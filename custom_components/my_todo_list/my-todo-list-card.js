@@ -882,6 +882,7 @@ class MyTodoListCardEditor extends HTMLElement {
       else if (key === "placeholder") el.placeholder = val;
       else if (key === "type") el.type = val;
       else if (key === "id") el.id = val;
+      else if (key === "checked") el.checked = val;
       else el.setAttribute(key, val);
     }
     for (const child of children) {
