@@ -13,42 +13,50 @@ from .websocket_api import async_register_websocket_commands
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORMS = ["todo"]
 CARD_URL = "/my_todo_list/my-todo-list-card.js"
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the My ToDo List component."""
+    hass.data.setdefault(DOMAIN, {})
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up My ToDo List from a config entry."""
-    store = MyToDoListStore(hass)
+    store = MyToDoListStore(hass, entry.entry_id)
     await store.async_load()
-    hass.data[DOMAIN] = store
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = store
 
-    async_register_websocket_commands(hass)
+    # Register websocket commands (only once)
+    if not hass.data.get(f"{DOMAIN}_ws_registered"):
+        async_register_websocket_commands(hass)
+        hass.data[f"{DOMAIN}_ws_registered"] = True
 
-    # Register the card JS file as a static path
-    await hass.http.async_register_static_paths(
-        [
-            StaticPathConfig(
-                CARD_URL,
-                hass.config.path(
-                    f"custom_components/{DOMAIN}/www/my-todo-list-card.js"
-                ),
-                cache_headers=False,
-            )
-        ]
-    )
+    # Register the card JS file (only once)
+    if not hass.data.get(f"{DOMAIN}_card_registered"):
+        await hass.http.async_register_static_paths(
+            [
+                StaticPathConfig(
+                    CARD_URL,
+                    hass.config.path(
+                        f"custom_components/{DOMAIN}/www/my-todo-list-card.js"
+                    ),
+                    cache_headers=False,
+                )
+            ]
+        )
+        add_extra_js_url(hass, CARD_URL)
+        hass.data[f"{DOMAIN}_card_registered"] = True
 
-    # Register the JS module so it loads on the frontend
-    add_extra_js_url(hass, CARD_URL)
-
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.data.pop(DOMAIN, None)
-    return True
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id, None)
+    return unload_ok

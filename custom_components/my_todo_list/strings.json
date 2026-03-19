@@ -2,12 +2,20 @@
   "config": {
     "step": {
       "user": {
-        "title": "My ToDo List",
-        "description": "This will set up the My ToDo List integration. You can manage your todo lists via Lovelace cards."
+        "title": "Create ToDo List",
+        "description": "Enter a name for the new todo list.",
+        "data": {
+          "name": "List name"
+        }
       }
     },
+    "error": {
+      "empty_name": "The name must not be empty.",
+      "name_too_long": "The name is too long (max 100 characters).",
+      "duplicate_name": "A list with this name already exists."
+    },
     "abort": {
-      "single_instance_allowed": "Already configured. Only a single configuration possible."
+      "already_configured": "This list is already configured."
     }
   }
 }

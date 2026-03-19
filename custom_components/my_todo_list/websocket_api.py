@@ -1,4 +1,4 @@
-"""WebSocket API for My ToDo List."""
+"""WebSocket API for My ToDo List - extended features (sub-items, reorder)."""
 
 import logging
 
@@ -7,12 +7,10 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DOMAIN, MAX_REORDER_IDS, MAX_TITLE_LENGTH, MAX_LIST_NAME_LENGTH
+from .const import DOMAIN, MAX_REORDER_IDS, MAX_TITLE_LENGTH
 
 _LOGGER = logging.getLogger(__name__)
 
-# Voluptuous validators for constrained strings
-_val_list_name = vol.All(str, vol.Length(min=1, max=MAX_LIST_NAME_LENGTH))
 _val_title = vol.All(str, vol.Length(min=1, max=MAX_TITLE_LENGTH))
 _val_id = vol.All(str, vol.Length(min=1, max=40))
 _val_date = vol.Any(vol.All(str, vol.Match(r"^\d{4}-\d{2}-\d{2}$")), None)
@@ -22,9 +20,6 @@ _val_date = vol.Any(vol.All(str, vol.Match(r"^\d{4}-\d{2}-\d{2}$")), None)
 def async_register_websocket_commands(hass: HomeAssistant) -> None:
     """Register WebSocket commands."""
     websocket_api.async_register_command(hass, ws_get_lists)
-    websocket_api.async_register_command(hass, ws_create_list)
-    websocket_api.async_register_command(hass, ws_rename_list)
-    websocket_api.async_register_command(hass, ws_delete_list)
     websocket_api.async_register_command(hass, ws_get_tasks)
     websocket_api.async_register_command(hass, ws_add_task)
     websocket_api.async_register_command(hass, ws_update_task)
@@ -35,83 +30,48 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_delete_sub_item)
 
 
+def _get_store(hass, entry_id):
+    """Get store for a config entry."""
+    stores = hass.data.get(DOMAIN, {})
+    store = stores.get(entry_id)
+    if store is None:
+        raise ValueError("List not found")
+    return store
+
+
 def _handle_error(connection, msg_id, err):
-    """Send a generic error without leaking internal details."""
+    """Send error without leaking internals."""
     if isinstance(err, ValueError):
-        # Send the validation message (safe, we control these)
         connection.send_error(msg_id, "invalid_request", str(err))
     else:
         _LOGGER.exception("Unexpected error in my_todo_list")
         connection.send_error(msg_id, "unknown_error", "An internal error occurred")
 
 
-# --- List commands ---
+# --- List overview (returns config entries as lists) ---
 
 
 @websocket_api.websocket_command({vol.Required("type"): "my_todo_list/get_lists"})
 @websocket_api.async_response
 async def ws_get_lists(hass, connection, msg):
-    """Get all lists."""
+    """Get all lists (config entries)."""
     try:
-        store = hass.data[DOMAIN]
-        connection.send_result(msg["id"], {"lists": store.get_lists()})
+        stores = hass.data.get(DOMAIN, {})
+        entries = hass.config_entries.async_entries(DOMAIN)
+        lists = []
+        for entry in entries:
+            store = stores.get(entry.entry_id)
+            lists.append({
+                "id": entry.entry_id,
+                "name": entry.data.get("name", entry.title),
+                "task_count": len(store.tasks) if store else 0,
+            })
+        connection.send_result(msg["id"], {"lists": lists})
     except Exception as err:
         _handle_error(connection, msg["id"], err)
 
 
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "my_todo_list/create_list",
-        vol.Required("name"): _val_list_name,
-    }
-)
-@websocket_api.async_response
-async def ws_create_list(hass, connection, msg):
-    """Create a new list."""
-    try:
-        store = hass.data[DOMAIN]
-        result = await store.async_create_list(msg["name"])
-        connection.send_result(msg["id"], result)
-    except Exception as err:
-        _handle_error(connection, msg["id"], err)
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "my_todo_list/rename_list",
-        vol.Required("list_id"): _val_id,
-        vol.Required("name"): _val_list_name,
-    }
-)
-@websocket_api.async_response
-async def ws_rename_list(hass, connection, msg):
-    """Rename a list."""
-    try:
-        store = hass.data[DOMAIN]
-        result = await store.async_rename_list(msg["list_id"], msg["name"])
-        connection.send_result(msg["id"], result)
-    except Exception as err:
-        _handle_error(connection, msg["id"], err)
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "my_todo_list/delete_list",
-        vol.Required("list_id"): _val_id,
-    }
-)
-@websocket_api.async_response
-async def ws_delete_list(hass, connection, msg):
-    """Delete a list."""
-    try:
-        store = hass.data[DOMAIN]
-        await store.async_delete_list(msg["list_id"])
-        connection.send_result(msg["id"])
-    except Exception as err:
-        _handle_error(connection, msg["id"], err)
-
-
-# --- Task commands ---
+# --- Task commands (list_id = entry_id) ---
 
 
 @websocket_api.websocket_command(
@@ -124,9 +84,8 @@ async def ws_delete_list(hass, connection, msg):
 async def ws_get_tasks(hass, connection, msg):
     """Get all tasks for a list."""
     try:
-        store = hass.data[DOMAIN]
-        tasks = store.get_tasks(msg["list_id"])
-        connection.send_result(msg["id"], {"tasks": tasks})
+        store = _get_store(hass, msg["list_id"])
+        connection.send_result(msg["id"], {"tasks": store.tasks})
     except Exception as err:
         _handle_error(connection, msg["id"], err)
 
@@ -142,8 +101,8 @@ async def ws_get_tasks(hass, connection, msg):
 async def ws_add_task(hass, connection, msg):
     """Add a task."""
     try:
-        store = hass.data[DOMAIN]
-        task = await store.async_add_task(msg["list_id"], msg["title"])
+        store = _get_store(hass, msg["list_id"])
+        task = await store.async_add_task(msg["title"])
         connection.send_result(msg["id"], task)
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -164,12 +123,12 @@ async def ws_add_task(hass, connection, msg):
 async def ws_update_task(hass, connection, msg):
     """Update a task."""
     try:
-        store = hass.data[DOMAIN]
+        store = _get_store(hass, msg["list_id"])
         kwargs = {}
         for key in ("title", "completed", "notes", "due_date"):
             if key in msg:
                 kwargs[key] = msg[key]
-        task = await store.async_update_task(msg["list_id"], msg["task_id"], **kwargs)
+        task = await store.async_update_task(msg["task_id"], **kwargs)
         connection.send_result(msg["id"], task)
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -186,8 +145,8 @@ async def ws_update_task(hass, connection, msg):
 async def ws_delete_task(hass, connection, msg):
     """Delete a task."""
     try:
-        store = hass.data[DOMAIN]
-        await store.async_delete_task(msg["list_id"], msg["task_id"])
+        store = _get_store(hass, msg["list_id"])
+        await store.async_delete_task(msg["task_id"])
         connection.send_result(msg["id"])
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -197,17 +156,15 @@ async def ws_delete_task(hass, connection, msg):
     {
         vol.Required("type"): "my_todo_list/reorder_tasks",
         vol.Required("list_id"): _val_id,
-        vol.Required("task_ids"): vol.All(
-            [_val_id], vol.Length(max=MAX_REORDER_IDS)
-        ),
+        vol.Required("task_ids"): vol.All([_val_id], vol.Length(max=MAX_REORDER_IDS)),
     }
 )
 @websocket_api.async_response
 async def ws_reorder_tasks(hass, connection, msg):
     """Reorder tasks."""
     try:
-        store = hass.data[DOMAIN]
-        await store.async_reorder_tasks(msg["list_id"], msg["task_ids"])
+        store = _get_store(hass, msg["list_id"])
+        await store.async_reorder_tasks(msg["task_ids"])
         connection.send_result(msg["id"])
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -228,10 +185,8 @@ async def ws_reorder_tasks(hass, connection, msg):
 async def ws_add_sub_item(hass, connection, msg):
     """Add a sub-item."""
     try:
-        store = hass.data[DOMAIN]
-        sub = await store.async_add_sub_item(
-            msg["list_id"], msg["task_id"], msg["title"]
-        )
+        store = _get_store(hass, msg["list_id"])
+        sub = await store.async_add_sub_item(msg["task_id"], msg["title"])
         connection.send_result(msg["id"], sub)
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -251,14 +206,12 @@ async def ws_add_sub_item(hass, connection, msg):
 async def ws_update_sub_item(hass, connection, msg):
     """Update a sub-item."""
     try:
-        store = hass.data[DOMAIN]
+        store = _get_store(hass, msg["list_id"])
         kwargs = {}
         for key in ("title", "completed"):
             if key in msg:
                 kwargs[key] = msg[key]
-        sub = await store.async_update_sub_item(
-            msg["list_id"], msg["task_id"], msg["sub_item_id"], **kwargs
-        )
+        sub = await store.async_update_sub_item(msg["task_id"], msg["sub_item_id"], **kwargs)
         connection.send_result(msg["id"], sub)
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -276,10 +229,8 @@ async def ws_update_sub_item(hass, connection, msg):
 async def ws_delete_sub_item(hass, connection, msg):
     """Delete a sub-item."""
     try:
-        store = hass.data[DOMAIN]
-        await store.async_delete_sub_item(
-            msg["list_id"], msg["task_id"], msg["sub_item_id"]
-        )
+        store = _get_store(hass, msg["list_id"])
+        await store.async_delete_sub_item(msg["task_id"], msg["sub_item_id"])
         connection.send_result(msg["id"])
     except Exception as err:
         _handle_error(connection, msg["id"], err)

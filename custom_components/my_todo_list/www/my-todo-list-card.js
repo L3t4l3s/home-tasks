@@ -26,7 +26,9 @@ class MyTodoListCard extends HTMLElement {
 
   setConfig(config) {
     this._config = config;
-    this._render();
+    if (this._initialized) {
+      this._loadTasks();
+    }
   }
 
   set hass(hass) {
@@ -885,18 +887,6 @@ class MyTodoListCardEditor extends HTMLElement {
     }
   }
 
-  async _reloadLists() {
-    try {
-      const result = await this._hass.callWS({ type: "my_todo_list/get_lists" });
-      if (result && Array.isArray(result.lists)) {
-        this._lists = result.lists;
-        this._render();
-      }
-    } catch (e) {
-      console.error("Failed to reload lists:", e);
-    }
-  }
-
   _render() {
     const root = this.shadowRoot;
     root.innerHTML = "";
@@ -908,10 +898,7 @@ class MyTodoListCardEditor extends HTMLElement {
       .field { display: flex; flex-direction: column; gap: 4px; }
       label { font-size: 12px; font-weight: 500; color: var(--secondary-text-color); text-transform: uppercase; letter-spacing: 0.5px; }
       select, input { padding: 8px 12px; border: 1px solid var(--divider-color); border-radius: 4px; font-size: 14px; background: var(--card-background-color); color: var(--primary-text-color); font-family: inherit; }
-      .create-list { display: flex; gap: 8px; }
-      .create-list input { flex: 1; }
-      button { padding: 8px 16px; background: var(--primary-color); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-family: inherit; }
-      button:hover { opacity: 0.9; }
+      .hint { font-size: 12px; color: var(--secondary-text-color); font-style: italic; }
     `;
     root.appendChild(style);
 
@@ -930,29 +917,6 @@ class MyTodoListCardEditor extends HTMLElement {
       this._fireChanged();
     });
 
-    // New list input
-    const newListInput = this._el("input", {
-      type: "text",
-      id: "new-list-name",
-      placeholder: "Listenname...",
-    });
-    const createBtn = this._el("button", { id: "create-list-btn", textContent: "Erstellen" });
-    createBtn.addEventListener("click", async () => {
-      const name = newListInput.value?.trim();
-      if (!name) return;
-      try {
-        const result = await this._hass.callWS({ type: "my_todo_list/create_list", name });
-        if (result) {
-          this._config = { ...this._config, list_id: result.id };
-          this._fireChanged();
-          newListInput.value = "";
-          await this._reloadLists();
-        }
-      } catch (e) {
-        console.error("Failed to create list:", e);
-      }
-    });
-
     // Title input
     const titleInput = this._el("input", {
       type: "text",
@@ -965,14 +929,16 @@ class MyTodoListCardEditor extends HTMLElement {
       this._fireChanged();
     });
 
+    const hint = this._el("span", {
+      className: "hint",
+      textContent: "Neue Listen k\u00f6nnen unter Einstellungen \u2192 Integrationen \u2192 My ToDo List erstellt werden.",
+    });
+
     const editor = this._el("div", { className: "editor" }, [
       this._el("div", { className: "field" }, [
         this._el("label", { textContent: "Liste" }),
         listSelect,
-      ]),
-      this._el("div", { className: "field" }, [
-        this._el("label", { textContent: "Neue Liste erstellen" }),
-        this._el("div", { className: "create-list" }, [newListInput, createBtn]),
+        hint,
       ]),
       this._el("div", { className: "field" }, [
         this._el("label", { textContent: "Titel (optional)" }),

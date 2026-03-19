@@ -2,12 +2,20 @@
   "config": {
     "step": {
       "user": {
-        "title": "My ToDo List",
-        "description": "Hiermit wird die My ToDo List Integration eingerichtet. Du kannst deine Aufgabenlisten \u00fcber Lovelace-Karten verwalten."
+        "title": "ToDo-Liste erstellen",
+        "description": "Gib einen Namen f\u00fcr die neue Aufgabenliste ein.",
+        "data": {
+          "name": "Listenname"
+        }
       }
     },
+    "error": {
+      "empty_name": "Der Name darf nicht leer sein.",
+      "name_too_long": "Der Name ist zu lang (max. 100 Zeichen).",
+      "duplicate_name": "Eine Liste mit diesem Namen existiert bereits."
+    },
     "abort": {
-      "single_instance_allowed": "Bereits konfiguriert. Es ist nur eine einzelne Konfiguration m\u00f6glich."
+      "already_configured": "Diese Liste ist bereits konfiguriert."
     }
   }
 }

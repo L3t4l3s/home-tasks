@@ -6,5 +6,6 @@
   "documentation": "https://github.com/L3t4l3s/MyToDoList",
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/L3t4l3s/MyToDoList/issues",
-  "version": "1.0.0"
+  "dependencies": ["todo"],
+  "version": "2.0.0"
 }
