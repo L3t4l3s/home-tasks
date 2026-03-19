@@ -149,11 +149,19 @@ class MyTodoListCard extends HTMLElement {
   }
 
   async _toggleTask(taskId, completed) {
-    await this._callWs("my_todo_list/update_task", {
-      list_id: this._config.list_id,
-      task_id: taskId,
-      completed: !completed,
-    });
+    const newCompleted = !completed;
+    if (newCompleted && this._config.auto_delete_completed) {
+      await this._callWs("my_todo_list/delete_task", {
+        list_id: this._config.list_id,
+        task_id: taskId,
+      });
+    } else {
+      await this._callWs("my_todo_list/update_task", {
+        list_id: this._config.list_id,
+        task_id: taskId,
+        completed: newCompleted,
+      });
+    }
     await this._loadTasks();
   }
 
@@ -364,8 +372,9 @@ class MyTodoListCard extends HTMLElement {
 
     const addTask = this._el("div", { className: "add-task" }, [addInput, addBtn]);
 
-    // Filters
-    const filters = this._el("div", { className: "filters" }, [
+    // Filters (hidden when auto-delete is on)
+    const hideFilters = this._config.auto_delete_completed === true;
+    const filters = hideFilters ? null : this._el("div", { className: "filters" }, [
       this._buildFilterBtn("Alle", "all"),
       this._buildFilterBtn("Offen", "open"),
       this._buildFilterBtn("Erledigt", "done"),
@@ -385,7 +394,9 @@ class MyTodoListCard extends HTMLElement {
 
     const children = [];
     if (header) children.push(header);
-    children.push(addTask, filters, taskList);
+    children.push(addTask);
+    if (filters) children.push(filters);
+    children.push(taskList);
     return this._el("div", { className: "card-content" }, children);
   }
 
@@ -962,6 +973,20 @@ class MyTodoListCardEditor extends HTMLElement {
       showTitleCb,
     ]);
 
+    // Auto-delete completed toggle
+    const autoDeleteCb = this._el("input", {
+      type: "checkbox",
+      checked: this._config.auto_delete_completed === true,
+    });
+    autoDeleteCb.addEventListener("change", () => {
+      this._config = { ...this._config, auto_delete_completed: autoDeleteCb.checked };
+      this._fireChanged();
+    });
+    const autoDeleteRow = this._el("div", { className: "toggle-row" }, [
+      this._el("span", { className: "toggle-label", textContent: "Erledigte Aufgaben sofort l\u00f6schen" }),
+      autoDeleteCb,
+    ]);
+
     // Show progress toggle
     const showProgressCb = this._el("input", {
       type: "checkbox",
@@ -995,6 +1020,7 @@ class MyTodoListCardEditor extends HTMLElement {
         this._el("label", { textContent: "Anzeige" }),
         showTitleRow,
         showProgressRow,
+        autoDeleteRow,
       ]),
     ]);
 
