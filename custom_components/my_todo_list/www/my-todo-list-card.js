@@ -349,7 +349,7 @@ class MyTodoListCard extends HTMLElement {
 
     const addBtn = this._el("button", {
       className: "add-btn",
-      textContent: "+ Hinzuf\u00fcgen",
+      textContent: "+",
     });
     addBtn.addEventListener("click", () => this._addTask());
 
