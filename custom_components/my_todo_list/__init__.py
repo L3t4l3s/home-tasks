@@ -36,7 +36,7 @@ async def _async_register_card(hass: HomeAssistant) -> None:
     static_paths = [
         StaticPathConfig(
             CARD_URL,
-            f"{comp_path}/www/my-todo-list-card.js",
+            f"{comp_path}/my-todo-list-card.js",
             cache_headers=False,
         ),
         StaticPathConfig(
