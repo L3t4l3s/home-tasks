@@ -20,6 +20,23 @@ CARD_URL = "/my_todo_list/my-todo-list-card.js"
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Set up the My ToDo List component."""
     hass.data.setdefault(DOMAIN, {})
+
+    # Register websocket commands and card JS once at component level
+    async_register_websocket_commands(hass)
+
+    await hass.http.async_register_static_paths(
+        [
+            StaticPathConfig(
+                CARD_URL,
+                hass.config.path(
+                    f"custom_components/{DOMAIN}/www/my-todo-list-card.js"
+                ),
+                cache_headers=False,
+            )
+        ]
+    )
+    add_extra_js_url(hass, CARD_URL)
+
     return True
 
 
@@ -28,27 +45,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     store = MyToDoListStore(hass, entry.entry_id)
     await store.async_load()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = store
-
-    # Register websocket commands (only once)
-    if not hass.data.get(f"{DOMAIN}_ws_registered"):
-        async_register_websocket_commands(hass)
-        hass.data[f"{DOMAIN}_ws_registered"] = True
-
-    # Register the card JS file (only once)
-    if not hass.data.get(f"{DOMAIN}_card_registered"):
-        await hass.http.async_register_static_paths(
-            [
-                StaticPathConfig(
-                    CARD_URL,
-                    hass.config.path(
-                        f"custom_components/{DOMAIN}/www/my-todo-list-card.js"
-                    ),
-                    cache_headers=False,
-                )
-            ]
-        )
-        add_extra_js_url(hass, CARD_URL)
-        hass.data[f"{DOMAIN}_card_registered"] = True
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
