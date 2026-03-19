@@ -836,6 +836,7 @@ class MyTodoListCardEditor extends HTMLElement {
     this._config = {};
     this._hass = null;
     this._lists = [];
+    this._listsLoaded = false;
   }
 
   _el(tag, attrs = {}, children = []) {
@@ -859,12 +860,16 @@ class MyTodoListCardEditor extends HTMLElement {
 
   setConfig(config) {
     this._config = { ...config };
-    this._render();
+    if (this._listsLoaded) {
+      this._render();
+    }
   }
 
   set hass(hass) {
     this._hass = hass;
-    this._loadLists();
+    if (!this._listsLoaded) {
+      this._loadLists();
+    }
   }
 
   async _loadLists() {
@@ -872,10 +877,23 @@ class MyTodoListCardEditor extends HTMLElement {
       const result = await this._hass.callWS({ type: "my_todo_list/get_lists" });
       if (result && Array.isArray(result.lists)) {
         this._lists = result.lists;
+        this._listsLoaded = true;
         this._render();
       }
     } catch (e) {
       // Integration might not be loaded yet
+    }
+  }
+
+  async _reloadLists() {
+    try {
+      const result = await this._hass.callWS({ type: "my_todo_list/get_lists" });
+      if (result && Array.isArray(result.lists)) {
+        this._lists = result.lists;
+        this._render();
+      }
+    } catch (e) {
+      console.error("Failed to reload lists:", e);
     }
   }
 
@@ -928,7 +946,7 @@ class MyTodoListCardEditor extends HTMLElement {
           this._config = { ...this._config, list_id: result.id };
           this._fireChanged();
           newListInput.value = "";
-          await this._loadLists();
+          await this._reloadLists();
         }
       } catch (e) {
         console.error("Failed to create list:", e);
