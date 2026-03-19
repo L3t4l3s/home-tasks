@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "My ToDo List",
+        "description": "Hiermit wird die My ToDo List Integration eingerichtet. Du kannst deine Aufgabenlisten \u00fcber Lovelace-Karten verwalten."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Bereits konfiguriert. Es ist nur eine einzelne Konfiguration m\u00f6glich."
+    }
+  }
+}

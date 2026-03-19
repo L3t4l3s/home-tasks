@@ -1,0 +1,13 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "My ToDo List",
+        "description": "This will set up the My ToDo List integration. You can manage your todo lists via Lovelace cards."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Already configured. Only a single configuration possible."
+    }
+  }
+}
