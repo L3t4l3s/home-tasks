@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.components.frontend import async_register_built_in_panel
+from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -42,8 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ]
     )
 
-    # Register as a Lovelace resource
-    await _async_register_lovelace_resource(hass)
+    # Register the JS module so it loads on the frontend
+    add_extra_js_url(hass, CARD_URL)
 
     return True
 
@@ -52,28 +52,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     hass.data.pop(DOMAIN, None)
     return True
-
-
-async def _async_register_lovelace_resource(hass: HomeAssistant) -> None:
-    """Register the card as a Lovelace resource."""
-    # Use the lovelace resources collection if available
-    try:
-        resources = hass.data.get("lovelace", {})
-        if hasattr(resources, "resources"):
-            # Check if already registered
-            for resource in resources.resources.async_items():
-                if resource.get("url", "") == CARD_URL:
-                    return
-            await resources.resources.async_create_item(
-                {"res_type": "module", "url": CARD_URL}
-            )
-            return
-    except Exception:  # noqa: BLE001
-        pass
-
-    # Fallback: log instruction for manual registration
-    _LOGGER.info(
-        "Please add the following to your Lovelace resources: "
-        "URL: %s, Type: JavaScript Module",
-        CARD_URL,
-    )
