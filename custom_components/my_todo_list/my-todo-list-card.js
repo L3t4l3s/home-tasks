@@ -648,10 +648,11 @@ class MyTodoListCard extends HTMLElement {
     const actions = this._el("div", { className: "detail-actions" }, [deleteBtn]);
 
     const details = [];
+    if (this._config.show_notes !== false) details.push(notesSection);
+    details.push(subSection);
     if (this._config.show_due_date !== false) details.push(dateSection);
     if (this._config.show_recurrence !== false) details.push(recurrenceSection);
-    if (this._config.show_notes !== false) details.push(notesSection);
-    details.push(subSection, actions);
+    details.push(actions);
     return this._el("div", { className: "task-details" }, details);
   }
 
