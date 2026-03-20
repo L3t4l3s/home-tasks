@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DOMAIN, MAX_REORDER_IDS, MAX_TITLE_LENGTH
+from .const import DOMAIN, MAX_REORDER_IDS, MAX_TITLE_LENGTH, VALID_RECURRENCE_INTERVALS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,6 +117,8 @@ async def ws_add_task(hass, connection, msg):
         vol.Optional("completed"): bool,
         vol.Optional("notes"): vol.All(str, vol.Length(max=5000)),
         vol.Optional("due_date"): _val_date,
+        vol.Optional("recurrence_interval"): vol.Any(vol.In(list(VALID_RECURRENCE_INTERVALS)), None),
+        vol.Optional("recurrence_enabled"): bool,
     }
 )
 @websocket_api.async_response
@@ -125,7 +127,7 @@ async def ws_update_task(hass, connection, msg):
     try:
         store = _get_store(hass, msg["list_id"])
         kwargs = {}
-        for key in ("title", "completed", "notes", "due_date"):
+        for key in ("title", "completed", "notes", "due_date", "recurrence_interval", "recurrence_enabled"):
             if key in msg:
                 kwargs[key] = msg[key]
         task = await store.async_update_task(msg["task_id"], **kwargs)

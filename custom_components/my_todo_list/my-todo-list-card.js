@@ -5,7 +5,7 @@
  * Security: All user-controlled content is set via textContent or DOM properties,
  * never via innerHTML with unsanitized data.
  */
-console.info("%c MY-TODO-LIST-CARD %c v2.1.0 ", "color: white; background: #03a9f4; font-weight: bold;", "color: #03a9f4; background: white; font-weight: bold;");
+console.info("%c MY-TODO-LIST-CARD %c v2.2.0 ", "color: white; background: #03a9f4; font-weight: bold;", "color: #03a9f4; background: white; font-weight: bold;");
 
 class MyTodoListCard extends HTMLElement {
   constructor() {
@@ -163,7 +163,9 @@ class MyTodoListCard extends HTMLElement {
 
   async _toggleTask(taskId, completed) {
     const newCompleted = !completed;
-    if (newCompleted && this._config.auto_delete_completed) {
+    const task = this._tasks.find(t => t.id === taskId);
+    const hasRecurrence = task && task.recurrence_enabled && task.recurrence_interval;
+    if (newCompleted && this._config.auto_delete_completed && !hasRecurrence) {
       await this._callWs("my_todo_list/delete_task", {
         list_id: this._config.list_id,
         task_id: taskId,
@@ -496,6 +498,13 @@ class MyTodoListCard extends HTMLElement {
         textContent: this._formatDueDate(task.due_date),
       }));
     }
+    if (task.recurrence_enabled && task.recurrence_interval && this._config.show_recurrence !== false) {
+      const labels = { daily: "Täglich", weekly: "Wöchentl.", biweekly: "Alle 2 Wo.", monthly: "Monatl." };
+      metaChildren.push(this._el("span", {
+        className: "recurrence-badge",
+        textContent: "\u21BB " + (labels[task.recurrence_interval] || task.recurrence_interval),
+      }));
+    }
     if (metaChildren.length > 0) {
       contentChildren.push(this._el("div", { className: "task-meta" }, metaChildren));
     }
@@ -579,6 +588,57 @@ class MyTodoListCard extends HTMLElement {
     subChildren.push(addSubBtn);
     const subSection = this._el("div", { className: "detail-section" }, subChildren);
 
+    // Recurrence section
+    const recurrenceEnabled = task.recurrence_enabled || false;
+    const recurrenceInterval = task.recurrence_interval || "daily";
+
+    const recurrenceToggle = this._el("input", { type: "checkbox", checked: recurrenceEnabled });
+    const recurrenceCheckmark = this._el("span", { className: "checkmark" });
+    const recurrenceLabel = this._el("label", { className: "checkbox-container small" }, [
+      recurrenceToggle, recurrenceCheckmark,
+    ]);
+    const recurrenceToggleRow = this._el("div", { className: "recurrence-toggle-row" }, [
+      recurrenceLabel,
+      this._el("span", { textContent: "Aktiviert" }),
+    ]);
+
+    const recurrenceSelect = this._el("select", { className: "recurrence-select" });
+    const options = [
+      { value: "daily", label: "Täglich" },
+      { value: "weekly", label: "Wöchentlich" },
+      { value: "biweekly", label: "Alle 2 Wochen" },
+      { value: "monthly", label: "Monatlich" },
+    ];
+    for (const opt of options) {
+      const optEl = this._el("option", { value: opt.value, textContent: opt.label });
+      if (opt.value === recurrenceInterval) optEl.selected = true;
+      recurrenceSelect.appendChild(optEl);
+    }
+    if (!recurrenceEnabled) recurrenceSelect.disabled = true;
+
+    recurrenceToggle.addEventListener("change", () => {
+      recurrenceSelect.disabled = !recurrenceToggle.checked;
+      this._callWs("my_todo_list/update_task", {
+        list_id: this._config.list_id,
+        task_id: task.id,
+        recurrence_enabled: recurrenceToggle.checked,
+        recurrence_interval: recurrenceSelect.value,
+      }).then(() => this._loadTasks());
+    });
+    recurrenceSelect.addEventListener("change", () => {
+      this._callWs("my_todo_list/update_task", {
+        list_id: this._config.list_id,
+        task_id: task.id,
+        recurrence_interval: recurrenceSelect.value,
+      }).then(() => this._loadTasks());
+    });
+
+    const recurrenceSection = this._el("div", { className: "detail-section" }, [
+      this._el("label", { className: "detail-label", textContent: "Wiederholung" }),
+      recurrenceToggleRow,
+      recurrenceSelect,
+    ]);
+
     // Delete button
     const deleteBtn = this._el("button", {
       className: "delete-task-btn",
@@ -589,6 +649,7 @@ class MyTodoListCard extends HTMLElement {
 
     const details = [];
     if (this._config.show_due_date !== false) details.push(dateSection);
+    if (this._config.show_recurrence !== false) details.push(recurrenceSection);
     if (this._config.show_notes !== false) details.push(notesSection);
     details.push(subSection, actions);
     return this._el("div", { className: "task-details" }, details);
@@ -908,6 +969,19 @@ class MyTodoListCard extends HTMLElement {
       }
       .due-date.today { background: #fff3e0; color: #e65100; }
       .due-date.overdue { background: #ffebee; color: var(--todo-error); font-weight: 500; }
+      .recurrence-badge {
+        font-size: 11px; padding: 2px 8px; border-radius: 10px;
+        background: #e3f2fd; color: #1565c0;
+      }
+      .recurrence-toggle-row {
+        display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+      }
+      .recurrence-select {
+        width: 100%; padding: 6px 8px; border: 1px solid var(--todo-divider);
+        border-radius: 4px; font-size: 13px; background: var(--todo-bg);
+        color: var(--todo-text); font-family: inherit;
+      }
+      .recurrence-select:disabled { opacity: 0.5; }
       .expand-btn {
         background: none; border: none; color: var(--todo-secondary-text);
         cursor: pointer; font-size: 10px; padding: 6px; border-radius: 4px;
@@ -1170,6 +1244,21 @@ class MyTodoListCardEditor extends HTMLElement {
       showNotesCb,
     ]);
 
+    // Show recurrence toggle
+    const showRecurrenceCb = this._el("input", {
+      type: "checkbox",
+      id: "cb-show-recurrence",
+      checked: this._config.show_recurrence !== false,
+    });
+    showRecurrenceCb.addEventListener("change", () => {
+      this._config = { ...this._config, show_recurrence: showRecurrenceCb.checked };
+      this._fireChanged();
+    });
+    const showRecurrenceRow = this._el("div", { className: "toggle-row" }, [
+      this._el("span", { className: "toggle-label", textContent: "Wiederholung anzeigen" }),
+      showRecurrenceCb,
+    ]);
+
     // Auto-delete completed toggle
     const autoDeleteCb = this._el("input", {
       type: "checkbox",
@@ -1205,6 +1294,7 @@ class MyTodoListCardEditor extends HTMLElement {
         showTitleRow,
         showProgressRow,
         showDueDateRow,
+        showRecurrenceRow,
         showNotesRow,
         autoDeleteRow,
       ]),

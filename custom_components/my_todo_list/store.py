@@ -1,8 +1,12 @@
 """Data store for My ToDo List - per-entry storage."""
 
+from __future__ import annotations
+
 import logging
 import re
 import uuid
+from collections.abc import Callable
+from datetime import datetime, timezone
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
@@ -13,6 +17,7 @@ from .const import (
     MAX_TASKS_PER_LIST,
     MAX_TITLE_LENGTH,
     STORAGE_VERSION,
+    VALID_RECURRENCE_INTERVALS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,6 +64,8 @@ class MyToDoListStore:
         """Initialize the store."""
         self._store = Store(hass, STORAGE_VERSION, f"my_todo_list_{entry_id}")
         self._data: dict | None = None
+        self.on_task_completed: Callable[[dict], None] | None = None
+        self.on_task_deleted: Callable[[str], None] | None = None
 
     async def async_load(self) -> None:
         """Load data from disk."""
@@ -68,6 +75,14 @@ class MyToDoListStore:
             await self._async_save()
         else:
             self._data = data
+            self._backfill_recurrence_fields()
+
+    def _backfill_recurrence_fields(self) -> None:
+        """Add missing recurrence fields to existing tasks."""
+        for task in self._data.get("tasks", []):
+            task.setdefault("recurrence_interval", None)
+            task.setdefault("recurrence_enabled", False)
+            task.setdefault("completed_at", None)
 
     async def _async_save(self) -> None:
         """Save data to disk."""
@@ -92,6 +107,9 @@ class MyToDoListStore:
             "due_date": None,
             "sort_order": max_order + 1,
             "sub_items": [],
+            "recurrence_interval": None,
+            "recurrence_enabled": False,
+            "completed_at": None,
         }
         self._data["tasks"].append(task)
         await self._async_save()
@@ -119,9 +137,29 @@ class MyToDoListStore:
             kwargs["due_date"] = validate_date(kwargs["due_date"])
         if "completed" in kwargs and not isinstance(kwargs["completed"], bool):
             raise ValueError("completed must be a boolean")
+        if "recurrence_interval" in kwargs:
+            val = kwargs["recurrence_interval"]
+            if val is not None and val not in VALID_RECURRENCE_INTERVALS:
+                raise ValueError(f"recurrence_interval must be one of {VALID_RECURRENCE_INTERVALS} or null")
+        if "recurrence_enabled" in kwargs and not isinstance(kwargs["recurrence_enabled"], bool):
+            raise ValueError("recurrence_enabled must be a boolean")
+
+        was_completed = task.get("completed", False)
+        allowed = ("title", "completed", "notes", "due_date", "recurrence_interval", "recurrence_enabled")
         for key, value in kwargs.items():
-            if key in ("title", "completed", "notes", "due_date"):
+            if key in allowed:
                 task[key] = value
+
+        # Track completed_at timestamp
+        is_completed = task.get("completed", False)
+        if is_completed and not was_completed:
+            task["completed_at"] = datetime.now(timezone.utc).isoformat()
+            # Notify recurrence scheduler
+            if self.on_task_completed and task.get("recurrence_enabled") and task.get("recurrence_interval"):
+                self.on_task_completed(task)
+        elif not is_completed and was_completed:
+            task["completed_at"] = None
+
         await self._async_save()
         return task
 
@@ -129,6 +167,8 @@ class MyToDoListStore:
         """Delete a task."""
         self.get_task(task_id)  # validate existence
         self._data["tasks"] = [t for t in self._data["tasks"] if t["id"] != task_id]
+        if self.on_task_deleted:
+            self.on_task_deleted(task_id)
         await self._async_save()
 
     async def async_reorder_tasks(self, task_ids: list[str]) -> None:
