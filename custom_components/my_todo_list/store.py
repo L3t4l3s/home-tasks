@@ -67,6 +67,7 @@ class MyToDoListStore:
         self._data: dict | None = None
         self.on_task_completed: Callable[[dict], None] | None = None
         self.on_task_deleted: Callable[[str], None] | None = None
+        self.on_task_assigned: Callable[[dict, str | None], None] | None = None
 
     async def async_load(self) -> None:
         """Load data from disk."""
@@ -97,6 +98,7 @@ class MyToDoListStore:
             task.setdefault("recurrence_unit", None)
             task.setdefault("recurrence_enabled", False)
             task.setdefault("completed_at", None)
+            task.setdefault("assigned_person", None)
 
     async def _async_save(self) -> None:
         """Save data to disk."""
@@ -125,6 +127,7 @@ class MyToDoListStore:
             "recurrence_unit": None,
             "recurrence_enabled": False,
             "completed_at": None,
+            "assigned_person": None,
         }
         self._data["tasks"].append(task)
         await self._async_save()
@@ -162,9 +165,14 @@ class MyToDoListStore:
                 raise ValueError(f"recurrence_value must be an integer between 1 and {MAX_RECURRENCE_VALUE}")
         if "recurrence_enabled" in kwargs and not isinstance(kwargs["recurrence_enabled"], bool):
             raise ValueError("recurrence_enabled must be a boolean")
+        if "assigned_person" in kwargs:
+            val = kwargs["assigned_person"]
+            if val is not None and (not isinstance(val, str) or len(val) > MAX_TITLE_LENGTH):
+                raise ValueError("assigned_person must be a string entity_id or null")
 
         was_completed = task.get("completed", False)
-        allowed = ("title", "completed", "notes", "due_date", "recurrence_value", "recurrence_unit", "recurrence_enabled")
+        previous_person = task.get("assigned_person")
+        allowed = ("title", "completed", "notes", "due_date", "recurrence_value", "recurrence_unit", "recurrence_enabled", "assigned_person")
         for key, value in kwargs.items():
             if key in allowed:
                 task[key] = value
@@ -178,6 +186,11 @@ class MyToDoListStore:
                 self.on_task_completed(task)
         elif not is_completed and was_completed:
             task["completed_at"] = None
+
+        # Notify about person assignment changes
+        new_person = task.get("assigned_person")
+        if new_person != previous_person and self.on_task_assigned:
+            self.on_task_assigned(task, previous_person)
 
         await self._async_save()
         return task

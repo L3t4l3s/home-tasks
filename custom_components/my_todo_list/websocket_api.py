@@ -120,6 +120,7 @@ async def ws_add_task(hass, connection, msg):
         vol.Optional("recurrence_value"): vol.All(int, vol.Range(min=1, max=MAX_RECURRENCE_VALUE)),
         vol.Optional("recurrence_unit"): vol.Any(vol.In(list(VALID_RECURRENCE_UNITS)), None),
         vol.Optional("recurrence_enabled"): bool,
+        vol.Optional("assigned_person"): vol.Any(str, None),
     }
 )
 @websocket_api.async_response
@@ -128,7 +129,7 @@ async def ws_update_task(hass, connection, msg):
     try:
         store = _get_store(hass, msg["list_id"])
         kwargs = {}
-        for key in ("title", "completed", "notes", "due_date", "recurrence_value", "recurrence_unit", "recurrence_enabled"):
+        for key in ("title", "completed", "notes", "due_date", "recurrence_value", "recurrence_unit", "recurrence_enabled", "assigned_person"):
             if key in msg:
                 kwargs[key] = msg[key]
         task = await store.async_update_task(msg["task_id"], **kwargs)

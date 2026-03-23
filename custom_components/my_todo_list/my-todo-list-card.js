@@ -509,6 +509,17 @@ class MyTodoListCard extends HTMLElement {
         textContent: "\u21BB " + label,
       }));
     }
+    if (task.assigned_person && this._config.show_assigned_person !== false) {
+      let personName = task.assigned_person;
+      if (this._hass && this._hass.states && this._hass.states[task.assigned_person]) {
+        const attrs = this._hass.states[task.assigned_person].attributes;
+        personName = (attrs && attrs.friendly_name) || task.assigned_person;
+      }
+      metaChildren.push(this._el("span", {
+        className: "assigned-badge",
+        textContent: "\uD83D\uDC64 " + personName,
+      }));
+    }
     if (metaChildren.length > 0) {
       contentChildren.push(this._el("div", { className: "task-meta" }, metaChildren));
     }
@@ -671,6 +682,35 @@ class MyTodoListCard extends HTMLElement {
       recurrenceRow,
     ]);
 
+    // Assigned person section
+    const personSelect = this._el("select", { className: "person-select" });
+    const noneOpt = this._el("option", { value: "", textContent: "\u2013 Niemand \u2013" });
+    if (!task.assigned_person) noneOpt.selected = true;
+    personSelect.appendChild(noneOpt);
+    if (this._hass && this._hass.states) {
+      const persons = Object.keys(this._hass.states)
+        .filter(eid => eid.startsWith("person."))
+        .sort();
+      for (const eid of persons) {
+        const state = this._hass.states[eid];
+        const name = (state && state.attributes && state.attributes.friendly_name) || eid;
+        const opt = this._el("option", { value: eid, textContent: name });
+        if (eid === task.assigned_person) opt.selected = true;
+        personSelect.appendChild(opt);
+      }
+    }
+    personSelect.addEventListener("change", () => {
+      this._callWs("my_todo_list/update_task", {
+        list_id: this._config.list_id,
+        task_id: task.id,
+        assigned_person: personSelect.value || null,
+      }).then(() => this._loadTasks());
+    });
+    const personSection = this._el("div", { className: "detail-section" }, [
+      this._el("label", { className: "detail-label", textContent: "Zugewiesen an" }),
+      personSelect,
+    ]);
+
     // Delete button
     const deleteBtn = this._el("button", {
       className: "delete-task-btn",
@@ -684,6 +724,7 @@ class MyTodoListCard extends HTMLElement {
     details.push(subSection);
     if (this._config.show_due_date !== false) details.push(dateSection);
     if (this._config.show_recurrence !== false) details.push(recurrenceSection);
+    if (this._config.show_assigned_person !== false) details.push(personSection);
     details.push(actions);
     return this._el("div", { className: "task-details" }, details);
   }
@@ -1006,6 +1047,15 @@ class MyTodoListCard extends HTMLElement {
         font-size: 11px; padding: 2px 8px; border-radius: 10px;
         background: #e3f2fd; color: #1565c0;
       }
+      .assigned-badge {
+        font-size: 11px; padding: 2px 8px; border-radius: 10px;
+        background: #f3e5f5; color: #7b1fa2;
+      }
+      .person-select {
+        width: 100%; padding: 6px 8px; border: 1px solid var(--todo-divider);
+        border-radius: 4px; font-size: 13px; background: var(--todo-bg);
+        color: var(--todo-text); font-family: inherit;
+      }
       .recurrence-toggle-row {
         display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
       }
@@ -1303,6 +1353,21 @@ class MyTodoListCardEditor extends HTMLElement {
       showRecurrenceCb,
     ]);
 
+    // Show assigned person toggle
+    const showPersonCb = this._el("input", {
+      type: "checkbox",
+      id: "cb-show-person",
+      checked: this._config.show_assigned_person !== false,
+    });
+    showPersonCb.addEventListener("change", () => {
+      this._config = { ...this._config, show_assigned_person: showPersonCb.checked };
+      this._fireChanged();
+    });
+    const showPersonRow = this._el("div", { className: "toggle-row" }, [
+      this._el("span", { className: "toggle-label", textContent: "Zugewiesene Person anzeigen" }),
+      showPersonCb,
+    ]);
+
     // Auto-delete completed toggle
     const autoDeleteCb = this._el("input", {
       type: "checkbox",
@@ -1339,6 +1404,7 @@ class MyTodoListCardEditor extends HTMLElement {
         showProgressRow,
         showDueDateRow,
         showRecurrenceRow,
+        showPersonRow,
         showNotesRow,
         autoDeleteRow,
       ]),

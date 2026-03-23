@@ -120,8 +120,11 @@ async def _async_reopen_task(hass: HomeAssistant, entry_id: str, task_id: str) -
         sub["completed"] = False
     await store._async_save()
 
-    # Update HA entity state
-    hass.bus.async_fire(f"{DOMAIN}_task_reopened", {"entry_id": entry_id, "task_id": task_id})
+    # Fire events
+    event_data = {"entry_id": entry_id, "task_id": task_id, "task_title": task.get("title", "")}
+    if task.get("assigned_person"):
+        event_data["assigned_person"] = task["assigned_person"]
+    hass.bus.async_fire(f"{DOMAIN}_task_reopened", event_data)
     _LOGGER.info("Recurring task '%s' reopened", task.get("title", task_id))
 
 
@@ -164,6 +167,28 @@ def _recover_recurrence_timers(hass: HomeAssistant, entry_id: str, store: MyToDo
             _schedule_recurrence(hass, entry_id, task, delay_seconds=remaining)
 
 
+def _fire_assignment_event(
+    hass: HomeAssistant, entry_id: str, task: dict, previous_person: str | None
+) -> None:
+    """Fire an event when a task's assigned person changes."""
+    hass.bus.async_fire(
+        f"{DOMAIN}_task_assigned",
+        {
+            "entry_id": entry_id,
+            "task_id": task["id"],
+            "task_title": task.get("title", ""),
+            "assigned_person": task.get("assigned_person"),
+            "previous_person": previous_person,
+        },
+    )
+    _LOGGER.debug(
+        "Task '%s' assigned to %s (was %s)",
+        task.get("title"),
+        task.get("assigned_person"),
+        previous_person,
+    )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up My ToDo List from a config entry."""
     await _async_register_card(hass)
@@ -172,9 +197,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await store.async_load()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = store
 
-    # Wire up recurrence callbacks
+    # Wire up callbacks
     store.on_task_completed = lambda task: _schedule_recurrence(hass, entry.entry_id, task)
     store.on_task_deleted = lambda task_id: _cancel_recurrence(hass, task_id)
+    store.on_task_assigned = lambda task, prev: _fire_assignment_event(hass, entry.entry_id, task, prev)
 
     # Recover any pending recurrence timers from before restart
     _recover_recurrence_timers(hass, entry.entry_id, store)
