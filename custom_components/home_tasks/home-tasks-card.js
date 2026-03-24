@@ -1128,15 +1128,15 @@ class MyTodoListCard extends HTMLElement {
         font-size: 11px; padding: 2px 8px; border-radius: 10px;
         background: var(--todo-surface); color: var(--todo-secondary-text);
       }
-      .due-date.today { background: #fff3e0; color: #e65100; }
-      .due-date.overdue { background: #ffebee; color: var(--todo-error); font-weight: 500; }
+      .due-date.today { background: rgba(255, 152, 0, 0.15); color: var(--warning-color, #ff9800); }
+      .due-date.overdue { background: rgba(244, 67, 54, 0.15); color: var(--todo-error); font-weight: 500; }
       .recurrence-badge {
         font-size: 11px; padding: 2px 8px; border-radius: 10px;
-        background: #e3f2fd; color: #1565c0;
+        background: rgba(3, 169, 244, 0.15); color: var(--info-color, #03a9f4);
       }
       .assigned-badge {
         font-size: 11px; padding: 2px 8px; border-radius: 10px;
-        background: #f3e5f5; color: #7b1fa2;
+        background: rgba(156, 39, 176, 0.15); color: var(--accent-color, #9c27b0);
       }
       .person-select {
         width: 100%; padding: 6px 8px; border: 1px solid var(--todo-divider);
@@ -1199,7 +1199,7 @@ class MyTodoListCard extends HTMLElement {
         background: none; border: none; color: var(--todo-disabled); cursor: pointer;
         font-size: 16px; padding: 2px 6px; border-radius: 4px; line-height: 1; flex-shrink: 0;
       }
-      .delete-sub-btn:hover { color: var(--todo-error); background: #ffebee; }
+      .delete-sub-btn:hover { color: var(--todo-error); background: rgba(244, 67, 54, 0.15); }
       .add-sub-btn {
         background: none; border: none; color: var(--todo-primary); cursor: pointer;
         font-size: 13px; padding: 6px 0; text-align: left; font-family: inherit;
@@ -1210,7 +1210,7 @@ class MyTodoListCard extends HTMLElement {
         background: none; border: 1px solid var(--todo-error); color: var(--todo-error);
         padding: 6px 14px; border-radius: 4px; font-size: 12px; cursor: pointer; font-family: inherit;
       }
-      .delete-task-btn:hover { background: #ffebee; }
+      .delete-task-btn:hover { background: rgba(244, 67, 54, 0.15); }
       .toast-error {
         position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
         background: var(--todo-error, #db4437); color: #fff; padding: 10px 20px;
