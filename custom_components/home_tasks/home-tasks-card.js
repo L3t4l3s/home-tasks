@@ -1,11 +1,11 @@
 /**
- * My ToDo List Card for Home Assistant
+ * Home Tasks Card for Home Assistant
  * A feature-rich todo list with drag & drop, sub-items, notes, and due dates.
  *
  * Security: All user-controlled content is set via textContent or DOM properties,
  * never via innerHTML with unsanitized data.
  */
-console.info("%c MY-TODO-LIST-CARD %c v2.3.0 ", "color: white; background: #03a9f4; font-weight: bold;", "color: #03a9f4; background: white; font-weight: bold;");
+console.info("%c HOME-TASKS-CARD %c v3.0.0 ", "color: white; background: #03a9f4; font-weight: bold;", "color: #03a9f4; background: white; font-weight: bold;");
 
 const _TRANSLATIONS = {
   en: {
@@ -44,7 +44,7 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Show sub-items",
     ed_show_person: "Show assigned person",
     ed_auto_delete: "Delete completed tasks immediately",
-    ed_hint: "New lists can be created under Settings \u2192 Integrations \u2192 My ToDo List.",
+    ed_hint: "New lists can be created under Settings \u2192 Integrations \u2192 Home Tasks.",
   },
   de: {
     my_tasks: "Meine Aufgaben",
@@ -82,7 +82,7 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Unterpunkte anzeigen",
     ed_show_person: "Zugewiesene Person anzeigen",
     ed_auto_delete: "Erledigte Aufgaben sofort l\u00f6schen",
-    ed_hint: "Neue Listen k\u00f6nnen unter Einstellungen \u2192 Integrationen \u2192 My ToDo List erstellt werden.",
+    ed_hint: "Neue Listen k\u00f6nnen unter Einstellungen \u2192 Integrationen \u2192 Home Tasks erstellt werden.",
   },
 };
 
@@ -208,7 +208,7 @@ class MyTodoListCard extends HTMLElement {
   }
 
   async _loadLists() {
-    const result = await this._callWs("my_todo_list/get_lists");
+    const result = await this._callWs("home_tasks/get_lists");
     if (result && Array.isArray(result.lists)) {
       this._lists = result.lists;
       if (!this._config.list_id && this._lists.length > 0) {
@@ -224,7 +224,7 @@ class MyTodoListCard extends HTMLElement {
       this._render();
       return;
     }
-    const result = await this._callWs("my_todo_list/get_tasks", {
+    const result = await this._callWs("home_tasks/get_tasks", {
       list_id: this._config.list_id,
     });
     if (result && Array.isArray(result.tasks)) {
@@ -236,7 +236,7 @@ class MyTodoListCard extends HTMLElement {
   async _addTask() {
     const title = this._newTaskTitle.trim();
     if (!title || !this._config.list_id) return;
-    const result = await this._callWs("my_todo_list/add_task", {
+    const result = await this._callWs("home_tasks/add_task", {
       list_id: this._config.list_id,
       title,
     });
@@ -251,12 +251,12 @@ class MyTodoListCard extends HTMLElement {
     const task = this._tasks.find(t => t.id === taskId);
     const hasRecurrence = task && task.recurrence_enabled && task.recurrence_unit;
     if (newCompleted && this._config.auto_delete_completed && !hasRecurrence) {
-      await this._callWs("my_todo_list/delete_task", {
+      await this._callWs("home_tasks/delete_task", {
         list_id: this._config.list_id,
         task_id: taskId,
       });
     } else {
-      await this._callWs("my_todo_list/update_task", {
+      await this._callWs("home_tasks/update_task", {
         list_id: this._config.list_id,
         task_id: taskId,
         completed: newCompleted,
@@ -267,7 +267,7 @@ class MyTodoListCard extends HTMLElement {
 
   async _updateTaskTitle(taskId, title) {
     if (!title.trim()) return;
-    const result = await this._callWs("my_todo_list/update_task", {
+    const result = await this._callWs("home_tasks/update_task", {
       list_id: this._config.list_id,
       task_id: taskId,
       title: title.trim(),
@@ -279,7 +279,7 @@ class MyTodoListCard extends HTMLElement {
   }
 
   async _updateTaskNotes(taskId, notes) {
-    await this._callWs("my_todo_list/update_task", {
+    await this._callWs("home_tasks/update_task", {
       list_id: this._config.list_id,
       task_id: taskId,
       notes,
@@ -287,7 +287,7 @@ class MyTodoListCard extends HTMLElement {
   }
 
   async _updateTaskDueDate(taskId, dueDate) {
-    await this._callWs("my_todo_list/update_task", {
+    await this._callWs("home_tasks/update_task", {
       list_id: this._config.list_id,
       task_id: taskId,
       due_date: dueDate || null,
@@ -296,7 +296,7 @@ class MyTodoListCard extends HTMLElement {
   }
 
   async _deleteTask(taskId) {
-    await this._callWs("my_todo_list/delete_task", {
+    await this._callWs("home_tasks/delete_task", {
       list_id: this._config.list_id,
       task_id: taskId,
     });
@@ -305,7 +305,7 @@ class MyTodoListCard extends HTMLElement {
   }
 
   async _addSubItem(taskId) {
-    const result = await this._callWs("my_todo_list/add_sub_item", {
+    const result = await this._callWs("home_tasks/add_sub_item", {
       list_id: this._config.list_id,
       task_id: taskId,
       title: "Neuer Unterpunkt",
@@ -317,7 +317,7 @@ class MyTodoListCard extends HTMLElement {
   }
 
   async _toggleSubItem(taskId, subItemId, completed) {
-    await this._callWs("my_todo_list/update_sub_item", {
+    await this._callWs("home_tasks/update_sub_item", {
       list_id: this._config.list_id,
       task_id: taskId,
       sub_item_id: subItemId,
@@ -328,7 +328,7 @@ class MyTodoListCard extends HTMLElement {
 
   async _updateSubItemTitle(taskId, subItemId, title) {
     if (!title.trim()) return;
-    const result = await this._callWs("my_todo_list/update_sub_item", {
+    const result = await this._callWs("home_tasks/update_sub_item", {
       list_id: this._config.list_id,
       task_id: taskId,
       sub_item_id: subItemId,
@@ -341,7 +341,7 @@ class MyTodoListCard extends HTMLElement {
   }
 
   async _deleteSubItem(taskId, subItemId) {
-    await this._callWs("my_todo_list/delete_sub_item", {
+    await this._callWs("home_tasks/delete_sub_item", {
       list_id: this._config.list_id,
       task_id: taskId,
       sub_item_id: subItemId,
@@ -350,7 +350,7 @@ class MyTodoListCard extends HTMLElement {
   }
 
   async _reorderTasks(taskIds) {
-    await this._callWs("my_todo_list/reorder_tasks", {
+    await this._callWs("home_tasks/reorder_tasks", {
       list_id: this._config.list_id,
       task_ids: taskIds,
     });
@@ -733,7 +733,7 @@ class MyTodoListCard extends HTMLElement {
     const saveRecurrence = () => {
       const val = Math.max(1, Math.min(365, parseInt(recurrenceValueInput.value) || 1));
       recurrenceValueInput.value = val;
-      this._callWs("my_todo_list/update_task", {
+      this._callWs("home_tasks/update_task", {
         list_id: this._config.list_id,
         task_id: task.id,
         recurrence_value: val,
@@ -746,7 +746,7 @@ class MyTodoListCard extends HTMLElement {
       recurrenceValueInput.disabled = !enabled;
       recurrenceUnitSelect.disabled = !enabled;
       const val = Math.max(1, Math.min(365, parseInt(recurrenceValueInput.value) || 1));
-      this._callWs("my_todo_list/update_task", {
+      this._callWs("home_tasks/update_task", {
         list_id: this._config.list_id,
         task_id: task.id,
         recurrence_enabled: enabled,
@@ -787,7 +787,7 @@ class MyTodoListCard extends HTMLElement {
       }
     }
     personSelect.addEventListener("change", () => {
-      this._callWs("my_todo_list/update_task", {
+      this._callWs("home_tasks/update_task", {
         list_id: this._config.list_id,
         task_id: task.id,
         assigned_person: personSelect.value || null,
@@ -1224,7 +1224,7 @@ class MyTodoListCard extends HTMLElement {
   // --- Card config ---
 
   static getConfigElement() {
-    return document.createElement("my-todo-list-card-editor");
+    return document.createElement("home-tasks-card-editor");
   }
 
   static getStubConfig() {
@@ -1300,7 +1300,7 @@ class MyTodoListCardEditor extends HTMLElement {
 
   async _loadLists() {
     try {
-      const result = await this._hass.callWS({ type: "my_todo_list/get_lists" });
+      const result = await this._hass.callWS({ type: "home_tasks/get_lists" });
       if (result && Array.isArray(result.lists)) {
         this._lists = result.lists;
         this._listsLoaded = true;
@@ -1532,12 +1532,12 @@ class MyTodoListCardEditor extends HTMLElement {
   }
 }
 
-customElements.define("my-todo-list-card", MyTodoListCard);
-customElements.define("my-todo-list-card-editor", MyTodoListCardEditor);
+customElements.define("home-tasks-card", MyTodoListCard);
+customElements.define("home-tasks-card-editor", MyTodoListCardEditor);
 
 window.customCards = window.customCards || [];
 window.customCards.push({
-  type: "my-todo-list-card",
-  name: "My ToDo List",
+  type: "home-tasks-card",
+  name: "Home Tasks",
   description: "A feature-rich todo list with drag & drop, sub-items, notes, and due dates.",
 });

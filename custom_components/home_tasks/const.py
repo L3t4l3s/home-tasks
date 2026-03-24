@@ -1,6 +1,6 @@
-"""Constants for the My ToDo List integration."""
+"""Constants for the Home Tasks integration."""
 
-DOMAIN = "my_todo_list"
+DOMAIN = "home_tasks"
 STORAGE_VERSION = 1
 
 # --- Security limits ---

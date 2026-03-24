@@ -1,4 +1,4 @@
-"""Todo platform for My ToDo List integration."""
+"""Todo platform for Home Tasks integration."""
 
 from datetime import date
 
@@ -22,11 +22,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up todo list entity from a config entry."""
     store = hass.data[DOMAIN][entry.entry_id]
-    entity = MyToDoListEntity(entry, store)
+    entity = HomeTasksEntity(entry, store)
     async_add_entities([entity])
 
 
-class MyToDoListEntity(TodoListEntity):
+class HomeTasksEntity(TodoListEntity):
     """A todo list entity backed by our custom store."""
 
     _attr_has_entity_name = True

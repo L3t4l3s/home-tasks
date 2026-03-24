@@ -1,4 +1,4 @@
-"""The My ToDo List integration."""
+"""The Home Tasks integration."""
 
 import logging
 from datetime import date, datetime, timedelta, timezone
@@ -12,13 +12,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
 from .const import DOMAIN, RECURRENCE_UNIT_SECONDS
-from .store import MyToDoListStore
+from .store import HomeTasksStore
 from .websocket_api import async_register_websocket_commands
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["todo", "sensor", "binary_sensor"]
-CARD_URL = "/my_todo_list/my-todo-list-card.js"
+CARD_URL = "/home_tasks/home-tasks-card.js"
 DATA_SETUP_DONE = f"{DOMAIN}_setup_done"
 DATA_RECURRENCE_TIMERS = f"{DOMAIN}_recurrence_timers"
 DATA_DUE_CHECK_UNSUB = f"{DOMAIN}_due_check_unsub"
@@ -32,7 +32,7 @@ DUE_CHECK_INTERVAL = timedelta(hours=1)
 # ---------------------------------------------------------------------------
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the My ToDo List component."""
+    """Set up the Home Tasks component."""
     hass.data.setdefault(DOMAIN, {})
     await _async_register_card(hass)
     _async_register_services(hass)
@@ -52,7 +52,7 @@ async def _async_register_card(hass: HomeAssistant) -> None:
     static_paths = [
         StaticPathConfig(
             CARD_URL,
-            f"{comp_path}/my-todo-list-card.js",
+            f"{comp_path}/home-tasks-card.js",
             cache_headers=False,
         ),
         StaticPathConfig(
@@ -77,7 +77,7 @@ async def _async_register_card(hass: HomeAssistant) -> None:
         pass
 
     _LOGGER.info(
-        "My ToDo List card served at %s - ensure it is added as a "
+        "Home Tasks card served at %s - ensure it is added as a "
         "Lovelace resource (JavaScript Module)",
         CARD_URL,
     )
@@ -148,7 +148,7 @@ async def _async_check_due_dates(hass: HomeAssistant, _now=None) -> None:
     stores = hass.data.get(DOMAIN, {})
 
     for entry_id, store in stores.items():
-        if not isinstance(store, MyToDoListStore):
+        if not isinstance(store, HomeTasksStore):
             continue
         for task in store.tasks:
             if task.get("completed"):
@@ -230,7 +230,7 @@ def _cancel_recurrence(hass: HomeAssistant, task_id: str) -> None:
         cancel()
 
 
-def _recover_recurrence_timers(hass: HomeAssistant, entry_id: str, store: MyToDoListStore) -> None:
+def _recover_recurrence_timers(hass: HomeAssistant, entry_id: str, store: HomeTasksStore) -> None:
     """On startup, recover timers for completed recurring tasks."""
     now = datetime.now(timezone.utc)
     for task in store.tasks:
@@ -264,14 +264,14 @@ def _recover_recurrence_timers(hass: HomeAssistant, entry_id: str, store: MyToDo
 #  Services
 # ---------------------------------------------------------------------------
 
-def _resolve_store(hass: HomeAssistant, data: dict) -> tuple[str, MyToDoListStore]:
+def _resolve_store(hass: HomeAssistant, data: dict) -> tuple[str, HomeTasksStore]:
     """Find the store by entry_id or list_name."""
     entry_id = data.get("entry_id")
     list_name = data.get("list_name")
 
     if entry_id:
         store = hass.data.get(DOMAIN, {}).get(entry_id)
-        if store is None or not isinstance(store, MyToDoListStore):
+        if store is None or not isinstance(store, HomeTasksStore):
             raise vol.Invalid(f"No list found with entry_id: {entry_id}")
         return entry_id, store
 
@@ -281,14 +281,14 @@ def _resolve_store(hass: HomeAssistant, data: dict) -> tuple[str, MyToDoListStor
             name = entry.data.get("name", entry.title)
             if name.lower() == list_name.lower():
                 store = hass.data.get(DOMAIN, {}).get(entry.entry_id)
-                if store and isinstance(store, MyToDoListStore):
+                if store and isinstance(store, HomeTasksStore):
                     return entry.entry_id, store
         raise vol.Invalid(f"No list found with name: {list_name}")
 
     raise vol.Invalid("Either entry_id or list_name must be provided")
 
 
-def _resolve_task(store: MyToDoListStore, data: dict) -> dict:
+def _resolve_task(store: HomeTasksStore, data: dict) -> dict:
     """Find a task by task_id or task_title."""
     task_id = data.get("task_id")
     task_title = data.get("task_title")
@@ -362,7 +362,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
             vol.Required("person"): cv.string,
         }),
     )
-    _LOGGER.info("My ToDo List services registered")
+    _LOGGER.info("Home Tasks services registered")
 
 
 # ---------------------------------------------------------------------------
@@ -370,11 +370,11 @@ def _async_register_services(hass: HomeAssistant) -> None:
 # ---------------------------------------------------------------------------
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up My ToDo List from a config entry."""
+    """Set up Home Tasks from a config entry."""
     await _async_register_card(hass)
     _async_register_services(hass)
 
-    store = MyToDoListStore(hass, entry.entry_id)
+    store = HomeTasksStore(hass, entry.entry_id)
     await store.async_load()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = store
 

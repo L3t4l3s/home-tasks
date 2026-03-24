@@ -1,4 +1,4 @@
-"""Sensor platform for My ToDo List integration."""
+"""Sensor platform for Home Tasks integration."""
 
 from datetime import date
 import logging
@@ -20,22 +20,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensor entities from a config entry."""
     store = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([MyToDoListOpenTasksSensor(entry, store)])
+    async_add_entities([HomeTasksOpenTasksSensor(entry, store)])
 
 
-class MyToDoListOpenTasksSensor(SensorEntity):
+class HomeTasksOpenTasksSensor(SensorEntity):
     """Sensor that reports the number of open tasks in a list."""
 
     _attr_has_entity_name = True
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement = "Aufgaben"
+    _attr_native_unit_of_measurement = "tasks"
     _attr_icon = "mdi:clipboard-list"
 
     def __init__(self, entry: ConfigEntry, store) -> None:
         """Initialize the sensor."""
         self._store = store
         list_name = entry.data.get("name", entry.title)
-        self._attr_name = f"{list_name} Offene Aufgaben"
+        self._attr_name = f"{list_name} Open Tasks"
         self._attr_unique_id = f"{entry.entry_id}_open_tasks"
 
     @property

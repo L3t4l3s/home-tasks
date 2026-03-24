@@ -1,4 +1,4 @@
-"""WebSocket API for My ToDo List - extended features (sub-items, reorder)."""
+"""WebSocket API for Home Tasks - extended features (sub-items, reorder)."""
 
 import logging
 
@@ -44,14 +44,14 @@ def _handle_error(connection, msg_id, err):
     if isinstance(err, ValueError):
         connection.send_error(msg_id, "invalid_request", str(err))
     else:
-        _LOGGER.exception("Unexpected error in my_todo_list")
+        _LOGGER.exception("Unexpected error in home_tasks")
         connection.send_error(msg_id, "unknown_error", "An internal error occurred")
 
 
 # --- List overview (returns config entries as lists) ---
 
 
-@websocket_api.websocket_command({vol.Required("type"): "my_todo_list/get_lists"})
+@websocket_api.websocket_command({vol.Required("type"): "home_tasks/get_lists"})
 @websocket_api.async_response
 async def ws_get_lists(hass, connection, msg):
     """Get all lists (config entries)."""
@@ -76,7 +76,7 @@ async def ws_get_lists(hass, connection, msg):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "my_todo_list/get_tasks",
+        vol.Required("type"): "home_tasks/get_tasks",
         vol.Required("list_id"): _val_id,
     }
 )
@@ -92,7 +92,7 @@ async def ws_get_tasks(hass, connection, msg):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "my_todo_list/add_task",
+        vol.Required("type"): "home_tasks/add_task",
         vol.Required("list_id"): _val_id,
         vol.Required("title"): _val_title,
     }
@@ -110,7 +110,7 @@ async def ws_add_task(hass, connection, msg):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "my_todo_list/update_task",
+        vol.Required("type"): "home_tasks/update_task",
         vol.Required("list_id"): _val_id,
         vol.Required("task_id"): _val_id,
         vol.Optional("title"): _val_title,
@@ -140,7 +140,7 @@ async def ws_update_task(hass, connection, msg):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "my_todo_list/delete_task",
+        vol.Required("type"): "home_tasks/delete_task",
         vol.Required("list_id"): _val_id,
         vol.Required("task_id"): _val_id,
     }
@@ -158,7 +158,7 @@ async def ws_delete_task(hass, connection, msg):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "my_todo_list/reorder_tasks",
+        vol.Required("type"): "home_tasks/reorder_tasks",
         vol.Required("list_id"): _val_id,
         vol.Required("task_ids"): vol.All([_val_id], vol.Length(max=MAX_REORDER_IDS)),
     }
@@ -179,7 +179,7 @@ async def ws_reorder_tasks(hass, connection, msg):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "my_todo_list/add_sub_item",
+        vol.Required("type"): "home_tasks/add_sub_item",
         vol.Required("list_id"): _val_id,
         vol.Required("task_id"): _val_id,
         vol.Required("title"): _val_title,
@@ -198,7 +198,7 @@ async def ws_add_sub_item(hass, connection, msg):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "my_todo_list/update_sub_item",
+        vol.Required("type"): "home_tasks/update_sub_item",
         vol.Required("list_id"): _val_id,
         vol.Required("task_id"): _val_id,
         vol.Required("sub_item_id"): _val_id,
@@ -223,7 +223,7 @@ async def ws_update_sub_item(hass, connection, msg):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "my_todo_list/delete_sub_item",
+        vol.Required("type"): "home_tasks/delete_sub_item",
         vol.Required("list_id"): _val_id,
         vol.Required("task_id"): _val_id,
         vol.Required("sub_item_id"): _val_id,

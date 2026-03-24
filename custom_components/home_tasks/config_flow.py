@@ -1,4 +1,4 @@
-"""Config flow for My ToDo List integration."""
+"""Config flow for Home Tasks integration."""
 
 import voluptuous as vol
 
@@ -7,8 +7,8 @@ from homeassistant import config_entries
 from .const import DOMAIN, MAX_LIST_NAME_LENGTH
 
 
-class MyToDoListConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for My ToDo List."""
+class HomeTasksConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Home Tasks."""
 
     VERSION = 1
 

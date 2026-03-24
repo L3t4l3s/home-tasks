@@ -1,4 +1,4 @@
-"""Data store for My ToDo List - per-entry storage."""
+"""Data store for Home Tasks - per-entry storage."""
 
 from __future__ import annotations
 
@@ -58,12 +58,12 @@ def validate_date(value: str | None) -> str | None:
     return value
 
 
-class MyToDoListStore:
+class HomeTasksStore:
     """Manage todo list data for a single list (one per config entry)."""
 
     def __init__(self, hass: HomeAssistant, entry_id: str) -> None:
         """Initialize the store."""
-        self._store = Store(hass, STORAGE_VERSION, f"my_todo_list_{entry_id}")
+        self._store = Store(hass, STORAGE_VERSION, f"home_tasks_{entry_id}")
         self._data: dict | None = None
         self._listeners: list[Callable[[], None]] = []
         self.on_task_completed: Callable[[dict], None] | None = None

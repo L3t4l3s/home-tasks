@@ -1,9 +1,9 @@
-# My ToDo List
+# Home Tasks
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
 [![Validate](https://github.com/L3t4l3s/MyToDoList/actions/workflows/validate.yaml/badge.svg)](https://github.com/L3t4l3s/MyToDoList/actions/workflows/validate.yaml)
 
-A feature-rich ToDo list integration for [Home Assistant](https://www.home-assistant.io/) with a custom Lovelace card.
+A feature-rich task management integration for [Home Assistant](https://www.home-assistant.io/) with a custom Lovelace card.
 
 ## Features
 
@@ -19,6 +19,7 @@ A feature-rich ToDo list integration for [Home Assistant](https://www.home-assis
 - **Sensors**: Open task count and overdue binary sensor per list
 - **Services**: Create, complete, and assign tasks via automations
 - **Auto-delete** completed tasks (optional)
+- **i18n**: Supports English and German, follows HA language setting
 - Follows Home Assistant design language
 
 ## Installation
@@ -29,25 +30,25 @@ A feature-rich ToDo list integration for [Home Assistant](https://www.home-assis
 2. Go to **Integrations**
 3. Click the **three dots** menu (top right) and select **Custom repositories**
 4. Add `https://github.com/L3t4l3s/MyToDoList` with category **Integration**
-5. Install **My ToDo List**
+5. Install **Home Tasks**
 6. Restart Home Assistant
 
 ### Manual
 
-1. Copy the `custom_components/my_todo_list` folder into your `config/custom_components/` directory
+1. Copy the `custom_components/home_tasks` folder into your `config/custom_components/` directory
 2. Restart Home Assistant
 
 ## Setup
 
 1. Go to **Settings** > **Devices & Services** > **Add Integration**
-2. Search for **My ToDo List**
+2. Search for **Home Tasks**
 3. Enter a name for your list
 4. Repeat for additional lists
 
 ### Lovelace Card
 
 1. Go to **Settings** > **Dashboards** > **Resources**
-2. Add `/my_todo_list/my-todo-list-card.js` as **JavaScript Module**
+2. Add `/home_tasks/home-tasks-card.js` as **JavaScript Module**
 3. Add the card to your dashboard
 
 ### Card Configuration
@@ -60,6 +61,8 @@ A feature-rich ToDo list integration for [Home Assistant](https://www.home-assis
 | `show_progress` | `true` | Show/hide the task progress bar |
 | `show_due_date` | `true` | Show/hide due date fields |
 | `show_recurrence` | `true` | Show/hide recurrence settings |
+| `show_sub_items` | `true` | Show/hide sub-items |
+| `show_assigned_person` | `true` | Show/hide person assignment |
 | `show_notes` | `true` | Show/hide the notes field |
 | `auto_delete_completed` | `false` | Automatically delete completed tasks |
 
@@ -69,18 +72,18 @@ A feature-rich ToDo list integration for [Home Assistant](https://www.home-assis
 
 | Event | Description |
 |-------|-------------|
-| `my_todo_list_task_created` | Fired when a task is created |
-| `my_todo_list_task_completed` | Fired when a task is marked as done |
-| `my_todo_list_task_due` | Fired when a task's due date is today (once per day) |
-| `my_todo_list_task_overdue` | Fired when a task is past its due date (once per day) |
-| `my_todo_list_task_assigned` | Fired when a person is assigned to a task |
-| `my_todo_list_task_reopened` | Fired when a recurring task is automatically reopened |
+| `home_tasks_task_created` | Fired when a task is created |
+| `home_tasks_task_completed` | Fired when a task is marked as done |
+| `home_tasks_task_due` | Fired when a task's due date is today (once per day) |
+| `home_tasks_task_overdue` | Fired when a task is past its due date (once per day) |
+| `home_tasks_task_assigned` | Fired when a person is assigned to a task |
+| `home_tasks_task_reopened` | Fired when a recurring task is automatically reopened |
 
 All events include: `entry_id`, `task_id`, `task_title`, and (if set) `assigned_person` and `due_date`.
 
 ### Services
 
-#### `my_todo_list.add_task`
+#### `home_tasks.add_task`
 
 Create a new task via automation.
 
@@ -89,12 +92,12 @@ Create a new task via automation.
 | `list_name` | * | Name of the list |
 | `entry_id` | * | Config entry ID (alternative to `list_name`) |
 | `title` | yes | Task title |
-| `assigned_person` | no | Person entity ID (e.g. `person.max`) |
+| `assigned_person` | no | Person entity ID (e.g. `person.john`) |
 | `due_date` | no | Due date (`YYYY-MM-DD`) |
 
 *Either `list_name` or `entry_id` is required.*
 
-#### `my_todo_list.complete_task`
+#### `home_tasks.complete_task`
 
 Mark a task as completed.
 
@@ -105,7 +108,7 @@ Mark a task as completed.
 | `task_title` | ** | Title of the task |
 | `task_id` | ** | UUID of the task |
 
-#### `my_todo_list.assign_task`
+#### `home_tasks.assign_task`
 
 Assign a person to a task.
 
@@ -130,10 +133,10 @@ Send a notification when a task is due:
 
 ```yaml
 automation:
-  - alias: "ToDo: Notify on due task"
+  - alias: "Home Tasks: Notify on due task"
     trigger:
       - platform: event
-        event_type: my_todo_list_task_due
+        event_type: home_tasks_task_due
     action:
       - service: notify.mobile_app
         data:

@@ -1,6 +1,6 @@
 {
-  "domain": "my_todo_list",
-  "name": "My ToDo List",
+  "domain": "home_tasks",
+  "name": "Home Tasks",
   "codeowners": ["@L3t4l3s"],
   "config_flow": true,
   "documentation": "https://github.com/L3t4l3s/MyToDoList",
@@ -8,5 +8,5 @@
   "issue_tracker": "https://github.com/L3t4l3s/MyToDoList/issues",
   "dependencies": ["todo"],
   "integration_type": "device",
-  "version": "2.3.0"
+  "version": "3.0.0"
 }

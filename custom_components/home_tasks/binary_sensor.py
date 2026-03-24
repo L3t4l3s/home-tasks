@@ -1,4 +1,4 @@
-"""Binary sensor platform for My ToDo List integration."""
+"""Binary sensor platform for Home Tasks integration."""
 
 from datetime import date
 import logging
@@ -23,10 +23,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary sensor entities from a config entry."""
     store = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([MyToDoListOverdueBinarySensor(entry, store)])
+    async_add_entities([HomeTasksOverdueBinarySensor(entry, store)])
 
 
-class MyToDoListOverdueBinarySensor(BinarySensorEntity):
+class HomeTasksOverdueBinarySensor(BinarySensorEntity):
     """Binary sensor that is ON when the list has overdue tasks."""
 
     _attr_has_entity_name = True
@@ -37,7 +37,7 @@ class MyToDoListOverdueBinarySensor(BinarySensorEntity):
         """Initialize the binary sensor."""
         self._store = store
         list_name = entry.data.get("name", entry.title)
-        self._attr_name = f"{list_name} Überfällig"
+        self._attr_name = f"{list_name} Overdue"
         self._attr_unique_id = f"{entry.entry_id}_overdue"
 
     @property

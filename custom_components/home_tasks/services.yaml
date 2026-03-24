@@ -1,0 +1,90 @@
+add_task:
+  name: Add Task
+  description: Create a new task in a task list.
+  fields:
+    list_name:
+      name: List Name
+      description: The name of the task list.
+      example: "Shopping List"
+      selector:
+        text:
+    entry_id:
+      name: Entry ID
+      description: The config entry ID of the list (alternative to list name).
+      selector:
+        text:
+    title:
+      name: Title
+      description: The task title.
+      required: true
+      example: "Buy milk"
+      selector:
+        text:
+    assigned_person:
+      name: Assigned Person
+      description: Person entity to assign (e.g. person.john).
+      selector:
+        entity:
+          domain: person
+    due_date:
+      name: Due Date
+      description: Due date in YYYY-MM-DD format.
+      selector:
+        date:
+
+complete_task:
+  name: Complete Task
+  description: Mark a task as completed.
+  fields:
+    list_name:
+      name: List Name
+      description: The name of the task list.
+      selector:
+        text:
+    entry_id:
+      name: Entry ID
+      description: The config entry ID of the list (alternative to list name).
+      selector:
+        text:
+    task_title:
+      name: Task Title
+      description: Title of the task to complete.
+      selector:
+        text:
+    task_id:
+      name: Task ID
+      description: UUID of the task (alternative to task title).
+      selector:
+        text:
+
+assign_task:
+  name: Assign Task
+  description: Assign a person to a task.
+  fields:
+    list_name:
+      name: List Name
+      description: The name of the task list.
+      selector:
+        text:
+    entry_id:
+      name: Entry ID
+      description: The config entry ID of the list (alternative to list name).
+      selector:
+        text:
+    task_title:
+      name: Task Title
+      description: Title of the task.
+      selector:
+        text:
+    task_id:
+      name: Task ID
+      description: UUID of the task (alternative to task title).
+      selector:
+        text:
+    person:
+      name: Person
+      description: Person entity to assign.
+      required: true
+      selector:
+        entity:
+          domain: person

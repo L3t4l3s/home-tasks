@@ -2,7 +2,7 @@
 
 ## Vorbereitung
 
-1. HACS → My ToDo List aktualisieren
+1. HACS → Home Tasks aktualisieren
 2. HA neu starten
 3. Mindestens eine Liste anlegen (z.B. "Einkaufsliste")
 4. Mindestens eine Person in HA eingerichtet haben (z.B. `person.max`)
@@ -16,27 +16,27 @@
 In **Entwicklerwerkzeuge → Ereignisse → Ereignisse abonnieren** jeweils eintragen und auf "Starte zuhören" klicken:
 
 ```
-my_todo_list_task_created
+home_tasks_task_created
 ```
 
 ```
-my_todo_list_task_completed
+home_tasks_task_completed
 ```
 
 ```
-my_todo_list_task_due
+home_tasks_task_due
 ```
 
 ```
-my_todo_list_task_overdue
+home_tasks_task_overdue
 ```
 
 ```
-my_todo_list_task_assigned
+home_tasks_task_assigned
 ```
 
 ```
-my_todo_list_task_reopened
+home_tasks_task_reopened
 ```
 
 ### 1.2 task_created testen
@@ -46,7 +46,7 @@ my_todo_list_task_reopened
 **Erwartetes Event:**
 ```json
 {
-  "event_type": "my_todo_list_task_created",
+  "event_type": "home_tasks_task_created",
   "data": {
     "entry_id": "...",
     "task_id": "...",
@@ -62,7 +62,7 @@ my_todo_list_task_reopened
 **Erwartetes Event:**
 ```json
 {
-  "event_type": "my_todo_list_task_completed",
+  "event_type": "home_tasks_task_completed",
   "data": {
     "entry_id": "...",
     "task_id": "...",
@@ -78,7 +78,7 @@ my_todo_list_task_reopened
 **Erwartetes Event:**
 ```json
 {
-  "event_type": "my_todo_list_task_assigned",
+  "event_type": "home_tasks_task_assigned",
   "data": {
     "entry_id": "...",
     "task_id": "...",
@@ -96,7 +96,7 @@ my_todo_list_task_reopened
 **Erwartetes Event:**
 ```json
 {
-  "event_type": "my_todo_list_task_due",
+  "event_type": "home_tasks_task_due",
   "data": {
     "entry_id": "...",
     "task_id": "...",
@@ -113,7 +113,7 @@ my_todo_list_task_reopened
 **Erwartetes Event:**
 ```json
 {
-  "event_type": "my_todo_list_task_overdue",
+  "event_type": "home_tasks_task_overdue",
   "data": {
     "entry_id": "...",
     "task_id": "...",
@@ -130,7 +130,7 @@ my_todo_list_task_reopened
 **Erwartetes Event:**
 ```json
 {
-  "event_type": "my_todo_list_task_reopened",
+  "event_type": "home_tasks_task_reopened",
   "data": {
     "entry_id": "...",
     "task_id": "...",
@@ -190,7 +190,7 @@ overdue_count: 1
 **YAML kopieren und einfügen:**
 
 ```yaml
-action: my_todo_list.add_task
+action: home_tasks.add_task
 data:
   list_name: "Einkaufsliste"
   title: "Milch kaufen"
@@ -198,7 +198,7 @@ data:
 
 **Mit Person und Fälligkeitsdatum:**
 ```yaml
-action: my_todo_list.add_task
+action: home_tasks.add_task
 data:
   list_name: "Einkaufsliste"
   title: "Brot kaufen"
@@ -212,7 +212,7 @@ data:
 
 **Per Titel:**
 ```yaml
-action: my_todo_list.complete_task
+action: home_tasks.complete_task
 data:
   list_name: "Einkaufsliste"
   task_title: "Milch kaufen"
@@ -223,7 +223,7 @@ data:
 ### 3.3 assign_task
 
 ```yaml
-action: my_todo_list.assign_task
+action: home_tasks.assign_task
 data:
   list_name: "Einkaufsliste"
   task_title: "Brot kaufen"
@@ -236,7 +236,7 @@ data:
 
 **Liste nicht gefunden:**
 ```yaml
-action: my_todo_list.add_task
+action: home_tasks.add_task
 data:
   list_name: "Gibt es nicht"
   title: "Test"
@@ -245,7 +245,7 @@ data:
 
 **Aufgabe nicht gefunden:**
 ```yaml
-action: my_todo_list.complete_task
+action: home_tasks.complete_task
 data:
   list_name: "Einkaufsliste"
   task_title: "Gibt es nicht"
@@ -263,7 +263,7 @@ alias: "ToDo - Fällige Aufgabe"
 description: "Benachrichtigung wenn eine Aufgabe fällig ist"
 triggers:
   - trigger: event
-    event_type: my_todo_list_task_due
+    event_type: home_tasks_task_due
 actions:
   - action: notify.mobile_app_dein_handy
     data:
@@ -278,7 +278,7 @@ alias: "ToDo - Überfällige Aufgabe"
 description: "Benachrichtigung bei überfälligen Aufgaben"
 triggers:
   - trigger: event
-    event_type: my_todo_list_task_overdue
+    event_type: home_tasks_task_overdue
 actions:
   - action: notify.mobile_app_dein_handy
     data:
@@ -297,7 +297,7 @@ alias: "ToDo - Zuweisung"
 description: "Person benachrichtigen wenn eine Aufgabe zugewiesen wird"
 triggers:
   - trigger: event
-    event_type: my_todo_list_task_assigned
+    event_type: home_tasks_task_assigned
 conditions:
   - condition: template
     value_template: "{{ trigger.event.data.assigned_person is not none }}"
@@ -316,7 +316,7 @@ alias: "ToDo - Aufgabe wiedereröffnet"
 description: "Benachrichtigung wenn wiederkehrende Aufgabe zurückgesetzt wird"
 triggers:
   - trigger: event
-    event_type: my_todo_list_task_reopened
+    event_type: home_tasks_task_reopened
 actions:
   - action: notify.mobile_app_dein_handy
     data:
@@ -339,7 +339,7 @@ conditions:
     weekday:
       - mon
 actions:
-  - action: my_todo_list.add_task
+  - action: home_tasks.add_task
     data:
       list_name: "Haushalt"
       title: "Müll rausbringen"
