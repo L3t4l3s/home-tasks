@@ -3,10 +3,10 @@
   "name": "Home Tasks",
   "codeowners": ["@L3t4l3s"],
   "config_flow": true,
+  "dependencies": ["frontend", "http", "todo"],
   "documentation": "https://github.com/L3t4l3s/home-tasks",
+  "integration_type": "device",
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/L3t4l3s/home-tasks/issues",
-  "dependencies": ["frontend", "http", "todo"],
-  "integration_type": "device",
   "version": "3.0.0"
 }
