@@ -5,7 +5,7 @@ from datetime import date, datetime, timedelta, timezone
 
 import voluptuous as vol
 
-from homeassistant.components.frontend import add_extra_module_url
+from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -80,7 +80,7 @@ async def _async_register_card(hass: HomeAssistant) -> None:
         pass
 
     # Auto-register card JS so users don't need to add a Lovelace resource manually
-    add_extra_module_url(hass, CARD_URL)
+    add_extra_js_url(hass, CARD_URL)
     _LOGGER.info("Home Tasks card served at %s", CARD_URL)
 
 

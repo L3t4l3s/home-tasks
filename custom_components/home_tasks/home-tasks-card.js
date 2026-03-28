@@ -1532,13 +1532,18 @@ class HomeTasksCardEditor extends HTMLElement {
   }
 }
 
-// Guard against double registration (HA scoped custom element registry polyfill)
-if (!customElements.get("home-tasks-card")) {
-  customElements.define("home-tasks-card", HomeTasksCard);
+// Register elements — try immediately and deferred to ensure HA's
+// scoped custom element registry polyfill is active (fixes Firefox/Safari/iPad)
+const _htRegister = () => {
+  try { customElements.define("home-tasks-card", HomeTasksCard); } catch(_) {}
+  try { customElements.define("home-tasks-card-editor", HomeTasksCardEditor); } catch(_) {}
+};
+
+_htRegister();
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", _htRegister, { once: true });
 }
-if (!customElements.get("home-tasks-card-editor")) {
-  customElements.define("home-tasks-card-editor", HomeTasksCardEditor);
-}
+window.addEventListener("load", _htRegister, { once: true });
 
 window.customCards = window.customCards || [];
 window.customCards.push({
