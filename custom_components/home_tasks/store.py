@@ -70,6 +70,7 @@ class HomeTasksStore:
         self.on_task_created: Callable[[dict], None] | None = None
         self.on_task_deleted: Callable[[str], None] | None = None
         self.on_task_assigned: Callable[[dict, str | None], None] | None = None
+        self.on_task_reopened: Callable[[dict], None] | None = None
 
     def async_add_listener(self, callback: Callable[[], None]) -> Callable[[], None]:
         """Add a listener for data changes. Returns a removal callable."""
@@ -204,6 +205,22 @@ class HomeTasksStore:
             self.on_task_assigned(task, previous_person)
 
         await self._async_save()
+        return task
+
+    async def async_reopen_task(self, task_id: str) -> dict:
+        """Reopen a completed task and reset its sub-items."""
+        task = self.get_task(task_id)
+        if not task.get("completed"):
+            return task  # already open, nothing to do
+
+        task["completed"] = False
+        task["completed_at"] = None
+        for sub in task.get("sub_items", []):
+            sub["completed"] = False
+        await self._async_save()
+
+        if self.on_task_reopened:
+            self.on_task_reopened(task)
         return task
 
     async def async_delete_task(self, task_id: str) -> None:

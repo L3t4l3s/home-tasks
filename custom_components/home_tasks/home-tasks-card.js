@@ -86,7 +86,7 @@ const _TRANSLATIONS = {
   },
 };
 
-class MyTodoListCard extends HTMLElement {
+class HomeTasksCard extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -1239,7 +1239,7 @@ class MyTodoListCard extends HTMLElement {
 /**
  * Card Editor — uses safe DOM construction
  */
-class MyTodoListCardEditor extends HTMLElement {
+class HomeTasksCardEditor extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -1532,8 +1532,13 @@ class MyTodoListCardEditor extends HTMLElement {
   }
 }
 
-customElements.define("home-tasks-card", MyTodoListCard);
-customElements.define("home-tasks-card-editor", MyTodoListCardEditor);
+// Guard against double registration (HA scoped custom element registry polyfill)
+if (!customElements.get("home-tasks-card")) {
+  customElements.define("home-tasks-card", HomeTasksCard);
+}
+if (!customElements.get("home-tasks-card-editor")) {
+  customElements.define("home-tasks-card-editor", HomeTasksCardEditor);
+}
 
 window.customCards = window.customCards || [];
 window.customCards.push({

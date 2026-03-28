@@ -88,3 +88,38 @@ assign_task:
       selector:
         entity:
           domain: person
+
+reopen_task:
+  name: Reopen Task
+  description: >-
+    Reopen a completed task. Provide task_title or task_id to reopen a single
+    task, or assigned_person to reopen all completed tasks for that person.
+  fields:
+    list_name:
+      name: List Name
+      description: The name of the task list.
+      selector:
+        text:
+    entry_id:
+      name: Entry ID
+      description: The config entry ID of the list (alternative to list name).
+      selector:
+        text:
+    task_title:
+      name: Task Title
+      description: Title of the task to reopen.
+      selector:
+        text:
+    task_id:
+      name: Task ID
+      description: UUID of the task to reopen (alternative to task title).
+      selector:
+        text:
+    assigned_person:
+      name: Assigned Person
+      description: >-
+        Person entity. If provided without task_title/task_id, all completed
+        tasks assigned to this person will be reopened.
+      selector:
+        entity:
+          domain: person

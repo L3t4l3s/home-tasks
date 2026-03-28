@@ -5,7 +5,7 @@ from datetime import date, datetime, timedelta, timezone
 
 import voluptuous as vol
 
-from homeassistant.components.frontend import add_extra_js_url
+from homeassistant.components.frontend import add_extra_module_url
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -80,7 +80,7 @@ async def _async_register_card(hass: HomeAssistant) -> None:
         pass
 
     # Auto-register card JS so users don't need to add a Lovelace resource manually
-    add_extra_js_url(hass, CARD_URL)
+    add_extra_module_url(hass, CARD_URL)
     _LOGGER.info("Home Tasks card served at %s", CARD_URL)
 
 
@@ -117,6 +117,11 @@ def _on_task_deleted(hass: HomeAssistant, task_id: str) -> None:
     """Handle task deletion: cancel recurrence and clean due-fired cache."""
     _cancel_recurrence(hass, task_id)
     hass.data.get(DATA_DUE_FIRED, {}).pop(task_id, None)
+
+
+def _on_task_reopened(hass: HomeAssistant, entry_id: str, task: dict) -> None:
+    """Fire event when a task is reopened."""
+    hass.bus.async_fire(f"{DOMAIN}_task_reopened", _build_event_data(entry_id, task))
 
 
 def _fire_assignment_event(
@@ -212,14 +217,7 @@ async def _async_reopen_task(hass: HomeAssistant, entry_id: str, task_id: str) -
     if not task.get("recurrence_enabled"):
         return
 
-    task["completed"] = False
-    task["completed_at"] = None
-    for sub in task.get("sub_items", []):
-        sub["completed"] = False
-    await store._async_save()
-
-    event_data = _build_event_data(entry_id, task)
-    hass.bus.async_fire(f"{DOMAIN}_task_reopened", event_data)
+    await store.async_reopen_task(task_id)
     _LOGGER.info("Recurring task '%s' reopened", task.get("title", task_id))
 
 
@@ -334,6 +332,30 @@ def _async_register_services(hass: HomeAssistant) -> None:
         task = _resolve_task(store, call.data)
         await store.async_update_task(task["id"], assigned_person=call.data["person"])
 
+    async def async_handle_reopen_task(call: ServiceCall) -> None:
+        _entry_id, store = _resolve_store(hass, call.data)
+        task_id = call.data.get("task_id")
+        task_title = call.data.get("task_title")
+        assigned_person = call.data.get("assigned_person")
+
+        if task_id or task_title:
+            # Reopen a single task
+            task = _resolve_task(store, call.data)
+            if task.get("completed"):
+                await store.async_reopen_task(task["id"])
+        elif assigned_person:
+            # Reopen all completed tasks for this person
+            for task in store.tasks:
+                if (
+                    task.get("completed")
+                    and task.get("assigned_person") == assigned_person
+                ):
+                    await store.async_reopen_task(task["id"])
+        else:
+            raise vol.Invalid(
+                "Either task_id, task_title, or assigned_person must be provided"
+            )
+
     hass.services.async_register(
         DOMAIN, "add_task", async_handle_add_task,
         schema=vol.Schema({
@@ -363,6 +385,16 @@ def _async_register_services(hass: HomeAssistant) -> None:
             vol.Required("person"): cv.string,
         }),
     )
+    hass.services.async_register(
+        DOMAIN, "reopen_task", async_handle_reopen_task,
+        schema=vol.Schema({
+            vol.Optional("entry_id"): cv.string,
+            vol.Optional("list_name"): cv.string,
+            vol.Optional("task_id"): cv.string,
+            vol.Optional("task_title"): cv.string,
+            vol.Optional("assigned_person"): cv.string,
+        }),
+    )
     _LOGGER.info("Home Tasks services registered")
 
 
@@ -384,6 +416,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     store.on_task_created = lambda task: _on_task_created(hass, entry.entry_id, task)
     store.on_task_deleted = lambda task_id: _on_task_deleted(hass, task_id)
     store.on_task_assigned = lambda task, prev: _fire_assignment_event(hass, entry.entry_id, task, prev)
+    store.on_task_reopened = lambda task: _on_task_reopened(hass, entry.entry_id, task)
 
     # Recover any pending recurrence timers from before restart
     _recover_recurrence_timers(hass, entry.entry_id, store)
