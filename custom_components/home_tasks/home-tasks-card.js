@@ -44,6 +44,7 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Show sub-items",
     ed_show_person: "Show assigned person",
     ed_auto_delete: "Delete completed tasks immediately",
+    ed_compact: "Compact mode",
     ed_show_tags: "Show tags",
     ed_hint: "New lists can be created under Settings \u2192 Integrations \u2192 Home Tasks.",
     tags: "Tags",
@@ -87,6 +88,7 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Unterpunkte anzeigen",
     ed_show_person: "Zugewiesene Person anzeigen",
     ed_auto_delete: "Erledigte Aufgaben sofort l\u00f6schen",
+    ed_compact: "Kompakte Ansicht",
     ed_show_tags: "Tags anzeigen",
     ed_hint: "Neue Listen k\u00f6nnen unter Einstellungen \u2192 Integrationen \u2192 Home Tasks erstellt werden.",
     tags: "Tags",
@@ -542,7 +544,8 @@ class HomeTasksCard extends HTMLElement {
     if (filters) children.push(filters);
     if (tagChips) children.push(tagChips);
     children.push(taskList);
-    return this._el("div", { className: "card-content" }, children);
+    const cc = this._config.compact ? "card-content compact" : "card-content";
+    return this._el("div", { className: cc }, children);
   }
 
   _buildFilterBtn(label, value) {
@@ -1367,6 +1370,31 @@ class HomeTasksCard extends HTMLElement {
         box-shadow: 0 2px 8px rgba(0,0,0,0.2);
       }
       @keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+      /* Compact mode overrides */
+      .compact { padding: 10px; }
+      .compact .header { margin-bottom: 10px; }
+      .compact .title { font-size: 18px; }
+      .compact .progress { font-size: 12px; }
+      .compact .add-task { margin-bottom: 10px; }
+      .compact .add-input { padding: 6px 10px; font-size: 13px; }
+      .compact .add-btn { padding: 6px 14px; font-size: 13px; }
+      .compact .filters { margin-bottom: 8px; }
+      .compact .filter-btn { padding: 4px 12px; font-size: 12px; }
+      .compact .tag-chips { margin-bottom: 8px; gap: 3px; }
+      .compact .tag-chip { padding: 2px 8px; font-size: 11px; }
+      .compact .task-list { gap: 3px; }
+      .compact .task-main { padding: 6px 8px; gap: 6px; min-height: 32px; }
+      .compact .task-title { font-size: 13px; }
+      .compact .task-meta { gap: 4px; }
+      .compact .sub-badge, .compact .due-date, .compact .recurrence-badge,
+      .compact .assigned-badge, .compact .tag-badge { font-size: 10px; padding: 1px 6px; }
+      .compact .checkmark { height: 16px; width: 16px; }
+      .compact .checkbox-container input:checked ~ .checkmark::after { width: 4px; height: 7px; }
+      .compact .expand-btn { padding: 4px; font-size: 9px; }
+      .compact .drag-handle { font-size: 14px; padding: 2px 1px; }
+      .compact .empty-state { padding: 16px; font-size: 13px; }
+      .compact .task-details { padding: 8px 10px; }
     `;
   }
 
@@ -1655,6 +1683,21 @@ class HomeTasksCardEditor extends HTMLElement {
       autoDeleteCb,
     ]);
 
+    // Compact mode toggle
+    const compactCb = this._el("input", {
+      type: "checkbox",
+      id: "cb-compact",
+      checked: this._config.compact === true,
+    });
+    compactCb.addEventListener("change", () => {
+      this._config = { ...this._config, compact: compactCb.checked };
+      this._fireChanged();
+    });
+    const compactRow = this._el("div", { className: "toggle-row" }, [
+      this._el("span", { className: "toggle-label", textContent: this._t("ed_compact") }),
+      compactCb,
+    ]);
+
     const hint = this._el("span", {
       className: "hint",
       textContent: this._t("ed_hint"),
@@ -1672,6 +1715,7 @@ class HomeTasksCardEditor extends HTMLElement {
       ]),
       this._el("div", { className: "field" }, [
         this._el("label", { textContent: this._t("ed_display") }),
+        compactRow,
         showTitleRow,
         showProgressRow,
         showDueDateRow,
