@@ -388,7 +388,7 @@ class HomeTasksCard extends HTMLElement {
     if (this._tagFilter) {
       tasks = tasks.filter((t) => t.tags && t.tags.includes(this._tagFilter));
     }
-    return tasks;
+    return tasks.slice().sort((a, b) => a.completed - b.completed);
   }
 
   // --- Helpers ---
