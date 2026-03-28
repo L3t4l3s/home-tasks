@@ -117,6 +117,7 @@ class HomeTasksCard extends HTMLElement {
     this._touchBound = {};
     this._newTaskTitle = "";
     this._tagFilter = null;
+    this._lastTitleClick = null;
     this._initialized = false;
   }
 
@@ -604,13 +605,18 @@ class HomeTasksCard extends HTMLElement {
     } else {
       const titleSpan = this._el("span", { className: "task-title", textContent: task.title });
       titleSpan.addEventListener("click", () => {
+        const now = Date.now();
+        if (this._lastTitleClick?.id === task.id && now - this._lastTitleClick.time < 300) {
+          this._lastTitleClick = null;
+          if (this._expandedTasks.has(task.id)) this._expandedTasks.delete(task.id);
+          else this._expandedTasks.add(task.id);
+          this._editingTaskId = task.id;
+          this._render();
+          return;
+        }
+        this._lastTitleClick = { id: task.id, time: now };
         if (this._expandedTasks.has(task.id)) this._expandedTasks.delete(task.id);
         else this._expandedTasks.add(task.id);
-        this._render();
-      });
-      titleSpan.addEventListener("dblclick", (e) => {
-        e.stopPropagation();
-        this._editingTaskId = task.id;
         this._render();
       });
       contentChildren.push(titleSpan);
