@@ -1697,18 +1697,31 @@ class HomeTasksCardEditor extends HTMLElement {
   }
 }
 
-// Register elements — try immediately and deferred to ensure HA's
-// scoped custom element registry polyfill is active (fixes Firefox/Safari/iPad)
+// Register elements — wait for HA's scoped custom element registry polyfill
+// before calling customElements.define. The polyfill replaces the native
+// define() with a JS wrapper; we detect this to avoid registering too early
+// (which puts the element in the native registry where the polyfill can't
+// find it, causing "Custom element not found" in Firefox/Safari/iPad).
 const _htRegister = () => {
   try { customElements.define("home-tasks-card", HomeTasksCard); } catch(_) {}
   try { customElements.define("home-tasks-card-editor", HomeTasksCardEditor); } catch(_) {}
 };
 
-_htRegister();
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", _htRegister, { once: true });
+const _htIsPolyfillReady = () =>
+  !customElements.define.toString().includes("[native code]");
+
+if (_htIsPolyfillReady()) {
+  _htRegister();
+} else {
+  let _htAttempts = 0;
+  const _htPoll = setInterval(() => {
+    _htAttempts++;
+    if (_htIsPolyfillReady() || _htAttempts > 200) {
+      clearInterval(_htPoll);
+      _htRegister();
+    }
+  }, 50);
 }
-window.addEventListener("load", _htRegister, { once: true });
 
 window.customCards = window.customCards || [];
 window.customCards.push({
