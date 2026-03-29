@@ -597,59 +597,66 @@ class HomeTasksCard extends HTMLElement {
 
     const addTask = this._el("div", { className: "add-task" }, [addInput, addBtn]);
 
-    // Filters + sort (hidden when auto-delete is on)
-    const hideFilters = this._config.auto_delete_completed === true;
-    const filters = hideFilters ? null : (() => {
-      const sortKeys = ["manual", "due", "priority", "title", "person"];
-      const sortLabels = {
-        manual: this._t("sort_manual"), due: this._t("sort_due"),
-        priority: this._t("sort_priority"), title: this._t("sort_title"),
-        person: this._t("sort_person"),
-      };
+    // Sort button (always visible, filter buttons hidden when auto-delete is on)
+    const sortLabels = {
+      manual: this._t("sort_manual"), due: this._t("sort_due"),
+      priority: this._t("sort_priority"), title: this._t("sort_title"),
+      person: this._t("sort_person"),
+    };
+    // Only offer sort options for features that are enabled in this card
+    const sortKeys = ["manual"];
+    if (this._config.show_due_date !== false) sortKeys.push("due");
+    if (this._config.show_priority !== false) sortKeys.push("priority");
+    sortKeys.push("title");
+    if (this._config.show_assigned_person !== false) sortKeys.push("person");
+    // If current sort is no longer available, fall back to manual
+    if (!sortKeys.includes(this._sortBy)) this._sortBy = "manual";
 
-      const sortDropdown = this._el("div", { className: "sort-dropdown" + (this._sortOpen ? "" : " hidden") });
-      for (const key of sortKeys) {
-        const opt = this._el("div", {
-          className: "sort-option" + (this._sortBy === key ? " active" : ""),
-          textContent: sortLabels[key],
-        });
-        opt.addEventListener("click", (e) => {
-          e.stopPropagation();
-          this._sortBy = key;
-          this._sortOpen = false;
-          this._render();
-        });
-        sortDropdown.appendChild(opt);
-      }
-
-      const sortBtnWrapper = this._el("div", { className: "sort-btn-wrapper" });
-      const isNonManual = this._sortBy !== "manual";
-      const sortBtn = this._el("button", {
-        className: "sort-btn" + (isNonManual ? " active" : ""),
-        textContent: "\u21C5 " + sortLabels[this._sortBy],
+    const sortDropdown = this._el("div", { className: "sort-dropdown" + (this._sortOpen ? "" : " hidden") });
+    for (const key of sortKeys) {
+      const opt = this._el("div", {
+        className: "sort-option" + (this._sortBy === key ? " active" : ""),
+        textContent: sortLabels[key],
       });
-      sortBtn.addEventListener("click", (e) => {
+      opt.addEventListener("click", (e) => {
         e.stopPropagation();
-        this._sortOpen = !this._sortOpen;
+        this._sortBy = key;
+        this._sortOpen = false;
         this._render();
       });
-      sortBtnWrapper.appendChild(sortBtn);
-      sortBtnWrapper.appendChild(sortDropdown);
+      sortDropdown.appendChild(opt);
+    }
+    const sortBtnWrapper = this._el("div", { className: "sort-btn-wrapper" });
+    const sortBtn = this._el("button", {
+      className: "sort-btn" + (this._sortBy !== "manual" ? " active" : ""),
+      textContent: "\u21C5",
+      title: sortLabels[this._sortBy],
+    });
+    sortBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this._sortOpen = !this._sortOpen;
+      this._render();
+    });
+    sortBtnWrapper.appendChild(sortBtn);
+    sortBtnWrapper.appendChild(sortDropdown);
+    if (this._sortOpen) {
+      const close = () => { this._sortOpen = false; this._render(); };
+      setTimeout(() => document.addEventListener("click", close, { once: true }), 0);
+    }
 
-      // Close on outside click
-      if (this._sortOpen) {
-        const close = () => { this._sortOpen = false; this._render(); };
-        setTimeout(() => document.addEventListener("click", close, { once: true }), 0);
-      }
-
-      return this._el("div", { className: "filters" }, [
+    // Filter buttons (hidden when auto-delete is on) + sort button
+    const hideFilters = this._config.auto_delete_completed === true;
+    const filterRowChildren = [];
+    if (!hideFilters) {
+      filterRowChildren.push(
         this._buildFilterBtn(this._t("filter_all"), "all"),
         this._buildFilterBtn(this._t("filter_open"), "open"),
         this._buildFilterBtn(this._t("filter_done"), "done"),
-        this._el("div", { className: "filter-spacer" }),
-        sortBtnWrapper,
-      ]);
-    })();
+      );
+    }
+    filterRowChildren.push(this._el("div", { className: "filter-spacer" }));
+    filterRowChildren.push(sortBtnWrapper);
+    const filters = this._el("div", { className: "filters" }, filterRowChildren);
 
     // Task list
     const taskListChildren = [];
@@ -691,7 +698,7 @@ class HomeTasksCard extends HTMLElement {
     const children = [];
     if (header) children.push(header);
     children.push(addTask);
-    if (filters) children.push(filters);
+    children.push(filters);
     if (tagChips) children.push(tagChips);
     children.push(taskList);
     const cc = this._config.compact ? "card-content compact" : "card-content";
