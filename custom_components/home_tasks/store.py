@@ -104,6 +104,7 @@ class HomeTasksStore:
                 val, unit = _MIGRATE[old]
                 task["recurrence_value"] = val
                 task["recurrence_unit"] = unit
+            task.setdefault("priority", None)
             task.setdefault("recurrence_value", 1)
             task.setdefault("recurrence_unit", None)
             task.setdefault("recurrence_enabled", False)
@@ -138,6 +139,7 @@ class HomeTasksStore:
             "due_date": None,
             "sort_order": max_order + 1,
             "sub_items": [],
+            "priority": None,
             "recurrence_value": 1,
             "recurrence_unit": None,
             "recurrence_enabled": False,
@@ -175,6 +177,10 @@ class HomeTasksStore:
             kwargs["due_date"] = validate_date(kwargs["due_date"])
         if "completed" in kwargs and not isinstance(kwargs["completed"], bool):
             raise ValueError("completed must be a boolean")
+        if "priority" in kwargs:
+            val = kwargs["priority"]
+            if val is not None and val not in (1, 2, 3):
+                raise ValueError("priority must be 1 (low), 2 (medium), 3 (high), or null")
         if "recurrence_unit" in kwargs:
             val = kwargs["recurrence_unit"]
             if val is not None and val not in VALID_RECURRENCE_UNITS:
@@ -223,7 +229,7 @@ class HomeTasksStore:
 
         was_completed = task.get("completed", False)
         previous_person = task.get("assigned_person")
-        allowed = ("title", "completed", "notes", "due_date", "recurrence_value", "recurrence_unit", "recurrence_enabled", "recurrence_type", "recurrence_weekdays", "assigned_person", "tags")
+        allowed = ("title", "completed", "notes", "due_date", "priority", "recurrence_value", "recurrence_unit", "recurrence_enabled", "recurrence_type", "recurrence_weekdays", "assigned_person", "tags")
         for key, value in kwargs.items():
             if key in allowed:
                 task[key] = value

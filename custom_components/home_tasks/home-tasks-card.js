@@ -27,6 +27,9 @@ const _TRANSLATIONS = {
     recurrence_every: "Every",
     rec_hours: "Hours", rec_days: "Days", rec_weeks: "Weeks", rec_months: "Months",
     rec_short_h: "h", rec_short_d: "d", rec_short_w: "w", rec_short_m: "mo",
+    priority: "Priority",
+    pri_high: "High", pri_medium: "Medium", pri_low: "Low",
+    ed_show_priority: "Show priority",
     rec_hourly: "Hourly", rec_daily: "Daily", rec_weekly: "Weekly", rec_monthly: "Monthly",
     rec_type_interval: "Every …", rec_type_weekdays: "On weekdays",
     rec_wd_0: "Mon", rec_wd_1: "Tue", rec_wd_2: "Wed", rec_wd_3: "Thu", rec_wd_4: "Fri", rec_wd_5: "Sat", rec_wd_6: "Sun",
@@ -73,6 +76,9 @@ const _TRANSLATIONS = {
     recurrence_every: "Alle",
     rec_hours: "Stunden", rec_days: "Tage", rec_weeks: "Wochen", rec_months: "Monate",
     rec_short_h: "Std.", rec_short_d: "T.", rec_short_w: "Wo.", rec_short_m: "Mon.",
+    priority: "Priorit\u00e4t",
+    pri_high: "Hoch", pri_medium: "Mittel", pri_low: "Niedrig",
+    ed_show_priority: "Priorit\u00e4t anzeigen",
     rec_hourly: "St\u00fcndl.", rec_daily: "T\u00e4glich", rec_weekly: "W\u00f6chentl.", rec_monthly: "Monatl.",
     rec_type_interval: "Alle …", rec_type_weekdays: "An Wochentagen",
     rec_wd_0: "Mo", rec_wd_1: "Di", rec_wd_2: "Mi", rec_wd_3: "Do", rec_wd_4: "Fr", rec_wd_5: "Sa", rec_wd_6: "So",
@@ -628,6 +634,14 @@ class HomeTasksCard extends HTMLElement {
 
     // Meta (sub-item count + due date) — second line below title
     const metaChildren = [];
+    if (task.priority && this._config.show_priority !== false) {
+      const priLabels = { 1: this._t("pri_low"), 2: this._t("pri_medium"), 3: this._t("pri_high") };
+      const priClass = { 1: "pri-low", 2: "pri-medium", 3: "pri-high" };
+      metaChildren.push(this._el("span", {
+        className: `priority-badge ${priClass[task.priority] || ""}`,
+        textContent: priLabels[task.priority],
+      }));
+    }
     const subProgress = this._getSubItemProgress(task);
     if (subProgress && this._config.show_sub_items !== false) {
       metaChildren.push(this._el("span", { className: "sub-badge", textContent: subProgress }));
@@ -766,6 +780,28 @@ class HomeTasksCard extends HTMLElement {
     addSubBtn.addEventListener("click", () => this._addSubItem(task.id));
     subChildren.push(addSubBtn);
     const subSection = this._el("div", { className: "detail-section" }, subChildren);
+
+    // Priority section
+    const currentPriority = task.priority || null;
+    const priorityBtnRow = this._el("div", { className: "priority-btn-row" });
+    for (const [val, key] of [[3, "pri_high"], [2, "pri_medium"], [1, "pri_low"]]) {
+      const btn = this._el("button", {
+        className: `priority-btn pri-${val}${currentPriority === val ? " active" : ""}`,
+        textContent: this._t(key),
+      });
+      btn.addEventListener("click", () => {
+        this._callWs("home_tasks/update_task", {
+          list_id: this._config.list_id,
+          task_id: task.id,
+          priority: currentPriority === val ? null : val,
+        }).then(() => this._loadTasks());
+      });
+      priorityBtnRow.appendChild(btn);
+    }
+    const prioritySection = this._el("div", { className: "detail-section" }, [
+      this._el("label", { className: "detail-label", textContent: this._t("priority") }),
+      priorityBtnRow,
+    ]);
 
     // Recurrence section
     const recurrenceEnabled = task.recurrence_enabled || false;
@@ -997,6 +1033,7 @@ class HomeTasksCard extends HTMLElement {
     const actions = this._el("div", { className: "detail-actions" }, [deleteBtn]);
 
     const details = [];
+    if (this._config.show_priority !== false) details.push(prioritySection);
     if (this._config.show_tags !== false) details.push(tagSection);
     if (this._config.show_notes !== false) details.push(notesSection);
     if (this._config.show_sub_items !== false) details.push(subSection);
@@ -1321,6 +1358,21 @@ class HomeTasksCard extends HTMLElement {
       }
       .due-date.today { background: rgba(255, 152, 0, 0.15); color: var(--warning-color, #ff9800); }
       .due-date.overdue { background: rgba(244, 67, 54, 0.15); color: var(--todo-error); font-weight: 500; }
+      .priority-badge {
+        font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 600;
+      }
+      .priority-badge.pri-high { background: rgba(244, 67, 54, 0.15); color: var(--todo-error, #f44336); }
+      .priority-badge.pri-medium { background: rgba(255, 152, 0, 0.15); color: var(--warning-color, #ff9800); }
+      .priority-badge.pri-low { background: rgba(3, 169, 244, 0.15); color: var(--info-color, #03a9f4); }
+      .priority-btn-row { display: flex; gap: 6px; }
+      .priority-btn {
+        flex: 1; padding: 5px 8px; border-radius: 4px; font-size: 12px; font-family: inherit;
+        border: 1px solid var(--todo-divider); background: var(--todo-bg);
+        color: var(--todo-secondary-text); cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s;
+      }
+      .priority-btn.pri-3.active { background: rgba(244, 67, 54, 0.2); color: var(--todo-error, #f44336); border-color: var(--todo-error, #f44336); }
+      .priority-btn.pri-2.active { background: rgba(255, 152, 0, 0.2); color: var(--warning-color, #ff9800); border-color: var(--warning-color, #ff9800); }
+      .priority-btn.pri-1.active { background: rgba(3, 169, 244, 0.2); color: var(--info-color, #03a9f4); border-color: var(--info-color, #03a9f4); }
       .recurrence-badge {
         font-size: 11px; padding: 2px 8px; border-radius: 10px;
         background: rgba(3, 169, 244, 0.15); color: var(--info-color, #03a9f4);
@@ -1482,7 +1534,7 @@ class HomeTasksCard extends HTMLElement {
       .compact .task-main { padding: 6px 8px; gap: 6px; min-height: 32px; }
       .compact .task-title { font-size: 13px; }
       .compact .task-meta { gap: 4px; }
-      .compact .sub-badge, .compact .due-date, .compact .recurrence-badge,
+      .compact .sub-badge, .compact .due-date, .compact .priority-badge, .compact .recurrence-badge,
       .compact .assigned-badge, .compact .tag-badge { font-size: 10px; padding: 1px 6px; }
       .compact .checkmark { height: 16px; width: 16px; }
       .compact .checkbox-container input:checked ~ .checkmark::after { width: 4px; height: 7px; }
@@ -1688,6 +1740,21 @@ class HomeTasksCardEditor extends HTMLElement {
       showDueDateCb,
     ]);
 
+    // Show priority toggle
+    const showPriorityCb = this._el("input", {
+      type: "checkbox",
+      id: "cb-show-priority",
+      checked: this._config.show_priority !== false,
+    });
+    showPriorityCb.addEventListener("change", () => {
+      this._config = { ...this._config, show_priority: showPriorityCb.checked };
+      this._fireChanged();
+    });
+    const showPriorityRow = this._el("div", { className: "toggle-row" }, [
+      this._el("span", { className: "toggle-label", textContent: this._t("ed_show_priority") }),
+      showPriorityCb,
+    ]);
+
     // Show notes toggle
     const showNotesCb = this._el("input", {
       type: "checkbox",
@@ -1814,6 +1881,7 @@ class HomeTasksCardEditor extends HTMLElement {
         showTitleRow,
         showProgressRow,
         showDueDateRow,
+        showPriorityRow,
         showRecurrenceRow,
         showSubItemsRow,
         showPersonRow,

@@ -117,6 +117,7 @@ async def ws_add_task(hass, connection, msg):
         vol.Optional("completed"): bool,
         vol.Optional("notes"): vol.All(str, vol.Length(max=5000)),
         vol.Optional("due_date"): _val_date,
+        vol.Optional("priority"): vol.Any(vol.In([1, 2, 3]), None),
         vol.Optional("recurrence_value"): vol.All(int, vol.Range(min=1, max=MAX_RECURRENCE_VALUE)),
         vol.Optional("recurrence_unit"): vol.Any(vol.In(list(VALID_RECURRENCE_UNITS)), None),
         vol.Optional("recurrence_enabled"): bool,
@@ -132,7 +133,7 @@ async def ws_update_task(hass, connection, msg):
     try:
         store = _get_store(hass, msg["list_id"])
         kwargs = {}
-        for key in ("title", "completed", "notes", "due_date", "recurrence_value", "recurrence_unit", "recurrence_enabled", "recurrence_type", "recurrence_weekdays", "assigned_person", "tags"):
+        for key in ("title", "completed", "notes", "due_date", "priority", "recurrence_value", "recurrence_unit", "recurrence_enabled", "recurrence_type", "recurrence_weekdays", "assigned_person", "tags"):
             if key in msg:
                 kwargs[key] = msg[key]
         task = await store.async_update_task(msg["task_id"], **kwargs)
