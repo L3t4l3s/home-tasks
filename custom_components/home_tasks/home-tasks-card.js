@@ -84,6 +84,9 @@ const _TRANSLATIONS = {
     ed_delete_column: "Delete column",
     ed_code_editor: "Code editor",
     ed_visual_editor: "Visual editor",
+    ed_icon: "Icon (optional)",
+    ed_card_title: "Card title (optional)",
+    ed_card_title_placeholder: "Title shown above columns",
   },
   de: {
     my_tasks: "Meine Aufgaben",
@@ -161,6 +164,9 @@ const _TRANSLATIONS = {
     ed_delete_column: "Spalte l\u00f6schen",
     ed_code_editor: "Code-Editor",
     ed_visual_editor: "Visueller Editor",
+    ed_icon: "Symbol (optional)",
+    ed_card_title: "Kartentitel (optional)",
+    ed_card_title_placeholder: "Titel \u00fcber den Spalten",
   },
 };
 
@@ -641,8 +647,15 @@ class HomeTasksCard extends HTMLElement {
     if (cols.length === 1) {
       return this._buildColumn(0);
     }
-    const colEls = cols.map((_, i) => this._buildColumn(i));
-    return this._el("div", { className: "multi-columns" }, colEls);
+    const children = [];
+    if (this._config.title) {
+      const titleEl = document.createElement("h1");
+      titleEl.className = "card-global-title";
+      titleEl.textContent = this._config.title;
+      children.push(titleEl);
+    }
+    children.push(this._el("div", { className: "multi-columns" }, cols.map((_, i) => this._buildColumn(i))));
+    return this._el("div", {}, children);
   }
 
   _buildColumn(colIdx) {
@@ -658,7 +671,16 @@ class HomeTasksCard extends HTMLElement {
     const showProgress = col.show_progress !== false;
     const headerChildren = [];
     if (showTitle) {
-      headerChildren.push(this._el("h1", { className: "title", textContent: this._getListName(colIdx) }));
+      const titleEl = document.createElement("h1");
+      titleEl.className = "title";
+      if (col.icon) {
+        const iconEl = document.createElement("ha-icon");
+        iconEl.setAttribute("icon", col.icon);
+        iconEl.style.cssText = "--mdc-icon-size:1.1em;vertical-align:-0.15em;margin-right:6px;";
+        titleEl.appendChild(iconEl);
+      }
+      titleEl.appendChild(document.createTextNode(this._getListName(colIdx)));
+      headerChildren.push(titleEl);
     }
     if (showProgress) {
       headerChildren.push(this._el("span", {
@@ -1628,7 +1650,8 @@ class HomeTasksCard extends HTMLElement {
       .card-column.drag-target { outline: 2px dashed var(--todo-primary); outline-offset: -2px; border-radius: var(--todo-radius); }
       .card-column { padding: 16px; }
       .header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
-      .title { font-size: 24px; font-weight: 700; color: var(--todo-text); margin: 0; }
+      .card-global-title { font-size: var(--ha-card-header-font-size, 1.5rem); font-weight: var(--ha-card-header-font-weight, 500); color: var(--ha-card-header-color, var(--todo-text)); margin: 0; padding: 16px 16px 0; line-height: 1.2; }
+      .title { font-size: var(--ha-card-header-font-size, 1.5rem); font-weight: var(--ha-card-header-font-weight, 500); color: var(--ha-card-header-color, var(--todo-text)); margin: 0; line-height: 1.2; }
       .progress { font-size: 14px; color: var(--todo-secondary-text); }
       .add-task { display: flex; gap: 8px; margin-bottom: 16px; }
       .add-input {
@@ -1907,7 +1930,7 @@ class HomeTasksCard extends HTMLElement {
       /* Compact mode overrides */
       .compact { padding: 10px; }
       .compact .header { margin-bottom: 10px; }
-      .compact .title { font-size: 18px; }
+      .compact .title { font-size: 1.1rem; }
       .compact .progress { font-size: 12px; }
       .compact .add-task { margin-bottom: 10px; }
       .compact .add-input { padding: 6px 10px; font-size: 13px; }
@@ -2059,32 +2082,45 @@ class HomeTasksCardEditor extends HTMLElement {
     style.textContent = `
       :host { display: block; }
       .editor { display: flex; flex-direction: column; gap: 0; padding: 16px 0; }
-      .editor-tabs { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+      .editor-card-title-row { margin-bottom: 12px; }
+      .editor-tabs-row {
+        display: flex; align-items: center;
+        border-bottom: 1px solid var(--divider-color, #e0e0e0);
+        margin-bottom: 0;
+      }
+      .editor-tabs { display: flex; gap: 0; align-items: center; flex: 1; }
       .editor-tab {
-        min-width: 32px; padding: 4px 12px; border: 1px solid var(--divider-color);
-        border-radius: 4px; background: transparent; cursor: pointer; font-size: 13px;
-        font-family: inherit; color: var(--primary-text-color);
+        min-width: 40px; height: 40px; padding: 0 14px;
+        border: none; border-bottom: 3px solid transparent;
+        background: transparent; cursor: pointer; font-size: 14px; font-weight: 500;
+        font-family: inherit; color: var(--secondary-text-color);
+        display: flex; align-items: center; justify-content: center;
+        transition: color 0.15s, border-color 0.15s;
       }
-      .editor-tab.active { background: var(--primary-color); color: #fff; border-color: var(--primary-color); }
-      .editor-tab:hover:not(.active) { background: var(--secondary-background-color); }
-      .editor-col-controls { display: flex; gap: 6px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
-      .editor-col-btn {
-        padding: 4px 10px; border: 1px solid var(--divider-color);
-        border-radius: 4px; background: transparent; cursor: pointer; font-size: 13px;
-        font-family: inherit; color: var(--primary-text-color);
+      .editor-tab.active { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); }
+      .editor-tab:hover:not(.active) { color: var(--primary-text-color); background: var(--secondary-background-color); }
+      .editor-tab-add {
+        height: 40px; padding: 0 12px; border: none; background: transparent;
+        cursor: pointer; color: var(--secondary-text-color); font-size: 20px; font-family: inherit;
+        display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        transition: color 0.15s;
       }
-      .editor-col-btn:hover { background: var(--secondary-background-color); }
-      .editor-col-btn.active { background: var(--secondary-background-color); border-color: var(--primary-color); color: var(--primary-color); }
-      .editor-col-btn-del { color: var(--error-color, #db4437); border-color: rgba(219,68,55,0.4); }
-      .editor-col-btn-del:hover { background: rgba(219, 68, 55, 0.1); }
+      .editor-tab-add:hover { color: var(--primary-color); }
+      .editor-col-controls {
+        display: flex; gap: 0; align-items: center;
+        padding: 4px 0 8px; margin-bottom: 8px;
+        border-bottom: 1px solid var(--divider-color, #e0e0e0);
+      }
+      .editor-col-controls ha-icon-button { color: var(--secondary-text-color); }
+      .editor-col-controls ha-icon-button.active { color: var(--primary-color); }
+      .editor-col-controls ha-icon-button.del { color: var(--error-color, #db4437); }
       .visual-editor { display: flex; flex-direction: column; gap: 16px; }
       .field { display: flex; flex-direction: column; gap: 4px; }
       label { font-size: 12px; font-weight: 500; color: var(--secondary-text-color); text-transform: uppercase; letter-spacing: 0.5px; }
       select, input[type="text"] { padding: 8px 12px; border: 1px solid var(--divider-color); border-radius: 4px; font-size: 14px; background: var(--card-background-color); color: var(--primary-text-color); font-family: inherit; }
       .hint { font-size: 12px; color: var(--secondary-text-color); font-style: italic; }
-      .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; }
+      .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; min-height: 40px; }
       .toggle-label { font-size: 14px; color: var(--primary-text-color); }
-      .toggle-row input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary-color); }
       .code-editor-wrapper { display: flex; flex-direction: column; gap: 6px; }
       .code-editor-textarea {
         width: 100%; min-height: 320px; padding: 10px; border: 1px solid var(--divider-color);
@@ -2100,8 +2136,24 @@ class HomeTasksCardEditor extends HTMLElement {
     const cols = this._config.columns;
     const activeTab = Math.min(this._editorTab, cols.length - 1);
 
-    // Tab bar
-    const tabBar = this._el("div", { className: "editor-tabs" });
+    // Global card title input (above tabs)
+    const cardTitleInput = this._el("input", {
+      type: "text",
+      id: "card-title-input",
+      value: this._config.title || "",
+      placeholder: this._t("ed_card_title_placeholder"),
+    });
+    cardTitleInput.addEventListener("input", () => {
+      this._config = { ...this._config, title: cardTitleInput.value || undefined };
+      this._fireChanged();
+    });
+    const cardTitleRow = this._el("div", { className: "editor-card-title-row field" }, [
+      this._el("label", { textContent: this._t("ed_card_title") }),
+      cardTitleInput,
+    ]);
+
+    // Tab bar (tabs on left, + on right)
+    const tabsEl = this._el("div", { className: "editor-tabs" });
     for (let i = 0; i < cols.length; i++) {
       const colName = cols[i].title ||
         this._lists.find(l => l.id === cols[i].list_id)?.name ||
@@ -2115,10 +2167,10 @@ class HomeTasksCardEditor extends HTMLElement {
         this._editorTab = i;
         this._render();
       });
-      tabBar.appendChild(tab);
+      tabsEl.appendChild(tab);
     }
     const addTabBtn = this._el("button", {
-      className: "editor-tab",
+      className: "editor-tab-add",
       textContent: "+",
       title: this._t("ed_add_column"),
     });
@@ -2130,31 +2182,38 @@ class HomeTasksCardEditor extends HTMLElement {
       this._fireChanged();
       this._render();
     });
-    tabBar.appendChild(addTabBtn);
+    const tabsRow = this._el("div", { className: "editor-tabs-row" }, [tabsEl, addTabBtn]);
 
-    // Column controls
+    // Column controls using ha-icon-button
     const isCodeMode = this._editorCodeMode[activeTab] === true;
     const controls = this._el("div", { className: "editor-col-controls" });
 
-    // Code/visual toggle
-    const codeBtn = this._el("button", {
-      className: "editor-col-btn" + (isCodeMode ? " active" : ""),
-      textContent: "{}",
-      title: isCodeMode ? this._t("ed_visual_editor") : this._t("ed_code_editor"),
-    });
-    codeBtn.addEventListener("click", () => {
-      if (!isCodeMode) {
-        this._editorCodeText[activeTab] = JSON.stringify(cols[activeTab], null, 2);
+    const makeIconBtn = (icon, label, cls, handler) => {
+      const btn = document.createElement("ha-icon-button");
+      btn.setAttribute("label", label);
+      if (cls) btn.className = cls;
+      const haIcon = document.createElement("ha-icon");
+      haIcon.setAttribute("icon", icon);
+      haIcon.setAttribute("slot", "icon");
+      btn.appendChild(haIcon);
+      btn.addEventListener("click", handler);
+      return btn;
+    };
+
+    controls.appendChild(makeIconBtn(
+      "mdi:code-braces",
+      isCodeMode ? this._t("ed_visual_editor") : this._t("ed_code_editor"),
+      isCodeMode ? "active" : "",
+      () => {
+        if (!isCodeMode) this._editorCodeText[activeTab] = JSON.stringify(cols[activeTab], null, 2);
+        this._editorCodeMode[activeTab] = !isCodeMode;
+        this._render();
       }
-      this._editorCodeMode[activeTab] = !isCodeMode;
-      this._render();
-    });
-    controls.appendChild(codeBtn);
+    ));
 
     if (cols.length > 1) {
       if (activeTab > 0) {
-        const leftBtn = this._el("button", { className: "editor-col-btn", textContent: "\u2190", title: this._t("ed_move_left") });
-        leftBtn.addEventListener("click", () => {
+        controls.appendChild(makeIconBtn("mdi:arrow-left", this._t("ed_move_left"), "", () => {
           this._clearCodeState();
           const newCols = [...cols];
           [newCols[activeTab - 1], newCols[activeTab]] = [newCols[activeTab], newCols[activeTab - 1]];
@@ -2162,12 +2221,10 @@ class HomeTasksCardEditor extends HTMLElement {
           this._editorTab = activeTab - 1;
           this._fireChanged();
           this._render();
-        });
-        controls.appendChild(leftBtn);
+        }));
       }
       if (activeTab < cols.length - 1) {
-        const rightBtn = this._el("button", { className: "editor-col-btn", textContent: "\u2192", title: this._t("ed_move_right") });
-        rightBtn.addEventListener("click", () => {
+        controls.appendChild(makeIconBtn("mdi:arrow-right", this._t("ed_move_right"), "", () => {
           this._clearCodeState();
           const newCols = [...cols];
           [newCols[activeTab], newCols[activeTab + 1]] = [newCols[activeTab + 1], newCols[activeTab]];
@@ -2175,11 +2232,9 @@ class HomeTasksCardEditor extends HTMLElement {
           this._editorTab = activeTab + 1;
           this._fireChanged();
           this._render();
-        });
-        controls.appendChild(rightBtn);
+        }));
       }
-      const dupBtn = this._el("button", { className: "editor-col-btn", textContent: "\u29C8", title: this._t("ed_duplicate") });
-      dupBtn.addEventListener("click", () => {
+      controls.appendChild(makeIconBtn("mdi:content-copy", this._t("ed_duplicate"), "", () => {
         this._clearCodeState();
         const newCols = [...cols];
         newCols.splice(activeTab + 1, 0, { ...cols[activeTab] });
@@ -2187,19 +2242,15 @@ class HomeTasksCardEditor extends HTMLElement {
         this._editorTab = activeTab + 1;
         this._fireChanged();
         this._render();
-      });
-      controls.appendChild(dupBtn);
-
-      const delBtn = this._el("button", { className: "editor-col-btn editor-col-btn-del", textContent: "\uD83D\uDDD1", title: this._t("ed_delete_column") });
-      delBtn.addEventListener("click", () => {
+      }));
+      controls.appendChild(makeIconBtn("mdi:delete", this._t("ed_delete_column"), "del", () => {
         this._clearCodeState();
         const newCols = cols.filter((_, i) => i !== activeTab);
         this._config = { ...this._config, columns: newCols };
         this._editorTab = Math.min(activeTab, newCols.length - 1);
         this._fireChanged();
         this._render();
-      });
-      controls.appendChild(delBtn);
+      }));
     }
 
     // Tab content
@@ -2207,7 +2258,7 @@ class HomeTasksCardEditor extends HTMLElement {
       ? this._buildCodeEditor(activeTab)
       : this._buildVisualEditor(activeTab);
 
-    const editor = this._el("div", { className: "editor" }, [tabBar, controls, tabContent]);
+    const editor = this._el("div", { className: "editor" }, [cardTitleRow, tabsRow, controls, tabContent]);
     root.appendChild(editor);
   }
 
@@ -2282,6 +2333,12 @@ class HomeTasksCardEditor extends HTMLElement {
     });
     titleInput.addEventListener("input", () => updateCol({ title: titleInput.value }));
 
+    // Icon picker
+    const iconPicker = document.createElement("ha-icon-picker");
+    iconPicker.label = this._t("ed_icon");
+    iconPicker.value = col.icon || "";
+    iconPicker.addEventListener("value-changed", (e) => updateCol({ icon: e.detail.value || undefined }));
+
     // Default filter select
     const defaultFilterSelect = this._el("select");
     for (const [val, key] of [["all", "filter_all"], ["open", "filter_open"], ["done", "filter_done"]]) {
@@ -2303,19 +2360,15 @@ class HomeTasksCardEditor extends HTMLElement {
     }
     defaultSortSelect.addEventListener("change", () => updateCol({ default_sort: defaultSortSelect.value }));
 
-    // Toggle helper
-    const makeToggle = (id, labelKey, configKey, defaultOn = true) => {
-      const cb = this._el("input", {
-        type: "checkbox",
-        id: `${id}-${tabIdx}`,
-        checked: col[configKey] !== false ? defaultOn : !defaultOn,
-      });
-      // More precise: default true means checked when undefined
-      cb.checked = defaultOn ? col[configKey] !== false : col[configKey] === true;
-      cb.addEventListener("change", () => updateCol({ [configKey]: cb.checked }));
+    // Toggle helper — uses ha-switch for native HA look
+    const makeToggle = (_id, labelKey, configKey, defaultOn = true) => {
+      const checked = defaultOn ? col[configKey] !== false : col[configKey] === true;
+      const sw = document.createElement("ha-switch");
+      sw.checked = checked;
+      sw.addEventListener("change", () => updateCol({ [configKey]: sw.checked }));
       return this._el("div", { className: "toggle-row" }, [
         this._el("span", { className: "toggle-label", textContent: this._t(labelKey) }),
-        cb,
+        sw,
       ]);
     };
 
@@ -2331,6 +2384,7 @@ class HomeTasksCardEditor extends HTMLElement {
         this._el("label", { textContent: this._t("ed_title") }),
         titleInput,
       ]),
+      this._el("div", { className: "field" }, [iconPicker]),
       this._el("div", { className: "field" }, [
         this._el("label", { textContent: this._t("ed_default_filter") }),
         defaultFilterSelect,
