@@ -5,18 +5,9 @@
 
 A feature-rich task management integration for [Home Assistant](https://www.home-assistant.io/) with a custom Lovelace card.
 
-## Screenshots
-
 <p align="center">
-  <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/Household-collapsed.png" width="400" alt="Household list with badges">
-  <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/Household-weekly.png" width="400" alt="Expanded task with sub-items, notes, and recurrence">
-</p>
-<p align="center">
-  <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/Quick-notes-minimal.png" width="400" alt="Minimal card without title or extras">
-  <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/Shopping-list.png" width="400" alt="Shopping list with auto-delete">
-</p>
-<p align="center">
-  <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/Card-editor.png" width="600" alt="Card editor with all display options">
+  <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/header-light.png" width="400" alt="Home Tasks in light mode">
+  <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/header-dark.png" width="400" alt="Home Tasks in dark mode">
 </p>
 
 ## Features
@@ -24,20 +15,21 @@ A feature-rich task management integration for [Home Assistant](https://www.home
 - **Drag & drop** reordering (desktop and mobile)
 - **Sub-items** with progress tracking
 - **Notes** per task
-- **Due dates** with overdue highlighting
-- **Recurring tasks** with flexible intervals (e.g. every 3 days, every 2 weeks)
+- **Due date & time** with overdue highlighting
+- **Reminders** — up to 5 per task, fire as HA events at a configurable offset before the due time
+- **Priority** (Low / Medium / High) with colored badges
+- **Recurring tasks** — fixed intervals (hours, days, weeks, months) or specific weekdays
 - **Person assignment** using HA person entities
-- **Tags** for categorization and filtering (e.g. `#kitchen`, `#daily`, `#morning`)
-- **Tag filtering** in the card via clickable tag chips
-- **Filters**: All / Open / Done (combinable with tag filter)
+- **Tags** for categorization and filtering
+- **Tag filtering** via clickable chips in the card header
+- **Filters**: All / Open / Done (per-list default configurable)
 - **Multiple lists** via integration config entries
-- **Events** for automations (task created, completed, due, overdue, assigned, reopened)
+- **Events** for automations (created, completed, due, overdue, overdue, assigned, reopened, reminder)
 - **Sensors**: Open task count and overdue binary sensor per list
-- **Services**: Create, complete, reopen, and assign tasks via automations — target tasks by name, person, or tag
+- **Services**: Create, complete, reopen, and assign tasks via automations
 - **Compact mode** for denser task rows
 - **Auto-delete** completed tasks (optional)
-- **i18n**: Supports English and German, follows HA language setting
-- Follows Home Assistant design language
+- **i18n**: English and German, follows HA language setting
 
 ## Installation
 
@@ -45,7 +37,7 @@ A feature-rich task management integration for [Home Assistant](https://www.home
 
 1. Open HACS in Home Assistant
 2. Go to **Integrations**
-3. Click the **three dots** menu (top right) and select **Custom repositories**
+3. Click the **three dots** menu (top right) → **Custom repositories**
 4. Add `https://github.com/L3t4l3s/home-tasks` with category **Integration**
 5. Install **Home Tasks**
 6. Restart Home Assistant
@@ -57,31 +49,133 @@ A feature-rich task management integration for [Home Assistant](https://www.home
 
 ## Setup
 
-1. Go to **Settings** > **Devices & Services** > **Add Integration**
+1. Go to **Settings** → **Devices & Services** → **Add Integration**
 2. Search for **Home Tasks**
 3. Enter a name for your list
 4. Repeat for additional lists
 
 The Lovelace card is automatically registered — just add it to your dashboard.
 
-### Card Configuration
+## Card Configuration
 
-All options are available in the visual card editor. You can also use YAML:
+All options are available in the visual card editor. The examples below cover typical use cases.
+
+### Option Reference
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `list_id` | (required) | The list to display (selectable in the visual editor) |
+| `list_id` | *(required)* | The list to display |
 | `title` | List name | Custom card title |
+| `default_filter` | `all` | Initial filter: `all`, `open`, or `done` |
 | `show_title` | `true` | Show/hide the card title |
 | `show_progress` | `true` | Show/hide the task progress counter |
-| `show_due_date` | `true` | Show/hide due date fields |
-| `show_recurrence` | `true` | Show/hide recurrence settings |
+| `show_notes` | `true` | Show/hide the notes field |
 | `show_sub_items` | `true` | Show/hide sub-items |
 | `show_assigned_person` | `true` | Show/hide person assignment |
-| `show_tags` | `true` | Show/hide tags, tag badges, and tag filter chips |
-| `show_notes` | `true` | Show/hide the notes field |
-| `auto_delete_completed` | `false` | Automatically delete completed tasks |
+| `show_priority` | `true` | Show/hide priority field and badge |
+| `show_tags` | `true` | Show/hide tags, badges, and filter chips |
+| `show_due_date` | `true` | Show/hide due date and time |
+| `show_reminders` | `true` | Show/hide reminders |
+| `show_recurrence` | `true` | Show/hide recurrence settings |
 | `compact` | `false` | Compact mode for denser task rows |
+| `auto_delete_completed` | `false` | Automatically delete completed tasks |
+
+---
+
+### Household
+
+Full-featured list for shared household tasks — priorities, due dates, person assignment, and recurrence keep everything organized.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/header-light.png" width="500" alt="Household list">
+</p>
+
+```yaml
+type: custom:home-tasks-card
+list_id: "your-list-id"
+title: Household
+default_filter: open
+```
+
+*(All display options are enabled by default.)*
+
+---
+
+### Shopping List
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/header-dark.png" width="500" alt="Shopping list">
+</p>
+
+Minimal and fast — just items and checkboxes. Completed entries disappear immediately.
+
+```yaml
+type: custom:home-tasks-card
+list_id: "your-list-id"
+show_title: false
+show_progress: false
+compact: true
+auto_delete_completed: true
+show_notes: false
+show_sub_items: false
+show_assigned_person: false
+show_priority: false
+show_tags: false
+show_due_date: false
+show_reminders: false
+show_recurrence: false
+```
+
+---
+
+### Work / Projects
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/usecase-work.png" width="500" alt="Work and projects list">
+</p>
+
+Focused on deadlines — priorities, due dates, reminders, and sub-items. Person assignment and recurrence hidden to reduce noise.
+
+```yaml
+type: custom:home-tasks-card
+list_id: "your-list-id"
+title: Work
+default_filter: open
+show_priority: true
+show_due_date: true
+show_reminders: true
+show_sub_items: true
+show_notes: true
+show_assigned_person: false
+show_tags: false
+show_recurrence: false
+```
+
+---
+
+### Kids Chores
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/usecase-chores.png" width="500" alt="Kids chores list">
+</p>
+
+Who does what and when — person assignment, weekday recurrence, and tags for time-of-day filtering. No deadlines or reminders needed.
+
+```yaml
+type: custom:home-tasks-card
+list_id: "your-list-id"
+title: Kids Chores
+show_priority: false
+show_due_date: false
+show_reminders: false
+show_recurrence: true
+show_assigned_person: true
+show_tags: true
+show_notes: false
+show_sub_items: false
+```
+
+---
 
 ## Automations
 
@@ -95,14 +189,14 @@ All options are available in the visual card editor. You can also use YAML:
 | `home_tasks_task_overdue` | Fired when a task is past its due date (once per day) |
 | `home_tasks_task_assigned` | Fired when a person is assigned to a task |
 | `home_tasks_task_reopened` | Fired when a task is reopened (manually or by recurrence) |
+| `home_tasks_task_reminder` | Fired at the configured offset before a task's due time |
 
-All events include: `entry_id`, `task_id`, `task_title`, and (if set) `assigned_person`, `due_date`, and `tags`.
+All events include: `entry_id`, `task_id`, `task_title`, and (if set) `assigned_person`, `due_date`, `tags`.
+The `home_tasks_task_reminder` event additionally includes `reminder_offset_minutes`.
 
 ### Services
 
 #### `home_tasks.add_task`
-
-Create a new task via automation.
 
 | Field | Required | Description |
 |-------|----------|-------------|
@@ -113,11 +207,9 @@ Create a new task via automation.
 | `due_date` | no | Due date (`YYYY-MM-DD`) |
 | `tags` | no | Comma-separated tags (e.g. `"kitchen,daily"`) |
 
-*Either `list_name` or `entry_id` is required.*
-
 #### `home_tasks.complete_task`
 
-Mark a task as completed. Provide `task_title`/`task_id` for a single task, or `tag` to complete all open tasks with that tag.
+Provide `task_title`/`task_id` for a single task, or `tag` to complete all open tasks with that tag.
 
 | Field | Required | Description |
 |-------|----------|-------------|
@@ -127,11 +219,9 @@ Mark a task as completed. Provide `task_title`/`task_id` for a single task, or `
 | `task_id` | ** | UUID of the task |
 | `tag` | ** | Complete all open tasks with this tag |
 
-*\* Either `list_name` or `entry_id`. \*\* Either `task_title`, `task_id`, or `tag`.*
-
 #### `home_tasks.reopen_task`
 
-Reopen completed tasks. Target by single task, person, tag, or a combination.
+Target by single task, person, tag, or a combination.
 
 | Field | Required | Description |
 |-------|----------|-------------|
@@ -142,11 +232,7 @@ Reopen completed tasks. Target by single task, person, tag, or a combination.
 | `assigned_person` | ** | Reopen all completed tasks for this person |
 | `tag` | ** | Reopen all completed tasks with this tag |
 
-*\* Either `list_name` or `entry_id`. \*\* At least one of `task_title`, `task_id`, `assigned_person`, or `tag`. `assigned_person` and `tag` can be combined to narrow the selection.*
-
 #### `home_tasks.assign_task`
-
-Assign a person to a task.
 
 | Field | Required | Description |
 |-------|----------|-------------|
@@ -155,6 +241,8 @@ Assign a person to a task.
 | `task_title` | ** | Title of the task |
 | `task_id` | ** | UUID of the task |
 | `person` | yes | Person entity ID |
+
+*\* Either `list_name` or `entry_id`. \*\* See individual service descriptions for required combinations.*
 
 ### Sensors
 
@@ -165,19 +253,19 @@ For each list, the integration creates:
 
 ### Example Automations
 
-Send a notification when a task is due:
+Send a notification when a reminder fires:
 
 ```yaml
 automation:
-  - alias: "Home Tasks: Notify on due task"
+  - alias: "Home Tasks: Reminder notification"
     trigger:
       - platform: event
-        event_type: home_tasks_task_due
+        event_type: home_tasks_task_reminder
     action:
       - service: notify.mobile_app
         data:
-          title: "Task due today"
-          message: "{{ trigger.event.data.task_title }}"
+          title: "Task reminder"
+          message: "{{ trigger.event.data.task_title }} is due soon"
 ```
 
 Reopen morning chores when a child arrives home:
