@@ -31,7 +31,7 @@ const _TRANSLATIONS = {
     pri_high: "High", pri_medium: "Medium", pri_low: "Low",
     ed_show_priority: "Show priority",
     rec_hourly: "Hourly", rec_daily: "Daily", rec_weekly: "Weekly", rec_monthly: "Monthly",
-    rec_type_interval: "Every …", rec_type_weekdays: "On weekdays",
+    rec_type_interval: "Every \u2026", rec_type_weekdays: "On weekdays",
     rec_wd_0: "Mon", rec_wd_1: "Tue", rec_wd_2: "Wed", rec_wd_3: "Thu", rec_wd_4: "Fri", rec_wd_5: "Sat", rec_wd_6: "Sun",
     assigned_to: "Assigned to",
     nobody: "\u2013 Nobody \u2013",
@@ -77,6 +77,13 @@ const _TRANSLATIONS = {
     rem_1d: "1 day before",
     rem_2d: "2 days before",
     ed_show_reminders: "Show reminders",
+    ed_add_column: "Add column",
+    ed_move_left: "Move left",
+    ed_move_right: "Move right",
+    ed_duplicate: "Duplicate column",
+    ed_delete_column: "Delete column",
+    ed_code_editor: "Code editor",
+    ed_visual_editor: "Visual editor",
   },
   de: {
     my_tasks: "Meine Aufgaben",
@@ -101,7 +108,7 @@ const _TRANSLATIONS = {
     pri_high: "Hoch", pri_medium: "Mittel", pri_low: "Niedrig",
     ed_show_priority: "Priorit\u00e4t anzeigen",
     rec_hourly: "St\u00fcndl.", rec_daily: "T\u00e4glich", rec_weekly: "W\u00f6chentl.", rec_monthly: "Monatl.",
-    rec_type_interval: "Alle …", rec_type_weekdays: "An Wochentagen",
+    rec_type_interval: "Alle \u2026", rec_type_weekdays: "An Wochentagen",
     rec_wd_0: "Mo", rec_wd_1: "Di", rec_wd_2: "Mi", rec_wd_3: "Do", rec_wd_4: "Fr", rec_wd_5: "Sa", rec_wd_6: "So",
     assigned_to: "Zugewiesen an",
     nobody: "\u2013 Niemand \u2013",
@@ -147,6 +154,13 @@ const _TRANSLATIONS = {
     rem_1d: "1 Tag vorher",
     rem_2d: "2 Tage vorher",
     ed_show_reminders: "Erinnerungen anzeigen",
+    ed_add_column: "Spalte hinzuf\u00fcgen",
+    ed_move_left: "Nach links",
+    ed_move_right: "Nach rechts",
+    ed_duplicate: "Spalte duplizieren",
+    ed_delete_column: "Spalte l\u00f6schen",
+    ed_code_editor: "Code-Editor",
+    ed_visual_editor: "Visueller Editor",
   },
 };
 
@@ -165,25 +179,27 @@ class HomeTasksCard extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
-    this._config = {};
+    this._config = { columns: [{}] };
     this._hass = null;
-    this._tasks = [];
     this._lists = [];
-    this._filter = "all"; // all, open, done
+    // Per-column state: [{filter, sortBy, sortOpen, tagFilter, tasks, newTaskTitle}]
+    this._columns = [];
     this._expandedTasks = new Set();
     this._editingTaskId = null;
     this._editingSubItemId = null;
     this._draggedTaskId = null;
+    this._draggedColIdx = null;
     this._dragOverTaskId = null;
     this._touchClone = null;
     this._touchStartTimer = null;
+    this._touchOffsetY = 0;
     this._touchBound = {};
-    this._newTaskTitle = "";
-    this._tagFilter = null;
-    this._sortBy = "manual";
-    this._sortOpen = false;
     this._lastTitleClick = null;
     this._initialized = false;
+  }
+
+  _defaultColState() {
+    return { filter: "all", sortBy: "manual", sortOpen: false, tagFilter: null, tasks: [], newTaskTitle: "" };
   }
 
   _t(key, ...args) {
@@ -193,18 +209,38 @@ class HomeTasksCard extends HTMLElement {
   }
 
   setConfig(config) {
-    const prevListId = this._config?.list_id;
-    const prevDefault = this._config?.default_filter;
-    const prevDefaultSort = this._config?.default_sort;
+    // Normalize old single-list format to columns format
+    if (config.list_id && !config.columns) {
+      config = { columns: [{ ...config }] };
+    }
+    if (!config.columns || !Array.isArray(config.columns) || config.columns.length === 0) {
+      config = { columns: [{}] };
+    }
+
+    const prevConfig = this._config || { columns: [] };
     this._config = config;
-    if (config.list_id !== prevListId || config.default_filter !== prevDefault) {
-      this._filter = config.default_filter || "all";
+
+    // Sync _columns array length
+    while (this._columns.length < config.columns.length) {
+      this._columns.push(this._defaultColState());
     }
-    if (config.list_id !== prevListId || config.default_sort !== prevDefaultSort) {
-      this._sortBy = config.default_sort || "manual";
+    this._columns.length = config.columns.length;
+
+    // Reset per-column filter/sort when list or defaults change
+    for (let i = 0; i < config.columns.length; i++) {
+      const col = config.columns[i];
+      const prevCol = prevConfig.columns?.[i];
+      if (col.list_id !== prevCol?.list_id || col.default_filter !== prevCol?.default_filter) {
+        this._columns[i].filter = col.default_filter || "all";
+        this._columns[i].tagFilter = null;
+      }
+      if (col.list_id !== prevCol?.list_id || col.default_sort !== prevCol?.default_sort) {
+        this._columns[i].sortBy = col.default_sort || "manual";
+      }
     }
+
     if (this._initialized) {
-      this._loadTasks();
+      this._loadAllTasks();
     } else {
       this._render();
     }
@@ -247,8 +283,6 @@ class HomeTasksCard extends HTMLElement {
         el.title = val;
       } else if (key === "htmlFor") {
         el.htmlFor = val;
-      } else if (key.startsWith("data-")) {
-        el.setAttribute(key, val);
       } else {
         el.setAttribute(key, val);
       }
@@ -299,179 +333,207 @@ class HomeTasksCard extends HTMLElement {
     const result = await this._callWs("home_tasks/get_lists");
     if (result && Array.isArray(result.lists)) {
       this._lists = result.lists;
-      if (!this._config.list_id && this._lists.length > 0) {
-        this._config = { ...this._config, list_id: this._lists[0].id };
+      // Auto-select first list if no column has a list configured
+      const hasAnyList = this._config.columns.some(c => c.list_id);
+      if (!hasAnyList && this._lists.length > 0) {
+        const newCols = [...this._config.columns];
+        newCols[0] = { ...newCols[0], list_id: this._lists[0].id };
+        this._config = { ...this._config, columns: newCols };
+        this._columns[0].filter = newCols[0].default_filter || "all";
       }
     }
-    await this._loadTasks();
+    await this._loadAllTasks();
   }
 
-  async _loadTasks() {
-    if (!this._config.list_id) {
-      this._tasks = [];
-      this._render();
-      return;
-    }
-    const result = await this._callWs("home_tasks/get_tasks", {
-      list_id: this._config.list_id,
-    });
-    if (result && Array.isArray(result.tasks)) {
-      this._tasks = result.tasks;
-    }
+  async _loadAllTasks() {
+    await Promise.all(this._config.columns.map(async (col, i) => {
+      if (!col.list_id) { this._columns[i].tasks = []; return; }
+      const r = await this._callWs("home_tasks/get_tasks", { list_id: col.list_id });
+      this._columns[i].tasks = r?.tasks ?? [];
+    }));
     this._render();
   }
 
-  async _addTask() {
-    const title = this._newTaskTitle.trim();
-    if (!title || !this._config.list_id) return;
+  _colListId(colIdx) {
+    return this._config.columns[colIdx]?.list_id;
+  }
+
+  async _addTask(colIdx) {
+    const cs = this._columns[colIdx];
+    const title = cs.newTaskTitle.trim();
+    if (!title || !this._colListId(colIdx)) return;
     const result = await this._callWs("home_tasks/add_task", {
-      list_id: this._config.list_id,
+      list_id: this._colListId(colIdx),
       title,
     });
     if (result) {
-      this._newTaskTitle = "";
-      await this._loadTasks();
+      cs.newTaskTitle = "";
+      await this._loadAllTasks();
     }
   }
 
-  async _toggleTask(taskId, completed) {
+  async _toggleTask(taskId, completed, colIdx) {
+    const col = this._config.columns[colIdx];
+    const cs = this._columns[colIdx];
     const newCompleted = !completed;
-    const task = this._tasks.find(t => t.id === taskId);
+    const task = cs.tasks.find(t => t.id === taskId);
     const hasRecurrence = task && task.recurrence_enabled && task.recurrence_unit;
-    if (newCompleted && this._config.auto_delete_completed && !hasRecurrence) {
+    if (newCompleted && col.auto_delete_completed && !hasRecurrence) {
       await this._callWs("home_tasks/delete_task", {
-        list_id: this._config.list_id,
+        list_id: this._colListId(colIdx),
         task_id: taskId,
       });
     } else {
       await this._callWs("home_tasks/update_task", {
-        list_id: this._config.list_id,
+        list_id: this._colListId(colIdx),
         task_id: taskId,
         completed: newCompleted,
       });
     }
-    await this._loadTasks();
+    await this._loadAllTasks();
   }
 
-  async _updateTaskTitle(taskId, title) {
+  async _updateTaskTitle(taskId, title, colIdx) {
     if (!title.trim()) return;
     const result = await this._callWs("home_tasks/update_task", {
-      list_id: this._config.list_id,
+      list_id: this._colListId(colIdx),
       task_id: taskId,
       title: title.trim(),
     });
     if (result) {
       this._editingTaskId = null;
-      await this._loadTasks();
+      await this._loadAllTasks();
     }
   }
 
-  async _updateTaskNotes(taskId, notes) {
+  async _updateTaskNotes(taskId, notes, colIdx) {
     await this._callWs("home_tasks/update_task", {
-      list_id: this._config.list_id,
+      list_id: this._colListId(colIdx),
       task_id: taskId,
       notes,
     });
   }
 
-  async _updateTaskDue(taskId, dueDate, dueTime) {
+  async _updateTaskDue(taskId, dueDate, dueTime, colIdx) {
     await this._callWs("home_tasks/update_task", {
-      list_id: this._config.list_id,
+      list_id: this._colListId(colIdx),
       task_id: taskId,
       due_date: dueDate || null,
       due_time: dueDate ? (dueTime || null) : null,
     });
-    await this._loadTasks();
+    await this._loadAllTasks();
   }
 
-  async _deleteTask(taskId) {
+  async _deleteTask(taskId, colIdx) {
     await this._callWs("home_tasks/delete_task", {
-      list_id: this._config.list_id,
+      list_id: this._colListId(colIdx),
       task_id: taskId,
     });
     this._expandedTasks.delete(taskId);
-    await this._loadTasks();
+    await this._loadAllTasks();
   }
 
-  async _addSubItem(taskId) {
+  async _addSubItem(taskId, colIdx) {
     const result = await this._callWs("home_tasks/add_sub_item", {
-      list_id: this._config.list_id,
+      list_id: this._colListId(colIdx),
       task_id: taskId,
       title: "Neuer Unterpunkt",
     });
     if (result) {
       this._editingSubItemId = result.id;
     }
-    await this._loadTasks();
+    await this._loadAllTasks();
   }
 
-  async _toggleSubItem(taskId, subItemId, completed) {
+  async _toggleSubItem(taskId, subItemId, completed, colIdx) {
     await this._callWs("home_tasks/update_sub_item", {
-      list_id: this._config.list_id,
+      list_id: this._colListId(colIdx),
       task_id: taskId,
       sub_item_id: subItemId,
       completed: !completed,
     });
-    await this._loadTasks();
+    await this._loadAllTasks();
   }
 
-  async _updateSubItemTitle(taskId, subItemId, title) {
+  async _updateSubItemTitle(taskId, subItemId, title, colIdx) {
     if (!title.trim()) return;
     const result = await this._callWs("home_tasks/update_sub_item", {
-      list_id: this._config.list_id,
+      list_id: this._colListId(colIdx),
       task_id: taskId,
       sub_item_id: subItemId,
       title: title.trim(),
     });
     if (result) {
       this._editingSubItemId = null;
-      await this._loadTasks();
+      await this._loadAllTasks();
     }
   }
 
-  async _deleteSubItem(taskId, subItemId) {
+  async _deleteSubItem(taskId, subItemId, colIdx) {
     await this._callWs("home_tasks/delete_sub_item", {
-      list_id: this._config.list_id,
+      list_id: this._colListId(colIdx),
       task_id: taskId,
       sub_item_id: subItemId,
     });
-    await this._loadTasks();
+    await this._loadAllTasks();
   }
 
-  async _reorderTasks(taskIds) {
+  async _reorderTasks(taskIds, colIdx) {
+    const listId = this._colListId(colIdx);
+    if (!listId) return;
     await this._callWs("home_tasks/reorder_tasks", {
-      list_id: this._config.list_id,
+      list_id: listId,
       task_ids: taskIds,
     });
-    await this._loadTasks();
+    await this._loadAllTasks();
   }
 
-  // --- Filter ---
+  async _moveTask(srcColIdx, tgtColIdx, taskId, targetTaskIds) {
+    const srcListId = this._colListId(srcColIdx);
+    const tgtListId = this._colListId(tgtColIdx);
+    if (!srcListId || !tgtListId) return;
+    await this._callWs("home_tasks/move_task", {
+      source_list_id: srcListId,
+      target_list_id: tgtListId,
+      task_id: taskId,
+    });
+    if (targetTaskIds.length > 0) {
+      await this._callWs("home_tasks/reorder_tasks", {
+        list_id: tgtListId,
+        task_ids: targetTaskIds,
+      });
+    }
+    await this._loadAllTasks();
+  }
 
-  get _filteredTasks() {
+  // --- Filter & Sort ---
+
+  _filteredTasks(colIdx) {
+    const cs = this._columns[colIdx];
     let tasks;
-    switch (this._filter) {
+    switch (cs.filter) {
       case "open":
-        tasks = this._tasks.filter((t) => !t.completed);
+        tasks = cs.tasks.filter((t) => !t.completed);
         break;
       case "done":
-        tasks = this._tasks.filter((t) => t.completed);
+        tasks = cs.tasks.filter((t) => t.completed);
         break;
       default:
-        tasks = this._tasks;
+        tasks = cs.tasks;
     }
-    if (this._tagFilter) {
-      tasks = tasks.filter((t) => t.tags && t.tags.includes(this._tagFilter));
+    if (cs.tagFilter) {
+      tasks = tasks.filter((t) => t.tags && t.tags.includes(cs.tagFilter));
     }
-    const cmp = this._buildSortComparator();
+    const cmp = this._buildSortComparator(colIdx);
     return tasks.slice().sort((a, b) => {
       if (a.completed !== b.completed) return a.completed ? 1 : -1;
       return cmp(a, b);
     });
   }
 
-  _buildSortComparator() {
-    switch (this._sortBy) {
+  _buildSortComparator(colIdx) {
+    const sortBy = this._columns[colIdx].sortBy;
+    switch (sortBy) {
       case "due": return (a, b) => {
         const da = a.due_date ? a.due_date + (a.due_time || "00:00") : null;
         const db = b.due_date ? b.due_date + (b.due_time || "00:00") : null;
@@ -481,7 +543,7 @@ class HomeTasksCard extends HTMLElement {
       case "priority": return (a, b) => {
         const pa = a.priority ?? 0;
         const pb = b.priority ?? 0;
-        return pb - pa; // high (3) first
+        return pb - pa;
       };
       case "title": return (a, b) =>
         (a.title || "").localeCompare(b.title || "", undefined, { sensitivity: "base" });
@@ -490,14 +552,14 @@ class HomeTasksCard extends HTMLElement {
         const pb = b.assigned_person || "\uffff";
         return pa.localeCompare(pb);
       };
-      default: return (a, b) => a.sort_order - b.sort_order; // manual
+      default: return (a, b) => a.sort_order - b.sort_order;
     }
   }
 
   // --- Helpers ---
 
-  _getCompletedCount() {
-    return this._tasks.filter((t) => t.completed).length;
+  _getCompletedCount(colIdx) {
+    return this._columns[colIdx].tasks.filter((t) => t.completed).length;
   }
 
   _getSubItemProgress(task) {
@@ -532,19 +594,19 @@ class HomeTasksCard extends HTMLElement {
     return formatted;
   }
 
-  _getListName() {
-    if (this._config.title) return this._config.title;
-    const list = this._lists.find((l) => l.id === this._config.list_id);
+  _getListName(colIdx) {
+    const col = this._config.columns[colIdx];
+    if (col.title) return col.title;
+    const list = this._lists.find((l) => l.id === col.list_id);
     return list ? list.name : this._t("my_tasks");
   }
 
-  // --- Render (DOM-based, no innerHTML with user data) ---
+  // --- Render ---
 
   _render() {
     const root = this.shadowRoot;
     root.innerHTML = "";
 
-    // Styles (static, no user data)
     const style = document.createElement("style");
     style.textContent = this._getStyles();
     root.appendChild(style);
@@ -553,19 +615,39 @@ class HomeTasksCard extends HTMLElement {
       this._buildCardContent(),
     ]);
     root.appendChild(card);
+
+    // Close any open sort dropdowns on next outside click
+    if (this._columns.some(c => c.sortOpen)) {
+      setTimeout(() => document.addEventListener("click", () => {
+        this._columns.forEach(c => { c.sortOpen = false; });
+        this._render();
+      }, { once: true }), 0);
+    }
   }
 
   _buildCardContent() {
-    const completedCount = this._getCompletedCount();
-    const totalCount = this._tasks.length;
-    const filteredTasks = this._filteredTasks;
+    const cols = this._config.columns;
+    if (cols.length === 1) {
+      return this._buildColumn(0);
+    }
+    const colEls = cols.map((_, i) => this._buildColumn(i));
+    return this._el("div", { className: "multi-columns" }, colEls);
+  }
+
+  _buildColumn(colIdx) {
+    const col = this._config.columns[colIdx];
+    const cs = this._columns[colIdx];
+    const compact = col.compact === true;
+    const filteredTasks = this._filteredTasks(colIdx);
+    const completedCount = this._getCompletedCount(colIdx);
+    const totalCount = cs.tasks.length;
 
     // Header
-    const showTitle = this._config.show_title !== false;
-    const showProgress = this._config.show_progress !== false;
+    const showTitle = col.show_title !== false;
+    const showProgress = col.show_progress !== false;
     const headerChildren = [];
     if (showTitle) {
-      headerChildren.push(this._el("h1", { className: "title", textContent: this._getListName() }));
+      headerChildren.push(this._el("h1", { className: "title", textContent: this._getListName(colIdx) }));
     }
     if (showProgress) {
       headerChildren.push(this._el("span", {
@@ -582,83 +664,104 @@ class HomeTasksCard extends HTMLElement {
       type: "text",
       className: "add-input",
       placeholder: this._t("add_placeholder"),
-      value: this._newTaskTitle,
+      value: cs.newTaskTitle,
     });
     addInput.addEventListener("input", (e) => {
-      this._newTaskTitle = e.target.value;
+      cs.newTaskTitle = e.target.value;
     });
     addInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") this._addTask();
+      if (e.key === "Enter") this._addTask(colIdx);
     });
 
     const addBtn = this._el("button", {
       className: "add-btn",
       textContent: "+",
     });
-    addBtn.addEventListener("click", () => this._addTask());
+    addBtn.addEventListener("click", () => this._addTask(colIdx));
 
     const addTask = this._el("div", { className: "add-task" }, [addInput, addBtn]);
 
-    // Sort button (always visible, filter buttons hidden when auto-delete is on)
+    // Sort button
     const sortLabels = {
       manual: this._t("sort_manual"), due: this._t("sort_due"),
       priority: this._t("sort_priority"), title: this._t("sort_title"),
       person: this._t("sort_person"),
     };
-    // Only offer sort options for features that are enabled in this card
     const sortKeys = ["manual"];
-    if (this._config.show_due_date !== false) sortKeys.push("due");
-    if (this._config.show_priority !== false) sortKeys.push("priority");
+    if (col.show_due_date !== false) sortKeys.push("due");
+    if (col.show_priority !== false) sortKeys.push("priority");
     sortKeys.push("title");
-    if (this._config.show_assigned_person !== false) sortKeys.push("person");
-    // If current sort is no longer available, fall back to manual
-    if (!sortKeys.includes(this._sortBy)) this._sortBy = "manual";
+    if (col.show_assigned_person !== false) sortKeys.push("person");
+    if (!sortKeys.includes(cs.sortBy)) cs.sortBy = "manual";
 
-    const sortDropdown = this._el("div", { className: "sort-dropdown" + (this._sortOpen ? "" : " hidden") });
+    const sortDropdown = this._el("div", { className: "sort-dropdown" + (cs.sortOpen ? "" : " hidden") });
     for (const key of sortKeys) {
       const opt = this._el("div", {
-        className: "sort-option" + (this._sortBy === key ? " active" : ""),
+        className: "sort-option" + (cs.sortBy === key ? " active" : ""),
         textContent: sortLabels[key],
       });
       opt.addEventListener("click", (e) => {
         e.stopPropagation();
-        this._sortBy = key;
-        this._sortOpen = false;
+        cs.sortBy = key;
+        cs.sortOpen = false;
         this._render();
       });
       sortDropdown.appendChild(opt);
     }
     const sortBtnWrapper = this._el("div", { className: "sort-btn-wrapper" });
     const sortBtn = this._el("button", {
-      className: "sort-btn" + (this._sortBy !== "manual" ? " active" : ""),
+      className: "sort-btn" + (cs.sortBy !== "manual" ? " active" : ""),
       textContent: "\u21C5",
-      title: sortLabels[this._sortBy],
+      title: sortLabels[cs.sortBy],
     });
     sortBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      this._sortOpen = !this._sortOpen;
+      const wasOpen = cs.sortOpen;
+      this._columns.forEach(c => { c.sortOpen = false; });
+      cs.sortOpen = !wasOpen;
       this._render();
     });
     sortBtnWrapper.appendChild(sortBtn);
     sortBtnWrapper.appendChild(sortDropdown);
-    if (this._sortOpen) {
-      const close = () => { this._sortOpen = false; this._render(); };
-      setTimeout(() => document.addEventListener("click", close, { once: true }), 0);
-    }
 
-    // Filter buttons (hidden when auto-delete is on) + sort button
-    const hideFilters = this._config.auto_delete_completed === true;
+    // Filter row
+    const hideFilters = col.auto_delete_completed === true;
     const filterRowChildren = [];
     if (!hideFilters) {
       filterRowChildren.push(
-        this._buildFilterBtn(this._t("filter_all"), "all"),
-        this._buildFilterBtn(this._t("filter_open"), "open"),
-        this._buildFilterBtn(this._t("filter_done"), "done"),
+        this._buildFilterBtn(this._t("filter_all"), "all", colIdx),
+        this._buildFilterBtn(this._t("filter_open"), "open", colIdx),
+        this._buildFilterBtn(this._t("filter_done"), "done", colIdx),
       );
     }
     filterRowChildren.push(this._el("div", { className: "filter-spacer" }));
-    if (this._config.show_sort !== false) filterRowChildren.push(sortBtnWrapper);
+    if (col.show_sort !== false) filterRowChildren.push(sortBtnWrapper);
     const filters = this._el("div", { className: "filters" }, filterRowChildren);
+
+    // Tag chips
+    let tagChips = null;
+    if (col.show_tags !== false) {
+      const allTags = new Set();
+      for (const t of cs.tasks) {
+        for (const tag of (t.tags || [])) allTags.add(tag);
+      }
+      if (allTags.size > 0) {
+        const chipChildren = [];
+        for (const tag of [...allTags].sort()) {
+          const isActive = cs.tagFilter === tag;
+          const chip = this._el("button", {
+            className: "tag-chip" + (isActive ? " active" : ""),
+            textContent: "#" + tag,
+          });
+          chip.addEventListener("click", () => {
+            cs.tagFilter = isActive ? null : tag;
+            this._render();
+          });
+          chipChildren.push(chip);
+        }
+        tagChips = this._el("div", { className: "tag-chips" }, chipChildren);
+      }
+    }
 
     // Task list
     const taskListChildren = [];
@@ -668,34 +771,30 @@ class HomeTasksCard extends HTMLElement {
       );
     }
     for (const task of filteredTasks) {
-      taskListChildren.push(this._buildTask(task));
+      taskListChildren.push(this._buildTask(task, colIdx));
     }
-    const taskList = this._el("div", { className: "task-list" }, taskListChildren);
+    const taskList = this._el("div", {
+      className: "task-list",
+      "data-col-idx": String(colIdx),
+    }, taskListChildren);
 
-    // Tag chips (filter by tag)
-    let tagChips = null;
-    if (this._config.show_tags !== false) {
-      const allTags = new Set();
-      for (const t of this._tasks) {
-        for (const tag of (t.tags || [])) allTags.add(tag);
-      }
-      if (allTags.size > 0) {
-        const chipChildren = [];
-        for (const tag of [...allTags].sort()) {
-          const isActive = this._tagFilter === tag;
-          const chip = this._el("button", {
-            className: "tag-chip" + (isActive ? " active" : ""),
-            textContent: "#" + tag,
-          });
-          chip.addEventListener("click", () => {
-            this._tagFilter = isActive ? null : tag;
-            this._render();
-          });
-          chipChildren.push(chip);
+    // Allow dropping on empty column
+    taskList.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      if (!this._draggedTaskId) return;
+      const tgtColIdx = parseInt(taskList.dataset.colIdx);
+      if (tgtColIdx !== this._draggedColIdx) {
+        const draggedEl = this.shadowRoot.querySelector(`.task[data-task-id="${this._draggedTaskId}"]`);
+        if (draggedEl && draggedEl.parentNode !== taskList) {
+          taskList.appendChild(draggedEl);
         }
-        tagChips = this._el("div", { className: "tag-chips" }, chipChildren);
+        taskList.closest(".card-column")?.classList.add("drag-target");
       }
-    }
+    });
+    taskList.addEventListener("drop", (e) => {
+      e.preventDefault();
+      this._finishDrag();
+    });
 
     const children = [];
     if (header) children.push(header);
@@ -703,23 +802,26 @@ class HomeTasksCard extends HTMLElement {
     children.push(filters);
     if (tagChips) children.push(tagChips);
     children.push(taskList);
-    const cc = this._config.compact ? "card-content compact" : "card-content";
-    return this._el("div", { className: cc }, children);
+
+    const className = "card-column" + (compact ? " compact" : "");
+    return this._el("div", { className }, children);
   }
 
-  _buildFilterBtn(label, value) {
+  _buildFilterBtn(label, value, colIdx) {
+    const cs = this._columns[colIdx];
     const btn = this._el("button", {
-      className: `filter-btn${this._filter === value ? " active" : ""}`,
+      className: `filter-btn${cs.filter === value ? " active" : ""}`,
       textContent: label,
     });
     btn.addEventListener("click", () => {
-      this._filter = value;
+      cs.filter = value;
       this._render();
     });
     return btn;
   }
 
-  _buildTask(task) {
+  _buildTask(task, colIdx) {
+    const cs = this._columns[colIdx];
     const isExpanded = this._expandedTasks.has(task.id);
     const isEditing = this._editingTaskId === task.id;
 
@@ -729,28 +831,23 @@ class HomeTasksCard extends HTMLElement {
     const taskEl = this._el("div", { className, draggable: true });
     taskEl.dataset.taskId = task.id;
 
-    // Main row
     const mainChildren = [];
 
-    // Drag handle (hidden in non-manual sort modes)
     const dragHandle = this._el("span", {
-      className: "drag-handle" + (this._sortBy !== "manual" ? " hidden" : ""),
+      className: "drag-handle" + (cs.sortBy !== "manual" ? " hidden" : ""),
       title: this._t("drag_handle"),
       textContent: "\u2237",
     });
     mainChildren.push(dragHandle);
 
-    // Checkbox
     const checkbox = this._el("input", { type: "checkbox", checked: task.completed });
-    checkbox.addEventListener("change", () => this._toggleTask(task.id, task.completed));
+    checkbox.addEventListener("change", () => this._toggleTask(task.id, task.completed, colIdx));
     const checkmark = this._el("span", { className: "checkmark" });
     const label = this._el("label", { className: "checkbox-container" }, [checkbox, checkmark]);
     mainChildren.push(label);
 
-    // Content wrapper (title + meta in column layout)
     const contentChildren = [];
 
-    // Title (editable or display)
     if (isEditing) {
       const editInput = this._el("input", {
         type: "text",
@@ -758,13 +855,14 @@ class HomeTasksCard extends HTMLElement {
         value: task.title,
       });
       editInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") this._updateTaskTitle(task.id, editInput.value);
+        if (e.key === "Enter") this._updateTaskTitle(task.id, editInput.value, colIdx);
         else if (e.key === "Escape") { this._editingTaskId = null; this._render(); }
       });
-      editInput.addEventListener("blur", () => this._updateTaskTitle(task.id, editInput.value));
+      editInput.addEventListener("blur", () => this._updateTaskTitle(task.id, editInput.value, colIdx));
       contentChildren.push(editInput);
       setTimeout(() => { editInput.focus(); editInput.select(); }, 0);
     } else {
+      const col = this._config.columns[colIdx];
       const titleSpan = this._el("span", { className: "task-title", textContent: task.title });
       titleSpan.addEventListener("click", () => {
         const now = Date.now();
@@ -784,9 +882,9 @@ class HomeTasksCard extends HTMLElement {
       contentChildren.push(titleSpan);
     }
 
-    // Meta (sub-item count + due date) — second line below title
+    const col = this._config.columns[colIdx];
     const metaChildren = [];
-    if (task.priority && this._config.show_priority !== false) {
+    if (task.priority && col.show_priority !== false) {
       const priLabels = { 1: this._t("pri_low"), 2: this._t("pri_medium"), 3: this._t("pri_high") };
       const priClass = { 1: "pri-low", 2: "pri-medium", 3: "pri-high" };
       metaChildren.push(this._el("span", {
@@ -795,10 +893,10 @@ class HomeTasksCard extends HTMLElement {
       }));
     }
     const subProgress = this._getSubItemProgress(task);
-    if (subProgress && this._config.show_sub_items !== false) {
+    if (subProgress && col.show_sub_items !== false) {
       metaChildren.push(this._el("span", { className: "sub-badge", textContent: subProgress }));
     }
-    if (task.due_date && this._config.show_due_date !== false) {
+    if (task.due_date && col.show_due_date !== false) {
       let dueCls = "due-date";
       if (this._isDueDateOverdue(task.due_date)) dueCls += " overdue";
       else if (this._isDueDateToday(task.due_date)) dueCls += " today";
@@ -807,7 +905,7 @@ class HomeTasksCard extends HTMLElement {
         textContent: this._formatDueDate(task.due_date, task.due_time),
       }));
     }
-    if (task.recurrence_enabled && this._config.show_recurrence !== false) {
+    if (task.recurrence_enabled && col.show_recurrence !== false) {
       let recLabel = null;
       if (task.recurrence_type === "weekdays" && task.recurrence_weekdays && task.recurrence_weekdays.length) {
         recLabel = task.recurrence_weekdays.map(d => this._t(`rec_wd_${d}`)).join(" ");
@@ -824,7 +922,7 @@ class HomeTasksCard extends HTMLElement {
         }));
       }
     }
-    if (task.assigned_person && this._config.show_assigned_person !== false) {
+    if (task.assigned_person && col.show_assigned_person !== false) {
       let personName = task.assigned_person;
       if (this._hass && this._hass.states && this._hass.states[task.assigned_person]) {
         const attrs = this._hass.states[task.assigned_person].attributes;
@@ -835,22 +933,22 @@ class HomeTasksCard extends HTMLElement {
         textContent: "\uD83D\uDC64 " + personName,
       }));
     }
-    if (task.tags && task.tags.length > 0 && this._config.show_tags !== false) {
+    if (task.tags && task.tags.length > 0 && col.show_tags !== false) {
       for (const tag of task.tags) {
-        const isActive = this._tagFilter === tag;
+        const isActive = cs.tagFilter === tag;
         const tagBadge = this._el("span", {
           className: "tag-badge" + (isActive ? " active" : ""),
           textContent: "#" + tag,
         });
         tagBadge.addEventListener("click", (e) => {
           e.stopPropagation();
-          this._tagFilter = isActive ? null : tag;
+          cs.tagFilter = isActive ? null : tag;
           this._render();
         });
         metaChildren.push(tagBadge);
       }
     }
-    if (task.reminders && task.reminders.length > 0 && this._config.show_reminders !== false) {
+    if (task.reminders && task.reminders.length > 0 && col.show_reminders !== false) {
       let remText;
       if (task.reminders.length === 1) {
         const entry = REMINDER_OFFSETS.find(([v]) => v === task.reminders[0]);
@@ -866,7 +964,6 @@ class HomeTasksCard extends HTMLElement {
 
     mainChildren.push(this._el("div", { className: "task-content" }, contentChildren));
 
-    // Expand button
     const expandBtn = this._el("button", {
       className: "expand-btn",
       textContent: isExpanded ? "\u25BC" : "\u25B6",
@@ -881,19 +978,20 @@ class HomeTasksCard extends HTMLElement {
     const mainRow = this._el("div", { className: "task-main" }, mainChildren);
     taskEl.appendChild(mainRow);
 
-    // Details (expanded)
     if (isExpanded) {
-      taskEl.appendChild(this._buildTaskDetails(task));
+      taskEl.appendChild(this._buildTaskDetails(task, colIdx));
     }
 
-    // Drag & drop
-    this._attachDragToTask(taskEl, task.id, dragHandle);
+    this._attachDragToTask(taskEl, task.id, dragHandle, colIdx);
 
     return taskEl;
   }
 
-  _buildTaskDetails(task) {
-    // Due section (date + time)
+  _buildTaskDetails(task, colIdx) {
+    const col = this._config.columns[colIdx];
+    const listId = this._colListId(colIdx);
+
+    // Due section
     const dateInput = this._el("input", {
       type: "date",
       className: "date-input",
@@ -909,10 +1007,10 @@ class HomeTasksCard extends HTMLElement {
     dateInput.addEventListener("change", () => {
       if (!dateInput.value) timeInput.value = "";
       timeInput.disabled = !dateInput.value;
-      this._updateTaskDue(task.id, dateInput.value, timeInput.value);
+      this._updateTaskDue(task.id, dateInput.value, timeInput.value, colIdx);
     });
     timeInput.addEventListener("change", () =>
-      this._updateTaskDue(task.id, dateInput.value, timeInput.value)
+      this._updateTaskDue(task.id, dateInput.value, timeInput.value, colIdx)
     );
 
     const dateSection = this._el("div", { className: "detail-section" }, [
@@ -927,13 +1025,12 @@ class HomeTasksCard extends HTMLElement {
       rows: 2,
       value: task.notes || "",
     });
-    // textarea needs textContent for initial value
     notesInput.textContent = task.notes || "";
     let debounceTimer;
     notesInput.addEventListener("input", () => {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
-        this._updateTaskNotes(task.id, notesInput.value);
+        this._updateTaskNotes(task.id, notesInput.value, colIdx);
       }, 500);
     });
     const notesSection = this._el("div", { className: "detail-section" }, [
@@ -946,13 +1043,13 @@ class HomeTasksCard extends HTMLElement {
       this._el("label", { className: "detail-label", textContent: this._t("sub_items") }),
     ];
     for (const sub of task.sub_items) {
-      subChildren.push(this._buildSubItem(task.id, sub));
+      subChildren.push(this._buildSubItem(task.id, sub, colIdx));
     }
     const addSubBtn = this._el("button", {
       className: "add-sub-btn",
       textContent: this._t("add_sub_item"),
     });
-    addSubBtn.addEventListener("click", () => this._addSubItem(task.id));
+    addSubBtn.addEventListener("click", () => this._addSubItem(task.id, colIdx));
     subChildren.push(addSubBtn);
     const subSection = this._el("div", { className: "detail-section" }, subChildren);
 
@@ -966,10 +1063,10 @@ class HomeTasksCard extends HTMLElement {
       });
       btn.addEventListener("click", () => {
         this._callWs("home_tasks/update_task", {
-          list_id: this._config.list_id,
+          list_id: listId,
           task_id: task.id,
           priority: currentPriority === val ? null : val,
-        }).then(() => this._loadTasks());
+        }).then(() => this._loadAllTasks());
       });
       priorityBtnRow.appendChild(btn);
     }
@@ -995,7 +1092,6 @@ class HomeTasksCard extends HTMLElement {
       this._el("span", { textContent: this._t("recurrence_enabled") }),
     ]);
 
-    // Mode selector: interval vs weekdays
     const recurrenceModeSelect = this._el("select", { className: "recurrence-select recurrence-mode-select" });
     for (const [val, key] of [["interval", "rec_type_interval"], ["weekdays", "rec_type_weekdays"]]) {
       const opt = this._el("option", { value: val, textContent: this._t(key) });
@@ -1003,7 +1099,6 @@ class HomeTasksCard extends HTMLElement {
       recurrenceModeSelect.appendChild(opt);
     }
 
-    // Interval sub-row
     const recurrenceValueInput = this._el("input", {
       type: "number",
       className: "recurrence-value",
@@ -1013,13 +1108,12 @@ class HomeTasksCard extends HTMLElement {
     recurrenceValueInput.max = 365;
 
     const recurrenceUnitSelect = this._el("select", { className: "recurrence-select" });
-    const unitOptions = [
+    for (const opt of [
       { value: "hours", label: this._t("rec_hours") },
       { value: "days", label: this._t("rec_days") },
       { value: "weeks", label: this._t("rec_weeks") },
       { value: "months", label: this._t("rec_months") },
-    ];
-    for (const opt of unitOptions) {
+    ]) {
       const optEl = this._el("option", { value: opt.value, textContent: opt.label });
       if (opt.value === recurrenceUnit) optEl.selected = true;
       recurrenceUnitSelect.appendChild(optEl);
@@ -1031,7 +1125,6 @@ class HomeTasksCard extends HTMLElement {
       recurrenceUnitSelect,
     ]);
 
-    // Weekday sub-row
     const weekdayCheckboxes = [];
     const recurrenceWeekdayRow = this._el("div", { className: "recurrence-weekday-row" });
     for (let d = 0; d < 7; d++) {
@@ -1044,14 +1137,12 @@ class HomeTasksCard extends HTMLElement {
       recurrenceWeekdayRow.appendChild(lbl);
     }
 
-    // Show/hide sub-rows based on current mode
     const applyModeVisibility = (type) => {
       recurrenceIntervalRow.style.display = type === "interval" ? "" : "none";
       recurrenceWeekdayRow.style.display = type === "weekdays" ? "" : "none";
     };
     applyModeVisibility(recurrenceType);
 
-    // Disable controls when recurrence not enabled
     const applyEnabledState = (enabled) => {
       recurrenceModeSelect.disabled = !enabled;
       recurrenceValueInput.disabled = !enabled;
@@ -1063,21 +1154,21 @@ class HomeTasksCard extends HTMLElement {
     const saveWeekdays = () => {
       const selected = weekdayCheckboxes.map((cb, i) => cb.checked ? i : -1).filter(i => i >= 0);
       this._callWs("home_tasks/update_task", {
-        list_id: this._config.list_id,
+        list_id: listId,
         task_id: task.id,
         recurrence_weekdays: selected,
-      }).then(() => this._loadTasks());
+      }).then(() => this._loadAllTasks());
     };
 
     const saveInterval = () => {
       const val = Math.max(1, Math.min(365, parseInt(recurrenceValueInput.value) || 1));
       recurrenceValueInput.value = val;
       this._callWs("home_tasks/update_task", {
-        list_id: this._config.list_id,
+        list_id: listId,
         task_id: task.id,
         recurrence_value: val,
         recurrence_unit: recurrenceUnitSelect.value,
-      }).then(() => this._loadTasks());
+      }).then(() => this._loadAllTasks());
     };
 
     recurrenceToggle.addEventListener("change", () => {
@@ -1087,24 +1178,24 @@ class HomeTasksCard extends HTMLElement {
       const val = Math.max(1, Math.min(365, parseInt(recurrenceValueInput.value) || 1));
       const selected = weekdayCheckboxes.map((cb, i) => cb.checked ? i : -1).filter(i => i >= 0);
       this._callWs("home_tasks/update_task", {
-        list_id: this._config.list_id,
+        list_id: listId,
         task_id: task.id,
         recurrence_enabled: enabled,
         recurrence_type: mode,
         recurrence_value: val,
         recurrence_unit: recurrenceUnitSelect.value,
         recurrence_weekdays: selected,
-      }).then(() => this._loadTasks());
+      }).then(() => this._loadAllTasks());
     });
 
     recurrenceModeSelect.addEventListener("change", () => {
       const mode = recurrenceModeSelect.value;
       applyModeVisibility(mode);
       this._callWs("home_tasks/update_task", {
-        list_id: this._config.list_id,
+        list_id: listId,
         task_id: task.id,
         recurrence_type: mode,
-      }).then(() => this._loadTasks());
+      }).then(() => this._loadAllTasks());
     });
 
     recurrenceValueInput.addEventListener("change", saveInterval);
@@ -1138,10 +1229,10 @@ class HomeTasksCard extends HTMLElement {
     }
     personSelect.addEventListener("change", () => {
       this._callWs("home_tasks/update_task", {
-        list_id: this._config.list_id,
+        list_id: listId,
         task_id: task.id,
         assigned_person: personSelect.value || null,
-      }).then(() => this._loadTasks());
+      }).then(() => this._loadAllTasks());
     });
     const personSection = this._el("div", { className: "detail-section" }, [
       this._el("label", { className: "detail-label", textContent: this._t("assigned_to") }),
@@ -1164,10 +1255,10 @@ class HomeTasksCard extends HTMLElement {
         removeBtn.addEventListener("click", () => {
           const newTags = taskTags.filter((t) => t !== tag);
           this._callWs("home_tasks/update_task", {
-            list_id: this._config.list_id,
+            list_id: listId,
             task_id: task.id,
             tags: newTags,
-          }).then(() => this._loadTasks());
+          }).then(() => this._loadAllTasks());
         });
         tagListEl.appendChild(
           this._el("span", { className: "tag-item" }, [
@@ -1188,10 +1279,10 @@ class HomeTasksCard extends HTMLElement {
         const val = tagInput.value.trim().toLowerCase();
         if (val && !taskTags.includes(val)) {
           this._callWs("home_tasks/update_task", {
-            list_id: this._config.list_id,
+            list_id: listId,
             task_id: task.id,
             tags: [...taskTags, val],
-          }).then(() => this._loadTasks());
+          }).then(() => this._loadAllTasks());
         }
         tagInput.value = "";
       }
@@ -1206,10 +1297,10 @@ class HomeTasksCard extends HTMLElement {
     ];
     const _rebuildReminders = (newReminders) => {
       this._callWs("home_tasks/update_task", {
-        list_id: this._config.list_id,
+        list_id: listId,
         task_id: task.id,
         reminders: newReminders,
-      }).then(() => this._loadTasks());
+      }).then(() => this._loadAllTasks());
     };
     for (let ri = 0; ri < taskReminders.length; ri++) {
       const offset = taskReminders[ri];
@@ -1254,28 +1345,28 @@ class HomeTasksCard extends HTMLElement {
       className: "delete-task-btn",
       textContent: this._t("delete_task"),
     });
-    deleteBtn.addEventListener("click", () => this._deleteTask(task.id));
+    deleteBtn.addEventListener("click", () => this._deleteTask(task.id, colIdx));
     const actions = this._el("div", { className: "detail-actions" }, [deleteBtn]);
 
     const details = [];
-    if (this._config.show_notes !== false) details.push(notesSection);
-    if (this._config.show_sub_items !== false) details.push(subSection);
-    if (this._config.show_assigned_person !== false) details.push(personSection);
-    if (this._config.show_priority !== false) details.push(prioritySection);
-    if (this._config.show_tags !== false) details.push(tagSection);
-    if (this._config.show_due_date !== false) details.push(dateSection);
-    if (this._config.show_reminders !== false) details.push(reminderSection);
-    if (this._config.show_recurrence !== false) details.push(recurrenceSection);
+    if (col.show_notes !== false) details.push(notesSection);
+    if (col.show_sub_items !== false) details.push(subSection);
+    if (col.show_assigned_person !== false) details.push(personSection);
+    if (col.show_priority !== false) details.push(prioritySection);
+    if (col.show_tags !== false) details.push(tagSection);
+    if (col.show_due_date !== false) details.push(dateSection);
+    if (col.show_reminders !== false) details.push(reminderSection);
+    if (col.show_recurrence !== false) details.push(recurrenceSection);
     details.push(actions);
     return this._el("div", { className: "task-details" }, details);
   }
 
-  _buildSubItem(taskId, sub) {
+  _buildSubItem(taskId, sub, colIdx) {
     const isEditing = this._editingSubItemId === sub.id;
 
     const checkbox = this._el("input", { type: "checkbox", checked: sub.completed });
     checkbox.addEventListener("change", () =>
-      this._toggleSubItem(taskId, sub.id, sub.completed)
+      this._toggleSubItem(taskId, sub.id, sub.completed, colIdx)
     );
     const checkmark = this._el("span", { className: "checkmark" });
     const label = this._el("label", { className: "checkbox-container small" }, [
@@ -1290,11 +1381,11 @@ class HomeTasksCard extends HTMLElement {
         value: sub.title,
       });
       titleEl.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") this._updateSubItemTitle(taskId, sub.id, titleEl.value);
+        if (e.key === "Enter") this._updateSubItemTitle(taskId, sub.id, titleEl.value, colIdx);
         else if (e.key === "Escape") { this._editingSubItemId = null; this._render(); }
       });
       titleEl.addEventListener("blur", () =>
-        this._updateSubItemTitle(taskId, sub.id, titleEl.value)
+        this._updateSubItemTitle(taskId, sub.id, titleEl.value, colIdx)
       );
       setTimeout(() => { titleEl.focus(); titleEl.select(); }, 0);
     } else {
@@ -1312,83 +1403,98 @@ class HomeTasksCard extends HTMLElement {
       title: this._t("delete_sub"),
       textContent: "\u00D7",
     });
-    deleteBtn.addEventListener("click", () => this._deleteSubItem(taskId, sub.id));
+    deleteBtn.addEventListener("click", () => this._deleteSubItem(taskId, sub.id, colIdx));
 
     return this._el("div", { className: "sub-item" }, [label, titleEl, deleteBtn]);
   }
 
-  // --- Drag & Drop (Desktop + Touch) ---
+  // --- Drag & Drop ---
 
-  _getOrderFromDom() {
-    const taskList = this.shadowRoot.querySelector(".task-list");
+  _getOrderFromDom(colIdx) {
+    const taskList = this.shadowRoot.querySelector(`.task-list[data-col-idx="${colIdx}"]`);
     if (!taskList) return [];
     return Array.from(taskList.querySelectorAll(".task")).map((el) => el.dataset.taskId);
   }
 
+  _mergeHiddenTasks(colIdx, visibleOrder) {
+    const cs = this._columns[colIdx];
+    const filteredIds = new Set(visibleOrder);
+    const hiddenIds = cs.tasks.map((t) => t.id).filter((id) => !filteredIds.has(id));
+    const fullOrder = [...visibleOrder];
+    const origOrder = cs.tasks.map((t) => t.id);
+    for (const hid of hiddenIds) {
+      const origIdx = origOrder.indexOf(hid);
+      let insertIdx = fullOrder.length;
+      for (let i = origIdx - 1; i >= 0; i--) {
+        const prevId = origOrder[i];
+        const posInNew = fullOrder.indexOf(prevId);
+        if (posInNew !== -1) { insertIdx = posInNew + 1; break; }
+      }
+      fullOrder.splice(insertIdx, 0, hid);
+    }
+    return fullOrder;
+  }
+
   _liveMoveTask(draggedEl, targetEl) {
     if (!draggedEl || !targetEl || draggedEl === targetEl) return;
-    const list = draggedEl.parentNode;
-    if (!list) return;
+    const targetList = targetEl.parentNode;
+    if (!targetList) return;
     const draggedRect = draggedEl.getBoundingClientRect();
     const targetRect = targetEl.getBoundingClientRect();
     if (draggedRect.top < targetRect.top) {
-      list.insertBefore(draggedEl, targetEl.nextSibling);
+      targetList.insertBefore(draggedEl, targetEl.nextSibling);
     } else {
-      list.insertBefore(draggedEl, targetEl);
+      targetList.insertBefore(draggedEl, targetEl);
     }
   }
 
   _finishDrag() {
-    // Read final order from DOM and sync to backend
-    const newOrder = this._getOrderFromDom();
     const draggedId = this._draggedTaskId;
-    this._draggedTaskId = null;
-    this._dragOverTaskId = null;
+    const srcColIdx = this._draggedColIdx;
 
-    // Clean up classes
+    // Determine which column the dragged element ended up in
+    const draggedEl = draggedId
+      ? this.shadowRoot.querySelector(`[data-task-id="${draggedId}"]`)
+      : null;
+    const currentTaskList = draggedEl?.closest(".task-list");
+    const tgtColIdx = currentTaskList !== null && currentTaskList !== undefined
+      ? parseInt(currentTaskList.dataset.colIdx ?? srcColIdx)
+      : srcColIdx;
+
+    // Clean up
+    this._draggedTaskId = null;
+    this._draggedColIdx = null;
+    this._dragOverTaskId = null;
     this.shadowRoot.querySelectorAll(".task").forEach((el) => {
       el.classList.remove("dragging", "drag-over");
     });
+    this.shadowRoot.querySelectorAll(".card-column").forEach((el) => {
+      el.classList.remove("drag-target");
+    });
+    if (this._touchClone) { this._touchClone.remove(); this._touchClone = null; }
+    if (this._touchStartTimer) { clearTimeout(this._touchStartTimer); this._touchStartTimer = null; }
 
-    // Remove touch clone
-    if (this._touchClone) {
-      this._touchClone.remove();
-      this._touchClone = null;
-    }
-    if (this._touchStartTimer) {
-      clearTimeout(this._touchStartTimer);
-      this._touchStartTimer = null;
-    }
+    if (!draggedId || srcColIdx === null) return;
 
-    // Merge filtered order back into full order (for hidden tasks)
-    if (draggedId && newOrder.length > 0) {
-      const filteredIds = new Set(newOrder);
-      const hiddenIds = this._tasks.map((t) => t.id).filter((id) => !filteredIds.has(id));
-      // Insert hidden tasks at their relative positions
-      const fullOrder = [...newOrder];
-      const origOrder = this._tasks.map((t) => t.id);
-      for (const hid of hiddenIds) {
-        const origIdx = origOrder.indexOf(hid);
-        // Find the best insertion point
-        let insertIdx = fullOrder.length;
-        for (let i = origIdx - 1; i >= 0; i--) {
-          const prevId = origOrder[i];
-          const posInNew = fullOrder.indexOf(prevId);
-          if (posInNew !== -1) {
-            insertIdx = posInNew + 1;
-            break;
-          }
-        }
-        fullOrder.splice(insertIdx, 0, hid);
+    if (!isNaN(tgtColIdx) && tgtColIdx !== srcColIdx) {
+      // Cross-column move
+      const targetTaskIds = this._getOrderFromDom(tgtColIdx);
+      this._moveTask(srcColIdx, tgtColIdx, draggedId, targetTaskIds);
+    } else {
+      // Same-column reorder
+      const visibleOrder = this._getOrderFromDom(srcColIdx ?? 0);
+      if (visibleOrder.length > 0) {
+        const fullOrder = this._mergeHiddenTasks(srcColIdx ?? 0, visibleOrder);
+        this._reorderTasks(fullOrder, srcColIdx ?? 0);
       }
-      this._reorderTasks(fullOrder);
     }
   }
 
-  _attachDragToTask(taskEl, taskId, dragHandle) {
-    // --- HTML5 Drag & Drop (Desktop) ---
+  _attachDragToTask(taskEl, taskId, dragHandle, colIdx) {
+    // HTML5 Drag & Drop (Desktop)
     taskEl.addEventListener("dragstart", (e) => {
       this._draggedTaskId = taskId;
+      this._draggedColIdx = colIdx;
       e.dataTransfer.effectAllowed = "move";
       taskEl.classList.add("dragging");
     });
@@ -1403,6 +1509,13 @@ class HomeTasksCard extends HTMLElement {
       if (!this._draggedTaskId || this._draggedTaskId === taskId) return;
       const draggedEl = this.shadowRoot.querySelector(`.task[data-task-id="${this._draggedTaskId}"]`);
       this._liveMoveTask(draggedEl, taskEl);
+      // Visual feedback for cross-column target
+      const tgtList = taskEl.closest(".task-list");
+      const tgtColIdx = tgtList ? parseInt(tgtList.dataset.colIdx) : colIdx;
+      if (tgtColIdx !== this._draggedColIdx) {
+        this.shadowRoot.querySelectorAll(".card-column").forEach(el => el.classList.remove("drag-target"));
+        taskEl.closest(".card-column")?.classList.add("drag-target");
+      }
     });
 
     taskEl.addEventListener("drop", (e) => {
@@ -1410,7 +1523,7 @@ class HomeTasksCard extends HTMLElement {
       this._finishDrag();
     });
 
-    // --- Touch Events (Mobile) ---
+    // Touch Events (Mobile)
     if (!dragHandle) return;
 
     dragHandle.addEventListener("touchstart", (e) => {
@@ -1418,9 +1531,9 @@ class HomeTasksCard extends HTMLElement {
       const touch = e.touches[0];
       this._touchStartTimer = setTimeout(() => {
         this._draggedTaskId = taskId;
+        this._draggedColIdx = colIdx;
         taskEl.classList.add("dragging");
 
-        // Create visual clone
         const rect = taskEl.getBoundingClientRect();
         const clone = taskEl.cloneNode(true);
         clone.className = "task drag-clone";
@@ -1441,7 +1554,6 @@ class HomeTasksCard extends HTMLElement {
 
     const onTouchMove = (e) => {
       if (!this._draggedTaskId) {
-        // If finger moves before long-press fires, cancel the timer (allow scroll)
         if (this._touchStartTimer) {
           clearTimeout(this._touchStartTimer);
           this._touchStartTimer = null;
@@ -1451,18 +1563,15 @@ class HomeTasksCard extends HTMLElement {
       e.preventDefault();
       const touch = e.touches[0];
 
-      // Move clone
       if (this._touchClone) {
         this._touchClone.style.top = `${touch.clientY - this._touchOffsetY}px`;
       }
 
-      // Find target element under finger (shadow DOM needs shadowRoot.elementFromPoint)
       if (this._touchClone) this._touchClone.style.display = "none";
       const shadowEl = this.shadowRoot.elementFromPoint(touch.clientX, touch.clientY);
       if (this._touchClone) this._touchClone.style.display = "";
 
       const target = shadowEl ? shadowEl.closest(".task") : null;
-
       if (target && target.dataset.taskId && target.dataset.taskId !== this._draggedTaskId && !target.classList.contains("drag-clone")) {
         const draggedEl = this.shadowRoot.querySelector(`.task[data-task-id="${this._draggedTaskId}"]`);
         this._liveMoveTask(draggedEl, target);
@@ -1501,7 +1610,12 @@ class HomeTasksCard extends HTMLElement {
         --todo-radius: 8px;
       }
       ha-card { overflow: hidden; }
-      .card-content { padding: 16px; }
+      .multi-columns { display: flex; gap: 0; align-items: flex-start; }
+      .multi-columns .card-column { flex: 1; min-width: 240px; border-right: 1px solid var(--todo-divider); }
+      .multi-columns .card-column:last-child { border-right: none; }
+      @media (max-width: 600px) { .multi-columns { flex-direction: column; } .multi-columns .card-column { border-right: none; border-bottom: 1px solid var(--todo-divider); } .multi-columns .card-column:last-child { border-bottom: none; } }
+      .card-column.drag-target { outline: 2px dashed var(--todo-primary); outline-offset: -2px; border-radius: var(--todo-radius); }
+      .card-column { padding: 16px; }
       .header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
       .title { font-size: 24px; font-weight: 700; color: var(--todo-text); margin: 0; }
       .progress { font-size: 14px; color: var(--todo-secondary-text); }
@@ -1548,7 +1662,7 @@ class HomeTasksCard extends HTMLElement {
       }
       .sort-option:hover { background: var(--todo-surface); }
       .sort-option.active { color: var(--todo-primary); font-weight: 500; }
-      .task-list { display: flex; flex-direction: column; gap: 6px; }
+      .task-list { display: flex; flex-direction: column; gap: 6px; min-height: 40px; }
       .empty-state { text-align: center; padding: 24px; color: var(--todo-disabled); font-size: 14px; }
       .task {
         border: 1px solid var(--todo-divider); border-radius: var(--todo-radius);
@@ -1562,6 +1676,7 @@ class HomeTasksCard extends HTMLElement {
         user-select: none; padding: 4px 2px; line-height: 1;
         touch-action: none;
       }
+      .drag-handle.hidden { visibility: hidden; }
       .drag-handle:active { cursor: grabbing; }
       @media (pointer: coarse) {
         .drag-handle { padding: 8px 6px; font-size: 18px; }
@@ -1634,9 +1749,7 @@ class HomeTasksCard extends HTMLElement {
         cursor: pointer; transition: all 0.2s;
       }
       .tag-badge:hover { opacity: 0.8; }
-      .tag-badge.active {
-        background: var(--success-color, #4caf50); color: #fff;
-      }
+      .tag-badge.active { background: var(--success-color, #4caf50); color: #fff; }
       .reminder-badge {
         font-size: 11px; padding: 2px 8px; border-radius: 10px;
         background: rgba(255, 152, 0, 0.15); color: var(--warning-color, #ff9800);
@@ -1648,10 +1761,7 @@ class HomeTasksCard extends HTMLElement {
         cursor: pointer; font-family: inherit; transition: all 0.2s;
       }
       .tag-chip:hover { background: rgba(76, 175, 80, 0.1); }
-      .tag-chip.active {
-        background: var(--success-color, #4caf50); color: #fff;
-        border-color: var(--success-color, #4caf50);
-      }
+      .tag-chip.active { background: var(--success-color, #4caf50); color: #fff; border-color: var(--success-color, #4caf50); }
       .tag-list { display: flex; gap: 6px; flex-wrap: wrap; }
       .tag-item {
         display: inline-flex; align-items: center; gap: 4px;
@@ -1675,16 +1785,10 @@ class HomeTasksCard extends HTMLElement {
         border-radius: 4px; font-size: 13px; background: var(--todo-bg);
         color: var(--todo-text); font-family: inherit;
       }
-      .recurrence-toggle-row {
-        display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
-      }
+      .recurrence-toggle-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
       .recurrence-mode-select { margin-bottom: 6px; }
-      .recurrence-input-row {
-        display: flex; align-items: center; gap: 8px;
-      }
-      .recurrence-prefix {
-        font-size: 13px; color: var(--todo-secondary-text); white-space: nowrap;
-      }
+      .recurrence-input-row { display: flex; align-items: center; gap: 8px; }
+      .recurrence-prefix { font-size: 13px; color: var(--todo-secondary-text); white-space: nowrap; }
       .recurrence-value {
         width: 60px; padding: 6px 8px; border: 1px solid var(--todo-divider);
         border-radius: 4px; font-size: 13px; background: var(--todo-bg);
@@ -1696,13 +1800,10 @@ class HomeTasksCard extends HTMLElement {
         color: var(--todo-text); font-family: inherit;
       }
       .recurrence-value:disabled, .recurrence-select:disabled { opacity: 0.5; }
-      .recurrence-weekday-row {
-        display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;
-      }
+      .recurrence-weekday-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
       .weekday-label {
         display: flex; flex-direction: column; align-items: center; gap: 3px;
-        font-size: 12px; color: var(--todo-secondary-text); cursor: pointer;
-        user-select: none;
+        font-size: 12px; color: var(--todo-secondary-text); cursor: pointer; user-select: none;
       }
       .weekday-label input[type="checkbox"] { display: none; }
       .weekday-label span {
@@ -1826,11 +1927,11 @@ class HomeTasksCard extends HTMLElement {
   }
 
   static getStubConfig() {
-    return { title: "" };
+    return { columns: [{}] };
   }
 
   getCardSize() {
-    return 3 + this._tasks.length;
+    return 3 + this._columns.reduce((sum, cs) => sum + cs.tasks.length, 0);
   }
 }
 
@@ -1841,10 +1942,14 @@ class HomeTasksCardEditor extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
-    this._config = {};
+    this._config = { columns: [{}] };
     this._hass = null;
     this._lists = [];
     this._listsLoaded = false;
+    this._editorTab = 0;
+    this._editorCodeMode = {};  // { tabIdx: bool }
+    this._editorCodeText = {};  // { tabIdx: string }
+    this._editorCodeError = {}; // { tabIdx: string }
   }
 
   _t(key, ...args) {
@@ -1874,18 +1979,24 @@ class HomeTasksCardEditor extends HTMLElement {
   }
 
   setConfig(config) {
+    // Normalize old single-list format
+    if (config.list_id && !config.columns) {
+      config = { columns: [{ ...config }] };
+    }
+    if (!config.columns || !Array.isArray(config.columns) || config.columns.length === 0) {
+      config = { columns: [{}] };
+    }
     this._config = { ...config };
+
+    // Clamp active tab
+    if (this._editorTab >= this._config.columns.length) {
+      this._editorTab = this._config.columns.length - 1;
+    }
+
     if (this._listsLoaded) {
-      // Only skip re-render if title input is focused (user is typing)
-      const root = this.shadowRoot;
-      const active = root && root.activeElement;
-      const isTitleFocused = active && active.id === "title-input";
-      if (isTitleFocused) {
-        // Update everything except the title input
-        this._updateNonInputValues();
-      } else {
-        this._render();
-      }
+      const active = this.shadowRoot?.activeElement;
+      if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
+      this._render();
     }
   }
 
@@ -1902,9 +2013,11 @@ class HomeTasksCardEditor extends HTMLElement {
       if (result && Array.isArray(result.lists)) {
         this._lists = result.lists;
         this._listsLoaded = true;
-        // Auto-select first list if none set
-        if (!this._config.list_id && this._lists.length > 0) {
-          this._config = { ...this._config, list_id: this._lists[0].id };
+        // Auto-select first list for first column if none set
+        if (!this._config.columns[0]?.list_id && this._lists.length > 0) {
+          const newCols = [...this._config.columns];
+          newCols[0] = { ...newCols[0], list_id: this._lists[0].id };
+          this._config = { ...this._config, columns: newCols };
           this._fireChanged();
         }
         this._render();
@@ -1914,24 +2027,39 @@ class HomeTasksCardEditor extends HTMLElement {
     }
   }
 
-  _updateNonInputValues() {
-    // Update select and checkboxes without touching text inputs
-    const root = this.shadowRoot;
-    const select = root.getElementById("list-select");
-    if (select && select.value !== this._config.list_id) {
-      select.value = this._config.list_id || "";
-    }
+  _clearCodeState() {
+    this._editorCodeMode = {};
+    this._editorCodeText = {};
+    this._editorCodeError = {};
   }
 
   _render() {
     const root = this.shadowRoot;
     root.innerHTML = "";
-    this._rendered = true;
 
     const style = document.createElement("style");
     style.textContent = `
       :host { display: block; }
-      .editor { display: flex; flex-direction: column; gap: 16px; padding: 16px 0; }
+      .editor { display: flex; flex-direction: column; gap: 0; padding: 16px 0; }
+      .editor-tabs { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+      .editor-tab {
+        min-width: 32px; padding: 4px 12px; border: 1px solid var(--divider-color);
+        border-radius: 4px; background: transparent; cursor: pointer; font-size: 13px;
+        font-family: inherit; color: var(--primary-text-color);
+      }
+      .editor-tab.active { background: var(--primary-color); color: #fff; border-color: var(--primary-color); }
+      .editor-tab:hover:not(.active) { background: var(--secondary-background-color); }
+      .editor-col-controls { display: flex; gap: 6px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+      .editor-col-btn {
+        padding: 4px 10px; border: 1px solid var(--divider-color);
+        border-radius: 4px; background: transparent; cursor: pointer; font-size: 13px;
+        font-family: inherit; color: var(--primary-text-color);
+      }
+      .editor-col-btn:hover { background: var(--secondary-background-color); }
+      .editor-col-btn.active { background: var(--secondary-background-color); border-color: var(--primary-color); color: var(--primary-color); }
+      .editor-col-btn-del { color: var(--error-color, #db4437); border-color: rgba(219,68,55,0.4); }
+      .editor-col-btn-del:hover { background: rgba(219, 68, 55, 0.1); }
+      .visual-editor { display: flex; flex-direction: column; gap: 16px; }
       .field { display: flex; flex-direction: column; gap: 4px; }
       label { font-size: 12px; font-weight: 500; color: var(--secondary-text-color); text-transform: uppercase; letter-spacing: 0.5px; }
       select, input[type="text"] { padding: 8px 12px; border: 1px solid var(--divider-color); border-radius: 4px; font-size: 14px; background: var(--card-background-color); color: var(--primary-text-color); font-family: inherit; }
@@ -1939,264 +2067,243 @@ class HomeTasksCardEditor extends HTMLElement {
       .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; }
       .toggle-label { font-size: 14px; color: var(--primary-text-color); }
       .toggle-row input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary-color); }
+      .code-editor-wrapper { display: flex; flex-direction: column; gap: 6px; }
+      .code-editor-textarea {
+        width: 100%; min-height: 320px; padding: 10px; border: 1px solid var(--divider-color);
+        border-radius: 4px; font-family: monospace; font-size: 12px;
+        background: var(--secondary-background-color); color: var(--primary-text-color);
+        box-sizing: border-box; resize: vertical; outline: none;
+      }
+      .code-editor-textarea:focus { border-color: var(--primary-color); }
+      .code-editor-error { color: var(--error-color, #db4437); font-size: 12px; }
     `;
     root.appendChild(style);
 
+    const cols = this._config.columns;
+    const activeTab = Math.min(this._editorTab, cols.length - 1);
+
+    // Tab bar
+    const tabBar = this._el("div", { className: "editor-tabs" });
+    for (let i = 0; i < cols.length; i++) {
+      const colName = cols[i].title ||
+        this._lists.find(l => l.id === cols[i].list_id)?.name ||
+        String(i + 1);
+      const tab = this._el("button", {
+        className: "editor-tab" + (i === activeTab ? " active" : ""),
+        textContent: String(i + 1),
+        title: colName,
+      });
+      tab.addEventListener("click", () => {
+        this._editorTab = i;
+        this._render();
+      });
+      tabBar.appendChild(tab);
+    }
+    const addTabBtn = this._el("button", {
+      className: "editor-tab",
+      textContent: "+",
+      title: this._t("ed_add_column"),
+    });
+    addTabBtn.addEventListener("click", () => {
+      this._clearCodeState();
+      const newCols = [...cols, {}];
+      this._config = { ...this._config, columns: newCols };
+      this._editorTab = newCols.length - 1;
+      this._fireChanged();
+      this._render();
+    });
+    tabBar.appendChild(addTabBtn);
+
+    // Column controls
+    const isCodeMode = this._editorCodeMode[activeTab] === true;
+    const controls = this._el("div", { className: "editor-col-controls" });
+
+    // Code/visual toggle
+    const codeBtn = this._el("button", {
+      className: "editor-col-btn" + (isCodeMode ? " active" : ""),
+      textContent: "{}",
+      title: isCodeMode ? this._t("ed_visual_editor") : this._t("ed_code_editor"),
+    });
+    codeBtn.addEventListener("click", () => {
+      if (!isCodeMode) {
+        this._editorCodeText[activeTab] = JSON.stringify(cols[activeTab], null, 2);
+      }
+      this._editorCodeMode[activeTab] = !isCodeMode;
+      this._render();
+    });
+    controls.appendChild(codeBtn);
+
+    if (cols.length > 1) {
+      if (activeTab > 0) {
+        const leftBtn = this._el("button", { className: "editor-col-btn", textContent: "\u2190", title: this._t("ed_move_left") });
+        leftBtn.addEventListener("click", () => {
+          this._clearCodeState();
+          const newCols = [...cols];
+          [newCols[activeTab - 1], newCols[activeTab]] = [newCols[activeTab], newCols[activeTab - 1]];
+          this._config = { ...this._config, columns: newCols };
+          this._editorTab = activeTab - 1;
+          this._fireChanged();
+          this._render();
+        });
+        controls.appendChild(leftBtn);
+      }
+      if (activeTab < cols.length - 1) {
+        const rightBtn = this._el("button", { className: "editor-col-btn", textContent: "\u2192", title: this._t("ed_move_right") });
+        rightBtn.addEventListener("click", () => {
+          this._clearCodeState();
+          const newCols = [...cols];
+          [newCols[activeTab], newCols[activeTab + 1]] = [newCols[activeTab + 1], newCols[activeTab]];
+          this._config = { ...this._config, columns: newCols };
+          this._editorTab = activeTab + 1;
+          this._fireChanged();
+          this._render();
+        });
+        controls.appendChild(rightBtn);
+      }
+      const dupBtn = this._el("button", { className: "editor-col-btn", textContent: "\u29C8", title: this._t("ed_duplicate") });
+      dupBtn.addEventListener("click", () => {
+        this._clearCodeState();
+        const newCols = [...cols];
+        newCols.splice(activeTab + 1, 0, { ...cols[activeTab] });
+        this._config = { ...this._config, columns: newCols };
+        this._editorTab = activeTab + 1;
+        this._fireChanged();
+        this._render();
+      });
+      controls.appendChild(dupBtn);
+
+      const delBtn = this._el("button", { className: "editor-col-btn editor-col-btn-del", textContent: "\uD83D\uDDD1", title: this._t("ed_delete_column") });
+      delBtn.addEventListener("click", () => {
+        this._clearCodeState();
+        const newCols = cols.filter((_, i) => i !== activeTab);
+        this._config = { ...this._config, columns: newCols };
+        this._editorTab = Math.min(activeTab, newCols.length - 1);
+        this._fireChanged();
+        this._render();
+      });
+      controls.appendChild(delBtn);
+    }
+
+    // Tab content
+    const tabContent = isCodeMode
+      ? this._buildCodeEditor(activeTab)
+      : this._buildVisualEditor(activeTab);
+
+    const editor = this._el("div", { className: "editor" }, [tabBar, controls, tabContent]);
+    root.appendChild(editor);
+  }
+
+  _buildCodeEditor(tabIdx) {
+    const col = this._config.columns[tabIdx];
+    const text = this._editorCodeText[tabIdx] !== undefined
+      ? this._editorCodeText[tabIdx]
+      : JSON.stringify(col, null, 2);
+
+    const textarea = this._el("textarea", { className: "code-editor-textarea" });
+    textarea.value = text;
+
+    textarea.addEventListener("input", () => {
+      this._editorCodeText[tabIdx] = textarea.value;
+      this._editorCodeError[tabIdx] = "";
+    });
+
+    textarea.addEventListener("blur", () => {
+      try {
+        const parsed = JSON.parse(textarea.value);
+        if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+          throw new Error("Must be a JSON object");
+        }
+        const newCols = [...this._config.columns];
+        newCols[tabIdx] = parsed;
+        this._config = { ...this._config, columns: newCols };
+        this._editorCodeText[tabIdx] = textarea.value;
+        this._editorCodeError[tabIdx] = "";
+        this._fireChanged();
+      } catch (e) {
+        this._editorCodeError[tabIdx] = e.message;
+      }
+      this._render();
+    });
+
+    const children = [textarea];
+    const errMsg = this._editorCodeError[tabIdx];
+    if (errMsg) {
+      children.push(this._el("span", { className: "code-editor-error", textContent: errMsg }));
+    }
+    return this._el("div", { className: "code-editor-wrapper" }, children);
+  }
+
+  _buildVisualEditor(tabIdx) {
+    const col = this._config.columns[tabIdx] || {};
+
+    const updateCol = (updates) => {
+      const newCols = [...this._config.columns];
+      newCols[tabIdx] = { ...newCols[tabIdx], ...updates };
+      this._config = { ...this._config, columns: newCols };
+      this._fireChanged();
+    };
+
     // List select
-    const listSelect = this._el("select", { id: "list-select" });
+    const listSelect = this._el("select", { id: `list-select-${tabIdx}` });
     for (const l of this._lists) {
       const option = this._el("option", {
         value: l.id,
-        selected: l.id === this._config.list_id,
+        selected: l.id === col.list_id,
         textContent: l.name,
       });
       listSelect.appendChild(option);
     }
-    listSelect.addEventListener("change", () => {
-      this._config = { ...this._config, list_id: listSelect.value };
-      this._fireChanged();
-    });
+    listSelect.addEventListener("change", () => updateCol({ list_id: listSelect.value }));
 
     // Title input
     const titleInput = this._el("input", {
       type: "text",
-      id: "title-input",
-      value: this._config.title || "",
+      id: `title-input-${tabIdx}`,
+      value: col.title || "",
       placeholder: this._t("ed_title_placeholder"),
     });
-    titleInput.addEventListener("input", () => {
-      this._config = { ...this._config, title: titleInput.value };
-      this._fireChanged();
-    });
-
-    // Show title toggle
-    const showTitleCb = this._el("input", {
-      type: "checkbox",
-      id: "cb-show-title",
-      checked: this._config.show_title !== false,
-    });
-    showTitleCb.addEventListener("change", () => {
-      this._config = { ...this._config, show_title: showTitleCb.checked };
-      this._fireChanged();
-    });
-    const showTitleRow = this._el("div", { className: "toggle-row" }, [
-      this._el("span", { className: "toggle-label", textContent: this._t("ed_show_title") }),
-      showTitleCb,
-    ]);
-
-    // Show progress toggle
-    const showProgressCb = this._el("input", {
-      type: "checkbox",
-      id: "cb-show-progress",
-      checked: this._config.show_progress !== false,
-    });
-    showProgressCb.addEventListener("change", () => {
-      this._config = { ...this._config, show_progress: showProgressCb.checked };
-      this._fireChanged();
-    });
-    const showProgressRow = this._el("div", { className: "toggle-row" }, [
-      this._el("span", { className: "toggle-label", textContent: this._t("ed_show_progress") }),
-      showProgressCb,
-    ]);
-
-    // Show sort toggle
-    const showSortCb = this._el("input", {
-      type: "checkbox",
-      id: "cb-show-sort",
-      checked: this._config.show_sort !== false,
-    });
-    showSortCb.addEventListener("change", () => {
-      this._config = { ...this._config, show_sort: showSortCb.checked };
-      this._fireChanged();
-    });
-    const showSortRow = this._el("div", { className: "toggle-row" }, [
-      this._el("span", { className: "toggle-label", textContent: this._t("ed_show_sort") }),
-      showSortCb,
-    ]);
-
-    // Show due date toggle
-    const showDueDateCb = this._el("input", {
-      type: "checkbox",
-      id: "cb-show-due-date",
-      checked: this._config.show_due_date !== false,
-    });
-    showDueDateCb.addEventListener("change", () => {
-      this._config = { ...this._config, show_due_date: showDueDateCb.checked };
-      this._fireChanged();
-    });
-    const showDueDateRow = this._el("div", { className: "toggle-row" }, [
-      this._el("span", { className: "toggle-label", textContent: this._t("ed_show_due_date") }),
-      showDueDateCb,
-    ]);
-
-    // Show priority toggle
-    const showPriorityCb = this._el("input", {
-      type: "checkbox",
-      id: "cb-show-priority",
-      checked: this._config.show_priority !== false,
-    });
-    showPriorityCb.addEventListener("change", () => {
-      this._config = { ...this._config, show_priority: showPriorityCb.checked };
-      this._fireChanged();
-    });
-    const showPriorityRow = this._el("div", { className: "toggle-row" }, [
-      this._el("span", { className: "toggle-label", textContent: this._t("ed_show_priority") }),
-      showPriorityCb,
-    ]);
-
-    // Show notes toggle
-    const showNotesCb = this._el("input", {
-      type: "checkbox",
-      id: "cb-show-notes",
-      checked: this._config.show_notes !== false,
-    });
-    showNotesCb.addEventListener("change", () => {
-      this._config = { ...this._config, show_notes: showNotesCb.checked };
-      this._fireChanged();
-    });
-    const showNotesRow = this._el("div", { className: "toggle-row" }, [
-      this._el("span", { className: "toggle-label", textContent: this._t("ed_show_notes") }),
-      showNotesCb,
-    ]);
-
-    // Show recurrence toggle
-    const showRecurrenceCb = this._el("input", {
-      type: "checkbox",
-      id: "cb-show-recurrence",
-      checked: this._config.show_recurrence !== false,
-    });
-    showRecurrenceCb.addEventListener("change", () => {
-      this._config = { ...this._config, show_recurrence: showRecurrenceCb.checked };
-      this._fireChanged();
-    });
-    const showRecurrenceRow = this._el("div", { className: "toggle-row" }, [
-      this._el("span", { className: "toggle-label", textContent: this._t("ed_show_recurrence") }),
-      showRecurrenceCb,
-    ]);
-
-    // Show reminders toggle
-    const showRemindersCb = this._el("input", {
-      type: "checkbox",
-      id: "cb-show-reminders",
-      checked: this._config.show_reminders !== false,
-    });
-    showRemindersCb.addEventListener("change", () => {
-      this._config = { ...this._config, show_reminders: showRemindersCb.checked };
-      this._fireChanged();
-    });
-    const showRemindersRow = this._el("div", { className: "toggle-row" }, [
-      this._el("span", { className: "toggle-label", textContent: this._t("ed_show_reminders") }),
-      showRemindersCb,
-    ]);
-
-    // Show sub-items toggle
-    const showSubItemsCb = this._el("input", {
-      type: "checkbox",
-      id: "cb-show-sub-items",
-      checked: this._config.show_sub_items !== false,
-    });
-    showSubItemsCb.addEventListener("change", () => {
-      this._config = { ...this._config, show_sub_items: showSubItemsCb.checked };
-      this._fireChanged();
-    });
-    const showSubItemsRow = this._el("div", { className: "toggle-row" }, [
-      this._el("span", { className: "toggle-label", textContent: this._t("ed_show_sub_items") }),
-      showSubItemsCb,
-    ]);
-
-    // Show assigned person toggle
-    const showPersonCb = this._el("input", {
-      type: "checkbox",
-      id: "cb-show-person",
-      checked: this._config.show_assigned_person !== false,
-    });
-    showPersonCb.addEventListener("change", () => {
-      this._config = { ...this._config, show_assigned_person: showPersonCb.checked };
-      this._fireChanged();
-    });
-    const showPersonRow = this._el("div", { className: "toggle-row" }, [
-      this._el("span", { className: "toggle-label", textContent: this._t("ed_show_person") }),
-      showPersonCb,
-    ]);
-
-    // Show tags toggle
-    const showTagsCb = this._el("input", {
-      type: "checkbox",
-      id: "cb-show-tags",
-      checked: this._config.show_tags !== false,
-    });
-    showTagsCb.addEventListener("change", () => {
-      this._config = { ...this._config, show_tags: showTagsCb.checked };
-      this._fireChanged();
-    });
-    const showTagsRow = this._el("div", { className: "toggle-row" }, [
-      this._el("span", { className: "toggle-label", textContent: this._t("ed_show_tags") }),
-      showTagsCb,
-    ]);
-
-    // Auto-delete completed toggle
-    const autoDeleteCb = this._el("input", {
-      type: "checkbox",
-      id: "cb-auto-delete",
-      checked: this._config.auto_delete_completed === true,
-    });
-    autoDeleteCb.addEventListener("change", () => {
-      this._config = { ...this._config, auto_delete_completed: autoDeleteCb.checked };
-      this._fireChanged();
-    });
-    const autoDeleteRow = this._el("div", { className: "toggle-row" }, [
-      this._el("span", { className: "toggle-label", textContent: this._t("ed_auto_delete") }),
-      autoDeleteCb,
-    ]);
-
-    // Compact mode toggle
-    const compactCb = this._el("input", {
-      type: "checkbox",
-      id: "cb-compact",
-      checked: this._config.compact === true,
-    });
-    compactCb.addEventListener("change", () => {
-      this._config = { ...this._config, compact: compactCb.checked };
-      this._fireChanged();
-    });
-    const compactRow = this._el("div", { className: "toggle-row" }, [
-      this._el("span", { className: "toggle-label", textContent: this._t("ed_compact") }),
-      compactCb,
-    ]);
-
-    const hint = this._el("span", {
-      className: "hint",
-      textContent: this._t("ed_hint"),
-    });
+    titleInput.addEventListener("input", () => updateCol({ title: titleInput.value }));
 
     // Default filter select
-    const defaultFilterSelect = this._el("select", { id: "default-filter-select" });
+    const defaultFilterSelect = this._el("select");
     for (const [val, key] of [["all", "filter_all"], ["open", "filter_open"], ["done", "filter_done"]]) {
       const opt = this._el("option", { value: val, textContent: this._t(key) });
-      if ((this._config.default_filter || "all") === val) opt.selected = true;
+      if ((col.default_filter || "all") === val) opt.selected = true;
       defaultFilterSelect.appendChild(opt);
     }
-    defaultFilterSelect.addEventListener("change", () => {
-      this._config = { ...this._config, default_filter: defaultFilterSelect.value };
-      this._fireChanged();
-    });
+    defaultFilterSelect.addEventListener("change", () => updateCol({ default_filter: defaultFilterSelect.value }));
 
     // Default sort select
-    const defaultSortSelect = this._el("select", { id: "default-sort-select" });
+    const defaultSortSelect = this._el("select");
     for (const [val, key] of [
       ["manual", "sort_manual"], ["due", "sort_due"], ["priority", "sort_priority"],
       ["title", "sort_title"], ["person", "sort_person"],
     ]) {
       const opt = this._el("option", { value: val, textContent: this._t(key) });
-      if ((this._config.default_sort || "manual") === val) opt.selected = true;
+      if ((col.default_sort || "manual") === val) opt.selected = true;
       defaultSortSelect.appendChild(opt);
     }
-    defaultSortSelect.addEventListener("change", () => {
-      this._config = { ...this._config, default_sort: defaultSortSelect.value };
-      this._fireChanged();
-    });
+    defaultSortSelect.addEventListener("change", () => updateCol({ default_sort: defaultSortSelect.value }));
 
-    const editor = this._el("div", { className: "editor" }, [
+    // Toggle helper
+    const makeToggle = (id, labelKey, configKey, defaultOn = true) => {
+      const cb = this._el("input", {
+        type: "checkbox",
+        id: `${id}-${tabIdx}`,
+        checked: col[configKey] !== false ? defaultOn : !defaultOn,
+      });
+      // More precise: default true means checked when undefined
+      cb.checked = defaultOn ? col[configKey] !== false : col[configKey] === true;
+      cb.addEventListener("change", () => updateCol({ [configKey]: cb.checked }));
+      return this._el("div", { className: "toggle-row" }, [
+        this._el("span", { className: "toggle-label", textContent: this._t(labelKey) }),
+        cb,
+      ]);
+    };
+
+    const hint = this._el("span", { className: "hint", textContent: this._t("ed_hint") });
+
+    return this._el("div", { className: "visual-editor" }, [
       this._el("div", { className: "field" }, [
         this._el("label", { textContent: this._t("ed_list") }),
         listSelect,
@@ -2216,23 +2323,21 @@ class HomeTasksCardEditor extends HTMLElement {
       ]),
       this._el("div", { className: "field" }, [
         this._el("label", { textContent: this._t("ed_display") }),
-        compactRow,
-        showTitleRow,
-        showProgressRow,
-        showSortRow,
-        showNotesRow,
-        showSubItemsRow,
-        showPersonRow,
-        showPriorityRow,
-        showTagsRow,
-        showDueDateRow,
-        showRemindersRow,
-        showRecurrenceRow,
-        autoDeleteRow,
+        makeToggle("compact", "ed_compact", "compact", false),
+        makeToggle("show-title", "ed_show_title", "show_title", true),
+        makeToggle("show-progress", "ed_show_progress", "show_progress", true),
+        makeToggle("show-sort", "ed_show_sort", "show_sort", true),
+        makeToggle("show-notes", "ed_show_notes", "show_notes", true),
+        makeToggle("show-sub-items", "ed_show_sub_items", "show_sub_items", true),
+        makeToggle("show-person", "ed_show_person", "show_assigned_person", true),
+        makeToggle("show-priority", "ed_show_priority", "show_priority", true),
+        makeToggle("show-tags", "ed_show_tags", "show_tags", true),
+        makeToggle("show-due-date", "ed_show_due_date", "show_due_date", true),
+        makeToggle("show-reminders", "ed_show_reminders", "show_reminders", true),
+        makeToggle("show-recurrence", "ed_show_recurrence", "show_recurrence", true),
+        makeToggle("auto-delete", "ed_auto_delete", "auto_delete_completed", false),
       ]),
     ]);
-
-    root.appendChild(editor);
   }
 
   _fireChanged() {

@@ -340,6 +340,25 @@ class HomeTasksStore:
                 task_map[tid]["sort_order"] = index
         await self._async_save()
 
+    async def async_export_task(self, task_id: str) -> dict:
+        """Remove a task from this list and return its data (for cross-list move)."""
+        task = self.get_task(task_id)
+        self._data["tasks"] = [t for t in self._data["tasks"] if t["id"] != task_id]
+        await self._async_save()
+        if self.on_task_deleted:
+            self.on_task_deleted(task_id)
+        return dict(task)
+
+    async def async_import_task(self, task: dict) -> dict:
+        """Insert an existing task dict into this list (for cross-list move)."""
+        max_order = max((t["sort_order"] for t in self._data["tasks"]), default=-1)
+        task = {**task, "sort_order": max_order + 1}
+        self._data["tasks"].append(task)
+        await self._async_save()
+        if self.on_task_created:
+            self.on_task_created(task)
+        return task
+
     # --- Sub-item methods ---
 
     async def async_add_sub_item(self, task_id: str, title: str) -> dict:

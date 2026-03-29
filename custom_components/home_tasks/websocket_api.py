@@ -29,6 +29,7 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_add_sub_item)
     websocket_api.async_register_command(hass, ws_update_sub_item)
     websocket_api.async_register_command(hass, ws_delete_sub_item)
+    websocket_api.async_register_command(hass, ws_move_task)
 
 
 def _get_store(hass, entry_id):
@@ -246,6 +247,30 @@ async def ws_delete_sub_item(hass, connection, msg):
     try:
         store = _get_store(hass, msg["list_id"])
         await store.async_delete_sub_item(msg["task_id"], msg["sub_item_id"])
+        connection.send_result(msg["id"])
+    except Exception as err:
+        _handle_error(connection, msg["id"], err)
+
+
+# --- Cross-list move ---
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "home_tasks/move_task",
+        vol.Required("source_list_id"): _val_id,
+        vol.Required("target_list_id"): _val_id,
+        vol.Required("task_id"): _val_id,
+    }
+)
+@websocket_api.async_response
+async def ws_move_task(hass, connection, msg):
+    """Move a task from one list to another."""
+    try:
+        src = _get_store(hass, msg["source_list_id"])
+        tgt = _get_store(hass, msg["target_list_id"])
+        task = await src.async_export_task(msg["task_id"])
+        await tgt.async_import_task(task)
         connection.send_result(msg["id"])
     except Exception as err:
         _handle_error(connection, msg["id"], err)
