@@ -37,6 +37,7 @@ const _TRANSLATIONS = {
     nobody: "\u2013 Nobody \u2013",
     delete_task: "Delete task",
     delete_sub: "Delete",
+    ed_default_filter: "Default filter",
     ed_list: "List",
     ed_title: "Title (optional)",
     ed_title_placeholder: "Default: List name",
@@ -86,6 +87,7 @@ const _TRANSLATIONS = {
     nobody: "\u2013 Niemand \u2013",
     delete_task: "Aufgabe l\u00f6schen",
     delete_sub: "L\u00f6schen",
+    ed_default_filter: "Standardfilter",
     ed_list: "Liste",
     ed_title: "Titel (optional)",
     ed_title_placeholder: "Standard: Listenname",
@@ -138,7 +140,12 @@ class HomeTasksCard extends HTMLElement {
   }
 
   setConfig(config) {
+    const prevListId = this._config?.list_id;
+    const prevDefault = this._config?.default_filter;
     this._config = config;
+    if (config.list_id !== prevListId || config.default_filter !== prevDefault) {
+      this._filter = config.default_filter || "all";
+    }
     if (this._initialized) {
       this._loadTasks();
     } else {
@@ -1865,6 +1872,18 @@ class HomeTasksCardEditor extends HTMLElement {
       textContent: this._t("ed_hint"),
     });
 
+    // Default filter select
+    const defaultFilterSelect = this._el("select", { id: "default-filter-select" });
+    for (const [val, key] of [["all", "filter_all"], ["open", "filter_open"], ["done", "filter_done"]]) {
+      const opt = this._el("option", { value: val, textContent: this._t(key) });
+      if ((this._config.default_filter || "all") === val) opt.selected = true;
+      defaultFilterSelect.appendChild(opt);
+    }
+    defaultFilterSelect.addEventListener("change", () => {
+      this._config = { ...this._config, default_filter: defaultFilterSelect.value };
+      this._fireChanged();
+    });
+
     const editor = this._el("div", { className: "editor" }, [
       this._el("div", { className: "field" }, [
         this._el("label", { textContent: this._t("ed_list") }),
@@ -1874,6 +1893,10 @@ class HomeTasksCardEditor extends HTMLElement {
       this._el("div", { className: "field" }, [
         this._el("label", { textContent: this._t("ed_title") }),
         titleInput,
+      ]),
+      this._el("div", { className: "field" }, [
+        this._el("label", { textContent: this._t("ed_default_filter") }),
+        defaultFilterSelect,
       ]),
       this._el("div", { className: "field" }, [
         this._el("label", { textContent: this._t("ed_display") }),
