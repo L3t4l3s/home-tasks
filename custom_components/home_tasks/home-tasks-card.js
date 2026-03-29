@@ -1621,7 +1621,7 @@ class HomeTasksCard extends HTMLElement {
         --todo-radius: 8px;
       }
       ha-card { overflow: hidden; }
-      .multi-columns { display: flex; gap: 0; align-items: flex-start; }
+      .multi-columns { display: flex; gap: 0; align-items: stretch; }
       .multi-columns .card-column { flex: 1; min-width: 240px; border-right: 1px solid var(--todo-divider); }
       .multi-columns .card-column:last-child { border-right: none; }
       @media (max-width: 600px) { .multi-columns { flex-direction: column; } .multi-columns .card-column { border-right: none; border-bottom: 1px solid var(--todo-divider); } .multi-columns .card-column:last-child { border-bottom: none; } }
