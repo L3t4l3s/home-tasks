@@ -57,6 +57,13 @@ const _TRANSLATIONS = {
     add_tag: "+ Add tag",
     tag_placeholder: "New tag...",
     remove_tag: "Remove",
+    sort_label: "Sort",
+    sort_manual: "Manual",
+    sort_due: "Due date",
+    sort_priority: "Priority",
+    sort_title: "Title (A\u2013Z)",
+    sort_person: "Assigned",
+    ed_default_sort: "Default sort",
     reminder: "Reminders",
     rem_add: "+ Add reminder",
     rem_none: "No reminder",
@@ -119,6 +126,13 @@ const _TRANSLATIONS = {
     add_tag: "+ Tag hinzuf\u00fcgen",
     tag_placeholder: "Neues Tag...",
     remove_tag: "Entfernen",
+    sort_label: "Sortierung",
+    sort_manual: "Manuell",
+    sort_due: "F\u00e4lligkeit",
+    sort_priority: "Priorit\u00e4t",
+    sort_title: "Titel (A\u2013Z)",
+    sort_person: "Zugewiesen",
+    ed_default_sort: "Standard-Sortierung",
     reminder: "Erinnerungen",
     rem_add: "+ Erinnerung hinzuf\u00fcgen",
     rem_none: "Keine Erinnerung",
@@ -164,6 +178,8 @@ class HomeTasksCard extends HTMLElement {
     this._touchBound = {};
     this._newTaskTitle = "";
     this._tagFilter = null;
+    this._sortBy = "manual";
+    this._sortOpen = false;
     this._lastTitleClick = null;
     this._initialized = false;
   }
@@ -177,9 +193,13 @@ class HomeTasksCard extends HTMLElement {
   setConfig(config) {
     const prevListId = this._config?.list_id;
     const prevDefault = this._config?.default_filter;
+    const prevDefaultSort = this._config?.default_sort;
     this._config = config;
     if (config.list_id !== prevListId || config.default_filter !== prevDefault) {
       this._filter = config.default_filter || "all";
+    }
+    if (config.list_id !== prevListId || config.default_sort !== prevDefaultSort) {
+      this._sortBy = config.default_sort || "manual";
     }
     if (this._initialized) {
       this._loadTasks();
@@ -441,7 +461,35 @@ class HomeTasksCard extends HTMLElement {
     if (this._tagFilter) {
       tasks = tasks.filter((t) => t.tags && t.tags.includes(this._tagFilter));
     }
-    return tasks.slice().sort((a, b) => a.completed - b.completed);
+    const cmp = this._buildSortComparator();
+    return tasks.slice().sort((a, b) => {
+      if (a.completed !== b.completed) return a.completed ? 1 : -1;
+      return cmp(a, b);
+    });
+  }
+
+  _buildSortComparator() {
+    switch (this._sortBy) {
+      case "due": return (a, b) => {
+        const da = a.due_date ? a.due_date + (a.due_time || "00:00") : null;
+        const db = b.due_date ? b.due_date + (b.due_time || "00:00") : null;
+        if (da && db) return da < db ? -1 : da > db ? 1 : 0;
+        return da ? -1 : db ? 1 : 0;
+      };
+      case "priority": return (a, b) => {
+        const pa = a.priority ?? 0;
+        const pb = b.priority ?? 0;
+        return pb - pa; // high (3) first
+      };
+      case "title": return (a, b) =>
+        (a.title || "").localeCompare(b.title || "", undefined, { sensitivity: "base" });
+      case "person": return (a, b) => {
+        const pa = a.assigned_person || "\uffff";
+        const pb = b.assigned_person || "\uffff";
+        return pa.localeCompare(pb);
+      };
+      default: return (a, b) => a.sort_order - b.sort_order; // manual
+    }
   }
 
   // --- Helpers ---
@@ -549,13 +597,59 @@ class HomeTasksCard extends HTMLElement {
 
     const addTask = this._el("div", { className: "add-task" }, [addInput, addBtn]);
 
-    // Filters (hidden when auto-delete is on)
+    // Filters + sort (hidden when auto-delete is on)
     const hideFilters = this._config.auto_delete_completed === true;
-    const filters = hideFilters ? null : this._el("div", { className: "filters" }, [
-      this._buildFilterBtn(this._t("filter_all"), "all"),
-      this._buildFilterBtn(this._t("filter_open"), "open"),
-      this._buildFilterBtn(this._t("filter_done"), "done"),
-    ]);
+    const filters = hideFilters ? null : (() => {
+      const sortKeys = ["manual", "due", "priority", "title", "person"];
+      const sortLabels = {
+        manual: this._t("sort_manual"), due: this._t("sort_due"),
+        priority: this._t("sort_priority"), title: this._t("sort_title"),
+        person: this._t("sort_person"),
+      };
+
+      const sortDropdown = this._el("div", { className: "sort-dropdown" + (this._sortOpen ? "" : " hidden") });
+      for (const key of sortKeys) {
+        const opt = this._el("div", {
+          className: "sort-option" + (this._sortBy === key ? " active" : ""),
+          textContent: sortLabels[key],
+        });
+        opt.addEventListener("click", (e) => {
+          e.stopPropagation();
+          this._sortBy = key;
+          this._sortOpen = false;
+          this._render();
+        });
+        sortDropdown.appendChild(opt);
+      }
+
+      const sortBtnWrapper = this._el("div", { className: "sort-btn-wrapper" });
+      const isNonManual = this._sortBy !== "manual";
+      const sortBtn = this._el("button", {
+        className: "sort-btn" + (isNonManual ? " active" : ""),
+        textContent: "\u21C5 " + sortLabels[this._sortBy],
+      });
+      sortBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        this._sortOpen = !this._sortOpen;
+        this._render();
+      });
+      sortBtnWrapper.appendChild(sortBtn);
+      sortBtnWrapper.appendChild(sortDropdown);
+
+      // Close on outside click
+      if (this._sortOpen) {
+        const close = () => { this._sortOpen = false; this._render(); };
+        setTimeout(() => document.addEventListener("click", close, { once: true }), 0);
+      }
+
+      return this._el("div", { className: "filters" }, [
+        this._buildFilterBtn(this._t("filter_all"), "all"),
+        this._buildFilterBtn(this._t("filter_open"), "open"),
+        this._buildFilterBtn(this._t("filter_done"), "done"),
+        this._el("div", { className: "filter-spacer" }),
+        sortBtnWrapper,
+      ]);
+    })();
 
     // Task list
     const taskListChildren = [];
@@ -629,8 +723,12 @@ class HomeTasksCard extends HTMLElement {
     // Main row
     const mainChildren = [];
 
-    // Drag handle
-    const dragHandle = this._el("span", { className: "drag-handle", title: this._t("drag_handle"), textContent: "\u2237" });
+    // Drag handle (hidden in non-manual sort modes)
+    const dragHandle = this._el("span", {
+      className: "drag-handle" + (this._sortBy !== "manual" ? " hidden" : ""),
+      title: this._t("drag_handle"),
+      textContent: "\u2237",
+    });
     mainChildren.push(dragHandle);
 
     // Checkbox
@@ -1412,7 +1510,8 @@ class HomeTasksCard extends HTMLElement {
         font-weight: 500; cursor: pointer; white-space: nowrap; font-family: inherit;
       }
       .add-btn:hover { opacity: 0.9; }
-      .filters { display: flex; gap: 4px; margin-bottom: 12px; }
+      .filters { display: flex; gap: 4px; margin-bottom: 12px; align-items: center; }
+      .filter-spacer { flex: 1; }
       .filter-btn {
         padding: 6px 16px; border: none; border-radius: 20px; background: transparent;
         color: var(--todo-secondary-text); font-size: 13px; cursor: pointer;
@@ -1420,6 +1519,26 @@ class HomeTasksCard extends HTMLElement {
       }
       .filter-btn.active { background: var(--todo-primary); color: #fff; }
       .filter-btn:not(.active):hover { background: var(--todo-surface); }
+      .sort-btn-wrapper { position: relative; }
+      .sort-btn {
+        padding: 5px 10px; border: 1px solid var(--todo-divider); border-radius: 20px;
+        background: transparent; color: var(--todo-secondary-text); font-size: 12px;
+        cursor: pointer; font-family: inherit; transition: all 0.2s; white-space: nowrap;
+      }
+      .sort-btn.active { border-color: var(--todo-primary); color: var(--todo-primary); }
+      .sort-btn:hover { background: var(--todo-surface); }
+      .sort-dropdown {
+        position: absolute; right: 0; top: calc(100% + 4px); z-index: 20;
+        background: var(--card-background-color, var(--todo-bg)); border: 1px solid var(--todo-divider);
+        border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 150px; overflow: hidden;
+      }
+      .sort-dropdown.hidden { display: none; }
+      .sort-option {
+        padding: 9px 14px; cursor: pointer; font-size: 13px;
+        color: var(--todo-text); transition: background 0.15s;
+      }
+      .sort-option:hover { background: var(--todo-surface); }
+      .sort-option.active { color: var(--todo-primary); font-weight: 500; }
       .task-list { display: flex; flex-direction: column; gap: 6px; }
       .empty-state { text-align: center; padding: 24px; color: var(--todo-disabled); font-size: 14px; }
       .task {
@@ -2038,6 +2157,21 @@ class HomeTasksCardEditor extends HTMLElement {
       this._fireChanged();
     });
 
+    // Default sort select
+    const defaultSortSelect = this._el("select", { id: "default-sort-select" });
+    for (const [val, key] of [
+      ["manual", "sort_manual"], ["due", "sort_due"], ["priority", "sort_priority"],
+      ["title", "sort_title"], ["person", "sort_person"],
+    ]) {
+      const opt = this._el("option", { value: val, textContent: this._t(key) });
+      if ((this._config.default_sort || "manual") === val) opt.selected = true;
+      defaultSortSelect.appendChild(opt);
+    }
+    defaultSortSelect.addEventListener("change", () => {
+      this._config = { ...this._config, default_sort: defaultSortSelect.value };
+      this._fireChanged();
+    });
+
     const editor = this._el("div", { className: "editor" }, [
       this._el("div", { className: "field" }, [
         this._el("label", { textContent: this._t("ed_list") }),
@@ -2051,6 +2185,10 @@ class HomeTasksCardEditor extends HTMLElement {
       this._el("div", { className: "field" }, [
         this._el("label", { textContent: this._t("ed_default_filter") }),
         defaultFilterSelect,
+      ]),
+      this._el("div", { className: "field" }, [
+        this._el("label", { textContent: this._t("ed_default_sort") }),
+        defaultSortSelect,
       ]),
       this._el("div", { className: "field" }, [
         this._el("label", { textContent: this._t("ed_display") }),
