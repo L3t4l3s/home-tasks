@@ -1151,14 +1151,14 @@ class HomeTasksCard extends HTMLElement {
     const actions = this._el("div", { className: "detail-actions" }, [deleteBtn]);
 
     const details = [];
-    if (this._config.show_priority !== false) details.push(prioritySection);
-    if (this._config.show_tags !== false) details.push(tagSection);
     if (this._config.show_notes !== false) details.push(notesSection);
     if (this._config.show_sub_items !== false) details.push(subSection);
-    if (this._config.show_due_date !== false) details.push(dateSection);
-    if (this._config.show_recurrence !== false) details.push(recurrenceSection);
-    if (this._config.show_reminders !== false) details.push(reminderSection);
     if (this._config.show_assigned_person !== false) details.push(personSection);
+    if (this._config.show_priority !== false) details.push(prioritySection);
+    if (this._config.show_tags !== false) details.push(tagSection);
+    if (this._config.show_due_date !== false) details.push(dateSection);
+    if (this._config.show_reminders !== false) details.push(reminderSection);
+    if (this._config.show_recurrence !== false) details.push(recurrenceSection);
     details.push(actions);
     return this._el("div", { className: "task-details" }, details);
   }
@@ -2057,14 +2057,14 @@ class HomeTasksCardEditor extends HTMLElement {
         compactRow,
         showTitleRow,
         showProgressRow,
-        showDueDateRow,
-        showPriorityRow,
-        showRecurrenceRow,
-        showRemindersRow,
+        showNotesRow,
         showSubItemsRow,
         showPersonRow,
+        showPriorityRow,
         showTagsRow,
-        showNotesRow,
+        showDueDateRow,
+        showRemindersRow,
+        showRecurrenceRow,
         autoDeleteRow,
       ]),
     ]);
