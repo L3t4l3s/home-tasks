@@ -107,6 +107,8 @@ class HomeTasksStore:
             task.setdefault("recurrence_value", 1)
             task.setdefault("recurrence_unit", None)
             task.setdefault("recurrence_enabled", False)
+            task.setdefault("recurrence_type", "interval")
+            task.setdefault("recurrence_weekdays", [])
             task.setdefault("completed_at", None)
             task.setdefault("assigned_person", None)
             task.setdefault("tags", [])
@@ -139,6 +141,8 @@ class HomeTasksStore:
             "recurrence_value": 1,
             "recurrence_unit": None,
             "recurrence_enabled": False,
+            "recurrence_type": "interval",
+            "recurrence_weekdays": [],
             "completed_at": None,
             "assigned_person": None,
             "tags": [],
@@ -181,6 +185,17 @@ class HomeTasksStore:
                 raise ValueError(f"recurrence_value must be an integer between 1 and {MAX_RECURRENCE_VALUE}")
         if "recurrence_enabled" in kwargs and not isinstance(kwargs["recurrence_enabled"], bool):
             raise ValueError("recurrence_enabled must be a boolean")
+        if "recurrence_type" in kwargs:
+            val = kwargs["recurrence_type"]
+            if val not in ("interval", "weekdays"):
+                raise ValueError("recurrence_type must be 'interval' or 'weekdays'")
+        if "recurrence_weekdays" in kwargs:
+            val = kwargs["recurrence_weekdays"]
+            if not isinstance(val, list):
+                raise ValueError("recurrence_weekdays must be a list")
+            if not all(isinstance(d, int) and 0 <= d <= 6 for d in val):
+                raise ValueError("recurrence_weekdays entries must be integers 0–6")
+            kwargs["recurrence_weekdays"] = sorted(set(val))
         if "assigned_person" in kwargs:
             val = kwargs["assigned_person"]
             if val is not None and (not isinstance(val, str) or len(val) > MAX_TITLE_LENGTH):
@@ -208,7 +223,7 @@ class HomeTasksStore:
 
         was_completed = task.get("completed", False)
         previous_person = task.get("assigned_person")
-        allowed = ("title", "completed", "notes", "due_date", "recurrence_value", "recurrence_unit", "recurrence_enabled", "assigned_person", "tags")
+        allowed = ("title", "completed", "notes", "due_date", "recurrence_value", "recurrence_unit", "recurrence_enabled", "recurrence_type", "recurrence_weekdays", "assigned_person", "tags")
         for key, value in kwargs.items():
             if key in allowed:
                 task[key] = value
@@ -218,8 +233,12 @@ class HomeTasksStore:
         if is_completed and not was_completed:
             task["completed_at"] = datetime.now(timezone.utc).isoformat()
             # Notify recurrence scheduler
-            if self.on_task_completed and task.get("recurrence_enabled") and task.get("recurrence_unit"):
-                self.on_task_completed(task)
+            if self.on_task_completed and task.get("recurrence_enabled"):
+                rec_type = task.get("recurrence_type", "interval")
+                if rec_type == "weekdays" and task.get("recurrence_weekdays"):
+                    self.on_task_completed(task)
+                elif rec_type == "interval" and task.get("recurrence_unit"):
+                    self.on_task_completed(task)
         elif not is_completed and was_completed:
             task["completed_at"] = None
 

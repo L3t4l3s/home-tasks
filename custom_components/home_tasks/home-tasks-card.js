@@ -28,6 +28,8 @@ const _TRANSLATIONS = {
     rec_hours: "Hours", rec_days: "Days", rec_weeks: "Weeks", rec_months: "Months",
     rec_short_h: "h", rec_short_d: "d", rec_short_w: "w", rec_short_m: "mo",
     rec_hourly: "Hourly", rec_daily: "Daily", rec_weekly: "Weekly", rec_monthly: "Monthly",
+    rec_type_interval: "Every …", rec_type_weekdays: "On weekdays",
+    rec_wd_0: "Mon", rec_wd_1: "Tue", rec_wd_2: "Wed", rec_wd_3: "Thu", rec_wd_4: "Fri", rec_wd_5: "Sat", rec_wd_6: "Sun",
     assigned_to: "Assigned to",
     nobody: "\u2013 Nobody \u2013",
     delete_task: "Delete task",
@@ -72,6 +74,8 @@ const _TRANSLATIONS = {
     rec_hours: "Stunden", rec_days: "Tage", rec_weeks: "Wochen", rec_months: "Monate",
     rec_short_h: "Std.", rec_short_d: "T.", rec_short_w: "Wo.", rec_short_m: "Mon.",
     rec_hourly: "St\u00fcndl.", rec_daily: "T\u00e4glich", rec_weekly: "W\u00f6chentl.", rec_monthly: "Monatl.",
+    rec_type_interval: "Alle …", rec_type_weekdays: "An Wochentagen",
+    rec_wd_0: "Mo", rec_wd_1: "Di", rec_wd_2: "Mi", rec_wd_3: "Do", rec_wd_4: "Fr", rec_wd_5: "Sa", rec_wd_6: "So",
     assigned_to: "Zugewiesen an",
     nobody: "\u2013 Niemand \u2013",
     delete_task: "Aufgabe l\u00f6schen",
@@ -637,17 +641,22 @@ class HomeTasksCard extends HTMLElement {
         textContent: this._formatDueDate(task.due_date),
       }));
     }
-    if (task.recurrence_enabled && task.recurrence_unit && this._config.show_recurrence !== false) {
-      const unitLabels = { hours: this._t("rec_short_h"), days: this._t("rec_short_d"), weeks: this._t("rec_short_w"), months: this._t("rec_short_m") };
-      const val = task.recurrence_value || 1;
-      const singleLabels = { hours: this._t("rec_hourly"), days: this._t("rec_daily"), weeks: this._t("rec_weekly"), months: this._t("rec_monthly") };
-      const label = val === 1
-        ? singleLabels[task.recurrence_unit]
-        : `${val} ${unitLabels[task.recurrence_unit] || task.recurrence_unit}`;
-      metaChildren.push(this._el("span", {
-        className: "recurrence-badge",
-        textContent: "\u21BB " + label,
-      }));
+    if (task.recurrence_enabled && this._config.show_recurrence !== false) {
+      let recLabel = null;
+      if (task.recurrence_type === "weekdays" && task.recurrence_weekdays && task.recurrence_weekdays.length) {
+        recLabel = task.recurrence_weekdays.map(d => this._t(`rec_wd_${d}`)).join(" ");
+      } else if (task.recurrence_unit) {
+        const unitLabels = { hours: this._t("rec_short_h"), days: this._t("rec_short_d"), weeks: this._t("rec_short_w"), months: this._t("rec_short_m") };
+        const val = task.recurrence_value || 1;
+        const singleLabels = { hours: this._t("rec_hourly"), days: this._t("rec_daily"), weeks: this._t("rec_weekly"), months: this._t("rec_monthly") };
+        recLabel = val === 1 ? singleLabels[task.recurrence_unit] : `${val} ${unitLabels[task.recurrence_unit] || task.recurrence_unit}`;
+      }
+      if (recLabel) {
+        metaChildren.push(this._el("span", {
+          className: "recurrence-badge",
+          textContent: "\u21BB " + recLabel,
+        }));
+      }
     }
     if (task.assigned_person && this._config.show_assigned_person !== false) {
       let personName = task.assigned_person;
@@ -762,6 +771,8 @@ class HomeTasksCard extends HTMLElement {
     const recurrenceEnabled = task.recurrence_enabled || false;
     const recurrenceValue = task.recurrence_value || 1;
     const recurrenceUnit = task.recurrence_unit || "days";
+    const recurrenceType = task.recurrence_type || "interval";
+    const recurrenceWeekdays = task.recurrence_weekdays || [];
 
     const recurrenceToggle = this._el("input", { type: "checkbox", checked: recurrenceEnabled });
     const recurrenceCheckmark = this._el("span", { className: "checkmark" });
@@ -773,6 +784,15 @@ class HomeTasksCard extends HTMLElement {
       this._el("span", { textContent: this._t("recurrence_enabled") }),
     ]);
 
+    // Mode selector: interval vs weekdays
+    const recurrenceModeSelect = this._el("select", { className: "recurrence-select recurrence-mode-select" });
+    for (const [val, key] of [["interval", "rec_type_interval"], ["weekdays", "rec_type_weekdays"]]) {
+      const opt = this._el("option", { value: val, textContent: this._t(key) });
+      if (val === recurrenceType) opt.selected = true;
+      recurrenceModeSelect.appendChild(opt);
+    }
+
+    // Interval sub-row
     const recurrenceValueInput = this._el("input", {
       type: "number",
       className: "recurrence-value",
@@ -793,12 +813,52 @@ class HomeTasksCard extends HTMLElement {
       if (opt.value === recurrenceUnit) optEl.selected = true;
       recurrenceUnitSelect.appendChild(optEl);
     }
-    if (!recurrenceEnabled) {
-      recurrenceValueInput.disabled = true;
-      recurrenceUnitSelect.disabled = true;
+
+    const recurrenceIntervalRow = this._el("div", { className: "recurrence-input-row" }, [
+      this._el("span", { textContent: this._t("recurrence_every"), className: "recurrence-prefix" }),
+      recurrenceValueInput,
+      recurrenceUnitSelect,
+    ]);
+
+    // Weekday sub-row
+    const weekdayCheckboxes = [];
+    const recurrenceWeekdayRow = this._el("div", { className: "recurrence-weekday-row" });
+    for (let d = 0; d < 7; d++) {
+      const cb = this._el("input", { type: "checkbox", checked: recurrenceWeekdays.includes(d) });
+      const lbl = this._el("label", { className: "weekday-label" }, [
+        cb,
+        this._el("span", { textContent: this._t(`rec_wd_${d}`) }),
+      ]);
+      weekdayCheckboxes.push(cb);
+      recurrenceWeekdayRow.appendChild(lbl);
     }
 
-    const saveRecurrence = () => {
+    // Show/hide sub-rows based on current mode
+    const applyModeVisibility = (type) => {
+      recurrenceIntervalRow.style.display = type === "interval" ? "" : "none";
+      recurrenceWeekdayRow.style.display = type === "weekdays" ? "" : "none";
+    };
+    applyModeVisibility(recurrenceType);
+
+    // Disable controls when recurrence not enabled
+    const applyEnabledState = (enabled) => {
+      recurrenceModeSelect.disabled = !enabled;
+      recurrenceValueInput.disabled = !enabled;
+      recurrenceUnitSelect.disabled = !enabled;
+      weekdayCheckboxes.forEach(cb => { cb.disabled = !enabled; });
+    };
+    applyEnabledState(recurrenceEnabled);
+
+    const saveWeekdays = () => {
+      const selected = weekdayCheckboxes.map((cb, i) => cb.checked ? i : -1).filter(i => i >= 0);
+      this._callWs("home_tasks/update_task", {
+        list_id: this._config.list_id,
+        task_id: task.id,
+        recurrence_weekdays: selected,
+      }).then(() => this._loadTasks());
+    };
+
+    const saveInterval = () => {
       const val = Math.max(1, Math.min(365, parseInt(recurrenceValueInput.value) || 1));
       recurrenceValueInput.value = val;
       this._callWs("home_tasks/update_task", {
@@ -811,30 +871,41 @@ class HomeTasksCard extends HTMLElement {
 
     recurrenceToggle.addEventListener("change", () => {
       const enabled = recurrenceToggle.checked;
-      recurrenceValueInput.disabled = !enabled;
-      recurrenceUnitSelect.disabled = !enabled;
+      applyEnabledState(enabled);
+      const mode = recurrenceModeSelect.value;
       const val = Math.max(1, Math.min(365, parseInt(recurrenceValueInput.value) || 1));
+      const selected = weekdayCheckboxes.map((cb, i) => cb.checked ? i : -1).filter(i => i >= 0);
       this._callWs("home_tasks/update_task", {
         list_id: this._config.list_id,
         task_id: task.id,
         recurrence_enabled: enabled,
+        recurrence_type: mode,
         recurrence_value: val,
         recurrence_unit: recurrenceUnitSelect.value,
+        recurrence_weekdays: selected,
       }).then(() => this._loadTasks());
     });
-    recurrenceValueInput.addEventListener("change", saveRecurrence);
-    recurrenceUnitSelect.addEventListener("change", saveRecurrence);
 
-    const recurrenceRow = this._el("div", { className: "recurrence-input-row" }, [
-      this._el("span", { textContent: this._t("recurrence_every"), className: "recurrence-prefix" }),
-      recurrenceValueInput,
-      recurrenceUnitSelect,
-    ]);
+    recurrenceModeSelect.addEventListener("change", () => {
+      const mode = recurrenceModeSelect.value;
+      applyModeVisibility(mode);
+      this._callWs("home_tasks/update_task", {
+        list_id: this._config.list_id,
+        task_id: task.id,
+        recurrence_type: mode,
+      }).then(() => this._loadTasks());
+    });
+
+    recurrenceValueInput.addEventListener("change", saveInterval);
+    recurrenceUnitSelect.addEventListener("change", saveInterval);
+    weekdayCheckboxes.forEach(cb => cb.addEventListener("change", saveWeekdays));
 
     const recurrenceSection = this._el("div", { className: "detail-section" }, [
       this._el("label", { className: "detail-label", textContent: this._t("recurrence") }),
       recurrenceToggleRow,
-      recurrenceRow,
+      recurrenceModeSelect,
+      recurrenceIntervalRow,
+      recurrenceWeekdayRow,
     ]);
 
     // Assigned person section
@@ -1304,6 +1375,7 @@ class HomeTasksCard extends HTMLElement {
       .recurrence-toggle-row {
         display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
       }
+      .recurrence-mode-select { margin-bottom: 6px; }
       .recurrence-input-row {
         display: flex; align-items: center; gap: 8px;
       }
@@ -1321,6 +1393,23 @@ class HomeTasksCard extends HTMLElement {
         color: var(--todo-text); font-family: inherit;
       }
       .recurrence-value:disabled, .recurrence-select:disabled { opacity: 0.5; }
+      .recurrence-weekday-row {
+        display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;
+      }
+      .weekday-label {
+        display: flex; flex-direction: column; align-items: center; gap: 3px;
+        font-size: 12px; color: var(--todo-secondary-text); cursor: pointer;
+        user-select: none;
+      }
+      .weekday-label input[type="checkbox"] { display: none; }
+      .weekday-label span {
+        padding: 4px 7px; border-radius: 4px; border: 1px solid var(--todo-divider);
+        background: var(--todo-bg); transition: background 0.15s, color 0.15s;
+      }
+      .weekday-label input[type="checkbox"]:checked + span {
+        background: var(--primary-color, #03a9f4); color: #fff; border-color: var(--primary-color, #03a9f4);
+      }
+      .weekday-label input[type="checkbox"]:disabled + span { opacity: 0.5; cursor: default; }
       .expand-btn {
         background: none; border: none; color: var(--todo-secondary-text);
         cursor: pointer; font-size: 10px; padding: 6px; border-radius: 4px;

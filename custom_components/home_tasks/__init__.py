@@ -1,5 +1,6 @@
 """The Home Tasks integration."""
 
+import calendar
 import logging
 from datetime import date, datetime, timedelta, timezone
 
@@ -181,28 +182,75 @@ async def _async_check_due_dates(hass: HomeAssistant, _now=None) -> None:
 #  Recurrence scheduling
 # ---------------------------------------------------------------------------
 
-def _schedule_recurrence(hass: HomeAssistant, entry_id: str, task: dict, delay_seconds: float | None = None) -> None:
-    """Schedule a task to reopen after its recurrence interval."""
+def _compute_reopen_delay(task: dict, completed_at: datetime) -> float | None:
+    """Compute seconds from now until the task should reopen.
+
+    - hours: exact elapsed-based interval (e.g. every 3 h → reopen 3 h after completion)
+    - days / weeks / months / weekdays: midnight (local time) of the target day
+    Returns None if recurrence is not configured. Negative means already overdue.
+    """
+    rec_type = task.get("recurrence_type", "interval")
+    now = datetime.now(timezone.utc)
+
+    if rec_type == "weekdays":
+        weekdays = task.get("recurrence_weekdays", [])
+        if not weekdays:
+            return None
+        completed_weekday = completed_at.weekday()
+        min_days = min((w - completed_weekday) % 7 or 7 for w in weekdays)
+        target = (completed_at.astimezone() + timedelta(days=min_days)).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        return (target.astimezone(timezone.utc) - now).total_seconds()
+
+    unit = task.get("recurrence_unit")
+    value = task.get("recurrence_value", 1)
+    if not unit or unit not in RECURRENCE_UNIT_SECONDS:
+        return None
+
+    if unit == "hours":
+        elapsed = (now - completed_at).total_seconds()
+        return float(RECURRENCE_UNIT_SECONDS["hours"] * value) - elapsed
+
+    # days / weeks / months → midnight of target day in local timezone
+    local_completed = completed_at.astimezone()
+    if unit == "days":
+        target_local = local_completed + timedelta(days=value)
+    elif unit == "weeks":
+        target_local = local_completed + timedelta(weeks=value)
+    else:  # months
+        m = local_completed.month - 1 + value
+        year = local_completed.year + m // 12
+        month = m % 12 + 1
+        day = min(local_completed.day, calendar.monthrange(year, month)[1])
+        target_local = local_completed.replace(year=year, month=month, day=day)
+
+    target_midnight = target_local.replace(hour=0, minute=0, second=0, microsecond=0)
+    return (target_midnight.astimezone(timezone.utc) - now).total_seconds()
+
+
+def _schedule_recurrence(hass: HomeAssistant, entry_id: str, task: dict, completed_at: datetime | None = None) -> None:
+    """Schedule a task to reopen based on its recurrence settings."""
     timers = hass.data.setdefault(DATA_RECURRENCE_TIMERS, {})
     task_id = task["id"]
 
     _cancel_recurrence(hass, task_id)
 
-    unit = task.get("recurrence_unit")
-    value = task.get("recurrence_value", 1)
-    if not unit or unit not in RECURRENCE_UNIT_SECONDS:
-        return
+    if completed_at is None:
+        completed_at = datetime.now(timezone.utc)
 
-    if delay_seconds is None:
-        delay_seconds = float(RECURRENCE_UNIT_SECONDS[unit] * value)
+    delay = _compute_reopen_delay(task, completed_at)
+    if delay is None:
+        return
+    delay = max(0.0, delay)
 
     def _reopen_task(_now):
         timers.pop(task_id, None)
         hass.async_create_task(_async_reopen_task(hass, entry_id, task_id))
 
-    cancel = async_call_later(hass, delay_seconds, _reopen_task)
+    cancel = async_call_later(hass, delay, _reopen_task)
     timers[task_id] = cancel
-    _LOGGER.debug("Scheduled recurrence for task %s in %s seconds", task_id, delay_seconds)
+    _LOGGER.debug("Scheduled recurrence for task %s in %.0f seconds", task_id, delay)
 
 
 async def _async_reopen_task(hass: HomeAssistant, entry_id: str, task_id: str) -> None:
@@ -233,10 +281,10 @@ def _cancel_recurrence(hass: HomeAssistant, task_id: str) -> None:
 
 def _recover_recurrence_timers(hass: HomeAssistant, entry_id: str, store: HomeTasksStore) -> None:
     """On startup, recover timers for completed recurring tasks."""
-    now = datetime.now(timezone.utc)
     for task in store.tasks:
-        if not task.get("completed") or not task.get("recurrence_enabled") or not task.get("recurrence_unit"):
+        if not task.get("completed") or not task.get("recurrence_enabled"):
             continue
+
         completed_at_str = task.get("completed_at")
         if not completed_at_str:
             continue
@@ -247,18 +295,14 @@ def _recover_recurrence_timers(hass: HomeAssistant, entry_id: str, store: HomeTa
         except (ValueError, TypeError):
             continue
 
-        unit_seconds = RECURRENCE_UNIT_SECONDS.get(task.get("recurrence_unit"), 0)
-        interval_seconds = unit_seconds * task.get("recurrence_value", 1)
-        if interval_seconds <= 0:
+        delay = _compute_reopen_delay(task, completed_at)
+        if delay is None:
             continue
 
-        elapsed = (now - completed_at).total_seconds()
-        remaining = interval_seconds - elapsed
-
-        if remaining <= 0:
+        if delay <= 0:
             hass.async_create_task(_async_reopen_task(hass, entry_id, task["id"]))
         else:
-            _schedule_recurrence(hass, entry_id, task, delay_seconds=remaining)
+            _schedule_recurrence(hass, entry_id, task, completed_at=completed_at)
 
 
 # ---------------------------------------------------------------------------
