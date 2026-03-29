@@ -267,6 +267,8 @@ async def ws_delete_sub_item(hass, connection, msg):
 async def ws_move_task(hass, connection, msg):
     """Move a task from one list to another."""
     try:
+        if msg["source_list_id"] == msg["target_list_id"]:
+            raise ValueError("source_list_id and target_list_id must be different")
         src = _get_store(hass, msg["source_list_id"])
         tgt = _get_store(hass, msg["target_list_id"])
         task = await src.async_export_task(msg["task_id"])

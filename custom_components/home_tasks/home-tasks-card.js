@@ -498,7 +498,11 @@ class HomeTasksCard extends HTMLElement {
   async _moveTask(srcColIdx, tgtColIdx, taskId, targetTaskIds) {
     const srcListId = this._colListId(srcColIdx);
     const tgtListId = this._colListId(tgtColIdx);
-    if (!srcListId || !tgtListId) return;
+    if (!srcListId || !tgtListId) {
+      this._showError("Cannot move task: list not configured");
+      await this._loadAllTasks();
+      return;
+    }
     await this._callWs("home_tasks/move_task", {
       source_list_id: srcListId,
       target_list_id: tgtListId,
