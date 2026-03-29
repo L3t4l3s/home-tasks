@@ -784,7 +784,7 @@ class HomeTasksCard extends HTMLElement {
     // Priority section
     const currentPriority = task.priority || null;
     const priorityBtnRow = this._el("div", { className: "priority-btn-row" });
-    for (const [val, key] of [[3, "pri_high"], [2, "pri_medium"], [1, "pri_low"]]) {
+    for (const [val, key] of [[1, "pri_low"], [2, "pri_medium"], [3, "pri_high"]]) {
       const btn = this._el("button", {
         className: `priority-btn pri-${val}${currentPriority === val ? " active" : ""}`,
         textContent: this._t(key),
