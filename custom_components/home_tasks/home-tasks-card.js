@@ -676,7 +676,7 @@ class HomeTasksCard extends HTMLElement {
       if (col.icon) {
         const iconEl = document.createElement("ha-icon");
         iconEl.setAttribute("icon", col.icon);
-        iconEl.style.cssText = "--mdc-icon-size:1.1em;vertical-align:-0.15em;margin-right:6px;";
+        iconEl.style.cssText = "--mdc-icon-size:1em;width:1em;height:1em;flex-shrink:0;";
         titleEl.appendChild(iconEl);
       }
       titleEl.appendChild(document.createTextNode(this._getListName(colIdx)));
@@ -1650,8 +1650,8 @@ class HomeTasksCard extends HTMLElement {
       .card-column.drag-target { outline: 2px dashed var(--todo-primary); outline-offset: -2px; border-radius: var(--todo-radius); }
       .card-column { padding: 16px; }
       .header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
-      .card-global-title { font-size: var(--ha-card-header-font-size, 1.5rem); font-weight: var(--ha-card-header-font-weight, 500); color: var(--ha-card-header-color, var(--todo-text)); margin: 0; padding: 16px 16px 0; line-height: 1.2; }
-      .title { font-size: var(--ha-card-header-font-size, 1.5rem); font-weight: var(--ha-card-header-font-weight, 500); color: var(--ha-card-header-color, var(--todo-text)); margin: 0; line-height: 1.2; }
+      .card-global-title { font-size: 1.25rem; font-weight: 500; color: var(--ha-card-header-color, var(--todo-text)); margin: 0; padding: 16px 16px 0; line-height: 1.2; }
+      .title { font-size: 1.25rem; font-weight: 500; color: var(--ha-card-header-color, var(--todo-text)); margin: 0; line-height: 1.2; display: flex; align-items: center; gap: 6px; }
       .progress { font-size: 14px; color: var(--todo-secondary-text); }
       .add-task { display: flex; gap: 8px; margin-bottom: 16px; }
       .add-input {
@@ -1930,7 +1930,7 @@ class HomeTasksCard extends HTMLElement {
       /* Compact mode overrides */
       .compact { padding: 10px; }
       .compact .header { margin-bottom: 10px; }
-      .compact .title { font-size: 1.1rem; }
+      .compact .title { font-size: 1rem; }
       .compact .progress { font-size: 12px; }
       .compact .add-task { margin-bottom: 10px; }
       .compact .add-input { padding: 6px 10px; font-size: 13px; }
@@ -2111,9 +2111,16 @@ class HomeTasksCardEditor extends HTMLElement {
         padding: 4px 0 8px; margin-bottom: 8px;
         border-bottom: 1px solid var(--divider-color, #e0e0e0);
       }
-      .editor-col-controls ha-icon-button { color: var(--secondary-text-color); }
-      .editor-col-controls ha-icon-button.active { color: var(--primary-color); }
-      .editor-col-controls ha-icon-button.del { color: var(--error-color, #db4437); }
+      .icon-btn {
+        width: 36px; height: 36px; border-radius: 50%; border: none;
+        background: transparent; cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--secondary-text-color); flex-shrink: 0; padding: 0;
+        transition: background 0.15s, color 0.15s;
+      }
+      .icon-btn:hover { background: var(--secondary-background-color); }
+      .icon-btn.active { color: var(--primary-color); }
+      .icon-btn.del { color: var(--error-color, #db4437); }
       .visual-editor { display: flex; flex-direction: column; gap: 16px; }
       .field { display: flex; flex-direction: column; gap: 4px; }
       label { font-size: 12px; font-weight: 500; color: var(--secondary-text-color); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -2189,12 +2196,12 @@ class HomeTasksCardEditor extends HTMLElement {
     const controls = this._el("div", { className: "editor-col-controls" });
 
     const makeIconBtn = (icon, label, cls, handler) => {
-      const btn = document.createElement("ha-icon-button");
-      btn.setAttribute("label", label);
-      if (cls) btn.className = cls;
+      const btn = document.createElement("button");
+      btn.className = "icon-btn" + (cls ? " " + cls : "");
+      btn.title = label;
       const haIcon = document.createElement("ha-icon");
       haIcon.setAttribute("icon", icon);
-      haIcon.setAttribute("slot", "icon");
+      haIcon.style.setProperty("--mdc-icon-size", "20px");
       btn.appendChild(haIcon);
       btn.addEventListener("click", handler);
       return btn;
@@ -2314,6 +2321,9 @@ class HomeTasksCardEditor extends HTMLElement {
 
     // List select
     const listSelect = this._el("select", { id: `list-select-${tabIdx}` });
+    if (!col.list_id) {
+      listSelect.appendChild(this._el("option", { value: "", selected: true, textContent: "\u2014 " + this._t("ed_list") + " \u2014" }));
+    }
     for (const l of this._lists) {
       const option = this._el("option", {
         value: l.id,
