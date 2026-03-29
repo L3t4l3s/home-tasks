@@ -63,6 +63,7 @@ const _TRANSLATIONS = {
     sort_priority: "Priority",
     sort_title: "Title (A\u2013Z)",
     sort_person: "Assigned",
+    ed_show_sort: "Show sort button",
     ed_default_sort: "Default sort",
     reminder: "Reminders",
     rem_add: "+ Add reminder",
@@ -132,6 +133,7 @@ const _TRANSLATIONS = {
     sort_priority: "Priorit\u00e4t",
     sort_title: "Titel (A\u2013Z)",
     sort_person: "Zugewiesen",
+    ed_show_sort: "Sortieren-Button anzeigen",
     ed_default_sort: "Standard-Sortierung",
     reminder: "Erinnerungen",
     rem_add: "+ Erinnerung hinzuf\u00fcgen",
@@ -655,7 +657,7 @@ class HomeTasksCard extends HTMLElement {
       );
     }
     filterRowChildren.push(this._el("div", { className: "filter-spacer" }));
-    filterRowChildren.push(sortBtnWrapper);
+    if (this._config.show_sort !== false) filterRowChildren.push(sortBtnWrapper);
     const filters = this._el("div", { className: "filters" }, filterRowChildren);
 
     // Task list
@@ -1997,6 +1999,21 @@ class HomeTasksCardEditor extends HTMLElement {
       showProgressCb,
     ]);
 
+    // Show sort toggle
+    const showSortCb = this._el("input", {
+      type: "checkbox",
+      id: "cb-show-sort",
+      checked: this._config.show_sort !== false,
+    });
+    showSortCb.addEventListener("change", () => {
+      this._config = { ...this._config, show_sort: showSortCb.checked };
+      this._fireChanged();
+    });
+    const showSortRow = this._el("div", { className: "toggle-row" }, [
+      this._el("span", { className: "toggle-label", textContent: this._t("ed_show_sort") }),
+      showSortCb,
+    ]);
+
     // Show due date toggle
     const showDueDateCb = this._el("input", {
       type: "checkbox",
@@ -2202,6 +2219,7 @@ class HomeTasksCardEditor extends HTMLElement {
         compactRow,
         showTitleRow,
         showProgressRow,
+        showSortRow,
         showNotesRow,
         showSubItemsRow,
         showPersonRow,
