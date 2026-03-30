@@ -12,6 +12,7 @@ A feature-rich task management integration for [Home Assistant](https://www.home
 
 ## Features
 
+- **Multi-column card** — display multiple lists side-by-side with cross-list drag & drop
 - **Drag & drop** reordering (desktop and mobile)
 - **Sub-items** with progress tracking
 - **Notes** per task
@@ -22,9 +23,10 @@ A feature-rich task management integration for [Home Assistant](https://www.home
 - **Person assignment** using HA person entities
 - **Tags** for categorization and filtering
 - **Tag filtering** via clickable chips in the card header
-- **Filters**: All / Open / Done (per-list default configurable)
+- **Sort** — by due date, priority, title, or assigned person; configurable default per column
+- **Filters**: All / Open / Done (per-column default configurable)
 - **Multiple lists** via integration config entries
-- **Events** for automations (created, completed, due, overdue, overdue, assigned, reopened, reminder)
+- **Events** for automations (created, completed, due, overdue, assigned, reopened, reminder)
 - **Sensors**: Open task count and overdue binary sensor per list
 - **Services**: Create, complete, reopen, and assign tasks via automations
 - **Compact mode** for denser task rows
@@ -60,15 +62,62 @@ The Lovelace card is automatically registered — just add it to your dashboard.
 
 All options are available in the visual card editor. The examples below cover typical use cases.
 
-### Option Reference
+### Single-column card
+
+```yaml
+type: custom:home-tasks-card
+columns:
+  - list_id: "your-list-id"
+    title: Household
+    default_filter: open
+```
+
+The old flat format (`list_id` at root level) is still supported and migrated automatically.
+
+### Multi-column card
+
+```yaml
+type: custom:home-tasks-card
+title: Family           # optional title above all columns
+columns:
+  - list_id: "uuid-household"
+    title: Household
+    icon: mdi:home
+    default_filter: open
+    default_sort: due
+  - list_id: "uuid-shopping"
+    title: Shopping
+    icon: mdi:cart
+    compact: true
+    auto_delete_completed: true
+    show_notes: false
+    show_sub_items: false
+    show_assigned_person: false
+    show_priority: false
+    show_tags: false
+    show_due_date: false
+    show_reminders: false
+    show_recurrence: false
+  - list_id: "uuid-kids"
+    title: Kids Chores
+    icon: mdi:school
+    show_priority: false
+    show_due_date: false
+    show_reminders: false
+```
+
+### Column option reference
 
 | Option | Default | Description |
 |--------|---------|-------------|
 | `list_id` | *(required)* | The list to display |
-| `title` | List name | Custom card title |
+| `title` | List name | Custom column title |
+| `icon` | — | MDI icon shown next to the column title (e.g. `mdi:home`) |
 | `default_filter` | `all` | Initial filter: `all`, `open`, or `done` |
-| `show_title` | `true` | Show/hide the card title |
+| `default_sort` | `manual` | Initial sort: `manual`, `due`, `priority`, `title`, or `person` |
+| `show_title` | `true` | Show/hide the column title |
 | `show_progress` | `true` | Show/hide the task progress counter |
+| `show_sort` | `true` | Show/hide the sort button |
 | `show_notes` | `true` | Show/hide the notes field |
 | `show_sub_items` | `true` | Show/hide sub-items |
 | `show_assigned_person` | `true` | Show/hide person assignment |
@@ -92,9 +141,10 @@ Full-featured list for shared household tasks — priorities, due dates, person 
 
 ```yaml
 type: custom:home-tasks-card
-list_id: "your-list-id"
-title: Household
-default_filter: open
+columns:
+  - list_id: "your-list-id"
+    title: Household
+    default_filter: open
 ```
 
 *(All display options are enabled by default.)*
@@ -111,19 +161,20 @@ Minimal and fast — just items and checkboxes. Completed entries disappear imme
 
 ```yaml
 type: custom:home-tasks-card
-list_id: "your-list-id"
-show_title: false
-show_progress: false
-compact: true
-auto_delete_completed: true
-show_notes: false
-show_sub_items: false
-show_assigned_person: false
-show_priority: false
-show_tags: false
-show_due_date: false
-show_reminders: false
-show_recurrence: false
+columns:
+  - list_id: "your-list-id"
+    compact: true
+    auto_delete_completed: true
+    show_title: false
+    show_progress: false
+    show_notes: false
+    show_sub_items: false
+    show_assigned_person: false
+    show_priority: false
+    show_tags: false
+    show_due_date: false
+    show_reminders: false
+    show_recurrence: false
 ```
 
 ---
@@ -138,17 +189,20 @@ Focused on deadlines — priorities, due dates, reminders, and sub-items. Person
 
 ```yaml
 type: custom:home-tasks-card
-list_id: "your-list-id"
-title: Work
-default_filter: open
-show_priority: true
-show_due_date: true
-show_reminders: true
-show_sub_items: true
-show_notes: true
-show_assigned_person: false
-show_tags: false
-show_recurrence: false
+columns:
+  - list_id: "your-list-id"
+    title: Work
+    icon: mdi:briefcase
+    default_filter: open
+    default_sort: due
+    show_priority: true
+    show_due_date: true
+    show_reminders: true
+    show_sub_items: true
+    show_notes: true
+    show_assigned_person: false
+    show_tags: false
+    show_recurrence: false
 ```
 
 ---
@@ -163,16 +217,18 @@ Who does what and when — person assignment, weekday recurrence, and tags for t
 
 ```yaml
 type: custom:home-tasks-card
-list_id: "your-list-id"
-title: Kids Chores
-show_priority: false
-show_due_date: false
-show_reminders: false
-show_recurrence: true
-show_assigned_person: true
-show_tags: true
-show_notes: false
-show_sub_items: false
+columns:
+  - list_id: "your-list-id"
+    title: Kids Chores
+    icon: mdi:school
+    show_priority: false
+    show_due_date: false
+    show_reminders: false
+    show_recurrence: true
+    show_assigned_person: true
+    show_tags: true
+    show_notes: false
+    show_sub_items: false
 ```
 
 ---
