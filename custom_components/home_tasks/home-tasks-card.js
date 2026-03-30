@@ -57,6 +57,8 @@ const _TRANSLATIONS = {
     add_tag: "+ Add tag",
     tag_placeholder: "New tag...",
     remove_tag: "Remove",
+    new_sub_item: "New sub-item",
+    remove_reminder: "Remove reminder",
     sort_label: "Sort",
     sort_manual: "Manual",
     sort_due: "Due date",
@@ -140,6 +142,8 @@ const _TRANSLATIONS = {
     add_tag: "+ Tag hinzuf\u00fcgen",
     tag_placeholder: "Neues Tag...",
     remove_tag: "Entfernen",
+    new_sub_item: "Neuer Unterpunkt",
+    remove_reminder: "Erinnerung entfernen",
     sort_label: "Sortierung",
     sort_manual: "Manuell",
     sort_due: "F\u00e4lligkeit",
@@ -200,7 +204,6 @@ class HomeTasksCard extends HTMLElement {
     this._editingSubItemId = null;
     this._draggedTaskId = null;
     this._draggedColIdx = null;
-    this._dragOverTaskId = null;
     this._touchClone = null;
     this._touchStartTimer = null;
     this._touchOffsetY = 0;
@@ -243,6 +246,16 @@ class HomeTasksCard extends HTMLElement {
       this._columns.push(this._defaultColState());
     }
     this._columns.length = config.columns.length;
+    // Clean up stale expanded/editing state when columns are removed
+    if (this._editingTaskId) {
+      const taskStillExists = this._columns.some(cs => cs.tasks?.some(t => t.id === this._editingTaskId));
+      if (!taskStillExists) this._editingTaskId = null;
+    }
+    // _expandedTasks is a Set of task IDs — clean up IDs no longer in any column
+    const allTaskIds = new Set(this._columns.flatMap(cs => (cs.tasks || []).map(t => t.id)));
+    for (const id of this._expandedTasks) {
+      if (!allTaskIds.has(id)) this._expandedTasks.delete(id);
+    }
 
     // Reset per-column filter/sort when list or defaults change
     for (let i = 0; i < config.columns.length; i++) {
@@ -455,7 +468,7 @@ class HomeTasksCard extends HTMLElement {
     const result = await this._callWs("home_tasks/add_sub_item", {
       list_id: this._colListId(colIdx),
       task_id: taskId,
-      title: "Neuer Unterpunkt",
+      title: this._t("new_sub_item"),
     });
     if (result) {
       this._editingSubItemId = result.id;
@@ -640,10 +653,13 @@ class HomeTasksCard extends HTMLElement {
 
     // Close any open sort dropdowns on next outside click
     if (this._columns.some(c => c.sortOpen)) {
-      setTimeout(() => document.addEventListener("click", () => {
+      if (this._sortCloseHandler) document.removeEventListener("click", this._sortCloseHandler);
+      this._sortCloseHandler = () => {
+        this._sortCloseHandler = null;
         this._columns.forEach(c => { c.sortOpen = false; });
         this._render();
-      }, { once: true }), 0);
+      };
+      setTimeout(() => document.addEventListener("click", this._sortCloseHandler, { once: true }), 0);
     }
   }
 
@@ -730,12 +746,12 @@ class HomeTasksCard extends HTMLElement {
     if (col.show_priority !== false) sortKeys.push("priority");
     sortKeys.push("title");
     if (col.show_assigned_person !== false) sortKeys.push("person");
-    if (!sortKeys.includes(cs.sortBy)) cs.sortBy = "manual";
+    const effectiveSortBy = sortKeys.includes(cs.sortBy) ? cs.sortBy : "manual";
 
     const sortDropdown = this._el("div", { className: "sort-dropdown" + (cs.sortOpen ? "" : " hidden") });
     for (const key of sortKeys) {
       const opt = this._el("div", {
-        className: "sort-option" + (cs.sortBy === key ? " active" : ""),
+        className: "sort-option" + (effectiveSortBy === key ? " active" : ""),
         textContent: sortLabels[key],
       });
       opt.addEventListener("click", (e) => {
@@ -748,9 +764,9 @@ class HomeTasksCard extends HTMLElement {
     }
     const sortBtnWrapper = this._el("div", { className: "sort-btn-wrapper" });
     const sortBtn = this._el("button", {
-      className: "sort-btn" + (cs.sortBy !== "manual" ? " active" : ""),
+      className: "sort-btn" + (effectiveSortBy !== "manual" ? " active" : ""),
       textContent: "\u21C5",
-      title: sortLabels[cs.sortBy],
+      title: sortLabels[effectiveSortBy],
     });
     sortBtn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -900,7 +916,6 @@ class HomeTasksCard extends HTMLElement {
       contentChildren.push(editInput);
       setTimeout(() => { editInput.focus(); editInput.select(); }, 0);
     } else {
-      const col = this._config.columns[colIdx];
       const titleSpan = this._el("span", { className: "task-title", textContent: task.title });
       titleSpan.addEventListener("click", () => {
         const now = Date.now();
@@ -1104,7 +1119,7 @@ class HomeTasksCard extends HTMLElement {
           list_id: listId,
           task_id: task.id,
           priority: currentPriority === val ? null : val,
-        }).then(() => this._loadAllTasks());
+        })?.then(() => this._loadAllTasks());
       });
       priorityBtnRow.appendChild(btn);
     }
@@ -1195,7 +1210,7 @@ class HomeTasksCard extends HTMLElement {
         list_id: listId,
         task_id: task.id,
         recurrence_weekdays: selected,
-      }).then(() => this._loadAllTasks());
+      })?.then(() => this._loadAllTasks());
     };
 
     const saveInterval = () => {
@@ -1206,7 +1221,7 @@ class HomeTasksCard extends HTMLElement {
         task_id: task.id,
         recurrence_value: val,
         recurrence_unit: recurrenceUnitSelect.value,
-      }).then(() => this._loadAllTasks());
+      })?.then(() => this._loadAllTasks());
     };
 
     recurrenceToggle.addEventListener("change", () => {
@@ -1223,7 +1238,7 @@ class HomeTasksCard extends HTMLElement {
         recurrence_value: val,
         recurrence_unit: recurrenceUnitSelect.value,
         recurrence_weekdays: selected,
-      }).then(() => this._loadAllTasks());
+      })?.then(() => this._loadAllTasks());
     });
 
     recurrenceModeSelect.addEventListener("change", () => {
@@ -1233,7 +1248,7 @@ class HomeTasksCard extends HTMLElement {
         list_id: listId,
         task_id: task.id,
         recurrence_type: mode,
-      }).then(() => this._loadAllTasks());
+      })?.then(() => this._loadAllTasks());
     });
 
     recurrenceValueInput.addEventListener("change", saveInterval);
@@ -1270,7 +1285,7 @@ class HomeTasksCard extends HTMLElement {
         list_id: listId,
         task_id: task.id,
         assigned_person: personSelect.value || null,
-      }).then(() => this._loadAllTasks());
+      })?.then(() => this._loadAllTasks());
     });
     const personSection = this._el("div", { className: "detail-section" }, [
       this._el("label", { className: "detail-label", textContent: this._t("assigned_to") }),
@@ -1296,7 +1311,7 @@ class HomeTasksCard extends HTMLElement {
             list_id: listId,
             task_id: task.id,
             tags: newTags,
-          }).then(() => this._loadAllTasks());
+          })?.then(() => this._loadAllTasks());
         });
         tagListEl.appendChild(
           this._el("span", { className: "tag-item" }, [
@@ -1320,7 +1335,7 @@ class HomeTasksCard extends HTMLElement {
             list_id: listId,
             task_id: task.id,
             tags: [...taskTags, val],
-          }).then(() => this._loadAllTasks());
+          })?.then(() => this._loadAllTasks());
         }
         tagInput.value = "";
       }
@@ -1338,7 +1353,7 @@ class HomeTasksCard extends HTMLElement {
         list_id: listId,
         task_id: task.id,
         reminders: newReminders,
-      }).then(() => this._loadAllTasks());
+      })?.then(() => this._loadAllTasks());
     };
     for (let ri = 0; ri < taskReminders.length; ri++) {
       const offset = taskReminders[ri];
@@ -1356,7 +1371,7 @@ class HomeTasksCard extends HTMLElement {
       const removeBtn = this._el("button", {
         className: "reminder-remove",
         textContent: "\u00D7",
-        title: this._t("remove_tag"),
+        title: this._t("remove_reminder"),
       });
       removeBtn.addEventListener("click", () => {
         const updated = taskReminders.filter((_, i) => i !== ri);
@@ -1502,7 +1517,6 @@ class HomeTasksCard extends HTMLElement {
     // Clean up
     this._draggedTaskId = null;
     this._draggedColIdx = null;
-    this._dragOverTaskId = null;
     this.shadowRoot.querySelectorAll(".task").forEach((el) => {
       el.classList.remove("dragging", "drag-over");
     });
@@ -2284,8 +2298,9 @@ class HomeTasksCardEditor extends HTMLElement {
     editor.addEventListener("value-changed", (e) => {
       const val = e.detail.value;
       if (val !== undefined && typeof val === "object" && !Array.isArray(val)) {
+        const { type: _t, ...stripped } = val;  // strip stray type key
         const newCols = [...this._config.columns];
-        newCols[tabIdx] = val;
+        newCols[tabIdx] = stripped;
         this._config = { ...this._config, columns: newCols };
         this._fireChanged();
       }
@@ -2325,7 +2340,7 @@ class HomeTasksCardEditor extends HTMLElement {
     titleInput.placeholder = this._t("ed_title_placeholder");
     titleInput.value = col.title || "";
     titleInput.style.width = "100%";
-    titleInput.addEventListener("change", (e) => updateCol({ title: e.target.value }));
+    titleInput.addEventListener("change", (e) => updateCol({ title: e.target.value || undefined }));
 
     // Icon picker
     const iconPicker = document.createElement("ha-icon-picker");
@@ -2378,11 +2393,11 @@ class HomeTasksCardEditor extends HTMLElement {
 
     const hint = this._el("span", { className: "hint", textContent: this._t("ed_hint") });
 
-    const makeSection = (icon, titleKey, nodes, defaultOpen = true) => {
+    const makeSection = (sectionId, icon, titleKey, nodes, defaultOpen = true) => {
       const det = document.createElement("details");
-      const isOpen = titleKey in this._sectionOpen ? this._sectionOpen[titleKey] : defaultOpen;
+      const isOpen = sectionId in this._sectionOpen ? this._sectionOpen[sectionId] : defaultOpen;
       if (isOpen) det.open = true;
-      det.addEventListener("toggle", () => { this._sectionOpen[titleKey] = det.open; });
+      det.addEventListener("toggle", () => { this._sectionOpen[sectionId] = det.open; });
       const sum = document.createElement("summary");
       const ico = document.createElement("ha-icon");
       ico.setAttribute("icon", icon);
@@ -2406,7 +2421,7 @@ class HomeTasksCardEditor extends HTMLElement {
 
     return this._el("div", { className: "visual-editor" }, [
       this._el("div", { className: "field" }, [listWrap, hint]),
-      makeSection("mdi:eye", "ed_sec_view", [
+      makeSection("view", "mdi:eye", "ed_sec_view", [
         this._el("div", { className: "field" }, [titleInput]),
         this._el("div", { className: "field" }, [iconPicker]),
         this._el("div", { className: "toggle-grid" }, [
@@ -2419,7 +2434,7 @@ class HomeTasksCardEditor extends HTMLElement {
         this._el("div", { className: "field" }, [filterWrap]),
         this._el("div", { className: "field" }, [sortWrap]),
       ]),
-      makeSection("mdi:tune", "ed_sec_display", [
+      makeSection("config", "mdi:tune", "ed_sec_display", [
         this._el("div", { className: "toggle-grid" }, [
           makeToggle("show-notes", "ed_show_notes", "show_notes", true),
           makeToggle("show-sub-items", "ed_show_sub_items", "show_sub_items", true),
