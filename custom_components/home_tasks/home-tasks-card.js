@@ -2121,11 +2121,29 @@ class HomeTasksCardEditor extends HTMLElement {
       .icon-btn:hover { background: var(--secondary-background-color); }
       .icon-btn.active { color: var(--primary-color); }
       .icon-btn.del { color: var(--error-color, #db4437); }
+      .icon-btn-spacer { flex: 1; }
       .visual-editor { display: flex; flex-direction: column; gap: 16px; }
-      .field { display: flex; flex-direction: column; gap: 4px; }
+      .field { display: flex; flex-direction: column; gap: 6px; }
       label { font-size: 12px; font-weight: 500; color: var(--secondary-text-color); text-transform: uppercase; letter-spacing: 0.5px; }
-      select, input[type="text"] { padding: 8px 12px; border: 1px solid var(--divider-color); border-radius: 4px; font-size: 14px; background: var(--card-background-color); color: var(--primary-text-color); font-family: inherit; }
-      .hint { font-size: 12px; color: var(--secondary-text-color); font-style: italic; }
+      ha-textfield { width: 100%; }
+      ha-icon-picker { width: 100%; }
+      .select-wrapper { position: relative; }
+      .select-wrapper::after {
+        content: ""; pointer-events: none; position: absolute; right: 14px; top: 50%;
+        transform: translateY(-50%); width: 0; height: 0;
+        border-left: 5px solid transparent; border-right: 5px solid transparent;
+        border-top: 6px solid var(--secondary-text-color);
+      }
+      select {
+        width: 100%; padding: 10px 36px 10px 14px;
+        border: 1px solid var(--divider-color, #e0e0e0); border-radius: 4px;
+        font-size: 14px; background: var(--card-background-color, #fff);
+        color: var(--primary-text-color); font-family: inherit;
+        appearance: none; -webkit-appearance: none; cursor: pointer;
+        outline: none; transition: border-color 0.15s;
+      }
+      select:focus { border-color: var(--primary-color); border-width: 2px; padding: 9px 35px 9px 13px; }
+      .hint { font-size: 12px; color: var(--secondary-text-color); font-style: italic; margin-top: 2px; }
       .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; min-height: 40px; }
       .toggle-label { font-size: 14px; color: var(--primary-text-color); }
       .code-editor-wrapper { display: flex; flex-direction: column; gap: 6px; }
@@ -2144,20 +2162,16 @@ class HomeTasksCardEditor extends HTMLElement {
     const activeTab = Math.min(this._editorTab, cols.length - 1);
 
     // Global card title input (above tabs)
-    const cardTitleInput = this._el("input", {
-      type: "text",
-      id: "card-title-input",
-      value: this._config.title || "",
-      placeholder: this._t("ed_card_title_placeholder"),
-    });
-    cardTitleInput.addEventListener("input", () => {
-      this._config = { ...this._config, title: cardTitleInput.value || undefined };
+    const cardTitleInput = document.createElement("ha-textfield");
+    cardTitleInput.label = this._t("ed_card_title");
+    cardTitleInput.placeholder = this._t("ed_card_title_placeholder");
+    cardTitleInput.value = this._config.title || "";
+    cardTitleInput.style.width = "100%";
+    cardTitleInput.addEventListener("input", (e) => {
+      this._config = { ...this._config, title: e.target.value || undefined };
       this._fireChanged();
     });
-    const cardTitleRow = this._el("div", { className: "editor-card-title-row field" }, [
-      this._el("label", { textContent: this._t("ed_card_title") }),
-      cardTitleInput,
-    ]);
+    const cardTitleRow = this._el("div", { className: "editor-card-title-row" }, [cardTitleInput]);
 
     // Tab bar (tabs on left, + on right)
     const tabsEl = this._el("div", { className: "editor-tabs" });
@@ -2176,11 +2190,13 @@ class HomeTasksCardEditor extends HTMLElement {
       });
       tabsEl.appendChild(tab);
     }
-    const addTabBtn = this._el("button", {
-      className: "editor-tab-add",
-      textContent: "+",
-      title: this._t("ed_add_column"),
-    });
+    const addTabBtn = document.createElement("button");
+    addTabBtn.className = "editor-tab-add";
+    addTabBtn.title = this._t("ed_add_column");
+    const _plusIcon = document.createElement("ha-icon");
+    _plusIcon.setAttribute("icon", "mdi:plus");
+    _plusIcon.style.setProperty("--mdc-icon-size", "20px");
+    addTabBtn.appendChild(_plusIcon);
     addTabBtn.addEventListener("click", () => {
       this._clearCodeState();
       const newCols = [...cols, {}];
@@ -2217,6 +2233,9 @@ class HomeTasksCardEditor extends HTMLElement {
         this._render();
       }
     ));
+    const _btnSpacer = document.createElement("div");
+    _btnSpacer.className = "icon-btn-spacer";
+    controls.appendChild(_btnSpacer);
 
     if (cols.length > 1) {
       if (activeTab > 0) {
@@ -2335,13 +2354,12 @@ class HomeTasksCardEditor extends HTMLElement {
     listSelect.addEventListener("change", () => updateCol({ list_id: listSelect.value }));
 
     // Title input
-    const titleInput = this._el("input", {
-      type: "text",
-      id: `title-input-${tabIdx}`,
-      value: col.title || "",
-      placeholder: this._t("ed_title_placeholder"),
-    });
-    titleInput.addEventListener("input", () => updateCol({ title: titleInput.value }));
+    const titleInput = document.createElement("ha-textfield");
+    titleInput.label = this._t("ed_title");
+    titleInput.placeholder = this._t("ed_title_placeholder");
+    titleInput.value = col.title || "";
+    titleInput.style.width = "100%";
+    titleInput.addEventListener("input", (e) => updateCol({ title: e.target.value }));
 
     // Icon picker
     const iconPicker = document.createElement("ha-icon-picker");
@@ -2387,21 +2405,18 @@ class HomeTasksCardEditor extends HTMLElement {
     return this._el("div", { className: "visual-editor" }, [
       this._el("div", { className: "field" }, [
         this._el("label", { textContent: this._t("ed_list") }),
-        listSelect,
+        this._el("div", { className: "select-wrapper" }, [listSelect]),
         hint,
       ]),
-      this._el("div", { className: "field" }, [
-        this._el("label", { textContent: this._t("ed_title") }),
-        titleInput,
-      ]),
+      this._el("div", { className: "field" }, [titleInput]),
       this._el("div", { className: "field" }, [iconPicker]),
       this._el("div", { className: "field" }, [
         this._el("label", { textContent: this._t("ed_default_filter") }),
-        defaultFilterSelect,
+        this._el("div", { className: "select-wrapper" }, [defaultFilterSelect]),
       ]),
       this._el("div", { className: "field" }, [
         this._el("label", { textContent: this._t("ed_default_sort") }),
-        defaultSortSelect,
+        this._el("div", { className: "select-wrapper" }, [defaultSortSelect]),
       ]),
       this._el("div", { className: "field" }, [
         this._el("label", { textContent: this._t("ed_display") }),
