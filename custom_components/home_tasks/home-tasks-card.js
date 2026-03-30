@@ -92,6 +92,8 @@ const _TRANSLATIONS = {
     ed_card_title_placeholder: "Title shown above columns",
     ed_sec_view: "Display",
     ed_sec_display: "Configuration",
+    due_time_lbl: "Time",
+    rec_mode_lbl: "Mode",
   },
   de: {
     my_tasks: "Meine Aufgaben",
@@ -176,6 +178,8 @@ const _TRANSLATIONS = {
     ed_card_title_placeholder: "Titel \u00fcber den Spalten",
     ed_sec_view: "Darstellung",
     ed_sec_display: "Konfiguration",
+    due_time_lbl: "Uhrzeit",
+    rec_mode_lbl: "Modus",
   },
 };
 
@@ -1066,12 +1070,10 @@ class HomeTasksCard extends HTMLElement {
     // Due section
     const dateInput = this._el("input", {
       type: "date",
-      className: "date-input",
       value: task.due_date || "",
     });
     const timeInput = this._el("input", {
       type: "time",
-      className: "time-input",
       value: task.due_time || "",
     });
     if (!task.due_date) timeInput.disabled = true;
@@ -1085,14 +1087,20 @@ class HomeTasksCard extends HTMLElement {
       this._updateTaskDue(task.id, dateInput.value, timeInput.value, colIdx)
     );
 
+    const dateWrap = this._el("div", { className: "field-wrap" }, [
+      dateInput,
+      this._el("span", { textContent: this._t("due_date") }),
+    ]);
+    const timeWrap = this._el("div", { className: "field-wrap" }, [
+      timeInput,
+      this._el("span", { textContent: this._t("due_time_lbl") }),
+    ]);
     const dateSection = this._el("div", { className: "detail-section" }, [
-      this._el("label", { className: "detail-label", textContent: this._t("due_date") }),
-      this._el("div", { className: "due-input-row" }, [dateInput, timeInput]),
+      this._el("div", { className: "due-input-row" }, [dateWrap, timeWrap]),
     ]);
 
     // Notes section
     const notesInput = this._el("textarea", {
-      className: "notes-input",
       placeholder: this._t("notes_placeholder"),
       rows: 2,
       value: task.notes || "",
@@ -1104,10 +1112,11 @@ class HomeTasksCard extends HTMLElement {
         this._updateTaskNotes(task.id, notesInput.value, colIdx);
       }, 500);
     });
-    const notesSection = this._el("div", { className: "detail-section" }, [
-      this._el("label", { className: "detail-label", textContent: this._t("notes") }),
+    const notesWrap = this._el("div", { className: "field-wrap" }, [
       notesInput,
+      this._el("span", { textContent: this._t("notes") }),
     ]);
+    const notesSection = this._el("div", { className: "detail-section" }, [notesWrap]);
 
     // Sub-items section
     const subChildren = [
@@ -1153,32 +1162,34 @@ class HomeTasksCard extends HTMLElement {
     const recurrenceType = task.recurrence_type || "interval";
     const recurrenceWeekdays = task.recurrence_weekdays || [];
 
-    const recurrenceToggle = this._el("input", { type: "checkbox", checked: recurrenceEnabled });
-    const recurrenceCheckmark = this._el("span", { className: "checkmark" });
-    const recurrenceLabel = this._el("label", { className: "checkbox-container small" }, [
-      recurrenceToggle, recurrenceCheckmark,
-    ]);
+    const recSwitch = document.createElement("ha-switch");
+    recSwitch.checked = recurrenceEnabled;
     const recurrenceToggleRow = this._el("div", { className: "recurrence-toggle-row" }, [
-      recurrenceLabel,
-      this._el("span", { textContent: this._t("recurrence_enabled") }),
+      this._el("label", { className: "detail-label", style: "margin: 0;" }, [
+        document.createTextNode(this._t("recurrence"))
+      ]),
+      recSwitch,
     ]);
 
-    const recurrenceModeSelect = this._el("select", { className: "recurrence-select recurrence-mode-select" });
+    const recurrenceModeSelect = this._el("select", {});
     for (const [val, key] of [["interval", "rec_type_interval"], ["weekdays", "rec_type_weekdays"]]) {
       const opt = this._el("option", { value: val, textContent: this._t(key) });
       if (val === recurrenceType) opt.selected = true;
       recurrenceModeSelect.appendChild(opt);
     }
+    const recurrenceModeWrap = this._el("div", { className: "sel-wrap" }, [
+      recurrenceModeSelect,
+      this._el("span", { textContent: this._t("rec_mode_lbl") }),
+    ]);
 
     const recurrenceValueInput = this._el("input", {
       type: "number",
-      className: "recurrence-value",
       value: recurrenceValue,
     });
     recurrenceValueInput.min = 1;
     recurrenceValueInput.max = 365;
 
-    const recurrenceUnitSelect = this._el("select", { className: "recurrence-select" });
+    const recurrenceUnitSelect = this._el("select", {});
     for (const opt of [
       { value: "hours", label: this._t("rec_hours") },
       { value: "days", label: this._t("rec_days") },
@@ -1190,10 +1201,17 @@ class HomeTasksCard extends HTMLElement {
       recurrenceUnitSelect.appendChild(optEl);
     }
 
-    const recurrenceIntervalRow = this._el("div", { className: "recurrence-input-row" }, [
-      this._el("span", { textContent: this._t("recurrence_every"), className: "recurrence-prefix" }),
+    const recValueWrap = this._el("div", { className: "field-wrap inline" }, [
       recurrenceValueInput,
+      this._el("span", { textContent: "#" }),
+    ]);
+    const recUnitWrap = this._el("div", { className: "sel-wrap inline" }, [
       recurrenceUnitSelect,
+      this._el("span", { textContent: this._t("recurrence_every") }),
+    ]);
+    const recurrenceIntervalRow = this._el("div", { className: "recurrence-input-row" }, [
+      recValueWrap,
+      recUnitWrap,
     ]);
 
     const weekdayCheckboxes = [];
@@ -1242,8 +1260,8 @@ class HomeTasksCard extends HTMLElement {
       })?.then(() => this._loadAllTasks());
     };
 
-    recurrenceToggle.addEventListener("change", () => {
-      const enabled = recurrenceToggle.checked;
+    recSwitch.addEventListener("change", () => {
+      const enabled = recSwitch.checked;
       applyEnabledState(enabled);
       const mode = recurrenceModeSelect.value;
       const val = Math.max(1, Math.min(365, parseInt(recurrenceValueInput.value) || 1));
@@ -1274,15 +1292,14 @@ class HomeTasksCard extends HTMLElement {
     weekdayCheckboxes.forEach(cb => cb.addEventListener("change", saveWeekdays));
 
     const recurrenceSection = this._el("div", { className: "detail-section" }, [
-      this._el("label", { className: "detail-label", textContent: this._t("recurrence") }),
       recurrenceToggleRow,
-      recurrenceModeSelect,
+      recurrenceModeWrap,
       recurrenceIntervalRow,
       recurrenceWeekdayRow,
     ]);
 
     // Assigned person section
-    const personSelect = this._el("select", { className: "person-select" });
+    const personSelect = this._el("select", {});
     const noneOpt = this._el("option", { value: "", textContent: this._t("nobody") });
     if (!task.assigned_person) noneOpt.selected = true;
     personSelect.appendChild(noneOpt);
@@ -1305,10 +1322,11 @@ class HomeTasksCard extends HTMLElement {
         assigned_person: personSelect.value || null,
       })?.then(() => this._loadAllTasks());
     });
-    const personSection = this._el("div", { className: "detail-section" }, [
-      this._el("label", { className: "detail-label", textContent: this._t("assigned_to") }),
+    const personWrap = this._el("div", { className: "sel-wrap" }, [
       personSelect,
+      this._el("span", { textContent: this._t("assigned_to") }),
     ]);
+    const personSection = this._el("div", { className: "detail-section" }, [personWrap]);
 
     // Tags section
     const tagSectionChildren = [
@@ -1342,7 +1360,6 @@ class HomeTasksCard extends HTMLElement {
     }
     const tagInput = this._el("input", {
       type: "text",
-      className: "tag-input",
       placeholder: this._t("tag_placeholder"),
     });
     tagInput.addEventListener("keydown", (e) => {
@@ -1358,7 +1375,11 @@ class HomeTasksCard extends HTMLElement {
         tagInput.value = "";
       }
     });
-    tagSectionChildren.push(tagInput);
+    const tagInputWrap = this._el("div", { className: "field-wrap" }, [
+      tagInput,
+      this._el("span", { textContent: this._t("add_tag").replace("+ ", "") }),
+    ]);
+    tagSectionChildren.push(tagInputWrap);
     const tagSection = this._el("div", { className: "detail-section" }, tagSectionChildren);
 
     // Reminders section
@@ -1375,7 +1396,7 @@ class HomeTasksCard extends HTMLElement {
     };
     for (let ri = 0; ri < taskReminders.length; ri++) {
       const offset = taskReminders[ri];
-      const sel = this._el("select", { className: "reminder-select" });
+      const sel = this._el("select", {});
       for (const [val, key] of REMINDER_OFFSETS) {
         const opt = this._el("option", { value: String(val), textContent: this._t(key) });
         if (val === offset) opt.selected = true;
@@ -1395,7 +1416,11 @@ class HomeTasksCard extends HTMLElement {
         const updated = taskReminders.filter((_, i) => i !== ri);
         _rebuildReminders(updated);
       });
-      reminderSectionChildren.push(this._el("div", { className: "reminder-row" }, [sel, removeBtn]));
+      const remSelWrap = this._el("div", { className: "sel-wrap" }, [
+        sel,
+        this._el("span", { textContent: this._t("reminder") }),
+      ]);
+      reminderSectionChildren.push(this._el("div", { className: "reminder-row" }, [remSelWrap, removeBtn]));
     }
     if (taskReminders.length < 5) {
       const addReminderBtn = this._el("button", {
@@ -1850,32 +1875,9 @@ class HomeTasksCard extends HTMLElement {
         cursor: pointer; font-size: 14px; padding: 0 2px; line-height: 1; opacity: 0.7;
       }
       .remove-tag-btn:hover { opacity: 1; }
-      .tag-input {
-        padding: 6px 10px; border: 1px solid var(--todo-divider); border-radius: 4px;
-        font-size: 13px; background: var(--todo-bg); color: var(--todo-text);
-        font-family: inherit; outline: none; max-width: 200px;
-      }
-      .tag-input:focus { border-color: var(--success-color, #4caf50); }
-      .person-select {
-        width: 100%; padding: 6px 8px; border: 1px solid var(--todo-divider);
-        border-radius: 4px; font-size: 13px; background: var(--todo-bg);
-        color: var(--todo-text); font-family: inherit;
-      }
-      .recurrence-toggle-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-      .recurrence-mode-select { margin-bottom: 6px; }
-      .recurrence-input-row { display: flex; align-items: center; gap: 8px; }
+      .recurrence-toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+      .recurrence-input-row { display: flex; align-items: flex-end; gap: 8px; }
       .recurrence-prefix { font-size: 13px; color: var(--todo-secondary-text); white-space: nowrap; }
-      .recurrence-value {
-        width: 60px; padding: 6px 8px; border: 1px solid var(--todo-divider);
-        border-radius: 4px; font-size: 13px; background: var(--todo-bg);
-        color: var(--todo-text); font-family: inherit; text-align: center;
-      }
-      .recurrence-select {
-        flex: 1; padding: 6px 8px; border: 1px solid var(--todo-divider);
-        border-radius: 4px; font-size: 13px; background: var(--todo-bg);
-        color: var(--todo-text); font-family: inherit;
-      }
-      .recurrence-value:disabled, .recurrence-select:disabled { opacity: 0.5; }
       .recurrence-weekday-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
       .weekday-label {
         display: flex; flex-direction: column; align-items: center; gap: 3px;
@@ -1891,11 +1893,6 @@ class HomeTasksCard extends HTMLElement {
       }
       .weekday-label input[type="checkbox"]:disabled + span { opacity: 0.5; cursor: default; }
       .reminder-row { display: flex; gap: 6px; align-items: center; }
-      .reminder-select {
-        flex: 1; padding: 6px 8px; border: 1px solid var(--todo-divider);
-        border-radius: 4px; font-size: 13px; background: var(--todo-bg);
-        color: var(--todo-text); font-family: inherit;
-      }
       .reminder-remove {
         background: none; border: none; color: var(--todo-secondary-text);
         cursor: pointer; font-size: 16px; padding: 2px 6px; border-radius: 4px; line-height: 1;
@@ -1921,24 +1918,26 @@ class HomeTasksCard extends HTMLElement {
         font-size: 11px; font-weight: 600; text-transform: uppercase;
         color: var(--todo-secondary-text); letter-spacing: 0.5px;
       }
-      .due-input-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-      .date-input {
-        padding: 6px 10px; border: 1px solid var(--todo-divider); border-radius: 4px;
-        font-size: 13px; background: var(--todo-bg); color: var(--todo-text);
-        font-family: inherit; flex: 1; min-width: 130px;
-      }
-      .time-input {
-        padding: 6px 10px; border: 1px solid var(--todo-divider); border-radius: 4px;
-        font-size: 13px; background: var(--todo-bg); color: var(--todo-text);
-        font-family: inherit; width: 100px;
-      }
-      .time-input:disabled { opacity: 0.4; }
-      .notes-input {
-        padding: 8px 10px; border: 1px solid var(--todo-divider); border-radius: 4px;
-        font-size: 13px; background: var(--todo-surface); color: var(--todo-text);
-        resize: vertical; min-height: 40px; font-family: inherit; outline: none;
-      }
-      .notes-input:focus { border-color: var(--todo-primary); background: var(--todo-bg); }
+      .due-input-row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+      .field-wrap { position: relative; width: 100%; }
+      .field-wrap input, .field-wrap textarea { width: 100%; box-sizing: border-box; padding: 20px 12px 6px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; background: var(--secondary-background-color, transparent); color: var(--primary-text-color); font-size: 0.875rem; font-family: inherit; outline: none; }
+      .field-wrap input:focus, .field-wrap textarea:focus { border: 2px solid var(--primary-color); padding: 19px 11px 5px; }
+      .field-wrap input:disabled, .field-wrap textarea:disabled { opacity: 0.4; }
+      .field-wrap textarea { resize: vertical; min-height: 60px; }
+      .field-wrap > span { position: absolute; top: 6px; left: 12px; font-size: 11px; font-weight: 600; color: var(--secondary-text-color); text-transform: uppercase; letter-spacing: 0.5px; pointer-events: none; }
+      .field-wrap input:focus ~ span, .field-wrap textarea:focus ~ span { color: var(--primary-color); }
+      .field-wrap.inline { flex: 1; width: auto; }
+      .field-wrap.inline input { padding: 16px 8px 4px; }
+      .field-wrap.inline > span { top: 4px; left: 8px; }
+      .sel-wrap { position: relative; width: 100%; }
+      .sel-wrap select { width: 100%; height: 48px; padding: 18px 32px 4px 12px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; background: var(--secondary-background-color, transparent); color: var(--primary-text-color); font-size: 0.875rem; font-family: inherit; appearance: none; -webkit-appearance: none; cursor: pointer; outline: none; box-sizing: border-box; }
+      .sel-wrap select:focus { border: 2px solid var(--primary-color); padding: 17px 31px 3px 11px; }
+      .sel-wrap select:disabled { opacity: 0.4; cursor: default; }
+      .sel-wrap > span { position: absolute; top: 6px; left: 12px; font-size: 11px; font-weight: 600; color: var(--secondary-text-color); text-transform: uppercase; letter-spacing: 0.5px; pointer-events: none; }
+      .sel-wrap::after { content: "▾"; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--secondary-text-color); font-size: 16px; line-height: 1; }
+      .sel-wrap.inline { flex: 1; width: auto; }
+      .sel-wrap.inline select { height: 40px; padding: 14px 28px 4px 10px; }
+      .sel-wrap.inline > span { top: 4px; left: 10px; font-size: 10px; }
       .sub-item { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
       .sub-title {
         flex: 1; font-size: 13px; color: var(--todo-text); cursor: default;
