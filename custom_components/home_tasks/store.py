@@ -388,6 +388,13 @@ class HomeTasksStore:
                 return sub
         raise ValueError("Sub-task not found")
 
+    async def async_reorder_sub_tasks(self, task_id: str, sub_task_ids: list[str]) -> None:
+        """Reorder sub-tasks within a task."""
+        task = self.get_task(task_id)
+        id_to_sub = {s["id"]: s for s in task["sub_items"]}
+        task["sub_items"] = [id_to_sub[sid] for sid in sub_task_ids if sid in id_to_sub]
+        await self._async_save()
+
     async def async_delete_sub_task(self, task_id: str, sub_task_id: str) -> None:
         """Delete a sub-task."""
         task = self.get_task(task_id)

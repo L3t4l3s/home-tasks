@@ -212,6 +212,10 @@ class HomeTasksCard extends HTMLElement {
     this._touchStartTimer = null;
     this._touchOffsetY = 0;
     this._touchBound = {};
+    this._draggedSubTaskId = null;
+    this._subTouchClone = null;
+    this._subTouchStartTimer = null;
+    this._subTouchOffsetY = 0;
     this._lastTitleClick = null;
     this._initialized = false;
     this._pendingRender = false;
@@ -520,6 +524,22 @@ class HomeTasksCard extends HTMLElement {
     await this._loadAllTasks();
   }
 
+  async _reorderSubTasks(taskId, subTaskIds, colIdx) {
+    await this._callWs("home_tasks/reorder_sub_tasks", {
+      list_id: this._colListId(colIdx),
+      task_id: taskId,
+      sub_task_ids: subTaskIds,
+    });
+    const tasks = this._columns[colIdx]?.tasks;
+    if (tasks) {
+      const task = tasks.find(t => t.id === taskId);
+      if (task && task.sub_items) {
+        const idToSub = Object.fromEntries(task.sub_items.map(s => [s.id, s]));
+        task.sub_items = subTaskIds.map(id => idToSub[id]).filter(Boolean);
+      }
+    }
+  }
+
   async _reorderTasks(taskIds, colIdx) {
     const listId = this._colListId(colIdx);
     if (!listId) return;
@@ -651,7 +671,7 @@ class HomeTasksCard extends HTMLElement {
 
   _render() {
     // Don't tear down DOM while a drag is in progress
-    if (this._draggedTaskId !== null) { this._pendingRender = true; return; }
+    if (this._draggedTaskId !== null || this._draggedSubTaskId !== null) { this._pendingRender = true; return; }
     this._pendingRender = false;
 
     // Remove any stale sort close handler before rebuilding DOM
@@ -1128,19 +1148,23 @@ class HomeTasksCard extends HTMLElement {
     const notesSection = this._el("div", { className: "detail-section" }, [notesWrap]);
 
     // Sub-tasks section
-    const subChildren = [
-      this._el("label", { className: "detail-label", textContent: this._t("sub_items") }),
-    ];
+    const subList = this._el("div", { className: "sub-task-list" });
+    subList.dataset.taskId = task.id;
     for (const sub of (task.sub_items || [])) {
-      subChildren.push(this._buildSubTask(task.id, sub, colIdx));
+      subList.appendChild(this._buildSubTask(task.id, sub, colIdx));
     }
+    subList.addEventListener("dragover", (e) => { e.preventDefault(); });
+    subList.addEventListener("drop", (e) => { e.preventDefault(); this._finishSubDrag(task.id, colIdx); });
     const addSubBtn = this._el("button", {
       className: "add-sub-btn",
       textContent: this._t("add_sub_item"),
     });
     addSubBtn.addEventListener("click", () => this._addSubTask(task.id, colIdx));
-    subChildren.push(addSubBtn);
-    const subSection = this._el("div", { className: "detail-section" }, subChildren);
+    const subSection = this._el("div", { className: "detail-section" }, [
+      this._el("label", { className: "detail-label", textContent: this._t("sub_items") }),
+      subList,
+      addSubBtn,
+    ]);
 
     // Priority section
     const currentPriority = task.priority || null;
@@ -1469,6 +1493,12 @@ class HomeTasksCard extends HTMLElement {
   _buildSubTask(taskId, sub, colIdx) {
     const isEditing = this._editingSubTaskId === sub.id;
 
+    const handle = this._el("span", {
+      className: "sub-drag-handle",
+      textContent: "\u2237",
+      title: this._t("drag_handle"),
+    });
+
     const checkbox = this._el("input", { type: "checkbox", checked: sub.completed });
     checkbox.addEventListener("change", () =>
       this._toggleSubTask(taskId, sub.id, sub.completed, colIdx)
@@ -1513,7 +1543,68 @@ class HomeTasksCard extends HTMLElement {
     });
     deleteBtn.addEventListener("click", () => this._deleteSubTask(taskId, sub.id, colIdx));
 
-    return this._el("div", { className: "sub-task" }, [label, titleEl, deleteBtn]);
+    const subEl = this._el("div", { className: "sub-task" }, [handle, label, titleEl, deleteBtn]);
+    subEl.draggable = true;
+    subEl.dataset.subTaskId = sub.id;
+
+    subEl.addEventListener("dragstart", (e) => {
+      this._draggedSubTaskId = sub.id;
+      e.dataTransfer.effectAllowed = "move";
+      subEl.classList.add("dragging");
+    });
+    subEl.addEventListener("dragend", () => this._finishSubDrag(taskId, colIdx));
+    subEl.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      if (!this._draggedSubTaskId || this._draggedSubTaskId === sub.id) return;
+      const draggedEl = this.shadowRoot.querySelector(`.sub-task[data-sub-task-id="${CSS.escape(this._draggedSubTaskId)}"]`);
+      this._liveMoveSubTask(draggedEl, subEl);
+    });
+    subEl.addEventListener("drop", (e) => { e.preventDefault(); this._finishSubDrag(taskId, colIdx); });
+
+    handle.addEventListener("touchstart", (e) => {
+      if (e.touches.length !== 1) return;
+      const touch = e.touches[0];
+      this._subTouchStartTimer = setTimeout(() => {
+        this._draggedSubTaskId = sub.id;
+        subEl.classList.add("dragging");
+        const rect = subEl.getBoundingClientRect();
+        const clone = subEl.cloneNode(true);
+        clone.style.cssText = `position:fixed;top:${rect.top}px;left:${rect.left}px;width:${rect.width}px;z-index:1000;opacity:0.85;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,0.3);background:var(--todo-bg,#fff);border-radius:4px;border:1px solid var(--todo-primary,#03a9f4);`;
+        this.shadowRoot.appendChild(clone);
+        this._subTouchClone = clone;
+        this._subTouchOffsetY = touch.clientY - rect.top;
+      }, 150);
+    }, { passive: true });
+
+    const onSubTouchMove = (e) => {
+      if (!this._draggedSubTaskId) {
+        clearTimeout(this._subTouchStartTimer);
+        this._subTouchStartTimer = null;
+        return;
+      }
+      e.preventDefault();
+      const touch = e.touches[0];
+      if (this._subTouchClone) this._subTouchClone.style.top = `${touch.clientY - this._subTouchOffsetY}px`;
+      if (this._subTouchClone) this._subTouchClone.style.display = "none";
+      const shadowEl = this.shadowRoot.elementFromPoint(touch.clientX, touch.clientY);
+      if (this._subTouchClone) this._subTouchClone.style.display = "";
+      const target = shadowEl?.closest(".sub-task");
+      if (target && target.dataset.subTaskId && target.dataset.subTaskId !== this._draggedSubTaskId) {
+        const draggedEl = this.shadowRoot.querySelector(`.sub-task[data-sub-task-id="${CSS.escape(this._draggedSubTaskId)}"]`);
+        this._liveMoveSubTask(draggedEl, target);
+      }
+    };
+    const onSubTouchEnd = () => {
+      clearTimeout(this._subTouchStartTimer);
+      this._subTouchStartTimer = null;
+      if (this._draggedSubTaskId) this._finishSubDrag(taskId, colIdx);
+    };
+    handle.addEventListener("touchmove", onSubTouchMove, { passive: false });
+    handle.addEventListener("touchend", onSubTouchEnd);
+    handle.addEventListener("touchcancel", onSubTouchEnd);
+
+    return subEl;
   }
 
   // --- Drag & Drop ---
@@ -1554,6 +1645,30 @@ class HomeTasksCard extends HTMLElement {
     } else {
       targetList.insertBefore(draggedEl, targetEl);
     }
+  }
+
+  _liveMoveSubTask(draggedEl, targetEl) {
+    if (!draggedEl || !targetEl || draggedEl === targetEl) return;
+    const r1 = draggedEl.getBoundingClientRect();
+    const r2 = targetEl.getBoundingClientRect();
+    if (r1.top < r2.top) {
+      targetEl.parentNode.insertBefore(draggedEl, targetEl.nextSibling);
+    } else {
+      targetEl.parentNode.insertBefore(draggedEl, targetEl);
+    }
+  }
+
+  _finishSubDrag(taskId, colIdx) {
+    const draggedId = this._draggedSubTaskId;
+    this._draggedSubTaskId = null;
+    this.shadowRoot.querySelectorAll(".sub-task").forEach(el => el.classList.remove("dragging"));
+    if (this._subTouchClone) { this._subTouchClone.remove(); this._subTouchClone = null; }
+    if (this._subTouchStartTimer) { clearTimeout(this._subTouchStartTimer); this._subTouchStartTimer = null; }
+    if (!draggedId) return;
+    const subList = this.shadowRoot.querySelector(`.sub-task-list[data-task-id="${CSS.escape(taskId)}"]`);
+    if (!subList) return;
+    const order = [...subList.querySelectorAll(".sub-task")].map(el => el.dataset.subTaskId).filter(Boolean);
+    if (order.length > 1) this._reorderSubTasks(taskId, order, colIdx);
   }
 
   _finishDrag() {
@@ -1948,7 +2063,12 @@ class HomeTasksCard extends HTMLElement {
       .sel-wrap.inline { flex: 1; width: auto; }
       .sel-wrap.inline select { height: 40px; padding: 14px 28px 4px 10px; }
       .sel-wrap.inline > span { top: 4px; left: 10px; font-size: 10px; }
+      .sub-task-list { display: flex; flex-direction: column; }
       .sub-task { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+      .sub-task.dragging { opacity: 0.4; }
+      .sub-drag-handle { cursor: grab; color: var(--todo-disabled); font-size: 14px; padding: 0 2px 0 0; user-select: none; flex-shrink: 0; }
+      .sub-drag-handle:active { cursor: grabbing; }
+      @media (pointer: coarse) { .sub-drag-handle { padding: 4px 4px 4px 0; font-size: 16px; } }
       .sub-title {
         flex: 1; font-size: 13px; color: var(--todo-text); cursor: default;
         min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;

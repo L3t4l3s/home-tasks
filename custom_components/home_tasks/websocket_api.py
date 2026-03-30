@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DOMAIN, MAX_REORDER_IDS, MAX_RECURRENCE_VALUE, MAX_REMINDER_OFFSET_MINUTES, MAX_REMINDERS_PER_TASK, MAX_TAGS_PER_TASK, MAX_TITLE_LENGTH, VALID_RECURRENCE_UNITS
+from .const import DOMAIN, MAX_REORDER_IDS, MAX_RECURRENCE_VALUE, MAX_REMINDER_OFFSET_MINUTES, MAX_REMINDERS_PER_TASK, MAX_SUB_TASKS_PER_TASK, MAX_TAGS_PER_TASK, MAX_TITLE_LENGTH, VALID_RECURRENCE_UNITS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +29,7 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_add_sub_task)
     websocket_api.async_register_command(hass, ws_update_sub_task)
     websocket_api.async_register_command(hass, ws_delete_sub_task)
+    websocket_api.async_register_command(hass, ws_reorder_sub_tasks)
     websocket_api.async_register_command(hass, ws_move_task)
 
 
@@ -247,6 +248,25 @@ async def ws_delete_sub_task(hass, connection, msg):
     try:
         store = _get_store(hass, msg["list_id"])
         await store.async_delete_sub_task(msg["task_id"], msg["sub_task_id"])
+        connection.send_result(msg["id"])
+    except Exception as err:
+        _handle_error(connection, msg["id"], err)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "home_tasks/reorder_sub_tasks",
+        vol.Required("list_id"): _val_id,
+        vol.Required("task_id"): _val_id,
+        vol.Required("sub_task_ids"): vol.All([_val_id], vol.Length(max=MAX_SUB_TASKS_PER_TASK)),
+    }
+)
+@websocket_api.async_response
+async def ws_reorder_sub_tasks(hass, connection, msg):
+    """Reorder sub-tasks within a task."""
+    try:
+        store = _get_store(hass, msg["list_id"])
+        await store.async_reorder_sub_tasks(msg["task_id"], msg["sub_task_ids"])
         connection.send_result(msg["id"])
     except Exception as err:
         _handle_error(connection, msg["id"], err)
