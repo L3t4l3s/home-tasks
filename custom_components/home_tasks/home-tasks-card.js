@@ -449,6 +449,11 @@ class HomeTasksCard extends HTMLElement {
       task_id: taskId,
       notes,
     });
+    const tasks = this._columns[colIdx]?.tasks;
+    if (tasks) {
+      const t = tasks.find(t => t.id === taskId);
+      if (t) t.notes = notes;
+    }
   }
 
   async _updateTaskDue(taskId, dueDate, dueTime, colIdx) {
@@ -1106,12 +1111,16 @@ class HomeTasksCard extends HTMLElement {
       value: task.notes || "",
     });
     let debounceTimer;
+    const saveNotes = () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = null;
+      this._updateTaskNotes(task.id, notesInput.value, colIdx);
+    };
     notesInput.addEventListener("input", () => {
       clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
-        this._updateTaskNotes(task.id, notesInput.value, colIdx);
-      }, 500);
+      debounceTimer = setTimeout(saveNotes, 500);
     });
+    notesInput.addEventListener("blur", saveNotes);
     const notesWrap = this._el("div", { className: "field-wrap" }, [
       notesInput,
       this._el("span", { textContent: this._t("notes") }),
