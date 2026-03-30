@@ -203,7 +203,7 @@ class HomeTasksCard extends HTMLElement {
     this._config = { columns: [{}] };
     this._hass = null;
     this._lists = [];
-    // Per-column state: [{filter, sortBy, sortOpen, tagFilter, tasks, newTaskTitle}]
+    // Per-column state: [{filter, sortBy, sortOpen, tagFilters, personFilters, tasks, newTaskTitle}]
     this._columns = [];
     this._expandedTasks = new Set();
     this._editingTaskId = null;
@@ -225,7 +225,7 @@ class HomeTasksCard extends HTMLElement {
   }
 
   _defaultColState() {
-    return { filter: "all", sortBy: "manual", sortOpen: false, tagFilter: null, personFilter: null, tasks: [], newTaskTitle: "" };
+    return { filter: "all", sortBy: "manual", sortOpen: false, tagFilters: new Set(), personFilters: new Set(), tasks: [], newTaskTitle: "" };
   }
 
   _t(key, ...args) {
@@ -275,7 +275,8 @@ class HomeTasksCard extends HTMLElement {
       const prevCol = prevConfig.columns?.[i];
       if (col.list_id !== prevCol?.list_id || col.default_filter !== prevCol?.default_filter) {
         this._columns[i].filter = col.default_filter || "all";
-        this._columns[i].tagFilter = null;
+        this._columns[i].tagFilters = new Set();
+        this._columns[i].personFilters = new Set();
       }
       if (col.list_id !== prevCol?.list_id || col.default_sort !== prevCol?.default_sort) {
         this._columns[i].sortBy = col.default_sort || "manual";
@@ -589,11 +590,11 @@ class HomeTasksCard extends HTMLElement {
       default:
         tasks = cs.tasks;
     }
-    if (cs.tagFilter) {
-      tasks = tasks.filter((t) => t.tags && t.tags.includes(cs.tagFilter));
+    if (cs.tagFilters.size > 0) {
+      tasks = tasks.filter((t) => t.tags && t.tags.some((tag) => cs.tagFilters.has(tag)));
     }
-    if (cs.personFilter) {
-      tasks = tasks.filter((t) => t.assigned_person === cs.personFilter);
+    if (cs.personFilters.size > 0) {
+      tasks = tasks.filter((t) => cs.personFilters.has(t.assigned_person));
     }
     const cmp = this._buildSortComparator(colIdx);
     return tasks.slice().sort((a, b) => {
@@ -836,13 +837,14 @@ class HomeTasksCard extends HTMLElement {
       if (allTags.size > 0) {
         const chipChildren = [];
         for (const tag of [...allTags].sort()) {
-          const isActive = cs.tagFilter === tag;
+          const isActive = cs.tagFilters.has(tag);
           const chip = this._el("button", {
             className: "tag-chip" + (isActive ? " active" : ""),
             textContent: "#" + tag,
           });
           chip.addEventListener("click", () => {
-            cs.tagFilter = isActive ? null : tag;
+            if (cs.tagFilters.has(tag)) cs.tagFilters.delete(tag);
+            else cs.tagFilters.add(tag);
             this._render();
           });
           chipChildren.push(chip);
@@ -861,7 +863,7 @@ class HomeTasksCard extends HTMLElement {
       if (assignedPersons.size > 0) {
         const chipChildren = [];
         for (const eid of [...assignedPersons].sort()) {
-          const isActive = cs.personFilter === eid;
+          const isActive = cs.personFilters.has(eid);
           let name = eid;
           if (this._hass && this._hass.states && this._hass.states[eid]) {
             name = this._hass.states[eid].attributes?.friendly_name || eid;
@@ -871,7 +873,8 @@ class HomeTasksCard extends HTMLElement {
             textContent: name,
           });
           chip.addEventListener("click", () => {
-            cs.personFilter = isActive ? null : eid;
+            if (cs.personFilters.has(eid)) cs.personFilters.delete(eid);
+            else cs.personFilters.add(eid);
             this._render();
           });
           chipChildren.push(chip);
@@ -1088,14 +1091,15 @@ class HomeTasksCard extends HTMLElement {
     }
     if (task.tags && task.tags.length > 0 && col.show_tags !== false) {
       for (const tag of task.tags) {
-        const isActive = cs.tagFilter === tag;
+        const isActive = cs.tagFilters.has(tag);
         const tagBadge = this._el("span", {
           className: "tag-badge" + (isActive ? " active" : ""),
           textContent: "#" + tag,
         });
         tagBadge.addEventListener("click", (e) => {
           e.stopPropagation();
-          cs.tagFilter = isActive ? null : tag;
+          if (cs.tagFilters.has(tag)) cs.tagFilters.delete(tag);
+          else cs.tagFilters.add(tag);
           this._render();
         });
         metaChildren.push(tagBadge);
@@ -2109,8 +2113,7 @@ class HomeTasksCard extends HTMLElement {
         font-size: 11px; font-weight: 600; text-transform: uppercase;
         color: var(--todo-secondary-text); letter-spacing: 0.5px;
       }
-      .due-input-row { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
-      .due-input-row .field-wrap { flex: 1 1 120px; width: auto; min-width: 0; }
+      .due-input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
       .field-wrap input[type="date"], .field-wrap input[type="time"] { text-align: left; padding-right: 6px; }
       .field-wrap { position: relative; width: 100%; }
       .field-wrap input, .field-wrap textarea { width: 100%; box-sizing: border-box; padding: 20px 12px 6px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; background: var(--mdc-text-field-fill-color, var(--input-fill-color, transparent)); color: var(--primary-text-color); font-size: 0.875rem; font-family: inherit; outline: none; }
