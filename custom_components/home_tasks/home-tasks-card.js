@@ -93,6 +93,7 @@ const _TRANSLATIONS = {
     ed_sec_view: "Display",
     ed_sec_display: "Configuration",
     due_time_lbl: "Time",
+    due_date_lbl: "Date",
     rec_mode_lbl: "Mode",
   },
   de: {
@@ -179,6 +180,7 @@ const _TRANSLATIONS = {
     ed_sec_view: "Darstellung",
     ed_sec_display: "Konfiguration",
     due_time_lbl: "Uhrzeit",
+    due_date_lbl: "Datum",
     rec_mode_lbl: "Modus",
   },
 };
@@ -223,7 +225,7 @@ class HomeTasksCard extends HTMLElement {
   }
 
   _defaultColState() {
-    return { filter: "all", sortBy: "manual", sortOpen: false, tagFilter: null, tasks: [], newTaskTitle: "" };
+    return { filter: "all", sortBy: "manual", sortOpen: false, tagFilter: null, personFilter: null, tasks: [], newTaskTitle: "" };
   }
 
   _t(key, ...args) {
@@ -590,6 +592,9 @@ class HomeTasksCard extends HTMLElement {
     if (cs.tagFilter) {
       tasks = tasks.filter((t) => t.tags && t.tags.includes(cs.tagFilter));
     }
+    if (cs.personFilter) {
+      tasks = tasks.filter((t) => t.assigned_person === cs.personFilter);
+    }
     const cmp = this._buildSortComparator(colIdx);
     return tasks.slice().sort((a, b) => {
       if (a.completed !== b.completed) return a.completed ? 1 : -1;
@@ -820,21 +825,8 @@ class HomeTasksCard extends HTMLElement {
     sortBtnWrapper.appendChild(sortBtn);
     sortBtnWrapper.appendChild(sortDropdown);
 
-    // Filter row
+    // Tag chips (built before filter row to decide sort button placement)
     const hideFilters = col.auto_delete_completed === true;
-    const filterRowChildren = [];
-    if (!hideFilters) {
-      filterRowChildren.push(
-        this._buildFilterBtn(this._t("filter_all"), "all", colIdx),
-        this._buildFilterBtn(this._t("filter_open"), "open", colIdx),
-        this._buildFilterBtn(this._t("filter_done"), "done", colIdx),
-      );
-    }
-    filterRowChildren.push(this._el("div", { className: "filter-spacer" }));
-    if (col.show_sort !== false) filterRowChildren.push(sortBtnWrapper);
-    const filters = this._el("div", { className: "filters" }, filterRowChildren);
-
-    // Tag chips
     let tagChips = null;
     if (col.show_tags !== false) {
       const allTags = new Set();
@@ -858,6 +850,65 @@ class HomeTasksCard extends HTMLElement {
         tagChips = this._el("div", { className: "tag-chips" }, chipChildren);
       }
     }
+
+    // Person chips
+    let personChips = null;
+    if (col.show_assigned_person !== false) {
+      const assignedPersons = new Set();
+      for (const t of cs.tasks) {
+        if (t.assigned_person) assignedPersons.add(t.assigned_person);
+      }
+      if (assignedPersons.size > 0) {
+        const chipChildren = [];
+        for (const eid of [...assignedPersons].sort()) {
+          const isActive = cs.personFilter === eid;
+          let name = eid;
+          if (this._hass && this._hass.states && this._hass.states[eid]) {
+            name = this._hass.states[eid].attributes?.friendly_name || eid;
+          }
+          const chip = this._el("button", {
+            className: "person-chip" + (isActive ? " active" : ""),
+            textContent: name,
+          });
+          chip.addEventListener("click", () => {
+            cs.personFilter = isActive ? null : eid;
+            this._render();
+          });
+          chipChildren.push(chip);
+        }
+        personChips = this._el("div", { className: "person-chips" }, chipChildren);
+      }
+    }
+
+    // Sort button placement: move into first available chips row when filters are hidden
+    const sortInTagRow = hideFilters && tagChips !== null && col.show_sort !== false;
+    const sortInPersonRow = hideFilters && tagChips === null && personChips !== null && col.show_sort !== false;
+
+    // Filter row
+    const filterRowChildren = [];
+    if (!hideFilters) {
+      filterRowChildren.push(
+        this._buildFilterBtn(this._t("filter_all"), "all", colIdx),
+        this._buildFilterBtn(this._t("filter_open"), "open", colIdx),
+        this._buildFilterBtn(this._t("filter_done"), "done", colIdx),
+      );
+      filterRowChildren.push(this._el("div", { className: "filter-spacer" }));
+      if (col.show_sort !== false) filterRowChildren.push(sortBtnWrapper);
+    } else if (col.show_sort !== false && !sortInTagRow && !sortInPersonRow) {
+      filterRowChildren.push(this._el("div", { className: "filter-spacer" }));
+      filterRowChildren.push(sortBtnWrapper);
+    }
+    const filters = filterRowChildren.length > 0
+      ? this._el("div", { className: "filters" }, filterRowChildren)
+      : null;
+
+    // Wrap chips + sort button together when sort moves into that row
+    const tagChipsEl = (tagChips && sortInTagRow)
+      ? this._el("div", { className: "tag-chips-row" }, [tagChips, sortBtnWrapper])
+      : tagChips;
+    const personChipsEl = (personChips && sortInPersonRow)
+      ? this._el("div", { className: "person-chips-row" }, [personChips, sortBtnWrapper])
+      : personChips;
 
     // Task list
     const taskListChildren = [];
@@ -896,8 +947,9 @@ class HomeTasksCard extends HTMLElement {
     const children = [];
     if (header) children.push(header);
     children.push(addTask);
-    children.push(filters);
-    if (tagChips) children.push(tagChips);
+    if (filters) children.push(filters);
+    if (tagChipsEl) children.push(tagChipsEl);
+    if (personChipsEl) children.push(personChipsEl);
     children.push(taskList);
 
     const className = "card-column" + (compact ? " compact" : "");
@@ -1065,10 +1117,10 @@ class HomeTasksCard extends HTMLElement {
 
     mainChildren.push(this._el("div", { className: "task-content" }, contentChildren));
 
-    const expandBtn = this._el("button", {
-      className: "expand-btn",
-      textContent: isExpanded ? "\u25BC" : "\u25B6",
-    });
+    const expandBtn = this._el("button", { className: "expand-btn" + (isExpanded ? " expanded" : "") });
+    const expandIcon = document.createElement("ha-icon");
+    expandIcon.setAttribute("icon", "mdi:chevron-down");
+    expandBtn.appendChild(expandIcon);
     expandBtn.addEventListener("click", () => {
       if (this._expandedTasks.has(task.id)) this._expandedTasks.delete(task.id);
       else this._expandedTasks.add(task.id);
@@ -1114,13 +1166,14 @@ class HomeTasksCard extends HTMLElement {
 
     const dateWrap = this._el("div", { className: "field-wrap" }, [
       dateInput,
-      this._el("span", { textContent: this._t("due_date") }),
+      this._el("span", { textContent: this._t("due_date_lbl") }),
     ]);
     const timeWrap = this._el("div", { className: "field-wrap" }, [
       timeInput,
       this._el("span", { textContent: this._t("due_time_lbl") }),
     ]);
     const dateSection = this._el("div", { className: "detail-section" }, [
+      this._el("label", { className: "detail-label", textContent: this._t("due_date") }),
       this._el("div", { className: "due-input-row" }, [dateWrap, timeWrap]),
     ]);
 
@@ -1141,11 +1194,11 @@ class HomeTasksCard extends HTMLElement {
       debounceTimer = setTimeout(saveNotes, 500);
     });
     notesInput.addEventListener("blur", saveNotes);
-    const notesWrap = this._el("div", { className: "field-wrap" }, [
-      notesInput,
-      this._el("span", { textContent: this._t("notes") }),
+    const notesWrap = this._el("div", { className: "field-wrap no-label" }, [notesInput]);
+    const notesSection = this._el("div", { className: "detail-section" }, [
+      this._el("label", { className: "detail-label", textContent: this._t("notes") }),
+      notesWrap,
     ]);
-    const notesSection = this._el("div", { className: "detail-section" }, [notesWrap]);
 
     // Sub-tasks section
     const subList = this._el("div", { className: "sub-task-list" });
@@ -1355,11 +1408,11 @@ class HomeTasksCard extends HTMLElement {
         assigned_person: personSelect.value || null,
       })?.then(() => this._loadAllTasks());
     });
-    const personWrap = this._el("div", { className: "sel-wrap" }, [
-      personSelect,
-      this._el("span", { textContent: this._t("assigned_to") }),
+    const personWrap = this._el("div", { className: "sel-wrap no-label" }, [personSelect]);
+    const personSection = this._el("div", { className: "detail-section" }, [
+      this._el("label", { className: "detail-label", textContent: this._t("assigned_to") }),
+      personWrap,
     ]);
-    const personSection = this._el("div", { className: "detail-section" }, [personWrap]);
 
     // Tags section
     const tagSectionChildren = [
@@ -1980,6 +2033,8 @@ class HomeTasksCard extends HTMLElement {
         background: rgba(255, 152, 0, 0.15); color: var(--warning-color, #ff9800);
       }
       .tag-chips { display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
+      .tag-chips-row { display: flex; align-items: flex-start; gap: 4px; margin-bottom: 12px; }
+      .tag-chips-row .tag-chips { flex: 1; margin-bottom: 0; }
       .tag-chip {
         padding: 4px 12px; border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 16px;
         background: transparent; color: var(--success-color, #4caf50); font-size: 12px;
@@ -1987,6 +2042,16 @@ class HomeTasksCard extends HTMLElement {
       }
       .tag-chip:hover { background: rgba(76, 175, 80, 0.1); }
       .tag-chip.active { background: var(--success-color, #4caf50); color: #fff; border-color: var(--success-color, #4caf50); }
+      .person-chips { display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
+      .person-chips-row { display: flex; align-items: flex-start; gap: 4px; margin-bottom: 12px; }
+      .person-chips-row .person-chips { flex: 1; margin-bottom: 0; }
+      .person-chip {
+        padding: 4px 12px; border: 1px solid var(--primary-color, #2196f3); border-radius: 16px;
+        background: transparent; color: var(--primary-color, #2196f3); font-size: 12px;
+        cursor: pointer; font-family: inherit; transition: all 0.2s;
+      }
+      .person-chip:hover { background: var(--todo-surface); }
+      .person-chip.active { background: var(--primary-color, #2196f3); color: #fff; }
       .tag-list { display: flex; gap: 6px; flex-wrap: wrap; }
       .tag-item {
         display: inline-flex; align-items: center; gap: 4px;
@@ -2028,10 +2093,13 @@ class HomeTasksCard extends HTMLElement {
       .add-reminder-btn:hover { text-decoration: underline; }
       .expand-btn {
         background: none; border: none; color: var(--todo-secondary-text);
-        cursor: pointer; font-size: 10px; padding: 6px; border-radius: 4px;
-        line-height: 1; flex-shrink: 0;
+        cursor: pointer; padding: 4px; border-radius: 4px;
+        display: inline-flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
       }
       .expand-btn:hover { background: var(--todo-surface); }
+      .expand-btn ha-icon { --mdc-icon-size: 18px; transition: transform 0.2s; }
+      .expand-btn.expanded ha-icon { transform: rotate(180deg); }
       .task-details {
         padding: 8px 12px 12px 44px; border-top: 1px solid var(--todo-divider);
         display: flex; flex-direction: column; gap: 12px;
@@ -2049,7 +2117,7 @@ class HomeTasksCard extends HTMLElement {
       .field-wrap input:focus, .field-wrap textarea:focus { border: 2px solid var(--primary-color); padding: 19px 11px 5px; }
       .field-wrap input:disabled, .field-wrap textarea:disabled { opacity: 0.4; }
       .field-wrap textarea { resize: vertical; min-height: 60px; }
-      .field-wrap > span { position: absolute; top: 6px; left: 12px; font-size: 11px; font-weight: 600; color: var(--secondary-text-color); text-transform: uppercase; letter-spacing: 0.5px; pointer-events: none; }
+      .field-wrap > span { position: absolute; top: 6px; left: 12px; font-size: 11px; font-weight: 400; color: var(--secondary-text-color); text-transform: none; letter-spacing: 0; pointer-events: none; }
       .field-wrap input:focus ~ span, .field-wrap textarea:focus ~ span { color: var(--primary-color); }
       .field-wrap.inline { flex: 1; width: auto; }
       .field-wrap.inline input { padding: 16px 8px 4px; }
@@ -2058,11 +2126,15 @@ class HomeTasksCard extends HTMLElement {
       .sel-wrap select { width: 100%; height: 48px; padding: 18px 32px 4px 12px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; background: var(--mdc-text-field-fill-color, var(--input-fill-color, transparent)); color: var(--primary-text-color); font-size: 0.875rem; font-family: inherit; appearance: none; -webkit-appearance: none; cursor: pointer; outline: none; box-sizing: border-box; }
       .sel-wrap select:focus { border: 2px solid var(--primary-color); padding: 17px 31px 3px 11px; }
       .sel-wrap select:disabled { opacity: 0.4; cursor: default; }
-      .sel-wrap > span { position: absolute; top: 6px; left: 12px; font-size: 11px; font-weight: 600; color: var(--secondary-text-color); text-transform: uppercase; letter-spacing: 0.5px; pointer-events: none; }
+      .sel-wrap > span { position: absolute; top: 6px; left: 12px; font-size: 11px; font-weight: 400; color: var(--secondary-text-color); text-transform: none; letter-spacing: 0; pointer-events: none; }
       .sel-wrap::after { content: "▾"; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--secondary-text-color); font-size: 16px; line-height: 1; }
       .sel-wrap.inline { flex: 1; width: auto; }
       .sel-wrap.inline select { height: 40px; padding: 14px 28px 4px 10px; }
       .sel-wrap.inline > span { top: 4px; left: 10px; font-size: 10px; }
+      .field-wrap.no-label input, .field-wrap.no-label textarea { padding: 10px 12px; }
+      .field-wrap.no-label input:focus, .field-wrap.no-label textarea:focus { padding: 9px 11px; }
+      .sel-wrap.no-label select { padding: 12px 32px 12px 12px; height: 44px; }
+      .sel-wrap.no-label select:focus { padding: 11px 31px 11px 11px; }
       .sub-task-list { display: flex; flex-direction: column; }
       .sub-task { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
       .sub-task.dragging { opacity: 0.4; }
@@ -2109,7 +2181,13 @@ class HomeTasksCard extends HTMLElement {
       .compact .filters { margin-bottom: 8px; }
       .compact .filter-btn { padding: 4px 12px; font-size: 12px; }
       .compact .tag-chips { margin-bottom: 8px; gap: 3px; }
+      .compact .tag-chips-row { margin-bottom: 8px; }
+      .compact .tag-chips-row .tag-chips { margin-bottom: 0; }
       .compact .tag-chip { padding: 2px 8px; font-size: 11px; }
+      .compact .person-chips { margin-bottom: 8px; gap: 3px; }
+      .compact .person-chips-row { margin-bottom: 8px; }
+      .compact .person-chips-row .person-chips { margin-bottom: 0; }
+      .compact .person-chip { padding: 2px 8px; font-size: 11px; }
       .compact .task-list { gap: 3px; }
       .compact .task-main { padding: 6px 8px; gap: 6px; min-height: 32px; }
       .compact .task-title { font-size: 13px; }
@@ -2118,7 +2196,8 @@ class HomeTasksCard extends HTMLElement {
       .compact .assigned-badge, .compact .tag-badge, .compact .reminder-badge { font-size: 10px; padding: 1px 6px; }
       .compact .checkmark { height: 16px; width: 16px; }
       .compact .checkbox-container input:checked ~ .checkmark::after { width: 4px; height: 7px; }
-      .compact .expand-btn { padding: 4px; font-size: 9px; }
+      .compact .expand-btn { padding: 2px; }
+      .compact .expand-btn ha-icon { --mdc-icon-size: 16px; }
       .compact .drag-handle { font-size: 14px; padding: 2px 1px; }
       .compact .empty-state { padding: 16px; font-size: 13px; }
       .compact .task-details { padding: 8px 10px; }
