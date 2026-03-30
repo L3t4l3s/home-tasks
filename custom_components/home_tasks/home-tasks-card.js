@@ -2132,7 +2132,7 @@ class HomeTasksCardEditor extends HTMLElement {
       summary::-webkit-details-marker { display: none; }
       .sum-chevron { margin-left: auto; display: inline-flex; transition: transform 0.2s; color: var(--secondary-text-color); }
       details[open] .sum-chevron { transform: rotate(180deg); }
-      .section-content { display: flex; flex-direction: column; gap: 16px; padding: 0 16px 16px; border-top: 1px solid var(--divider-color, rgba(255,255,255,0.12)); }
+      .section-content { display: flex; flex-direction: column; gap: 16px; padding: 16px 16px; border-top: 1px solid var(--divider-color, rgba(255,255,255,0.12)); }
       label { font-size: 12px; font-weight: 500; color: var(--secondary-text-color); text-transform: uppercase; letter-spacing: 0.5px; }
       ha-textfield { width: 100%; }
       ha-icon-picker { width: 100%; }
@@ -2158,7 +2158,7 @@ class HomeTasksCardEditor extends HTMLElement {
     cardTitleInput.placeholder = this._t("ed_card_title_placeholder");
     cardTitleInput.value = this._config.title || "";
     cardTitleInput.style.width = "100%";
-    cardTitleInput.addEventListener("input", (e) => {
+    cardTitleInput.addEventListener("change", (e) => {
       this._config = { ...this._config, title: e.target.value || undefined };
       this._fireChanged();
     });
