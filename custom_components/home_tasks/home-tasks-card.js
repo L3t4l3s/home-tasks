@@ -2032,9 +2032,7 @@ class HomeTasksCardEditor extends HTMLElement {
       this._editorTab = this._config.columns.length - 1;
     }
 
-    if (this._listsLoaded) {
-      const active = this.shadowRoot?.activeElement;
-      if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
+    if (this._listsLoaded && !this._firing) {
       this._render();
     }
   }
@@ -2402,12 +2400,13 @@ class HomeTasksCardEditor extends HTMLElement {
   }
 
   _fireChanged() {
-    const event = new CustomEvent("config-changed", {
+    this._firing = true;
+    this.dispatchEvent(new CustomEvent("config-changed", {
       detail: { config: this._config },
       bubbles: true,
       composed: true,
-    });
-    this.dispatchEvent(event);
+    }));
+    this._firing = false;
   }
 }
 
