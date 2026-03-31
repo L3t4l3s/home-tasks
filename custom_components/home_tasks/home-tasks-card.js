@@ -3248,12 +3248,7 @@ class HomeTasksCardEditor extends HTMLElement {
       label { font-size: 12px; font-weight: 500; color: var(--secondary-text-color); text-transform: uppercase; letter-spacing: 0.5px; }
       ha-textfield { width: 100%; }
       ha-icon-picker { width: 100%; }
-      .sel-wrap { position: relative; width: 100%; }
-      .sel-wrap select { width: 100%; height: 56px; padding: 26px 36px 6px 16px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; background: var(--mdc-text-field-fill-color, var(--input-fill-color, transparent)); color: var(--primary-text-color); font-size: 1rem; font-family: inherit; appearance: none; -webkit-appearance: none; cursor: pointer; outline: none; box-sizing: border-box; }
-      .sel-wrap select:focus { border: 2px solid var(--primary-color); padding-left: 15px; padding-top: 25px; padding-bottom: 5px; }
-      .sel-wrap > span { position: absolute; top: 8px; left: 16px; font-size: 12px; color: var(--secondary-text-color); pointer-events: none; transition: color 0.15s; font-weight: normal; text-transform: none; letter-spacing: normal; }
-      .sel-wrap select:focus ~ span { color: var(--primary-color); }
-      .sel-wrap::after { content: "▾"; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--secondary-text-color); font-size: 18px; line-height: 1; }
+      ha-select { width: 100%; }
       .hint { font-size: 12px; color: var(--secondary-text-color); font-style: italic; margin-top: 2px; }
       .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; min-height: 40px; }
       .toggle-label { font-size: 14px; color: var(--primary-text-color); }
@@ -3417,20 +3412,24 @@ class HomeTasksCardEditor extends HTMLElement {
     };
 
     // List select
-    const listWrap = document.createElement("div");
-    listWrap.className = "sel-wrap";
-    const listSel = document.createElement("select");
-    { const opt = document.createElement("option"); opt.value = ""; opt.textContent = "\u2014"; listSel.appendChild(opt); }
-    for (const l of this._lists) {
-      const opt = document.createElement("option");
-      opt.value = l.id;
-      opt.textContent = l.name;
-      if (l.id === col.list_id) opt.selected = true;
-      listSel.appendChild(opt);
+    const listSelect = document.createElement("ha-select");
+    listSelect.label = this._t("ed_list");
+    listSelect.style.width = "100%";
+    if (!col.list_id) {
+      const emptyItem = document.createElement("mwc-list-item");
+      emptyItem.setAttribute("value", "");
+      emptyItem.selected = true;
+      emptyItem.textContent = "\u2014";
+      listSelect.appendChild(emptyItem);
     }
-    listSel.addEventListener("change", () => { updateCol({ list_id: listSel.value || undefined }); });
-    listWrap.appendChild(listSel);
-    const listLbl = document.createElement("span"); listLbl.textContent = this._t("ed_list"); listWrap.appendChild(listLbl);
+    for (const l of this._lists) {
+      const item = document.createElement("mwc-list-item");
+      item.setAttribute("value", l.id);
+      if (l.id === col.list_id) item.selected = true;
+      item.textContent = l.name;
+      listSelect.appendChild(item);
+    }
+    listSelect.addEventListener("selected", () => updateCol({ list_id: listSelect.value || undefined }));
 
     // Title input
     const titleInput = document.createElement("ha-textfield");
@@ -3447,35 +3446,33 @@ class HomeTasksCardEditor extends HTMLElement {
     iconPicker.addEventListener("value-changed", (e) => updateCol({ icon: e.detail.value || undefined }));
 
     // Default filter select
-    const filterWrap = document.createElement("div");
-    filterWrap.className = "sel-wrap";
-    const filterSel = document.createElement("select");
+    const filterSelect = document.createElement("ha-select");
+    filterSelect.label = this._t("ed_default_filter");
+    filterSelect.style.width = "100%";
     for (const [val, key] of [["all", "filter_all"], ["open", "filter_open"], ["done", "filter_done"]]) {
-      const opt = document.createElement("option");
-      opt.value = val; opt.textContent = this._t(key);
-      if ((col.default_filter || "all") === val) opt.selected = true;
-      filterSel.appendChild(opt);
+      const item = document.createElement("mwc-list-item");
+      item.setAttribute("value", val);
+      if ((col.default_filter || "all") === val) item.selected = true;
+      item.textContent = this._t(key);
+      filterSelect.appendChild(item);
     }
-    filterSel.addEventListener("change", () => { updateCol({ default_filter: filterSel.value }); });
-    filterWrap.appendChild(filterSel);
-    const filterLbl = document.createElement("span"); filterLbl.textContent = this._t("ed_default_filter"); filterWrap.appendChild(filterLbl);
+    filterSelect.addEventListener("selected", () => updateCol({ default_filter: filterSelect.value }));
 
     // Default sort select
-    const sortWrap = document.createElement("div");
-    sortWrap.className = "sel-wrap";
-    const sortSel = document.createElement("select");
+    const sortSelect = document.createElement("ha-select");
+    sortSelect.label = this._t("ed_default_sort");
+    sortSelect.style.width = "100%";
     for (const [val, key] of [
       ["manual", "sort_manual"], ["due", "sort_due"], ["priority", "sort_priority"],
       ["title", "sort_title"], ["person", "sort_person"],
     ]) {
-      const opt = document.createElement("option");
-      opt.value = val; opt.textContent = this._t(key);
-      if ((col.default_sort || "manual") === val) opt.selected = true;
-      sortSel.appendChild(opt);
+      const item = document.createElement("mwc-list-item");
+      item.setAttribute("value", val);
+      if ((col.default_sort || "manual") === val) item.selected = true;
+      item.textContent = this._t(key);
+      sortSelect.appendChild(item);
     }
-    sortSel.addEventListener("change", () => { updateCol({ default_sort: sortSel.value }); });
-    sortWrap.appendChild(sortSel);
-    const sortLbl = document.createElement("span"); sortLbl.textContent = this._t("ed_default_sort"); sortWrap.appendChild(sortLbl);
+    sortSelect.addEventListener("selected", () => updateCol({ default_sort: sortSelect.value }));
 
     // Toggle helper — uses ha-switch for native HA look
     const makeToggle = (_id, labelKey, configKey, defaultOn = true) => {
@@ -3519,7 +3516,7 @@ class HomeTasksCardEditor extends HTMLElement {
     };
 
     return this._el("div", { className: "visual-editor" }, [
-      this._el("div", { className: "field" }, [listWrap, hint]),
+      this._el("div", { className: "field" }, [listSelect, hint]),
       makeSection("view", "mdi:eye", "ed_sec_view", [
         this._el("div", { className: "field" }, [titleInput]),
         this._el("div", { className: "field" }, [iconPicker]),
@@ -3530,8 +3527,8 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-sort", "ed_show_sort", "show_sort", true),
           makeToggle("compact", "ed_compact", "compact", false),
         ]),
-        this._el("div", { className: "field" }, [filterWrap]),
-        this._el("div", { className: "field" }, [sortWrap]),
+        this._el("div", { className: "field" }, [filterSelect]),
+        this._el("div", { className: "field" }, [sortSelect]),
       ]),
       makeSection("config", "mdi:tune", "ed_sec_display", [
         this._el("div", { className: "toggle-grid" }, [
