@@ -801,7 +801,8 @@ class HomeTasksCard extends HTMLElement {
   }
 
   _t(key, ...args) {
-    const lang = (this._hass && this._hass.language) || "en";
+    let lang = (this._hass && this._hass.language) || "en";
+    if (lang === "nb" || lang === "nn") lang = "no";
     const str = (_TRANSLATIONS[lang] || _TRANSLATIONS.en)[key] || _TRANSLATIONS.en[key] || key;
     return args.length ? str.replace(/\{(\d+)\}/g, (_, i) => args[i] ?? "") : str;
   }
@@ -2830,7 +2831,8 @@ class HomeTasksCardEditor extends HTMLElement {
   }
 
   _t(key, ...args) {
-    const lang = (this._hass && this._hass.language) || "en";
+    let lang = (this._hass && this._hass.language) || "en";
+    if (lang === "nb" || lang === "nn") lang = "no";
     const str = (_TRANSLATIONS[lang] || _TRANSLATIONS.en)[key] || _TRANSLATIONS.en[key] || key;
     return args.length ? str.replace(/\{(\d+)\}/g, (_, i) => args[i] ?? "") : str;
   }
