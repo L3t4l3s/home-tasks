@@ -210,7 +210,10 @@ def _parse_rec_time(task: dict) -> tuple[int, int]:
 
 
 def _check_end_date(task: dict, target: datetime) -> bool:
-    """Return True if target exceeds the recurrence end date (meaning: stop)."""
+    """Return True if target exceeds the recurrence end date (meaning: stop).
+
+    Comparison uses local date because end_date is user-specified in local time.
+    """
     if task.get("recurrence_end_type") != "date":
         return False
     end_date_str = task.get("recurrence_end_date")
@@ -218,21 +221,24 @@ def _check_end_date(task: dict, target: datetime) -> bool:
         return False
     try:
         end_date = date.fromisoformat(end_date_str)
-        return target.date() > end_date
+        return target.astimezone().date() > end_date
     except ValueError:
         return False
 
 
 def _apply_start_date(task: dict, target: datetime) -> datetime:
-    """Advance target to recurrence_start_date if target falls before it."""
+    """Advance target to recurrence_start_date if target falls before it.
+
+    Comparison uses local date because start_date is user-specified in local time.
+    """
     start_date_str = task.get("recurrence_start_date")
     if not start_date_str:
         return target
     try:
         start_date = date.fromisoformat(start_date_str)
-        if target.date() < start_date:
+        local_target = target.astimezone()
+        if local_target.date() < start_date:
             t_h, t_m = _parse_rec_time(task)
-            local_target = target.astimezone()
             return local_target.replace(
                 year=start_date.year, month=start_date.month, day=start_date.day,
                 hour=t_h, minute=t_m, second=0, microsecond=0,
