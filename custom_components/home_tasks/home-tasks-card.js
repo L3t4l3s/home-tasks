@@ -2960,7 +2960,7 @@ class HomeTasksCard extends HTMLElement {
       .expand-btn ha-icon { --mdc-icon-size: 18px; transition: transform 0.2s; }
       .expand-btn.expanded ha-icon { transform: rotate(180deg); }
       .task-details {
-        padding: 8px 12px 12px 44px; border-top: 1px solid var(--todo-divider);
+        padding: 8px 12px 12px 12px; border-top: 1px solid var(--todo-divider);
         display: flex; flex-direction: column; gap: 12px;
       }
       .detail-section { display: flex; flex-direction: column; gap: 6px; }
