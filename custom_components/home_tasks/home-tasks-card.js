@@ -2045,9 +2045,10 @@ class HomeTasksCard extends HTMLElement {
     const applyRowVisibility = (mode, unit) => {
       recurrenceIntervalRow.style.display = mode === "interval" ? "" : "none";
       recurrenceWeekdayRow.style.display = mode === "weekdays" ? "" : "none";
-      // Hide time column for hours mode (start date column always visible)
-      recurrenceTimeWrap.style.display = (mode === "weekdays" || (mode === "interval" && unit !== "hours")) ? "" : "none";
-      recurrenceDateTimeRow.style.gridTemplateColumns = recurrenceTimeWrap.style.display === "none" ? "1fr" : "1fr 1fr";
+      // Hide time column for hours mode; use .single CSS class (not inline style) for iOS reliability
+      const hideTime = !(mode === "weekdays" || (mode === "interval" && unit !== "hours"));
+      recurrenceTimeWrap.style.display = hideTime ? "none" : "";
+      recurrenceDateTimeRow.classList.toggle("single", hideTime);
     };
     applyRowVisibility(recurrenceType, recurrenceUnit);
 
