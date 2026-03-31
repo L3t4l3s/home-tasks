@@ -1524,7 +1524,7 @@ class HomeTasksCard extends HTMLElement {
           }
           const chip = this._el("button", {
             className: "person-chip" + (isActive ? " active" : ""),
-            textContent: name,
+            textContent: "\uD83D\uDC64 " + name,
           });
           chip.addEventListener("click", () => {
             if (cs.personFilters.has(eid)) cs.personFilters.delete(eid);
@@ -2864,11 +2864,11 @@ class HomeTasksCard extends HTMLElement {
       }
       .assigned-badge {
         font-size: 11px; padding: 2px 8px; border-radius: 10px;
-        background: rgba(156, 39, 176, 0.15); color: var(--accent-color, #9c27b0);
+        background: rgba(33, 150, 243, 0.15); color: var(--primary-color, #2196f3);
         cursor: pointer; transition: all 0.2s;
       }
       .assigned-badge:hover { opacity: 0.8; }
-      .assigned-badge.active { background: var(--accent-color, #9c27b0); color: #fff; }
+      .assigned-badge.active { background: var(--primary-color, #2196f3); color: #fff; }
       .tag-badge {
         font-size: 11px; padding: 2px 8px; border-radius: 10px;
         background: rgba(76, 175, 80, 0.15); color: var(--success-color, #4caf50);
