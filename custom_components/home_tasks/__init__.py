@@ -148,7 +148,11 @@ def _async_register_due_checker(hass: HomeAssistant) -> None:
     """Register the periodic due-date checker (once globally)."""
     if hass.data.get(DATA_DUE_CHECK_UNSUB):
         return
-    unsub = async_track_time_interval(hass, _async_check_due_dates, DUE_CHECK_INTERVAL)
+
+    async def _periodic_check(_now=None) -> None:
+        await _async_check_due_dates(hass)
+
+    unsub = async_track_time_interval(hass, _periodic_check, DUE_CHECK_INTERVAL)
     hass.data[DATA_DUE_CHECK_UNSUB] = unsub
     # Also run once on startup
     hass.async_create_task(_async_check_due_dates(hass))
