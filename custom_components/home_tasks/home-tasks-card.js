@@ -2133,7 +2133,7 @@ class HomeTasksCard extends HTMLElement {
       .field-wrap > span { position: absolute; top: 6px; left: 12px; font-size: 11px; font-weight: 400; color: var(--secondary-text-color); text-transform: none; letter-spacing: 0; pointer-events: none; }
       .field-wrap input:focus ~ span, .field-wrap textarea:focus ~ span { color: var(--primary-color); }
       .field-wrap.inline { flex: 1; width: auto; }
-      .field-wrap.inline input { padding: 16px 8px 4px; }
+      .field-wrap.inline input { height: 40px; padding: 16px 8px 4px; box-sizing: border-box; }
       .field-wrap.inline > span { top: 4px; left: 8px; }
       .sel-wrap { position: relative; width: 100%; }
       .sel-wrap select { width: 100%; height: 48px; padding: 18px 32px 4px 12px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; background: var(--mdc-text-field-fill-color, var(--input-fill-color, transparent)); color: var(--primary-text-color); font-size: 0.875rem; font-family: inherit; appearance: none; -webkit-appearance: none; cursor: pointer; outline: none; box-sizing: border-box; }
