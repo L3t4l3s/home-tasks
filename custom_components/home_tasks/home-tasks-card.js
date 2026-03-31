@@ -99,6 +99,7 @@ const _TRANSLATIONS = {
     rec_end_date_lbl: "End date", rec_max_count_lbl: "max", rec_remaining: "{0} left", rec_start_date_lbl: "Start date",
     history: "History", history_created: "Created", history_completed: "Completed", history_reopened: "Reopened",
     history_reset: "Auto-reset (recurrence)", history_changed: "changed", history_empty: "No history yet", hist_title: "Title", history_disabled: "Disabled",
+    ed_show_history: "Show history", hist_by_user: "User",
   },
   nl: {
     my_tasks: "Mijn taken",
@@ -147,6 +148,7 @@ const _TRANSLATIONS = {
     rec_end_date_lbl: "Einddatum", rec_max_count_lbl: "max", rec_remaining: "nog {0}", rec_start_date_lbl: "Startdatum",
     history: "Geschiedenis", history_created: "Aangemaakt", history_completed: "Voltooid", history_reopened: "Heropend",
     history_reset: "Automatisch teruggezet", history_changed: "gewijzigd", history_empty: "Geen geschiedenis", hist_title: "Titel", history_disabled: "Uitgeschakeld",
+    ed_show_history: "Geschiedenis tonen", hist_by_user: "Gebruiker",
   },
   it: {
     my_tasks: "Le mie attivit\u00e0",
@@ -195,6 +197,7 @@ const _TRANSLATIONS = {
     rec_end_date_lbl: "Data di fine", rec_max_count_lbl: "max", rec_remaining: "ancora {0}", rec_start_date_lbl: "Data di inizio",
     history: "Cronologia", history_created: "Creato", history_completed: "Completato", history_reopened: "Riaperto",
     history_reset: "Ripristino automatico", history_changed: "modificato", history_empty: "Nessuna cronologia", hist_title: "Titolo", history_disabled: "Disabilitato",
+    ed_show_history: "Mostra cronologia", hist_by_user: "Utente",
   },
   pl: {
     my_tasks: "Moje zadania",
@@ -243,6 +246,7 @@ const _TRANSLATIONS = {
     rec_end_date_lbl: "Data ko\u0144cowa", rec_max_count_lbl: "max", rec_remaining: "jeszcze {0}", rec_start_date_lbl: "Data pocz\u0105tku",
     history: "Historia", history_created: "Utworzono", history_completed: "Uko\u0144czono", history_reopened: "Ponownie otwarto",
     history_reset: "Auto-reset", history_changed: "zmieniono", history_empty: "Brak historii", hist_title: "Tytu\u0142", history_disabled: "Wy\u0142\u0105czono",
+    ed_show_history: "Poka\u017c histori\u0119", hist_by_user: "U\u017cytkownik",
   },
   sv: {
     my_tasks: "Mina uppgifter",
@@ -291,6 +295,7 @@ const _TRANSLATIONS = {
     rec_end_date_lbl: "Slutdatum", rec_max_count_lbl: "max", rec_remaining: "{0} kvar", rec_start_date_lbl: "Startdatum",
     history: "Historik", history_created: "Skapad", history_completed: "Avklarad", history_reopened: "\u00d6ppnad igen",
     history_reset: "Auto-\u00e5terst\u00e4lld", history_changed: "\u00e4ndrad", history_empty: "Ingen historik", hist_title: "Titel", history_disabled: "Inaktiverad",
+    ed_show_history: "Visa historik", hist_by_user: "Anv\u00e4ndare",
   },
   fr: {
     my_tasks: "Mes t\u00e2ches",
@@ -339,6 +344,7 @@ const _TRANSLATIONS = {
     rec_end_date_lbl: "Date de fin", rec_max_count_lbl: "max", rec_remaining: "encore {0}", rec_start_date_lbl: "Date de d\u00e9but",
     history: "Historique", history_created: "Cr\u00e9\u00e9", history_completed: "Termin\u00e9", history_reopened: "R\u00e9ouvert",
     history_reset: "R\u00e9initialisation auto.", history_changed: "modifi\u00e9", history_empty: "Aucun historique", hist_title: "Titre", history_disabled: "D\u00e9sactiv\u00e9",
+    ed_show_history: "Afficher l'historique", hist_by_user: "Utilisateur",
   },
   pt: {
     my_tasks: "Minhas tarefas",
@@ -387,6 +393,7 @@ const _TRANSLATIONS = {
     rec_end_date_lbl: "Data de fim", rec_max_count_lbl: "max", rec_remaining: "ainda {0}", rec_start_date_lbl: "Data de in\u00edcio",
     history: "Hist\u00f3rico", history_created: "Criado", history_completed: "Conclu\u00eddo", history_reopened: "Reaberto",
     history_reset: "Reiniciado automaticamente", history_changed: "alterado", history_empty: "Sem hist\u00f3rico", hist_title: "T\u00edtulo", history_disabled: "Desativado",
+    ed_show_history: "Mostrar hist\u00f3rico", hist_by_user: "Utilizador",
   },
   es: {
     my_tasks: "Mis tareas",
@@ -435,6 +442,7 @@ const _TRANSLATIONS = {
     rec_end_date_lbl: "Fecha de fin", rec_max_count_lbl: "max", rec_remaining: "a\u00fan {0}", rec_start_date_lbl: "Fecha de inicio",
     history: "Historial", history_created: "Creado", history_completed: "Completado", history_reopened: "Reabierto",
     history_reset: "Restablecimiento autom.", history_changed: "modificado", history_empty: "Sin historial", hist_title: "T\u00edtulo", history_disabled: "Desactivado",
+    ed_show_history: "Mostrar historial", hist_by_user: "Usuario",
   },
   ru: {
     my_tasks: "\u041c\u043e\u0438 \u0437\u0430\u0434\u0430\u0447\u0438",
@@ -483,6 +491,7 @@ const _TRANSLATIONS = {
     rec_end_date_lbl: "\u0414\u0430\u0442\u0430 \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f", rec_max_count_lbl: "max", rec_remaining: "\u0435\u0449\u0451 {0}", rec_start_date_lbl: "\u0414\u0430\u0442\u0430 \u043d\u0430\u0447\u0430\u043b\u0430",
     history: "\u0418\u0441\u0442\u043e\u0440\u0438\u044f", history_created: "\u0421\u043e\u0437\u0434\u0430\u043d\u043e", history_completed: "\u0412\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043e", history_reopened: "\u041f\u0435\u0440\u0435\u043e\u0442\u043a\u0440\u044b\u0442\u043e",
     history_reset: "\u0410\u0432\u0442\u043e\u0441\u0431\u0440\u043e\u0441", history_changed: "\u0438\u0437\u043c\u0435\u043d\u0435\u043d\u043e", history_empty: "\u041d\u0435\u0442 \u0438\u0441\u0442\u043e\u0440\u0438\u0438", hist_title: "\u0417\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a", history_disabled: "\u041e\u0442\u043a\u043b\u044e\u0447\u0435\u043d\u043e",
+    ed_show_history: "\u041f\u043e\u043a\u0430\u0437\u044b\u0432\u0430\u0442\u044c \u0438\u0441\u0442\u043e\u0440\u0438\u044e", hist_by_user: "\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c",
   },
   cs: {
     my_tasks: "Moje \u00fakoly",
@@ -531,6 +540,7 @@ const _TRANSLATIONS = {
     rec_end_date_lbl: "Datum konce", rec_max_count_lbl: "max", rec_remaining: "je\u0161t\u011b {0}", rec_start_date_lbl: "Datum za\u010d\u00e1tku",
     history: "Historie", history_created: "Vytvo\u0159eno", history_completed: "Dokon\u010deno", history_reopened: "Znovu otev\u0159eno",
     history_reset: "Automaticky obnoveno", history_changed: "zm\u011bn\u011bno", history_empty: "\u017d\u00e1dn\u00e1 historie", hist_title: "N\u00e1zev", history_disabled: "Deaktivov\u00e1no",
+    ed_show_history: "Zobrazit historii", hist_by_user: "U\u017eivatel",
   },
   da: {
     my_tasks: "Mine opgaver",
@@ -579,6 +589,7 @@ const _TRANSLATIONS = {
     rec_end_date_lbl: "Slutdato", rec_max_count_lbl: "max", rec_remaining: "{0} tilbage", rec_start_date_lbl: "Startdato",
     history: "Historik", history_created: "Oprettet", history_completed: "F\u00e6rdiggjort", history_reopened: "\u00c5bnet igen",
     history_reset: "Auto-nulstillet", history_changed: "\u00e6ndret", history_empty: "Ingen historik", hist_title: "Titel", history_disabled: "Deaktiveret",
+    ed_show_history: "Vis historik", hist_by_user: "Bruger",
   },
   no: {
     my_tasks: "Mine oppgaver",
@@ -627,6 +638,7 @@ const _TRANSLATIONS = {
     rec_end_date_lbl: "Sluttdato", rec_max_count_lbl: "max", rec_remaining: "{0} igjen", rec_start_date_lbl: "Startdato",
     history: "Historikk", history_created: "Opprettet", history_completed: "Fullf\u00f8rt", history_reopened: "\u00c5pnet igjen",
     history_reset: "Auto-tilbakestilt", history_changed: "endret", history_empty: "Ingen historikk", hist_title: "Tittel", history_disabled: "Deaktivert",
+    ed_show_history: "Vis historikk", hist_by_user: "Bruker",
   },
   fi: {
     my_tasks: "Omat teht\u00e4v\u00e4t",
@@ -675,6 +687,7 @@ const _TRANSLATIONS = {
     rec_end_date_lbl: "Loppup\u00e4iv\u00e4", rec_max_count_lbl: "max", rec_remaining: "{0} j\u00e4ljell\u00e4", rec_start_date_lbl: "Alkamisp\u00e4iv\u00e4",
     history: "Historia", history_created: "Luotu", history_completed: "Valmis", history_reopened: "Avattu uudelleen",
     history_reset: "Automaattinen palautus", history_changed: "muutettu", history_empty: "Ei historiaa", hist_title: "Otsikko", history_disabled: "K\u00e4yt\u00f6ss\u00e4 poistettu",
+    ed_show_history: "N\u00e4yt\u00e4 historia", hist_by_user: "K\u00e4ytt\u00e4j\u00e4",
   },
   hu: {
     my_tasks: "Feladataim",
@@ -723,6 +736,7 @@ const _TRANSLATIONS = {
     rec_end_date_lbl: "V\u00e9gdatum", rec_max_count_lbl: "max", rec_remaining: "m\u00e9g {0}", rec_start_date_lbl: "Kezd\u0151 d\u00e1tum",
     history: "El\u0151zm\u00e9nyek", history_created: "L\u00e9trehozva", history_completed: "Teljes\u00edtve", history_reopened: "\u00dajranyitva",
     history_reset: "Automatikus visszavonas", history_changed: "m\u00f3dos\u00edtva", history_empty: "Nincs el\u0151zm\u00e9ny", hist_title: "C\u00edm", history_disabled: "Letiltva",
+    ed_show_history: "El\u0151zm\u00e9nyek mutat\u00e1sa", hist_by_user: "Felhaszn\u00e1l\u00f3",
   },
   de: {
     my_tasks: "Meine Aufgaben",
@@ -814,6 +828,7 @@ const _TRANSLATIONS = {
     rec_end_date_lbl: "Enddatum", rec_max_count_lbl: "max", rec_remaining: "noch {0}", rec_start_date_lbl: "Startdatum",
     history: "Verlauf", history_created: "Erstellt", history_completed: "Erledigt", history_reopened: "Wieder ge\u00f6ffnet",
     history_reset: "Automatisch zur\u00fcckgesetzt", history_changed: "ge\u00e4ndert", history_empty: "Noch kein Verlauf", hist_title: "Titel", history_disabled: "Deaktiviert",
+    ed_show_history: "Verlauf anzeigen", hist_by_user: "Benutzer",
   },
 };
 
@@ -2358,8 +2373,11 @@ class HomeTasksCard extends HTMLElement {
           }
           icon = "\u270e";
         }
+        const byLabel = entry.by && entry.by !== "recurrence"
+          ? ` \u00b7 ${entry.by === "user" ? this._t("hist_by_user") : entry.by}`
+          : "";
         row.appendChild(this._el("span", { className: "history-icon", textContent: icon }));
-        row.appendChild(this._el("span", { className: "history-text", textContent: text }));
+        row.appendChild(this._el("span", { className: "history-text", textContent: text + byLabel }));
         row.appendChild(this._el("span", { className: "history-ts", textContent: tsStr }));
         histContent.appendChild(row);
       }
@@ -2378,7 +2396,7 @@ class HomeTasksCard extends HTMLElement {
     if (col.show_due_date !== false) details.push(dateSection);
     if (col.show_reminders !== false) details.push(reminderSection);
     if (col.show_recurrence !== false) details.push(recurrenceSection);
-    details.push(historySection);
+    if (col.show_history) details.push(historySection);
     details.push(actions);
     return this._el("div", { className: "task-details" }, details);
   }
@@ -3540,6 +3558,7 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-due-date", "ed_show_due_date", "show_due_date", true),
           makeToggle("show-reminders", "ed_show_reminders", "show_reminders", true),
           makeToggle("show-recurrence", "ed_show_recurrence", "show_recurrence", true),
+          makeToggle("show-history", "ed_show_history", "show_history", false),
         ]),
       ], false),
     ]);

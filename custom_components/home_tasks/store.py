@@ -158,12 +158,15 @@ class HomeTasksStore:
         """Return all tasks sorted by order."""
         return sorted(self._data["tasks"], key=lambda t: t["sort_order"])
 
-    async def async_add_task(self, title: str) -> dict:
+    async def async_add_task(self, title: str, actor: str | None = None) -> dict:
         """Add a task."""
         title = validate_text(title, MAX_TITLE_LENGTH, "Task title")
         if len(self._data["tasks"]) >= MAX_TASKS_PER_LIST:
             raise ValueError(f"Maximum number of tasks ({MAX_TASKS_PER_LIST}) reached")
         max_order = max((t["sort_order"] for t in self._data["tasks"]), default=-1)
+        created_entry: dict = {"ts": datetime.now(timezone.utc).isoformat(), "action": "created"}
+        if actor:
+            created_entry["by"] = actor
         task = {
             "id": str(uuid.uuid4()),
             "title": title,
@@ -189,7 +192,7 @@ class HomeTasksStore:
             "completed_at": None,
             "assigned_person": None,
             "tags": [],
-            "history": [{"ts": datetime.now(timezone.utc).isoformat(), "action": "created"}],
+            "history": [created_entry],
         }
         self._data["tasks"].append(task)
         await self._async_save()
@@ -204,7 +207,7 @@ class HomeTasksStore:
                 return task
         raise ValueError("Task not found")
 
-    async def async_update_task(self, task_id: str, **kwargs) -> dict:
+    async def async_update_task(self, task_id: str, actor: str | None = None, **kwargs) -> dict:
         """Update a task's fields."""
         task = self.get_task(task_id)
         if "title" in kwargs:
@@ -343,27 +346,28 @@ class HomeTasksStore:
         # History tracking
         if any(k in kwargs for k in _HISTORY_FIELDS) or "completed" in kwargs:
             _now = datetime.now(timezone.utc).isoformat()
+            _by = {"by": actor} if actor else {}
             new_hist = []
             if "title" in kwargs and task.get("title") != old_title:
-                new_hist.append({"ts": _now, "action": "updated", "field": "title", "from": old_title, "to": task.get("title")})
+                new_hist.append({"ts": _now, "action": "updated", "field": "title", "from": old_title, "to": task.get("title"), **_by})
             if "due_date" in kwargs and task.get("due_date") != old_due_date:
-                new_hist.append({"ts": _now, "action": "updated", "field": "due_date", "from": old_due_date, "to": task.get("due_date")})
+                new_hist.append({"ts": _now, "action": "updated", "field": "due_date", "from": old_due_date, "to": task.get("due_date"), **_by})
             if "due_time" in kwargs and task.get("due_time") != old_due_time:
-                new_hist.append({"ts": _now, "action": "updated", "field": "due_time", "from": old_due_time, "to": task.get("due_time")})
+                new_hist.append({"ts": _now, "action": "updated", "field": "due_time", "from": old_due_time, "to": task.get("due_time"), **_by})
             if "priority" in kwargs and task.get("priority") != old_priority:
-                new_hist.append({"ts": _now, "action": "updated", "field": "priority", "from": old_priority, "to": task.get("priority")})
+                new_hist.append({"ts": _now, "action": "updated", "field": "priority", "from": old_priority, "to": task.get("priority"), **_by})
             if "assigned_person" in kwargs and task.get("assigned_person") != previous_person:
-                new_hist.append({"ts": _now, "action": "updated", "field": "assigned_person", "from": previous_person, "to": task.get("assigned_person")})
+                new_hist.append({"ts": _now, "action": "updated", "field": "assigned_person", "from": previous_person, "to": task.get("assigned_person"), **_by})
             if "tags" in kwargs and task.get("tags") != old_tags:
-                new_hist.append({"ts": _now, "action": "updated", "field": "tags", "from": old_tags, "to": list(task.get("tags", []))})
+                new_hist.append({"ts": _now, "action": "updated", "field": "tags", "from": old_tags, "to": list(task.get("tags", [])), **_by})
             if "notes" in kwargs and task.get("notes") != old_notes:
-                new_hist.append({"ts": _now, "action": "updated", "field": "notes"})
+                new_hist.append({"ts": _now, "action": "updated", "field": "notes", **_by})
             if "recurrence_enabled" in kwargs and task.get("recurrence_enabled") != old_recurrence_enabled:
-                new_hist.append({"ts": _now, "action": "updated", "field": "recurrence_enabled", "to": task.get("recurrence_enabled")})
+                new_hist.append({"ts": _now, "action": "updated", "field": "recurrence_enabled", "to": task.get("recurrence_enabled"), **_by})
             if is_completed and not was_completed:
-                new_hist.append({"ts": _now, "action": "completed"})
+                new_hist.append({"ts": _now, "action": "completed", **_by})
             elif not is_completed and was_completed:
-                new_hist.append({"ts": _now, "action": "reopened", "by": "user"})
+                new_hist.append({"ts": _now, "action": "reopened", "by": actor or "user"})
             if new_hist:
                 hist = task.setdefault("history", [])
                 hist.extend(new_hist)
@@ -386,8 +390,12 @@ class HomeTasksStore:
         await self._async_save()
         return task
 
-    async def async_reopen_task(self, task_id: str) -> dict:
-        """Reopen a completed task and reset its sub-tasks."""
+    async def async_reopen_task(self, task_id: str, actor: str | None = None) -> dict:
+        """Reopen a completed task and reset its sub-tasks.
+
+        actor=None means triggered by the recurrence scheduler.
+        actor="name" means triggered by a user or automation.
+        """
         task = self.get_task(task_id)
         if not task.get("completed"):
             return task  # already open, nothing to do
@@ -396,7 +404,7 @@ class HomeTasksStore:
         task["completed_at"] = None
         for sub in task.get("sub_items", []):
             sub["completed"] = False
-        _rec_entry = {"ts": datetime.now(timezone.utc).isoformat(), "action": "reopened", "by": "recurrence"}
+        _rec_entry = {"ts": datetime.now(timezone.utc).isoformat(), "action": "reopened", "by": actor or "recurrence"}
         hist = task.setdefault("history", [])
         hist.append(_rec_entry)
         if len(hist) > _MAX_HISTORY:

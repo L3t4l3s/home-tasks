@@ -105,7 +105,8 @@ async def ws_add_task(hass, connection, msg):
     """Add a task."""
     try:
         store = _get_store(hass, msg["list_id"])
-        task = await store.async_add_task(msg["title"])
+        actor = connection.user.name if connection.user else None
+        task = await store.async_add_task(msg["title"], actor=actor)
         connection.send_result(msg["id"], task)
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -147,11 +148,12 @@ async def ws_update_task(hass, connection, msg):
     """Update a task."""
     try:
         store = _get_store(hass, msg["list_id"])
+        actor = connection.user.name if connection.user else None
         kwargs = {}
         for key in ("title", "completed", "notes", "due_date", "due_time", "reminders", "priority", "recurrence_value", "recurrence_unit", "recurrence_enabled", "recurrence_type", "recurrence_weekdays", "recurrence_start_date", "recurrence_time", "recurrence_end_type", "recurrence_end_date", "recurrence_max_count", "recurrence_remaining_count", "assigned_person", "tags"):
             if key in msg:
                 kwargs[key] = msg[key]
-        task = await store.async_update_task(msg["task_id"], **kwargs)
+        task = await store.async_update_task(msg["task_id"], actor=actor, **kwargs)
         connection.send_result(msg["id"], task)
     except Exception as err:
         _handle_error(connection, msg["id"], err)

@@ -502,6 +502,18 @@ def _resolve_task(store: HomeTasksStore, data: dict) -> dict:
     raise ValueError("Either task_id or task_title must be provided")
 
 
+async def _resolve_actor(hass: HomeAssistant, call: ServiceCall) -> str | None:
+    """Resolve the actor name from a service call context (user or automation)."""
+    user_id = call.context.user_id
+    if not user_id:
+        return None
+    try:
+        user = await hass.auth.async_get_user(user_id)
+        return user.name if user else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def _async_register_services(hass: HomeAssistant) -> None:
     """Register integration services (once globally)."""
     if hass.services.has_service(DOMAIN, "add_task"):
@@ -509,7 +521,8 @@ def _async_register_services(hass: HomeAssistant) -> None:
 
     async def async_handle_add_task(call: ServiceCall) -> None:
         entry_id, store = _resolve_store(hass, call.data)
-        task = await store.async_add_task(call.data["title"])
+        actor = await _resolve_actor(hass, call)
+        task = await store.async_add_task(call.data["title"], actor=actor)
         kwargs = {}
         if "assigned_person" in call.data:
             kwargs["assigned_person"] = call.data["assigned_person"]
@@ -519,10 +532,11 @@ def _async_register_services(hass: HomeAssistant) -> None:
             raw = call.data["tags"]
             kwargs["tags"] = [t.strip() for t in raw.split(",") if t.strip()]
         if kwargs:
-            await store.async_update_task(task["id"], **kwargs)
+            await store.async_update_task(task["id"], actor=actor, **kwargs)
 
     async def async_handle_complete_task(call: ServiceCall) -> None:
         _entry_id, store = _resolve_store(hass, call.data)
+        actor = await _resolve_actor(hass, call)
         tag = call.data.get("tag")
 
         if tag:
@@ -532,19 +546,21 @@ def _async_register_services(hass: HomeAssistant) -> None:
                     not task.get("completed")
                     and tag in (t.lower() for t in task.get("tags", []))
                 ):
-                    await store.async_update_task(task["id"], completed=True)
+                    await store.async_update_task(task["id"], actor=actor, completed=True)
         else:
             task = _resolve_task(store, call.data)
             if not task.get("completed"):
-                await store.async_update_task(task["id"], completed=True)
+                await store.async_update_task(task["id"], actor=actor, completed=True)
 
     async def async_handle_assign_task(call: ServiceCall) -> None:
         _entry_id, store = _resolve_store(hass, call.data)
+        actor = await _resolve_actor(hass, call)
         task = _resolve_task(store, call.data)
-        await store.async_update_task(task["id"], assigned_person=call.data["person"])
+        await store.async_update_task(task["id"], actor=actor, assigned_person=call.data["person"])
 
     async def async_handle_reopen_task(call: ServiceCall) -> None:
         _entry_id, store = _resolve_store(hass, call.data)
+        actor = await _resolve_actor(hass, call)
         task_id = call.data.get("task_id")
         task_title = call.data.get("task_title")
         assigned_person = call.data.get("assigned_person")
@@ -554,7 +570,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
             # Reopen a single task
             task = _resolve_task(store, call.data)
             if task.get("completed"):
-                await store.async_reopen_task(task["id"])
+                await store.async_reopen_task(task["id"], actor=actor)
         elif assigned_person or tag:
             # Reopen completed tasks matching person and/or tag
             for task in store.tasks:
@@ -566,7 +582,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
                     t.lower() for t in task.get("tags", [])
                 ):
                     continue
-                await store.async_reopen_task(task["id"])
+                await store.async_reopen_task(task["id"], actor=actor)
         else:
             raise vol.Invalid(
                 "Either task_id, task_title, assigned_person, or tag must be provided"
