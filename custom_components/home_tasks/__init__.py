@@ -211,6 +211,25 @@ def _check_end_date(task: dict, target: datetime) -> bool:
         return False
 
 
+def _apply_start_date(task: dict, target: datetime) -> datetime:
+    """Advance target to recurrence_start_date if target falls before it."""
+    start_date_str = task.get("recurrence_start_date")
+    if not start_date_str:
+        return target
+    try:
+        start_date = date.fromisoformat(start_date_str)
+        if target.date() < start_date:
+            t_h, t_m = _parse_rec_time(task)
+            local_target = target.astimezone()
+            return local_target.replace(
+                year=start_date.year, month=start_date.month, day=start_date.day,
+                hour=t_h, minute=t_m, second=0, microsecond=0,
+            )
+    except ValueError:
+        pass
+    return target
+
+
 def _compute_reopen_delay(task: dict, completed_at: datetime) -> float | None:
     """Compute seconds from now until the task should reopen.
 
@@ -234,6 +253,7 @@ def _compute_reopen_delay(task: dict, completed_at: datetime) -> float | None:
         )
         if _check_end_date(task, target):
             return None
+        target = _apply_start_date(task, target)
         return (target.astimezone(timezone.utc) - now).total_seconds()
 
     unit = task.get("recurrence_unit")
@@ -261,6 +281,7 @@ def _compute_reopen_delay(task: dict, completed_at: datetime) -> float | None:
     target_time = target_local.replace(hour=t_h, minute=t_m, second=0, microsecond=0)
     if _check_end_date(task, target_time):
         return None
+    target_time = _apply_start_date(task, target_time)
     return (target_time.astimezone(timezone.utc) - now).total_seconds()
 
 

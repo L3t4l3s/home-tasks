@@ -96,7 +96,7 @@ const _TRANSLATIONS = {
     due_date_lbl: "Date",
     rec_mode_lbl: "Mode",
     rec_time: "Reactivation time", rec_end: "End", rec_end_never: "Never", rec_end_date: "On date", rec_end_count: "After N times",
-    rec_end_date_lbl: "End date", rec_max_count_lbl: "max", rec_remaining: "{0} left",
+    rec_end_date_lbl: "End date", rec_max_count_lbl: "max", rec_remaining: "{0} left", rec_start_date_lbl: "Start date",
   },
   nl: {
     my_tasks: "Mijn taken",
@@ -142,7 +142,7 @@ const _TRANSLATIONS = {
     ed_sec_view: "Weergave", ed_sec_display: "Configuratie",
     due_time_lbl: "Tijd", due_date_lbl: "Datum", rec_mode_lbl: "Modus",
     rec_time: "Tijdstip", rec_end: "Einde", rec_end_never: "Nooit", rec_end_date: "Op datum", rec_end_count: "Na N keer",
-    rec_end_date_lbl: "Einddatum", rec_max_count_lbl: "max", rec_remaining: "nog {0}",
+    rec_end_date_lbl: "Einddatum", rec_max_count_lbl: "max", rec_remaining: "nog {0}", rec_start_date_lbl: "Startdatum",
   },
   it: {
     my_tasks: "Le mie attivit\u00e0",
@@ -188,7 +188,7 @@ const _TRANSLATIONS = {
     ed_sec_view: "Visualizzazione", ed_sec_display: "Configurazione",
     due_time_lbl: "Ora", due_date_lbl: "Data", rec_mode_lbl: "Modalit\u00e0",
     rec_time: "Orario", rec_end: "Fine", rec_end_never: "Mai", rec_end_date: "Alla data", rec_end_count: "Dopo N volte",
-    rec_end_date_lbl: "Data di fine", rec_max_count_lbl: "max", rec_remaining: "ancora {0}",
+    rec_end_date_lbl: "Data di fine", rec_max_count_lbl: "max", rec_remaining: "ancora {0}", rec_start_date_lbl: "Data di inizio",
   },
   pl: {
     my_tasks: "Moje zadania",
@@ -234,7 +234,7 @@ const _TRANSLATIONS = {
     ed_sec_view: "Wy\u015bwietlanie", ed_sec_display: "Konfiguracja",
     due_time_lbl: "Czas", due_date_lbl: "Data", rec_mode_lbl: "Tryb",
     rec_time: "Godzina", rec_end: "Koniec", rec_end_never: "Nigdy", rec_end_date: "W dniu", rec_end_count: "Po N razach",
-    rec_end_date_lbl: "Data ko\u0144cowa", rec_max_count_lbl: "max", rec_remaining: "jeszcze {0}",
+    rec_end_date_lbl: "Data ko\u0144cowa", rec_max_count_lbl: "max", rec_remaining: "jeszcze {0}", rec_start_date_lbl: "Data pocz\u0105tku",
   },
   sv: {
     my_tasks: "Mina uppgifter",
@@ -280,7 +280,7 @@ const _TRANSLATIONS = {
     ed_sec_view: "Visning", ed_sec_display: "Konfiguration",
     due_time_lbl: "Tid", due_date_lbl: "Datum", rec_mode_lbl: "L\u00e4ge",
     rec_time: "Tid", rec_end: "Slut", rec_end_never: "Aldrig", rec_end_date: "P\u00e5 datum", rec_end_count: "Efter N g\u00e5nger",
-    rec_end_date_lbl: "Slutdatum", rec_max_count_lbl: "max", rec_remaining: "{0} kvar",
+    rec_end_date_lbl: "Slutdatum", rec_max_count_lbl: "max", rec_remaining: "{0} kvar", rec_start_date_lbl: "Startdatum",
   },
   fr: {
     my_tasks: "Mes t\u00e2ches",
@@ -326,7 +326,7 @@ const _TRANSLATIONS = {
     ed_sec_view: "Affichage", ed_sec_display: "Configuration",
     due_time_lbl: "Heure", due_date_lbl: "Date", rec_mode_lbl: "Mode",
     rec_time: "Heure", rec_end: "Fin", rec_end_never: "Jamais", rec_end_date: "\u00c0 la date", rec_end_count: "Apr\u00e8s N fois",
-    rec_end_date_lbl: "Date de fin", rec_max_count_lbl: "max", rec_remaining: "encore {0}",
+    rec_end_date_lbl: "Date de fin", rec_max_count_lbl: "max", rec_remaining: "encore {0}", rec_start_date_lbl: "Date de d\u00e9but",
   },
   pt: {
     my_tasks: "Minhas tarefas",
@@ -372,7 +372,7 @@ const _TRANSLATIONS = {
     ed_sec_view: "Exibi\u00e7\u00e3o", ed_sec_display: "Configura\u00e7\u00e3o",
     due_time_lbl: "Hora", due_date_lbl: "Data", rec_mode_lbl: "Modo",
     rec_time: "Hora", rec_end: "Fim", rec_end_never: "Nunca", rec_end_date: "Em data", rec_end_count: "Ap\u00f3s N vezes",
-    rec_end_date_lbl: "Data de fim", rec_max_count_lbl: "max", rec_remaining: "ainda {0}",
+    rec_end_date_lbl: "Data de fim", rec_max_count_lbl: "max", rec_remaining: "ainda {0}", rec_start_date_lbl: "Data de in\u00edcio",
   },
   es: {
     my_tasks: "Mis tareas",
@@ -418,7 +418,7 @@ const _TRANSLATIONS = {
     ed_sec_view: "Visualizaci\u00f3n", ed_sec_display: "Configuraci\u00f3n",
     due_time_lbl: "Hora", due_date_lbl: "Fecha", rec_mode_lbl: "Modo",
     rec_time: "Hora", rec_end: "Fin", rec_end_never: "Nunca", rec_end_date: "En fecha", rec_end_count: "Despu\u00e9s de N veces",
-    rec_end_date_lbl: "Fecha de fin", rec_max_count_lbl: "max", rec_remaining: "a\u00fan {0}",
+    rec_end_date_lbl: "Fecha de fin", rec_max_count_lbl: "max", rec_remaining: "a\u00fan {0}", rec_start_date_lbl: "Fecha de inicio",
   },
   ru: {
     my_tasks: "\u041c\u043e\u0438 \u0437\u0430\u0434\u0430\u0447\u0438",
@@ -464,7 +464,7 @@ const _TRANSLATIONS = {
     ed_sec_view: "\u041e\u0442\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u0435", ed_sec_display: "\u041a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044f",
     due_time_lbl: "\u0412\u0440\u0435\u043c\u044f", due_date_lbl: "\u0414\u0430\u0442\u0430", rec_mode_lbl: "\u0420\u0435\u0436\u0438\u043c",
     rec_time: "\u0412\u0440\u0435\u043c\u044f", rec_end: "\u041e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u0435", rec_end_never: "\u041d\u0438\u043a\u043e\u0433\u0434\u0430", rec_end_date: "\u041f\u043e \u0434\u0430\u0442\u0435", rec_end_count: "\u041f\u043e\u0441\u043b\u0435 N \u0440\u0430\u0437",
-    rec_end_date_lbl: "\u0414\u0430\u0442\u0430 \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f", rec_max_count_lbl: "max", rec_remaining: "\u0435\u0449\u0451 {0}",
+    rec_end_date_lbl: "\u0414\u0430\u0442\u0430 \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f", rec_max_count_lbl: "max", rec_remaining: "\u0435\u0449\u0451 {0}", rec_start_date_lbl: "\u0414\u0430\u0442\u0430 \u043d\u0430\u0447\u0430\u043b\u0430",
   },
   cs: {
     my_tasks: "Moje \u00fakoly",
@@ -510,7 +510,7 @@ const _TRANSLATIONS = {
     ed_sec_view: "Zobrazen\u00ed", ed_sec_display: "Konfigurace",
     due_time_lbl: "\u010cas", due_date_lbl: "Datum", rec_mode_lbl: "Re\u017eim",
     rec_time: "\u010cas", rec_end: "Konec", rec_end_never: "Nikdy", rec_end_date: "K datu", rec_end_count: "Po N kr\u00e1t",
-    rec_end_date_lbl: "Datum konce", rec_max_count_lbl: "max", rec_remaining: "je\u0161t\u011b {0}",
+    rec_end_date_lbl: "Datum konce", rec_max_count_lbl: "max", rec_remaining: "je\u0161t\u011b {0}", rec_start_date_lbl: "Datum za\u010d\u00e1tku",
   },
   da: {
     my_tasks: "Mine opgaver",
@@ -556,7 +556,7 @@ const _TRANSLATIONS = {
     ed_sec_view: "Visning", ed_sec_display: "Konfiguration",
     due_time_lbl: "Tid", due_date_lbl: "Dato", rec_mode_lbl: "Tilstand",
     rec_time: "Tidspunkt", rec_end: "Slut", rec_end_never: "Aldrig", rec_end_date: "P\u00e5 dato", rec_end_count: "Efter N gange",
-    rec_end_date_lbl: "Slutdato", rec_max_count_lbl: "max", rec_remaining: "{0} tilbage",
+    rec_end_date_lbl: "Slutdato", rec_max_count_lbl: "max", rec_remaining: "{0} tilbage", rec_start_date_lbl: "Startdato",
   },
   no: {
     my_tasks: "Mine oppgaver",
@@ -602,7 +602,7 @@ const _TRANSLATIONS = {
     ed_sec_view: "Visning", ed_sec_display: "Konfigurasjon",
     due_time_lbl: "Tid", due_date_lbl: "Dato", rec_mode_lbl: "Modus",
     rec_time: "Klokkeslett", rec_end: "Slutt", rec_end_never: "Aldri", rec_end_date: "P\u00e5 dato", rec_end_count: "Etter N ganger",
-    rec_end_date_lbl: "Sluttdato", rec_max_count_lbl: "max", rec_remaining: "{0} igjen",
+    rec_end_date_lbl: "Sluttdato", rec_max_count_lbl: "max", rec_remaining: "{0} igjen", rec_start_date_lbl: "Startdato",
   },
   fi: {
     my_tasks: "Omat teht\u00e4v\u00e4t",
@@ -648,7 +648,7 @@ const _TRANSLATIONS = {
     ed_sec_view: "N\u00e4ytt\u00f6", ed_sec_display: "Konfiguraatio",
     due_time_lbl: "Aika", due_date_lbl: "P\u00e4iv\u00e4m\u00e4\u00e4r\u00e4", rec_mode_lbl: "Tila",
     rec_time: "Aika", rec_end: "Loppu", rec_end_never: "Ei koskaan", rec_end_date: "P\u00e4iv\u00e4m\u00e4\u00e4r\u00e4n\u00e4", rec_end_count: "N kerran j\u00e4lkeen",
-    rec_end_date_lbl: "Loppup\u00e4iv\u00e4", rec_max_count_lbl: "max", rec_remaining: "{0} j\u00e4ljell\u00e4",
+    rec_end_date_lbl: "Loppup\u00e4iv\u00e4", rec_max_count_lbl: "max", rec_remaining: "{0} j\u00e4ljell\u00e4", rec_start_date_lbl: "Alkamisp\u00e4iv\u00e4",
   },
   hu: {
     my_tasks: "Feladataim",
@@ -694,7 +694,7 @@ const _TRANSLATIONS = {
     ed_sec_view: "Megjelen\u00edt\u00e9s", ed_sec_display: "Konfigur\u00e1ci\u00f3",
     due_time_lbl: "Id\u0151pont", due_date_lbl: "D\u00e1tum", rec_mode_lbl: "M\u00f3d",
     rec_time: "Id\u0151pont", rec_end: "V\u00e9ge", rec_end_never: "Soha", rec_end_date: "D\u00e1tumon", rec_end_count: "N alkalom ut\u00e1n",
-    rec_end_date_lbl: "V\u00e9gdatum", rec_max_count_lbl: "max", rec_remaining: "m\u00e9g {0}",
+    rec_end_date_lbl: "V\u00e9gdatum", rec_max_count_lbl: "max", rec_remaining: "m\u00e9g {0}", rec_start_date_lbl: "Kezd\u0151 d\u00e1tum",
   },
   de: {
     my_tasks: "Meine Aufgaben",
@@ -783,7 +783,7 @@ const _TRANSLATIONS = {
     due_date_lbl: "Datum",
     rec_mode_lbl: "Modus",
     rec_time: "Uhrzeit", rec_end: "Ende", rec_end_never: "Nie", rec_end_date: "An Datum", rec_end_count: "Nach X mal",
-    rec_end_date_lbl: "Enddatum", rec_max_count_lbl: "max", rec_remaining: "noch {0}",
+    rec_end_date_lbl: "Enddatum", rec_max_count_lbl: "max", rec_remaining: "noch {0}", rec_start_date_lbl: "Startdatum",
   },
 };
 
@@ -1861,7 +1861,8 @@ class HomeTasksCard extends HTMLElement {
     const recurrenceUnit = task.recurrence_unit || "days";
     const recurrenceType = task.recurrence_type || "interval";
     const recurrenceWeekdays = task.recurrence_weekdays || [];
-    const recurrenceTime = task.recurrence_time || "";
+    const recurrenceStartDate = task.recurrence_start_date || "";
+    const recurrenceTime = task.recurrence_time || "00:00";
     const recurrenceEndType = task.recurrence_end_type || "none";
     const recurrenceEndDate = task.recurrence_end_date || "";
     const recurrenceMaxCount = task.recurrence_max_count ?? null;
@@ -1938,11 +1939,20 @@ class HomeTasksCard extends HTMLElement {
       recurrenceWeekdayRow.appendChild(lbl);
     }
 
-    // Reactivation time input (hidden for hours mode)
+    // Start date + reactivation time (start date + time row, time hidden for hours mode)
+    const recurrenceStartDateInput = this._el("input", { type: "date", value: recurrenceStartDate });
+    const recurrenceStartDateWrap = this._el("div", { className: "field-wrap" }, [
+      recurrenceStartDateInput,
+      this._el("span", { textContent: this._t("rec_start_date_lbl") }),
+    ]);
     const recurrenceTimeInput = this._el("input", { type: "time", value: recurrenceTime });
     const recurrenceTimeWrap = this._el("div", { className: "field-wrap" }, [
       recurrenceTimeInput,
       this._el("span", { textContent: this._t("rec_time") }),
+    ]);
+    const recurrenceDateTimeRow = this._el("div", { className: "due-input-row" }, [
+      recurrenceStartDateWrap,
+      recurrenceTimeWrap,
     ]);
 
     // End condition
@@ -1992,7 +2002,9 @@ class HomeTasksCard extends HTMLElement {
     const applyRowVisibility = (mode, unit) => {
       recurrenceIntervalRow.style.display = mode === "interval" ? "" : "none";
       recurrenceWeekdayRow.style.display = mode === "weekdays" ? "" : "none";
+      // Hide time column for hours mode (start date column always visible)
       recurrenceTimeWrap.style.display = (mode === "weekdays" || (mode === "interval" && unit !== "hours")) ? "" : "none";
+      recurrenceDateTimeRow.style.gridTemplateColumns = recurrenceTimeWrap.style.display === "none" ? "1fr" : "1fr 1fr";
     };
     applyRowVisibility(recurrenceType, recurrenceUnit);
 
@@ -2009,6 +2021,7 @@ class HomeTasksCard extends HTMLElement {
       spinUp.disabled = !enabled;
       spinDown.disabled = !enabled;
       weekdayCheckboxes.forEach(cb => { cb.disabled = !enabled; });
+      recurrenceStartDateInput.disabled = !enabled;
       recurrenceTimeInput.disabled = !enabled;
       recurrenceEndSelect.disabled = !enabled;
       recurrenceEndDateInput.disabled = !enabled;
@@ -2036,6 +2049,14 @@ class HomeTasksCard extends HTMLElement {
         task_id: task.id,
         recurrence_value: val,
         recurrence_unit: recurrenceUnitSelect.value,
+      })?.then(() => this._loadAllTasks());
+    };
+
+    const saveStartDate = () => {
+      this._callWs("home_tasks/update_task", {
+        list_id: listId,
+        task_id: task.id,
+        recurrence_start_date: recurrenceStartDateInput.value || null,
       })?.then(() => this._loadAllTasks());
     };
 
@@ -2073,6 +2094,7 @@ class HomeTasksCard extends HTMLElement {
         recurrence_value: val,
         recurrence_unit: recurrenceUnitSelect.value,
         recurrence_weekdays: selected,
+        recurrence_start_date: recurrenceStartDateInput.value || null,
         recurrence_time: recurrenceTimeInput.value || null,
         recurrence_end_type: endType,
         recurrence_end_date: endType === "date" ? (recurrenceEndDateInput.value || null) : null,
@@ -2093,6 +2115,7 @@ class HomeTasksCard extends HTMLElement {
     recurrenceValueInput.addEventListener("change", saveInterval);
     recurrenceUnitSelect.addEventListener("change", saveInterval);
     weekdayCheckboxes.forEach(cb => cb.addEventListener("change", saveWeekdays));
+    recurrenceStartDateInput.addEventListener("change", saveStartDate);
     recurrenceTimeInput.addEventListener("change", saveRecurrenceTime);
     recurrenceEndSelect.addEventListener("change", () => { applyEndTypeVisibility(recurrenceEndSelect.value); saveEndCondition(); });
     recurrenceEndDateInput.addEventListener("change", saveEndCondition);
@@ -2103,7 +2126,7 @@ class HomeTasksCard extends HTMLElement {
       recurrenceModeWrap,
       recurrenceIntervalRow,
       recurrenceWeekdayRow,
-      recurrenceTimeWrap,
+      recurrenceDateTimeRow,
       recurrenceEndWrap,
       recurrenceEndDateWrap,
       recurrenceCountRow,

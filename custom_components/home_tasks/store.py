@@ -133,6 +133,7 @@ class HomeTasksStore:
             task.setdefault("recurrence_enabled", False)
             task.setdefault("recurrence_type", "interval")
             task.setdefault("recurrence_weekdays", [])
+            task.setdefault("recurrence_start_date", None)
             task.setdefault("recurrence_time", None)
             task.setdefault("recurrence_end_type", "none")
             task.setdefault("recurrence_end_date", None)
@@ -175,6 +176,7 @@ class HomeTasksStore:
             "recurrence_enabled": False,
             "recurrence_type": "interval",
             "recurrence_weekdays": [],
+            "recurrence_start_date": None,
             "recurrence_time": None,
             "recurrence_end_type": "none",
             "recurrence_end_date": None,
@@ -241,6 +243,8 @@ class HomeTasksStore:
             if not all(isinstance(d, int) and 0 <= d <= 6 for d in val):
                 raise ValueError("recurrence_weekdays entries must be integers 0–6")
             kwargs["recurrence_weekdays"] = sorted(set(val))
+        if "recurrence_start_date" in kwargs:
+            kwargs["recurrence_start_date"] = validate_date(kwargs["recurrence_start_date"], "recurrence_start_date")
         if "recurrence_time" in kwargs:
             kwargs["recurrence_time"] = validate_time(kwargs["recurrence_time"])
         if "recurrence_end_type" in kwargs:
@@ -297,7 +301,7 @@ class HomeTasksStore:
         old_due_time = task.get("due_time")
         old_reminders = task.get("reminders", [])
 
-        allowed = ("title", "completed", "notes", "due_date", "due_time", "priority", "reminders", "recurrence_value", "recurrence_unit", "recurrence_enabled", "recurrence_type", "recurrence_weekdays", "recurrence_time", "recurrence_end_type", "recurrence_end_date", "recurrence_max_count", "recurrence_remaining_count", "assigned_person", "tags")
+        allowed = ("title", "completed", "notes", "due_date", "due_time", "priority", "reminders", "recurrence_value", "recurrence_unit", "recurrence_enabled", "recurrence_type", "recurrence_weekdays", "recurrence_start_date", "recurrence_time", "recurrence_end_type", "recurrence_end_date", "recurrence_max_count", "recurrence_remaining_count", "assigned_person", "tags")
         for key, value in kwargs.items():
             if key in allowed:
                 task[key] = value
