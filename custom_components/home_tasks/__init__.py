@@ -262,8 +262,11 @@ def _compute_reopen_delay(task: dict, completed_at: datetime) -> float | None:
         return None
 
     if unit == "hours":
-        elapsed = (now - completed_at).total_seconds()
-        return float(RECURRENCE_UNIT_SECONDS["hours"] * value) - elapsed
+        reopen_at = completed_at + timedelta(seconds=RECURRENCE_UNIT_SECONDS["hours"] * value)
+        if _check_end_date(task, reopen_at):
+            return None
+        reopen_at = _apply_start_date(task, reopen_at)
+        return (reopen_at.astimezone(timezone.utc) - now).total_seconds()
 
     # days / weeks / months → recurrence_time (or midnight) of target day in local timezone
     local_completed = completed_at.astimezone()
