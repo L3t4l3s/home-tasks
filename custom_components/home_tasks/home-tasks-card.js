@@ -1639,13 +1639,6 @@ class HomeTasksCard extends HTMLElement {
 
     const mainChildren = [];
 
-    const dragHandle = this._el("span", {
-      className: "drag-handle" + (cs.sortBy !== "manual" ? " hidden" : ""),
-      title: this._t("drag_handle"),
-      textContent: "\u2237",
-    });
-    mainChildren.push(dragHandle);
-
     const checkbox = this._el("input", { type: "checkbox", checked: task.completed });
     checkbox.addEventListener("change", () => this._toggleTask(task.id, task.completed, colIdx));
     const checkmark = this._el("span", { className: "checkmark" });
@@ -1674,19 +1667,10 @@ class HomeTasksCard extends HTMLElement {
       setTimeout(() => { editInput.focus(); editInput.select(); }, 0);
     } else {
       const titleSpan = this._el("span", { className: "task-title", textContent: task.title });
-      titleSpan.addEventListener("click", () => {
-        const now = Date.now();
-        if (this._lastTitleClick?.id === task.id && now - this._lastTitleClick.time < 300) {
-          this._lastTitleClick = null;
-          if (this._expandedTasks.has(task.id)) this._expandedTasks.delete(task.id);
-          else this._expandedTasks.add(task.id);
-          this._editingTaskId = task.id;
-          this._render();
-          return;
-        }
-        this._lastTitleClick = { id: task.id, time: now };
-        if (this._expandedTasks.has(task.id)) this._expandedTasks.delete(task.id);
-        else this._expandedTasks.add(task.id);
+      titleSpan.addEventListener("dblclick", (e) => {
+        e.stopPropagation();
+        this._expandedTasks.add(task.id);
+        this._editingTaskId = task.id;
         this._render();
       });
       contentChildren.push(titleSpan);
@@ -1739,10 +1723,18 @@ class HomeTasksCard extends HTMLElement {
         const attrs = this._hass.states[task.assigned_person].attributes;
         personName = (attrs && attrs.friendly_name) || task.assigned_person;
       }
-      metaChildren.push(this._el("span", {
-        className: "assigned-badge",
+      const isActivePerson = cs.personFilters.has(task.assigned_person);
+      const assignedBadge = this._el("span", {
+        className: "assigned-badge" + (isActivePerson ? " active" : ""),
         textContent: "\uD83D\uDC64 " + personName,
-      }));
+      });
+      assignedBadge.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (cs.personFilters.has(task.assigned_person)) cs.personFilters.delete(task.assigned_person);
+        else cs.personFilters.add(task.assigned_person);
+        this._render();
+      });
+      metaChildren.push(assignedBadge);
     }
     if (task.tags && task.tags.length > 0 && col.show_tags !== false) {
       for (const tag of task.tags) {
@@ -1780,21 +1772,25 @@ class HomeTasksCard extends HTMLElement {
     const expandIcon = document.createElement("ha-icon");
     expandIcon.setAttribute("icon", "mdi:chevron-down");
     expandBtn.appendChild(expandIcon);
-    expandBtn.addEventListener("click", () => {
+    mainChildren.push(expandBtn);
+
+    const mainRow = this._el("div", { className: "task-main" }, mainChildren);
+    mainRow.addEventListener("click", (e) => {
+      if (e.detail > 1) return;
+      if (e.target.closest(".checkbox-container")) return;
+      if (e.target.closest(".tag-badge")) return;
+      if (e.target.closest(".assigned-badge")) return;
       if (this._expandedTasks.has(task.id)) this._expandedTasks.delete(task.id);
       else this._expandedTasks.add(task.id);
       this._render();
     });
-    mainChildren.push(expandBtn);
-
-    const mainRow = this._el("div", { className: "task-main" }, mainChildren);
     taskEl.appendChild(mainRow);
 
     if (isExpanded) {
       taskEl.appendChild(this._buildTaskDetails(task, colIdx));
     }
 
-    this._attachDragToTask(taskEl, task.id, dragHandle, colIdx);
+    this._attachDragToTask(taskEl, task.id, colIdx);
 
     return taskEl;
   }
@@ -2627,7 +2623,7 @@ class HomeTasksCard extends HTMLElement {
     if (this._pendingRender) this._render();
   }
 
-  _attachDragToTask(taskEl, taskId, dragHandle, colIdx) {
+  _attachDragToTask(taskEl, taskId, colIdx) {
     // HTML5 Drag & Drop (Desktop)
     taskEl.addEventListener("dragstart", (e) => {
       this._draggedTaskId = taskId;
@@ -2660,10 +2656,8 @@ class HomeTasksCard extends HTMLElement {
       this._finishDrag();
     });
 
-    // Touch Events (Mobile)
-    if (!dragHandle) return;
-
-    dragHandle.addEventListener("touchstart", (e) => {
+    // Touch Events (Mobile) — long-press anywhere on the task row to drag
+    taskEl.addEventListener("touchstart", (e) => {
       if (e.touches.length !== 1) return;
       const touch = e.touches[0];
       this._touchStartTimer = setTimeout(() => {
@@ -2725,9 +2719,9 @@ class HomeTasksCard extends HTMLElement {
       }
     };
 
-    dragHandle.addEventListener("touchmove", onTouchMove, { passive: false });
-    dragHandle.addEventListener("touchend", onTouchEnd);
-    dragHandle.addEventListener("touchcancel", onTouchEnd);
+    taskEl.addEventListener("touchmove", onTouchMove, { passive: false });
+    taskEl.addEventListener("touchend", onTouchEnd);
+    taskEl.addEventListener("touchcancel", onTouchEnd);
   }
 
   // --- Styles ---
@@ -2807,18 +2801,8 @@ class HomeTasksCard extends HTMLElement {
         background: var(--todo-bg); transition: box-shadow 0.2s, border-color 0.2s;
       }
       .task.dragging { opacity: 0.4; }
-      .task-main { display: flex; align-items: center; padding: 10px 12px; gap: 8px; min-height: 44px; }
+      .task-main { display: flex; align-items: center; padding: 10px 12px; gap: 8px; min-height: 44px; cursor: pointer; }
       .task-content { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-      .drag-handle {
-        cursor: grab; color: var(--todo-disabled); font-size: 16px;
-        user-select: none; padding: 4px 2px; line-height: 1;
-        touch-action: none;
-      }
-      .drag-handle.hidden { visibility: hidden; }
-      .drag-handle:active { cursor: grabbing; }
-      @media (pointer: coarse) {
-        .drag-handle { padding: 8px 6px; font-size: 18px; }
-      }
       .checkbox-container {
         position: relative; display: inline-flex; align-items: center;
         cursor: pointer; flex-shrink: 0;
@@ -2880,7 +2864,10 @@ class HomeTasksCard extends HTMLElement {
       .assigned-badge {
         font-size: 11px; padding: 2px 8px; border-radius: 10px;
         background: rgba(156, 39, 176, 0.15); color: var(--accent-color, #9c27b0);
+        cursor: pointer; transition: all 0.2s;
       }
+      .assigned-badge:hover { opacity: 0.8; }
+      .assigned-badge.active { background: var(--accent-color, #9c27b0); color: #fff; }
       .tag-badge {
         font-size: 11px; padding: 2px 8px; border-radius: 10px;
         background: rgba(76, 175, 80, 0.15); color: var(--success-color, #4caf50);
@@ -3076,7 +3063,6 @@ class HomeTasksCard extends HTMLElement {
       .compact .checkbox-container input:checked ~ .checkmark::after { width: 4px; height: 7px; }
       .compact .expand-btn { padding: 2px; }
       .compact .expand-btn ha-icon { --mdc-icon-size: 16px; }
-      .compact .drag-handle { font-size: 14px; padding: 2px 1px; }
       .compact .empty-state { padding: 16px; font-size: 13px; }
       .compact .task-details { padding: 8px 10px; }
     `;
