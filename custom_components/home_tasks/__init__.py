@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
@@ -303,6 +303,7 @@ def _schedule_recurrence(hass: HomeAssistant, entry_id: str, task: dict, complet
         return
     delay = max(0.0, delay)
 
+    @callback
     def _reopen_task(_now):
         timers.pop(task_id, None)
         hass.async_create_task(_async_reopen_task(hass, entry_id, task_id))
@@ -393,6 +394,7 @@ def _schedule_reminders(hass: HomeAssistant, entry_id: str, task: dict) -> None:
         if delay <= 0:
             continue  # already past — silent miss
 
+        @callback
         def _fire_reminder(_now, _task=task, _offset=offset):
             key = f"{_task['id']}_r{_offset}"
             hass.data.get(DATA_REMINDER_TIMERS, {}).pop(key, None)
