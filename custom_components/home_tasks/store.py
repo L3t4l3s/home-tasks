@@ -30,6 +30,9 @@ _LOGGER = logging.getLogger(__name__)
 _DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _TIME_PATTERN = re.compile(r"^\d{2}:\d{2}$")
 
+_MAX_HISTORY = 50  # max history entries per task
+_HISTORY_FIELDS = ("title", "due_date", "due_time", "priority", "assigned_person", "tags", "notes", "recurrence_enabled")
+
 
 def validate_text(value: str, max_length: int, field_name: str) -> str:
     """Validate and return a trimmed text field."""
@@ -142,6 +145,7 @@ class HomeTasksStore:
             task.setdefault("completed_at", None)
             task.setdefault("assigned_person", None)
             task.setdefault("tags", [])
+            task.setdefault("history", [])
 
     async def _async_save(self) -> None:
         """Save data to disk."""
@@ -185,6 +189,7 @@ class HomeTasksStore:
             "completed_at": None,
             "assigned_person": None,
             "tags": [],
+            "history": [{"ts": datetime.now(timezone.utc).isoformat(), "action": "created"}],
         }
         self._data["tasks"].append(task)
         await self._async_save()
@@ -300,6 +305,11 @@ class HomeTasksStore:
         old_due_date = task.get("due_date")
         old_due_time = task.get("due_time")
         old_reminders = task.get("reminders", [])
+        old_title = task.get("title", "")
+        old_priority = task.get("priority")
+        old_tags = list(task.get("tags", []))
+        old_notes = task.get("notes", "")
+        old_recurrence_enabled = task.get("recurrence_enabled", False)
 
         allowed = ("title", "completed", "notes", "due_date", "due_time", "priority", "reminders", "recurrence_value", "recurrence_unit", "recurrence_enabled", "recurrence_type", "recurrence_weekdays", "recurrence_start_date", "recurrence_time", "recurrence_end_type", "recurrence_end_date", "recurrence_max_count", "recurrence_remaining_count", "assigned_person", "tags")
         for key, value in kwargs.items():
@@ -330,6 +340,36 @@ class HomeTasksStore:
         elif not is_completed and was_completed:
             task["completed_at"] = None
 
+        # History tracking
+        if any(k in kwargs for k in _HISTORY_FIELDS) or "completed" in kwargs:
+            _now = datetime.now(timezone.utc).isoformat()
+            new_hist = []
+            if "title" in kwargs and task.get("title") != old_title:
+                new_hist.append({"ts": _now, "action": "updated", "field": "title", "from": old_title, "to": task.get("title")})
+            if "due_date" in kwargs and task.get("due_date") != old_due_date:
+                new_hist.append({"ts": _now, "action": "updated", "field": "due_date", "from": old_due_date, "to": task.get("due_date")})
+            if "due_time" in kwargs and task.get("due_time") != old_due_time:
+                new_hist.append({"ts": _now, "action": "updated", "field": "due_time", "from": old_due_time, "to": task.get("due_time")})
+            if "priority" in kwargs and task.get("priority") != old_priority:
+                new_hist.append({"ts": _now, "action": "updated", "field": "priority", "from": old_priority, "to": task.get("priority")})
+            if "assigned_person" in kwargs and task.get("assigned_person") != previous_person:
+                new_hist.append({"ts": _now, "action": "updated", "field": "assigned_person", "from": previous_person, "to": task.get("assigned_person")})
+            if "tags" in kwargs and task.get("tags") != old_tags:
+                new_hist.append({"ts": _now, "action": "updated", "field": "tags", "from": old_tags, "to": list(task.get("tags", []))})
+            if "notes" in kwargs and task.get("notes") != old_notes:
+                new_hist.append({"ts": _now, "action": "updated", "field": "notes"})
+            if "recurrence_enabled" in kwargs and task.get("recurrence_enabled") != old_recurrence_enabled:
+                new_hist.append({"ts": _now, "action": "updated", "field": "recurrence_enabled", "to": task.get("recurrence_enabled")})
+            if is_completed and not was_completed:
+                new_hist.append({"ts": _now, "action": "completed"})
+            elif not is_completed and was_completed:
+                new_hist.append({"ts": _now, "action": "reopened", "by": "user"})
+            if new_hist:
+                hist = task.setdefault("history", [])
+                hist.extend(new_hist)
+                if len(hist) > _MAX_HISTORY:
+                    task["history"] = hist[-_MAX_HISTORY:]
+
         # Notify reminder scheduler when due date/time or reminders change
         if self.on_reminders_changed and (
             task.get("due_date") != old_due_date
@@ -356,6 +396,11 @@ class HomeTasksStore:
         task["completed_at"] = None
         for sub in task.get("sub_items", []):
             sub["completed"] = False
+        _rec_entry = {"ts": datetime.now(timezone.utc).isoformat(), "action": "reopened", "by": "recurrence"}
+        hist = task.setdefault("history", [])
+        hist.append(_rec_entry)
+        if len(hist) > _MAX_HISTORY:
+            task["history"] = hist[-_MAX_HISTORY:]
         await self._async_save()
 
         if self.on_task_reopened:

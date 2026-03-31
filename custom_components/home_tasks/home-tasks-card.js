@@ -97,6 +97,8 @@ const _TRANSLATIONS = {
     rec_mode_lbl: "Mode",
     rec_time: "Reactivation time", rec_end: "End", rec_end_never: "Never", rec_end_date: "On date", rec_end_count: "After N times",
     rec_end_date_lbl: "End date", rec_max_count_lbl: "max", rec_remaining: "{0} left", rec_start_date_lbl: "Start date",
+    history: "History", history_created: "Created", history_completed: "Completed", history_reopened: "Reopened",
+    history_reset: "Auto-reset (recurrence)", history_changed: "changed", history_empty: "No history yet", hist_title: "Title", history_disabled: "Disabled",
   },
   nl: {
     my_tasks: "Mijn taken",
@@ -143,6 +145,8 @@ const _TRANSLATIONS = {
     due_time_lbl: "Tijd", due_date_lbl: "Datum", rec_mode_lbl: "Modus",
     rec_time: "Tijdstip", rec_end: "Einde", rec_end_never: "Nooit", rec_end_date: "Op datum", rec_end_count: "Na N keer",
     rec_end_date_lbl: "Einddatum", rec_max_count_lbl: "max", rec_remaining: "nog {0}", rec_start_date_lbl: "Startdatum",
+    history: "Geschiedenis", history_created: "Aangemaakt", history_completed: "Voltooid", history_reopened: "Heropend",
+    history_reset: "Automatisch teruggezet", history_changed: "gewijzigd", history_empty: "Geen geschiedenis", hist_title: "Titel", history_disabled: "Uitgeschakeld",
   },
   it: {
     my_tasks: "Le mie attivit\u00e0",
@@ -189,6 +193,8 @@ const _TRANSLATIONS = {
     due_time_lbl: "Ora", due_date_lbl: "Data", rec_mode_lbl: "Modalit\u00e0",
     rec_time: "Orario", rec_end: "Fine", rec_end_never: "Mai", rec_end_date: "Alla data", rec_end_count: "Dopo N volte",
     rec_end_date_lbl: "Data di fine", rec_max_count_lbl: "max", rec_remaining: "ancora {0}", rec_start_date_lbl: "Data di inizio",
+    history: "Cronologia", history_created: "Creato", history_completed: "Completato", history_reopened: "Riaperto",
+    history_reset: "Ripristino automatico", history_changed: "modificato", history_empty: "Nessuna cronologia", hist_title: "Titolo", history_disabled: "Disabilitato",
   },
   pl: {
     my_tasks: "Moje zadania",
@@ -235,6 +241,8 @@ const _TRANSLATIONS = {
     due_time_lbl: "Czas", due_date_lbl: "Data", rec_mode_lbl: "Tryb",
     rec_time: "Godzina", rec_end: "Koniec", rec_end_never: "Nigdy", rec_end_date: "W dniu", rec_end_count: "Po N razach",
     rec_end_date_lbl: "Data ko\u0144cowa", rec_max_count_lbl: "max", rec_remaining: "jeszcze {0}", rec_start_date_lbl: "Data pocz\u0105tku",
+    history: "Historia", history_created: "Utworzono", history_completed: "Uko\u0144czono", history_reopened: "Ponownie otwarto",
+    history_reset: "Auto-reset", history_changed: "zmieniono", history_empty: "Brak historii", hist_title: "Tytu\u0142", history_disabled: "Wy\u0142\u0105czono",
   },
   sv: {
     my_tasks: "Mina uppgifter",
@@ -281,6 +289,8 @@ const _TRANSLATIONS = {
     due_time_lbl: "Tid", due_date_lbl: "Datum", rec_mode_lbl: "L\u00e4ge",
     rec_time: "Tid", rec_end: "Slut", rec_end_never: "Aldrig", rec_end_date: "P\u00e5 datum", rec_end_count: "Efter N g\u00e5nger",
     rec_end_date_lbl: "Slutdatum", rec_max_count_lbl: "max", rec_remaining: "{0} kvar", rec_start_date_lbl: "Startdatum",
+    history: "Historik", history_created: "Skapad", history_completed: "Avklarad", history_reopened: "\u00d6ppnad igen",
+    history_reset: "Auto-\u00e5terst\u00e4lld", history_changed: "\u00e4ndrad", history_empty: "Ingen historik", hist_title: "Titel", history_disabled: "Inaktiverad",
   },
   fr: {
     my_tasks: "Mes t\u00e2ches",
@@ -327,6 +337,8 @@ const _TRANSLATIONS = {
     due_time_lbl: "Heure", due_date_lbl: "Date", rec_mode_lbl: "Mode",
     rec_time: "Heure", rec_end: "Fin", rec_end_never: "Jamais", rec_end_date: "\u00c0 la date", rec_end_count: "Apr\u00e8s N fois",
     rec_end_date_lbl: "Date de fin", rec_max_count_lbl: "max", rec_remaining: "encore {0}", rec_start_date_lbl: "Date de d\u00e9but",
+    history: "Historique", history_created: "Cr\u00e9\u00e9", history_completed: "Termin\u00e9", history_reopened: "R\u00e9ouvert",
+    history_reset: "R\u00e9initialisation auto.", history_changed: "modifi\u00e9", history_empty: "Aucun historique", hist_title: "Titre", history_disabled: "D\u00e9sactiv\u00e9",
   },
   pt: {
     my_tasks: "Minhas tarefas",
@@ -373,6 +385,8 @@ const _TRANSLATIONS = {
     due_time_lbl: "Hora", due_date_lbl: "Data", rec_mode_lbl: "Modo",
     rec_time: "Hora", rec_end: "Fim", rec_end_never: "Nunca", rec_end_date: "Em data", rec_end_count: "Ap\u00f3s N vezes",
     rec_end_date_lbl: "Data de fim", rec_max_count_lbl: "max", rec_remaining: "ainda {0}", rec_start_date_lbl: "Data de in\u00edcio",
+    history: "Hist\u00f3rico", history_created: "Criado", history_completed: "Conclu\u00eddo", history_reopened: "Reaberto",
+    history_reset: "Reiniciado automaticamente", history_changed: "alterado", history_empty: "Sem hist\u00f3rico", hist_title: "T\u00edtulo", history_disabled: "Desativado",
   },
   es: {
     my_tasks: "Mis tareas",
@@ -419,6 +433,8 @@ const _TRANSLATIONS = {
     due_time_lbl: "Hora", due_date_lbl: "Fecha", rec_mode_lbl: "Modo",
     rec_time: "Hora", rec_end: "Fin", rec_end_never: "Nunca", rec_end_date: "En fecha", rec_end_count: "Despu\u00e9s de N veces",
     rec_end_date_lbl: "Fecha de fin", rec_max_count_lbl: "max", rec_remaining: "a\u00fan {0}", rec_start_date_lbl: "Fecha de inicio",
+    history: "Historial", history_created: "Creado", history_completed: "Completado", history_reopened: "Reabierto",
+    history_reset: "Restablecimiento autom.", history_changed: "modificado", history_empty: "Sin historial", hist_title: "T\u00edtulo", history_disabled: "Desactivado",
   },
   ru: {
     my_tasks: "\u041c\u043e\u0438 \u0437\u0430\u0434\u0430\u0447\u0438",
@@ -465,6 +481,8 @@ const _TRANSLATIONS = {
     due_time_lbl: "\u0412\u0440\u0435\u043c\u044f", due_date_lbl: "\u0414\u0430\u0442\u0430", rec_mode_lbl: "\u0420\u0435\u0436\u0438\u043c",
     rec_time: "\u0412\u0440\u0435\u043c\u044f", rec_end: "\u041e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u0435", rec_end_never: "\u041d\u0438\u043a\u043e\u0433\u0434\u0430", rec_end_date: "\u041f\u043e \u0434\u0430\u0442\u0435", rec_end_count: "\u041f\u043e\u0441\u043b\u0435 N \u0440\u0430\u0437",
     rec_end_date_lbl: "\u0414\u0430\u0442\u0430 \u043e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u044f", rec_max_count_lbl: "max", rec_remaining: "\u0435\u0449\u0451 {0}", rec_start_date_lbl: "\u0414\u0430\u0442\u0430 \u043d\u0430\u0447\u0430\u043b\u0430",
+    history: "\u0418\u0441\u0442\u043e\u0440\u0438\u044f", history_created: "\u0421\u043e\u0437\u0434\u0430\u043d\u043e", history_completed: "\u0412\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043e", history_reopened: "\u041f\u0435\u0440\u0435\u043e\u0442\u043a\u0440\u044b\u0442\u043e",
+    history_reset: "\u0410\u0432\u0442\u043e\u0441\u0431\u0440\u043e\u0441", history_changed: "\u0438\u0437\u043c\u0435\u043d\u0435\u043d\u043e", history_empty: "\u041d\u0435\u0442 \u0438\u0441\u0442\u043e\u0440\u0438\u0438", hist_title: "\u0417\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a", history_disabled: "\u041e\u0442\u043a\u043b\u044e\u0447\u0435\u043d\u043e",
   },
   cs: {
     my_tasks: "Moje \u00fakoly",
@@ -511,6 +529,8 @@ const _TRANSLATIONS = {
     due_time_lbl: "\u010cas", due_date_lbl: "Datum", rec_mode_lbl: "Re\u017eim",
     rec_time: "\u010cas", rec_end: "Konec", rec_end_never: "Nikdy", rec_end_date: "K datu", rec_end_count: "Po N kr\u00e1t",
     rec_end_date_lbl: "Datum konce", rec_max_count_lbl: "max", rec_remaining: "je\u0161t\u011b {0}", rec_start_date_lbl: "Datum za\u010d\u00e1tku",
+    history: "Historie", history_created: "Vytvo\u0159eno", history_completed: "Dokon\u010deno", history_reopened: "Znovu otev\u0159eno",
+    history_reset: "Automaticky obnoveno", history_changed: "zm\u011bn\u011bno", history_empty: "\u017d\u00e1dn\u00e1 historie", hist_title: "N\u00e1zev", history_disabled: "Deaktivov\u00e1no",
   },
   da: {
     my_tasks: "Mine opgaver",
@@ -557,6 +577,8 @@ const _TRANSLATIONS = {
     due_time_lbl: "Tid", due_date_lbl: "Dato", rec_mode_lbl: "Tilstand",
     rec_time: "Tidspunkt", rec_end: "Slut", rec_end_never: "Aldrig", rec_end_date: "P\u00e5 dato", rec_end_count: "Efter N gange",
     rec_end_date_lbl: "Slutdato", rec_max_count_lbl: "max", rec_remaining: "{0} tilbage", rec_start_date_lbl: "Startdato",
+    history: "Historik", history_created: "Oprettet", history_completed: "F\u00e6rdiggjort", history_reopened: "\u00c5bnet igen",
+    history_reset: "Auto-nulstillet", history_changed: "\u00e6ndret", history_empty: "Ingen historik", hist_title: "Titel", history_disabled: "Deaktiveret",
   },
   no: {
     my_tasks: "Mine oppgaver",
@@ -603,6 +625,8 @@ const _TRANSLATIONS = {
     due_time_lbl: "Tid", due_date_lbl: "Dato", rec_mode_lbl: "Modus",
     rec_time: "Klokkeslett", rec_end: "Slutt", rec_end_never: "Aldri", rec_end_date: "P\u00e5 dato", rec_end_count: "Etter N ganger",
     rec_end_date_lbl: "Sluttdato", rec_max_count_lbl: "max", rec_remaining: "{0} igjen", rec_start_date_lbl: "Startdato",
+    history: "Historikk", history_created: "Opprettet", history_completed: "Fullf\u00f8rt", history_reopened: "\u00c5pnet igjen",
+    history_reset: "Auto-tilbakestilt", history_changed: "endret", history_empty: "Ingen historikk", hist_title: "Tittel", history_disabled: "Deaktivert",
   },
   fi: {
     my_tasks: "Omat teht\u00e4v\u00e4t",
@@ -649,6 +673,8 @@ const _TRANSLATIONS = {
     due_time_lbl: "Aika", due_date_lbl: "P\u00e4iv\u00e4m\u00e4\u00e4r\u00e4", rec_mode_lbl: "Tila",
     rec_time: "Aika", rec_end: "Loppu", rec_end_never: "Ei koskaan", rec_end_date: "P\u00e4iv\u00e4m\u00e4\u00e4r\u00e4n\u00e4", rec_end_count: "N kerran j\u00e4lkeen",
     rec_end_date_lbl: "Loppup\u00e4iv\u00e4", rec_max_count_lbl: "max", rec_remaining: "{0} j\u00e4ljell\u00e4", rec_start_date_lbl: "Alkamisp\u00e4iv\u00e4",
+    history: "Historia", history_created: "Luotu", history_completed: "Valmis", history_reopened: "Avattu uudelleen",
+    history_reset: "Automaattinen palautus", history_changed: "muutettu", history_empty: "Ei historiaa", hist_title: "Otsikko", history_disabled: "K\u00e4yt\u00f6ss\u00e4 poistettu",
   },
   hu: {
     my_tasks: "Feladataim",
@@ -695,6 +721,8 @@ const _TRANSLATIONS = {
     due_time_lbl: "Id\u0151pont", due_date_lbl: "D\u00e1tum", rec_mode_lbl: "M\u00f3d",
     rec_time: "Id\u0151pont", rec_end: "V\u00e9ge", rec_end_never: "Soha", rec_end_date: "D\u00e1tumon", rec_end_count: "N alkalom ut\u00e1n",
     rec_end_date_lbl: "V\u00e9gdatum", rec_max_count_lbl: "max", rec_remaining: "m\u00e9g {0}", rec_start_date_lbl: "Kezd\u0151 d\u00e1tum",
+    history: "El\u0151zm\u00e9nyek", history_created: "L\u00e9trehozva", history_completed: "Teljes\u00edtve", history_reopened: "\u00dajranyitva",
+    history_reset: "Automatikus visszavonas", history_changed: "m\u00f3dos\u00edtva", history_empty: "Nincs el\u0151zm\u00e9ny", hist_title: "C\u00edm", history_disabled: "Letiltva",
   },
   de: {
     my_tasks: "Meine Aufgaben",
@@ -784,6 +812,8 @@ const _TRANSLATIONS = {
     rec_mode_lbl: "Modus",
     rec_time: "Uhrzeit", rec_end: "Ende", rec_end_never: "Nie", rec_end_date: "An Datum", rec_end_count: "Nach X mal",
     rec_end_date_lbl: "Enddatum", rec_max_count_lbl: "max", rec_remaining: "noch {0}", rec_start_date_lbl: "Startdatum",
+    history: "Verlauf", history_created: "Erstellt", history_completed: "Erledigt", history_reopened: "Wieder ge\u00f6ffnet",
+    history_reset: "Automatisch zur\u00fcckgesetzt", history_changed: "ge\u00e4ndert", history_empty: "Noch kein Verlauf", hist_title: "Titel", history_disabled: "Deaktiviert",
   },
 };
 
@@ -2278,6 +2308,67 @@ class HomeTasksCard extends HTMLElement {
     deleteBtn.addEventListener("click", () => this._deleteTask(task.id, colIdx));
     const actions = this._el("div", { className: "detail-actions" }, [deleteBtn]);
 
+    // History section
+    const taskHistory = (task.history || []).slice().reverse();
+    const histContent = this._el("div", { className: "history-list" });
+    if (taskHistory.length === 0) {
+      histContent.appendChild(this._el("p", { className: "history-empty", textContent: this._t("history_empty") }));
+    } else {
+      const fieldNames = {
+        title: this._t("hist_title"),
+        due_date: this._t("due_date"),
+        due_time: this._t("due_time_lbl"),
+        priority: this._t("priority"),
+        assigned_person: this._t("assigned_to"),
+        tags: this._t("tags"),
+        notes: this._t("notes"),
+        recurrence_enabled: this._t("recurrence"),
+      };
+      const fmtPriority = (v) => v != null ? [this._t("pri_low"), this._t("pri_medium"), this._t("pri_high")][v - 1] || String(v) : "\u2013";
+      const fmtPerson = (v) => {
+        if (!v) return "\u2013";
+        return this._hass?.states?.[v]?.attributes?.friendly_name || v;
+      };
+      const fmtVal = (v, field) => {
+        if (v == null) return "\u2013";
+        if (field === "priority") return fmtPriority(v);
+        if (field === "assigned_person") return fmtPerson(v);
+        if (field === "tags") return Array.isArray(v) ? (v.join(", ") || "\u2013") : String(v);
+        return String(v);
+      };
+      for (const entry of taskHistory) {
+        const row = this._el("div", { className: "history-entry" });
+        const ts = new Date(entry.ts);
+        const tsStr = ts.toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" });
+        let icon = "\u2022", text = "";
+        if (entry.action === "created") {
+          icon = "\u2605"; text = this._t("history_created");
+        } else if (entry.action === "completed") {
+          icon = "\u2713"; text = this._t("history_completed");
+        } else if (entry.action === "reopened") {
+          icon = "\u21BA"; text = entry.by === "recurrence" ? this._t("history_reset") : this._t("history_reopened");
+        } else if (entry.action === "updated") {
+          const lbl = fieldNames[entry.field] || entry.field;
+          if (entry.field === "recurrence_enabled") {
+            text = `${lbl}: ${entry.to ? this._t("recurrence_enabled") : this._t("history_disabled")}`;
+          } else if (entry.from !== undefined || entry.to !== undefined) {
+            text = `${lbl}: ${fmtVal(entry.from, entry.field)} \u2192 ${fmtVal(entry.to, entry.field)}`;
+          } else {
+            text = `${lbl} ${this._t("history_changed")}`;
+          }
+          icon = "\u270e";
+        }
+        row.appendChild(this._el("span", { className: "history-icon", textContent: icon }));
+        row.appendChild(this._el("span", { className: "history-text", textContent: text }));
+        row.appendChild(this._el("span", { className: "history-ts", textContent: tsStr }));
+        histContent.appendChild(row);
+      }
+    }
+    const historySection = this._el("div", { className: "detail-section" }, [
+      this._el("label", { className: "detail-label", textContent: this._t("history") }),
+      histContent,
+    ]);
+
     const details = [];
     if (col.show_notes !== false) details.push(notesSection);
     if ((col.show_sub_tasks ?? col.show_sub_items) !== false) details.push(subSection);
@@ -2287,6 +2378,7 @@ class HomeTasksCard extends HTMLElement {
     if (col.show_due_date !== false) details.push(dateSection);
     if (col.show_reminders !== false) details.push(reminderSection);
     if (col.show_recurrence !== false) details.push(recurrenceSection);
+    details.push(historySection);
     details.push(actions);
     return this._el("div", { className: "task-details" }, details);
   }
@@ -2914,6 +3006,13 @@ class HomeTasksCard extends HTMLElement {
         font-size: 13px; padding: 6px 0; text-align: left; font-family: inherit;
       }
       .add-sub-btn:hover { text-decoration: underline; }
+      .history-list { display: flex; flex-direction: column; gap: 0; max-height: 220px; overflow-y: auto; }
+      .history-entry { display: grid; grid-template-columns: 18px 1fr auto; align-items: baseline; gap: 6px; padding: 5px 0; border-bottom: 1px solid var(--divider-color, rgba(128,128,128,0.15)); font-size: 12px; }
+      .history-entry:last-child { border-bottom: none; }
+      .history-icon { color: var(--secondary-text-color); text-align: center; font-size: 11px; }
+      .history-text { color: var(--primary-text-color); }
+      .history-ts { color: var(--secondary-text-color); white-space: nowrap; font-size: 11px; }
+      .history-empty { margin: 0; font-size: 12px; color: var(--secondary-text-color); }
       .detail-actions { display: flex; justify-content: flex-end; padding-top: 4px; }
       .delete-task-btn {
         background: none; border: 1px solid var(--todo-error); color: var(--todo-error);
