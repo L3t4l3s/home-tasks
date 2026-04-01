@@ -868,6 +868,10 @@ class HomeTasksCard extends HTMLElement {
     this._initialized = false;
     this._pendingRender = false;
     this._styleEl = null;
+    this._justAddedTaskId = null;
+    this._addInputRect = null;
+    this._justAppearedTaskIds = null;
+    this._filterAnimPending = false;
   }
 
   _defaultColState() {
@@ -1059,13 +1063,31 @@ class HomeTasksCard extends HTMLElement {
     const cs = this._columns[colIdx];
     const title = cs.newTaskTitle.trim();
     if (!title || !this._colListId(colIdx)) return;
+
+    // Capture add-input position for the entry animation
+    const colEl = this.shadowRoot.querySelector(`.task-list[data-col-idx="${colIdx}"]`)
+      ?.closest(".card-column");
+    const addInput = colEl?.querySelector(".add-input");
+    const addInputRect = addInput ? addInput.getBoundingClientRect() : null;
+
+    // Snapshot existing task positions (they may shift when new task is inserted)
+    const before = new Map();
+    this.shadowRoot.querySelectorAll(`.task-list[data-col-idx="${colIdx}"] .task`).forEach(el => {
+      if (el.dataset.taskId) before.set(el.dataset.taskId, el.getBoundingClientRect().top);
+    });
+
     const result = await this._callWs("home_tasks/add_task", {
       list_id: this._colListId(colIdx),
       title,
     });
     if (result) {
       cs.newTaskTitle = "";
+      this._justAddedTaskId = String(result.id);
+      this._addInputRect = addInputRect;
       await this._loadAllTasks();
+      this._justAddedTaskId = null;
+      this._addInputRect = null;
+      this._applyFlip(before, colIdx, 0.25);
     }
   }
 
@@ -1075,19 +1097,26 @@ class HomeTasksCard extends HTMLElement {
     const newCompleted = !completed;
     const task = cs.tasks.find(t => t.id === taskId);
     const hasRecurrence = task && task.recurrence_enabled && task.recurrence_unit;
+
+    // auto_delete path → route through _deleteTask to reuse exit animation
     if (newCompleted && col.auto_delete_completed && !hasRecurrence) {
-      await this._callWs("home_tasks/delete_task", {
-        list_id: this._colListId(colIdx),
-        task_id: taskId,
-      });
-    } else {
-      await this._callWs("home_tasks/update_task", {
-        list_id: this._colListId(colIdx),
-        task_id: taskId,
-        completed: newCompleted,
-      });
+      await this._deleteTask(taskId, colIdx);
+      return;
     }
+
+    // Snapshot all visible task positions for FLIP (completion/reopen moves the task)
+    const before = new Map();
+    this.shadowRoot.querySelectorAll(`.task-list[data-col-idx="${colIdx}"] .task`).forEach(el => {
+      if (el.dataset.taskId) before.set(el.dataset.taskId, el.getBoundingClientRect().top);
+    });
+
+    await this._callWs("home_tasks/update_task", {
+      list_id: this._colListId(colIdx),
+      task_id: taskId,
+      completed: newCompleted,
+    });
     await this._loadAllTasks();
+    this._applyFlip(before, colIdx, 0.28);
   }
 
   async _updateTaskTitle(taskId, title, colIdx) {
@@ -1127,12 +1156,44 @@ class HomeTasksCard extends HTMLElement {
   }
 
   async _deleteTask(taskId, colIdx) {
-    await this._callWs("home_tasks/delete_task", {
-      list_id: this._colListId(colIdx),
-      task_id: taskId,
-    });
-    this._expandedTasks.delete(taskId);
-    await this._loadAllTasks();
+    const taskEl = this.shadowRoot.querySelector(
+      `.task[data-task-id="${CSS.escape(String(taskId))}"]`
+    );
+
+    if (taskEl) {
+      // Snapshot positions of all OTHER tasks (deleted task still occupies layout space)
+      const before = new Map();
+      this.shadowRoot.querySelectorAll(`.task-list[data-col-idx="${colIdx}"] .task`).forEach(el => {
+        const id = el.dataset.taskId;
+        if (id && id !== String(taskId)) before.set(id, el.getBoundingClientRect().top);
+      });
+
+      // Animate the task out
+      await new Promise(resolve => {
+        taskEl.style.transition = "opacity 0.18s ease, transform 0.18s ease";
+        taskEl.style.opacity = "0";
+        taskEl.style.transform = "scale(0.95)";
+        taskEl.addEventListener("transitionend", resolve, { once: true });
+        setTimeout(resolve, 250); // safety fallback
+      });
+
+      await this._callWs("home_tasks/delete_task", {
+        list_id: this._colListId(colIdx),
+        task_id: taskId,
+      });
+      this._expandedTasks.delete(taskId);
+      await this._loadAllTasks();
+      this._applyFlip(before, colIdx, 0.22);
+
+    } else {
+      // Fallback: task not in DOM, delete without animation
+      await this._callWs("home_tasks/delete_task", {
+        list_id: this._colListId(colIdx),
+        task_id: taskId,
+      });
+      this._expandedTasks.delete(taskId);
+      await this._loadAllTasks();
+    }
   }
 
   async _addSubTask(taskId, colIdx) {
@@ -1279,6 +1340,90 @@ class HomeTasksCard extends HTMLElement {
       };
       default: return (a, b) => a.sort_order - b.sort_order;
     }
+  }
+
+  // --- FLIP & Filter Animation Helpers ---
+
+  _applyFlip(before, colIdx, duration = 0.3) {
+    if (!before || before.size === 0) return;
+    // Pass 1: read ALL new positions first (no style writes yet — avoids cascading reflows)
+    const newPositions = new Map();
+    this.shadowRoot
+      .querySelectorAll(`.task-list[data-col-idx="${colIdx}"] .task`)
+      .forEach(el => {
+        const id = el.dataset.taskId;
+        if (id && before.has(id)) newPositions.set(id, el.getBoundingClientRect().top);
+      });
+    // Pass 2: apply transforms
+    const flipEls = [];
+    newPositions.forEach((newTop, id) => {
+      const el = this.shadowRoot.querySelector(
+        `.task-list[data-col-idx="${colIdx}"] .task[data-task-id="${CSS.escape(id)}"]`
+      );
+      if (!el) return;
+      const dy = before.get(id) - newTop;
+      if (Math.abs(dy) < 1) return;
+      el.style.transition = "none";
+      el.style.transform = `translateY(${dy}px)`;
+      flipEls.push(el);
+    });
+    if (flipEls.length === 0) return;
+    flipEls[0].getBoundingClientRect(); // single reflow commits all start states
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        flipEls.forEach(el => {
+          el.style.transition = `transform ${duration}s ease`;
+          el.style.transform = "";
+          el.addEventListener("transitionend", () => {
+            el.style.transition = "";
+            el.style.transform = "";
+          }, { once: true });
+        });
+      });
+    });
+  }
+
+  _animateFilterChange(colIdx, applyFilterFn) {
+    if (this._filterAnimPending) {
+      applyFilterFn();
+      this._render();
+      return;
+    }
+    const taskList = this.shadowRoot.querySelector(`.task-list[data-col-idx="${colIdx}"]`);
+    if (!taskList) { applyFilterFn(); this._render(); return; }
+
+    // Snapshot current visible tasks
+    const before = new Map();
+    const currentIds = new Set();
+    taskList.querySelectorAll(".task[data-task-id]").forEach(el => {
+      const id = el.dataset.taskId;
+      if (!id) return;
+      before.set(id, el.getBoundingClientRect().top);
+      currentIds.add(id);
+    });
+
+    // Apply filter change to compute future set
+    applyFilterFn();
+    const futureIds = new Set(this._filteredTasks(colIdx).map(t => String(t.id)));
+
+    const disappearing = [...currentIds].filter(id => !futureIds.has(id));
+    const appearing    = [...futureIds].filter(id => !currentIds.has(id));
+
+    // Animate exit on disappearing tasks
+    disappearing.forEach(id => {
+      const el = taskList.querySelector(`.task[data-task-id="${CSS.escape(id)}"]`);
+      if (el) el.classList.add("task-anim-exit");
+    });
+
+    const delay = disappearing.length > 0 ? 175 : 0;
+    this._filterAnimPending = true;
+    setTimeout(() => {
+      this._filterAnimPending = false;
+      this._justAppearedTaskIds = new Set(appearing);
+      this._render();
+      this._justAppearedTaskIds = null;
+      this._applyFlip(before, colIdx, 0.25);
+    }, delay);
   }
 
   // --- Helpers ---
@@ -1465,33 +1610,7 @@ class HomeTasksCard extends HTMLElement {
         cs.sortBy = key;
         cs.sortOpen = false;
         this._render();
-        // FLIP: CSS transition — set transform synchronously so the browser
-        // sees the old position, force ONE reflow to commit it, then transition to 0.
-        const flipEls = [];
-        this.shadowRoot.querySelectorAll(`.task-list[data-col-idx="${colIdx}"] .task`).forEach(el => {
-          const id = el.dataset.taskId;
-          if (!id || !before.has(id)) return;
-          const dy = before.get(id) - el.getBoundingClientRect().top;
-          if (Math.abs(dy) < 1) return;
-          el.style.transition = "none";
-          el.style.transform = `translateY(${dy}px)`;
-          flipEls.push(el);
-        });
-        if (flipEls.length) {
-          flipEls[0].getBoundingClientRect(); // force reflow so start positions are committed
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              flipEls.forEach(el => {
-                el.style.transition = "transform 0.3s ease";
-                el.style.transform = "";
-                el.addEventListener("transitionend", () => {
-                  el.style.transition = "";
-                  el.style.transform = "";
-                }, { once: true });
-              });
-            });
-          });
-        }
+        this._applyFlip(before, colIdx, 0.3);
       });
       sortDropdown.appendChild(opt);
     }
@@ -1529,20 +1648,22 @@ class HomeTasksCard extends HTMLElement {
             "data-tag": tag,
           });
           chip.addEventListener("click", () => {
-            if (cs.tagFilters.has(tag)) cs.tagFilters.delete(tag);
-            else cs.tagFilters.add(tag);
-            this._render();
-            // Double-rAF: first frame commits the start state (no class),
-            // second frame adds the class to trigger the CSS animation.
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                this.shadowRoot.querySelectorAll(`.tag-chip[data-tag="${CSS.escape(tag)}"]`)
-                  .forEach(c => {
-                    c.classList.add("chip-anim");
-                    c.addEventListener("animationend", () => c.classList.remove("chip-anim"), { once: true });
-                  });
-              });
+            this._animateFilterChange(colIdx, () => {
+              if (cs.tagFilters.has(tag)) cs.tagFilters.delete(tag);
+              else cs.tagFilters.add(tag);
             });
+            // chip-pop: delay so render has completed before querying new chips
+            setTimeout(() => {
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  this.shadowRoot.querySelectorAll(`.tag-chip[data-tag="${CSS.escape(tag)}"]`)
+                    .forEach(c => {
+                      c.classList.add("chip-anim");
+                      c.addEventListener("animationend", () => c.classList.remove("chip-anim"), { once: true });
+                    });
+                });
+              });
+            }, 0);
           });
           chipChildren.push(chip);
         }
@@ -1571,18 +1692,21 @@ class HomeTasksCard extends HTMLElement {
             "data-eid": eid,
           });
           chip.addEventListener("click", () => {
-            if (cs.personFilters.has(eid)) cs.personFilters.delete(eid);
-            else cs.personFilters.add(eid);
-            this._render();
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                this.shadowRoot.querySelectorAll(`.person-chip[data-eid="${CSS.escape(eid)}"]`)
-                  .forEach(c => {
-                    c.classList.add("chip-anim");
-                    c.addEventListener("animationend", () => c.classList.remove("chip-anim"), { once: true });
-                  });
-              });
+            this._animateFilterChange(colIdx, () => {
+              if (cs.personFilters.has(eid)) cs.personFilters.delete(eid);
+              else cs.personFilters.add(eid);
             });
+            setTimeout(() => {
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  this.shadowRoot.querySelectorAll(`.person-chip[data-eid="${CSS.escape(eid)}"]`)
+                    .forEach(c => {
+                      c.classList.add("chip-anim");
+                      c.addEventListener("animationend", () => c.classList.remove("chip-anim"), { once: true });
+                    });
+                });
+              });
+            }, 0);
           });
           chipChildren.push(chip);
         }
@@ -1673,8 +1797,7 @@ class HomeTasksCard extends HTMLElement {
       textContent: label,
     });
     btn.addEventListener("click", () => {
-      cs.filter = value;
-      this._render();
+      this._animateFilterChange(colIdx, () => { cs.filter = value; });
     });
     return btn;
   }
@@ -1787,11 +1910,18 @@ class HomeTasksCard extends HTMLElement {
       });
       assignedBadge.addEventListener("click", (e) => {
         e.stopPropagation();
-        if (cs.personFilters.has(task.assigned_person)) cs.personFilters.delete(task.assigned_person);
-        else cs.personFilters.add(task.assigned_person);
-        this._render();
-        this.shadowRoot.querySelectorAll(`.assigned-badge[data-eid="${CSS.escape(task.assigned_person)}"]`)
-          .forEach(b => { void b.offsetWidth; b.classList.add("chip-anim"); });
+        this._animateFilterChange(colIdx, () => {
+          if (cs.personFilters.has(task.assigned_person)) cs.personFilters.delete(task.assigned_person);
+          else cs.personFilters.add(task.assigned_person);
+        });
+        setTimeout(() => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              this.shadowRoot.querySelectorAll(`.assigned-badge[data-eid="${CSS.escape(task.assigned_person)}"]`)
+                .forEach(b => { b.classList.add("chip-anim"); b.addEventListener("animationend", () => b.classList.remove("chip-anim"), { once: true }); });
+            });
+          });
+        }, 0);
       });
       metaChildren.push(assignedBadge);
     }
@@ -1805,11 +1935,18 @@ class HomeTasksCard extends HTMLElement {
         });
         tagBadge.addEventListener("click", (e) => {
           e.stopPropagation();
-          if (cs.tagFilters.has(tag)) cs.tagFilters.delete(tag);
-          else cs.tagFilters.add(tag);
-          this._render();
-          this.shadowRoot.querySelectorAll(`.tag-badge[data-tag="${CSS.escape(tag)}"]`)
-            .forEach(b => { void b.offsetWidth; b.classList.add("chip-anim"); });
+          this._animateFilterChange(colIdx, () => {
+            if (cs.tagFilters.has(tag)) cs.tagFilters.delete(tag);
+            else cs.tagFilters.add(tag);
+          });
+          setTimeout(() => {
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                this.shadowRoot.querySelectorAll(`.tag-badge[data-tag="${CSS.escape(tag)}"]`)
+                  .forEach(b => { b.classList.add("chip-anim"); b.addEventListener("animationend", () => b.classList.remove("chip-anim"), { once: true }); });
+              });
+            });
+          }, 0);
         });
         metaChildren.push(tagBadge);
       }
@@ -1893,6 +2030,46 @@ class HomeTasksCard extends HTMLElement {
     }
 
     this._attachDragToTask(taskEl, task.id, colIdx);
+
+    // Filter enter animation: task is newly appearing after a filter change
+    if (this._justAppearedTaskIds && this._justAppearedTaskIds.has(String(task.id))) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const el = this.shadowRoot.querySelector(
+            `.task-list[data-col-idx="${colIdx}"] .task[data-task-id="${CSS.escape(String(task.id))}"]`
+          );
+          if (el) {
+            el.classList.add("task-anim-enter");
+            el.addEventListener("animationend", () => el.classList.remove("task-anim-enter"), { once: true });
+          }
+        });
+      });
+    }
+
+    // Creation animation: task slides in from the add-input field position
+    if (this._justAddedTaskId && this._justAddedTaskId === String(task.id)) {
+      const inputRect = this._addInputRect;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const el = this.shadowRoot.querySelector(
+            `.task-list[data-col-idx="${colIdx}"] .task[data-task-id="${CSS.escape(String(task.id))}"]`
+          );
+          if (!el) return;
+          const taskTop = el.getBoundingClientRect().top;
+          const originDy = inputRect ? (inputRect.bottom - taskTop) : -30;
+          el.style.transition = "none";
+          el.style.opacity = "0";
+          el.style.transform = `translateY(${originDy}px)`;
+          el.getBoundingClientRect(); // commit start state
+          el.style.transition = "opacity 0.25s ease, transform 0.25s ease";
+          el.style.opacity = "";
+          el.style.transform = "";
+          el.addEventListener("transitionend", () => {
+            el.style.transition = "";
+          }, { once: true });
+        });
+      });
+    }
 
     return taskEl;
   }
@@ -3219,6 +3396,23 @@ class HomeTasksCard extends HTMLElement {
       .compact .expand-btn ha-icon { --mdc-icon-size: 16px; }
       .compact .empty-state { padding: 16px; font-size: 13px; }
       .compact .task-details-inner { padding: 8px 10px; }
+
+      @keyframes task-exit {
+        0%   { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; transform: translateY(-8px); }
+      }
+      @keyframes task-enter {
+        0%   { opacity: 0; transform: translateY(10px); }
+        100% { opacity: 1; transform: translateY(0); }
+      }
+      .task-anim-exit {
+        animation: task-exit 0.17s ease-out forwards;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      .task-anim-enter {
+        animation: task-enter 0.22s ease-out;
+      }
     `;
   }
 
