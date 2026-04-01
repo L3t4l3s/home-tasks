@@ -3790,7 +3790,10 @@ class HomeTasksCardEditor extends HTMLElement {
       item.textContent = l.name;
       listSelect.appendChild(item);
     }
-    listSelect.addEventListener("selected", () => updateCol({ list_id: listSelect.value || undefined }));
+    listSelect.addEventListener("closed", () => {
+      const newVal = listSelect.value || undefined;
+      if (newVal !== col.list_id) updateCol({ list_id: newVal });
+    });
 
     // Title input
     const titleInput = document.createElement("ha-textfield");
@@ -3817,7 +3820,10 @@ class HomeTasksCardEditor extends HTMLElement {
       item.textContent = this._t(key);
       filterSelect.appendChild(item);
     }
-    filterSelect.addEventListener("selected", () => updateCol({ default_filter: filterSelect.value }));
+    filterSelect.addEventListener("closed", () => {
+      const newVal = filterSelect.value;
+      if (newVal && newVal !== (col.default_filter || "all")) updateCol({ default_filter: newVal });
+    });
 
     // Default sort select
     const sortSelect = document.createElement("ha-select");
@@ -3833,7 +3839,10 @@ class HomeTasksCardEditor extends HTMLElement {
       item.textContent = this._t(key);
       sortSelect.appendChild(item);
     }
-    sortSelect.addEventListener("selected", () => updateCol({ default_sort: sortSelect.value }));
+    sortSelect.addEventListener("closed", () => {
+      const newVal = sortSelect.value;
+      if (newVal && newVal !== (col.default_sort || "manual")) updateCol({ default_sort: newVal });
+    });
 
     // Toggle helper — uses ha-switch for native HA look
     const makeToggle = (_id, labelKey, configKey, defaultOn = true) => {
