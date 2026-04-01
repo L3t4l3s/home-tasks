@@ -1478,14 +1478,18 @@ class HomeTasksCard extends HTMLElement {
           flipEls.push(el);
         });
         if (flipEls.length) {
-          flipEls[0].getBoundingClientRect(); // single forced reflow for all
-          flipEls.forEach(el => {
-            el.style.transition = "transform 0.3s ease";
-            el.style.transform = "";
-            el.addEventListener("transitionend", () => {
-              el.style.transition = "";
-              el.style.transform = "";
-            }, { once: true });
+          flipEls[0].getBoundingClientRect(); // force reflow so start positions are committed
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              flipEls.forEach(el => {
+                el.style.transition = "transform 0.3s ease";
+                el.style.transform = "";
+                el.addEventListener("transitionend", () => {
+                  el.style.transition = "";
+                  el.style.transform = "";
+                }, { once: true });
+              });
+            });
           });
         }
       });
@@ -1528,11 +1532,17 @@ class HomeTasksCard extends HTMLElement {
             if (cs.tagFilters.has(tag)) cs.tagFilters.delete(tag);
             else cs.tagFilters.add(tag);
             this._render();
-            // Force reflow before adding the class — without it the browser never
-            // sees the freshly-created element WITHOUT the class, so the animation
-            // would not fire.
-            this.shadowRoot.querySelectorAll(`.tag-chip[data-tag="${CSS.escape(tag)}"]`)
-              .forEach(c => { void c.offsetWidth; c.classList.add("chip-anim"); });
+            // Double-rAF: first frame commits the start state (no class),
+            // second frame adds the class to trigger the CSS animation.
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                this.shadowRoot.querySelectorAll(`.tag-chip[data-tag="${CSS.escape(tag)}"]`)
+                  .forEach(c => {
+                    c.classList.add("chip-anim");
+                    c.addEventListener("animationend", () => c.classList.remove("chip-anim"), { once: true });
+                  });
+              });
+            });
           });
           chipChildren.push(chip);
         }
@@ -1564,8 +1574,15 @@ class HomeTasksCard extends HTMLElement {
             if (cs.personFilters.has(eid)) cs.personFilters.delete(eid);
             else cs.personFilters.add(eid);
             this._render();
-            this.shadowRoot.querySelectorAll(`.person-chip[data-eid="${CSS.escape(eid)}"]`)
-              .forEach(c => { void c.offsetWidth; c.classList.add("chip-anim"); });
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                this.shadowRoot.querySelectorAll(`.person-chip[data-eid="${CSS.escape(eid)}"]`)
+                  .forEach(c => {
+                    c.classList.add("chip-anim");
+                    c.addEventListener("animationend", () => c.classList.remove("chip-anim"), { once: true });
+                  });
+              });
+            });
           });
           chipChildren.push(chip);
         }
@@ -1827,26 +1844,23 @@ class HomeTasksCard extends HTMLElement {
       if (e.target.closest(".assigned-badge")) return;
       if (e.target.closest(".edit-title-input")) return;
       if (this._expandedTasks.has(task.id)) {
-        // Animate close via a zero-padding wrapper — max-height:0 on the wrapper
-        // truly collapses to 0 (unlike on the padded .task-details element itself).
+        // Delete from state BEFORE animation — any re-render during the animation
+        // will correctly see the task as collapsed.
+        this._expandedTasks.delete(task.id);
         const detailsEl = taskEl.querySelector(".task-details");
         if (detailsEl) {
           const h = detailsEl.offsetHeight;
-          if (!h) { this._expandedTasks.delete(task.id); this._render(); return; }
-          const wrap = document.createElement("div");
-          wrap.style.cssText = `overflow:hidden;max-height:${h}px;`;
-          detailsEl.replaceWith(wrap);
-          wrap.appendChild(detailsEl);
+          if (!h) { this._render(); return; }
+          detailsEl.style.height = h + "px"; // freeze at current visible height
           requestAnimationFrame(() => {
-            wrap.style.transition = "max-height 0.22s ease-in";
-            wrap.style.maxHeight = "0";
-            wrap.addEventListener("transitionend", () => {
-              this._expandedTasks.delete(task.id);
-              this._render();
-            }, { once: true });
+            requestAnimationFrame(() => {
+              detailsEl.style.height = "0";
+              detailsEl.addEventListener("transitionend", () => {
+                this._render();
+              }, { once: true });
+            });
           });
         } else {
-          this._expandedTasks.delete(task.id);
           this._render();
         }
       } else {
@@ -1861,23 +1875,20 @@ class HomeTasksCard extends HTMLElement {
 
     if (isExpanded) {
       const detailsEl = this._buildTaskDetails(task, colIdx);
+      taskEl.appendChild(detailsEl);
       if (this._justExpandedTaskId === task.id) {
-        // Wrap in a zero-padding div and animate the WRAPPER's max-height.
-        // Animating max-height on the padded .task-details directly would start
-        // at padding-height (not 0) because max-height doesn't include padding.
-        const wrap = document.createElement("div");
-        wrap.style.cssText = "overflow:hidden;max-height:0;";
-        taskEl.appendChild(wrap);
-        wrap.appendChild(detailsEl);
+        // .task-details starts at height:0 (CSS default). Animate to full height.
         requestAnimationFrame(() => {
-          wrap.style.transition = "max-height 0.28s ease-out";
-          wrap.style.maxHeight = "800px";
-          wrap.addEventListener("transitionend", () => {
-            wrap.replaceWith(detailsEl); // unwrap after animation completes
-          }, { once: true });
+          requestAnimationFrame(() => {
+            detailsEl.style.height = detailsEl.scrollHeight + "px";
+            detailsEl.addEventListener("transitionend", () => {
+              detailsEl.style.height = "auto"; // release constraint once fully open
+            }, { once: true });
+          });
         });
       } else {
-        taskEl.appendChild(detailsEl);
+        // Already open (after re-render): show without animation
+        detailsEl.style.height = "auto";
       }
     }
 
@@ -2234,7 +2245,7 @@ class HomeTasksCard extends HTMLElement {
         recurrence_end_type: endType,
         recurrence_end_date: endType === "date" ? (recurrenceEndDateInput.value || null) : null,
         recurrence_max_count: endType === "count" ? (parseInt(recurrenceMaxCountInput.value) || null) : null,
-      })?.then(() => this._loadAllTasks());
+      })?.then(() => setTimeout(() => this._loadAllTasks(), 250));
     });
 
     recurrenceModeSelect.addEventListener("change", () => {
@@ -2488,7 +2499,8 @@ class HomeTasksCard extends HTMLElement {
     if (col.show_recurrence !== false) details.push(recurrenceSection);
     if (col.show_history) details.push(historySection);
     details.push(actions);
-    return this._el("div", { className: "task-details" }, details);
+    const inner = this._el("div", { className: "task-details-inner" }, details);
+    return this._el("div", { className: "task-details" }, [inner]);
   }
 
   _buildSubTask(taskId, sub, colIdx) {
@@ -3086,9 +3098,13 @@ class HomeTasksCard extends HTMLElement {
       .expand-btn ha-icon { --mdc-icon-size: 18px; transition: transform 0.2s; }
       .expand-btn.expanded ha-icon { transform: rotate(180deg); }
       .task-details {
-        padding: 8px 12px 12px 12px; border-top: 1px solid var(--todo-divider);
-        display: flex; flex-direction: column; gap: 12px; overflow-x: hidden;
-        box-sizing: border-box;
+        border-top: 1px solid var(--todo-divider);
+        overflow: hidden; box-sizing: border-box;
+        height: 0; transition: height 0.25s ease;
+      }
+      .task-details-inner {
+        padding: 8px 12px 12px 12px; display: flex; flex-direction: column; gap: 12px;
+        overflow-x: hidden;
       }
       .detail-section { display: flex; flex-direction: column; gap: 6px; }
       .detail-label {
@@ -3202,7 +3218,7 @@ class HomeTasksCard extends HTMLElement {
       .compact .expand-btn { padding: 2px; }
       .compact .expand-btn ha-icon { --mdc-icon-size: 16px; }
       .compact .empty-state { padding: 16px; font-size: 13px; }
-      .compact .task-details { padding: 8px 10px; }
+      .compact .task-details-inner { padding: 8px 10px; }
     `;
   }
 
@@ -3244,7 +3260,7 @@ class HomeTasksCardEditor extends HTMLElement {
     this._editorTab = 0;
     this._editorCodeMode = {};  // { tabIdx: bool }
     this._sectionOpen = {};     // { translationKey: bool } — persists across re-renders
-    this._ownConfigJson = null; // JSON of config we last fired, to skip the echo setConfig call
+    this._ignoreNextSetConfig = false; // skip the echo setConfig() call after _fireChanged
   }
 
   _t(key, ...args) {
@@ -3297,12 +3313,10 @@ class HomeTasksCardEditor extends HTMLElement {
     }
 
     // Skip re-render if this setConfig is the echo of our own _fireChanged call
-    const incomingJson = JSON.stringify(this._config);
-    if (this._ownConfigJson !== null && this._ownConfigJson === incomingJson) {
-      this._ownConfigJson = null;
+    if (this._ignoreNextSetConfig) {
+      this._ignoreNextSetConfig = false;
       return;
     }
-    this._ownConfigJson = null;
     if (this._listsLoaded) {
       this._render();
     }
@@ -3679,12 +3693,14 @@ class HomeTasksCardEditor extends HTMLElement {
           if (!h) { det.open = false; return; }
           wrap.style.cssText = `overflow:hidden;max-height:${h}px;`;
           requestAnimationFrame(() => {
-            wrap.style.transition = "max-height 0.22s ease-in";
-            wrap.style.maxHeight = "0";
-            wrap.addEventListener("transitionend", () => {
-              det.open = false;
-              wrap.style.cssText = "";
-            }, { once: true });
+            requestAnimationFrame(() => {
+              wrap.style.transition = "max-height 0.22s ease-in";
+              wrap.style.maxHeight = "0";
+              wrap.addEventListener("transitionend", () => {
+                det.open = false;
+                wrap.style.cssText = "";
+              }, { once: true });
+            });
           });
         } else {
           // Mark open immediately so any mid-animation re-render preserves state
@@ -3692,11 +3708,13 @@ class HomeTasksCardEditor extends HTMLElement {
           det.open = true;
           wrap.style.cssText = "overflow:hidden;max-height:0;";
           requestAnimationFrame(() => {
-            wrap.style.transition = "max-height 0.28s ease-out";
-            wrap.style.maxHeight = "800px";
-            wrap.addEventListener("transitionend", () => {
-              wrap.style.cssText = "";
-            }, { once: true });
+            requestAnimationFrame(() => {
+              wrap.style.transition = "max-height 0.28s ease-out";
+              wrap.style.maxHeight = "800px";
+              wrap.addEventListener("transitionend", () => {
+                wrap.style.cssText = "";
+              }, { once: true });
+            });
           });
         }
       });
@@ -3736,9 +3754,8 @@ class HomeTasksCardEditor extends HTMLElement {
   }
 
   _fireChanged() {
-    // Save a JSON snapshot of the config we're about to fire. When HA echoes it
-    // back via setConfig() (sync or async), we compare and skip the re-render.
-    this._ownConfigJson = JSON.stringify(this._config);
+    // Flag so the immediate echo setConfig() from HA is ignored (no re-render).
+    this._ignoreNextSetConfig = true;
     this.dispatchEvent(new CustomEvent("config-changed", {
       detail: { config: this._config },
       bubbles: true,
