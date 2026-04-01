@@ -1780,6 +1780,7 @@ class HomeTasksCard extends HTMLElement {
       if (e.target.closest(".checkbox-container")) return;
       if (e.target.closest(".tag-badge")) return;
       if (e.target.closest(".assigned-badge")) return;
+      if (e.target.closest(".edit-title-input")) return;
       if (this._expandedTasks.has(task.id)) this._expandedTasks.delete(task.id);
       else this._expandedTasks.add(task.id);
       this._render();
