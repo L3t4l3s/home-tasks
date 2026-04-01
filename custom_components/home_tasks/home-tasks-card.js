@@ -860,7 +860,6 @@ class HomeTasksCard extends HTMLElement {
     this._touchClone = null;
     this._touchStartTimer = null;
     this._touchOffsetY = 0;
-    this._touchBound = {};
     this._draggedSubTaskId = null;
     this._subTouchClone = null;
     this._subTouchStartTimer = null;
@@ -3634,8 +3633,9 @@ class HomeTasksCardEditor extends HTMLElement {
       sum.addEventListener("click", (e) => {
         e.preventDefault();
         if (det.open) {
-          // Animate close: fix current height, then transition to 0
-          content.style.height = content.scrollHeight + "px";
+          const h = content.scrollHeight;
+          if (!h) { det.open = false; content.style.cssText = ""; this._sectionOpen[sectionId] = false; return; }
+          content.style.height = h + "px";
           content.style.overflow = "hidden";
           requestAnimationFrame(() => {
             content.style.transition = "height 0.2s ease-in";
@@ -3649,6 +3649,7 @@ class HomeTasksCardEditor extends HTMLElement {
         } else {
           det.open = true;
           const h = content.scrollHeight;
+          if (!h) { content.style.cssText = ""; this._sectionOpen[sectionId] = true; return; }
           content.style.cssText = "height:0;overflow:hidden;";
           requestAnimationFrame(() => {
             content.style.transition = "height 0.25s ease-out";

@@ -34,6 +34,12 @@ _MAX_HISTORY = 50  # max history entries per task
 _HISTORY_FIELDS = ("title", "due_date", "due_time", "priority", "assigned_person", "tags", "notes", "recurrence_enabled")
 
 
+def _trim_history(hist: list) -> None:
+    """Trim history in-place to _MAX_HISTORY entries."""
+    if len(hist) > _MAX_HISTORY:
+        del hist[:-_MAX_HISTORY]
+
+
 def validate_text(value: str, max_length: int, field_name: str) -> str:
     """Validate and return a trimmed text field."""
     if not isinstance(value, str):
@@ -369,8 +375,7 @@ class HomeTasksStore:
             if new_hist:
                 hist = task.setdefault("history", [])
                 hist.extend(new_hist)
-                if len(hist) > _MAX_HISTORY:
-                    task["history"] = hist[-_MAX_HISTORY:]
+                _trim_history(hist)
 
         # Notify reminder scheduler when due date/time or reminders change
         if self.on_reminders_changed and (
@@ -405,8 +410,7 @@ class HomeTasksStore:
         _rec_entry = {"ts": datetime.now(timezone.utc).isoformat(), "action": "reopened", "by": actor or "recurrence"}
         hist = task.setdefault("history", [])
         hist.append(_rec_entry)
-        if len(hist) > _MAX_HISTORY:
-            task["history"] = hist[-_MAX_HISTORY:]
+        _trim_history(hist)
         await self._async_save()
 
         if self.on_task_reopened:

@@ -28,6 +28,7 @@ DATA_RECURRENCE_TIMERS = f"{DOMAIN}_recurrence_timers"
 DATA_REMINDER_TIMERS = f"{DOMAIN}_reminder_timers"
 DATA_DUE_CHECK_UNSUB = f"{DOMAIN}_due_check_unsub"
 DATA_DUE_FIRED = f"{DOMAIN}_due_fired"
+DATA_DUE_STARTUP_DONE = f"{DOMAIN}_due_startup_done"
 
 DUE_CHECK_INTERVAL = timedelta(hours=1)
 
@@ -149,6 +150,7 @@ def _async_register_due_checker(hass: HomeAssistant) -> None:
     if hass.data.get(DATA_DUE_CHECK_UNSUB):
         return
 
+    @callback
     def _periodic_check(_now=None) -> None:
         hass.async_create_task(_async_check_due_dates(hass))
 
@@ -681,8 +683,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _recover_recurrence_timers(hass, entry.entry_id, store)
     _recover_reminder_timers(hass, entry.entry_id, store)
 
-    # Run due-date check now that this store is loaded
-    hass.async_create_task(_async_check_due_dates(hass))
+    # Run due-date check once after all entries are loaded (iterates all stores)
+    if not hass.data.get(DATA_DUE_STARTUP_DONE):
+        hass.data[DATA_DUE_STARTUP_DONE] = True
+        hass.async_create_task(_async_check_due_dates(hass))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
