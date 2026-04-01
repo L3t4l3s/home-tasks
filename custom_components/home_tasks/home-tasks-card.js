@@ -1781,14 +1781,46 @@ class HomeTasksCard extends HTMLElement {
       if (e.target.closest(".tag-badge")) return;
       if (e.target.closest(".assigned-badge")) return;
       if (e.target.closest(".edit-title-input")) return;
-      if (this._expandedTasks.has(task.id)) this._expandedTasks.delete(task.id);
-      else this._expandedTasks.add(task.id);
-      this._render();
+      if (this._expandedTasks.has(task.id)) {
+        // Animate close, then re-render
+        const detailsEl = taskEl.querySelector(".task-details");
+        if (detailsEl) {
+          const h = detailsEl.scrollHeight;
+          detailsEl.animate(
+            [{ height: h + "px", overflow: "hidden" }, { height: "0px", overflow: "hidden" }],
+            { duration: 200, easing: "ease-in" }
+          );
+          setTimeout(() => { this._expandedTasks.delete(task.id); this._render(); }, 200);
+        } else {
+          this._expandedTasks.delete(task.id);
+          this._render();
+        }
+      } else {
+        // Re-render with expanded state, then animate open
+        this._justExpandedTaskId = task.id;
+        this._expandedTasks.add(task.id);
+        this._render();
+        this._justExpandedTaskId = null;
+      }
     });
     taskEl.appendChild(mainRow);
 
     if (isExpanded) {
-      taskEl.appendChild(this._buildTaskDetails(task, colIdx));
+      const detailsEl = this._buildTaskDetails(task, colIdx);
+      if (this._justExpandedTaskId === task.id) {
+        detailsEl.style.height = "0px";
+        detailsEl.style.overflow = "hidden";
+        taskEl.appendChild(detailsEl);
+        const h = detailsEl.scrollHeight;
+        requestAnimationFrame(() => {
+          detailsEl.animate(
+            [{ height: "0px", overflow: "hidden" }, { height: h + "px", overflow: "hidden" }],
+            { duration: 250, easing: "ease-out" }
+          ).onfinish = () => { detailsEl.style.height = ""; detailsEl.style.overflow = ""; };
+        });
+      } else {
+        taskEl.appendChild(detailsEl);
+      }
     }
 
     this._attachDragToTask(taskEl, task.id, colIdx);
@@ -2549,6 +2581,11 @@ class HomeTasksCard extends HTMLElement {
     if (!draggedEl || !targetEl || draggedEl === targetEl) return;
     const targetList = targetEl.parentNode;
     if (!targetList) return;
+
+    // FLIP: snapshot Y positions of non-dragging siblings before move
+    const siblings = [...targetList.querySelectorAll(".task:not(.dragging)")];
+    const before = new Map(siblings.map(el => [el, el.getBoundingClientRect().top]));
+
     const draggedRect = draggedEl.getBoundingClientRect();
     const targetRect = targetEl.getBoundingClientRect();
     if (draggedRect.top < targetRect.top) {
@@ -2556,17 +2593,54 @@ class HomeTasksCard extends HTMLElement {
     } else {
       targetList.insertBefore(draggedEl, targetEl);
     }
+
+    // FLIP: animate siblings from their previous position to the new one
+    siblings.forEach(el => {
+      const dy = (before.get(el) ?? el.getBoundingClientRect().top) - el.getBoundingClientRect().top;
+      if (Math.abs(dy) < 1) return;
+      el.style.transition = "none";
+      el.style.transform = `translateY(${dy}px)`;
+      requestAnimationFrame(() => {
+        el.style.transition = "transform 0.18s ease";
+        el.style.transform = "";
+        el.addEventListener("transitionend", () => {
+          el.style.transition = "";
+          el.style.transform = "";
+        }, { once: true });
+      });
+    });
   }
 
   _liveMoveSubTask(draggedEl, targetEl) {
     if (!draggedEl || !targetEl || draggedEl === targetEl) return;
+    const list = targetEl.parentNode;
+    if (!list) return;
+
+    const siblings = [...list.querySelectorAll(".sub-task:not(.dragging)")];
+    const before = new Map(siblings.map(el => [el, el.getBoundingClientRect().top]));
+
     const r1 = draggedEl.getBoundingClientRect();
     const r2 = targetEl.getBoundingClientRect();
     if (r1.top < r2.top) {
-      targetEl.parentNode.insertBefore(draggedEl, targetEl.nextSibling);
+      list.insertBefore(draggedEl, targetEl.nextSibling);
     } else {
-      targetEl.parentNode.insertBefore(draggedEl, targetEl);
+      list.insertBefore(draggedEl, targetEl);
     }
+
+    siblings.forEach(el => {
+      const dy = (before.get(el) ?? el.getBoundingClientRect().top) - el.getBoundingClientRect().top;
+      if (Math.abs(dy) < 1) return;
+      el.style.transition = "none";
+      el.style.transform = `translateY(${dy}px)`;
+      requestAnimationFrame(() => {
+        el.style.transition = "transform 0.18s ease";
+        el.style.transform = "";
+        el.addEventListener("transitionend", () => {
+          el.style.transition = "";
+          el.style.transform = "";
+        }, { once: true });
+      });
+    });
   }
 
   _finishSubDrag(taskId, colIdx) {
