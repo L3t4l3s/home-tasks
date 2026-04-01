@@ -1071,10 +1071,7 @@ class HomeTasksCard extends HTMLElement {
     const addInputRect = addInput ? addInput.getBoundingClientRect() : null;
 
     // Snapshot existing task positions (they may shift when new task is inserted)
-    const before = new Map();
-    this.shadowRoot.querySelectorAll(`.task-list[data-col-idx="${colIdx}"] .task`).forEach(el => {
-      if (el.dataset.taskId) before.set(el.dataset.taskId, el.getBoundingClientRect().top);
-    });
+    const before = this._captureListFlip(colIdx);
 
     const result = await this._callWs("home_tasks/add_task", {
       list_id: this._colListId(colIdx),
@@ -1105,10 +1102,7 @@ class HomeTasksCard extends HTMLElement {
     }
 
     // Snapshot all visible task positions for FLIP (completion/reopen moves the task)
-    const before = new Map();
-    this.shadowRoot.querySelectorAll(`.task-list[data-col-idx="${colIdx}"] .task`).forEach(el => {
-      if (el.dataset.taskId) before.set(el.dataset.taskId, el.getBoundingClientRect().top);
-    });
+    const before = this._captureListFlip(colIdx);
 
     await this._callWs("home_tasks/update_task", {
       list_id: this._colListId(colIdx),
@@ -1162,10 +1156,12 @@ class HomeTasksCard extends HTMLElement {
 
     if (taskEl) {
       // Snapshot positions of all OTHER tasks (deleted task still occupies layout space)
+      const listEl = this.shadowRoot.querySelector(`.task-list[data-col-idx="${colIdx}"]`);
+      const listTop = listEl ? listEl.getBoundingClientRect().top : 0;
       const before = new Map();
       this.shadowRoot.querySelectorAll(`.task-list[data-col-idx="${colIdx}"] .task`).forEach(el => {
         const id = el.dataset.taskId;
-        if (id && id !== String(taskId)) before.set(id, el.getBoundingClientRect().top);
+        if (id && id !== String(taskId)) before.set(id, el.getBoundingClientRect().top - listTop);
       });
 
       // Animate the task out
@@ -1346,13 +1342,15 @@ class HomeTasksCard extends HTMLElement {
 
   _applyFlip(before, colIdx, duration = 0.3) {
     if (!before || before.size === 0) return;
-    // Pass 1: read ALL new positions first (no style writes yet — avoids cascading reflows)
+    // Pass 1: read ALL new positions first (relative to list top — no style writes yet)
+    const taskListEl = this.shadowRoot.querySelector(`.task-list[data-col-idx="${colIdx}"]`);
+    const curListTop = taskListEl ? taskListEl.getBoundingClientRect().top : 0;
     const newPositions = new Map();
     this.shadowRoot
       .querySelectorAll(`.task-list[data-col-idx="${colIdx}"] .task`)
       .forEach(el => {
         const id = el.dataset.taskId;
-        if (id && before.has(id)) newPositions.set(id, el.getBoundingClientRect().top);
+        if (id && before.has(id)) newPositions.set(id, el.getBoundingClientRect().top - curListTop);
       });
     // Pass 2: apply transforms
     const flipEls = [];
@@ -1383,6 +1381,18 @@ class HomeTasksCard extends HTMLElement {
     });
   }
 
+  _captureListFlip(colIdx) {
+    const listEl = this.shadowRoot.querySelector(`.task-list[data-col-idx="${colIdx}"]`);
+    const before = new Map();
+    if (!listEl) return before;
+    const listTop = listEl.getBoundingClientRect().top;
+    listEl.querySelectorAll(".task[data-task-id]").forEach(el => {
+      const id = el.dataset.taskId;
+      if (id) before.set(id, el.getBoundingClientRect().top - listTop);
+    });
+    return before;
+  }
+
   _animateFilterChange(colIdx, applyFilterFn) {
     if (this._filterAnimPending) {
       applyFilterFn();
@@ -1392,13 +1402,14 @@ class HomeTasksCard extends HTMLElement {
     const taskList = this.shadowRoot.querySelector(`.task-list[data-col-idx="${colIdx}"]`);
     if (!taskList) { applyFilterFn(); this._render(); return; }
 
-    // Snapshot current visible tasks
+    // Snapshot current visible tasks (relative to list top — cancels card-level viewport shifts)
+    const listTop = taskList.getBoundingClientRect().top;
     const before = new Map();
     const currentIds = new Set();
     taskList.querySelectorAll(".task[data-task-id]").forEach(el => {
       const id = el.dataset.taskId;
       if (!id) return;
-      before.set(id, el.getBoundingClientRect().top);
+      before.set(id, el.getBoundingClientRect().top - listTop);
       currentIds.add(id);
     });
 
@@ -1603,10 +1614,7 @@ class HomeTasksCard extends HTMLElement {
       opt.addEventListener("click", (e) => {
         e.stopPropagation();
         // Snapshot task positions before re-render for FLIP animation
-        const before = new Map();
-        this.shadowRoot.querySelectorAll(`.task-list[data-col-idx="${colIdx}"] .task`).forEach(el => {
-          if (el.dataset.taskId) before.set(el.dataset.taskId, el.getBoundingClientRect().top);
-        });
+        const before = this._captureListFlip(colIdx);
         cs.sortBy = key;
         cs.sortOpen = false;
         this._render();
