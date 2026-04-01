@@ -1662,7 +1662,7 @@ class HomeTasksCard extends HTMLElement {
     let className = "task";
     if (task.completed) className += " completed";
 
-    const taskEl = this._el("div", { className, draggable: true });
+    const taskEl = this._el("div", { className, draggable: !isEditing });
     taskEl.dataset.taskId = task.id;
 
     const mainChildren = [];
