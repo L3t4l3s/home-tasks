@@ -3617,7 +3617,8 @@ class HomeTasksCardEditor extends HTMLElement {
       label { font-size: 12px; font-weight: 500; color: var(--secondary-text-color); text-transform: uppercase; letter-spacing: 0.5px; }
       ha-textfield { width: 100%; }
       ha-icon-picker { width: 100%; }
-      ha-select { width: 100%; }
+      select.editor-native-select { width: 100%; padding: 10px 12px; border: 1px solid var(--divider-color, rgba(0,0,0,0.12)); border-radius: 4px; background: var(--card-background-color, var(--ha-card-background, white)); color: var(--primary-text-color, #212121); font-size: 14px; cursor: pointer; box-sizing: border-box; }
+      select.editor-native-select:focus { outline: none; border-color: var(--primary-color, #03a9f4); }
       .hint { font-size: 12px; color: var(--secondary-text-color); font-style: italic; margin-top: 2px; }
       .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; min-height: 40px; }
       .toggle-label { font-size: 14px; color: var(--primary-text-color); }
@@ -3781,26 +3782,25 @@ class HomeTasksCardEditor extends HTMLElement {
     };
 
     // List select
-    const listSelect = document.createElement("ha-select");
-    listSelect.label = this._t("ed_list");
-    listSelect.style.width = "100%";
+    const listLabel = this._el("label", { textContent: this._t("ed_list") });
+    const listSelect = document.createElement("select");
+    listSelect.className = "editor-native-select";
     if (!col.list_id) {
-      const emptyItem = document.createElement("ha-list-item");
-      emptyItem.setAttribute("value", "");
-      emptyItem.value = "";
-      emptyItem.textContent = "\u2014";
-      listSelect.appendChild(emptyItem);
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = "\u2014";
+      opt.selected = true;
+      listSelect.appendChild(opt);
     }
     for (const l of this._lists) {
-      const item = document.createElement("ha-list-item");
-      item.setAttribute("value", l.id);
-      item.value = l.id;
-      item.textContent = l.name;
-      listSelect.appendChild(item);
+      const opt = document.createElement("option");
+      opt.value = l.id;
+      opt.textContent = l.name;
+      if (l.id === col.list_id) opt.selected = true;
+      listSelect.appendChild(opt);
     }
-    requestAnimationFrame(() => { listSelect.value = col.list_id || ""; });
-    listSelect.addEventListener("value-changed", (e) => {
-      const newVal = e.detail.value || undefined;
+    listSelect.addEventListener("change", () => {
+      const newVal = listSelect.value || undefined;
       if (newVal !== col.list_id) updateCol({ list_id: newVal });
     });
 
@@ -3819,39 +3819,37 @@ class HomeTasksCardEditor extends HTMLElement {
     iconPicker.addEventListener("value-changed", (e) => updateCol({ icon: e.detail.value || undefined }));
 
     // Default filter select
-    const filterSelect = document.createElement("ha-select");
-    filterSelect.label = this._t("ed_default_filter");
-    filterSelect.style.width = "100%";
+    const filterLabel = this._el("label", { textContent: this._t("ed_default_filter") });
+    const filterSelect = document.createElement("select");
+    filterSelect.className = "editor-native-select";
     for (const [val, key] of [["all", "filter_all"], ["open", "filter_open"], ["done", "filter_done"]]) {
-      const item = document.createElement("ha-list-item");
-      item.setAttribute("value", val);
-      item.value = val;
-      item.textContent = this._t(key);
-      filterSelect.appendChild(item);
+      const opt = document.createElement("option");
+      opt.value = val;
+      opt.textContent = this._t(key);
+      if ((col.default_filter || "all") === val) opt.selected = true;
+      filterSelect.appendChild(opt);
     }
-    requestAnimationFrame(() => { filterSelect.value = col.default_filter || "all"; });
-    filterSelect.addEventListener("value-changed", (e) => {
-      const newVal = e.detail.value;
+    filterSelect.addEventListener("change", () => {
+      const newVal = filterSelect.value;
       if (newVal && newVal !== (col.default_filter || "all")) updateCol({ default_filter: newVal });
     });
 
     // Default sort select
-    const sortSelect = document.createElement("ha-select");
-    sortSelect.label = this._t("ed_default_sort");
-    sortSelect.style.width = "100%";
+    const sortLabel = this._el("label", { textContent: this._t("ed_default_sort") });
+    const sortSelect = document.createElement("select");
+    sortSelect.className = "editor-native-select";
     for (const [val, key] of [
       ["manual", "sort_manual"], ["due", "sort_due"], ["priority", "sort_priority"],
       ["title", "sort_title"], ["person", "sort_person"],
     ]) {
-      const item = document.createElement("ha-list-item");
-      item.setAttribute("value", val);
-      item.value = val;
-      item.textContent = this._t(key);
-      sortSelect.appendChild(item);
+      const opt = document.createElement("option");
+      opt.value = val;
+      opt.textContent = this._t(key);
+      if ((col.default_sort || "manual") === val) opt.selected = true;
+      sortSelect.appendChild(opt);
     }
-    requestAnimationFrame(() => { sortSelect.value = col.default_sort || "manual"; });
-    sortSelect.addEventListener("value-changed", (e) => {
-      const newVal = e.detail.value;
+    sortSelect.addEventListener("change", () => {
+      const newVal = sortSelect.value;
       if (newVal && newVal !== (col.default_sort || "manual")) updateCol({ default_sort: newVal });
     });
 
@@ -3937,7 +3935,7 @@ class HomeTasksCardEditor extends HTMLElement {
     };
 
     return this._el("div", { className: "visual-editor" }, [
-      this._el("div", { className: "field" }, [listSelect, hint]),
+      this._el("div", { className: "field" }, [listLabel, listSelect, hint]),
       makeSection("view", "mdi:eye", "ed_sec_view", [
         this._el("div", { className: "field" }, [titleInput]),
         this._el("div", { className: "field" }, [iconPicker]),
@@ -3948,8 +3946,8 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-sort", "ed_show_sort", "show_sort", true),
           makeToggle("compact", "ed_compact", "compact", false),
         ]),
-        this._el("div", { className: "field" }, [filterSelect]),
-        this._el("div", { className: "field" }, [sortSelect]),
+        this._el("div", { className: "field" }, [filterLabel, filterSelect]),
+        this._el("div", { className: "field" }, [sortLabel, sortSelect]),
       ]),
       makeSection("config", "mdi:tune", "ed_sec_display", [
         this._el("div", { className: "toggle-grid" }, [
