@@ -172,8 +172,6 @@ Full-featured list for shared household tasks — priorities, due dates, person 
 type: custom:home-tasks-card
 columns:
   - list_id: "your-list-id"
-    title: Household
-    icon: mdi:home
     default_filter: open
 ```
 
@@ -190,7 +188,6 @@ Minimal and fast — just items and checkboxes. Completed entries disappear imme
 type: custom:home-tasks-card
 columns:
   - list_id: "your-list-id"
-    compact: true
     auto_delete_completed: true
     show_notes: false
     show_sub_tasks: false
@@ -200,6 +197,7 @@ columns:
     show_due_date: false
     show_reminders: false
     show_recurrence: false
+    show_sort: false
 ```
 
 </td>
@@ -217,8 +215,6 @@ Focused on deadlines — priorities, due dates, reminders, and sub-tasks. Person
 type: custom:home-tasks-card
 columns:
   - list_id: "your-list-id"
-    title: Work
-    icon: mdi:briefcase
     default_filter: open
     default_sort: due
     show_assigned_person: false
@@ -233,7 +229,7 @@ columns:
 
 <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/usecase-chores.png" alt="Kids chores list">
 
-Who does what and when — person assignment, weekday recurrence, and tags for time-of-day filtering. No deadlines or reminders needed.
+Who does what and when — person assignment, weekday recurrence, and tags for time-of-day filtering. No deadlines, notes, or sub-tasks needed.
 
 ```yaml
 type: custom:home-tasks-card
@@ -244,9 +240,8 @@ columns:
     show_priority: false
     show_due_date: false
     show_reminders: false
-    show_recurrence: true
-    show_assigned_person: true
-    show_tags: true
+    show_notes: false
+    show_sub_tasks: false
 ```
 
 </td>
