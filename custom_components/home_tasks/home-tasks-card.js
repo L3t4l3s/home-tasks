@@ -1095,6 +1095,8 @@ class HomeTasksCard extends HTMLElement {
       baseUpdate.due_datetime = `${dueDate} ${dueTime}`;
     } else if (dueDate) {
       baseUpdate.due_date = dueDate;
+    } else {
+      baseUpdate.due_date = "";
     }
 
     // Update base fields via HA's standard todo service
