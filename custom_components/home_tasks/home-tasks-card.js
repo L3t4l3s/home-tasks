@@ -1420,10 +1420,32 @@ class HomeTasksCard extends HTMLElement {
 
   async _reorderTasks(taskIds, colIdx) {
     if (this._isExternalCol(colIdx)) {
-      // Persist sort order in overlay — fire all updates in parallel
+      const entityId = this._colEntityId(colIdx);
+      const features = this._colSupportedFeatures(colIdx);
+      const supportsMove = !!(features & 8); // MOVE_TODO_ITEM
+
+      if (supportsMove) {
+        // Sync order to provider via HA's todo/item/move (sequential — each
+        // move depends on the previous item's final position)
+        for (let i = 0; i < taskIds.length; i++) {
+          try {
+            await this._hass.callWS({
+              type: "todo/item/move",
+              entity_id: entityId,
+              uid: taskIds[i],
+              previous_uid: i > 0 ? taskIds[i - 1] : undefined,
+            });
+          } catch (err) {
+            console.warn("Failed to move external task:", err);
+            break;
+          }
+        }
+      }
+
+      // Also persist in overlay as fallback (for providers without MOVE support)
       await Promise.all(taskIds.map((uid, i) =>
         this._callWs("home_tasks/update_external_overlay", {
-          entity_id: this._colEntityId(colIdx),
+          entity_id: entityId,
           task_uid: uid,
           sort_order: i,
         })
