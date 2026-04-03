@@ -383,13 +383,14 @@ def _get_external_todo_items(hass, entity_id: str) -> list[dict]:
 
 def _merge_tasks_with_overlays(external_items: list[dict], overlay_store: ExternalTaskOverlayStore) -> list[dict]:
     """Merge external todo items with overlay data to produce Home Tasks-compatible dicts."""
-    raw_overlays = overlay_store._data.get("overlays", {}) if overlay_store._data else {}
     overlays = overlay_store.get_all_overlays()
+    raw_overlays = overlay_store._data.get("overlays", {}) if overlay_store._data else {}
     tasks = []
     for idx, item in enumerate(external_items):
         uid = item.get("uid") or ""
         overlay = overlays.get(uid, {})
-        # Use provider's original order unless user explicitly reordered in Home Tasks
+        # Use provider's original order unless user explicitly reordered in Home Tasks.
+        # Only explicitly stored sort_order counts (overlays now only contain set fields).
         raw = raw_overlays.get(uid, {})
         sort_order = raw["sort_order"] if "sort_order" in raw else idx
         completed = item.get("status") == "completed"

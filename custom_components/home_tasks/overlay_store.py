@@ -120,6 +120,30 @@ class ExternalTaskOverlayStore:
             await self._async_save()
         else:
             self._data = data
+            self._strip_default_overlays()
+
+    def _strip_default_overlays(self) -> None:
+        """Remove fields from stored overlays that match _empty_overlay() defaults.
+
+        Earlier versions stored all defaults on every overlay write.  This
+        migration strips them so only user-set values remain, allowing the
+        merge logic to distinguish explicit values from defaults.
+        """
+        defaults = _empty_overlay()
+        overlays = self._data.get("overlays", {})
+        to_delete = []
+        for uid, overlay in overlays.items():
+            keys_to_remove = [
+                k for k, v in list(overlay.items())
+                if k in defaults and v == defaults[k] and k != "sub_items"
+            ]
+            for k in keys_to_remove:
+                del overlay[k]
+            # Remove empty overlays entirely
+            if not overlay:
+                to_delete.append(uid)
+        for uid in to_delete:
+            del overlays[uid]
 
     async def _async_save(self) -> None:
         """Save overlay data to disk."""
@@ -154,7 +178,9 @@ class ExternalTaskOverlayStore:
         self._validate_overlay_fields(kwargs)
 
         overlays = self._data.setdefault("overlays", {})
-        overlay = overlays.setdefault(task_uid, _empty_overlay())
+        if task_uid not in overlays:
+            overlays[task_uid] = {}
+        overlay = overlays[task_uid]
 
         for key, value in kwargs.items():
             if key in OVERLAY_FIELDS:
@@ -174,7 +200,9 @@ class ExternalTaskOverlayStore:
         """Add a sub-task to the overlay of *task_uid*."""
         title = validate_text(title, MAX_TITLE_LENGTH, "Sub-task title")
         overlays = self._data.setdefault("overlays", {})
-        overlay = overlays.setdefault(task_uid, _empty_overlay())
+        if task_uid not in overlays:
+            overlays[task_uid] = {}
+        overlay = overlays[task_uid]
         subs = overlay.setdefault("sub_items", [])
         if len(subs) >= MAX_SUB_TASKS_PER_TASK:
             raise ValueError(f"Maximum number of sub-tasks ({MAX_SUB_TASKS_PER_TASK}) reached")
