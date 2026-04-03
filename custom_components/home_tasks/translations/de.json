@@ -33,7 +33,8 @@
     },
     "abort": {
       "already_configured": "Diese Liste ist bereits konfiguriert.",
-      "no_external_entities": "Keine externen Todo-Entities gefunden. Bitte richte zuerst eine CalDAV-, Google Tasks- oder Todoist-Integration ein."
+      "no_external_entities": "Keine externen Todo-Entities gefunden. Bitte richte zuerst eine CalDAV-, Google Tasks- oder Todoist-Integration ein.",
+      "max_lists_reached": "Maximale Anzahl an Listen (50) erreicht."
     }
   }
 }

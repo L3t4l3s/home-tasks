@@ -5,7 +5,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.helpers import entity_registry as er
 
-from .const import DOMAIN, MAX_LIST_NAME_LENGTH
+from .const import DOMAIN, MAX_LIST_NAME_LENGTH, MAX_LISTS
 
 
 class HomeTasksConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -15,6 +15,8 @@ class HomeTasksConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Let the user choose between creating a native list or linking an external one."""
+        if len(self._async_current_entries()) >= MAX_LISTS:
+            return self.async_abort(reason="max_lists_reached")
         return self.async_show_menu(
             step_id="user",
             menu_options=["native", "external"],

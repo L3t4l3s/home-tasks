@@ -14,6 +14,8 @@ _LOGGER = logging.getLogger(__name__)
 
 _val_title = vol.All(str, vol.Length(min=1, max=MAX_TITLE_LENGTH))
 _val_id = vol.All(str, vol.Length(min=1, max=40))
+_val_entity_id = vol.All(str, vol.Length(min=1, max=255))
+_val_task_uid = vol.All(str, vol.Length(min=1, max=255))
 _val_date = vol.Any(vol.All(str, vol.Match(r"^\d{4}-\d{2}-\d{2}$")), None)
 _val_time = vol.Any(vol.All(str, vol.Match(r"^\d{2}:\d{2}$")), None)
 
@@ -480,7 +482,7 @@ async def ws_get_external_lists(hass, connection, msg):
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "home_tasks/get_external_tasks",
-        vol.Required("entity_id"): str,
+        vol.Required("entity_id"): _val_entity_id,
     }
 )
 @websocket_api.async_response
@@ -507,8 +509,8 @@ async def ws_get_external_tasks(hass, connection, msg):
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "home_tasks/update_external_overlay",
-        vol.Required("entity_id"): str,
-        vol.Required("task_uid"): str,
+        vol.Required("entity_id"): _val_entity_id,
+        vol.Required("task_uid"): _val_task_uid,
         vol.Optional("priority"): vol.Any(vol.In([1, 2, 3]), None),
         vol.Optional("due_time"): _val_time,
         vol.Optional("assigned_person"): vol.Any(str, None),
@@ -550,8 +552,8 @@ async def ws_update_external_overlay(hass, connection, msg):
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "home_tasks/add_external_sub_task",
-        vol.Required("entity_id"): str,
-        vol.Required("task_uid"): str,
+        vol.Required("entity_id"): _val_entity_id,
+        vol.Required("task_uid"): _val_task_uid,
         vol.Required("title"): _val_title,
     }
 )
@@ -569,8 +571,8 @@ async def ws_add_external_sub_task(hass, connection, msg):
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "home_tasks/update_external_sub_task",
-        vol.Required("entity_id"): str,
-        vol.Required("task_uid"): str,
+        vol.Required("entity_id"): _val_entity_id,
+        vol.Required("task_uid"): _val_task_uid,
         vol.Required("sub_task_id"): _val_id,
         vol.Optional("title"): _val_title,
         vol.Optional("completed"): bool,
@@ -594,8 +596,8 @@ async def ws_update_external_sub_task(hass, connection, msg):
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "home_tasks/delete_external_sub_task",
-        vol.Required("entity_id"): str,
-        vol.Required("task_uid"): str,
+        vol.Required("entity_id"): _val_entity_id,
+        vol.Required("task_uid"): _val_task_uid,
         vol.Required("sub_task_id"): _val_id,
     }
 )
@@ -613,8 +615,8 @@ async def ws_delete_external_sub_task(hass, connection, msg):
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "home_tasks/reorder_external_sub_tasks",
-        vol.Required("entity_id"): str,
-        vol.Required("task_uid"): str,
+        vol.Required("entity_id"): _val_entity_id,
+        vol.Required("task_uid"): _val_task_uid,
         vol.Required("sub_task_ids"): vol.All([_val_id], vol.Length(max=MAX_SUB_TASKS_PER_TASK)),
     }
 )
@@ -632,8 +634,8 @@ async def ws_reorder_external_sub_tasks(hass, connection, msg):
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "home_tasks/delete_external_overlay",
-        vol.Required("entity_id"): str,
-        vol.Required("task_uid"): str,
+        vol.Required("entity_id"): _val_entity_id,
+        vol.Required("task_uid"): _val_task_uid,
     }
 )
 @websocket_api.async_response

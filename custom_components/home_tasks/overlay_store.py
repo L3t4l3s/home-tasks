@@ -8,6 +8,7 @@ is keyed by the external task's UID and persisted locally via HA's Store helper.
 from __future__ import annotations
 
 import logging
+import re
 import uuid
 from collections.abc import Callable
 from datetime import datetime, timezone
@@ -97,7 +98,9 @@ class ExternalTaskOverlayStore:
     def __init__(self, hass: HomeAssistant, entity_id: str) -> None:
         """Initialize the overlay store."""
         # Sanitise entity_id for use in the storage filename.
-        safe_id = entity_id.replace(".", "_")
+        # Strip everything except alphanumerics and underscores to prevent
+        # path traversal (e.g. ../../etc/passwd) or filesystem-special chars.
+        safe_id = re.sub(r"[^a-zA-Z0-9_]", "_", entity_id)
         self._store = Store(hass, OVERLAY_STORAGE_VERSION, f"home_tasks_overlay_{safe_id}")
         self._data: dict | None = None
         self._listeners: list[Callable[[], None]] = []
