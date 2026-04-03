@@ -2,20 +2,38 @@
   "config": {
     "step": {
       "user": {
+        "title": "Home Tasks",
+        "description": "W\u00e4hle aus, was du einrichten m\u00f6chtest.",
+        "menu_options": {
+          "native": "Neue Aufgabenliste erstellen",
+          "external": "Externe Todo-Liste verkn\u00fcpfen"
+        }
+      },
+      "native": {
         "title": "Aufgabenliste erstellen",
         "description": "Gib einen Namen f\u00fcr die neue Aufgabenliste ein.",
         "data": {
           "name": "Listenname"
+        }
+      },
+      "external": {
+        "title": "Externe Todo-Liste verkn\u00fcpfen",
+        "description": "W\u00e4hle eine externe Todo-Entity aus, um sie mit Home Tasks-Funktionen (Priorit\u00e4t, Tags, Unteraufgaben usw.) zu erweitern.",
+        "data": {
+          "entity_id": "Todo-Entity"
         }
       }
     },
     "error": {
       "empty_name": "Der Name darf nicht leer sein.",
       "name_too_long": "Der Name ist zu lang (max. 100 Zeichen).",
-      "duplicate_name": "Eine Liste mit diesem Namen existiert bereits."
+      "duplicate_name": "Eine Liste mit diesem Namen existiert bereits.",
+      "empty_entity": "Bitte w\u00e4hle eine Entity aus.",
+      "already_linked": "Diese Entity ist bereits verkn\u00fcpft."
     },
     "abort": {
-      "already_configured": "Diese Liste ist bereits konfiguriert."
+      "already_configured": "Diese Liste ist bereits konfiguriert.",
+      "no_external_entities": "Keine externen Todo-Entities gefunden. Bitte richte zuerst eine CalDAV-, Google Tasks- oder Todoist-Integration ein."
     }
   }
 }
