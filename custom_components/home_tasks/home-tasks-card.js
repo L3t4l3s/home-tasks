@@ -1069,38 +1069,36 @@ class HomeTasksCard extends HTMLElement {
     const entityId = this._colEntityId(colIdx);
     const features = this._colSupportedFeatures(colIdx);
     const supportsDatetime = !!(features & 32); // SET_DUE_DATETIME_ON_ITEM
-    // HA's todo.update_item uses: rename, status, due_date, due_datetime, description
-    const BASE_KEYS = new Set(["title", "completed", "due_date", "notes"]);
-    const baseUpdate = {};
-    const overlayUpdate = {};
 
+    // Separate fields into base (synced to provider) and overlay (local)
+    const BASE_KEYS = new Set(["title", "completed", "due_date", "notes"]);
+    const overlayUpdate = {};
     for (const [k, v] of Object.entries(fields)) {
-      if (BASE_KEYS.has(k)) {
-        if (k === "completed") {
-          baseUpdate.status = v ? "completed" : "needs_action";
-        } else if (k === "due_date") {
-          // Combine with due_time for due_datetime only if provider supports it
-          const dueTime = fields.due_time;
-          if (v && dueTime && supportsDatetime) {
-            baseUpdate.due_datetime = `${v} ${dueTime}`;
-          } else if (v) {
-            baseUpdate.due_date = v;
-          } else {
-            // Clear due date: send empty string
-            baseUpdate.due_date = "";
-          }
-        } else if (k === "notes") {
-          baseUpdate.description = v || "";
-        } else if (k === "title") {
-          baseUpdate.rename = v;
-        }
-      } else {
+      if (!BASE_KEYS.has(k)) {
         overlayUpdate[k] = v;
       }
     }
 
+    // Build a COMPLETE base update with all fields (like HA's standard card).
+    // CalDAV requires a full item representation — partial updates may create
+    // duplicates instead of modifying the existing task.
+    const task = this._columns[colIdx]?.tasks?.find(t => t.id === taskId);
+    const merged = { ...task, ...fields };
+    const dueDate = merged.due_date || null;
+    const dueTime = merged.due_time || null;
+    const baseUpdate = {
+      rename: merged.title || "",
+      status: merged.completed ? "completed" : "needs_action",
+      description: merged.notes || "",
+    };
+    if (dueDate && dueTime && supportsDatetime) {
+      baseUpdate.due_datetime = `${dueDate} ${dueTime}`;
+    } else if (dueDate) {
+      baseUpdate.due_date = dueDate;
+    }
+
     // Update base fields via HA's standard todo service
-    if (Object.keys(baseUpdate).length > 0) {
+    if (task) {
       try {
         await this._hass.callService("todo", "update_item", {
           item: taskId,
