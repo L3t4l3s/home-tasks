@@ -431,7 +431,7 @@ def _merge_tasks_with_overlays(
             "_external": True,
         }
         tasks.append(task)
-    return sorted(tasks, key=lambda t: t["sort_order"])
+    return tasks
 
 
 @websocket_api.websocket_command({vol.Required("type"): "home_tasks/get_external_lists"})
