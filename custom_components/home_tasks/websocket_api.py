@@ -351,16 +351,29 @@ def _get_external_todo_items(hass, entity_id: str) -> list[dict]:
         entity = entity_comp.get_entity(entity_id)
         if entity and hasattr(entity, "todo_items"):
             items = entity.todo_items or []
+            from datetime import datetime as dt
+
             result = []
             for item in items:
                 uid = item.uid
                 if not uid:
                     continue  # Skip items without a UID — cannot be tracked
+                # Split due into date + time (due can be date or datetime)
+                due_date = None
+                due_time = None
+                if item.due is not None:
+                    if isinstance(item.due, dt):
+                        local_due = item.due.astimezone()
+                        due_date = local_due.date().isoformat()
+                        due_time = local_due.strftime("%H:%M")
+                    else:
+                        due_date = item.due.isoformat()
                 result.append({
                     "uid": uid,
                     "summary": item.summary,
                     "status": item.status.value if item.status else "needs_action",
-                    "due": item.due.isoformat() if item.due else None,
+                    "due": due_date,
+                    "due_time": due_time,
                     "description": item.description,
                 })
             return result
@@ -385,7 +398,7 @@ def _merge_tasks_with_overlays(external_items: list[dict], overlay_store: Extern
             "sort_order": overlay.get("sort_order", idx),
             "sub_items": overlay.get("sub_items", []),
             "priority": overlay.get("priority"),
-            "due_time": overlay.get("due_time"),
+            "due_time": item.get("due_time") or overlay.get("due_time"),
             "reminders": overlay.get("reminders", []),
             "recurrence_value": overlay.get("recurrence_value", 1),
             "recurrence_unit": overlay.get("recurrence_unit"),
