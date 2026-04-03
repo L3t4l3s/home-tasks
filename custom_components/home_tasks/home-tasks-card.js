@@ -1034,6 +1034,13 @@ class HomeTasksCard extends HTMLElement {
     return this._config.columns[colIdx]?.entity_id;
   }
 
+  _colSupportedFeatures(colIdx) {
+    if (!this._isExternalCol(colIdx)) return -1; // native: all features
+    const entityId = this._colEntityId(colIdx);
+    const ext = (this._externalLists || []).find(l => l.entity_id === entityId);
+    return ext?.supported_features ?? 0;
+  }
+
   /**
    * Route a task update to the correct backend.
    * For native columns: single WS call to home_tasks/update_task.
@@ -1049,6 +1056,8 @@ class HomeTasksCard extends HTMLElement {
     }
 
     const entityId = this._colEntityId(colIdx);
+    const features = this._colSupportedFeatures(colIdx);
+    const supportsDatetime = !!(features & 32); // SET_DUE_DATETIME_ON_ITEM
     // HA's todo.update_item uses: rename, status, due_date, due_datetime, description
     const BASE_KEYS = new Set(["title", "completed", "due_date", "notes"]);
     const baseUpdate = {};
@@ -1059,9 +1068,9 @@ class HomeTasksCard extends HTMLElement {
         if (k === "completed") {
           baseUpdate.status = v ? "completed" : "needs_action";
         } else if (k === "due_date") {
-          // Combine with due_time if present for due_datetime support
+          // Combine with due_time for due_datetime only if provider supports it
           const dueTime = fields.due_time;
-          if (v && dueTime) {
+          if (v && dueTime && supportsDatetime) {
             baseUpdate.due_datetime = `${v} ${dueTime}`;
           } else if (v) {
             baseUpdate.due_date = v;
@@ -2268,6 +2277,10 @@ class HomeTasksCard extends HTMLElement {
       type: "date",
       value: task.due_date || "",
     });
+    // Check if external provider supports due time (SET_DUE_DATETIME_ON_ITEM = 32)
+    const features = this._colSupportedFeatures(colIdx);
+    const supportsTime = !this._isExternalCol(colIdx) || !!(features & 32);
+
     const timeInput = this._el("input", {
       type: "time",
       value: task.due_time || "",
@@ -2277,7 +2290,7 @@ class HomeTasksCard extends HTMLElement {
     dateInput.addEventListener("change", () => {
       if (!dateInput.value) timeInput.value = "";
       timeInput.disabled = !dateInput.value;
-      this._updateTaskDue(task.id, dateInput.value, timeInput.value, colIdx);
+      this._updateTaskDue(task.id, dateInput.value, supportsTime ? timeInput.value : "", colIdx);
     });
     timeInput.addEventListener("change", () =>
       this._updateTaskDue(task.id, dateInput.value, timeInput.value, colIdx)
@@ -2291,6 +2304,7 @@ class HomeTasksCard extends HTMLElement {
       timeInput,
       this._el("span", { textContent: this._t("due_time_lbl") }),
     ]);
+    if (!supportsTime) timeWrap.style.display = "none";
     const dateSection = this._el("div", { className: "detail-section" }, [
       this._el("label", { className: "detail-label", textContent: this._t("due_date") }),
       this._el("div", { className: "due-input-row" }, [dateWrap, timeWrap]),
