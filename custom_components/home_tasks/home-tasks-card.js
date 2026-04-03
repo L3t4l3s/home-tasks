@@ -1252,9 +1252,21 @@ class HomeTasksCard extends HTMLElement {
     // Snapshot all visible task positions for FLIP (completion/reopen moves the task)
     const before = this._captureListFlip(colIdx);
 
-    await this._updateTaskRouted(colIdx, taskId, { completed: newCompleted });
-    await this._loadAllTasks();
-    this._applyFlip(before, colIdx, 0.28);
+    if (this._isExternalCol(colIdx) && task) {
+      // Optimistic update: render new state immediately, then sync to provider.
+      // External service calls have latency; the entity may not reflect the
+      // change right away, so we update locally first.
+      task.completed = newCompleted;
+      this._render();
+      this._applyFlip(before, colIdx, 0.28);
+      await this._updateTaskRouted(colIdx, taskId, { completed: newCompleted });
+      // Delayed reload to pick up any provider-side changes
+      setTimeout(() => this._loadAllTasks(), 1000);
+    } else {
+      await this._updateTaskRouted(colIdx, taskId, { completed: newCompleted });
+      await this._loadAllTasks();
+      this._applyFlip(before, colIdx, 0.28);
+    }
   }
 
   async _updateTaskTitle(taskId, title, colIdx) {
