@@ -76,3 +76,27 @@ async def test_sensor_overdue_count_attribute(
     entity_id = _get_sensor_entity_id(hass, f"{mock_config_entry.entry_id}_open_tasks")
     state = hass.states.get(entity_id)
     assert state.attributes.get("overdue_count") == 1
+
+
+# ---------------------------------------------------------------------------
+# External entries should not create sensor entities
+# ---------------------------------------------------------------------------
+
+
+async def test_sensor_not_created_for_external_entry(
+    hass: HomeAssistant,
+) -> None:
+    """External entries do not create a sensor entity."""
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    ext_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"type": "external", "entity_id": "todo.sensor_ext", "name": "Sensor Ext"},
+        title="Sensor Ext (External)",
+    )
+    ext_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(ext_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = _get_sensor_entity_id(hass, f"{ext_entry.entry_id}_open_tasks")
+    assert entity_id is None

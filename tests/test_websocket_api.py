@@ -483,3 +483,163 @@ async def test_ws_external_command_unknown_entity_error(
     msg = await client.receive_json()
     assert msg["success"] is False
     assert msg["error"]["code"] == "invalid_request"
+
+
+# ---------------------------------------------------------------------------
+# External task merge / get_external_tasks tests
+# ---------------------------------------------------------------------------
+
+
+async def test_ws_get_external_tasks_merges_overlay(
+    hass: HomeAssistant, hass_ws_client, external_config_entry
+) -> None:
+    """get_external_tasks returns external items merged with overlay data."""
+    from unittest.mock import MagicMock
+    from datetime import date
+    from homeassistant.components.todo import TodoItem, TodoItemStatus
+
+    # Register a mock todo entity so _get_external_todo_items can read it
+    mock_entity = MagicMock()
+    mock_entity.todo_items = [
+        TodoItem(uid="ext-1", summary="Task A", status=TodoItemStatus.NEEDS_ACTION, due=date(2026, 6, 15)),
+        TodoItem(uid="ext-2", summary="Task B", status=TodoItemStatus.COMPLETED, due=None),
+    ]
+    mock_comp = MagicMock()
+    mock_comp.get_entity.return_value = mock_entity
+    hass.data["todo"] = mock_comp
+    hass.states.async_set("todo.ws_external", "1")
+
+    # Set overlay for ext-1
+    from custom_components.home_tasks.overlay_store import ExternalTaskOverlayStore
+    overlay_store = hass.data[DOMAIN][external_config_entry.entry_id]
+    assert isinstance(overlay_store, ExternalTaskOverlayStore)
+    await overlay_store.async_set_overlay("ext-1", priority=3, tags=["urgent"])
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 40,
+        "type": "home_tasks/get_external_tasks",
+        "entity_id": "todo.ws_external",
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    tasks = msg["result"]["tasks"]
+    assert len(tasks) == 2
+
+    task_a = next(t for t in tasks if t["id"] == "ext-1")
+    assert task_a["title"] == "Task A"
+    assert task_a["priority"] == 3
+    assert task_a["tags"] == ["urgent"]
+    assert task_a["due_date"] == "2026-06-15"
+    assert task_a["_external"] is True
+
+    task_b = next(t for t in tasks if t["id"] == "ext-2")
+    assert task_b["completed"] is True
+
+
+async def test_merge_tasks_provider_owns_order_true_ignores_overlay(
+    hass: HomeAssistant,
+) -> None:
+    """When provider_owns_order=True, sort_order equals index, not overlay value."""
+    from custom_components.home_tasks.overlay_store import ExternalTaskOverlayStore
+    from custom_components.home_tasks.websocket_api import _merge_tasks_with_overlays
+
+    overlay_store = ExternalTaskOverlayStore(hass, "todo.order_test")
+    await overlay_store.async_load()
+    await overlay_store.async_set_overlay("uid-1", sort_order=99)
+
+    external_items = [
+        {"uid": "uid-1", "summary": "First", "status": "needs_action", "due": None, "due_time": None, "description": None},
+        {"uid": "uid-2", "summary": "Second", "status": "needs_action", "due": None, "due_time": None, "description": None},
+    ]
+    tasks = _merge_tasks_with_overlays(external_items, overlay_store, provider_owns_order=True)
+    assert tasks[0]["sort_order"] == 0
+    assert tasks[1]["sort_order"] == 1
+
+
+async def test_merge_tasks_provider_owns_order_false_uses_overlay_sort(
+    hass: HomeAssistant,
+) -> None:
+    """When provider_owns_order=False, overlay sort_order is used if set."""
+    from custom_components.home_tasks.overlay_store import ExternalTaskOverlayStore
+    from custom_components.home_tasks.websocket_api import _merge_tasks_with_overlays
+
+    overlay_store = ExternalTaskOverlayStore(hass, "todo.order_test2")
+    await overlay_store.async_load()
+    await overlay_store.async_set_overlay("uid-1", sort_order=99)
+
+    external_items = [
+        {"uid": "uid-1", "summary": "First", "status": "needs_action", "due": None, "due_time": None, "description": None},
+        {"uid": "uid-2", "summary": "Second", "status": "needs_action", "due": None, "due_time": None, "description": None},
+    ]
+    tasks = _merge_tasks_with_overlays(external_items, overlay_store, provider_owns_order=False)
+    assert tasks[0]["sort_order"] == 99  # overlay value
+    assert tasks[1]["sort_order"] == 1   # fallback to index
+
+
+async def test_get_external_todo_items_skips_no_uid(
+    hass: HomeAssistant,
+) -> None:
+    """_get_external_todo_items skips items with uid=None."""
+    from unittest.mock import MagicMock
+    from homeassistant.components.todo import TodoItem, TodoItemStatus
+    from custom_components.home_tasks.websocket_api import _get_external_todo_items
+
+    mock_entity = MagicMock()
+    mock_entity.todo_items = [
+        TodoItem(uid="abc", summary="Has UID", status=TodoItemStatus.NEEDS_ACTION),
+        TodoItem(uid=None, summary="No UID", status=TodoItemStatus.NEEDS_ACTION),
+    ]
+    mock_comp = MagicMock()
+    mock_comp.get_entity.return_value = mock_entity
+    hass.data["todo"] = mock_comp
+    hass.states.async_set("todo.uid_test", "2")
+
+    items = _get_external_todo_items(hass, "todo.uid_test")
+    assert len(items) == 1
+    assert items[0]["uid"] == "abc"
+
+
+async def test_get_external_todo_items_splits_datetime_due(
+    hass: HomeAssistant,
+) -> None:
+    """_get_external_todo_items splits a datetime due into date and time parts."""
+    from unittest.mock import MagicMock
+    from datetime import datetime, timezone
+    from homeassistant.components.todo import TodoItem, TodoItemStatus
+    from custom_components.home_tasks.websocket_api import _get_external_todo_items
+
+    mock_entity = MagicMock()
+    mock_entity.todo_items = [
+        TodoItem(
+            uid="dt-1",
+            summary="Datetime due",
+            status=TodoItemStatus.NEEDS_ACTION,
+            due=datetime(2026, 6, 15, 14, 30, tzinfo=timezone.utc),
+        ),
+    ]
+    mock_comp = MagicMock()
+    mock_comp.get_entity.return_value = mock_entity
+    hass.data["todo"] = mock_comp
+    hass.states.async_set("todo.dt_test", "1")
+
+    items = _get_external_todo_items(hass, "todo.dt_test")
+    assert len(items) == 1
+    # The due is converted to local time; verify it has date and time parts
+    assert items[0]["due"] is not None
+    assert items[0]["due_time"] is not None
+    # Verify date format YYYY-MM-DD
+    import re
+    assert re.match(r"^\d{4}-\d{2}-\d{2}$", items[0]["due"])
+    # Verify time format HH:MM
+    assert re.match(r"^\d{2}:\d{2}$", items[0]["due_time"])
+
+
+async def test_get_external_todo_items_entity_not_found(
+    hass: HomeAssistant,
+) -> None:
+    """_get_external_todo_items raises ValueError for nonexistent entity."""
+    from custom_components.home_tasks.websocket_api import _get_external_todo_items
+
+    with pytest.raises(ValueError, match="Entity not found"):
+        _get_external_todo_items(hass, "todo.nonexistent_entity")

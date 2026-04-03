@@ -84,3 +84,27 @@ async def test_binary_sensor_overdue_tasks_attribute(
     assert len(overdue_tasks) == 1
     assert overdue_tasks[0]["title"] == "Late task"
     assert overdue_tasks[0]["due_date"] == "2026-04-01"
+
+
+# ---------------------------------------------------------------------------
+# External entries should not create binary sensor entities
+# ---------------------------------------------------------------------------
+
+
+async def test_binary_sensor_not_created_for_external_entry(
+    hass: HomeAssistant,
+) -> None:
+    """External entries do not create a binary_sensor entity."""
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    ext_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"type": "external", "entity_id": "todo.bsensor_ext", "name": "BSensor Ext"},
+        title="BSensor Ext (External)",
+    )
+    ext_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(ext_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = _get_binary_sensor_entity_id(hass, f"{ext_entry.entry_id}_overdue")
+    assert entity_id is None

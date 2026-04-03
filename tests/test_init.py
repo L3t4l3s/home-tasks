@@ -357,3 +357,64 @@ async def test_external_entry_setup_and_unload(
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.entry_id not in hass.data.get(DOMAIN, {})
+
+
+# ---------------------------------------------------------------------------
+# External entry edge cases
+# ---------------------------------------------------------------------------
+
+
+async def test_external_entry_setup_fails_without_entity_id(
+    hass: HomeAssistant, patch_add_extra_js_url
+) -> None:
+    """External entry without entity_id returns False on setup."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"type": "external"},
+        title="Bad External",
+    )
+    entry.add_to_hass(hass)
+    result = await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert result is False
+    assert entry.entry_id not in hass.data.get(DOMAIN, {})
+
+
+async def test_check_external_due_dates_handles_missing_entity(
+    hass: HomeAssistant, patch_add_extra_js_url
+) -> None:
+    """_async_check_due_dates does not raise for external entity that doesn't exist."""
+    from custom_components.home_tasks import _async_check_due_dates
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"type": "external", "entity_id": "todo.nonexistent", "name": "Ghost"},
+        title="Ghost (External)",
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Should not raise — errors are caught and logged
+    await _async_check_due_dates(hass)
+    await hass.async_block_till_done()
+
+
+async def test_startup_due_check_scheduled_once(
+    hass: HomeAssistant, mock_config_entry, patch_add_extra_js_url
+) -> None:
+    """DATA_DUE_STARTUP_DONE is set after first entry setup, preventing duplicates."""
+    from custom_components.home_tasks import DATA_DUE_STARTUP_DONE
+
+    assert hass.data.get(DATA_DUE_STARTUP_DONE) is True
+
+    # Set up a second (external) entry — the flag should still be True
+    ext_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"type": "external", "entity_id": "todo.second_ext", "name": "Second"},
+        title="Second (External)",
+    )
+    ext_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(ext_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.data.get(DATA_DUE_STARTUP_DONE) is True

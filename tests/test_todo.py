@@ -210,3 +210,53 @@ async def test_todo_external_entry_skipped(hass: HomeAssistant, patch_add_extra_
     reg = er.async_get(hass)
     entity_id = reg.async_get_entity_id("todo", DOMAIN, ext_entry.entry_id)
     assert entity_id is None
+
+
+# ---------------------------------------------------------------------------
+# Due-date preservation on update
+# ---------------------------------------------------------------------------
+
+
+async def test_todo_update_preserves_due_date_on_title_change(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Renaming a task via todo.update_item does not clear its due_date."""
+    task = await store.async_add_task("Original")
+    await store.async_update_task(task["id"], due_date="2026-06-15")
+    await hass.async_block_till_done()
+
+    entity_id = _get_todo_entity_id(hass, mock_config_entry.entry_id)
+    await hass.services.async_call(
+        "todo", "update_item",
+        {"entity_id": entity_id, "item": task["id"], "rename": "New name"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    updated = store.get_task(task["id"])
+    assert updated["title"] == "New name"
+    assert updated["due_date"] == "2026-06-15"
+
+
+async def test_todo_update_clears_due_date(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Setting due_date to None via todo.update_item clears the date."""
+    task = await store.async_add_task("Has date")
+    await store.async_update_task(task["id"], due_date="2026-06-15")
+    await hass.async_block_till_done()
+
+    entity_id = _get_todo_entity_id(hass, mock_config_entry.entry_id)
+    # HA passes a complete TodoItem — with due=None to clear
+    entity_comp = hass.data.get("todo")
+    if entity_comp and hasattr(entity_comp, "get_entity"):
+        entity = entity_comp.get_entity(entity_id)
+        if entity:
+            item = TodoItem(
+                uid=task["id"],
+                summary="Has date",
+                status=TodoItemStatus.NEEDS_ACTION,
+                due=None,
+            )
+            await entity.async_update_todo_item(item)
+            await hass.async_block_till_done()
+            assert store.get_task(task["id"])["due_date"] is None

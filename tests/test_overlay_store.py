@@ -271,3 +271,67 @@ async def test_valid_recurrence_overlay(hass: HomeAssistant, overlay_store) -> N
     )
     assert overlay["recurrence_enabled"] is True
     assert overlay["recurrence_weekdays"] == [0, 2, 4]
+
+
+# ---------------------------------------------------------------------------
+# _strip_default_overlays and selective storage
+# ---------------------------------------------------------------------------
+
+
+async def test_strip_default_overlays_removes_defaults(hass: HomeAssistant, overlay_store) -> None:
+    """_strip_default_overlays removes an overlay that is entirely defaults."""
+    overlay_store._data = {"overlays": {"uid-1": {
+        "priority": None,
+        "tags": [],
+        "recurrence_enabled": False,
+        "sort_order": 0,
+        "due_time": None,
+        "assigned_person": None,
+        "reminders": [],
+        "recurrence_value": 1,
+        "recurrence_unit": None,
+        "recurrence_type": "interval",
+        "recurrence_weekdays": [],
+        "recurrence_start_date": None,
+        "recurrence_time": None,
+        "recurrence_end_type": "none",
+        "recurrence_end_date": None,
+        "recurrence_max_count": None,
+        "recurrence_remaining_count": None,
+        "history": [],
+        "completed_at": None,
+    }}}
+    overlay_store._strip_default_overlays()
+    # All fields matched defaults (sub_items excluded from strip by design),
+    # so the overlay entry should be removed entirely.
+    assert overlay_store._data["overlays"] == {}
+
+
+async def test_strip_default_overlays_keeps_nondefault_fields(hass: HomeAssistant, overlay_store) -> None:
+    """_strip_default_overlays keeps non-default values and removes default ones."""
+    overlay_store._data = {"overlays": {"uid-2": {
+        "priority": 2,
+        "tags": [],
+    }}}
+    overlay_store._strip_default_overlays()
+    stored = overlay_store._data["overlays"]["uid-2"]
+    assert stored["priority"] == 2
+    assert "tags" not in stored
+
+
+async def test_set_overlay_only_stores_explicit_fields(hass: HomeAssistant, overlay_store) -> None:
+    """async_set_overlay stores only the fields that were explicitly passed."""
+    await overlay_store.async_set_overlay("uid-explicit", priority=2)
+    raw = overlay_store._data["overlays"]["uid-explicit"]
+    assert raw["priority"] == 2
+    # Should NOT contain all 20 default fields — only the one we set
+    assert "tags" not in raw
+    assert "recurrence_enabled" not in raw
+    assert "sort_order" not in raw
+
+
+async def test_update_sub_task_wrong_id_raises(hass: HomeAssistant, overlay_store) -> None:
+    """Updating a sub-task with the wrong sub_task_id raises ValueError."""
+    sub = await overlay_store.async_add_sub_task("uid-sub", "A sub-task")
+    with pytest.raises(ValueError, match="Sub-task not found"):
+        await overlay_store.async_update_sub_task("uid-sub", "wrong-sub-id", completed=True)
