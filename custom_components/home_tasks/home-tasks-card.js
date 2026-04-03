@@ -1026,6 +1026,17 @@ class HomeTasksCard extends HTMLElement {
 
   // --- External entity routing helpers ---
 
+  /**
+   * Reload tasks for an external column with a delay.
+   * External providers have latency — the entity may not reflect changes
+   * immediately after a service call. This does an immediate load attempt
+   * followed by a delayed retry.
+   */
+  _reloadExternal(colIdx) {
+    this._loadAllTasks();
+    setTimeout(() => this._loadAllTasks(), 1500);
+  }
+
   _isExternalCol(colIdx) {
     return !!this._config.columns[colIdx]?.entity_id;
   }
@@ -1225,9 +1236,7 @@ class HomeTasksCard extends HTMLElement {
     if (result) {
       cs.newTaskTitle = "";
       if (this._isExternalCol(colIdx)) {
-        // Delayed reload — entity may not reflect the new task yet
-        await this._loadAllTasks();
-        setTimeout(() => this._loadAllTasks(), 1500);
+        this._reloadExternal(colIdx);
       } else {
         this._justAddedTaskId = result.id ? String(result.id) : null;
         this._addInputRect = addInputRect;
@@ -1263,8 +1272,7 @@ class HomeTasksCard extends HTMLElement {
       this._render();
       this._applyFlip(before, colIdx, 0.28);
       await this._updateTaskRouted(colIdx, taskId, { completed: newCompleted });
-      // Delayed reload to pick up any provider-side changes
-      setTimeout(() => this._loadAllTasks(), 1000);
+      this._reloadExternal(colIdx);
     } else {
       await this._updateTaskRouted(colIdx, taskId, { completed: newCompleted });
       await this._loadAllTasks();
@@ -1276,7 +1284,13 @@ class HomeTasksCard extends HTMLElement {
     if (!title.trim()) return;
     await this._updateTaskRouted(colIdx, taskId, { title: title.trim() });
     this._editingTaskId = null;
-    await this._loadAllTasks();
+    if (this._isExternalCol(colIdx)) {
+      const task = this._columns[colIdx]?.tasks?.find(t => t.id === taskId);
+      if (task) task.title = title.trim();
+      this._reloadExternal(colIdx);
+    } else {
+      await this._loadAllTasks();
+    }
   }
 
   async _updateTaskNotes(taskId, notes, colIdx) {
@@ -1293,7 +1307,16 @@ class HomeTasksCard extends HTMLElement {
       due_date: dueDate || null,
       due_time: dueDate ? (dueTime || null) : null,
     });
-    await this._loadAllTasks();
+    if (this._isExternalCol(colIdx)) {
+      const task = this._columns[colIdx]?.tasks?.find(t => t.id === taskId);
+      if (task) {
+        task.due_date = dueDate || null;
+        task.due_time = dueDate ? (dueTime || null) : null;
+      }
+      this._reloadExternal(colIdx);
+    } else {
+      await this._loadAllTasks();
+    }
   }
 
   async _deleteTask(taskId, colIdx) {
