@@ -30,25 +30,28 @@ _LOGGER = logging.getLogger(__name__)
 async def _collect(result: Any) -> list:
     """Normalize a Todoist API result to a plain list.
 
-    todoist-api-python v2.x: regular coroutine → ``await`` gives a list.
-    v3+/v4: async generator → yields pages of lists.
-    This helper transparently handles both.
+    todoist-api-python v2.x: coroutine → await → list[Task].
+    v3+/v4: may return coroutine → await → async_generator,
+    or directly an async_generator that yields list[Task] pages.
+    This helper unwraps all layers until we have a flat list.
     """
-    # Already a plain list (shouldn't happen but be safe)
+    # Unwrap coroutines first (may resolve to list OR async_generator)
+    while asyncio.iscoroutine(result) or asyncio.isfuture(result):
+        result = await result
+    # Already a plain list
     if isinstance(result, list):
         return result
-    # Coroutine (v2.x) — await it to get the list
-    if asyncio.iscoroutine(result):
-        resolved = await result
-        return resolved if isinstance(resolved, list) else [resolved]
-    # Async generator / async iterator (v3+/v4) — collect all pages
-    items: list = []
-    async for page in result:
-        if isinstance(page, list):
-            items.extend(page)
-        else:
-            items.append(page)
-    return items
+    # Async generator / async iterator — collect all pages
+    if hasattr(result, "__aiter__"):
+        items: list = []
+        async for page in result:
+            if isinstance(page, list):
+                items.extend(page)
+            else:
+                items.append(page)
+        return items
+    # Single item fallback
+    return [result]
 
 
 # Weekday names used when converting our recurrence weekdays to Todoist strings.
