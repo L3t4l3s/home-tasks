@@ -69,8 +69,8 @@ def _handle_error(connection, msg_id, err):
     if isinstance(err, ValueError):
         connection.send_error(msg_id, "invalid_request", str(err))
     else:
-        _LOGGER.exception("Unexpected error in home_tasks")
-        connection.send_error(msg_id, "unknown_error", "An internal error occurred")
+        _LOGGER.exception("Unexpected error in home_tasks: %s", err)
+        connection.send_error(msg_id, "unknown_error", f"Internal error: {type(err).__name__}: {err}")
 
 
 # --- List overview (returns config entries as lists) ---
