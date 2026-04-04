@@ -408,6 +408,7 @@ def _merge_tasks_with_overlays(
 def _merge_tasks_with_adapter_data(
     adapter_items: list[dict],
     overlay_store: ExternalTaskOverlayStore,
+    adapter_capabilities=None,
 ) -> list[dict]:
     """Merge tasks from a rich adapter with remaining overlay data.
 
@@ -416,11 +417,20 @@ def _merge_tasks_with_adapter_data(
     the adapter does NOT sync.
     """
     overlays = overlay_store.get_all_overlays()
+    raw_overlays = overlay_store._data.get("overlays", {}) if overlay_store._data else {}
+    can_sync_order = adapter_capabilities.can_sync_order if adapter_capabilities else False
     tasks = []
-    for item in adapter_items:
+    for idx, item in enumerate(adapter_items):
         uid = item.get("uid") or ""
         overlay = overlays.get(uid, {})
+        raw = raw_overlays.get(uid, {})
         completed = item.get("status") == "completed"
+
+        # Sort order: use provider order if synced, else overlay, else provider index
+        if can_sync_order:
+            sort_order = item.get("order", idx)
+        else:
+            sort_order = raw["sort_order"] if "sort_order" in raw else item.get("order", idx)
 
         task = {
             "id": uid,
@@ -428,7 +438,7 @@ def _merge_tasks_with_adapter_data(
             "completed": completed,
             "notes": item.get("description") or "",
             "due_date": item.get("due"),
-            "sort_order": item.get("order", 0),
+            "sort_order": sort_order,
             # --- Fields from adapter (synced) ---
             "priority": item.get("priority"),
             "tags": item.get("labels", []),
@@ -530,7 +540,9 @@ async def ws_get_external_tasks(hass, connection, msg):
         if adapter and not isinstance(adapter, GenericAdapter):
             # Rich adapter (e.g. Todoist) — read directly from provider API
             external_items = await adapter.async_read_tasks()
-            tasks = _merge_tasks_with_adapter_data(external_items, overlay_store)
+            tasks = _merge_tasks_with_adapter_data(
+                external_items, overlay_store, adapter.capabilities,
+            )
         else:
             # Generic path — read via HA todo entity + overlay
             external_items = _get_external_todo_items(hass, entity_id)

@@ -327,20 +327,6 @@ class TodoistAdapter(ProviderAdapter):
     """Full bidirectional sync via the Todoist REST API."""
 
     provider_type = "todoist"
-    # Note: can_sync_order and can_sync_reminders are False because
-    # todoist-api-python v3.x does not support the order param on
-    # update_task, and has no reminder endpoints.
-    capabilities = ProviderCapabilities(
-        can_sync_priority=True,
-        can_sync_labels=True,
-        can_sync_order=False,
-        can_sync_due_time=True,
-        can_sync_description=True,
-        can_sync_assignee=True,
-        can_sync_sub_items=True,
-        can_sync_recurrence=True,
-        can_sync_reminders=False,
-    )
 
     def __init__(
         self,
@@ -354,6 +340,19 @@ class TodoistAdapter(ProviderAdapter):
         self._api: Any = None  # TodoistAPIAsync, lazy-initialised
         self._project_id: str | None = config_data.get("todoist_project_id")
         self._collaborators: list[Any] = []
+        # Instance-level capabilities — can_sync_assignee is updated after
+        # loading collaborators (disabled for non-shared projects).
+        self.capabilities = ProviderCapabilities(
+            can_sync_priority=True,
+            can_sync_labels=True,
+            can_sync_order=False,
+            can_sync_due_time=True,
+            can_sync_description=True,
+            can_sync_assignee=False,  # updated in _load_collaborators
+            can_sync_sub_items=True,
+            can_sync_recurrence=True,
+            can_sync_reminders=False,
+        )
 
     # -- lazy init ----------------------------------------------------------
 
@@ -428,6 +427,10 @@ class TodoistAdapter(ProviderAdapter):
         except Exception:  # noqa: BLE001
             self._collaborators = []
             _LOGGER.debug("No collaborators for project %s (probably not shared)", self._project_id)
+        # Enable assignee sync only for shared projects with collaborators
+        self.capabilities = ProviderCapabilities(
+            **{**self.capabilities.to_dict(), "can_sync_assignee": len(self._collaborators) > 0}
+        )
 
     # -- Assignee matching --------------------------------------------------
 
@@ -585,34 +588,55 @@ class TodoistAdapter(ProviderAdapter):
 
     @staticmethod
     def _extract_time(due_obj: Any) -> str | None:
-        """Extract HH:MM from a Todoist due object."""
+        """Extract HH:MM from a Todoist due object.
+
+        v3.x: ``due.date`` is a ``datetime`` (with time) or ``date`` (no time).
+        v2.x: ``due.datetime`` is an ISO string like ``"2026-04-08T00:45:00Z"``.
+        """
         if due_obj is None:
             return None
-        due_dt = getattr(due_obj, "datetime", None)
-        if due_dt:
-            # Parse ISO datetime string
+        from datetime import date as date_type
+
+        due_val = getattr(due_obj, "date", None)
+        if isinstance(due_val, dt):
+            # v3.x: due.date is a datetime object with time component
+            local = due_val.astimezone() if due_val.tzinfo else due_val
+            return local.strftime("%H:%M")
+
+        # v2.x fallback: due.datetime is an ISO string
+        due_dt_str = getattr(due_obj, "datetime", None)
+        if due_dt_str and isinstance(due_dt_str, str):
             try:
-                parsed = dt.fromisoformat(due_dt.replace("Z", "+00:00"))
-                local = parsed.astimezone()
-                return local.strftime("%H:%M")
+                parsed = dt.fromisoformat(due_dt_str.replace("Z", "+00:00"))
+                return parsed.astimezone().strftime("%H:%M")
             except (ValueError, TypeError):
                 pass
         return None
 
     @staticmethod
     def _extract_date(due_obj: Any) -> str | None:
-        """Extract YYYY-MM-DD from a Todoist due object."""
+        """Extract YYYY-MM-DD string from a Todoist due object.
+
+        v3.x: ``due.date`` is a ``datetime`` or ``date`` Python object.
+        v2.x: ``due.date`` is an ISO date string, ``due.datetime`` an ISO string.
+        """
         if due_obj is None:
             return None
-        due_dt = getattr(due_obj, "datetime", None)
-        if due_dt:
-            try:
-                parsed = dt.fromisoformat(due_dt.replace("Z", "+00:00"))
-                local = parsed.astimezone()
-                return local.date().isoformat()
-            except (ValueError, TypeError):
-                pass
-        return getattr(due_obj, "date", None)
+        from datetime import date as date_type
+
+        due_val = getattr(due_obj, "date", None)
+        if due_val is None:
+            return None
+        # v3.x: Python date/datetime object
+        if isinstance(due_val, dt):
+            local = due_val.astimezone() if due_val.tzinfo else due_val
+            return local.date().isoformat()
+        if isinstance(due_val, date_type):
+            return due_val.isoformat()
+        # v2.x: already a string
+        if isinstance(due_val, str):
+            return due_val
+        return str(due_val)
 
     def _build_due_params(self, fields: dict) -> dict[str, Any]:
         """Build Todoist API due parameters from fields."""
@@ -765,13 +789,9 @@ class TodoistAdapter(ProviderAdapter):
                      "recurrence_start_date", "recurrence_time", "recurrence_end_date"}
         changed_due_keys = _DUE_KEYS & fields.keys()
         if changed_due_keys:
-            # Only send due params when there's a concrete value to set —
-            # toggling recurrence_enabled alone without other recurrence
-            # details should not overwrite the existing due date.
-            if changed_due_keys != {"recurrence_enabled"}:
-                due_params = self._build_due_params(fields)
-                if due_params:
-                    api_fields.update(due_params)
+            due_params = self._build_due_params(fields)
+            if due_params:
+                api_fields.update(due_params)
 
         # Assignee
         if "assigned_person" in fields:

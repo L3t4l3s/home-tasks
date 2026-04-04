@@ -245,12 +245,14 @@ class TestProviderCapabilities:
         assert all(v is False for v in d.values())
 
     def test_todoist_capabilities(self):
-        caps = TodoistAdapter.capabilities
+        hass = MagicMock()
+        adapter = TodoistAdapter(hass, "todo.todoist_test", {}, "fake_token")
+        caps = adapter.capabilities
         assert caps.can_sync_priority is True
         assert caps.can_sync_labels is True
         assert caps.can_sync_order is False  # v3.x has no order param
         assert caps.can_sync_sub_items is True
-        assert caps.can_sync_assignee is True
+        assert caps.can_sync_assignee is False  # False until collaborators loaded
         assert caps.can_sync_recurrence is True
         assert caps.can_sync_reminders is False  # v3.x has no reminder endpoints
 
