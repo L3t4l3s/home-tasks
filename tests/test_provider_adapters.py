@@ -248,11 +248,11 @@ class TestProviderCapabilities:
         caps = TodoistAdapter.capabilities
         assert caps.can_sync_priority is True
         assert caps.can_sync_labels is True
-        assert caps.can_sync_order is True
+        assert caps.can_sync_order is False  # v3.x has no order param
         assert caps.can_sync_sub_items is True
         assert caps.can_sync_assignee is True
         assert caps.can_sync_recurrence is True
-        assert caps.can_sync_reminders is True
+        assert caps.can_sync_reminders is False  # v3.x has no reminder endpoints
 
     def test_generic_capabilities(self):
         caps = GenericAdapter.capabilities

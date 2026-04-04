@@ -327,16 +327,19 @@ class TodoistAdapter(ProviderAdapter):
     """Full bidirectional sync via the Todoist REST API."""
 
     provider_type = "todoist"
+    # Note: can_sync_order and can_sync_reminders are False because
+    # todoist-api-python v3.x does not support the order param on
+    # update_task, and has no reminder endpoints.
     capabilities = ProviderCapabilities(
         can_sync_priority=True,
         can_sync_labels=True,
-        can_sync_order=True,
+        can_sync_order=False,
         can_sync_due_time=True,
         can_sync_description=True,
         can_sync_assignee=True,
         can_sync_sub_items=True,
         can_sync_recurrence=True,
-        can_sync_reminders=True,
+        can_sync_reminders=False,
     )
 
     def __init__(
@@ -754,13 +757,21 @@ class TodoistAdapter(ProviderAdapter):
         if "tags" in fields:
             api_fields["labels"] = fields["tags"]
 
-        # Due date / time / recurrence
-        due_keys = {"due_date", "due_time", "recurrence_enabled", "recurrence_type",
+        # Due date / time / recurrence — only touch if the caller
+        # explicitly sends one of these keys (avoid clearing due date
+        # when the update is about a different field like reminders).
+        _DUE_KEYS = {"due_date", "due_time", "recurrence_enabled", "recurrence_type",
                      "recurrence_value", "recurrence_unit", "recurrence_weekdays",
                      "recurrence_start_date", "recurrence_time", "recurrence_end_date"}
-        if any(k in fields for k in due_keys):
-            due_params = self._build_due_params(fields)
-            api_fields.update(due_params)
+        changed_due_keys = _DUE_KEYS & fields.keys()
+        if changed_due_keys:
+            # Only send due params when there's a concrete value to set —
+            # toggling recurrence_enabled alone without other recurrence
+            # details should not overwrite the existing due date.
+            if changed_due_keys != {"recurrence_enabled"}:
+                due_params = self._build_due_params(fields)
+                if due_params:
+                    api_fields.update(due_params)
 
         # Assignee
         if "assigned_person" in fields:
@@ -774,12 +785,14 @@ class TodoistAdapter(ProviderAdapter):
             else:
                 api_fields["assignee_id"] = None
 
-        # Status (separate API calls)
+        # Status — method names differ across API versions
         if "completed" in fields:
             if fields["completed"]:
-                await api.close_task(task_uid)
+                complete = getattr(api, "complete_task", None) or api.close_task
+                await complete(task_uid)
             else:
-                await api.reopen_task(task_uid)
+                uncomplete = getattr(api, "uncomplete_task", None) or api.reopen_task
+                await uncomplete(task_uid)
 
         # Send update if there are API fields
         if api_fields:
@@ -805,15 +818,9 @@ class TodoistAdapter(ProviderAdapter):
         await api.delete_task(task_uid)
 
     async def async_reorder_tasks(self, task_uids: list[str]) -> bool:
-        api = await self._ensure_api()
-        try:
-            await asyncio.gather(*(
-                api.update_task(uid, order=i) for i, uid in enumerate(task_uids)
-            ))
-        except Exception:  # noqa: BLE001
-            _LOGGER.warning("Failed to reorder Todoist tasks")
-            return False
-        return True
+        # todoist-api-python v3.x update_task does not support the 'order'
+        # parameter — fall back to overlay-based ordering.
+        return False
 
     # -- Sub-task CRUD ------------------------------------------------------
 
@@ -829,9 +836,11 @@ class TodoistAdapter(ProviderAdapter):
             api_fields["content"] = fields["title"]
         if "completed" in fields:
             if fields["completed"]:
-                await api.close_task(sub_task_uid)
+                complete = getattr(api, "complete_task", None) or api.close_task
+                await complete(sub_task_uid)
             else:
-                await api.reopen_task(sub_task_uid)
+                uncomplete = getattr(api, "uncomplete_task", None) or api.reopen_task
+                await uncomplete(sub_task_uid)
         if api_fields:
             await api.update_task(sub_task_uid, **api_fields)
         return True
@@ -844,15 +853,7 @@ class TodoistAdapter(ProviderAdapter):
     async def async_reorder_sub_tasks(
         self, parent_uid: str, sub_task_uids: list[str]
     ) -> bool:
-        api = await self._ensure_api()
-        try:
-            await asyncio.gather(*(
-                api.update_task(uid, order=i) for i, uid in enumerate(sub_task_uids)
-            ))
-        except Exception:  # noqa: BLE001
-            _LOGGER.warning("Failed to reorder Todoist sub-tasks")
-            return False
-        return True
+        return False  # v3.x has no order param — use overlay
 
     # -- Reminder sync ------------------------------------------------------
 
