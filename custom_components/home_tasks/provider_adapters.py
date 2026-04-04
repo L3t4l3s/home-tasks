@@ -64,10 +64,12 @@ _GENERIC_BASE_FIELDS = frozenset({"title", "completed", "notes", "due_date", "du
 # Fields that the TodoistAdapter syncs directly via the Todoist API.
 _TODOIST_PROVIDER_FIELDS = frozenset({
     "title", "notes", "priority", "tags", "due_date", "due_time",
-    "completed", "assigned_person", "reminders", "sort_order",
+    "completed", "assigned_person", "sort_order",
     "recurrence_enabled", "recurrence_type", "recurrence_value",
     "recurrence_unit", "recurrence_weekdays", "recurrence_start_date",
     "recurrence_time", "recurrence_end_date",
+    # Note: "reminders" is intentionally NOT here — it goes to overlay
+    # because todoist-api-python v3.x has no reminder endpoints.
 })
 
 # ---------------------------------------------------------------------------
@@ -477,7 +479,14 @@ class TodoistAdapter(ProviderAdapter):
     @staticmethod
     def _build_recurrence_string(fields: dict) -> str | None:
         """Convert structured recurrence fields to a Todoist due_string."""
-        if not fields.get("recurrence_enabled"):
+        # Recurrence is active if explicitly enabled OR if recurrence detail
+        # fields are present (partial update from the card editor).
+        _REC_DETAIL_KEYS = {"recurrence_value", "recurrence_unit", "recurrence_weekdays",
+                            "recurrence_type", "recurrence_time", "recurrence_start_date"}
+        has_details = any(k in fields for k in _REC_DETAIL_KEYS)
+        if not fields.get("recurrence_enabled") and not has_details:
+            return None
+        if fields.get("recurrence_enabled") is False:
             return None
 
         rtype = fields.get("recurrence_type", "interval")
@@ -793,17 +802,17 @@ class TodoistAdapter(ProviderAdapter):
             if due_params:
                 api_fields.update(due_params)
 
-        # Assignee
+        # Assignee — can only SET, not clear via API (Todoist rejects empty/null)
         if "assigned_person" in fields:
             if fields["assigned_person"]:
                 collab_id = self._resolve_person_to_collaborator(fields["assigned_person"])
                 if collab_id:
                     api_fields["assignee_id"] = collab_id
                 else:
-                    # No match – keep in overlay
                     unsynced["assigned_person"] = fields["assigned_person"]
             else:
-                api_fields["assignee_id"] = None
+                # Clearing: keep in overlay only (API has no unassign)
+                unsynced["assigned_person"] = None
 
         # Status — method names differ across API versions
         if "completed" in fields:
