@@ -30,13 +30,18 @@ _LOGGER = logging.getLogger(__name__)
 async def _collect(result: Any) -> list:
     """Normalize a Todoist API result to a plain list.
 
-    todoist-api-python v2.x returns ``list`` directly from ``await``.
-    v3+/v4 returns an ``AsyncIterator[list[T]]`` (async generator) that
-    yields pages.  This helper transparently handles both.
+    todoist-api-python v2.x: regular coroutine → ``await`` gives a list.
+    v3+/v4: async generator → yields pages of lists.
+    This helper transparently handles both.
     """
+    # Already a plain list (shouldn't happen but be safe)
     if isinstance(result, list):
         return result
-    # async generator / async iterator → collect all pages
+    # Coroutine (v2.x) — await it to get the list
+    if asyncio.iscoroutine(result):
+        resolved = await result
+        return resolved if isinstance(resolved, list) else [resolved]
+    # Async generator / async iterator (v3+/v4) — collect all pages
     items: list = []
     async for page in result:
         if isinstance(page, list):
