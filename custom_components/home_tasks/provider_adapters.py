@@ -26,6 +26,26 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
+async def _collect(result: Any) -> list:
+    """Normalize a Todoist API result to a plain list.
+
+    todoist-api-python v2.x returns ``list`` directly from ``await``.
+    v3+/v4 returns an ``AsyncIterator[list[T]]`` (async generator) that
+    yields pages.  This helper transparently handles both.
+    """
+    if isinstance(result, list):
+        return result
+    # async generator / async iterator → collect all pages
+    items: list = []
+    async for page in result:
+        if isinstance(page, list):
+            items.extend(page)
+        else:
+            items.append(page)
+    return items
+
+
 # Weekday names used when converting our recurrence weekdays to Todoist strings.
 _WEEKDAY_NAMES = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
 _VALID_RECURRENCE_UNITS = frozenset({"hours", "days", "weeks", "months"})
@@ -350,7 +370,7 @@ class TodoistAdapter(ProviderAdapter):
     async def _resolve_project_id(self) -> None:
         """Determine the Todoist project ID from the entity name."""
         api = self._api
-        projects = await api.get_projects()
+        projects = await _collect(api.get_projects())
 
         # Derive expected project name from entity_id or config name
         entity_name = self._config_data.get("name", "")
@@ -393,7 +413,7 @@ class TodoistAdapter(ProviderAdapter):
             self._collaborators = []
             return
         try:
-            self._collaborators = await self._api.get_collaborators(self._project_id)
+            self._collaborators = await _collect(self._api.get_collaborators(self._project_id))
         except Exception:  # noqa: BLE001
             self._collaborators = []
             _LOGGER.debug("No collaborators for project %s (probably not shared)", self._project_id)
@@ -618,7 +638,7 @@ class TodoistAdapter(ProviderAdapter):
         if self._project_id:
             kwargs["project_id"] = self._project_id
 
-        all_tasks = await api.get_tasks(**kwargs)
+        all_tasks = await _collect(api.get_tasks(**kwargs))
 
         # Separate main tasks from sub-tasks
         main_tasks = [t for t in all_tasks if not t.parent_id]
@@ -835,7 +855,7 @@ class TodoistAdapter(ProviderAdapter):
             return
         existing: list[Any] = []
         try:
-            existing = await api.get_reminders(task_id=task_uid)
+            existing = await _collect(api.get_reminders(task_id=task_uid))
         except Exception:  # noqa: BLE001
             _LOGGER.debug("Could not read reminders for task %s", task_uid)
             return
