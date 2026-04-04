@@ -756,24 +756,22 @@ async def _async_setup_external_entry(hass: HomeAssistant, entry: ConfigEntry) -
         _LOGGER.error("External entry %s has no entity_id", entry.entry_id)
         return False
 
-    # Auto-detect and migrate provider_type if missing
-    if "provider_type" not in entry.data:
-        from .provider_adapters import detect_provider_type  # noqa: WPS433
-
-        provider_type = detect_provider_type(hass, entity_id)
-        hass.config_entries.async_update_entry(
-            entry, data={**entry.data, "provider_type": provider_type}
-        )
-        _LOGGER.info("Detected provider_type '%s' for %s", provider_type, entity_id)
-
     overlay_store = ExternalTaskOverlayStore(hass, entity_id)
     await overlay_store.async_load()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = overlay_store
 
-    # Instantiate the provider adapter
-    from .provider_adapters import get_adapter  # noqa: WPS433
+    # Instantiate the provider adapter.
+    # Detect provider_type on the fly if missing (pre-1.7 entries) — do NOT call
+    # async_update_entry here because that triggers a config entry reload which
+    # would abort this setup mid-flight and cause transient "overlay not found" errors.
+    from .provider_adapters import detect_provider_type, get_adapter  # noqa: WPS433
 
-    adapter = get_adapter(hass, entity_id, entry.data)
+    config_data = dict(entry.data)
+    if "provider_type" not in config_data:
+        config_data["provider_type"] = detect_provider_type(hass, entity_id)
+        _LOGGER.info("Detected provider_type '%s' for %s", config_data["provider_type"], entity_id)
+
+    adapter = get_adapter(hass, entity_id, config_data)
     hass.data.setdefault(f"{DOMAIN}_adapters", {})[entity_id] = adapter
 
     _LOGGER.info(
