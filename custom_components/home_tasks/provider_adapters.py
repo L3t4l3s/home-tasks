@@ -794,17 +794,25 @@ class TodoistAdapter(ProviderAdapter):
                 unsynced[key] = value
 
         # Step 2: Send API updates (errors are logged but don't block overlay).
-        try:
-            if "completed" in fields:
+        api_errors: list[str] = []
+        if "completed" in fields:
+            try:
                 if fields["completed"]:
                     await api.complete_task(task_uid)
                 else:
                     await api.uncomplete_task(task_uid)
-            if api_fields:
-                _LOGGER.debug("Todoist update_task %s: %s", task_uid, api_fields)
+            except Exception as exc:  # noqa: BLE001
+                api_errors.append(f"status: {exc}")
+        if api_fields:
+            try:
                 await api.update_task(task_uid, **api_fields)
-        except Exception as exc:  # noqa: BLE001
-            _LOGGER.warning("Todoist API update failed for task %s: %s", task_uid, exc)
+            except Exception as exc:  # noqa: BLE001
+                api_errors.append(f"update({list(api_fields.keys())}): {exc}")
+        if api_errors:
+            err_msg = "; ".join(api_errors)
+            _LOGGER.warning("Todoist API errors for task %s: %s", task_uid, err_msg)
+            # Propagate error so the card shows it
+            raise ValueError(f"Todoist sync partial failure: {err_msg}")
 
         # Sync reminders via API
         if "reminders" in fields:
