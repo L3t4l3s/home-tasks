@@ -1358,7 +1358,8 @@ class HomeTasksCard extends HTMLElement {
       this._render();
     }
 
-    // Send to backend in background
+    // Send to backend in background, then swap temp ID for real ID
+    // without a full reload (which would destroy the active input).
     let result;
     if (this._isExternalCol(colIdx)) {
       result = await this._callWs("home_tasks/add_external_sub_task", {
@@ -1373,10 +1374,14 @@ class HomeTasksCard extends HTMLElement {
         title,
       });
     }
-    if (result) {
-      this._editingSubTaskId = result.id;
+    if (result && task) {
+      // Replace temp ID with real ID in local data — no DOM rebuild needed
+      const sub = task.sub_items.find(s => s.id === tempId);
+      if (sub) sub.id = result.id;
+      if (this._editingSubTaskId === tempId) {
+        this._editingSubTaskId = result.id;
+      }
     }
-    await this._loadAllTasks();
   }
 
   async _toggleSubTask(taskId, subItemId, completed, colIdx) {
