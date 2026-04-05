@@ -313,6 +313,7 @@ class TodoistAdapter(ProviderAdapter):
         self._token = token
         self._api: Any = None  # TodoistAPIClient, lazy-initialised
         self._project_id: str | None = config_data.get("todoist_project_id")
+        self._collaborators: list[Any] = []
         self.capabilities = ProviderCapabilities(
             can_sync_priority=True,
             can_sync_labels=True,
@@ -337,6 +338,11 @@ class TodoistAdapter(ProviderAdapter):
 
         if not self._project_id:
             await self._resolve_project_id()
+        if not self._collaborators and self._project_id:
+            try:
+                self._collaborators = await self._api.get_collaborators(self._project_id)
+            except Exception:  # noqa: BLE001
+                self._collaborators = []
         return self._api
 
     async def _resolve_project_id(self) -> None:
@@ -367,6 +373,23 @@ class TodoistAdapter(ProviderAdapter):
             _LOGGER.info("Resolved Todoist project ID %s for %s", self._project_id, self._entity_id)
         else:
             _LOGGER.warning("Could not resolve Todoist project ID for %s", self._entity_id)
+
+    def _match_person_to_collaborator(self, person_entity_id: str) -> str | None:
+        """Match HA person entity → Todoist collaborator ID by name."""
+        state = self._hass.states.get(person_entity_id)
+        if not state:
+            return None
+        name = (state.attributes.get("friendly_name") or "").lower().strip()
+        if not name:
+            return None
+        for c in self._collaborators:
+            if c.name.lower().strip() == name:
+                return c.id
+        for c in self._collaborators:
+            cn = c.name.lower().strip()
+            if name in cn or cn in name:
+                return c.id
+        return None
 
     # -- Recurrence mapping -------------------------------------------------
 
@@ -656,7 +679,11 @@ class TodoistAdapter(ProviderAdapter):
         due_params = self._build_due_params(fields)
         kwargs.update(due_params)
 
-        # Assignee: API v1 ignores assignee_id — stored in overlay only
+        # Assignee: send to API (visible in Todoist app) — overlay handles display
+        if fields.get("assigned_person"):
+            collab_id = self._match_person_to_collaborator(fields["assigned_person"])
+            if collab_id:
+                kwargs["assignee_id"] = collab_id
 
         task = await api.add_task(**kwargs)
 
@@ -695,7 +722,14 @@ class TodoistAdapter(ProviderAdapter):
             if due_params:
                 api_fields.update(due_params)
 
-        # Assignee: API v1 ignores assignee_id — always goes to overlay
+        # Assignee: API accepts assignee_id on write (visible in Todoist app)
+        # but never returns it on read — so we ALSO store in overlay.
+        if "assigned_person" in fields:
+            if fields["assigned_person"]:
+                collab_id = self._match_person_to_collaborator(fields["assigned_person"])
+                if collab_id:
+                    api_fields["assignee_id"] = collab_id
+            unsynced["assigned_person"] = fields["assigned_person"]
 
         # --- Fields that ALWAYS go to overlay ---
         _OVERLAY_ALWAYS = {"recurrence_end_type", "recurrence_end_date",
