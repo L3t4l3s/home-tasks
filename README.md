@@ -50,7 +50,7 @@ Display tasks from **any HA todo integration** alongside native Home Tasks lists
 |----------|---------------|----------|----------|-------------|---------|----------|--------|-----------|----------|------------|-----------|-------|
 | **CalDAV** (Nextcloud, etc.) | [CalDAV](https://www.home-assistant.io/integrations/caldav/) (Core) | yes | yes | yes | no | no | no | no | no | no | no | |
 | **Google Tasks** | [Google Tasks](https://www.home-assistant.io/integrations/google_tasks/) (Core) | yes | no | yes | yes | no | no | no | no | no | no | Google's API does not expose due times or recurrence ([open issue](https://issuetracker.google.com/issues/36759725)) |
-| **Todoist** | [Todoist](https://www.home-assistant.io/integrations/todoist/) (Core) | yes | yes | yes | yes | yes | yes | yes | yes | yes | yes | Full bidirectional sync via direct Todoist API |
+| **Todoist** | [Todoist](https://www.home-assistant.io/integrations/todoist/) (Core) | yes | yes | yes | yes | yes | yes | yes | no | yes | yes | Full bidirectional sync via direct Todoist API |
 
 Any other integration that creates `todo.*` entities following HA's standard `TodoListEntity` should also work. Fields marked "no" are available locally in Home Tasks but not synced to the provider.
 
@@ -66,7 +66,7 @@ When you link a Todoist list, Home Tasks automatically detects the Todoist provi
 | Labels / Tags | Full | Direct 1:1 mapping (both use string names) |
 | Sort order | Full | Via Todoist task `child_order` field |
 | Sub-tasks | Full | Created as real Todoist sub-tasks (`parent_id`) |
-| Assigned person | Set only | Name-matching between HA person entities and Todoist collaborators. Assigning works; **removing** an assignee must be done in the Todoist app (API limitation). Only available for shared projects. |
+| Assigned person | Local | Stored in overlay only — the Todoist REST API v1 silently ignores `assignee_id` on both create and update. |
 | Recurrence | Full | Mapped: structured recurrence to Todoist natural language strings (e.g. "every monday at 9am"). Complex Todoist patterns displayed read-only. End date supported; **repetition count** ("after N times") is local only. |
 | Reminders | Full | Synced via Todoist Reminders API (minute offsets) |
 | History / audit log | Local | Always stored locally |
@@ -83,7 +83,7 @@ Home Tasks uses its **own lightweight REST API client** (no dependency on `todoi
 - **Deadline vs. due date** — Todoist separates planned work date (due) from deadline
 - **Favorites** — marking tasks or projects as favorites
 - **Saved filters** — Todoist's own filter query language
-- **Unassign tasks** — the API does not support clearing an assignee
+- **Task assignment** — the REST API v1 silently ignores `assignee_id`; assignment only works via the Todoist app or Sync API
 
 ### Dashboard Card
 

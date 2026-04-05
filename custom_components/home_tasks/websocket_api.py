@@ -69,8 +69,8 @@ def _handle_error(connection, msg_id, err):
     if isinstance(err, ValueError):
         connection.send_error(msg_id, "invalid_request", str(err))
     else:
-        _LOGGER.exception("Unexpected error in home_tasks: %s", err)
-        connection.send_error(msg_id, "unknown_error", f"Internal error: {type(err).__name__}: {err}")
+        _LOGGER.exception("Unexpected error in home_tasks")
+        connection.send_error(msg_id, "unknown_error", "An internal error occurred")
 
 
 # --- List overview (returns config entries as lists) ---
@@ -444,8 +444,7 @@ def _merge_tasks_with_adapter_data(
             "tags": item.get("labels", []),
             "due_time": item.get("due_time"),
             "sub_items": item.get("sub_items", []),
-            "assigned_person": item.get("assigned_person") or overlay.get("assigned_person"),
-            "assigned_name": item.get("assigned_name"),
+            "assigned_person": overlay.get("assigned_person"),
             # Recurrence (from adapter if synced, else overlay)
             "recurrence_enabled": item.get("recurrence_enabled", overlay.get("recurrence_enabled", False)),
             "recurrence_type": item.get("recurrence_type", overlay.get("recurrence_type", "interval")),

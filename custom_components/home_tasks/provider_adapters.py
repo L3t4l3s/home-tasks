@@ -38,7 +38,7 @@ _GENERIC_BASE_FIELDS = frozenset({"title", "completed", "notes", "due_date", "du
 # Fields that the TodoistAdapter syncs directly via the Todoist API.
 _TODOIST_PROVIDER_FIELDS = frozenset({
     "title", "notes", "priority", "tags", "due_date", "due_time",
-    "completed", "assigned_person", "reminders", "sort_order",
+    "completed", "reminders", "sort_order",
     "recurrence_enabled", "recurrence_type", "recurrence_value",
     "recurrence_unit", "recurrence_weekdays", "recurrence_start_date",
     "recurrence_time", "recurrence_end_date",
@@ -313,14 +313,13 @@ class TodoistAdapter(ProviderAdapter):
         self._token = token
         self._api: Any = None  # TodoistAPIClient, lazy-initialised
         self._project_id: str | None = config_data.get("todoist_project_id")
-        self._collaborators: list[Any] = []
         self.capabilities = ProviderCapabilities(
             can_sync_priority=True,
             can_sync_labels=True,
             can_sync_order=True,
             can_sync_due_time=True,
             can_sync_description=True,
-            can_sync_assignee=False,  # updated in _load_collaborators
+            can_sync_assignee=False,  # API v1 silently ignores assignee_id
             can_sync_sub_items=True,
             can_sync_recurrence=True,
             can_sync_reminders=True,
@@ -338,7 +337,6 @@ class TodoistAdapter(ProviderAdapter):
 
         if not self._project_id:
             await self._resolve_project_id()
-        await self._load_collaborators()
         return self._api
 
     async def _resolve_project_id(self) -> None:
@@ -369,73 +367,6 @@ class TodoistAdapter(ProviderAdapter):
             _LOGGER.info("Resolved Todoist project ID %s for %s", self._project_id, self._entity_id)
         else:
             _LOGGER.warning("Could not resolve Todoist project ID for %s", self._entity_id)
-
-    async def _load_collaborators(self) -> None:
-        """Load and cache collaborators for the project."""
-        if not self._project_id:
-            self._collaborators = []
-            return
-        try:
-            self._collaborators = await self._api.get_collaborators(self._project_id)
-        except Exception:  # noqa: BLE001
-            self._collaborators = []
-            _LOGGER.debug("No collaborators for project %s (probably not shared)", self._project_id)
-        self.capabilities = ProviderCapabilities(
-            **{**self.capabilities.to_dict(), "can_sync_assignee": len(self._collaborators) > 0}
-        )
-
-    # -- Assignee matching --------------------------------------------------
-
-    def _resolve_person_to_collaborator(self, person_entity_id: str) -> str | None:
-        """Match HA person → Todoist collaborator ID by name."""
-        state = self._hass.states.get(person_entity_id)
-        if not state:
-            _LOGGER.warning("Assignee resolve: entity %s not found in HA states", person_entity_id)
-            return None
-        person_name = (state.attributes.get("friendly_name") or "").lower().strip()
-        if not person_name:
-            _LOGGER.warning("Assignee resolve: entity %s has no friendly_name", person_entity_id)
-            return None
-
-        _LOGGER.warning(
-            "Assignee resolve: looking for '%s' in %d collaborators (project=%s): %s",
-            person_name,
-            len(self._collaborators),
-            self._project_id,
-            [c.name for c in self._collaborators],
-        )
-
-        # Exact match first
-        for collab in self._collaborators:
-            if collab.name.lower().strip() == person_name:
-                _LOGGER.warning("Assignee resolve: exact match → collab_id=%s", collab.id)
-                return collab.id
-
-        # Partial match
-        for collab in self._collaborators:
-            cn = collab.name.lower().strip()
-            if person_name in cn or cn in person_name:
-                _LOGGER.warning("Assignee resolve: partial match → collab_id=%s", collab.id)
-                return collab.id
-
-        _LOGGER.warning("Assignee resolve: NO MATCH found")
-        return None
-
-    def _resolve_collaborator_to_person(self, assignee_id: str) -> tuple[str | None, str | None]:
-        """Match Todoist collaborator → HA person entity.
-
-        Returns (person_entity_id_or_None, collaborator_display_name_or_None).
-        """
-        collab = next((c for c in self._collaborators if c.id == assignee_id), None)
-        if not collab:
-            return None, None
-
-        collab_name = collab.name.lower().strip()
-        for state in self._hass.states.async_all("person"):
-            pname = (state.attributes.get("friendly_name") or "").lower().strip()
-            if pname == collab_name or pname in collab_name or collab_name in pname:
-                return state.entity_id, collab.name
-        return None, collab.name  # No HA person match → "unknown (Name)"
 
     # -- Recurrence mapping -------------------------------------------------
 
@@ -671,14 +602,6 @@ class TodoistAdapter(ProviderAdapter):
             if t.parent_id:
                 sub_tasks_by_parent[t.parent_id].append(t)
 
-        # Pre-build assignee cache to avoid repeated person-state scans
-        _assignee_cache: dict[str, tuple[str | None, str | None]] = {}
-
-        def _resolve_assignee(assignee_id: str) -> tuple[str | None, str | None]:
-            if assignee_id not in _assignee_cache:
-                _assignee_cache[assignee_id] = self._resolve_collaborator_to_person(assignee_id)
-            return _assignee_cache[assignee_id]
-
         result: list[dict] = []
         for task in main_tasks:
             children = sub_tasks_by_parent.get(task.id, [])
@@ -687,12 +610,6 @@ class TodoistAdapter(ProviderAdapter):
                 {"id": st.id, "title": st.content, "completed": st.is_completed}
                 for st in children
             ]
-
-            # Resolve assignee (cached)
-            assigned_person = None
-            assigned_name = None
-            if task.assignee_id:
-                assigned_person, assigned_name = _resolve_assignee(task.assignee_id)
 
             # Parse recurrence from due object
             recurrence = self._parse_recurrence_from_due(task.due)
@@ -715,8 +632,6 @@ class TodoistAdapter(ProviderAdapter):
                 "labels": list(task.labels) if task.labels else [],
                 "order": task.order,
                 "sub_items": sub_items,
-                "assigned_person": assigned_person,
-                "assigned_name": assigned_name,
                 "reminders": reminders,
                 **recurrence,
             })
@@ -741,11 +656,7 @@ class TodoistAdapter(ProviderAdapter):
         due_params = self._build_due_params(fields)
         kwargs.update(due_params)
 
-        # Assignee
-        if fields.get("assigned_person"):
-            collab_id = self._resolve_person_to_collaborator(fields["assigned_person"])
-            if collab_id:
-                kwargs["assignee_id"] = collab_id
+        # Assignee: API v1 ignores assignee_id — stored in overlay only
 
         task = await api.add_task(**kwargs)
 
@@ -784,19 +695,7 @@ class TodoistAdapter(ProviderAdapter):
             if due_params:
                 api_fields.update(due_params)
 
-        # Assignee
-        if "assigned_person" in fields:
-            if fields["assigned_person"]:
-                collab_id = self._resolve_person_to_collaborator(fields["assigned_person"])
-                if collab_id:
-                    api_fields["assignee_id"] = collab_id
-                else:
-                    _LOGGER.warning(
-                        "No collaborator match for %s (project=%s, %d collabs)",
-                        fields["assigned_person"], self._project_id, len(self._collaborators),
-                    )
-                    unsynced["assigned_person"] = fields["assigned_person"]
-            # Clearing assignee is not supported by the API — ignore silently
+        # Assignee: API v1 ignores assignee_id — always goes to overlay
 
         # --- Fields that ALWAYS go to overlay ---
         _OVERLAY_ALWAYS = {"recurrence_end_type", "recurrence_end_date",
@@ -811,25 +710,16 @@ class TodoistAdapter(ProviderAdapter):
                 unsynced[key] = value
 
         # Step 2: Send API updates (errors are logged but don't block overlay).
-        api_errors: list[str] = []
-        if "completed" in fields:
-            try:
+        try:
+            if "completed" in fields:
                 if fields["completed"]:
                     await api.complete_task(task_uid)
                 else:
                     await api.uncomplete_task(task_uid)
-            except Exception as exc:  # noqa: BLE001
-                api_errors.append(f"status: {exc}")
-        if api_fields:
-            try:
+            if api_fields:
                 await api.update_task(task_uid, **api_fields)
-            except Exception as exc:  # noqa: BLE001
-                api_errors.append(f"update({list(api_fields.keys())}): {exc}")
-        if api_errors:
-            err_msg = "; ".join(api_errors)
-            _LOGGER.warning("Todoist API errors for task %s: %s", task_uid, err_msg)
-            # Propagate error so the card shows it
-            raise ValueError(f"Todoist sync partial failure: {err_msg}")
+        except Exception:  # noqa: BLE001
+            _LOGGER.warning("Todoist API update failed for task %s", task_uid)
 
         # Sync reminders via API
         if "reminders" in fields:
