@@ -801,9 +801,10 @@ class TodoistAdapter(ProviderAdapter):
                 else:
                     await api.uncomplete_task(task_uid)
             if api_fields:
+                _LOGGER.debug("Todoist update_task %s: %s", task_uid, api_fields)
                 await api.update_task(task_uid, **api_fields)
-        except Exception:  # noqa: BLE001
-            _LOGGER.warning("Todoist API update failed for task %s — overlay still saved", task_uid)
+        except Exception as exc:  # noqa: BLE001
+            _LOGGER.warning("Todoist API update failed for task %s: %s", task_uid, exc)
 
         # Sync reminders via API
         if "reminders" in fields:

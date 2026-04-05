@@ -155,8 +155,9 @@ class TodoistAPIClient:
         payload = json.dumps(data) if data else None
         async with session.post(f"{_BASE_URL}/{path}", data=payload) as resp:
             resp.raise_for_status()
-            if resp.content_length and resp.content_length > 0:
-                return await resp.json()
+            body = await resp.read()
+            if body:
+                return json.loads(body)
             return None
 
     async def _delete(self, path: str) -> None:
