@@ -588,15 +588,22 @@ class TodoistAdapter(ProviderAdapter):
         due_date = fields.get("due_date")
         due_time = fields.get("due_time")
 
-        # Check if recurrence is being set
+        # Check if recurrence is being set or cleared
         recurrence_str = self._build_recurrence_string(fields)
         if recurrence_str:
-            # _build_recurrence_string already appends "at HH:MM" from recurrence_time,
-            # so only append due_time if recurrence_time was NOT in the fields.
             if due_time and not fields.get("recurrence_time"):
                 params["due_string"] = f"{recurrence_str} at {due_time}"
             else:
                 params["due_string"] = recurrence_str
+        elif fields.get("recurrence_enabled") is False:
+            # Recurrence disabled — set the existing due date as non-recurring
+            if due_date:
+                if due_time:
+                    params["due_datetime"] = f"{due_date}T{due_time}:00"
+                else:
+                    params["due_date"] = due_date
+            else:
+                params["due_string"] = "no date"
         elif due_date:
             if due_time:
                 params["due_datetime"] = f"{due_date}T{due_time}:00"
