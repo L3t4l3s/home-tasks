@@ -27,32 +27,6 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _collect(result: Any) -> list:
-    """Normalize a Todoist API result to a plain list.
-
-    todoist-api-python v2.x: coroutine → await → list[Task].
-    v3+/v4: may return coroutine → await → async_generator,
-    or directly an async_generator that yields list[Task] pages.
-    This helper unwraps all layers until we have a flat list.
-    """
-    # Unwrap coroutines first (may resolve to list OR async_generator)
-    while asyncio.iscoroutine(result) or asyncio.isfuture(result):
-        result = await result
-    # Already a plain list
-    if isinstance(result, list):
-        return result
-    # Async generator / async iterator — collect all pages
-    if hasattr(result, "__aiter__"):
-        items: list = []
-        async for page in result:
-            if isinstance(page, list):
-                items.extend(page)
-            else:
-                items.append(page)
-        return items
-    # Single item fallback
-    return [result]
-
 
 # Weekday names used when converting our recurrence weekdays to Todoist strings.
 _WEEKDAY_NAMES = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
@@ -339,11 +313,9 @@ class TodoistAdapter(ProviderAdapter):
     ) -> None:
         super().__init__(hass, entity_id, config_data)
         self._token = token
-        self._api: Any = None  # TodoistAPIAsync, lazy-initialised
+        self._api: Any = None  # TodoistAPIClient, lazy-initialised
         self._project_id: str | None = config_data.get("todoist_project_id")
         self._collaborators: list[Any] = []
-        # Instance-level capabilities — can_sync_assignee is updated after
-        # loading collaborators (disabled for non-shared projects).
         self.capabilities = ProviderCapabilities(
             can_sync_priority=True,
             can_sync_labels=True,
@@ -359,32 +331,22 @@ class TodoistAdapter(ProviderAdapter):
     # -- lazy init ----------------------------------------------------------
 
     async def _ensure_api(self) -> Any:
-        """Create the TodoistAPIAsync instance on first use."""
+        """Create the TodoistAPIClient instance on first use."""
         if self._api is not None:
             return self._api
-        try:
-            from todoist_api_python.api_async import TodoistAPIAsync  # noqa: WPS433
-        except ImportError:
-            _LOGGER.error(
-                "todoist-api-python is not installed – cannot use Todoist adapter"
-            )
-            raise
-        self._api = TodoistAPIAsync(self._token)
+        from .todoist_api import TodoistAPIClient  # noqa: WPS433
 
-        # Resolve project ID if not cached in config_entry
+        self._api = TodoistAPIClient(self._token)
+
         if not self._project_id:
             await self._resolve_project_id()
-
-        # Load collaborators for assignee matching
         await self._load_collaborators()
         return self._api
 
     async def _resolve_project_id(self) -> None:
         """Determine the Todoist project ID from the entity name."""
-        api = self._api
-        projects = await _collect(api.get_projects())
+        projects = await self._api.get_projects()
 
-        # Derive expected project name from entity_id or config name
         entity_name = self._config_data.get("name", "")
         entity_id_suffix = self._entity_id.replace("todo.", "").replace("_", " ")
 
@@ -397,7 +359,6 @@ class TodoistAdapter(ProviderAdapter):
                 break
 
         if not self._project_id and projects:
-            # Last resort: try to match by removing "todoist_" prefix from entity_id
             stripped = entity_id_suffix
             if stripped.startswith("todoist "):
                 stripped = stripped[8:]
@@ -407,17 +368,9 @@ class TodoistAdapter(ProviderAdapter):
                     break
 
         if self._project_id:
-            _LOGGER.info(
-                "Resolved Todoist project ID %s for %s",
-                self._project_id,
-                self._entity_id,
-            )
+            _LOGGER.info("Resolved Todoist project ID %s for %s", self._project_id, self._entity_id)
         else:
-            _LOGGER.warning(
-                "Could not resolve Todoist project ID for %s – "
-                "falling back to fetching all tasks",
-                self._entity_id,
-            )
+            _LOGGER.warning("Could not resolve Todoist project ID for %s", self._entity_id)
 
     async def _load_collaborators(self) -> None:
         """Load and cache collaborators for the project."""
@@ -425,36 +378,13 @@ class TodoistAdapter(ProviderAdapter):
             self._collaborators = []
             return
         try:
-            self._collaborators = await _collect(self._api.get_collaborators(self._project_id))
+            self._collaborators = await self._api.get_collaborators(self._project_id)
         except Exception:  # noqa: BLE001
             self._collaborators = []
             _LOGGER.debug("No collaborators for project %s (probably not shared)", self._project_id)
-        # Enable assignee sync only for shared projects with collaborators
         self.capabilities = ProviderCapabilities(
             **{**self.capabilities.to_dict(), "can_sync_assignee": len(self._collaborators) > 0}
         )
-
-    async def _raw_update_task(self, task_uid: str, payload: dict) -> None:
-        """Send a raw POST to the Todoist task endpoint.
-
-        Bypasses the todoist-api-python library which filters ``None``
-        values and doesn't expose all REST API fields (like ``order``).
-        """
-        import json
-        try:
-            from todoist_api_python._core.endpoints import get_api_url, TASKS_PATH
-            from todoist_api_python._core.http_headers import create_headers
-        except ImportError:
-            _LOGGER.debug("Cannot send raw update: internal Todoist modules unavailable")
-            return
-
-        url = get_api_url(f"{TASKS_PATH}/{task_uid}")
-        headers = create_headers(token=self._token, with_content=True)
-
-        import aiohttp
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, headers=headers, data=json.dumps(payload)) as resp:
-                resp.raise_for_status()
 
     # -- Assignee matching --------------------------------------------------
 
@@ -620,55 +550,36 @@ class TodoistAdapter(ProviderAdapter):
 
     @staticmethod
     def _extract_time(due_obj: Any) -> str | None:
-        """Extract HH:MM from a Todoist due object.
-
-        v3.x: ``due.date`` is a ``datetime`` (with time) or ``date`` (no time).
-        v2.x: ``due.datetime`` is an ISO string like ``"2026-04-08T00:45:00Z"``.
-        """
+        """Extract HH:MM from a TodoistDue object."""
         if due_obj is None:
             return None
-        from datetime import date as date_type
-
-        due_val = getattr(due_obj, "date", None)
-        if isinstance(due_val, dt):
-            # v3.x: due.date is a datetime object with time component
-            local = due_val.astimezone() if due_val.tzinfo else due_val
+        date_str = getattr(due_obj, "date", None)
+        if not date_str or "T" not in str(date_str):
+            return None
+        try:
+            parsed = dt.fromisoformat(str(date_str).replace("Z", "+00:00"))
+            local = parsed.astimezone()
             return local.strftime("%H:%M")
-
-        # v2.x fallback: due.datetime is an ISO string
-        due_dt_str = getattr(due_obj, "datetime", None)
-        if due_dt_str and isinstance(due_dt_str, str):
-            try:
-                parsed = dt.fromisoformat(due_dt_str.replace("Z", "+00:00"))
-                return parsed.astimezone().strftime("%H:%M")
-            except (ValueError, TypeError):
-                pass
-        return None
+        except (ValueError, TypeError):
+            return None
 
     @staticmethod
     def _extract_date(due_obj: Any) -> str | None:
-        """Extract YYYY-MM-DD string from a Todoist due object.
-
-        v3.x: ``due.date`` is a ``datetime`` or ``date`` Python object.
-        v2.x: ``due.date`` is an ISO date string, ``due.datetime`` an ISO string.
-        """
+        """Extract YYYY-MM-DD string from a TodoistDue object."""
         if due_obj is None:
             return None
-        from datetime import date as date_type
-
-        due_val = getattr(due_obj, "date", None)
-        if due_val is None:
+        date_str = getattr(due_obj, "date", None)
+        if not date_str:
             return None
-        # v3.x: Python date/datetime object
-        if isinstance(due_val, dt):
-            local = due_val.astimezone() if due_val.tzinfo else due_val
-            return local.date().isoformat()
-        if isinstance(due_val, date_type):
-            return due_val.isoformat()
-        # v2.x: already a string
-        if isinstance(due_val, str):
-            return due_val
-        return str(due_val)
+        s = str(date_str)
+        if "T" in s:
+            try:
+                parsed = dt.fromisoformat(s.replace("Z", "+00:00"))
+                local = parsed.astimezone()
+                return local.date().isoformat()
+            except (ValueError, TypeError):
+                return s[:10]
+        return s[:10]  # "YYYY-MM-DD"
 
     async def _merge_due_fields(self, api: Any, task_uid: str, fields: dict) -> dict:
         """Merge partial recurrence/due fields with the current task state.
@@ -715,10 +626,9 @@ class TodoistAdapter(ProviderAdapter):
                 params["due_string"] = recurrence_str
         elif due_date:
             if due_time:
-                params["due_datetime"] = dt.fromisoformat(f"{due_date}T{due_time}:00")
+                params["due_datetime"] = f"{due_date}T{due_time}:00"
             else:
-                from datetime import date as date_type
-                params["due_date"] = date_type.fromisoformat(due_date)
+                params["due_date"] = due_date
         elif due_date is None and "due_date" in fields:
             # Explicitly clearing due date
             params["due_string"] = "no date"
@@ -733,7 +643,7 @@ class TodoistAdapter(ProviderAdapter):
         if self._project_id:
             kwargs["project_id"] = self._project_id
 
-        all_tasks = await _collect(api.get_tasks(**kwargs))
+        all_tasks = await api.get_tasks(project_id=self._project_id)
 
         # Separate main tasks from sub-tasks
         main_tasks = [t for t in all_tasks if not t.parent_id]
@@ -812,13 +722,8 @@ class TodoistAdapter(ProviderAdapter):
 
         task = await api.add_task(**kwargs)
 
-        # Create reminders (only if the API version supports it)
-        if fields.get("reminders") and hasattr(api, "add_reminder"):
-            for offset in fields["reminders"]:
-                try:
-                    await api.add_reminder(task.id, reminder_type="relative", minute_offset=offset)
-                except Exception:  # noqa: BLE001
-                    _LOGGER.warning("Failed to create reminder (offset=%s) for task %s", offset, task.id)
+        # Reminders are stored in overlay (Todoist REST API v1 has no
+        # reminder endpoints accessible via our client).
 
         return task.id
 
@@ -865,26 +770,21 @@ class TodoistAdapter(ProviderAdapter):
                 else:
                     unsynced["assigned_person"] = fields["assigned_person"]
             else:
-                # Todoist API does not support clearing assignee via the
-                # library — keep the provider state as-is.
-                pass
+                # Clear assignee — our client sends null directly to the API
+                api_fields["assignee_id"] = None
 
         # Status — method names differ across API versions
         if "completed" in fields:
             if fields["completed"]:
-                complete = getattr(api, "complete_task", None) or api.close_task
-                await complete(task_uid)
+                await api.complete_task(task_uid)
             else:
-                uncomplete = getattr(api, "uncomplete_task", None) or api.reopen_task
-                await uncomplete(task_uid)
+                await api.uncomplete_task(task_uid)
 
         # Send update if there are API fields
         if api_fields:
             await api.update_task(task_uid, **api_fields)
 
-        # Sync reminders (only if the API version supports it)
-        if "reminders" in fields and hasattr(api, "add_reminder"):
-            await self._sync_reminders(task_uid, fields["reminders"])
+        # Reminders go to overlay (no API support)
 
         for key, value in fields.items():
             if key not in _TODOIST_PROVIDER_FIELDS and key not in unsynced:
@@ -902,15 +802,14 @@ class TodoistAdapter(ProviderAdapter):
         await api.delete_task(task_uid)
 
     async def async_reorder_tasks(self, task_uids: list[str]) -> bool:
-        # todoist-api-python v3.x update_task() doesn't expose 'order',
-        # but the Todoist REST API accepts it — use _raw_update_task.
+        api = await self._ensure_api()
         try:
             await asyncio.gather(*(
-                self._raw_update_task(uid, {"child_order": i})
+                api.update_task(uid, child_order=i)
                 for i, uid in enumerate(task_uids)
             ))
         except Exception:  # noqa: BLE001
-            _LOGGER.warning("Failed to reorder Todoist tasks via raw API")
+            _LOGGER.warning("Failed to reorder Todoist tasks")
             return False
         return True
 
@@ -945,58 +844,16 @@ class TodoistAdapter(ProviderAdapter):
     async def async_reorder_sub_tasks(
         self, parent_uid: str, sub_task_uids: list[str]
     ) -> bool:
+        api = await self._ensure_api()
         try:
             await asyncio.gather(*(
-                self._raw_update_task(uid, {"child_order": i})
+                api.update_task(uid, child_order=i)
                 for i, uid in enumerate(sub_task_uids)
             ))
         except Exception:  # noqa: BLE001
-            _LOGGER.warning("Failed to reorder Todoist sub-tasks via raw API")
+            _LOGGER.warning("Failed to reorder Todoist sub-tasks")
             return False
         return True
-
-    # -- Reminder sync ------------------------------------------------------
-
-    async def _sync_reminders(self, task_uid: str, new_offsets: list[int]) -> None:
-        """Delta-sync reminder offsets to Todoist."""
-        api = await self._ensure_api()
-        if not hasattr(api, "get_reminders"):
-            return
-        existing: list[Any] = []
-        try:
-            existing = await _collect(api.get_reminders(task_id=task_uid))
-        except Exception:  # noqa: BLE001
-            _LOGGER.debug("Could not read reminders for task %s", task_uid)
-            return
-
-        existing_map = {
-            r.minute_offset: r.id
-            for r in existing
-            if getattr(r, "minute_offset", None) is not None
-        }
-        new_set = set(new_offsets)
-
-        # Delete removed (concurrently)
-        to_delete = [rid for offset, rid in existing_map.items() if offset not in new_set]
-        if to_delete:
-            results = await asyncio.gather(
-                *(api.delete_reminder(rid) for rid in to_delete),
-                return_exceptions=True,
-            )
-            for rid, result in zip(to_delete, results):
-                if isinstance(result, Exception):
-                    _LOGGER.warning("Failed to delete reminder %s", rid)
-
-        # Create added (concurrently)
-        to_create = [o for o in new_offsets if o not in existing_map]
-        if to_create:
-            results = await asyncio.gather(
-                *(api.add_reminder(task_uid, reminder_type="relative", minute_offset=o) for o in to_create),
-                return_exceptions=True,
-            )
-            for offset, result in zip(to_create, results):
-                if isinstance(result, Exception):
-                    _LOGGER.warning("Failed to create reminder (offset=%s)", offset)
 
 
 # ---------------------------------------------------------------------------
