@@ -2409,7 +2409,7 @@ class HomeTasksCard extends HTMLElement {
     const recurrenceWeekdays = task.recurrence_weekdays || [];
     const recurrenceStartDate = task.recurrence_start_date || "";
     const recurrenceTime = task.recurrence_time || "00:00";
-    const recurrenceEndType = task.recurrence_end_type || "none";
+    const recurrenceEndType = task.recurrence_end_type === "count" ? "count" : "date";
     const recurrenceEndDate = task.recurrence_end_date || "";
     const recurrenceMaxCount = task.recurrence_max_count ?? null;
     const recurrenceRemainingCount = task.recurrence_remaining_count ?? task.recurrence_max_count ?? null;
@@ -2501,13 +2501,13 @@ class HomeTasksCard extends HTMLElement {
       recurrenceTimeWrap,
     ]);
 
-    // End condition — hide "count" option for providers that don't support it
+    // End condition — "date" (default) or "count" (native lists only)
     const caps = this._colCapabilities(colIdx);
     const providerSupportsCount = !this._isExternalCol(colIdx) || !caps || !caps.can_sync_recurrence;
-    const endOptions = [["none", "rec_end_never"], ["date", "rec_end_date"]];
-    if (providerSupportsCount) endOptions.push(["count", "rec_end_count"]);
 
     const recurrenceEndSelect = this._el("select", {});
+    const endOptions = [["date", "rec_end_date"]];
+    if (providerSupportsCount) endOptions.push(["count", "rec_end_count"]);
     for (const [val, key] of endOptions) {
       const opt = this._el("option", { value: val, textContent: this._t(key) });
       if (val === recurrenceEndType) opt.selected = true;
@@ -2517,6 +2517,8 @@ class HomeTasksCard extends HTMLElement {
       recurrenceEndSelect,
       this._el("span", { textContent: this._t("rec_end") }),
     ]);
+    // Hide mode selector for Todoist (only "date" available)
+    if (!providerSupportsCount) recurrenceEndWrap.style.display = "none";
 
     const recurrenceEndDateInput = this._el("input", { type: "date", value: recurrenceEndDate });
     const recurrenceEndDateWrap = this._el("div", { className: "due-input-row single" }, [
@@ -2563,7 +2565,7 @@ class HomeTasksCard extends HTMLElement {
     applyRowVisibility(recurrenceType, recurrenceUnit);
 
     const applyEndTypeVisibility = (endType) => {
-      recurrenceEndDateWrap.style.display = endType === "date" ? "" : "none";
+      recurrenceEndDateWrap.style.display = endType === "count" ? "none" : "";
       recurrenceCountRow.style.display = endType === "count" ? "" : "none";
     };
     applyEndTypeVisibility(recurrenceEndType);
@@ -2616,8 +2618,10 @@ class HomeTasksCard extends HTMLElement {
 
     const saveEndCondition = () => {
       const endType = recurrenceEndSelect.value;
+      // "date" with empty field = no end (equivalent to old "none" mode)
+      const effectiveEndType = (endType === "date" && !recurrenceEndDateInput.value) ? "none" : endType;
       this._updateTaskRouted(colIdx, task.id, {
-        recurrence_end_type: endType,
+        recurrence_end_type: effectiveEndType,
         recurrence_end_date: endType === "date" ? (recurrenceEndDateInput.value || null) : null,
         recurrence_max_count: endType === "count" ? (parseInt(recurrenceMaxCountInput.value) || null) : null,
       })?.then(() => this._loadAllTasks());
