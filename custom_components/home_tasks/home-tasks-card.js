@@ -1345,18 +1345,32 @@ class HomeTasksCard extends HTMLElement {
   }
 
   async _addSubTask(taskId, colIdx) {
+    const title = this._t("new_sub_item");
+    const tempId = "_pending_sub_" + Date.now();
+
+    // Optimistic: insert placeholder sub-task immediately
+    const cs = this._columns[colIdx];
+    const task = cs.tasks.find(t => t.id === taskId);
+    if (task) {
+      if (!task.sub_items) task.sub_items = [];
+      task.sub_items.push({ id: tempId, title, completed: false });
+      this._editingSubTaskId = tempId;
+      this._render();
+    }
+
+    // Send to backend in background
     let result;
     if (this._isExternalCol(colIdx)) {
       result = await this._callWs("home_tasks/add_external_sub_task", {
         entity_id: this._colEntityId(colIdx),
         task_uid: taskId,
-        title: this._t("new_sub_item"),
+        title,
       });
     } else {
       result = await this._callWs("home_tasks/add_sub_task", {
         list_id: this._colListId(colIdx),
         task_id: taskId,
-        title: this._t("new_sub_item"),
+        title,
       });
     }
     if (result) {
