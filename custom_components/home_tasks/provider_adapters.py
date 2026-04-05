@@ -735,39 +735,33 @@ class TodoistAdapter(ProviderAdapter):
 
     async def async_update_task(self, task_uid: str, fields: dict) -> dict:
         api = await self._ensure_api()
+
+        # Step 1: Determine which fields go to the API vs overlay.
+        # Overlay fields are ALWAYS returned regardless of API success.
         api_fields: dict[str, Any] = {}
         unsynced: dict[str, Any] = {}
 
-        # Content
+        # --- Fields that go to the Todoist API ---
         if "title" in fields:
             api_fields["content"] = fields["title"]
         if "notes" in fields:
             api_fields["description"] = fields["notes"]
-
-        # Priority
         if "priority" in fields:
             api_fields["priority"] = priority_to_todoist(fields["priority"])
-
-        # Labels
         if "tags" in fields:
             api_fields["labels"] = fields["tags"]
 
-        # Due date / time / recurrence — only touch if the caller
-        # explicitly sends one of these keys (avoid clearing due date
-        # when the update is about a different field like reminders).
+        # Due / recurrence
         _DUE_KEYS = {"due_date", "due_time", "recurrence_enabled", "recurrence_type",
                      "recurrence_value", "recurrence_unit", "recurrence_weekdays",
                      "recurrence_start_date", "recurrence_time", "recurrence_end_date"}
-        changed_due_keys = _DUE_KEYS & fields.keys()
-        if changed_due_keys:
-            # Merge with current task state so partial recurrence updates
-            # (e.g. only start_date) don't lose the existing interval/weekdays.
+        if _DUE_KEYS & fields.keys():
             merged_due = await self._merge_due_fields(api, task_uid, fields)
             due_params = self._build_due_params(merged_due)
             if due_params:
                 api_fields.update(due_params)
 
-        # Assignee — clearing requires a separate API call that may fail
+        # Assignee
         if "assigned_person" in fields:
             if fields["assigned_person"]:
                 collab_id = self._resolve_person_to_collaborator(fields["assigned_person"])
@@ -775,35 +769,31 @@ class TodoistAdapter(ProviderAdapter):
                     api_fields["assignee_id"] = collab_id
                 else:
                     unsynced["assigned_person"] = fields["assigned_person"]
-            else:
-                # Try to clear assignee via separate API call (may fail with 400)
-                try:
-                    await api.update_task(task_uid, assignee_id=None)
-                except Exception:  # noqa: BLE001
-                    _LOGGER.debug("Cannot clear assignee via API for task %s", task_uid)
-                # Do NOT add assignee_id to api_fields — handle it separately
+            # Clearing assignee is not supported by the API — ignore silently
 
-        # Status
-        if "completed" in fields:
-            if fields["completed"]:
-                await api.complete_task(task_uid)
-            else:
-                await api.uncomplete_task(task_uid)
+        # --- Fields that ALWAYS go to overlay ---
+        _OVERLAY_ALWAYS = {"recurrence_end_type", "recurrence_end_date",
+                          "recurrence_max_count", "recurrence_remaining_count"}
+        for key in _OVERLAY_ALWAYS:
+            if key in fields:
+                unsynced[key] = fields[key]
 
-        # Send update if there are API fields (without assignee_id)
-        if api_fields:
-            await api.update_task(task_uid, **api_fields)
-
+        # All fields NOT handled by the API go to overlay
         for key, value in fields.items():
             if key not in _TODOIST_PROVIDER_FIELDS and key not in unsynced:
                 unsynced[key] = value
 
-        # Recurrence end-condition → always overlay (Todoist may or may not
-        # honour "ending ..." in the due_string, but we need to persist it
-        # locally for reliable display).
-        for key in ("recurrence_end_type", "recurrence_end_date", "recurrence_max_count", "recurrence_remaining_count"):
-            if key in fields:
-                unsynced[key] = fields[key]
+        # Step 2: Send API updates (errors are logged but don't block overlay).
+        try:
+            if "completed" in fields:
+                if fields["completed"]:
+                    await api.complete_task(task_uid)
+                else:
+                    await api.uncomplete_task(task_uid)
+            if api_fields:
+                await api.update_task(task_uid, **api_fields)
+        except Exception:  # noqa: BLE001
+            _LOGGER.warning("Todoist API update failed for task %s — overlay still saved", task_uid)
 
         return unsynced
 
