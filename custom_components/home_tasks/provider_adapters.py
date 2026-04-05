@@ -482,7 +482,8 @@ class TodoistAdapter(ProviderAdapter):
         # Recurrence is active if explicitly enabled OR if recurrence detail
         # fields are present (partial update from the card editor).
         _REC_DETAIL_KEYS = {"recurrence_value", "recurrence_unit", "recurrence_weekdays",
-                            "recurrence_type", "recurrence_time", "recurrence_start_date"}
+                            "recurrence_type", "recurrence_time", "recurrence_start_date",
+                            "recurrence_end_date"}
         has_details = any(k in fields for k in _REC_DETAIL_KEYS)
         if not fields.get("recurrence_enabled") and not has_details:
             return None
@@ -647,6 +648,34 @@ class TodoistAdapter(ProviderAdapter):
             return due_val
         return str(due_val)
 
+    async def _merge_due_fields(self, api: Any, task_uid: str, fields: dict) -> dict:
+        """Merge partial recurrence/due fields with the current task state.
+
+        When the card sends e.g. only ``{recurrence_start_date: "2026-04-06"}``,
+        we need the existing recurrence_value/unit/weekdays to build a correct
+        Todoist due_string.  Fetch the current task and parse its due object.
+        """
+        _REC_KEYS = {"recurrence_enabled", "recurrence_type", "recurrence_value",
+                     "recurrence_unit", "recurrence_weekdays", "recurrence_start_date",
+                     "recurrence_time"}
+        # If all recurrence keys are present, no need to fetch
+        if _REC_KEYS <= fields.keys():
+            return fields
+
+        try:
+            current_task = await api.get_task(task_uid)
+        except Exception:  # noqa: BLE001
+            return fields
+
+        # Parse existing recurrence from the current due object
+        current = self._parse_recurrence_from_due(current_task.due)
+        current["due_date"] = self._extract_date(current_task.due)
+        current["due_time"] = self._extract_time(current_task.due)
+
+        # Merge: fields from the caller win, fill in blanks from current
+        merged = {**current, **fields}
+        return merged
+
     def _build_due_params(self, fields: dict) -> dict[str, Any]:
         """Build Todoist API due parameters from fields."""
         params: dict[str, Any] = {}
@@ -798,7 +827,10 @@ class TodoistAdapter(ProviderAdapter):
                      "recurrence_start_date", "recurrence_time", "recurrence_end_date"}
         changed_due_keys = _DUE_KEYS & fields.keys()
         if changed_due_keys:
-            due_params = self._build_due_params(fields)
+            # Merge with current task state so partial recurrence updates
+            # (e.g. only start_date) don't lose the existing interval/weekdays.
+            merged_due = await self._merge_due_fields(api, task_uid, fields)
+            due_params = self._build_due_params(merged_due)
             if due_params:
                 api_fields.update(due_params)
 
