@@ -390,22 +390,35 @@ class TodoistAdapter(ProviderAdapter):
         """Match HA person → Todoist collaborator ID by name."""
         state = self._hass.states.get(person_entity_id)
         if not state:
+            _LOGGER.warning("Assignee resolve: entity %s not found in HA states", person_entity_id)
             return None
         person_name = (state.attributes.get("friendly_name") or "").lower().strip()
         if not person_name:
+            _LOGGER.warning("Assignee resolve: entity %s has no friendly_name", person_entity_id)
             return None
+
+        _LOGGER.warning(
+            "Assignee resolve: looking for '%s' in %d collaborators (project=%s): %s",
+            person_name,
+            len(self._collaborators),
+            self._project_id,
+            [c.name for c in self._collaborators],
+        )
 
         # Exact match first
         for collab in self._collaborators:
             if collab.name.lower().strip() == person_name:
+                _LOGGER.warning("Assignee resolve: exact match → collab_id=%s", collab.id)
                 return collab.id
 
         # Partial match
         for collab in self._collaborators:
             cn = collab.name.lower().strip()
             if person_name in cn or cn in person_name:
+                _LOGGER.warning("Assignee resolve: partial match → collab_id=%s", collab.id)
                 return collab.id
 
+        _LOGGER.warning("Assignee resolve: NO MATCH found")
         return None
 
     def _resolve_collaborator_to_person(self, assignee_id: str) -> tuple[str | None, str | None]:
@@ -778,6 +791,10 @@ class TodoistAdapter(ProviderAdapter):
                 if collab_id:
                     api_fields["assignee_id"] = collab_id
                 else:
+                    _LOGGER.warning(
+                        "No collaborator match for %s (project=%s, %d collabs)",
+                        fields["assigned_person"], self._project_id, len(self._collaborators),
+                    )
                     unsynced["assigned_person"] = fields["assigned_person"]
             # Clearing assignee is not supported by the API — ignore silently
 
