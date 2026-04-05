@@ -450,7 +450,9 @@ class TodoistAdapter(ProviderAdapter):
 
         parts: list[str] = []
 
-        if rtype == "weekdays" and weekdays:
+        if rtype == "weekdays":
+            if not weekdays:
+                weekdays = [0, 1, 2, 3, 4]  # Default: Mon-Fri
             day_names = [_WEEKDAY_NAMES[d] for d in sorted(weekdays) if 0 <= d <= 6]
             parts.append(f"every {', '.join(day_names)}")
         else:

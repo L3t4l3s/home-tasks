@@ -68,17 +68,17 @@ class TodoistTask:
     @classmethod
     def from_dict(cls, data: dict) -> TodoistTask:
         return cls(
-            id=data.get("id", ""),
+            id=str(data.get("id", "")),
             content=data.get("content", ""),
             description=data.get("description", ""),
-            project_id=data.get("project_id", ""),
-            section_id=data.get("section_id"),
-            parent_id=data.get("parent_id"),
+            project_id=str(data.get("project_id", "")),
+            section_id=str(data["section_id"]) if data.get("section_id") else None,
+            parent_id=str(data["parent_id"]) if data.get("parent_id") else None,
             order=data.get("order") or data.get("child_order") or 0,
             priority=data.get("priority", 1),
             labels=data.get("labels") or [],
             due=TodoistDue.from_dict(data.get("due")),
-            assignee_id=data.get("assignee_id"),
+            assignee_id=str(data["assignee_id"]) if data.get("assignee_id") else None,
             is_completed=data.get("is_completed", False),
         )
 
@@ -91,7 +91,7 @@ class TodoistProject:
 
     @classmethod
     def from_dict(cls, data: dict) -> TodoistProject:
-        return cls(id=data.get("id", ""), name=data.get("name", ""))
+        return cls(id=str(data.get("id", "")), name=data.get("name", ""))
 
 
 @dataclass
@@ -104,7 +104,7 @@ class TodoistCollaborator:
     @classmethod
     def from_dict(cls, data: dict) -> TodoistCollaborator:
         return cls(
-            id=data.get("id", ""),
+            id=str(data.get("id", "")),
             name=data.get("name", ""),
             email=data.get("email", ""),
         )
