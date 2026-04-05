@@ -64,12 +64,14 @@ When you link a Todoist list, Home Tasks automatically detects the Todoist provi
 | Due date & time | Full | Read + write via API, including timezone support |
 | Priority | Full | Mapped: Home Tasks Low/Medium/High = Todoist P3/P2/P1 |
 | Labels / Tags | Full | Direct 1:1 mapping (both use string names) |
-| Sort order | Full | Via Todoist task `order` field |
+| Sort order | Full | Via Todoist task `child_order` field |
 | Sub-tasks | Full | Created as real Todoist sub-tasks (`parent_id`) |
-| Assigned person | Full | Name-matching between HA person entities and Todoist collaborators. Shows "Unknown (name)" if no HA person matches. |
-| Recurrence | Full | Mapped: structured recurrence to Todoist natural language strings (e.g. "every monday at 9am"). Complex Todoist patterns displayed read-only. |
-| Reminders | Full | Mapped: minute offsets to Todoist relative reminders |
+| Assigned person | Set only | Name-matching between HA person entities and Todoist collaborators. Assigning works; **removing** an assignee must be done in the Todoist app (API limitation). Only available for shared projects. |
+| Recurrence | Full | Mapped: structured recurrence to Todoist natural language strings (e.g. "every monday at 9am"). Complex Todoist patterns displayed read-only. End date supported; **repetition count** ("after N times") is local only. |
+| Reminders | Full | Synced via Todoist Reminders API (minute offsets) |
 | History / audit log | Local | Always stored locally |
+
+Home Tasks uses its **own lightweight REST API client** (no dependency on `todoist-api-python`) to communicate directly with the Todoist API. The only requirement is the existing HA Todoist integration being configured — the API token is read from its config entry automatically.
 
 **Unsupported Todoist features** (not synchronized):
 
@@ -81,6 +83,7 @@ When you link a Todoist list, Home Tasks automatically detects the Todoist provi
 - **Deadline vs. due date** — Todoist separates planned work date (due) from deadline
 - **Favorites** — marking tasks or projects as favorites
 - **Saved filters** — Todoist's own filter query language
+- **Unassign tasks** — the API does not support clearing an assignee
 
 ### Dashboard Card
 

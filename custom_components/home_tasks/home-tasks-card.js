@@ -2501,9 +2501,14 @@ class HomeTasksCard extends HTMLElement {
       recurrenceTimeWrap,
     ]);
 
-    // End condition
+    // End condition — hide "count" option for providers that don't support it
+    const caps = this._colCapabilities(colIdx);
+    const providerSupportsCount = !this._isExternalCol(colIdx) || !caps || !caps.can_sync_recurrence;
+    const endOptions = [["none", "rec_end_never"], ["date", "rec_end_date"]];
+    if (providerSupportsCount) endOptions.push(["count", "rec_end_count"]);
+
     const recurrenceEndSelect = this._el("select", {});
-    for (const [val, key] of [["none", "rec_end_never"], ["date", "rec_end_date"], ["count", "rec_end_count"]]) {
+    for (const [val, key] of endOptions) {
       const opt = this._el("option", { value: val, textContent: this._t(key) });
       if (val === recurrenceEndType) opt.selected = true;
       recurrenceEndSelect.appendChild(opt);
