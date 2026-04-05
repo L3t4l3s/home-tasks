@@ -758,17 +758,17 @@ class TodoistAdapter(ProviderAdapter):
             if key not in _TODOIST_PROVIDER_FIELDS and key not in unsynced:
                 unsynced[key] = value
 
-        # Step 2: Send API updates (errors are logged but don't block overlay).
-        try:
-            if "completed" in fields:
+        # Step 2: Send API updates.
+        if "completed" in fields:
+            try:
                 if fields["completed"]:
                     await api.complete_task(task_uid)
                 else:
                     await api.uncomplete_task(task_uid)
-            if api_fields:
-                await api.update_task(task_uid, **api_fields)
-        except Exception:  # noqa: BLE001
-            _LOGGER.warning("Todoist API update failed for task %s", task_uid)
+            except Exception:  # noqa: BLE001
+                _LOGGER.warning("Todoist complete/uncomplete failed for %s", task_uid)
+        if api_fields:
+            await api.update_task(task_uid, **api_fields)
 
         # Sync reminders via API
         if "reminders" in fields:
