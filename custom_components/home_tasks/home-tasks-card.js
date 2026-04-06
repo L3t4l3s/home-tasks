@@ -3263,13 +3263,20 @@ class HomeTasksCard extends HTMLElement {
   _collapseAllForDrag() {
     if (this._expandedTasks.size === 0) return;
     this._expandedTasks.clear();
-    // Visually collapse without re-render to preserve the drag source element
-    for (const det of this.shadowRoot.querySelectorAll(".task-details")) {
-      det.style.height = "0";
+    const details = this.shadowRoot.querySelectorAll(".task-details");
+    // Freeze current heights as px (CSS can't transition from "auto")
+    for (const det of details) {
+      det.style.height = det.offsetHeight + "px";
     }
     for (const btn of this.shadowRoot.querySelectorAll(".expand-btn.expanded")) {
       btn.classList.remove("expanded");
     }
+    // Animate to 0 on next frame
+    requestAnimationFrame(() => {
+      for (const det of details) {
+        det.style.height = "0";
+      }
+    });
   }
 
   _attachDragToTask(taskEl, taskId, colIdx) {
