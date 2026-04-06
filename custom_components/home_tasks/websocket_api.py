@@ -36,6 +36,7 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_delete_sub_task)
     websocket_api.async_register_command(hass, ws_reorder_sub_tasks)
     websocket_api.async_register_command(hass, ws_move_task)
+    websocket_api.async_register_command(hass, ws_move_task_cross)
     # External list commands
     websocket_api.async_register_command(hass, ws_get_external_lists)
     websocket_api.async_register_command(hass, ws_get_external_tasks)
@@ -327,6 +328,260 @@ async def ws_move_task(hass, connection, msg):
         tgt = _get_store(hass, msg["target_list_id"])
         task = await src.async_export_task(msg["task_id"])
         await tgt.async_import_task(task)
+        connection.send_result(msg["id"])
+    except Exception as err:
+        _handle_error(connection, msg["id"], err)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "home_tasks/move_task_cross",
+        vol.Required("task_id"): vol.All(str, vol.Length(min=1, max=255)),
+        vol.Optional("source_list_id"): _val_id,
+        vol.Optional("source_entity_id"): _val_entity_id,
+        vol.Optional("target_list_id"): _val_id,
+        vol.Optional("target_entity_id"): _val_entity_id,
+    }
+)
+@websocket_api.async_response
+async def ws_move_task_cross(hass, connection, msg):
+    """Move a task between any combination of native and external lists."""
+    import uuid as _uuid
+    from .store import HomeTasksStore
+
+    try:
+        src_list_id = msg.get("source_list_id")
+        src_entity_id = msg.get("source_entity_id")
+        tgt_list_id = msg.get("target_list_id")
+        tgt_entity_id = msg.get("target_entity_id")
+        task_id = msg["task_id"]
+
+        if not (src_list_id or src_entity_id):
+            raise ValueError("source_list_id or source_entity_id required")
+        if not (tgt_list_id or tgt_entity_id):
+            raise ValueError("target_list_id or target_entity_id required")
+
+        src_is_native = bool(src_list_id)
+        tgt_is_native = bool(tgt_list_id)
+
+        # --- Native → Native (delegate to existing logic) ---
+        if src_is_native and tgt_is_native:
+            if src_list_id == tgt_list_id:
+                raise ValueError("source and target must be different")
+            src_store = _get_store(hass, src_list_id)
+            tgt_store = _get_store(hass, tgt_list_id)
+            task_data = await src_store.async_export_task(task_id)
+            await tgt_store.async_import_task(task_data)
+            connection.send_result(msg["id"])
+            return
+
+        # --- Read full task data from source ---
+        if src_is_native:
+            src_store = _get_store(hass, src_list_id)
+            task_data = src_store.get_task(task_id)
+        else:
+            # External source: read via adapter if available, else HA entity + overlay
+            src_overlay = _get_overlay_store(hass, src_entity_id)
+            src_adapter = _get_adapter(hass, src_entity_id)
+            overlay = src_overlay.get_overlay(task_id)
+
+            if src_adapter and not isinstance(src_adapter, GenericAdapter):
+                # Rich adapter (e.g. Todoist) — read from provider API + overlay merge
+                adapter_items = await src_adapter.async_read_tasks()
+                merged = _merge_tasks_with_adapter_data(
+                    adapter_items, src_overlay, src_adapter.capabilities,
+                )
+                item = next((t for t in merged if t.get("id") == task_id), None)
+                if item is None:
+                    raise ValueError(f"Task {task_id} not found in {src_entity_id}")
+                task_data = {
+                    "title": item.get("title", ""),
+                    "completed": item.get("completed", False),
+                    "notes": item.get("notes", ""),
+                    "due_date": item.get("due_date"),
+                    "due_time": item.get("due_time"),
+                    "priority": item.get("priority"),
+                    "assigned_person": item.get("assigned_person"),
+                    "tags": item.get("tags", []),
+                    "reminders": item.get("reminders", []),
+                    "sub_items": item.get("sub_items", []),
+                    "recurrence_enabled": item.get("recurrence_enabled", False),
+                    "recurrence_type": item.get("recurrence_type", "interval"),
+                    "recurrence_value": item.get("recurrence_value", 1),
+                    "recurrence_unit": item.get("recurrence_unit"),
+                    "recurrence_weekdays": item.get("recurrence_weekdays", []),
+                    "recurrence_start_date": item.get("recurrence_start_date"),
+                    "recurrence_time": item.get("recurrence_time"),
+                    "recurrence_end_type": item.get("recurrence_end_type", "none"),
+                    "recurrence_end_date": item.get("recurrence_end_date"),
+                    "recurrence_max_count": item.get("recurrence_max_count"),
+                    "recurrence_remaining_count": item.get("recurrence_remaining_count"),
+                    "completed_at": item.get("completed_at"),
+                    "history": item.get("history", []),
+                }
+            else:
+                # Generic path — HA entity + overlay
+                items = _get_external_todo_items(hass, src_entity_id)
+                item = next((i for i in items if (i.get("uid") or "") == task_id), None)
+                if item is None:
+                    raise ValueError(f"Task {task_id} not found in {src_entity_id}")
+                task_data = {
+                    "title": item.get("summary") or "",
+                    "completed": item.get("status") == "completed",
+                    "notes": item.get("description") or "",
+                    "due_date": item.get("due"),
+                    "due_time": item.get("due_time") or overlay.get("due_time"),
+                    "priority": overlay.get("priority"),
+                    "assigned_person": overlay.get("assigned_person"),
+                    "tags": overlay.get("tags", []),
+                    "reminders": overlay.get("reminders", []),
+                    "sub_items": overlay.get("sub_items", []),
+                    "recurrence_enabled": overlay.get("recurrence_enabled", False),
+                    "recurrence_type": overlay.get("recurrence_type", "interval"),
+                    "recurrence_value": overlay.get("recurrence_value", 1),
+                    "recurrence_unit": overlay.get("recurrence_unit"),
+                    "recurrence_weekdays": overlay.get("recurrence_weekdays", []),
+                    "recurrence_start_date": overlay.get("recurrence_start_date"),
+                    "recurrence_time": overlay.get("recurrence_time"),
+                    "recurrence_end_type": overlay.get("recurrence_end_type", "none"),
+                    "recurrence_end_date": overlay.get("recurrence_end_date"),
+                    "recurrence_max_count": overlay.get("recurrence_max_count"),
+                    "recurrence_remaining_count": overlay.get("recurrence_remaining_count"),
+                    "completed_at": overlay.get("completed_at"),
+                    "history": overlay.get("history", []),
+                }
+
+        # --- Create task in target ---
+        if tgt_is_native:
+            tgt_store = _get_store(hass, tgt_list_id)
+            # Build a full native task dict
+            max_order = max((t["sort_order"] for t in tgt_store._data["tasks"]), default=-1)
+            new_task = {
+                "id": str(_uuid.uuid4()),
+                "title": task_data.get("title", ""),
+                "completed": task_data.get("completed", False),
+                "notes": task_data.get("notes", ""),
+                "due_date": task_data.get("due_date"),
+                "sort_order": max_order + 1,
+                "sub_items": task_data.get("sub_items", []),
+                "priority": task_data.get("priority"),
+                "due_time": task_data.get("due_time"),
+                "reminders": task_data.get("reminders", []),
+                "recurrence_value": task_data.get("recurrence_value", 1),
+                "recurrence_unit": task_data.get("recurrence_unit"),
+                "recurrence_enabled": task_data.get("recurrence_enabled", False),
+                "recurrence_type": task_data.get("recurrence_type", "interval"),
+                "recurrence_weekdays": task_data.get("recurrence_weekdays", []),
+                "recurrence_start_date": task_data.get("recurrence_start_date"),
+                "recurrence_time": task_data.get("recurrence_time"),
+                "recurrence_end_type": task_data.get("recurrence_end_type", "none"),
+                "recurrence_end_date": task_data.get("recurrence_end_date"),
+                "recurrence_max_count": task_data.get("recurrence_max_count"),
+                "recurrence_remaining_count": task_data.get("recurrence_remaining_count"),
+                "completed_at": task_data.get("completed_at"),
+                "assigned_person": task_data.get("assigned_person"),
+                "tags": task_data.get("tags", []),
+                "history": task_data.get("history", []),
+                "external_id": None,
+                "sync_source": None,
+            }
+            tgt_store._data["tasks"].append(new_task)
+            await tgt_store._async_save()
+            if tgt_store.on_task_created:
+                tgt_store.on_task_created(new_task)
+        else:
+            # External target: create via adapter, then set overlay for all fields
+            tgt_adapter = _get_adapter(hass, tgt_entity_id)
+            tgt_overlay = _get_overlay_store(hass, tgt_entity_id)
+            # Don't pass reminders in create_fields — Todoist may add
+            # default reminders on creation.  We sync them explicitly
+            # afterwards via _sync_reminders to avoid duplicates.
+            move_reminders = task_data.get("reminders", [])
+            create_fields = {
+                "title": task_data.get("title", ""),
+                "notes": task_data.get("notes", ""),
+                "due_date": task_data.get("due_date"),
+                "due_time": task_data.get("due_time"),
+                "priority": task_data.get("priority"),
+                "tags": task_data.get("tags", []),
+                "assigned_person": task_data.get("assigned_person"),
+            }
+            if task_data.get("recurrence_enabled"):
+                create_fields["recurrence_enabled"] = True
+                for k in ("recurrence_type", "recurrence_value", "recurrence_unit",
+                           "recurrence_weekdays", "recurrence_start_date", "recurrence_time"):
+                    if task_data.get(k) is not None:
+                        create_fields[k] = task_data[k]
+
+            if tgt_adapter:
+                new_uid = await tgt_adapter.async_create_task(create_fields)
+            else:
+                generic = GenericAdapter(hass, tgt_entity_id, {})
+                await generic.async_create_task(create_fields)
+                new_uid = None
+
+            # Generic adapters don't return the UID — discover it by
+            # re-fetching the task list and finding the new entry.
+            if new_uid is None:
+                import asyncio
+                await asyncio.sleep(1)  # give provider time to persist
+                new_items = _get_external_todo_items(hass, tgt_entity_id)
+                title_lower = (task_data.get("title") or "").lower()
+                for ni in reversed(new_items):
+                    if (ni.get("summary") or "").lower() == title_lower:
+                        new_uid = ni.get("uid")
+                        break
+
+            # Sync reminders after creation (avoids duplicates with provider defaults)
+            if new_uid and move_reminders and tgt_adapter and hasattr(tgt_adapter, "_sync_reminders"):
+                try:
+                    await tgt_adapter._sync_reminders(new_uid, move_reminders)
+                except Exception:  # noqa: BLE001
+                    _LOGGER.debug("Could not sync reminders for moved task %s", new_uid)
+
+            # Create sub-tasks via adapter if supported (e.g. Todoist)
+            sub_items = task_data.get("sub_items", [])
+            if new_uid and sub_items and tgt_adapter:
+                for sub in sub_items:
+                    sub_title = sub.get("title", "")
+                    if sub_title:
+                        try:
+                            await tgt_adapter.async_add_sub_task(new_uid, sub_title)
+                        except Exception:  # noqa: BLE001
+                            _LOGGER.debug("Could not create sub-task '%s' via adapter", sub_title)
+
+            # Store ALL overlay fields on the new task so nothing is lost
+            overlay_fields = {}
+            for field in OVERLAY_FIELDS:
+                val = task_data.get(field)
+                if val is not None:
+                    overlay_fields[field] = val
+            # Always transfer list-type fields even if empty (to preserve cleared state)
+            for field in ("tags", "reminders", "sub_items", "recurrence_weekdays"):
+                overlay_fields[field] = task_data.get(field, [])
+
+            if new_uid and overlay_fields:
+                await tgt_overlay.async_set_overlay(new_uid, **overlay_fields)
+            elif not new_uid:
+                _LOGGER.warning(
+                    "Could not discover UID for moved task '%s' in %s — overlay fields not saved",
+                    task_data.get("title"), tgt_entity_id,
+                )
+
+        # --- Delete task from source ---
+        if src_is_native:
+            await src_store.async_export_task(task_id)  # removes + triggers callback
+        else:
+            # Delete from external provider
+            src_adapter = _get_adapter(hass, src_entity_id)
+            if src_adapter:
+                await src_adapter.async_delete_task(task_id)
+            else:
+                generic = GenericAdapter(hass, src_entity_id, {})
+                await generic.async_delete_task(task_id)
+            # Clean up overlay
+            await src_overlay.async_delete_overlay(task_id)
+
         connection.send_result(msg["id"])
     except Exception as err:
         _handle_error(connection, msg["id"], err)
