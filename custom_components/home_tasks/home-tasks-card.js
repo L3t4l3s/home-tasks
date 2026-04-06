@@ -3953,6 +3953,15 @@ class HomeTasksCard extends HTMLElement {
   getCardSize() {
     return 3 + this._columns.reduce((sum, cs) => sum + cs.tasks.length, 0);
   }
+
+  getLayoutOptions() {
+    return {
+      grid_columns: "full",
+      grid_min_columns: 4,
+      grid_rows: "auto",
+      grid_min_rows: 2,
+    };
+  }
 }
 
 /**
