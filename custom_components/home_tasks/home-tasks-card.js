@@ -922,6 +922,12 @@ class HomeTasksCard extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
+    this.shadowRoot.addEventListener("focusout", () => {
+      // After focus leaves all inputs, flush any deferred render
+      requestAnimationFrame(() => {
+        if (this._pendingRender && !this.shadowRoot.activeElement) this._render();
+      });
+    });
     this._config = { columns: [{}] };
     this._hass = null;
     this._lists = [];
@@ -942,6 +948,7 @@ class HomeTasksCard extends HTMLElement {
     this._subTouchOffsetY = 0;
     this._lastTitleClick = null;
     this._initialized = false;
+    this._extPollTimer = null;
     this._pendingRender = false;
     this._styleEl = null;
     this._justAddedTaskId = null;
@@ -1025,10 +1032,39 @@ class HomeTasksCard extends HTMLElement {
   }
 
   set hass(hass) {
+    const prev = this._hass;
     this._hass = hass;
     if (!this._initialized) {
       this._initialized = true;
       this._loadLists();
+      return;
+    }
+    // Reload when any external entity's state object changes (new reference = entity updated)
+    if (prev && hass) {
+      for (const col of this._config.columns) {
+        if (!col.entity_id) continue;
+        if (prev.states?.[col.entity_id] !== hass.states?.[col.entity_id]) {
+          this._isBackgroundUpdate = true;
+          this._loadAllTasks().finally(() => { this._isBackgroundUpdate = false; });
+          return;
+        }
+      }
+    }
+    // Start/stop periodic polling for external detail changes (notes, due dates, etc.)
+    // that don't update the entity state (which is just the active item count).
+    this._syncExtPollTimer();
+  }
+
+  _syncExtPollTimer() {
+    const hasExternal = this._config.columns.some(c => c.entity_id);
+    if (hasExternal && !this._extPollTimer) {
+      this._extPollTimer = setInterval(async () => {
+        this._isBackgroundUpdate = true;
+        try { await this._loadAllTasks(); } finally { this._isBackgroundUpdate = false; }
+      }, 30000);
+    } else if (!hasExternal && this._extPollTimer) {
+      clearInterval(this._extPollTimer);
+      this._extPollTimer = null;
     }
   }
 
@@ -1333,24 +1369,20 @@ class HomeTasksCard extends HTMLElement {
 
   async _updateTaskTitle(taskId, title, colIdx) {
     if (!title.trim()) return;
-    await this._updateTaskRouted(colIdx, taskId, { title: title.trim() });
+    const task = this._columns[colIdx]?.tasks?.find(t => t.id === taskId);
+    if (task) task.title = title.trim();
     this._editingTaskId = null;
-    if (this._isExternalCol(colIdx)) {
-      const task = this._columns[colIdx]?.tasks?.find(t => t.id === taskId);
-      if (task) task.title = title.trim();
-      this._reloadExternal(colIdx);
-    } else {
-      await this._loadAllTasks();
-    }
+    this._render();
+    await this._updateTaskRouted(colIdx, taskId, { title: title.trim() });
+    if (this._isExternalCol(colIdx)) this._reloadExternal(colIdx);
   }
 
   async _updateTaskNotes(taskId, notes, colIdx) {
+    // Optimistic local update — must happen before the await so a deferred
+    // render (triggered by focusout) picks up the user's value, not stale poll data.
+    const task = this._columns[colIdx]?.tasks?.find(t => t.id === taskId);
+    if (task) task.notes = notes;
     await this._updateTaskRouted(colIdx, taskId, { notes });
-    const tasks = this._columns[colIdx]?.tasks;
-    if (tasks) {
-      const t = tasks.find(t => t.id === taskId);
-      if (t) t.notes = notes;
-    }
   }
 
   async _updateTaskDue(taskId, dueDate, dueTime, colIdx) {
@@ -1442,6 +1474,11 @@ class HomeTasksCard extends HTMLElement {
   }
 
   async _toggleSubTask(taskId, subItemId, completed, colIdx) {
+    // Optimistic local update
+    const task = this._columns[colIdx]?.tasks?.find(t => t.id === taskId);
+    const sub = task?.sub_items?.find(s => s.id === subItemId);
+    if (sub) sub.completed = !completed;
+    this._render();
     if (this._isExternalCol(colIdx)) {
       await this._callWs("home_tasks/update_external_sub_task", {
         entity_id: this._colEntityId(colIdx),
@@ -1457,34 +1494,39 @@ class HomeTasksCard extends HTMLElement {
         completed: !completed,
       });
     }
-    await this._loadAllTasks();
   }
 
   async _updateSubTaskTitle(taskId, subItemId, title, colIdx) {
     if (!title.trim()) return;
-    let result;
+    const task = this._columns[colIdx]?.tasks?.find(t => t.id === taskId);
+    const sub = task?.sub_items?.find(s => s.id === subItemId);
+    if (sub) sub.title = title.trim();
+    this._editingSubTaskId = null;
+    this._render();
     if (this._isExternalCol(colIdx)) {
-      result = await this._callWs("home_tasks/update_external_sub_task", {
+      await this._callWs("home_tasks/update_external_sub_task", {
         entity_id: this._colEntityId(colIdx),
         task_uid: taskId,
         sub_task_id: subItemId,
         title: title.trim(),
       });
     } else {
-      result = await this._callWs("home_tasks/update_sub_task", {
+      await this._callWs("home_tasks/update_sub_task", {
         list_id: this._colListId(colIdx),
         task_id: taskId,
         sub_task_id: subItemId,
         title: title.trim(),
       });
     }
-    if (result) {
-      this._editingSubTaskId = null;
-      await this._loadAllTasks();
-    }
   }
 
   async _deleteSubTask(taskId, subItemId, colIdx) {
+    // Optimistic local update
+    const task = this._columns[colIdx]?.tasks?.find(t => t.id === taskId);
+    if (task?.sub_items) {
+      task.sub_items = task.sub_items.filter(s => s.id !== subItemId);
+    }
+    this._render();
     if (this._isExternalCol(colIdx)) {
       await this._callWs("home_tasks/delete_external_sub_task", {
         entity_id: this._colEntityId(colIdx),
@@ -1498,7 +1540,6 @@ class HomeTasksCard extends HTMLElement {
         sub_task_id: subItemId,
       });
     }
-    await this._loadAllTasks();
   }
 
   async _reorderSubTasks(taskId, subTaskIds, colIdx) {
@@ -1842,8 +1883,21 @@ class HomeTasksCard extends HTMLElement {
   // --- Render ---
 
   _render() {
-    // Don't tear down DOM while a drag is in progress
-    if (this._draggedTaskId !== null || this._draggedSubTaskId !== null) { this._pendingRender = true; return; }
+    // Don't tear down DOM while the user is interacting — but only for
+    // background updates (polling, state changes). User-initiated renders
+    // (clicks, edits, saves) must always go through.
+    if (this._isBackgroundUpdate) {
+      if (this._draggedTaskId !== null || this._draggedSubTaskId !== null
+          || this._editingTaskId || this._editingSubTaskId) {
+        this._pendingRender = true;
+        return;
+      }
+      const active = this.shadowRoot?.activeElement;
+      if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.tagName === "SELECT")) {
+        this._pendingRender = true;
+        return;
+      }
+    }
     this._pendingRender = false;
 
     // Remove any stale sort close handler before rebuilding DOM
@@ -2354,28 +2408,45 @@ class HomeTasksCard extends HTMLElement {
       if (e.target.closest(".tag-badge")) return;
       if (e.target.closest(".assigned-badge")) return;
       if (e.target.closest(".edit-title-input")) return;
+
+      // If an animation is in progress, skip animation and just toggle + render
+      if (this._animatingTaskIds?.has(task.id)) {
+        this._animatingTaskIds.delete(task.id);
+        if (this._expandedTasks.has(task.id)) {
+          this._expandedTasks.delete(task.id);
+        } else {
+          this._expandedTasks.add(task.id);
+        }
+        this._render();
+        return;
+      }
+
       if (this._expandedTasks.has(task.id)) {
-        // Delete from state BEFORE animation — any re-render during the animation
-        // will correctly see the task as collapsed.
         this._expandedTasks.delete(task.id);
         const detailsEl = taskEl.querySelector(".task-details");
         if (detailsEl) {
           const h = detailsEl.offsetHeight;
           if (!h) { this._render(); return; }
-          detailsEl.style.height = h + "px"; // freeze at current visible height
+          detailsEl.style.height = h + "px";
+          if (!this._animatingTaskIds) this._animatingTaskIds = new Set();
+          this._animatingTaskIds.add(task.id);
+          const finish = () => {
+            if (!this._animatingTaskIds?.delete(task.id)) return;
+            this._render();
+          };
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               detailsEl.style.height = "0";
-              detailsEl.addEventListener("transitionend", () => {
-                this._render();
-              }, { once: true });
+              detailsEl.addEventListener("transitionend", finish, { once: true });
+              setTimeout(finish, 300);
             });
           });
         } else {
           this._render();
         }
       } else {
-        // Re-render with expanded state, then animate open
+        if (!this._animatingTaskIds) this._animatingTaskIds = new Set();
+        this._animatingTaskIds.add(task.id);
         this._justExpandedTaskId = task.id;
         this._expandedTasks.add(task.id);
         this._render();
@@ -2393,6 +2464,7 @@ class HomeTasksCard extends HTMLElement {
           requestAnimationFrame(() => {
             detailsEl.style.height = detailsEl.scrollHeight + "px";
             detailsEl.addEventListener("transitionend", () => {
+              this._animatingTaskIds?.delete(task.id);
               detailsEl.style.height = "auto"; // release constraint once fully open
             }, { once: true });
           });
@@ -2571,9 +2643,10 @@ class HomeTasksCard extends HTMLElement {
         textContent: this._t(key),
       });
       btn.addEventListener("click", () => {
-        this._updateTaskRouted(colIdx, task.id, {
-          priority: currentPriority === val ? null : val,
-        })?.then(() => this._loadAllTasks());
+        const newPri = currentPriority === val ? null : val;
+        task.priority = newPri;
+        this._render();
+        this._updateTaskRouted(colIdx, task.id, { priority: newPri });
       });
       priorityBtnRow.appendChild(btn);
     }
@@ -2926,7 +2999,6 @@ class HomeTasksCard extends HTMLElement {
     recurrenceUnitSelect.addEventListener("change", saveInterval);
     weekdayCheckboxes.forEach(cb => cb.addEventListener("change", saveWeekdays));
     recurrenceStartDateInput.addEventListener("change", saveStartDate);
-    recurrenceStartDateInput.addEventListener("change", saveStartDate);
     recurrenceStartDateInput.addEventListener("keydown", (e) => { if (e.key === "Enter") recurrenceStartDateInput.blur(); });
     recurrenceTimeInput.addEventListener("change", saveRecurrenceTime);
     recurrenceTimeInput.addEventListener("keydown", (e) => { if (e.key === "Enter") recurrenceTimeInput.blur(); });
@@ -2964,9 +3036,9 @@ class HomeTasksCard extends HTMLElement {
       }
     }
     personSelect.addEventListener("change", () => {
-      this._updateTaskRouted(colIdx, task.id, {
-        assigned_person: personSelect.value || null,
-      })?.then(() => this._loadAllTasks());
+      task.assigned_person = personSelect.value || null;
+      this._render();
+      this._updateTaskRouted(colIdx, task.id, { assigned_person: task.assigned_person });
     });
     const personWrap = this._el("div", { className: "sel-wrap no-label" }, [personSelect]);
     const personSection = this._el("div", { className: "detail-section" }, [
@@ -2989,9 +3061,9 @@ class HomeTasksCard extends HTMLElement {
         });
         removeBtn.addEventListener("click", () => {
           const newTags = taskTags.filter((t) => t !== tag);
-          this._updateTaskRouted(colIdx, task.id, {
-            tags: newTags,
-          })?.then(() => this._loadAllTasks());
+          task.tags = newTags;
+          this._render();
+          this._updateTaskRouted(colIdx, task.id, { tags: newTags });
         });
         tagListEl.appendChild(
           this._el("span", { className: "tag-item" }, [
@@ -3010,11 +3082,13 @@ class HomeTasksCard extends HTMLElement {
       if (e.key === "Enter") {
         const val = tagInput.value.trim().toLowerCase();
         if (val && !taskTags.includes(val)) {
-          this._updateTaskRouted(colIdx, task.id, {
-            tags: [...taskTags, val],
-          })?.then(() => this._loadAllTasks());
+          const newTags = [...taskTags, val];
+          task.tags = newTags;
+          this._render();
+          this._updateTaskRouted(colIdx, task.id, { tags: newTags });
+        } else {
+          tagInput.value = "";
         }
-        tagInput.value = "";
       }
     });
     const tagInputWrap = this._el("div", { className: "field-wrap" }, [
@@ -3030,9 +3104,9 @@ class HomeTasksCard extends HTMLElement {
       this._el("label", { className: "detail-label", textContent: this._t("reminder") }),
     ];
     const _rebuildReminders = (newReminders) => {
-      this._updateTaskRouted(colIdx, task.id, {
-        reminders: newReminders,
-      })?.then(() => this._loadAllTasks());
+      task.reminders = newReminders;
+      this._render();
+      this._updateTaskRouted(colIdx, task.id, { reminders: newReminders });
     };
     for (let ri = 0; ri < taskReminders.length; ri++) {
       const offset = taskReminders[ri];
@@ -3221,21 +3295,24 @@ class HomeTasksCard extends HTMLElement {
     subEl.dataset.subTaskId = sub.id;
 
     subEl.addEventListener("dragstart", (e) => {
+      e.stopPropagation();
       this._draggedSubTaskId = sub.id;
       e.dataTransfer.effectAllowed = "move";
       subEl.classList.add("dragging");
     });
-    subEl.addEventListener("dragend", () => this._finishSubDrag(taskId, colIdx));
+    subEl.addEventListener("dragend", (e) => { e.stopPropagation(); this._finishSubDrag(taskId, colIdx); });
     subEl.addEventListener("dragover", (e) => {
       e.preventDefault();
+      e.stopPropagation();
       e.dataTransfer.dropEffect = "move";
       if (!this._draggedSubTaskId || this._draggedSubTaskId === sub.id) return;
       const draggedEl = this.shadowRoot.querySelector(`.sub-task[data-sub-task-id="${CSS.escape(this._draggedSubTaskId)}"]`);
       this._liveMoveSubTask(draggedEl, subEl, e.clientY);
     });
-    subEl.addEventListener("drop", (e) => { e.preventDefault(); this._finishSubDrag(taskId, colIdx); });
+    subEl.addEventListener("drop", (e) => { e.preventDefault(); e.stopPropagation(); this._finishSubDrag(taskId, colIdx); });
 
     handle.addEventListener("touchstart", (e) => {
+      e.stopPropagation();
       if (e.touches.length !== 1) return;
       const touch = e.touches[0];
       this._subTouchStartTimer = setTimeout(() => {
@@ -3428,6 +3505,8 @@ class HomeTasksCard extends HTMLElement {
 
   _collapseAllForDrag() {
     if (this._expandedTasks.size === 0) return;
+    // Invalidate any in-flight expand/collapse animations
+    if (this._animatingTaskIds) this._animatingTaskIds.clear();
     this._expandedTasks.clear();
     const details = this.shadowRoot.querySelectorAll(".task-details");
     // Freeze current heights as px (CSS can't transition from "auto")
@@ -3494,6 +3573,9 @@ class HomeTasksCard extends HTMLElement {
 
         const rect = taskEl.getBoundingClientRect();
         const clone = taskEl.cloneNode(true);
+        // Remove expanded details from clone so it shows collapsed during drag
+        const cloneDetails = clone.querySelector(".task-details");
+        if (cloneDetails) cloneDetails.remove();
         clone.className = "task drag-clone";
         clone.style.cssText = `
           position: fixed; top: ${rect.top}px; left: ${rect.left}px;
@@ -3940,6 +4022,7 @@ class HomeTasksCard extends HTMLElement {
     }
     if (this._touchStartTimer) { clearTimeout(this._touchStartTimer); this._touchStartTimer = null; }
     if (this._subTouchStartTimer) { clearTimeout(this._subTouchStartTimer); this._subTouchStartTimer = null; }
+    if (this._extPollTimer) { clearInterval(this._extPollTimer); this._extPollTimer = null; }
   }
 
   static getConfigElement() {
