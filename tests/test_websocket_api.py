@@ -843,3 +843,416 @@ async def test_ws_get_external_lists_with_linked(
     assert len(matched) == 1
     assert matched[0]["linked"] is True
     assert matched[0]["supported_features"] == 119
+
+
+# ---------------------------------------------------------------------------
+# move_task_cross — universal cross-list move (native ↔ external)
+# ---------------------------------------------------------------------------
+
+
+class _MockAdapter:
+    """In-memory adapter that records create/delete calls and stores tasks."""
+
+    def __init__(self, provider_type="generic"):
+        from custom_components.home_tasks.provider_adapters import ProviderCapabilities
+        self.provider_type = provider_type
+        self.capabilities = ProviderCapabilities(
+            can_sync_priority=True,
+            can_sync_labels=True,
+            can_sync_order=True,
+            can_sync_due_time=True,
+            can_sync_description=True,
+            can_sync_assignee=True,
+            can_sync_sub_items=True,
+            can_sync_recurrence=True,
+            can_sync_reminders=True,
+        )
+        self.created: list[dict] = []
+        self.deleted: list[str] = []
+        self._tasks: list[dict] = []
+        self._next_id = 1
+
+    async def async_create_task(self, fields):
+        uid = f"mock-uid-{self._next_id}"
+        self._next_id += 1
+        item = {"uid": uid, "summary": fields.get("title", ""), "status": "needs_action"}
+        item.update({k: v for k, v in fields.items() if k != "title"})
+        self._tasks.append(item)
+        self.created.append({"uid": uid, **fields})
+        return uid
+
+    async def async_delete_task(self, task_uid):
+        self.deleted.append(task_uid)
+        self._tasks = [t for t in self._tasks if t["uid"] != task_uid]
+
+    async def async_read_tasks(self):
+        return list(self._tasks)
+
+    async def async_add_sub_task(self, parent_uid, title):
+        return None
+
+    async def _sync_reminders(self, uid, reminders):
+        pass
+
+
+async def test_ws_move_task_cross_native_to_native(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store, patch_add_extra_js_url
+) -> None:
+    """move_task_cross delegates native→native to async_export/import_task."""
+    entry2 = MockConfigEntry(domain=DOMAIN, data={"name": "Target List"}, title="Target List")
+    entry2.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry2.entry_id)
+    await hass.async_block_till_done()
+
+    task = await store.async_add_task("Cross move me")
+    await store.async_update_task(task["id"], priority=2, tags=["work"])
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 100,
+        "type": "home_tasks/move_task_cross",
+        "task_id": task["id"],
+        "source_list_id": mock_config_entry.entry_id,
+        "target_list_id": entry2.entry_id,
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    assert all(t["id"] != task["id"] for t in store.tasks)
+    target_store = hass.data[DOMAIN][entry2.entry_id]
+    moved = next(t for t in target_store.tasks if t["title"] == "Cross move me")
+    assert moved["priority"] == 2
+    assert moved["tags"] == ["work"]
+
+
+async def test_ws_move_task_cross_missing_source(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry
+) -> None:
+    """move_task_cross without any source returns invalid_request."""
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 101,
+        "type": "home_tasks/move_task_cross",
+        "task_id": "fake",
+        "target_list_id": mock_config_entry.entry_id,
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is False
+
+
+async def test_ws_move_task_cross_missing_target(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry
+) -> None:
+    """move_task_cross without any target returns invalid_request."""
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 102,
+        "type": "home_tasks/move_task_cross",
+        "task_id": "fake",
+        "source_list_id": mock_config_entry.entry_id,
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is False
+
+
+async def test_ws_move_task_cross_native_to_native_same_error(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store
+) -> None:
+    """move_task_cross with identical native source/target returns error."""
+    task = await store.async_add_task("Same list")
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 103,
+        "type": "home_tasks/move_task_cross",
+        "task_id": task["id"],
+        "source_list_id": mock_config_entry.entry_id,
+        "target_list_id": mock_config_entry.entry_id,
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is False
+
+
+async def test_ws_move_task_cross_native_to_external(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store,
+    external_config_entry,
+) -> None:
+    """move_task_cross sends task to external adapter and removes it from source."""
+    # Replace the auto-registered adapter with our mock
+    mock_adapter = _MockAdapter("generic")
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})["todo.ws_external"] = mock_adapter
+
+    task = await store.async_add_task("Going external")
+    await store.async_update_task(
+        task["id"], notes="some notes", priority=3, tags=["urgent"], reminders=[60]
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 104,
+        "type": "home_tasks/move_task_cross",
+        "task_id": task["id"],
+        "source_list_id": mock_config_entry.entry_id,
+        "target_entity_id": "todo.ws_external",
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+
+    # Source: removed
+    assert all(t["id"] != task["id"] for t in store.tasks)
+    # Target: created via adapter
+    assert len(mock_adapter.created) == 1
+    assert mock_adapter.created[0]["title"] == "Going external"
+    assert mock_adapter.created[0]["priority"] == 3
+
+    # Overlay should hold all overlay-eligible fields (priority, tags, reminders, etc.)
+    from custom_components.home_tasks.overlay_store import ExternalTaskOverlayStore
+    overlay = hass.data[DOMAIN][external_config_entry.entry_id]
+    assert isinstance(overlay, ExternalTaskOverlayStore)
+    new_uid = mock_adapter.created[0]["uid"]
+    saved = overlay.get_overlay(new_uid)
+    assert saved.get("tags") == ["urgent"]
+    assert saved.get("reminders") == [60]
+
+
+async def test_ws_move_task_cross_external_to_native(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store,
+    external_config_entry,
+) -> None:
+    """move_task_cross reads source from external adapter (rich path) and creates a native task."""
+    mock_adapter = _MockAdapter("generic")
+    # Pre-populate adapter — return values match the adapter contract (ISO strings)
+    mock_adapter._tasks.append({
+        "uid": "ext-uid-99",
+        "summary": "External original",
+        "status": "needs_action",
+        "due": "2026-07-01",
+        "priority": 2,
+        "labels": ["from_provider"],
+        "sub_items": [],
+    })
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})["todo.ws_external"] = mock_adapter
+
+    # Set an overlay field so we can verify it's read during the merge
+    overlay = hass.data[DOMAIN][external_config_entry.entry_id]
+    await overlay.async_set_overlay("ext-uid-99", reminders=[15])
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 105,
+        "type": "home_tasks/move_task_cross",
+        "task_id": "ext-uid-99",
+        "source_entity_id": "todo.ws_external",
+        "target_list_id": mock_config_entry.entry_id,
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+
+    # Native target should now have the task
+    moved = next((t for t in store.tasks if t["title"] == "External original"), None)
+    assert moved is not None
+    assert moved["due_date"] == "2026-07-01"
+    assert moved["priority"] == 2
+    assert moved["tags"] == ["from_provider"]
+    assert moved["reminders"] == [15]
+
+    # Source provider was deleted from
+    assert "ext-uid-99" in mock_adapter.deleted
+
+
+async def test_ws_move_task_cross_external_to_external(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, patch_add_extra_js_url
+) -> None:
+    """move_task_cross transfers between two external entities via adapters (rich path)."""
+    # Two external entries
+    src_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"type": "external", "entity_id": "todo.src_ext", "name": "Source Ext"},
+        title="Source Ext (External)",
+    )
+    src_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(src_entry.entry_id)
+    tgt_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"type": "external", "entity_id": "todo.tgt_ext", "name": "Target Ext"},
+        title="Target Ext (External)",
+    )
+    tgt_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(tgt_entry.entry_id)
+    await hass.async_block_till_done()
+
+    src_adapter = _MockAdapter("generic")
+    tgt_adapter = _MockAdapter("generic")
+    src_adapter._tasks.append({
+        "uid": "src-uid-1",
+        "summary": "Cross-ext task",
+        "status": "needs_action",
+        "labels": [],
+        "sub_items": [],
+    })
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})["todo.src_ext"] = src_adapter
+    hass.data[f"{DOMAIN}_adapters"]["todo.tgt_ext"] = tgt_adapter
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 106,
+        "type": "home_tasks/move_task_cross",
+        "task_id": "src-uid-1",
+        "source_entity_id": "todo.src_ext",
+        "target_entity_id": "todo.tgt_ext",
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+
+    # Created on target adapter, deleted from source
+    assert len(tgt_adapter.created) == 1
+    assert tgt_adapter.created[0]["title"] == "Cross-ext task"
+    assert "src-uid-1" in src_adapter.deleted
+
+
+# ---------------------------------------------------------------------------
+# create / update / reorder external tasks (adapter-routed)
+# ---------------------------------------------------------------------------
+
+
+async def test_ws_create_external_task_via_adapter(
+    hass: HomeAssistant, hass_ws_client, external_config_entry
+) -> None:
+    """create_external_task forwards to adapter and returns the new uid."""
+    mock_adapter = _MockAdapter("generic")
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})["todo.ws_external"] = mock_adapter
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 200,
+        "type": "home_tasks/create_external_task",
+        "entity_id": "todo.ws_external",
+        "title": "New external task",
+        "priority": 2,
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    assert msg["result"]["uid"].startswith("mock-uid-")
+    assert mock_adapter.created[0]["title"] == "New external task"
+    assert mock_adapter.created[0]["priority"] == 2
+
+
+async def test_ws_create_external_task_overlay_for_unsynced_reminders(
+    hass: HomeAssistant, hass_ws_client, external_config_entry
+) -> None:
+    """create_external_task stores reminders in overlay when adapter cannot sync them."""
+    from custom_components.home_tasks.provider_adapters import ProviderCapabilities
+
+    mock_adapter = _MockAdapter("generic")
+    # Override capabilities to NOT sync reminders
+    mock_adapter.capabilities = ProviderCapabilities(
+        can_sync_priority=True,
+        can_sync_labels=True,
+        can_sync_order=True,
+        can_sync_due_time=True,
+        can_sync_description=True,
+        can_sync_assignee=True,
+        can_sync_sub_items=True,
+        can_sync_recurrence=True,
+        can_sync_reminders=False,
+    )
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})["todo.ws_external"] = mock_adapter
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 201,
+        "type": "home_tasks/create_external_task",
+        "entity_id": "todo.ws_external",
+        "title": "Reminder task",
+        "reminders": [30, 60],
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    new_uid = msg["result"]["uid"]
+
+    overlay = hass.data[DOMAIN][external_config_entry.entry_id]
+    saved = overlay.get_overlay(new_uid)
+    assert saved.get("reminders") == [30, 60]
+
+
+async def test_ws_update_external_task_routes_unsynced_to_overlay(
+    hass: HomeAssistant, hass_ws_client, external_config_entry
+) -> None:
+    """update_external_task stores unsynced fields in the overlay."""
+    class _UnsyncedAdapter(_MockAdapter):
+        async def async_update_task(self, task_uid, fields):
+            # Pretend nothing is synced; everything is unsynced
+            return dict(fields)
+
+    adapter = _UnsyncedAdapter("generic")
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})["todo.ws_external"] = adapter
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 202,
+        "type": "home_tasks/update_external_task",
+        "entity_id": "todo.ws_external",
+        "task_uid": "uid-x",
+        "priority": 3,
+        "tags": ["a", "b"],
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    assert "priority" in msg["result"]["unsynced"]
+    assert "tags" in msg["result"]["unsynced"]
+
+    overlay = hass.data[DOMAIN][external_config_entry.entry_id]
+    saved = overlay.get_overlay("uid-x")
+    assert saved.get("priority") == 3
+    assert saved.get("tags") == ["a", "b"]
+
+
+async def test_ws_reorder_external_tasks_provider_handled(
+    hass: HomeAssistant, hass_ws_client, external_config_entry
+) -> None:
+    """reorder_external_tasks reports provider_handled=True when adapter accepts it."""
+    class _ReorderAdapter(_MockAdapter):
+        async def async_reorder_tasks(self, task_uids):
+            self.last_reorder = task_uids
+            return True
+
+    adapter = _ReorderAdapter("generic")
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})["todo.ws_external"] = adapter
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 203,
+        "type": "home_tasks/reorder_external_tasks",
+        "entity_id": "todo.ws_external",
+        "task_uids": ["a", "b", "c"],
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    assert msg["result"]["provider_handled"] is True
+    assert adapter.last_reorder == ["a", "b", "c"]
+
+
+async def test_ws_reorder_external_tasks_falls_back_to_overlay(
+    hass: HomeAssistant, hass_ws_client, external_config_entry
+) -> None:
+    """reorder_external_tasks falls back to overlay sort_order when adapter declines."""
+    class _NoReorderAdapter(_MockAdapter):
+        async def async_reorder_tasks(self, task_uids):
+            return False  # provider does not handle order
+
+    adapter = _NoReorderAdapter("generic")
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})["todo.ws_external"] = adapter
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 204,
+        "type": "home_tasks/reorder_external_tasks",
+        "entity_id": "todo.ws_external",
+        "task_uids": ["x", "y", "z"],
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    assert msg["result"]["provider_handled"] is False
+
+    overlay = hass.data[DOMAIN][external_config_entry.entry_id]
+    assert overlay.get_overlay("x").get("sort_order") == 0
+    assert overlay.get_overlay("y").get("sort_order") == 1
+    assert overlay.get_overlay("z").get("sort_order") == 2

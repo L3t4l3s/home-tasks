@@ -657,3 +657,273 @@ async def test_startup_due_check_fires_after_delay(
 
     # DATA_DUE_FIRED should be initialized as a dict (the check ran)
     assert isinstance(hass.data.get(DATA_DUE_FIRED), dict)
+
+
+# ---------------------------------------------------------------------------
+# Reminder scheduler tests
+# ---------------------------------------------------------------------------
+
+
+async def test_reminder_fires_event_at_offset(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """A scheduled reminder fires home_tasks_task_reminder when its offset elapses."""
+    from datetime import date as _date
+    events = []
+    hass.bus.async_listen(f"{DOMAIN}_task_reminder", lambda e: events.append(e))
+
+    # Due tomorrow at midnight (local), reminder 1 day before = ~now
+    tomorrow = (_date.today() + timedelta(days=1)).isoformat()
+    task = await store.async_add_task("Reminder task")
+    await store.async_update_task(
+        task["id"],
+        due_date=tomorrow,
+        due_time="12:00",
+        reminders=[60],  # 60 min before
+    )
+    await hass.async_block_till_done()
+
+    # Reminder is at tomorrow 11:00 local. Advance well past that.
+    async_fire_time_changed(hass, utcnow() + timedelta(days=2))
+    await hass.async_block_till_done()
+
+    matching = [e for e in events if e.data["task_id"] == task["id"]]
+    assert len(matching) == 1
+    assert matching[0].data["reminder_offset_minutes"] == 60
+
+
+async def test_reminder_skipped_for_completed_task(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """_schedule_reminders does not schedule timers for completed tasks."""
+    from custom_components.home_tasks import _schedule_reminders, DATA_REMINDER_TIMERS
+    from datetime import date as _date
+
+    tomorrow = (_date.today() + timedelta(days=1)).isoformat()
+    task = await store.async_add_task("Done already")
+    await store.async_update_task(
+        task["id"], due_date=tomorrow, reminders=[30], completed=True
+    )
+    await hass.async_block_till_done()
+
+    # Manually invoke after completion to confirm short-circuit
+    _schedule_reminders(hass, mock_config_entry.entry_id, store.get_task(task["id"]))
+    timers = hass.data.get(DATA_REMINDER_TIMERS, {})
+    assert not any(k.startswith(f"{task['id']}_r") for k in timers)
+
+
+async def test_reminder_skipped_without_due_date(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """_schedule_reminders does nothing for a task with reminders but no due date."""
+    from custom_components.home_tasks import _schedule_reminders, DATA_REMINDER_TIMERS
+
+    task = await store.async_add_task("No due date")
+    await store.async_update_task(task["id"], reminders=[30])
+    await hass.async_block_till_done()
+
+    _schedule_reminders(hass, mock_config_entry.entry_id, store.get_task(task["id"]))
+    timers = hass.data.get(DATA_REMINDER_TIMERS, {})
+    assert not any(k.startswith(f"{task['id']}_r") for k in timers)
+
+
+async def test_reminder_silent_miss_for_past_offset(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """A reminder whose offset is already in the past is silently dropped."""
+    from custom_components.home_tasks import _schedule_reminders, DATA_REMINDER_TIMERS
+    from datetime import date as _date
+
+    # Due today 00:00 → reminder 1440 min (1 day) before is yesterday → past
+    today = _date.today().isoformat()
+    task = await store.async_add_task("Past reminder")
+    await store.async_update_task(
+        task["id"], due_date=today, due_time="00:00", reminders=[1440]
+    )
+    await hass.async_block_till_done()
+
+    _schedule_reminders(hass, mock_config_entry.entry_id, store.get_task(task["id"]))
+    timers = hass.data.get(DATA_REMINDER_TIMERS, {})
+    assert not any(k.startswith(f"{task['id']}_r") for k in timers)
+
+
+async def test_cancel_reminders_removes_pending_timers(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """_cancel_reminders removes all timer entries for a task_id."""
+    from custom_components.home_tasks import _cancel_reminders, DATA_REMINDER_TIMERS
+    from datetime import date as _date
+
+    tomorrow = (_date.today() + timedelta(days=1)).isoformat()
+    task = await store.async_add_task("Cancellable")
+    await store.async_update_task(
+        task["id"],
+        due_date=tomorrow,
+        due_time="12:00",
+        reminders=[60, 30, 15],
+    )
+    await hass.async_block_till_done()
+
+    timers = hass.data.get(DATA_REMINDER_TIMERS, {})
+    assert sum(1 for k in timers if k.startswith(f"{task['id']}_r")) == 3
+
+    _cancel_reminders(hass, task["id"])
+    assert not any(k.startswith(f"{task['id']}_r") for k in timers)
+
+
+async def test_completing_task_cancels_reminders(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Completing a task cancels its pending reminder timers."""
+    from custom_components.home_tasks import DATA_REMINDER_TIMERS
+    from datetime import date as _date
+
+    tomorrow = (_date.today() + timedelta(days=1)).isoformat()
+    task = await store.async_add_task("Will be completed")
+    await store.async_update_task(
+        task["id"],
+        due_date=tomorrow,
+        due_time="12:00",
+        reminders=[60],
+    )
+    await hass.async_block_till_done()
+    timers = hass.data.get(DATA_REMINDER_TIMERS, {})
+    assert any(k.startswith(f"{task['id']}_r") for k in timers)
+
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+    assert not any(k.startswith(f"{task['id']}_r") for k in timers)
+
+
+async def test_recover_reminder_timers_after_restart(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """_recover_reminder_timers reschedules timers for open tasks with reminders."""
+    from custom_components.home_tasks import (
+        _recover_reminder_timers,
+        _cancel_reminders,
+        DATA_REMINDER_TIMERS,
+    )
+    from datetime import date as _date
+
+    tomorrow = (_date.today() + timedelta(days=1)).isoformat()
+    task = await store.async_add_task("Surviving reminder")
+    await store.async_update_task(
+        task["id"], due_date=tomorrow, due_time="12:00", reminders=[60]
+    )
+    await hass.async_block_till_done()
+
+    # Simulate "restart": clear all timers, then recover
+    _cancel_reminders(hass, task["id"])
+    timers = hass.data.get(DATA_REMINDER_TIMERS, {})
+    assert not any(k.startswith(f"{task['id']}_r") for k in timers)
+
+    _recover_reminder_timers(hass, mock_config_entry.entry_id, store)
+    assert any(k.startswith(f"{task['id']}_r") for k in timers)
+
+
+# ---------------------------------------------------------------------------
+# Recurrence recovery tests
+# ---------------------------------------------------------------------------
+
+
+async def test_recover_recurrence_timer_with_future_delay(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """_recover_recurrence_timers schedules a timer when reopen is in the future."""
+    from custom_components.home_tasks import (
+        _recover_recurrence_timers,
+        _cancel_recurrence,
+        DATA_RECURRENCE_TIMERS,
+    )
+    from datetime import datetime as _dt, timezone as _tz
+
+    task = await store.async_add_task("Recovers later")
+    await store.async_update_task(
+        task["id"],
+        recurrence_enabled=True,
+        recurrence_unit="hours",
+        recurrence_value=24,
+    )
+    # Mark completed with completed_at = now → reopen in ~24h
+    now_iso = _dt.now(_tz.utc).isoformat()
+    await store.async_update_task(task["id"], completed=True)
+    # Patch completed_at on the stored task to be deterministic
+    store.get_task(task["id"])["completed_at"] = now_iso
+    await hass.async_block_till_done()
+
+    _cancel_recurrence(hass, task["id"])
+    assert task["id"] not in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+
+    _recover_recurrence_timers(hass, mock_config_entry.entry_id, store)
+    assert task["id"] in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+
+
+async def test_recover_recurrence_timer_with_past_delay_reopens(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """_recover_recurrence_timers immediately reopens a task whose reopen time has passed."""
+    from custom_components.home_tasks import _recover_recurrence_timers
+    from datetime import datetime as _dt, timezone as _tz
+
+    task = await store.async_add_task("Should reopen now")
+    await store.async_update_task(
+        task["id"],
+        recurrence_enabled=True,
+        recurrence_unit="hours",
+        recurrence_value=1,
+    )
+    # completed_at far in the past → delay <= 0 → immediate reopen
+    past = (_dt.now(_tz.utc) - timedelta(days=7)).isoformat()
+    await store.async_update_task(task["id"], completed=True)
+    store.get_task(task["id"])["completed_at"] = past
+    await hass.async_block_till_done()
+
+    _recover_recurrence_timers(hass, mock_config_entry.entry_id, store)
+    await hass.async_block_till_done()
+    assert store.get_task(task["id"])["completed"] is False
+
+
+async def test_recover_recurrence_skips_non_recurring(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """_recover_recurrence_timers skips completed tasks without recurrence_enabled."""
+    from custom_components.home_tasks import (
+        _recover_recurrence_timers,
+        DATA_RECURRENCE_TIMERS,
+    )
+
+    task = await store.async_add_task("Not recurring")
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+
+    _recover_recurrence_timers(hass, mock_config_entry.entry_id, store)
+    assert task["id"] not in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+
+
+async def test_recover_recurrence_skips_missing_completed_at(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """_recover_recurrence_timers skips tasks where completed_at is missing or invalid."""
+    from custom_components.home_tasks import (
+        _recover_recurrence_timers,
+        _cancel_recurrence,
+        DATA_RECURRENCE_TIMERS,
+    )
+
+    task = await store.async_add_task("Missing completed_at")
+    await store.async_update_task(
+        task["id"],
+        recurrence_enabled=True,
+        recurrence_unit="hours",
+        recurrence_value=1,
+    )
+    await store.async_update_task(task["id"], completed=True)
+    # Wipe completed_at and cancel the auto-scheduled timer so we can test recovery
+    store.get_task(task["id"])["completed_at"] = None
+    _cancel_recurrence(hass, task["id"])
+    await hass.async_block_till_done()
+    assert task["id"] not in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+
+    _recover_recurrence_timers(hass, mock_config_entry.entry_id, store)
+    assert task["id"] not in hass.data.get(DATA_RECURRENCE_TIMERS, {})
