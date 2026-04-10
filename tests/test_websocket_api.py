@@ -1256,3 +1256,354 @@ async def test_ws_reorder_external_tasks_falls_back_to_overlay(
     assert overlay.get_overlay("x").get("sort_order") == 0
     assert overlay.get_overlay("y").get("sort_order") == 1
     assert overlay.get_overlay("z").get("sort_order") == 2
+
+
+# ---------------------------------------------------------------------------
+# Adapter sub-task commands when capabilities.can_sync_sub_items=True
+# ---------------------------------------------------------------------------
+
+
+class _SubTaskAdapter(_MockAdapter):
+    """Mock adapter with sub-task tracking for the four sub-task commands."""
+
+    def __init__(self, provider_type="generic"):
+        super().__init__(provider_type)
+        self._sub_calls: dict[str, list] = {
+            "add": [], "update": [], "delete": [], "reorder": [],
+        }
+
+    async def async_add_sub_task(self, parent_uid, title):
+        self._sub_calls["add"].append((parent_uid, title))
+        return f"sub-{len(self._sub_calls['add'])}"
+
+    async def async_update_sub_task(self, sub_task_uid, **fields):
+        self._sub_calls["update"].append((sub_task_uid, fields))
+        return True
+
+    async def async_delete_sub_task(self, sub_task_uid):
+        self._sub_calls["delete"].append(sub_task_uid)
+        return True
+
+    async def async_reorder_sub_tasks(self, parent_uid, sub_task_uids):
+        self._sub_calls["reorder"].append((parent_uid, list(sub_task_uids)))
+        return True
+
+
+async def test_ws_add_external_sub_task_via_adapter(
+    hass: HomeAssistant, hass_ws_client, external_config_entry
+) -> None:
+    """add_external_sub_task delegates to adapter when can_sync_sub_items=True."""
+    adapter = _SubTaskAdapter()
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})["todo.ws_external"] = adapter
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 300,
+        "type": "home_tasks/add_external_sub_task",
+        "entity_id": "todo.ws_external",
+        "task_uid": "parent-1",
+        "title": "Sub via adapter",
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    assert msg["result"]["title"] == "Sub via adapter"
+    assert msg["result"]["completed"] is False
+    assert ("parent-1", "Sub via adapter") in adapter._sub_calls["add"]
+
+
+async def test_ws_update_external_sub_task_via_adapter(
+    hass: HomeAssistant, hass_ws_client, external_config_entry
+) -> None:
+    """update_external_sub_task delegates to adapter when supported."""
+    adapter = _SubTaskAdapter()
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})["todo.ws_external"] = adapter
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 301,
+        "type": "home_tasks/update_external_sub_task",
+        "entity_id": "todo.ws_external",
+        "task_uid": "parent-1",
+        "sub_task_id": "sub-99",
+        "title": "Renamed sub",
+        "completed": True,
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    assert adapter._sub_calls["update"][0][0] == "sub-99"
+    assert adapter._sub_calls["update"][0][1]["title"] == "Renamed sub"
+    assert adapter._sub_calls["update"][0][1]["completed"] is True
+
+
+async def test_ws_delete_external_sub_task_via_adapter(
+    hass: HomeAssistant, hass_ws_client, external_config_entry
+) -> None:
+    """delete_external_sub_task delegates to adapter when supported."""
+    adapter = _SubTaskAdapter()
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})["todo.ws_external"] = adapter
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 302,
+        "type": "home_tasks/delete_external_sub_task",
+        "entity_id": "todo.ws_external",
+        "task_uid": "parent-1",
+        "sub_task_id": "sub-42",
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    assert "sub-42" in adapter._sub_calls["delete"]
+
+
+async def test_ws_reorder_external_sub_tasks_via_adapter(
+    hass: HomeAssistant, hass_ws_client, external_config_entry
+) -> None:
+    """reorder_external_sub_tasks delegates to adapter when supported."""
+    adapter = _SubTaskAdapter()
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})["todo.ws_external"] = adapter
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 303,
+        "type": "home_tasks/reorder_external_sub_tasks",
+        "entity_id": "todo.ws_external",
+        "task_uid": "parent-1",
+        "sub_task_ids": ["a", "b", "c"],
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    assert adapter._sub_calls["reorder"][0] == ("parent-1", ["a", "b", "c"])
+
+
+# ---------------------------------------------------------------------------
+# get_external_tasks rich adapter path (vs. generic path already covered)
+# ---------------------------------------------------------------------------
+
+
+async def test_ws_get_external_tasks_via_rich_adapter(
+    hass: HomeAssistant, hass_ws_client, external_config_entry
+) -> None:
+    """get_external_tasks reads from adapter.async_read_tasks when adapter is rich."""
+    adapter = _MockAdapter("generic")
+    adapter._tasks.append({
+        "uid": "rich-1",
+        "summary": "Rich adapter task",
+        "status": "needs_action",
+        "labels": ["alpha"],
+        "sub_items": [],
+        "priority": 2,
+    })
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})["todo.ws_external"] = adapter
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 304,
+        "type": "home_tasks/get_external_tasks",
+        "entity_id": "todo.ws_external",
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    tasks = msg["result"]["tasks"]
+    assert any(t["id"] == "rich-1" for t in tasks)
+    rich = next(t for t in tasks if t["id"] == "rich-1")
+    assert rich["title"] == "Rich adapter task"
+    assert rich["tags"] == ["alpha"]
+    assert rich["priority"] == 2
+
+
+# ---------------------------------------------------------------------------
+# create_external_task / update_external_task fallback paths (no adapter)
+# ---------------------------------------------------------------------------
+
+
+async def test_ws_create_external_task_without_adapter_uses_generic(
+    hass: HomeAssistant, hass_ws_client, external_config_entry
+) -> None:
+    """When no adapter is registered, create_external_task falls back to GenericAdapter."""
+    # Remove any pre-registered adapter
+    hass.data.get(f"{DOMAIN}_adapters", {}).pop("todo.ws_external", None)
+
+    # Mock the generic adapter's async_create_task by patching at the module level
+    from unittest.mock import AsyncMock, patch
+    with patch(
+        "custom_components.home_tasks.websocket_api.GenericAdapter"
+    ) as mock_generic:
+        instance = mock_generic.return_value
+        instance.async_create_task = AsyncMock(return_value=None)
+
+        client = await hass_ws_client(hass)
+        await client.send_json({
+            "id": 305,
+            "type": "home_tasks/create_external_task",
+            "entity_id": "todo.ws_external",
+            "title": "Generic create",
+        })
+        msg = await client.receive_json()
+        assert msg["success"] is True
+        assert msg["result"]["uid"] is None
+        instance.async_create_task.assert_awaited_once()
+
+
+async def test_ws_update_external_task_without_adapter_uses_generic(
+    hass: HomeAssistant, hass_ws_client, external_config_entry
+) -> None:
+    """When no adapter is registered, update_external_task falls back to GenericAdapter."""
+    hass.data.get(f"{DOMAIN}_adapters", {}).pop("todo.ws_external", None)
+
+    from unittest.mock import AsyncMock, patch
+    with patch(
+        "custom_components.home_tasks.websocket_api.GenericAdapter"
+    ) as mock_generic:
+        instance = mock_generic.return_value
+        instance.async_update_task = AsyncMock(return_value={"priority": 3})
+
+        client = await hass_ws_client(hass)
+        await client.send_json({
+            "id": 306,
+            "type": "home_tasks/update_external_task",
+            "entity_id": "todo.ws_external",
+            "task_uid": "uid-1",
+            "title": "x",
+        })
+        msg = await client.receive_json()
+        assert msg["success"] is True
+        instance.async_update_task.assert_awaited_once()
+
+
+# ---------------------------------------------------------------------------
+# Cross-move generic-target fallback path (no adapter on target)
+# ---------------------------------------------------------------------------
+
+
+async def test_ws_move_task_cross_native_to_generic_target(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store, patch_add_extra_js_url,
+) -> None:
+    """move_task_cross to an external entity without an adapter uses GenericAdapter
+    and discovers the new uid via re-fetch."""
+    # Set up an external entry but DON'T register an adapter for it
+    ext_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"type": "external", "entity_id": "todo.cross_generic", "name": "CrossGen"},
+        title="CrossGen (External)",
+    )
+    ext_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(ext_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Remove the auto-registered adapter so the generic fallback runs
+    hass.data.get(f"{DOMAIN}_adapters", {}).pop("todo.cross_generic", None)
+
+    task = await store.async_add_task("Move via generic")
+    await store.async_update_task(task["id"], priority=2, tags=["g1"])
+
+    # Patch GenericAdapter so its async_create_task and _get_external_todo_items work
+    from unittest.mock import AsyncMock, patch
+    with patch(
+        "custom_components.home_tasks.websocket_api.GenericAdapter"
+    ) as mock_generic, patch(
+        "custom_components.home_tasks.websocket_api._get_external_todo_items",
+        return_value=[{"uid": "new-uid-99", "summary": "Move via generic"}],
+    ):
+        instance = mock_generic.return_value
+        instance.async_create_task = AsyncMock(return_value=None)
+        instance.async_delete_task = AsyncMock()
+
+        client = await hass_ws_client(hass)
+        await client.send_json({
+            "id": 307,
+            "type": "home_tasks/move_task_cross",
+            "task_id": task["id"],
+            "source_list_id": mock_config_entry.entry_id,
+            "target_entity_id": "todo.cross_generic",
+        })
+        msg = await client.receive_json()
+        assert msg["success"] is True
+        assert all(t["id"] != task["id"] for t in store.tasks)
+        instance.async_create_task.assert_awaited_once()
+
+    # Overlay should have the moved fields under the discovered uid
+    overlay = hass.data[DOMAIN][ext_entry.entry_id]
+    saved = overlay.get_overlay("new-uid-99")
+    assert saved.get("priority") == 2
+    assert saved.get("tags") == ["g1"]
+
+
+async def test_ws_move_task_cross_generic_source_with_adapter(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store, external_config_entry,
+) -> None:
+    """move_task_cross from a generic external source (no adapter) to native list."""
+    # Remove any adapter so the generic _get_external_todo_items path runs for source
+    hass.data.get(f"{DOMAIN}_adapters", {}).pop("todo.ws_external", None)
+
+    from unittest.mock import patch, AsyncMock
+
+    with patch(
+        "custom_components.home_tasks.websocket_api._get_external_todo_items",
+        return_value=[{
+            "uid": "src-only-99",
+            "summary": "Generic source",
+            "status": "needs_action",
+            "due": "2027-04-15",
+        }],
+    ), patch(
+        "custom_components.home_tasks.websocket_api.GenericAdapter"
+    ) as mock_generic:
+        instance = mock_generic.return_value
+        instance.async_delete_task = AsyncMock()
+
+        client = await hass_ws_client(hass)
+        await client.send_json({
+            "id": 308,
+            "type": "home_tasks/move_task_cross",
+            "task_id": "src-only-99",
+            "source_entity_id": "todo.ws_external",
+            "target_list_id": mock_config_entry.entry_id,
+        })
+        msg = await client.receive_json()
+        assert msg["success"] is True
+        moved = next((t for t in store.tasks if t["title"] == "Generic source"), None)
+        assert moved is not None
+        assert moved["due_date"] == "2027-04-15"
+        instance.async_delete_task.assert_awaited_once_with("src-only-99")
+
+
+# ---------------------------------------------------------------------------
+# Cross-move native → external with recurrence + sub-items (covers more branches)
+# ---------------------------------------------------------------------------
+
+
+async def test_ws_move_task_cross_with_recurrence_and_subitems(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store, external_config_entry,
+) -> None:
+    """Native task with recurrence config + sub-items moved to a rich adapter."""
+    adapter = _SubTaskAdapter("generic")
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})["todo.ws_external"] = adapter
+
+    task = await store.async_add_task("Recurring with subs")
+    tid = task["id"]
+    await store.async_update_task(
+        tid,
+        recurrence_enabled=True,
+        recurrence_unit="days",
+        recurrence_value=1,
+        recurrence_type="interval",
+    )
+    await store.async_add_sub_task(tid, "first sub")
+    await store.async_add_sub_task(tid, "second sub")
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 309,
+        "type": "home_tasks/move_task_cross",
+        "task_id": tid,
+        "source_list_id": mock_config_entry.entry_id,
+        "target_entity_id": "todo.ws_external",
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    # Adapter received recurrence + the two sub-tasks
+    assert adapter.created[0]["recurrence_enabled"] is True
+    assert len(adapter._sub_calls["add"]) == 2
+    sub_titles = [c[1] for c in adapter._sub_calls["add"]]
+    assert "first sub" in sub_titles
+    assert "second sub" in sub_titles

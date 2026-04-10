@@ -927,3 +927,223 @@ async def test_recover_recurrence_skips_missing_completed_at(
 
     _recover_recurrence_timers(hass, mock_config_entry.entry_id, store)
     assert task["id"] not in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+
+
+# ---------------------------------------------------------------------------
+# Pure-function edge cases for full coverage
+# ---------------------------------------------------------------------------
+
+
+def test_check_end_date_invalid_iso() -> None:
+    """_check_end_date with malformed end_date string returns False."""
+    from custom_components.home_tasks.__init__ import _check_end_date
+    task = {"recurrence_end_type": "date", "recurrence_end_date": "not-a-date"}
+    target = datetime(2026, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
+    assert _check_end_date(task, target) is False
+
+
+def test_apply_start_date_invalid_iso() -> None:
+    """_apply_start_date with malformed start_date returns target unchanged."""
+    from custom_components.home_tasks.__init__ import _apply_start_date
+    target = datetime(2026, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
+    result = _apply_start_date({"recurrence_start_date": "garbage"}, target)
+    assert result == target
+
+
+def test_apply_start_date_target_after_start() -> None:
+    """_apply_start_date returns target unchanged if it's already past start_date."""
+    from custom_components.home_tasks.__init__ import _apply_start_date
+    target = datetime(2026, 12, 1, 12, 0, 0, tzinfo=timezone.utc)
+    result = _apply_start_date({"recurrence_start_date": "2026-01-01"}, target)
+    assert result == target
+
+
+def test_compute_reopen_delay_weekdays_empty_list() -> None:
+    """_compute_reopen_delay returns None when type=weekdays but the list is empty."""
+    from custom_components.home_tasks.__init__ import _compute_reopen_delay
+    completed = datetime(2026, 1, 5, 12, 0, 0, tzinfo=timezone.utc)
+    delay = _compute_reopen_delay(
+        {"recurrence_type": "weekdays", "recurrence_weekdays": []}, completed,
+    )
+    assert delay is None
+
+
+def test_compute_reopen_delay_years_unit() -> None:
+    """_compute_reopen_delay supports unit=years (covers the years branch)."""
+    from custom_components.home_tasks.__init__ import _compute_reopen_delay
+    completed = datetime(2026, 1, 5, 12, 0, 0, tzinfo=timezone.utc)
+    delay = _compute_reopen_delay(
+        {"recurrence_type": "interval", "recurrence_unit": "years",
+         "recurrence_value": 1}, completed,
+    )
+    assert delay is not None
+    assert isinstance(delay, float)
+
+
+def test_compute_reopen_delay_invalid_unit() -> None:
+    """_compute_reopen_delay returns None when recurrence_unit is invalid."""
+    from custom_components.home_tasks.__init__ import _compute_reopen_delay
+    completed = datetime(2026, 1, 5, 12, 0, 0, tzinfo=timezone.utc)
+    delay = _compute_reopen_delay(
+        {"recurrence_type": "interval", "recurrence_unit": "centuries",
+         "recurrence_value": 1}, completed,
+    )
+    assert delay is None
+
+
+def test_compute_reopen_delay_weekdays_with_end_date_passed() -> None:
+    """_compute_reopen_delay returns None for weekdays with passed end_date."""
+    from custom_components.home_tasks.__init__ import _compute_reopen_delay
+    completed = datetime(2026, 1, 5, 12, 0, 0, tzinfo=timezone.utc)
+    task = {
+        "recurrence_type": "weekdays",
+        "recurrence_weekdays": [0, 2, 4],
+        "recurrence_end_type": "date",
+        "recurrence_end_date": "2025-01-01",  # in the past
+    }
+    assert _compute_reopen_delay(task, completed) is None
+
+
+def test_compute_reopen_delay_hours_with_end_date_passed() -> None:
+    """_compute_reopen_delay returns None for hours unit with passed end_date."""
+    from custom_components.home_tasks.__init__ import _compute_reopen_delay
+    completed = datetime(2026, 1, 5, 12, 0, 0, tzinfo=timezone.utc)
+    task = {
+        "recurrence_type": "interval",
+        "recurrence_unit": "hours",
+        "recurrence_value": 1,
+        "recurrence_end_type": "date",
+        "recurrence_end_date": "2025-01-01",
+    }
+    assert _compute_reopen_delay(task, completed) is None
+
+
+def test_compute_due_datetime_no_due_date() -> None:
+    """_compute_due_datetime returns None for tasks without a due_date."""
+    from custom_components.home_tasks.__init__ import _compute_due_datetime
+    assert _compute_due_datetime({}) is None
+    assert _compute_due_datetime({"due_date": None}) is None
+
+
+def test_compute_due_datetime_invalid_date_string() -> None:
+    """_compute_due_datetime returns None for malformed due_date."""
+    from custom_components.home_tasks.__init__ import _compute_due_datetime
+    assert _compute_due_datetime({"due_date": "not-a-date"}) is None
+
+
+def test_compute_due_datetime_with_invalid_time() -> None:
+    """_compute_due_datetime falls back to midnight when due_time is malformed."""
+    from custom_components.home_tasks.__init__ import _compute_due_datetime
+    result = _compute_due_datetime({"due_date": "2027-05-15", "due_time": "xx:yy"})
+    assert result is not None
+    assert result.hour == 0
+    assert result.minute == 0
+
+
+def test_compute_due_datetime_date_only() -> None:
+    """_compute_due_datetime with no due_time returns midnight local."""
+    from custom_components.home_tasks.__init__ import _compute_due_datetime
+    result = _compute_due_datetime({"due_date": "2027-05-15"})
+    assert result is not None
+    assert result.hour == 0
+    assert result.year == 2027
+
+
+# ---------------------------------------------------------------------------
+# Service resolver error paths
+# ---------------------------------------------------------------------------
+
+
+async def test_resolve_store_no_args_raises(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """_resolve_store without entry_id or list_name raises vol.Invalid."""
+    from custom_components.home_tasks import _resolve_store
+    import voluptuous as vol
+    with pytest.raises(vol.Invalid):
+        _resolve_store(hass, {})
+
+
+async def test_resolve_store_unknown_entry_id_raises(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """_resolve_store with a non-existent entry_id raises vol.Invalid."""
+    from custom_components.home_tasks import _resolve_store
+    import voluptuous as vol
+    with pytest.raises(vol.Invalid):
+        _resolve_store(hass, {"entry_id": "nonexistent"})
+
+
+async def test_resolve_store_unknown_list_name_raises(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """_resolve_store with a non-existent list_name raises vol.Invalid."""
+    from custom_components.home_tasks import _resolve_store
+    import voluptuous as vol
+    with pytest.raises(vol.Invalid):
+        _resolve_store(hass, {"list_name": "Ghost List"})
+
+
+def test_resolve_task_no_args_raises() -> None:
+    """_resolve_task without task_id or task_title raises ValueError."""
+    from custom_components.home_tasks import _resolve_task
+    fake_store = type("S", (), {"tasks": []})()
+    with pytest.raises(ValueError):
+        _resolve_task(fake_store, {})
+
+
+def test_resolve_task_unknown_title_raises() -> None:
+    """_resolve_task with a non-matching title raises ValueError."""
+    from custom_components.home_tasks import _resolve_task
+    fake_store = type("S", (), {"tasks": [{"id": "1", "title": "Other"}]})()
+    with pytest.raises(ValueError):
+        _resolve_task(fake_store, {"task_title": "Missing"})
+
+
+def test_resolve_task_returns_completed_when_no_open_match() -> None:
+    """_resolve_task returns the first completed match when no open ones exist."""
+    from custom_components.home_tasks import _resolve_task
+    fake_store = type("S", (), {"tasks": [
+        {"id": "1", "title": "Buy", "completed": True},
+    ]})()
+    result = _resolve_task(fake_store, {"task_title": "Buy"})
+    assert result["id"] == "1"
+
+
+async def test_resolve_actor_no_user_id_returns_none(
+    hass: HomeAssistant, mock_config_entry
+) -> None:
+    """_resolve_actor returns None when call.context has no user_id."""
+    from custom_components.home_tasks import _resolve_actor
+    from unittest.mock import MagicMock
+    call = MagicMock()
+    call.context.user_id = None
+    result = await _resolve_actor(hass, call)
+    assert result is None
+
+
+async def test_resolve_actor_get_user_failure_returns_none(
+    hass: HomeAssistant, mock_config_entry
+) -> None:
+    """_resolve_actor returns None when async_get_user raises."""
+    from custom_components.home_tasks import _resolve_actor
+    from unittest.mock import MagicMock, AsyncMock, patch
+    call = MagicMock()
+    call.context.user_id = "user-123"
+    with patch.object(hass.auth, "async_get_user", AsyncMock(side_effect=Exception("auth down"))):
+        result = await _resolve_actor(hass, call)
+    assert result is None
+
+
+async def test_service_reopen_task_no_args_raises(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """reopen_task service with neither task nor person/tag raises an error."""
+    import voluptuous as vol
+    with pytest.raises((vol.Invalid, Exception)):
+        await hass.services.async_call(
+            DOMAIN,
+            "reopen_task",
+            {"list_name": "Test List"},
+            blocking=True,
+        )

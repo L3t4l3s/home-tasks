@@ -680,3 +680,428 @@ class TestTodoistAdapterReminderSync:
 
         # The first reminder should have been rolled back via delete_reminder
         api.delete_reminder.assert_awaited_once_with("created-1")
+
+
+# ---------------------------------------------------------------------------
+#  GenericAdapter — exercises the actual hass.services.async_call paths
+# ---------------------------------------------------------------------------
+
+
+def _make_generic_adapter(supported_features: int = 0):
+    """Build a GenericAdapter with a minimal mocked HA hass + entity state."""
+    hass = MagicMock()
+    state = MagicMock()
+    state.attributes = {"supported_features": supported_features}
+    hass.states.get = MagicMock(return_value=state)
+    hass.services.async_call = AsyncMock()
+    return GenericAdapter(hass, "todo.test_entity", {}), hass
+
+
+class TestGenericAdapterCreateTask:
+    """async_create_task forwards to todo.add_item with mapped fields."""
+
+    async def test_basic_title_only(self):
+        adapter, hass = _make_generic_adapter()
+        result = await adapter.async_create_task({"title": "Buy milk"})
+        assert result is None  # Generic adapter doesn't return uid
+        hass.services.async_call.assert_awaited_once()
+        args, kwargs = hass.services.async_call.await_args
+        assert args[0] == "todo"
+        assert args[1] == "add_item"
+        assert args[2]["item"] == "Buy milk"
+
+    async def test_with_due_date_only_no_datetime_support(self):
+        adapter, hass = _make_generic_adapter(supported_features=0)
+        await adapter.async_create_task({
+            "title": "T", "due_date": "2027-05-15"
+        })
+        service_data = hass.services.async_call.await_args.args[2]
+        assert service_data["due_date"] == "2027-05-15"
+        assert "due_datetime" not in service_data
+
+    async def test_with_due_date_and_time_with_datetime_support(self):
+        adapter, hass = _make_generic_adapter(supported_features=32)
+        await adapter.async_create_task({
+            "title": "T", "due_date": "2027-05-15", "due_time": "09:30"
+        })
+        service_data = hass.services.async_call.await_args.args[2]
+        assert service_data["due_datetime"] == "2027-05-15 09:30:00"
+        assert "due_date" not in service_data
+
+    async def test_with_due_time_but_no_datetime_support_falls_back(self):
+        adapter, hass = _make_generic_adapter(supported_features=0)
+        await adapter.async_create_task({
+            "title": "T", "due_date": "2027-05-15", "due_time": "09:30"
+        })
+        service_data = hass.services.async_call.await_args.args[2]
+        # No datetime support → only due_date is sent
+        assert service_data["due_date"] == "2027-05-15"
+        assert "due_datetime" not in service_data
+
+    async def test_with_notes(self):
+        adapter, hass = _make_generic_adapter()
+        await adapter.async_create_task({"title": "T", "notes": "Some notes"})
+        service_data = hass.services.async_call.await_args.args[2]
+        assert service_data["description"] == "Some notes"
+
+
+class TestGenericAdapterUpdateTask:
+    """async_update_task routes fields to either the API or the unsynced dict."""
+
+    async def test_title_rename(self):
+        adapter, hass = _make_generic_adapter()
+        unsynced = await adapter.async_update_task("uid-1", {"title": "Renamed"})
+        kwargs = hass.services.async_call.await_args.args[2]
+        assert kwargs["item"] == "uid-1"
+        assert kwargs["rename"] == "Renamed"
+        assert "title" not in unsynced
+
+    async def test_completed_true(self):
+        adapter, hass = _make_generic_adapter()
+        await adapter.async_update_task("uid-1", {"completed": True})
+        kwargs = hass.services.async_call.await_args.args[2]
+        assert kwargs["status"] == "completed"
+
+    async def test_completed_false(self):
+        adapter, hass = _make_generic_adapter()
+        await adapter.async_update_task("uid-1", {"completed": False})
+        kwargs = hass.services.async_call.await_args.args[2]
+        assert kwargs["status"] == "needs_action"
+
+    async def test_notes_update(self):
+        adapter, hass = _make_generic_adapter()
+        await adapter.async_update_task("uid-1", {"notes": "New notes"})
+        kwargs = hass.services.async_call.await_args.args[2]
+        assert kwargs["description"] == "New notes"
+
+    async def test_clear_due_date(self):
+        adapter, hass = _make_generic_adapter()
+        await adapter.async_update_task("uid-1", {"due_date": None})
+        kwargs = hass.services.async_call.await_args.args[2]
+        assert kwargs["due_date"] is None
+
+    async def test_due_date_only_no_datetime_support(self):
+        adapter, hass = _make_generic_adapter(supported_features=0)
+        await adapter.async_update_task(
+            "uid-1", {"due_date": "2027-06-01"}
+        )
+        kwargs = hass.services.async_call.await_args.args[2]
+        assert kwargs["due_date"] == "2027-06-01"
+
+    async def test_due_date_with_time_with_datetime_support(self):
+        adapter, hass = _make_generic_adapter(supported_features=32)
+        await adapter.async_update_task(
+            "uid-1", {"due_date": "2027-06-01", "due_time": "14:30"}
+        )
+        kwargs = hass.services.async_call.await_args.args[2]
+        assert kwargs["due_datetime"] == "2027-06-01 14:30:00"
+
+    async def test_clear_due_time_only_with_datetime_support(self):
+        """Clearing only due_time (date kept) downgrades to midnight datetime."""
+        adapter, hass = _make_generic_adapter(supported_features=32)
+        await adapter.async_update_task(
+            "uid-1", {"due_date": "2027-06-01", "due_time": None}
+        )
+        kwargs = hass.services.async_call.await_args.args[2]
+        assert kwargs["due_datetime"] == "2027-06-01 00:00:00"
+
+    async def test_due_time_alone_goes_to_unsynced(self):
+        """due_time without due_date can't be sent to provider — overlay only."""
+        adapter, hass = _make_generic_adapter(supported_features=32)
+        unsynced = await adapter.async_update_task(
+            "uid-1", {"due_time": "10:00"}
+        )
+        assert unsynced.get("due_time") == "10:00"
+
+    async def test_unknown_field_routed_to_unsynced(self):
+        adapter, hass = _make_generic_adapter()
+        unsynced = await adapter.async_update_task(
+            "uid-1", {"priority": 2, "tags": ["a"]}
+        )
+        assert unsynced["priority"] == 2
+        assert unsynced["tags"] == ["a"]
+
+    async def test_no_api_call_when_only_unsynced_fields(self):
+        adapter, hass = _make_generic_adapter()
+        await adapter.async_update_task("uid-1", {"priority": 1})
+        # Only "item" key would be in service_data → no API call
+        hass.services.async_call.assert_not_awaited()
+
+
+class TestGenericAdapterDeleteTask:
+    async def test_delete(self):
+        adapter, hass = _make_generic_adapter()
+        await adapter.async_delete_task("uid-1")
+        args = hass.services.async_call.await_args.args
+        assert args[1] == "remove_item"
+        assert args[2]["item"] == "uid-1"
+
+
+class TestGenericAdapterReorderTasks:
+    """async_reorder_tasks uses todo/item/move when supported."""
+
+    async def test_reorder_unsupported_returns_false(self):
+        """Without MOVE_TODO_ITEM (8) feature, returns False (caller uses overlay)."""
+        adapter, hass = _make_generic_adapter(supported_features=0)
+        result = await adapter.async_reorder_tasks(["a", "b", "c"])
+        assert result is False
+        hass.services.async_call.assert_not_awaited()
+
+    async def test_reorder_supported_calls_item_move(self):
+        adapter, hass = _make_generic_adapter(supported_features=8)
+        result = await adapter.async_reorder_tasks(["a", "b", "c"])
+        assert result is True
+        # 3 calls, one per item
+        assert hass.services.async_call.await_count == 3
+        first = hass.services.async_call.await_args_list[0].args[2]
+        assert first["uid"] == "a"
+        assert first["previous_uid"] is None
+        second = hass.services.async_call.await_args_list[1].args[2]
+        assert second["uid"] == "b"
+        assert second["previous_uid"] == "a"
+
+    async def test_reorder_failure_returns_false(self):
+        adapter, hass = _make_generic_adapter(supported_features=8)
+        hass.services.async_call = AsyncMock(side_effect=Exception("boom"))
+        result = await adapter.async_reorder_tasks(["a", "b"])
+        assert result is False
+
+
+# ---------------------------------------------------------------------------
+#  TodoistAdapter — pure helper functions
+# ---------------------------------------------------------------------------
+
+
+class TestTodoistDueExtractors:
+    """_extract_date and _extract_time on TodoistDue objects."""
+
+    def test_extract_date_none(self):
+        assert TodoistAdapter._extract_date(None) is None
+
+    def test_extract_date_simple(self):
+        due = MagicMock()
+        due.date = "2027-05-15"
+        assert TodoistAdapter._extract_date(due) == "2027-05-15"
+
+    def test_extract_date_with_iso_datetime(self):
+        due = MagicMock()
+        due.date = "2027-05-15T14:30:00"
+        result = TodoistAdapter._extract_date(due)
+        assert result == "2027-05-15"
+
+    def test_extract_date_no_date_attr(self):
+        due = MagicMock()
+        due.date = None
+        assert TodoistAdapter._extract_date(due) is None
+
+    def test_extract_time_none(self):
+        assert TodoistAdapter._extract_time(None) is None
+
+    def test_extract_time_no_T_in_date(self):
+        due = MagicMock()
+        due.date = "2027-05-15"  # date only, no time component
+        assert TodoistAdapter._extract_time(due) is None
+
+    def test_extract_time_with_iso_datetime(self):
+        due = MagicMock()
+        due.date = "2027-05-15T09:30:00"
+        result = TodoistAdapter._extract_time(due)
+        # Must be a HH:MM string (timezone conversion may shift hour)
+        assert result is not None
+        assert len(result) == 5 and result[2] == ":"
+
+
+class TestTodoistMatchCollaborator:
+    """_match_person_to_collaborator finds Todoist user IDs from HA person entities."""
+
+    def _build_adapter(self, person_name=None, collaborators=None):
+        hass = MagicMock()
+        if person_name is None:
+            hass.states.get = MagicMock(return_value=None)
+        else:
+            state = MagicMock()
+            state.attributes = {"friendly_name": person_name}
+            hass.states.get = MagicMock(return_value=state)
+        adapter = TodoistAdapter(hass, "todo.test", {}, "tok")
+        adapter._collaborators = collaborators or []
+        return adapter
+
+    def _make_collab(self, name, collab_id):
+        c = MagicMock()
+        c.name = name
+        c.id = collab_id
+        return c
+
+    def test_no_state_returns_none(self):
+        adapter = self._build_adapter(person_name=None)
+        assert adapter._match_person_to_collaborator("person.alice") is None
+
+    def test_no_friendly_name_returns_none(self):
+        adapter = self._build_adapter(person_name="")
+        assert adapter._match_person_to_collaborator("person.alice") is None
+
+    def test_exact_match(self):
+        adapter = self._build_adapter(
+            person_name="Alice", collaborators=[self._make_collab("Alice", "123")]
+        )
+        assert adapter._match_person_to_collaborator("person.alice") == "123"
+
+    def test_case_insensitive_match(self):
+        adapter = self._build_adapter(
+            person_name="ALICE", collaborators=[self._make_collab("alice", "123")]
+        )
+        assert adapter._match_person_to_collaborator("person.alice") == "123"
+
+    def test_substring_match(self):
+        adapter = self._build_adapter(
+            person_name="Alice",
+            collaborators=[self._make_collab("Alice Wonderland", "456")],
+        )
+        assert adapter._match_person_to_collaborator("person.alice") == "456"
+
+    def test_no_match(self):
+        adapter = self._build_adapter(
+            person_name="Alice", collaborators=[self._make_collab("Bob", "789")]
+        )
+        assert adapter._match_person_to_collaborator("person.alice") is None
+
+
+class TestTodoistBuildDueParams:
+    """_build_due_params maps structured fields to Todoist API parameters."""
+
+    def _adapter(self):
+        adapter, _api = _make_todoist_adapter_with_mock_api()
+        return adapter
+
+    def test_due_date_only(self):
+        params = self._adapter()._build_due_params({"due_date": "2027-05-15"})
+        assert params == {"due_date": "2027-05-15"}
+
+    def test_due_date_and_time(self):
+        params = self._adapter()._build_due_params(
+            {"due_date": "2027-05-15", "due_time": "09:30"}
+        )
+        assert params == {"due_datetime": "2027-05-15T09:30:00"}
+
+    def test_clear_due_date_explicitly(self):
+        params = self._adapter()._build_due_params({"due_date": None})
+        assert params == {"due_string": "no date"}
+
+    def test_recurrence_disabled_with_due_date(self):
+        params = self._adapter()._build_due_params({
+            "recurrence_enabled": False, "due_date": "2027-05-15"
+        })
+        assert params == {"due_date": "2027-05-15"}
+
+    def test_recurrence_disabled_no_due_clears(self):
+        params = self._adapter()._build_due_params({"recurrence_enabled": False})
+        assert params == {"due_string": "no date"}
+
+    def test_recurrence_enabled_daily(self):
+        params = self._adapter()._build_due_params({
+            "recurrence_enabled": True, "recurrence_unit": "days",
+            "recurrence_value": 1,
+        })
+        assert "due_string" in params
+        assert "every day" in params["due_string"]
+
+    def test_recurrence_with_due_time_inserted(self):
+        params = self._adapter()._build_due_params({
+            "recurrence_enabled": True, "recurrence_unit": "days",
+            "recurrence_value": 1, "due_time": "09:30",
+        })
+        assert "at 09:30" in params["due_string"]
+
+    def test_recurrence_hourly_no_time_appended(self):
+        params = self._adapter()._build_due_params({
+            "recurrence_enabled": True, "recurrence_unit": "hours",
+            "recurrence_value": 2, "due_time": "09:30",
+        })
+        # Hourly intervals must not append "at HH:MM" (Todoist 400)
+        assert "at 09:30" not in params["due_string"]
+
+
+class TestTodoistMergeDueFields:
+    """_merge_due_fields fetches current task state when fields are partial."""
+
+    async def test_complete_fields_skip_fetch(self):
+        adapter, api = _make_todoist_adapter_with_mock_api()
+        full_fields = {
+            "recurrence_enabled": True,
+            "recurrence_type": "interval",
+            "recurrence_value": 1,
+            "recurrence_unit": "days",
+            "recurrence_weekdays": [],
+            "recurrence_start_date": None,
+            "recurrence_time": None,
+            "due_date": "2027-05-15",
+        }
+        result = await adapter._merge_due_fields(api, "t1", full_fields)
+        assert result == full_fields
+        api.get_task.assert_not_called()
+
+    async def test_partial_fields_fetch_and_merge(self):
+        adapter, api = _make_todoist_adapter_with_mock_api()
+        current = MagicMock()
+        current.due = MagicMock()
+        current.due.is_recurring = True
+        current.due.string = "every 2 days"
+        current.due.date = "2027-05-15"
+        api.get_task = AsyncMock(return_value=current)
+
+        result = await adapter._merge_due_fields(
+            api, "t1", {"recurrence_start_date": "2027-06-01"}
+        )
+        # New start_date present + fields from current state filled in
+        assert result["recurrence_start_date"] == "2027-06-01"
+        assert result["recurrence_enabled"] is True
+
+    async def test_fetch_failure_returns_fields_unchanged(self):
+        adapter, api = _make_todoist_adapter_with_mock_api()
+        api.get_task = AsyncMock(side_effect=Exception("network down"))
+        fields = {"recurrence_start_date": "2027-06-01"}
+        result = await adapter._merge_due_fields(api, "t1", fields)
+        assert result == fields
+
+
+class TestTodoistResolveProjectId:
+    """_resolve_project_id picks the right project from a list by name."""
+
+    async def test_exact_match_by_entity_data_name(self):
+        hass = MagicMock()
+        adapter = TodoistAdapter(hass, "todo.shopping", {"name": "Shopping"}, "tok")
+        adapter._api = MagicMock()
+        proj_a = MagicMock()
+        proj_a.id = "id-a"
+        proj_a.name = "Other"
+        proj_b = MagicMock()
+        proj_b.id = "id-b"
+        proj_b.name = "Shopping"
+        adapter._api.get_projects = AsyncMock(return_value=[proj_a, proj_b])
+
+        await adapter._resolve_project_id()
+        assert adapter._project_id == "id-b"
+
+    async def test_match_by_entity_id_suffix(self):
+        hass = MagicMock()
+        adapter = TodoistAdapter(hass, "todo.my_list", {}, "tok")
+        adapter._api = MagicMock()
+        proj = MagicMock()
+        proj.id = "id-x"
+        proj.name = "my list"  # matches normalized entity_id
+        adapter._api.get_projects = AsyncMock(return_value=[proj])
+
+        await adapter._resolve_project_id()
+        assert adapter._project_id == "id-x"
+
+    async def test_no_match_leaves_id_unset(self):
+        hass = MagicMock()
+        adapter = TodoistAdapter(hass, "todo.unknown", {}, "tok")
+        adapter._api = MagicMock()
+        proj = MagicMock()
+        proj.id = "x"
+        proj.name = "Other"
+        adapter._api.get_projects = AsyncMock(return_value=[proj])
+
+        await adapter._resolve_project_id()
+        assert adapter._project_id is None
