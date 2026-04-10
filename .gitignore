@@ -5,3 +5,4 @@ __pycache__/
 htmlcov/
 *.pyc
 MANUAL_TEST_PLAN.md
+tests/live/.env

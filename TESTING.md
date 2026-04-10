@@ -162,3 +162,104 @@ freezegun==1.5.1
 `winloop` is installed separately (not in requirements_test.txt) because it is only needed on Windows and has no conflict risk.
 
 Do **not** add `homeassistant` or `pytest-asyncio` or `pytest-cov` separately — they are pinned by pytest-hacc and adding them causes version conflicts.
+
+---
+
+# Live tests (opt-in)
+
+Beyond the in-memory unit tests, this repo has a **live test suite** under
+`tests/live/` that runs against a real Home Assistant instance and real
+provider APIs (Todoist, Google Tasks, CalDAV, Local Todo, Bring).
+
+Live tests catch a class of bugs that mocks fundamentally cannot:
+
+- Provider API contract drift (e.g. Todoist changing recurrence string format)
+- Reminder / sub-task / recurrence sync edge cases against real backends
+- WebSocket schema mismatches between the card and the integration
+- Real-world timing and eventual-consistency issues
+
+They are **opt-in** — `pytest` (default) does not collect them.  Run with:
+
+```bash
+pytest -m live
+```
+
+## Setup (one-time)
+
+1. **Long-lived access token**
+   - HA → Profile → Security → "Create Token" at the bottom
+   - Copy the token (you only see it once)
+
+2. **Native test lists** (via Settings → Devices & Services → Home Tasks)
+   - Create one named **`Home-Tasks E2E Test`** (required for E2E tests)
+   - Create another named **`Home-Tasks E2E Test 2`** (required for move_task tests)
+
+3. **Per-provider test lists** — pick the providers you want to test.
+   For each, create a NEW empty list/project in the provider's UI:
+   - **Todoist**: new project named e.g. `ht-test`
+   - **Google Tasks**: new task list named e.g. `ht-test`
+   - **CalDAV**: new collection named e.g. `ht-test`
+   - **Local Todo**: HA → Settings → Devices → Local Todo → new list `ht-test`
+   - **Bring**: new shopping list named e.g. `ht-test`
+
+   Then **link each one** through Home Tasks → Add list → Choose external,
+   selecting the new entity.  Note the resulting `todo.<entity_id>` under
+   Settings → Devices & Services → Entities.
+
+4. **Create `tests/live/.env`** by copying `.env.example`:
+
+   ```bash
+   cp tests/live/.env.example tests/live/.env
+   # Then edit tests/live/.env with your token and entity IDs
+   ```
+
+   Each variable is optional — tests for unset providers are auto-skipped.
+
+## Running
+
+```bash
+# All live tests (skips any provider whose env var is missing)
+pytest -m live
+
+# Just the WebSocket E2E tests
+pytest -m live tests/live/test_e2e_websocket.py
+
+# Just one provider
+pytest -m live tests/live/test_provider_todoist.py
+
+# Verbose
+pytest -m live -v
+```
+
+## Safety
+
+Each test list is **wiped before every test** (the autouse fixture deletes
+all items).  A safety guard aborts the wipe if a list contains more than
+`HT_MAX_EXISTING_ITEMS` (default 50) items, so accidentally pointing tests
+at a real list cannot destroy data.  Verify after a test run:
+
+- The dedicated test list in each provider's UI should be empty (or contain
+  only items left over from a failing test)
+- All other lists must be unchanged
+
+## What's covered
+
+| File | Tests | What it exercises |
+|------|------:|--------------------|
+| `test_e2e_websocket.py` | 14 | Full WS API: lists, CRUD, sub-tasks, reorder, move, reminders, recurrence config |
+| `test_e2e_cross_move.py` | 5 | `move_task_cross` native ↔ each provider |
+| `test_provider_todoist.py` | 11+1xfail | Rich adapter: CRUD, sub-tasks, recurrence round-trip, reminders, reorder |
+| `test_provider_google_tasks.py` | 7 | Generic adapter: CRUD + overlay routing |
+| `test_provider_caldav.py` | 7 | Generic adapter: CRUD + overlay routing |
+| `test_provider_local_todo.py` | 7 | Direct todo.* services (Local Todo not linked through home_tasks) |
+| `test_provider_bring.py` | 5 | Shopping-list provider: CRUD + overlay-everything |
+| **Total** | **56 + 1 xfail** | |
+
+## Known findings (live-test discoveries)
+
+- **Todoist reminder sync round-trip** (`test_reminders_update_round_trip`,
+  marked xfail) — `POST /reminders` succeeds but `GET /reminders` for the
+  same task returns empty. Either `TodoistAdapter._sync_reminders` isn't
+  actually creating reminders, or the API filters them out for some reason.
+  Reproducible across multiple runs. Needs investigation.
+
