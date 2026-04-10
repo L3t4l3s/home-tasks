@@ -1,0 +1,12 @@
+{
+  "name": "home-tasks",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test --experimental-test-coverage tests-js/test_*.mjs",
+    "test:nocov": "node --test tests-js/test_*.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^25.0.0"
+  }
+}

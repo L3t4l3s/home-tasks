@@ -255,11 +255,102 @@ at a real list cannot destroy data.  Verify after a test run:
 | `test_provider_bring.py` | 5 | Shopping-list provider: CRUD + overlay-everything |
 | **Total** | **56 + 1 xfail** | |
 
+---
+
+# JavaScript card tests
+
+The Lovelace card (`custom_components/home_tasks/home-tasks-card.js`) is a
+~4600 line vanilla custom element with extensive DOM manipulation. It is
+tested with **Node's built-in `node:test` runner + jsdom**, no bundler or
+browser required.
+
+## Setup
+
+Requires Node.js 20+ (uses `node:test --experimental-test-coverage`).
+
+```bash
+# From the repo root
+npm install
+```
+
+This installs only `jsdom` as a dev dependency. No esbuild, no Vitest, no
+Playwright — keeping the toolchain minimal so it runs in any sandboxed
+environment (the addon container, GitHub Actions, etc.).
+
+## Running
+
+```bash
+# Run all JS tests with coverage
+npm test
+
+# Run without coverage (faster)
+npm run test:nocov
+
+# Run a single test file
+node --test tests-js/test_card_helpers.mjs
+```
+
+## Architecture
+
+`tests-js/setup.mjs` builds a fresh jsdom realm, installs the necessary
+browser globals (`window`, `document`, `customElements`, `HTMLElement`,
+etc.), and loads `home-tasks-card.js` into that realm via
+`new dom.window.Function(src)`. The result is a fully usable
+`HomeTasksCard` class that can be instantiated, configured with a mock
+`hass`, and rendered into a shadow DOM that tests can query.
+
+For tests that depend on dates ("today", "tomorrow", date arithmetic),
+`loadCard({ frozenNow: '2027-06-15T12:00:00Z' })` replaces the realm's
+`window.Date` with a stub that returns the fixed moment.
+
+## Test files
+
+| File | Tests | What it exercises |
+|------|------:|--------------------|
+| `test_card_loads.mjs` | 2 | Smoke: card source loads, custom element registers |
+| `test_card_helpers.mjs` | 25 | Pure helpers: `_isDueDateOverdue`, `_isDueDateToday`, `_getSubTaskProgress`, `_buildSortComparator` (manual/priority/title/due/person), `_formatDueDate` (today/tomorrow/yesterday/+2/-2/far) |
+| `test_card_render.mjs` | 14 | Full lifecycle (`setConfig` → `set hass` → `_loadLists` → render), task list rendering, optimistic updates (notes/title/sub-task delete), `_render` background-update guard (editing, dragging), `_filteredTasks` integration, column-type helpers |
+| **Total** | **41** | |
+
+## Mocking pattern for render tests
+
+Tests that need a populated card use `makeRecordingHass()` from
+`test_card_render.mjs`:
+
+```javascript
+const hass = makeRecordingHass({
+  'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'Test' }] },
+  'home_tasks/get_tasks': {
+    tasks: [{ id: 'T1', title: 'Task A', sort_order: 0, sub_items: [] }],
+  },
+});
+const card = new HomeTasksCard();
+card.setConfig({ columns: [{ list_id: 'L1' }] });
+card.hass = hass;
+await flush(card);  // wait for async _loadLists to complete
+
+// Now assert against card.shadowRoot or card._columns[i].tasks
+```
+
+The mock returns canned responses per WS command type and records every
+call in `hass.calls` for verification.
+
+## Coverage
+
+`node:test --experimental-test-coverage` reports coverage of the test
+files themselves, not of `home-tasks-card.js` (which is loaded as a
+runtime-synthesized function rather than from disk, so V8 cannot track
+it). Functional coverage is measured by what behaviors we assert.
+
 ## Known findings (live-test discoveries)
 
-- **Todoist reminder sync round-trip** (`test_reminders_update_round_trip`,
-  marked xfail) — `POST /reminders` succeeds but `GET /reminders` for the
-  same task returns empty. Either `TodoistAdapter._sync_reminders` isn't
-  actually creating reminders, or the API filters them out for some reason.
-  Reproducible across multiple runs. Needs investigation.
+All Live-Test findings have been fixed and are now regression-tested.
+
+- **Todoist reminder sync data loss on Free accounts** (fixed in 9db4096):
+  Free Todoist users cannot create reminders with non-zero offsets
+  (`PREMIUM_ONLY`). The old `_sync_reminders` deleted existing reminders
+  before attempting adds, so any reminder edit silently destroyed the
+  implicit "at due time" reminder that Todoist auto-creates for tasks
+  with due_datetime. Now `_sync_reminders` adds first, aborts on
+  `PREMIUM_ONLY`, and rolls back any partial creates.
 

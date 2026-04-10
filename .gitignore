@@ -6,3 +6,5 @@ htmlcov/
 *.pyc
 MANUAL_TEST_PLAN.md
 tests/live/.env
+node_modules/
+package-lock.json
