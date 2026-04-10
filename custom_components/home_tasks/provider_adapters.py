@@ -703,8 +703,14 @@ class TodoistAdapter(ProviderAdapter):
             # Parse recurrence from due object
             recurrence = self._parse_recurrence_from_due(task.due)
 
-            # Read reminders
-            raw_reminders = await api.get_reminders(task.id)
+            # Read reminders — best-effort, swallow API errors here so a
+            # single failed reminders call doesn't break the whole task list.
+            try:
+                from .todoist_api import TodoistAPIError  # noqa: WPS433
+                raw_reminders = await api.get_reminders(task.id)
+            except TodoistAPIError as err:
+                _LOGGER.debug("Could not read reminders for task %s: %s", task.id, err.message)
+                raw_reminders = []
             reminders = [
                 r["minute_offset"] for r in raw_reminders
                 if r.get("minute_offset") is not None
@@ -909,9 +915,25 @@ class TodoistAdapter(ProviderAdapter):
     # -- Reminder sync ------------------------------------------------------
 
     async def _sync_reminders(self, task_uid: str, new_offsets: list[int]) -> None:
-        """Delta-sync reminder offsets to Todoist."""
+        """Delta-sync reminder offsets to Todoist.
+
+        Free Todoist accounts cannot create reminders with non-zero
+        minute_offset (Premium-only feature).  We try to add the new
+        reminders FIRST so that, if the API rejects them, we don't end
+        up deleting the existing ones and leaving the task with nothing.
+        """
+        from .todoist_api import TodoistAPIError  # noqa: WPS433
+
         api = self._api
-        existing = await api.get_reminders(task_uid)
+        try:
+            existing = await api.get_reminders(task_uid)
+        except TodoistAPIError as err:
+            _LOGGER.warning(
+                "Cannot read reminders for task %s: %s — skipping sync",
+                task_uid, err.message,
+            )
+            return
+
         existing_map = {
             r.get("minute_offset"): r.get("id")
             for r in existing
@@ -919,15 +941,50 @@ class TodoistAdapter(ProviderAdapter):
         }
         new_set = set(new_offsets)
 
-        # Delete removed
+        # Step 1: try to ADD new reminders first.  If the API rejects any
+        # of them (e.g. PREMIUM_ONLY for non-zero offsets on Free accounts),
+        # abort the whole sync so we don't delete the existing reminders.
+        offsets_to_add = [o for o in new_offsets if o not in existing_map]
+        added_ids: list[str] = []
+        for offset in offsets_to_add:
+            try:
+                result = await api.add_reminder(
+                    task_uid, reminder_type="relative", minute_offset=offset
+                )
+                if result and result.get("id"):
+                    added_ids.append(result["id"])
+            except TodoistAPIError as err:
+                if err.is_premium_only:
+                    _LOGGER.warning(
+                        "Todoist rejected reminder offset=%d for task %s: %s. "
+                        "Reminders with non-zero offsets require Todoist Premium. "
+                        "Aborting reminder sync to preserve existing reminders.",
+                        offset, task_uid, err.message,
+                    )
+                else:
+                    _LOGGER.warning(
+                        "Todoist rejected reminder offset=%d for task %s: %s. "
+                        "Aborting reminder sync.",
+                        offset, task_uid, err.message,
+                    )
+                # Roll back: delete any reminders we just created in this call
+                for rid in added_ids:
+                    try:
+                        await api.delete_reminder(rid)
+                    except TodoistAPIError:
+                        pass
+                return
+
+        # Step 2: all adds succeeded, now safe to delete the obsolete ones.
         for offset, rid in existing_map.items():
             if offset not in new_set:
-                await api.delete_reminder(rid)
-
-        # Create added
-        for offset in new_offsets:
-            if offset not in existing_map:
-                await api.add_reminder(task_uid, reminder_type="relative", minute_offset=offset)
+                try:
+                    await api.delete_reminder(rid)
+                except TodoistAPIError as err:
+                    _LOGGER.warning(
+                        "Failed to delete obsolete reminder %s for task %s: %s",
+                        rid, task_uid, err.message,
+                    )
 
 
 # ---------------------------------------------------------------------------

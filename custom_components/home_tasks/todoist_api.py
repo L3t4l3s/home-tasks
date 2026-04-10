@@ -25,6 +25,24 @@ _BASE_URL = "https://api.todoist.com/api/v1"
 _TIMEOUT = aiohttp.ClientTimeout(total=30)
 
 
+class TodoistAPIError(Exception):
+    """Raised when the Todoist API returns an error response.
+
+    Carries the API's error_code (e.g. 32 = PREMIUM_ONLY) so callers can
+    distinguish recoverable limitations from real failures.
+    """
+
+    def __init__(self, status: int, error_code: int | None, message: str) -> None:
+        super().__init__(f"Todoist API {status}: {message}")
+        self.status = status
+        self.error_code = error_code
+        self.message = message
+
+    @property
+    def is_premium_only(self) -> bool:
+        return self.error_code == 32 or self.status == 403
+
+
 # ---------------------------------------------------------------------------
 #  Lightweight data classes (only the fields we read)
 # ---------------------------------------------------------------------------
@@ -144,17 +162,32 @@ class TodoistAPIClient:
 
     # -- low-level helpers --------------------------------------------------
 
+    async def _raise_for_status(self, resp: aiohttp.ClientResponse) -> None:
+        """Convert HTTP errors into TodoistAPIError carrying the API's error_code."""
+        if resp.status < 400:
+            return
+        body = await resp.text()
+        error_code: int | None = None
+        message = body
+        try:
+            payload = json.loads(body) if body else {}
+            error_code = payload.get("error_code")
+            message = payload.get("error") or payload.get("error_tag") or body
+        except (ValueError, TypeError):
+            pass
+        raise TodoistAPIError(resp.status, error_code, message)
+
     async def _get(self, path: str, params: dict | None = None) -> Any:
         session = self._get_session()
         async with session.get(f"{_BASE_URL}/{path}", params=params) as resp:
-            resp.raise_for_status()
+            await self._raise_for_status(resp)
             return await resp.json()
 
     async def _post(self, path: str, data: dict | None = None) -> Any:
         session = self._get_session()
         payload = json.dumps(data) if data else None
         async with session.post(f"{_BASE_URL}/{path}", data=payload) as resp:
-            resp.raise_for_status()
+            await self._raise_for_status(resp)
             body = await resp.read()
             if body:
                 return json.loads(body)
@@ -163,7 +196,7 @@ class TodoistAPIClient:
     async def _delete(self, path: str) -> None:
         session = self._get_session()
         async with session.delete(f"{_BASE_URL}/{path}") as resp:
-            resp.raise_for_status()
+            await self._raise_for_status(resp)
 
     # -- paginated GET (API returns cursor-based pagination) ----------------
 
@@ -242,13 +275,13 @@ class TodoistAPIClient:
     # -- Reminders ----------------------------------------------------------
 
     async def get_reminders(self, task_id: str) -> list[dict]:
-        """Get reminders for a task.  Returns raw dicts."""
-        try:
-            items = await self._get_all("reminders", params={"task_id": task_id})
-            return items
-        except Exception:  # noqa: BLE001
-            _LOGGER.debug("Reminders endpoint not available or failed for task %s", task_id)
-            return []
+        """Get reminders for a task.  Returns raw dicts.
+
+        Raises TodoistAPIError on real failures so callers can decide
+        whether to retry, fall back, or surface the issue.
+        """
+        items = await self._get_all("reminders", params={"task_id": task_id})
+        return items
 
     async def add_reminder(
         self,
@@ -259,7 +292,11 @@ class TodoistAPIClient:
         due_string: str | None = None,
         service: str = "push",
     ) -> dict | None:
-        """Create a reminder.  Returns the created reminder dict or None."""
+        """Create a reminder.  Returns the created reminder dict.
+
+        Raises TodoistAPIError(error_code=32) when the user's plan does not
+        permit explicit reminders (Premium-only feature for non-zero offsets).
+        """
         data: dict[str, Any] = {
             "task_id": task_id,
             "type": reminder_type,
@@ -269,18 +306,11 @@ class TodoistAPIClient:
             data["minute_offset"] = minute_offset
         if due_string is not None:
             data["due_string"] = due_string
-        try:
-            return await self._post("reminders", data)
-        except Exception:  # noqa: BLE001
-            _LOGGER.debug("Failed to create reminder for task %s", task_id)
-            return None
+        return await self._post("reminders", data)
 
     async def delete_reminder(self, reminder_id: str) -> None:
-        """Delete a reminder."""
-        try:
-            await self._delete(f"reminders/{reminder_id}")
-        except Exception:  # noqa: BLE001
-            _LOGGER.debug("Failed to delete reminder %s", reminder_id)
+        """Delete a reminder.  Raises TodoistAPIError on failure."""
+        await self._delete(f"reminders/{reminder_id}")
 
 
 # ---------------------------------------------------------------------------

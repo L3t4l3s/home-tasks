@@ -311,50 +311,58 @@ async def test_recurrence_weekdays(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    reason=(
-        "FINDING: Todoist reminder sync round-trip is broken. "
-        "POST /reminders succeeds (HTTP 200) but GET /reminders for the "
-        "same task returns []. Either the integration's _sync_reminders "
-        "calls aren't actually creating reminders, or Todoist's API is "
-        "filtering them out for some reason. Needs investigation in "
-        "TodoistAdapter._sync_reminders / TodoistAPIClient.add_reminder."
-    ),
-    strict=False,
-)
-async def test_reminders_update_round_trip(
+async def test_reminders_premium_only_does_not_destroy_existing(
     ws_client: HAWebSocketClient, todoist_entity: str
 ) -> None:
-    """Update reminders on an existing task → adapter reports them back."""
+    """Setting Premium-only reminders on a Free account must NOT delete the
+    implicit reminder Todoist created for tasks with due_datetime.
+
+    REGRESSION TEST for the bug found via the live tests:
+      - Todoist Free accounts cannot create reminders with non-zero
+        minute_offset (returns 403 PREMIUM_ONLY).
+      - Old _sync_reminders deleted existing reminders BEFORE attempting
+        to add new ones, then the adds failed silently → task ended up
+        with no reminders at all (data loss).
+      - New _sync_reminders attempts adds first, aborts on PREMIUM_ONLY,
+        and leaves the existing reminders intact.
+
+    This test verifies the new behavior: even when we ask for offsets the
+    free tier can't honor, the implicit at-due-time reminder survives.
+    """
     create = await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=todoist_entity,
-        title="Reminder update test",
+        title="Reminder preservation",
         due_date="2027-10-01",
         due_time="09:00",
     )
     uid = create["uid"]
     await asyncio.sleep(TODOIST_SETTLE)
 
+    # Snapshot reminders BEFORE the update — Todoist auto-creates one
+    # for any task with due_datetime.
+    before = await _refetch(ws_client, todoist_entity)
+    task_before = next(t for t in before if t["id"] == uid)
+    reminders_before = sorted(task_before.get("reminders", []))
+
+    # Try to set Premium-only reminders.  This will fail at the API level
+    # but must NOT delete the existing implicit reminder.
     await ws_client.send_command(
         "home_tasks/update_external_task",
         entity_id=todoist_entity, task_uid=uid,
         reminders=[60, 1440],
     )
+    await asyncio.sleep(TODOIST_SETTLE * 2)
 
-    # Poll for up to 10 seconds — Todoist reminder sync is slow.
-    found = False
-    for _ in range(20):
-        await asyncio.sleep(0.5)
-        result = await ws_client.send_command(
-            "home_tasks/get_external_tasks", entity_id=todoist_entity
-        )
-        task = next((t for t in result["tasks"] if t["id"] == uid), None)
-        if task and {60, 1440}.issubset(set(task.get("reminders", []))):
-            found = True
-            break
-    assert found, (
-        f"Expected reminders [60, 1440] never appeared (got {task.get('reminders') if task else 'task missing'})"
+    after = await _refetch(ws_client, todoist_entity)
+    task_after = next(t for t in after if t["id"] == uid)
+    reminders_after = sorted(task_after.get("reminders", []))
+
+    # The implicit reminder must still be present (no data loss)
+    assert reminders_after == reminders_before, (
+        f"Reminders changed unexpectedly: before={reminders_before} "
+        f"after={reminders_after}.  This means _sync_reminders deleted "
+        f"the implicit reminder and failed to replace it."
     )
 
 

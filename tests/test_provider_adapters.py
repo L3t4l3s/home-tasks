@@ -618,6 +618,11 @@ class TestTodoistAdapterReminderSync:
     async def test_sync_creates_new(self):
         adapter, api = _make_todoist_adapter_with_mock_api()
         api.get_reminders = AsyncMock(return_value=[])
+        # add_reminder returns a dict-like result so the rollback path
+        # in _sync_reminders can read its "id".
+        api.add_reminder = AsyncMock(side_effect=[
+            {"id": "new-r1"}, {"id": "new-r2"},
+        ])
         await adapter._sync_reminders("t1", [30, 60])
         assert api.add_reminder.await_count == 2
 
@@ -638,3 +643,40 @@ class TestTodoistAdapterReminderSync:
         await adapter._sync_reminders("t1", [15])
         api.delete_reminder.assert_not_called()
         api.add_reminder.assert_not_called()
+
+    async def test_sync_aborts_on_premium_only_without_deleting_existing(self):
+        """REGRESSION: Free tier rejects offset reminders → don't delete the
+        existing implicit reminder; roll back any partial creates."""
+        from custom_components.home_tasks.todoist_api import TodoistAPIError
+
+        adapter, api = _make_todoist_adapter_with_mock_api()
+        # Existing implicit reminder (offset=0) that Todoist auto-creates
+        api.get_reminders = AsyncMock(return_value=[
+            {"id": "implicit-1", "minute_offset": 0},
+        ])
+        # Adds will fail with PREMIUM_ONLY
+        api.add_reminder = AsyncMock(
+            side_effect=TodoistAPIError(403, 32, "Premium only feature")
+        )
+
+        await adapter._sync_reminders("t1", [60, 1440])
+
+        # The existing implicit reminder must NOT have been deleted
+        api.delete_reminder.assert_not_called()
+
+    async def test_sync_rolls_back_partial_creates_on_premium_error(self):
+        """REGRESSION: If first add succeeds but second fails, the first
+        must be rolled back (delete the partially-created reminder)."""
+        from custom_components.home_tasks.todoist_api import TodoistAPIError
+
+        adapter, api = _make_todoist_adapter_with_mock_api()
+        api.get_reminders = AsyncMock(return_value=[])
+        api.add_reminder = AsyncMock(side_effect=[
+            {"id": "created-1"},
+            TodoistAPIError(403, 32, "Premium only feature"),
+        ])
+
+        await adapter._sync_reminders("t1", [30, 60])
+
+        # The first reminder should have been rolled back via delete_reminder
+        api.delete_reminder.assert_awaited_once_with("created-1")
