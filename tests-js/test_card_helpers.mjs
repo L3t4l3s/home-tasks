@@ -255,3 +255,9 @@ describe('_formatDueDate', () => {
     assert.match(result, /^10\.\s.+\s29$/);  // "10. Mar 29"
   });
 });
+
+
+// Timezone regression tests are in separate files (test_tz_*.mjs) because
+// V8 caches TZ data per isolate, so changing process.env.TZ between tests
+// in the same file doesn't take effect. Each test_tz_*.mjs sets its TZ
+// once at module top level before any Date instance is created.

@@ -1815,15 +1815,29 @@ class HomeTasksCard extends HTMLElement {
 
   _isDueDateOverdue(dueDate) {
     if (!dueDate) return false;
+    // dueDate is "YYYY-MM-DD" in the user's local timezone. Parse it as
+    // local midnight rather than `new Date(dueDate)` which interprets
+    // date-only strings as UTC midnight (causing wrong-day classification
+    // for users west of UTC).
+    const [y, m, d] = dueDate.split("-").map(Number);
+    if (!y || !m || !d) return false;
+    const due = new Date(y, m - 1, d);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return new Date(dueDate) < today;
+    return due < today;
   }
 
   _isDueDateToday(dueDate) {
     if (!dueDate) return false;
-    const today = new Date().toISOString().split("T")[0];
-    return dueDate === today;
+    // Compare against the local calendar date, not the UTC one. Using
+    // toISOString() returns the UTC date which differs from the local
+    // date for several hours each day in any non-UTC timezone.
+    const now = new Date();
+    const localToday =
+      now.getFullYear() + "-" +
+      String(now.getMonth() + 1).padStart(2, "0") + "-" +
+      String(now.getDate()).padStart(2, "0");
+    return dueDate === localToday;
   }
 
   _formatDueDate(dueDate, dueTime) {
