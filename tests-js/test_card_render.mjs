@@ -504,4 +504,110 @@ describe('REGRESSION: input fields inside expanded tasks accept text selection',
     // Clean up the timer so it doesn't fire after the test
     clearTimeout(card._touchStartTimer);
   });
+
+  test('dragstart on a textarea is preventDefault\'d so the drag never begins', async () => {
+    const card = await expandedCard();
+    const win = card.shadowRoot.ownerDocument.defaultView;
+    const taskEl = card.shadowRoot.querySelector('.task[data-task-id="T1"]');
+    const notesEl = card.shadowRoot.querySelector('.task-details textarea');
+
+    // Synthesize a dragstart event with target = textarea
+    const evt = new win.Event('dragstart', { bubbles: true, cancelable: true });
+    Object.defineProperty(evt, 'target', { value: notesEl, configurable: true });
+    // dataTransfer is what the existing handler reads — provide a stub
+    Object.defineProperty(evt, 'dataTransfer', {
+      value: { effectAllowed: '', setData: () => {} },
+      configurable: true,
+    });
+
+    taskEl.dispatchEvent(evt);
+
+    assert.equal(evt.defaultPrevented, true,
+      'dragstart originating from a textarea must be preventDefault\'d');
+    assert.equal(card._draggedTaskId, null,
+      'no drag state should have been recorded');
+  });
+
+  test('dragstart on the task body is NOT preventDefault\'d (sanity)', async () => {
+    const card = await expandedCard();
+    const win = card.shadowRoot.ownerDocument.defaultView;
+    const taskEl = card.shadowRoot.querySelector('.task[data-task-id="T1"]');
+    const titleSpan = taskEl.querySelector('.task-title') || taskEl;
+
+    const evt = new win.Event('dragstart', { bubbles: true, cancelable: true });
+    Object.defineProperty(evt, 'target', { value: titleSpan, configurable: true });
+    Object.defineProperty(evt, 'dataTransfer', {
+      value: { effectAllowed: '', setData: () => {} },
+      configurable: true,
+    });
+
+    taskEl.dispatchEvent(evt);
+
+    assert.equal(evt.defaultPrevented, false);
+    assert.equal(card._draggedTaskId, 'T1');
+    // Clean up so subsequent tests don't see leftover drag state
+    card._draggedTaskId = null;
+    card._draggedColIdx = null;
+  });
+});
+
+
+// ---------------------------------------------------------------------------
+// REGRESSION: expanded tasks must NOT be draggable (browser blocks all
+// text selection/cursor inside any draggable=true ancestor regardless of
+// JS-level event interception, so the only working fix is draggable=false)
+// ---------------------------------------------------------------------------
+
+
+describe('REGRESSION: draggable attribute toggles with expanded state', () => {
+  async function cardWithOneTask() {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'Test' }] },
+      'home_tasks/get_tasks': {
+        tasks: [{ id: 'T1', title: 'X', sort_order: 0, sub_items: [], notes: '' }],
+      },
+    });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{ list_id: 'L1' }] });
+    card.hass = hass;
+    await flush(card);
+    return card;
+  }
+
+  test('collapsed task is draggable=true', async () => {
+    const card = await cardWithOneTask();
+    const taskEl = card.shadowRoot.querySelector('.task[data-task-id="T1"]');
+    assert.equal(taskEl.getAttribute('draggable'), 'true');
+  });
+
+  test('expanded task is draggable=false', async () => {
+    const card = await cardWithOneTask();
+    card._expandedTasks.add('T1');
+    card._render();
+    const taskEl = card.shadowRoot.querySelector('.task[data-task-id="T1"]');
+    assert.equal(taskEl.getAttribute('draggable'), 'false',
+      'expanded task must be non-draggable so its inputs accept text selection');
+  });
+
+  test('editing-title task is draggable=false', async () => {
+    const card = await cardWithOneTask();
+    card._editingTaskId = 'T1';
+    card._render();
+    const taskEl = card.shadowRoot.querySelector('.task[data-task-id="T1"]');
+    assert.equal(taskEl.getAttribute('draggable'), 'false');
+  });
+
+  test('collapsing a task makes it draggable again', async () => {
+    const card = await cardWithOneTask();
+    card._expandedTasks.add('T1');
+    card._render();
+    let taskEl = card.shadowRoot.querySelector('.task[data-task-id="T1"]');
+    assert.equal(taskEl.getAttribute('draggable'), 'false');
+
+    card._expandedTasks.delete('T1');
+    card._render();
+    taskEl = card.shadowRoot.querySelector('.task[data-task-id="T1"]');
+    assert.equal(taskEl.getAttribute('draggable'), 'true');
+  });
 });

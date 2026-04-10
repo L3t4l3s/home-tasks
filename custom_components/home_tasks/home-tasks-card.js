@@ -2243,7 +2243,15 @@ class HomeTasksCard extends HTMLElement {
     let className = "task";
     if (task.completed) className += " completed";
 
-    const taskEl = this._el("div", { className, draggable: !isEditing });
+    // draggable=false while editing OR while expanded:
+    //   - editing: the title input must accept text selection
+    //   - expanded: the details container has notes/tag/date inputs that
+    //     must accept text selection. The browser blocks ALL cursor and
+    //     text-selection inside any draggable=true ancestor, regardless
+    //     of dragstart.preventDefault() or mousedown.stopPropagation().
+    //     Users can drag a task only when it's collapsed — matching the
+    //     UX of Trello, Jira and other card-based interfaces.
+    const taskEl = this._el("div", { className, draggable: !isEditing && !isExpanded });
     taskEl.dataset.taskId = task.id;
 
     const mainChildren = [];
@@ -3558,6 +3566,15 @@ class HomeTasksCard extends HTMLElement {
   _attachDragToTask(taskEl, taskId, colIdx) {
     // HTML5 Drag & Drop (Desktop)
     taskEl.addEventListener("dragstart", (e) => {
+      // The whole .task is draggable=true so the browser starts a drag
+      // detection on mousedown anywhere inside it — including text inputs.
+      // Cancel the drag at the dragstart hook (which fires before any move)
+      // when the user is interacting with a text field.
+      if (this._isInteractiveTarget(e.target)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
       this._draggedTaskId = taskId;
       this._draggedColIdx = colIdx;
       e.dataTransfer.effectAllowed = "move";
