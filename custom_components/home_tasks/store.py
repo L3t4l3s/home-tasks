@@ -89,6 +89,158 @@ def validate_time(value: str | None) -> str | None:
     return value
 
 
+# ---------------------------------------------------------------------------
+# Per-field validators — shared between HomeTasksStore.async_update_task and
+# ExternalTaskOverlayStore.async_set_overlay so the rules stay in one place.
+# ---------------------------------------------------------------------------
+
+def validate_notes(value):
+    if not isinstance(value, str):
+        raise ValueError("Notes must be a string")
+    if len(value) > MAX_NOTES_LENGTH:
+        raise ValueError(f"Notes exceed maximum length of {MAX_NOTES_LENGTH}")
+    return value
+
+
+def validate_priority(value):
+    if value is not None and value not in (1, 2, 3):
+        raise ValueError("priority must be 1 (low), 2 (medium), 3 (high), or null")
+    return value
+
+
+def validate_completed(value):
+    if not isinstance(value, bool):
+        raise ValueError("completed must be a boolean")
+    return value
+
+
+def validate_recurrence_unit(value):
+    if value is not None and value not in VALID_RECURRENCE_UNITS:
+        raise ValueError(f"recurrence_unit must be one of {VALID_RECURRENCE_UNITS} or null")
+    return value
+
+
+def validate_recurrence_value(value):
+    if not isinstance(value, int) or value < 1 or value > MAX_RECURRENCE_VALUE:
+        raise ValueError(f"recurrence_value must be an integer between 1 and {MAX_RECURRENCE_VALUE}")
+    return value
+
+
+def validate_recurrence_enabled(value):
+    if not isinstance(value, bool):
+        raise ValueError("recurrence_enabled must be a boolean")
+    return value
+
+
+def validate_recurrence_type(value):
+    if value not in ("interval", "weekdays"):
+        raise ValueError("recurrence_type must be 'interval' or 'weekdays'")
+    return value
+
+
+def validate_recurrence_weekdays(value):
+    if not isinstance(value, list):
+        raise ValueError("recurrence_weekdays must be a list")
+    if not all(isinstance(d, int) and 0 <= d <= 6 for d in value):
+        raise ValueError("recurrence_weekdays entries must be integers 0–6")
+    return sorted(set(value))
+
+
+def validate_recurrence_end_type(value):
+    if value not in ("none", "date", "count"):
+        raise ValueError("recurrence_end_type must be 'none', 'date', or 'count'")
+    return value
+
+
+def validate_recurrence_max_count(value):
+    if value is not None and (not isinstance(value, int) or value < 1):
+        raise ValueError("recurrence_max_count must be a positive integer or null")
+    return value
+
+
+def validate_recurrence_remaining_count(value):
+    if value is not None and (not isinstance(value, int) or value < 0):
+        raise ValueError("recurrence_remaining_count must be a non-negative integer or null")
+    return value
+
+
+def validate_assigned_person(value):
+    if value is not None and (not isinstance(value, str) or len(value) > MAX_TITLE_LENGTH):
+        raise ValueError("assigned_person must be a string entity_id or null")
+    return value
+
+
+def validate_tags(value):
+    if not isinstance(value, list):
+        raise ValueError("tags must be a list")
+    if len(value) > MAX_TAGS_PER_TASK:
+        raise ValueError(f"Maximum of {MAX_TAGS_PER_TASK} tags allowed")
+    cleaned: list[str] = []
+    seen: set[str] = set()
+    for tag in value:
+        if not isinstance(tag, str):
+            raise ValueError("Each tag must be a string")
+        tag = tag.strip().lower()
+        if not tag:
+            continue
+        if len(tag) > MAX_TAG_LENGTH:
+            raise ValueError(f"Tag exceeds maximum length of {MAX_TAG_LENGTH}")
+        if tag not in seen:
+            cleaned.append(tag)
+            seen.add(tag)
+    return cleaned
+
+
+def validate_reminders(value):
+    if not isinstance(value, list):
+        raise ValueError("reminders must be a list")
+    if len(value) > MAX_REMINDERS_PER_TASK:
+        raise ValueError(f"Maximum of {MAX_REMINDERS_PER_TASK} reminders allowed")
+    if not all(isinstance(r, int) and 0 <= r <= MAX_REMINDER_OFFSET_MINUTES for r in value):
+        raise ValueError(f"Each reminder must be an integer between 0 and {MAX_REMINDER_OFFSET_MINUTES}")
+    return sorted(set(value))
+
+
+# Mapping field name → validator function. Used by both stores' update paths.
+_FIELD_VALIDATORS = {
+    "notes": validate_notes,
+    "priority": validate_priority,
+    "completed": validate_completed,
+    "recurrence_unit": validate_recurrence_unit,
+    "recurrence_value": validate_recurrence_value,
+    "recurrence_enabled": validate_recurrence_enabled,
+    "recurrence_type": validate_recurrence_type,
+    "recurrence_weekdays": validate_recurrence_weekdays,
+    "recurrence_end_type": validate_recurrence_end_type,
+    "recurrence_max_count": validate_recurrence_max_count,
+    "recurrence_remaining_count": validate_recurrence_remaining_count,
+    "assigned_person": validate_assigned_person,
+    "tags": validate_tags,
+    "reminders": validate_reminders,
+    "due_time": validate_time,
+}
+
+
+def apply_field_validators(kwargs: dict) -> None:
+    """Run each validator on its field if present in kwargs (in-place)."""
+    for field, validator in _FIELD_VALIDATORS.items():
+        if field in kwargs:
+            kwargs[field] = validator(kwargs[field])
+    # Date fields use named validators with field_name kwarg
+    if "due_date" in kwargs:
+        kwargs["due_date"] = validate_date(kwargs["due_date"])
+        if kwargs["due_date"] is None:
+            kwargs["due_time"] = None  # clear time when date is cleared
+    if "recurrence_start_date" in kwargs:
+        kwargs["recurrence_start_date"] = validate_date(
+            kwargs["recurrence_start_date"], "recurrence_start_date"
+        )
+    if "recurrence_end_date" in kwargs:
+        kwargs["recurrence_end_date"] = validate_date(
+            kwargs["recurrence_end_date"], "recurrence_end_date"
+        )
+
+
 class HomeTasksStore:
     """Manage todo list data for a single list (one per config entry)."""
 
@@ -249,96 +401,9 @@ class HomeTasksStore:
         """Validate every field present in kwargs and normalise list values in-place."""
         if "title" in kwargs:
             kwargs["title"] = validate_text(kwargs["title"], MAX_TITLE_LENGTH, "Task title")
-        if "notes" in kwargs:
-            notes = kwargs["notes"]
-            if not isinstance(notes, str):
-                raise ValueError("Notes must be a string")
-            if len(notes) > MAX_NOTES_LENGTH:
-                raise ValueError(f"Notes exceed maximum length of {MAX_NOTES_LENGTH}")
-        if "due_date" in kwargs:
-            kwargs["due_date"] = validate_date(kwargs["due_date"])
-            if kwargs["due_date"] is None:
-                kwargs["due_time"] = None  # clear time when date is cleared
-        if "due_time" in kwargs:
-            kwargs["due_time"] = validate_time(kwargs["due_time"])
-        if "completed" in kwargs and not isinstance(kwargs["completed"], bool):
-            raise ValueError("completed must be a boolean")
-        if "priority" in kwargs:
-            val = kwargs["priority"]
-            if val is not None and val not in (1, 2, 3):
-                raise ValueError("priority must be 1 (low), 2 (medium), 3 (high), or null")
-        if "recurrence_unit" in kwargs:
-            val = kwargs["recurrence_unit"]
-            if val is not None and val not in VALID_RECURRENCE_UNITS:
-                raise ValueError(f"recurrence_unit must be one of {VALID_RECURRENCE_UNITS} or null")
-        if "recurrence_value" in kwargs:
-            val = kwargs["recurrence_value"]
-            if not isinstance(val, int) or val < 1 or val > MAX_RECURRENCE_VALUE:
-                raise ValueError(f"recurrence_value must be an integer between 1 and {MAX_RECURRENCE_VALUE}")
-        if "recurrence_enabled" in kwargs and not isinstance(kwargs["recurrence_enabled"], bool):
-            raise ValueError("recurrence_enabled must be a boolean")
-        if "recurrence_type" in kwargs:
-            val = kwargs["recurrence_type"]
-            if val not in ("interval", "weekdays"):
-                raise ValueError("recurrence_type must be 'interval' or 'weekdays'")
-        if "recurrence_weekdays" in kwargs:
-            val = kwargs["recurrence_weekdays"]
-            if not isinstance(val, list):
-                raise ValueError("recurrence_weekdays must be a list")
-            if not all(isinstance(d, int) and 0 <= d <= 6 for d in val):
-                raise ValueError("recurrence_weekdays entries must be integers 0–6")
-            kwargs["recurrence_weekdays"] = sorted(set(val))
-        if "recurrence_start_date" in kwargs:
-            kwargs["recurrence_start_date"] = validate_date(kwargs["recurrence_start_date"], "recurrence_start_date")
         if "recurrence_time" in kwargs:
             kwargs["recurrence_time"] = validate_time(kwargs["recurrence_time"])
-        if "recurrence_end_type" in kwargs:
-            val = kwargs["recurrence_end_type"]
-            if val not in ("none", "date", "count"):
-                raise ValueError("recurrence_end_type must be 'none', 'date', or 'count'")
-        if "recurrence_end_date" in kwargs:
-            kwargs["recurrence_end_date"] = validate_date(kwargs["recurrence_end_date"], "recurrence_end_date")
-        if "recurrence_max_count" in kwargs:
-            val = kwargs["recurrence_max_count"]
-            if val is not None and (not isinstance(val, int) or val < 1):
-                raise ValueError("recurrence_max_count must be a positive integer or null")
-        if "recurrence_remaining_count" in kwargs:
-            val = kwargs["recurrence_remaining_count"]
-            if val is not None and (not isinstance(val, int) or val < 0):
-                raise ValueError("recurrence_remaining_count must be a non-negative integer or null")
-        if "assigned_person" in kwargs:
-            val = kwargs["assigned_person"]
-            if val is not None and (not isinstance(val, str) or len(val) > MAX_TITLE_LENGTH):
-                raise ValueError("assigned_person must be a string entity_id or null")
-        if "tags" in kwargs:
-            tags = kwargs["tags"]
-            if not isinstance(tags, list):
-                raise ValueError("tags must be a list")
-            if len(tags) > MAX_TAGS_PER_TASK:
-                raise ValueError(f"Maximum of {MAX_TAGS_PER_TASK} tags allowed")
-            cleaned: list[str] = []
-            seen: set[str] = set()
-            for tag in tags:
-                if not isinstance(tag, str):
-                    raise ValueError("Each tag must be a string")
-                tag = tag.strip().lower()
-                if not tag:
-                    continue
-                if len(tag) > MAX_TAG_LENGTH:
-                    raise ValueError(f"Tag exceeds maximum length of {MAX_TAG_LENGTH}")
-                if tag not in seen:
-                    cleaned.append(tag)
-                    seen.add(tag)
-            kwargs["tags"] = cleaned
-        if "reminders" in kwargs:
-            val = kwargs["reminders"]
-            if not isinstance(val, list):
-                raise ValueError("reminders must be a list")
-            if len(val) > MAX_REMINDERS_PER_TASK:
-                raise ValueError(f"Maximum of {MAX_REMINDERS_PER_TASK} reminders allowed")
-            if not all(isinstance(r, int) and 0 <= r <= MAX_REMINDER_OFFSET_MINUTES for r in val):
-                raise ValueError(f"Each reminder must be an integer between 0 and {MAX_REMINDER_OFFSET_MINUTES}")
-            kwargs["reminders"] = sorted(set(val))
+        apply_field_validators(kwargs)
 
     @staticmethod
     def _snapshot_task(task: dict) -> dict:
@@ -385,31 +450,48 @@ class HomeTasksStore:
             if self.on_task_reopened:
                 self.on_task_reopened(task)
 
-    @staticmethod
-    def _record_history(task: dict, snapshot: dict, kwargs: dict, actor: str | None) -> None:
+    # Field name → format of the history entry it should produce when changed.
+    #   "from_to": include both from and to values
+    #   "to_only": include only to (used for booleans like recurrence_enabled)
+    #   "marker":  include neither (used when the actual value is sensitive, e.g. notes)
+    _HISTORY_ENTRY_FORMATS = {
+        "title": "from_to",
+        "due_date": "from_to",
+        "due_time": "from_to",
+        "priority": "from_to",
+        "assigned_person": "from_to",
+        "tags": "from_to",
+        "notes": "marker",
+        "recurrence_enabled": "to_only",
+    }
+
+    @classmethod
+    def _record_history(cls, task: dict, snapshot: dict, kwargs: dict, actor: str | None) -> None:
         """Append history entries for any fields that actually changed."""
         _now = datetime.now(timezone.utc).isoformat()
         _by = {"by": actor} if actor else {}
         new_hist: list[dict] = []
+
+        for field, fmt in cls._HISTORY_ENTRY_FORMATS.items():
+            if field not in kwargs:
+                continue
+            new_value = task.get(field)
+            old_value = snapshot[field]
+            # tags need a list copy for accurate diffing
+            if field == "tags":
+                new_value = list(new_value or [])
+            if new_value == old_value:
+                continue
+            entry = {"ts": _now, "action": "updated", "field": field, **_by}
+            if fmt == "from_to":
+                entry["from"] = old_value
+                entry["to"] = new_value
+            elif fmt == "to_only":
+                entry["to"] = new_value
+            new_hist.append(entry)
+
         was_completed = snapshot["completed"]
         is_completed = task.get("completed", False)
-
-        if "title" in kwargs and task.get("title") != snapshot["title"]:
-            new_hist.append({"ts": _now, "action": "updated", "field": "title", "from": snapshot["title"], "to": task.get("title"), **_by})
-        if "due_date" in kwargs and task.get("due_date") != snapshot["due_date"]:
-            new_hist.append({"ts": _now, "action": "updated", "field": "due_date", "from": snapshot["due_date"], "to": task.get("due_date"), **_by})
-        if "due_time" in kwargs and task.get("due_time") != snapshot["due_time"]:
-            new_hist.append({"ts": _now, "action": "updated", "field": "due_time", "from": snapshot["due_time"], "to": task.get("due_time"), **_by})
-        if "priority" in kwargs and task.get("priority") != snapshot["priority"]:
-            new_hist.append({"ts": _now, "action": "updated", "field": "priority", "from": snapshot["priority"], "to": task.get("priority"), **_by})
-        if "assigned_person" in kwargs and task.get("assigned_person") != snapshot["assigned_person"]:
-            new_hist.append({"ts": _now, "action": "updated", "field": "assigned_person", "from": snapshot["assigned_person"], "to": task.get("assigned_person"), **_by})
-        if "tags" in kwargs and task.get("tags") != snapshot["tags"]:
-            new_hist.append({"ts": _now, "action": "updated", "field": "tags", "from": snapshot["tags"], "to": list(task.get("tags", [])), **_by})
-        if "notes" in kwargs and task.get("notes") != snapshot["notes"]:
-            new_hist.append({"ts": _now, "action": "updated", "field": "notes", **_by})
-        if "recurrence_enabled" in kwargs and task.get("recurrence_enabled") != snapshot["recurrence_enabled"]:
-            new_hist.append({"ts": _now, "action": "updated", "field": "recurrence_enabled", "to": task.get("recurrence_enabled"), **_by})
         if is_completed and not was_completed:
             new_hist.append({"ts": _now, "action": "completed", **_by})
         elif not is_completed and was_completed:

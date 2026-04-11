@@ -27,7 +27,7 @@ from .const import (
     MAX_TITLE_LENGTH,
     VALID_RECURRENCE_UNITS,
 )
-from .store import validate_date, validate_text, validate_time
+from .store import apply_field_validators, validate_date, validate_text, validate_time
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -258,75 +258,6 @@ class ExternalTaskOverlayStore:
     @staticmethod
     def _validate_overlay_fields(kwargs: dict) -> None:
         """Validate incoming overlay fields (same rules as HomeTasksStore)."""
-        if "priority" in kwargs:
-            val = kwargs["priority"]
-            if val is not None and val not in (1, 2, 3):
-                raise ValueError("priority must be 1, 2, 3, or null")
-        if "due_time" in kwargs:
-            kwargs["due_time"] = validate_time(kwargs["due_time"])
-        if "assigned_person" in kwargs:
-            val = kwargs["assigned_person"]
-            if val is not None and (not isinstance(val, str) or len(val) > MAX_TITLE_LENGTH):
-                raise ValueError("assigned_person must be a string entity_id or null")
-        if "tags" in kwargs:
-            tags = kwargs["tags"]
-            if not isinstance(tags, list):
-                raise ValueError("tags must be a list")
-            if len(tags) > MAX_TAGS_PER_TASK:
-                raise ValueError(f"Maximum of {MAX_TAGS_PER_TASK} tags allowed")
-            cleaned: list[str] = []
-            seen: set[str] = set()
-            for tag in tags:
-                if not isinstance(tag, str):
-                    raise ValueError("Each tag must be a string")
-                tag = tag.strip().lower()
-                if not tag:
-                    continue
-                if len(tag) > MAX_TAG_LENGTH:
-                    raise ValueError(f"Tag exceeds maximum length of {MAX_TAG_LENGTH}")
-                if tag not in seen:
-                    cleaned.append(tag)
-                    seen.add(tag)
-            kwargs["tags"] = cleaned
-        if "reminders" in kwargs:
-            val = kwargs["reminders"]
-            if not isinstance(val, list):
-                raise ValueError("reminders must be a list")
-            if len(val) > MAX_REMINDERS_PER_TASK:
-                raise ValueError(f"Maximum of {MAX_REMINDERS_PER_TASK} reminders allowed")
-            if not all(isinstance(r, int) and 0 <= r <= MAX_REMINDER_OFFSET_MINUTES for r in val):
-                raise ValueError(f"Each reminder must be 0–{MAX_REMINDER_OFFSET_MINUTES}")
-            kwargs["reminders"] = sorted(set(val))
-        if "recurrence_unit" in kwargs:
-            val = kwargs["recurrence_unit"]
-            if val is not None and val not in VALID_RECURRENCE_UNITS:
-                raise ValueError(f"recurrence_unit must be one of {VALID_RECURRENCE_UNITS} or null")
-        if "recurrence_value" in kwargs:
-            val = kwargs["recurrence_value"]
-            if not isinstance(val, int) or val < 1 or val > MAX_RECURRENCE_VALUE:
-                raise ValueError(f"recurrence_value must be 1–{MAX_RECURRENCE_VALUE}")
-        if "recurrence_enabled" in kwargs and not isinstance(kwargs["recurrence_enabled"], bool):
-            raise ValueError("recurrence_enabled must be a boolean")
-        if "recurrence_type" in kwargs and kwargs["recurrence_type"] not in ("interval", "weekdays"):
-            raise ValueError("recurrence_type must be 'interval' or 'weekdays'")
-        if "recurrence_weekdays" in kwargs:
-            val = kwargs["recurrence_weekdays"]
-            if not isinstance(val, list) or not all(isinstance(d, int) and 0 <= d <= 6 for d in val):
-                raise ValueError("recurrence_weekdays entries must be integers 0–6")
-            kwargs["recurrence_weekdays"] = sorted(set(val))
-        if "recurrence_start_date" in kwargs:
-            kwargs["recurrence_start_date"] = validate_date(kwargs["recurrence_start_date"], "recurrence_start_date")
         if "recurrence_time" in kwargs:
             kwargs["recurrence_time"] = validate_time(kwargs["recurrence_time"])
-        if "recurrence_end_type" in kwargs and kwargs["recurrence_end_type"] not in ("none", "date", "count"):
-            raise ValueError("recurrence_end_type must be 'none', 'date', or 'count'")
-        if "recurrence_end_date" in kwargs:
-            kwargs["recurrence_end_date"] = validate_date(kwargs["recurrence_end_date"], "recurrence_end_date")
-        if "recurrence_max_count" in kwargs:
-            val = kwargs["recurrence_max_count"]
-            if val is not None and (not isinstance(val, int) or val < 1):
-                raise ValueError("recurrence_max_count must be a positive integer or null")
-        if "recurrence_remaining_count" in kwargs:
-            val = kwargs["recurrence_remaining_count"]
-            if val is not None and (not isinstance(val, int) or val < 0):
-                raise ValueError("recurrence_remaining_count must be a non-negative integer or null")
+        apply_field_validators(kwargs)
