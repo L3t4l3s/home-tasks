@@ -1964,12 +1964,44 @@ class HomeTasksCard extends HTMLElement {
   _buildColumn(colIdx) {
     const col = this._config.columns[colIdx];
     const cs = this._columns[colIdx];
-    const compact = col.compact === true;
     const filteredTasks = this._filteredTasks(colIdx);
     const completedCount = this._getCompletedCount(colIdx);
     const totalCount = cs.tasks.length;
+    const hideFilters = col.auto_delete_completed === true;
 
-    // Header
+    const header = this._buildColumnHeader(col, colIdx, completedCount, totalCount);
+    const addTask = this._buildColumnAddTask(cs, colIdx);
+    const sortBtnWrapper = (col.show_sort !== false) ? this._buildColumnSortControl(col, cs, colIdx) : null;
+    const tagChips = this._buildColumnTagChips(col, cs, colIdx);
+    const personChips = this._buildColumnPersonChips(col, cs, colIdx);
+
+    // Sort button placement: move into first available chips row when filters are hidden
+    const sortInTagRow = hideFilters && tagChips !== null && sortBtnWrapper !== null;
+    const sortInPersonRow = hideFilters && tagChips === null && personChips !== null && sortBtnWrapper !== null;
+
+    const filters = this._buildColumnFilterRow(hideFilters, sortBtnWrapper, sortInTagRow, sortInPersonRow, colIdx);
+    const tagChipsEl = (tagChips && sortInTagRow)
+      ? this._el("div", { className: "tag-chips-row" }, [tagChips, sortBtnWrapper])
+      : tagChips;
+    const personChipsEl = (personChips && sortInPersonRow)
+      ? this._el("div", { className: "person-chips-row" }, [personChips, sortBtnWrapper])
+      : personChips;
+
+    const taskList = this._buildColumnTaskList(filteredTasks, colIdx);
+
+    const children = [];
+    if (header) children.push(header);
+    children.push(addTask);
+    if (filters) children.push(filters);
+    if (tagChipsEl) children.push(tagChipsEl);
+    if (personChipsEl) children.push(personChipsEl);
+    children.push(taskList);
+
+    const className = "card-column" + (col.compact === true ? " compact" : "");
+    return this._el("div", { className }, children);
+  }
+
+  _buildColumnHeader(col, colIdx, completedCount, totalCount) {
     const showTitle = col.show_title !== false;
     const showProgress = col.show_progress !== false;
     const headerChildren = [];
@@ -1991,33 +2023,28 @@ class HomeTasksCard extends HTMLElement {
         textContent: this._t("progress", completedCount, totalCount),
       }));
     }
-    const header = headerChildren.length > 0
+    return headerChildren.length > 0
       ? this._el("div", { className: "header" }, headerChildren)
       : null;
+  }
 
-    // Add task input
+  _buildColumnAddTask(cs, colIdx) {
     const addInput = this._el("input", {
       type: "text",
       className: "add-input",
       placeholder: this._t("add_placeholder"),
       value: cs.newTaskTitle,
     });
-    addInput.addEventListener("input", (e) => {
-      cs.newTaskTitle = e.target.value;
-    });
+    addInput.addEventListener("input", (e) => { cs.newTaskTitle = e.target.value; });
     addInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") this._addTask(colIdx);
     });
-
-    const addBtn = this._el("button", {
-      className: "add-btn",
-      textContent: "+",
-    });
+    const addBtn = this._el("button", { className: "add-btn", textContent: "+" });
     addBtn.addEventListener("click", () => this._addTask(colIdx));
+    return this._el("div", { className: "add-task" }, [addInput, addBtn]);
+  }
 
-    const addTask = this._el("div", { className: "add-task" }, [addInput, addBtn]);
-
-    // Sort button
+  _buildColumnSortControl(col, cs, colIdx) {
     const sortLabels = {
       manual: this._t("sort_manual"), due: this._t("sort_due"),
       priority: this._t("sort_priority"), title: this._t("sort_title"),
@@ -2038,7 +2065,6 @@ class HomeTasksCard extends HTMLElement {
       });
       opt.addEventListener("click", (e) => {
         e.stopPropagation();
-        // Snapshot task positions before re-render for FLIP animation
         const before = this._captureListFlip(colIdx);
         cs.sortBy = key;
         cs.sortOpen = false;
@@ -2062,122 +2088,116 @@ class HomeTasksCard extends HTMLElement {
     });
     sortBtnWrapper.appendChild(sortBtn);
     sortBtnWrapper.appendChild(sortDropdown);
+    return sortBtnWrapper;
+  }
 
-    // Tag chips (built before filter row to decide sort button placement)
-    const hideFilters = col.auto_delete_completed === true;
-    let tagChips = null;
-    if (col.show_tags !== false) {
-      const allTags = new Set();
-      for (const t of cs.tasks) {
-        for (const tag of (t.tags || [])) allTags.add(tag);
-      }
-      if (allTags.size > 0) {
-        const chipChildren = [];
-        for (const tag of [...allTags].sort()) {
-          const isActive = cs.tagFilters.has(tag);
-          const chip = this._el("button", {
-            className: "tag-chip" + (isActive ? " active" : ""),
-            textContent: "#" + tag,
-            "data-tag": tag,
-          });
-          chip.addEventListener("click", () => {
-            this._animateFilterChange(colIdx, () => {
-              if (cs.tagFilters.has(tag)) cs.tagFilters.delete(tag);
-              else cs.tagFilters.add(tag);
-            });
-            // chip-pop: delay so render has completed before querying new chips
-            setTimeout(() => {
-              requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                  this.shadowRoot.querySelectorAll(`.tag-chip[data-tag="${CSS.escape(tag)}"]`)
-                    .forEach(c => {
-                      c.classList.add("chip-anim");
-                      c.addEventListener("animationend", () => c.classList.remove("chip-anim"), { once: true });
-                    });
-                });
-              });
-            }, 0);
-          });
-          chipChildren.push(chip);
-        }
-        tagChips = this._el("div", { className: "tag-chips" }, chipChildren);
-      }
+  _buildColumnTagChips(col, cs, colIdx) {
+    if (col.show_tags === false) return null;
+    const allTags = new Set();
+    for (const t of cs.tasks) {
+      for (const tag of (t.tags || [])) allTags.add(tag);
     }
-
-    // Person chips
-    let personChips = null;
-    if (col.show_assigned_person !== false) {
-      const assignedPersons = new Set();
-      for (const t of cs.tasks) {
-        if (t.assigned_person) assignedPersons.add(t.assigned_person);
-      }
-      if (assignedPersons.size > 0) {
-        const chipChildren = [];
-        for (const eid of [...assignedPersons].sort()) {
-          const isActive = cs.personFilters.has(eid);
-          let name = eid;
-          if (this._hass && this._hass.states && this._hass.states[eid]) {
-            name = this._hass.states[eid].attributes?.friendly_name || eid;
-          }
-          const chip = this._el("button", {
-            className: "person-chip" + (isActive ? " active" : ""),
-            textContent: "\uD83D\uDC64 " + name,
-            "data-eid": eid,
-          });
-          chip.addEventListener("click", () => {
-            this._animateFilterChange(colIdx, () => {
-              if (cs.personFilters.has(eid)) cs.personFilters.delete(eid);
-              else cs.personFilters.add(eid);
-            });
-            setTimeout(() => {
-              requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                  this.shadowRoot.querySelectorAll(`.person-chip[data-eid="${CSS.escape(eid)}"]`)
-                    .forEach(c => {
-                      c.classList.add("chip-anim");
-                      c.addEventListener("animationend", () => c.classList.remove("chip-anim"), { once: true });
-                    });
-                });
-              });
-            }, 0);
-          });
-          chipChildren.push(chip);
-        }
-        personChips = this._el("div", { className: "person-chips" }, chipChildren);
-      }
+    if (allTags.size === 0) return null;
+    const chipChildren = [];
+    for (const tag of [...allTags].sort()) {
+      chipChildren.push(this._buildColumnTagChip(tag, cs, colIdx));
     }
+    return this._el("div", { className: "tag-chips" }, chipChildren);
+  }
 
-    // Sort button placement: move into first available chips row when filters are hidden
-    const sortInTagRow = hideFilters && tagChips !== null && col.show_sort !== false;
-    const sortInPersonRow = hideFilters && tagChips === null && personChips !== null && col.show_sort !== false;
+  _buildColumnTagChip(tag, cs, colIdx) {
+    const isActive = cs.tagFilters.has(tag);
+    const chip = this._el("button", {
+      className: "tag-chip" + (isActive ? " active" : ""),
+      textContent: "#" + tag,
+      "data-tag": tag,
+    });
+    chip.addEventListener("click", () => {
+      this._animateFilterChange(colIdx, () => {
+        if (cs.tagFilters.has(tag)) cs.tagFilters.delete(tag);
+        else cs.tagFilters.add(tag);
+      });
+      // chip-pop: delay so render has completed before querying new chips
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            this.shadowRoot.querySelectorAll(`.tag-chip[data-tag="${CSS.escape(tag)}"]`)
+              .forEach(c => {
+                c.classList.add("chip-anim");
+                c.addEventListener("animationend", () => c.classList.remove("chip-anim"), { once: true });
+              });
+          });
+        });
+      }, 0);
+    });
+    return chip;
+  }
 
-    // Filter row
-    const filterRowChildren = [];
+  _buildColumnPersonChips(col, cs, colIdx) {
+    if (col.show_assigned_person === false) return null;
+    const assignedPersons = new Set();
+    for (const t of cs.tasks) {
+      if (t.assigned_person) assignedPersons.add(t.assigned_person);
+    }
+    if (assignedPersons.size === 0) return null;
+    const chipChildren = [];
+    for (const eid of [...assignedPersons].sort()) {
+      chipChildren.push(this._buildColumnPersonChip(eid, cs, colIdx));
+    }
+    return this._el("div", { className: "person-chips" }, chipChildren);
+  }
+
+  _buildColumnPersonChip(eid, cs, colIdx) {
+    const isActive = cs.personFilters.has(eid);
+    let name = eid;
+    if (this._hass && this._hass.states && this._hass.states[eid]) {
+      name = this._hass.states[eid].attributes?.friendly_name || eid;
+    }
+    const chip = this._el("button", {
+      className: "person-chip" + (isActive ? " active" : ""),
+      textContent: "\uD83D\uDC64 " + name,
+      "data-eid": eid,
+    });
+    chip.addEventListener("click", () => {
+      this._animateFilterChange(colIdx, () => {
+        if (cs.personFilters.has(eid)) cs.personFilters.delete(eid);
+        else cs.personFilters.add(eid);
+      });
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            this.shadowRoot.querySelectorAll(`.person-chip[data-eid="${CSS.escape(eid)}"]`)
+              .forEach(c => {
+                c.classList.add("chip-anim");
+                c.addEventListener("animationend", () => c.classList.remove("chip-anim"), { once: true });
+              });
+          });
+        });
+      }, 0);
+    });
+    return chip;
+  }
+
+  _buildColumnFilterRow(hideFilters, sortBtnWrapper, sortInTagRow, sortInPersonRow, colIdx) {
+    const children = [];
     if (!hideFilters) {
-      filterRowChildren.push(
+      children.push(
         this._buildFilterBtn(this._t("filter_all"), "all", colIdx),
         this._buildFilterBtn(this._t("filter_open"), "open", colIdx),
         this._buildFilterBtn(this._t("filter_done"), "done", colIdx),
       );
-      filterRowChildren.push(this._el("div", { className: "filter-spacer" }));
-      if (col.show_sort !== false) filterRowChildren.push(sortBtnWrapper);
-    } else if (col.show_sort !== false && !sortInTagRow && !sortInPersonRow) {
-      filterRowChildren.push(this._el("div", { className: "filter-spacer" }));
-      filterRowChildren.push(sortBtnWrapper);
+      children.push(this._el("div", { className: "filter-spacer" }));
+      if (sortBtnWrapper) children.push(sortBtnWrapper);
+    } else if (sortBtnWrapper && !sortInTagRow && !sortInPersonRow) {
+      children.push(this._el("div", { className: "filter-spacer" }));
+      children.push(sortBtnWrapper);
     }
-    const filters = filterRowChildren.length > 0
-      ? this._el("div", { className: "filters" }, filterRowChildren)
+    return children.length > 0
+      ? this._el("div", { className: "filters" }, children)
       : null;
+  }
 
-    // Wrap chips + sort button together when sort moves into that row
-    const tagChipsEl = (tagChips && sortInTagRow)
-      ? this._el("div", { className: "tag-chips-row" }, [tagChips, sortBtnWrapper])
-      : tagChips;
-    const personChipsEl = (personChips && sortInPersonRow)
-      ? this._el("div", { className: "person-chips-row" }, [personChips, sortBtnWrapper])
-      : personChips;
-
-    // Task list
+  _buildColumnTaskList(filteredTasks, colIdx) {
     const taskListChildren = [];
     if (filteredTasks.length === 0) {
       taskListChildren.push(
@@ -2210,17 +2230,7 @@ class HomeTasksCard extends HTMLElement {
       e.preventDefault();
       this._finishDrag();
     });
-
-    const children = [];
-    if (header) children.push(header);
-    children.push(addTask);
-    if (filters) children.push(filters);
-    if (tagChipsEl) children.push(tagChipsEl);
-    if (personChipsEl) children.push(personChipsEl);
-    children.push(taskList);
-
-    const className = "card-column" + (compact ? " compact" : "");
-    return this._el("div", { className }, children);
+    return taskList;
   }
 
   _buildFilterBtn(label, value, colIdx) {
@@ -2237,6 +2247,7 @@ class HomeTasksCard extends HTMLElement {
 
   _buildTask(task, colIdx) {
     const cs = this._columns[colIdx];
+    const col = this._config.columns[colIdx];
     const isExpanded = this._expandedTasks.has(task.id);
     const isEditing = this._editingTaskId === task.id;
 
@@ -2254,16 +2265,42 @@ class HomeTasksCard extends HTMLElement {
     const taskEl = this._el("div", { className, draggable: !isEditing && !isExpanded });
     taskEl.dataset.taskId = task.id;
 
-    const mainChildren = [];
+    // --- main row: checkbox + content + expand button ---
+    const checkboxEl = this._buildTaskCheckbox(task, colIdx);
+    const contentChildren = this._buildTaskContentChildren(task, colIdx, isEditing);
+    const metaBadges = this._buildTaskMetaBadges(task, col, cs, colIdx);
+    if (metaBadges.length > 0) {
+      contentChildren.push(this._el("div", { className: "task-meta" }, metaBadges));
+    }
+    const contentEl = this._el("div", { className: "task-content" }, contentChildren);
+    const expandBtn = this._buildTaskExpandButton(isExpanded);
 
+    const mainRow = this._el("div", { className: "task-main" }, [checkboxEl, contentEl, expandBtn]);
+    this._attachTaskExpandClickHandler(mainRow, task, taskEl);
+    taskEl.appendChild(mainRow);
+
+    // --- expanded details + open/close animation ---
+    if (isExpanded) {
+      const detailsEl = this._buildTaskDetails(task, colIdx);
+      taskEl.appendChild(detailsEl);
+      this._animateExpandedDetails(detailsEl, task);
+    }
+
+    this._attachDragToTask(taskEl, task.id, colIdx);
+    this._attachTaskAppearanceAnimations(task, colIdx);
+
+    return taskEl;
+  }
+
+  _buildTaskCheckbox(task, colIdx) {
     const checkbox = this._el("input", { type: "checkbox", checked: task.completed });
     checkbox.addEventListener("change", () => this._toggleTask(task.id, task.completed, colIdx));
     const checkmark = this._el("span", { className: "checkmark" });
-    const label = this._el("label", { className: "checkbox-container" }, [checkbox, checkmark]);
-    mainChildren.push(label);
+    return this._el("label", { className: "checkbox-container" }, [checkbox, checkmark]);
+  }
 
-    const contentChildren = [];
-
+  _buildTaskContentChildren(task, colIdx, isEditing) {
+    const children = [];
     if (isEditing) {
       const editInput = this._el("input", {
         type: "text",
@@ -2283,7 +2320,7 @@ class HomeTasksCard extends HTMLElement {
       editInput.addEventListener("blur", () => {
         if (this._editingTaskId === task.id) this._updateTaskTitle(task.id, editInput.value, colIdx);
       });
-      contentChildren.push(editInput);
+      children.push(editInput);
       setTimeout(() => { editInput.focus(); editInput.select(); }, 0);
     } else {
       const titleSpan = this._el("span", { className: "task-title", textContent: task.title });
@@ -2293,137 +2330,162 @@ class HomeTasksCard extends HTMLElement {
         this._editingTaskId = task.id;
         this._render();
       });
-      contentChildren.push(titleSpan);
+      children.push(titleSpan);
     }
+    return children;
+  }
 
-    const col = this._config.columns[colIdx];
-    const metaChildren = [];
-    if (task.priority && col.show_priority !== false) {
-      const priLabels = { 1: this._t("pri_low"), 2: this._t("pri_medium"), 3: this._t("pri_high") };
-      const priClass = { 1: "pri-low", 2: "pri-medium", 3: "pri-high" };
-      metaChildren.push(this._el("span", {
-        className: `priority-badge ${priClass[task.priority] || ""}`,
-        textContent: priLabels[task.priority],
-      }));
-    }
-    const subProgress = this._getSubTaskProgress(task);
-    if (subProgress && (col.show_sub_tasks ?? col.show_sub_items) !== false) {
-      metaChildren.push(this._el("span", { className: "sub-badge", textContent: subProgress }));
-    }
-    if (task.due_date && col.show_due_date !== false) {
-      let dueCls = "due-date";
-      if (this._isDueDateOverdue(task.due_date)) dueCls += " overdue";
-      else if (this._isDueDateToday(task.due_date)) dueCls += " today";
-      metaChildren.push(this._el("span", {
-        className: dueCls,
-        textContent: this._formatDueDate(task.due_date, task.due_time),
-      }));
-    }
-    if (task.recurrence_enabled && col.show_recurrence !== false) {
-      let recLabel = null;
-      if (task.recurrence_type === "weekdays" && task.recurrence_weekdays && task.recurrence_weekdays.length) {
-        recLabel = task.recurrence_weekdays.map(d => this._t(`rec_wd_${d}`)).join(" ");
-      } else if (task.recurrence_unit) {
-        const unitLabels = { hours: this._t("rec_short_h"), days: this._t("rec_short_d"), weeks: this._t("rec_short_w"), months: this._t("rec_short_m"), years: this._t("rec_short_y") };
-        const val = task.recurrence_value || 1;
-        const singleLabels = { hours: this._t("rec_hourly"), days: this._t("rec_daily"), weeks: this._t("rec_weekly"), months: this._t("rec_monthly"), years: this._t("rec_yearly") };
-        recLabel = val === 1 ? singleLabels[task.recurrence_unit] : `${val} ${unitLabels[task.recurrence_unit] || task.recurrence_unit}`;
-      }
-      // Fallback for complex Todoist recurrence patterns
-      if (!recLabel && task._todoist_recurrence_string) {
-        recLabel = task._todoist_recurrence_string;
-      }
-      if (recLabel) {
-        let badgeText = "\u21BB " + recLabel;
-        if (task.recurrence_end_type === "count" && task.recurrence_remaining_count != null) {
-          badgeText += " \u00b7 " + this._t("rec_remaining", task.recurrence_remaining_count);
-        }
-        metaChildren.push(this._el("span", { className: "recurrence-badge", textContent: badgeText }));
-      }
-    }
-    if ((task.assigned_person || task.assigned_name) && col.show_assigned_person !== false) {
-      let personName;
-      if (task.assigned_person && this._hass && this._hass.states && this._hass.states[task.assigned_person]) {
-        const attrs = this._hass.states[task.assigned_person].attributes;
-        personName = (attrs && attrs.friendly_name) || task.assigned_person;
-      } else if (task.assigned_name) {
-        // Todoist collaborator with no HA person match
-        personName = this._t("assigned_unknown").replace("%s", task.assigned_name);
-      } else {
-        personName = task.assigned_person;
-      }
-      const isActivePerson = cs.personFilters.has(task.assigned_person);
-      const assignedBadge = this._el("span", {
-        className: "assigned-badge" + (isActivePerson ? " active" : ""),
-        textContent: "\uD83D\uDC64 " + personName,
-        "data-eid": task.assigned_person,
-      });
-      assignedBadge.addEventListener("click", (e) => {
-        e.stopPropagation();
-        this._animateFilterChange(colIdx, () => {
-          if (cs.personFilters.has(task.assigned_person)) cs.personFilters.delete(task.assigned_person);
-          else cs.personFilters.add(task.assigned_person);
-        });
-        setTimeout(() => {
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              this.shadowRoot.querySelectorAll(`.assigned-badge[data-eid="${CSS.escape(task.assigned_person)}"]`)
-                .forEach(b => { b.classList.add("chip-anim"); b.addEventListener("animationend", () => b.classList.remove("chip-anim"), { once: true }); });
-            });
-          });
-        }, 0);
-      });
-      metaChildren.push(assignedBadge);
-    }
-    if (task.tags && task.tags.length > 0 && col.show_tags !== false) {
-      for (const tag of task.tags) {
-        const isActive = cs.tagFilters.has(tag);
-        const tagBadge = this._el("span", {
-          className: "tag-badge" + (isActive ? " active" : ""),
-          textContent: "#" + tag,
-          "data-tag": tag,
-        });
-        tagBadge.addEventListener("click", (e) => {
-          e.stopPropagation();
-          this._animateFilterChange(colIdx, () => {
-            if (cs.tagFilters.has(tag)) cs.tagFilters.delete(tag);
-            else cs.tagFilters.add(tag);
-          });
-          setTimeout(() => {
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                this.shadowRoot.querySelectorAll(`.tag-badge[data-tag="${CSS.escape(tag)}"]`)
-                  .forEach(b => { b.classList.add("chip-anim"); b.addEventListener("animationend", () => b.classList.remove("chip-anim"), { once: true }); });
-              });
-            });
-          }, 0);
-        });
-        metaChildren.push(tagBadge);
-      }
-    }
-    if (task.reminders && task.reminders.length > 0 && col.show_reminders !== false) {
-      let remText;
-      if (task.reminders.length === 1) {
-        const entry = REMINDER_OFFSETS.find(([v]) => v === task.reminders[0]);
-        remText = "\u23F0 " + (entry ? this._t(entry[1]) : task.reminders[0] + " min");
-      } else {
-        remText = "\u23F0 " + task.reminders.length;
-      }
-      metaChildren.push(this._el("span", { className: "reminder-badge", textContent: remText }));
-    }
-    if (metaChildren.length > 0) {
-      contentChildren.push(this._el("div", { className: "task-meta" }, metaChildren));
-    }
-
-    mainChildren.push(this._el("div", { className: "task-content" }, contentChildren));
-
+  _buildTaskExpandButton(isExpanded) {
     const expandBtn = this._el("button", { className: "expand-btn" + (isExpanded ? " expanded" : "") });
     const expandIcon = document.createElement("ha-icon");
     expandIcon.setAttribute("icon", "mdi:chevron-down");
     expandBtn.appendChild(expandIcon);
-    mainChildren.push(expandBtn);
+    return expandBtn;
+  }
 
-    const mainRow = this._el("div", { className: "task-main" }, mainChildren);
+  _buildTaskMetaBadges(task, col, cs, colIdx) {
+    const meta = [];
+    if (task.priority && col.show_priority !== false) {
+      meta.push(this._buildPriorityBadge(task));
+    }
+    const subProgress = this._getSubTaskProgress(task);
+    if (subProgress && (col.show_sub_tasks ?? col.show_sub_items) !== false) {
+      meta.push(this._el("span", { className: "sub-badge", textContent: subProgress }));
+    }
+    if (task.due_date && col.show_due_date !== false) {
+      meta.push(this._buildDueDateBadge(task));
+    }
+    if (task.recurrence_enabled && col.show_recurrence !== false) {
+      const badge = this._buildRecurrenceBadge(task);
+      if (badge) meta.push(badge);
+    }
+    if ((task.assigned_person || task.assigned_name) && col.show_assigned_person !== false) {
+      meta.push(this._buildAssignedPersonBadge(task, cs, colIdx));
+    }
+    if (task.tags && task.tags.length > 0 && col.show_tags !== false) {
+      for (const tag of task.tags) {
+        meta.push(this._buildTagBadge(tag, cs, colIdx));
+      }
+    }
+    if (task.reminders && task.reminders.length > 0 && col.show_reminders !== false) {
+      meta.push(this._buildReminderBadge(task));
+    }
+    return meta;
+  }
+
+  _buildPriorityBadge(task) {
+    const priLabels = { 1: this._t("pri_low"), 2: this._t("pri_medium"), 3: this._t("pri_high") };
+    const priClass = { 1: "pri-low", 2: "pri-medium", 3: "pri-high" };
+    return this._el("span", {
+      className: `priority-badge ${priClass[task.priority] || ""}`,
+      textContent: priLabels[task.priority],
+    });
+  }
+
+  _buildDueDateBadge(task) {
+    let dueCls = "due-date";
+    if (this._isDueDateOverdue(task.due_date)) dueCls += " overdue";
+    else if (this._isDueDateToday(task.due_date)) dueCls += " today";
+    return this._el("span", {
+      className: dueCls,
+      textContent: this._formatDueDate(task.due_date, task.due_time),
+    });
+  }
+
+  _buildRecurrenceBadge(task) {
+    let recLabel = null;
+    if (task.recurrence_type === "weekdays" && task.recurrence_weekdays && task.recurrence_weekdays.length) {
+      recLabel = task.recurrence_weekdays.map(d => this._t(`rec_wd_${d}`)).join(" ");
+    } else if (task.recurrence_unit) {
+      const unitLabels = { hours: this._t("rec_short_h"), days: this._t("rec_short_d"), weeks: this._t("rec_short_w"), months: this._t("rec_short_m"), years: this._t("rec_short_y") };
+      const val = task.recurrence_value || 1;
+      const singleLabels = { hours: this._t("rec_hourly"), days: this._t("rec_daily"), weeks: this._t("rec_weekly"), months: this._t("rec_monthly"), years: this._t("rec_yearly") };
+      recLabel = val === 1 ? singleLabels[task.recurrence_unit] : `${val} ${unitLabels[task.recurrence_unit] || task.recurrence_unit}`;
+    }
+    // Fallback for complex Todoist recurrence patterns
+    if (!recLabel && task._todoist_recurrence_string) {
+      recLabel = task._todoist_recurrence_string;
+    }
+    if (!recLabel) return null;
+    let badgeText = "\u21BB " + recLabel;
+    if (task.recurrence_end_type === "count" && task.recurrence_remaining_count != null) {
+      badgeText += " \u00b7 " + this._t("rec_remaining", task.recurrence_remaining_count);
+    }
+    return this._el("span", { className: "recurrence-badge", textContent: badgeText });
+  }
+
+  _buildAssignedPersonBadge(task, cs, colIdx) {
+    let personName;
+    if (task.assigned_person && this._hass && this._hass.states && this._hass.states[task.assigned_person]) {
+      const attrs = this._hass.states[task.assigned_person].attributes;
+      personName = (attrs && attrs.friendly_name) || task.assigned_person;
+    } else if (task.assigned_name) {
+      // Todoist collaborator with no HA person match
+      personName = this._t("assigned_unknown").replace("%s", task.assigned_name);
+    } else {
+      personName = task.assigned_person;
+    }
+    const isActivePerson = cs.personFilters.has(task.assigned_person);
+    const assignedBadge = this._el("span", {
+      className: "assigned-badge" + (isActivePerson ? " active" : ""),
+      textContent: "\uD83D\uDC64 " + personName,
+      "data-eid": task.assigned_person,
+    });
+    assignedBadge.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this._animateFilterChange(colIdx, () => {
+        if (cs.personFilters.has(task.assigned_person)) cs.personFilters.delete(task.assigned_person);
+        else cs.personFilters.add(task.assigned_person);
+      });
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            this.shadowRoot.querySelectorAll(`.assigned-badge[data-eid="${CSS.escape(task.assigned_person)}"]`)
+              .forEach(b => { b.classList.add("chip-anim"); b.addEventListener("animationend", () => b.classList.remove("chip-anim"), { once: true }); });
+          });
+        });
+      }, 0);
+    });
+    return assignedBadge;
+  }
+
+  _buildTagBadge(tag, cs, colIdx) {
+    const isActive = cs.tagFilters.has(tag);
+    const tagBadge = this._el("span", {
+      className: "tag-badge" + (isActive ? " active" : ""),
+      textContent: "#" + tag,
+      "data-tag": tag,
+    });
+    tagBadge.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this._animateFilterChange(colIdx, () => {
+        if (cs.tagFilters.has(tag)) cs.tagFilters.delete(tag);
+        else cs.tagFilters.add(tag);
+      });
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            this.shadowRoot.querySelectorAll(`.tag-badge[data-tag="${CSS.escape(tag)}"]`)
+              .forEach(b => { b.classList.add("chip-anim"); b.addEventListener("animationend", () => b.classList.remove("chip-anim"), { once: true }); });
+          });
+        });
+      }, 0);
+    });
+    return tagBadge;
+  }
+
+  _buildReminderBadge(task) {
+    let remText;
+    if (task.reminders.length === 1) {
+      const entry = REMINDER_OFFSETS.find(([v]) => v === task.reminders[0]);
+      remText = "\u23F0 " + (entry ? this._t(entry[1]) : task.reminders[0] + " min");
+    } else {
+      remText = "\u23F0 " + task.reminders.length;
+    }
+    return this._el("span", { className: "reminder-badge", textContent: remText });
+  }
+
+  _attachTaskExpandClickHandler(mainRow, task, taskEl) {
     mainRow.addEventListener("click", (e) => {
       if (e.detail > 1) return;
       if (e.target.closest(".checkbox-container")) return;
@@ -2444,28 +2506,7 @@ class HomeTasksCard extends HTMLElement {
       }
 
       if (this._expandedTasks.has(task.id)) {
-        this._expandedTasks.delete(task.id);
-        const detailsEl = taskEl.querySelector(".task-details");
-        if (detailsEl) {
-          const h = detailsEl.offsetHeight;
-          if (!h) { this._render(); return; }
-          detailsEl.style.height = h + "px";
-          if (!this._animatingTaskIds) this._animatingTaskIds = new Set();
-          this._animatingTaskIds.add(task.id);
-          const finish = () => {
-            if (!this._animatingTaskIds?.delete(task.id)) return;
-            this._render();
-          };
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              detailsEl.style.height = "0";
-              detailsEl.addEventListener("transitionend", finish, { once: true });
-              setTimeout(finish, 300);
-            });
-          });
-        } else {
-          this._render();
-        }
+        this._collapseExpandedTask(task, taskEl);
       } else {
         if (!this._animatingTaskIds) this._animatingTaskIds = new Set();
         this._animatingTaskIds.add(task.id);
@@ -2475,30 +2516,52 @@ class HomeTasksCard extends HTMLElement {
         this._justExpandedTaskId = null;
       }
     });
-    taskEl.appendChild(mainRow);
+  }
 
-    if (isExpanded) {
-      const detailsEl = this._buildTaskDetails(task, colIdx);
-      taskEl.appendChild(detailsEl);
-      if (this._justExpandedTaskId === task.id) {
-        // .task-details starts at height:0 (CSS default). Animate to full height.
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            detailsEl.style.height = detailsEl.scrollHeight + "px";
-            detailsEl.addEventListener("transitionend", () => {
-              this._animatingTaskIds?.delete(task.id);
-              detailsEl.style.height = "auto"; // release constraint once fully open
-            }, { once: true });
-          });
-        });
-      } else {
-        // Already open (after re-render): show without animation
-        detailsEl.style.height = "auto";
-      }
+  _collapseExpandedTask(task, taskEl) {
+    this._expandedTasks.delete(task.id);
+    const detailsEl = taskEl.querySelector(".task-details");
+    if (!detailsEl) {
+      this._render();
+      return;
     }
+    const h = detailsEl.offsetHeight;
+    if (!h) { this._render(); return; }
+    detailsEl.style.height = h + "px";
+    if (!this._animatingTaskIds) this._animatingTaskIds = new Set();
+    this._animatingTaskIds.add(task.id);
+    const finish = () => {
+      if (!this._animatingTaskIds?.delete(task.id)) return;
+      this._render();
+    };
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        detailsEl.style.height = "0";
+        detailsEl.addEventListener("transitionend", finish, { once: true });
+        setTimeout(finish, 300);
+      });
+    });
+  }
 
-    this._attachDragToTask(taskEl, task.id, colIdx);
+  _animateExpandedDetails(detailsEl, task) {
+    if (this._justExpandedTaskId === task.id) {
+      // .task-details starts at height:0 (CSS default). Animate to full height.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          detailsEl.style.height = detailsEl.scrollHeight + "px";
+          detailsEl.addEventListener("transitionend", () => {
+            this._animatingTaskIds?.delete(task.id);
+            detailsEl.style.height = "auto"; // release constraint once fully open
+          }, { once: true });
+        });
+      });
+    } else {
+      // Already open (after re-render): show without animation
+      detailsEl.style.height = "auto";
+    }
+  }
 
+  _attachTaskAppearanceAnimations(task, colIdx) {
     // Filter enter animation: task is newly appearing after a filter change
     if (this._justAppearedTaskIds && this._justAppearedTaskIds.has(String(task.id))) {
       requestAnimationFrame(() => {
@@ -2538,8 +2601,6 @@ class HomeTasksCard extends HTMLElement {
         });
       });
     }
-
-    return taskEl;
   }
 
   _buildTaskDetails(task, colIdx) {
@@ -3215,63 +3276,80 @@ class HomeTasksCard extends HTMLElement {
     if (taskHistory.length === 0) {
       histContent.appendChild(this._el("p", { className: "history-empty", textContent: this._t("history_empty") }));
     } else {
-      const fieldNames = {
-        title: this._t("hist_title"),
-        due_date: this._t("due_date"),
-        due_time: this._t("due_time_lbl"),
-        priority: this._t("priority"),
-        assigned_person: this._t("assigned_to"),
-        tags: this._t("tags"),
-        notes: this._t("notes"),
-        recurrence_enabled: this._t("recurrence"),
-      };
-      const fmtPriority = (v) => v != null ? [this._t("pri_low"), this._t("pri_medium"), this._t("pri_high")][v - 1] || String(v) : "\u2013";
-      const fmtPerson = (v) => {
-        if (!v) return "\u2013";
-        return this._hass?.states?.[v]?.attributes?.friendly_name || v;
-      };
-      const fmtVal = (v, field) => {
-        if (v == null) return "\u2013";
-        if (field === "priority") return fmtPriority(v);
-        if (field === "assigned_person") return fmtPerson(v);
-        if (field === "tags") return Array.isArray(v) ? (v.join(", ") || "\u2013") : String(v);
-        return String(v);
-      };
       for (const entry of taskHistory) {
-        const row = this._el("div", { className: "history-entry" });
-        const ts = new Date(entry.ts);
-        const tsStr = ts.toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" });
-        let icon = "\u2022", text = "";
-        if (entry.action === "created") {
-          icon = "\u2605"; text = this._t("history_created");
-        } else if (entry.action === "completed") {
-          icon = "\u2713"; text = this._t("history_completed");
-        } else if (entry.action === "reopened") {
-          icon = "\u21BA"; text = entry.by === "recurrence" ? this._t("history_reset") : this._t("history_reopened");
-        } else if (entry.action === "updated") {
-          const lbl = fieldNames[entry.field] || entry.field;
-          if (entry.field === "recurrence_enabled") {
-            text = `${lbl}: ${entry.to ? this._t("recurrence_enabled") : this._t("history_disabled")}`;
-          } else if (entry.from !== undefined || entry.to !== undefined) {
-            text = `${lbl}: ${fmtVal(entry.from, entry.field)} \u2192 ${fmtVal(entry.to, entry.field)}`;
-          } else {
-            text = `${lbl} ${this._t("history_changed")}`;
-          }
-          icon = "\u270e";
-        }
-        const byLabel = entry.by && entry.by !== "recurrence"
-          ? ` \u00b7 ${entry.by === "user" ? this._t("hist_by_user") : entry.by}`
-          : "";
-        row.appendChild(this._el("span", { className: "history-icon", textContent: icon }));
-        row.appendChild(this._el("span", { className: "history-text", textContent: text + byLabel }));
-        row.appendChild(this._el("span", { className: "history-ts", textContent: tsStr }));
-        histContent.appendChild(row);
+        histContent.appendChild(this._buildHistoryEntry(entry));
       }
     }
     return this._el("div", { className: "detail-section" }, [
       this._el("label", { className: "detail-label", textContent: this._t("history") }),
       histContent,
     ]);
+  }
+
+  _buildHistoryEntry(entry) {
+    const row = this._el("div", { className: "history-entry" });
+    const ts = new Date(entry.ts);
+    const tsStr = ts.toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" });
+    const { icon, text } = this._formatHistoryEntry(entry);
+    const byLabel = entry.by && entry.by !== "recurrence"
+      ? ` \u00b7 ${entry.by === "user" ? this._t("hist_by_user") : entry.by}`
+      : "";
+    row.appendChild(this._el("span", { className: "history-icon", textContent: icon }));
+    row.appendChild(this._el("span", { className: "history-text", textContent: text + byLabel }));
+    row.appendChild(this._el("span", { className: "history-ts", textContent: tsStr }));
+    return row;
+  }
+
+  _formatHistoryEntry(entry) {
+    if (entry.action === "created") {
+      return { icon: "\u2605", text: this._t("history_created") };
+    }
+    if (entry.action === "completed") {
+      return { icon: "\u2713", text: this._t("history_completed") };
+    }
+    if (entry.action === "reopened") {
+      const text = entry.by === "recurrence" ? this._t("history_reset") : this._t("history_reopened");
+      return { icon: "\u21BA", text };
+    }
+    if (entry.action === "updated") {
+      return { icon: "\u270e", text: this._formatHistoryUpdateText(entry) };
+    }
+    return { icon: "\u2022", text: "" };
+  }
+
+  _formatHistoryUpdateText(entry) {
+    const fieldNames = {
+      title: this._t("hist_title"),
+      due_date: this._t("due_date"),
+      due_time: this._t("due_time_lbl"),
+      priority: this._t("priority"),
+      assigned_person: this._t("assigned_to"),
+      tags: this._t("tags"),
+      notes: this._t("notes"),
+      recurrence_enabled: this._t("recurrence"),
+    };
+    const lbl = fieldNames[entry.field] || entry.field;
+    if (entry.field === "recurrence_enabled") {
+      return `${lbl}: ${entry.to ? this._t("recurrence_enabled") : this._t("history_disabled")}`;
+    }
+    if (entry.from !== undefined || entry.to !== undefined) {
+      return `${lbl}: ${this._formatHistoryValue(entry.from, entry.field)} \u2192 ${this._formatHistoryValue(entry.to, entry.field)}`;
+    }
+    return `${lbl} ${this._t("history_changed")}`;
+  }
+
+  _formatHistoryValue(v, field) {
+    if (v == null) return "\u2013";
+    if (field === "priority") {
+      return [this._t("pri_low"), this._t("pri_medium"), this._t("pri_high")][v - 1] || String(v);
+    }
+    if (field === "assigned_person") {
+      return this._hass?.states?.[v]?.attributes?.friendly_name || v;
+    }
+    if (field === "tags") {
+      return Array.isArray(v) ? (v.join(", ") || "\u2013") : String(v);
+    }
+    return String(v);
   }
 
   _isInteractiveTarget(el) {
