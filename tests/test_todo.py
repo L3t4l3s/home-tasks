@@ -1,7 +1,7 @@
 """Tests for the todo platform entity."""
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 
 import pytest
 from homeassistant.components.todo import TodoItem, TodoItemStatus
@@ -309,3 +309,190 @@ async def test_todo_update_item_with_description(
             await entity.async_update_todo_item(item)
             await hass.async_block_till_done()
             assert store.get_task(task["id"])["notes"] == "My notes"
+
+
+# ---------------------------------------------------------------------------
+# New features: due_time as datetime, completed_at, move support
+# ---------------------------------------------------------------------------
+
+
+async def test_todo_items_expose_due_datetime(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """When due_time is set, TodoItem.due is a datetime, not just a date."""
+    from datetime import datetime
+
+    task = await store.async_add_task("Timed")
+    await store.async_update_task(task["id"], due_date="2027-05-15", due_time="14:30")
+    await hass.async_block_till_done()
+
+    entity_id = _get_todo_entity_id(hass, mock_config_entry.entry_id)
+    entity_comp = hass.data.get("todo")
+    if entity_comp and hasattr(entity_comp, "get_entity"):
+        entity = entity_comp.get_entity(entity_id)
+        if entity:
+            items = entity.todo_items or []
+            timed = [i for i in items if i.uid == task["id"]]
+            assert timed
+            assert isinstance(timed[0].due, datetime)
+            assert timed[0].due.hour == 14
+            assert timed[0].due.minute == 30
+
+
+async def test_todo_items_expose_date_only_when_no_time(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """When due_time is not set, TodoItem.due remains a plain date."""
+    task = await store.async_add_task("Date only")
+    await store.async_update_task(task["id"], due_date="2027-05-15")
+    await hass.async_block_till_done()
+
+    entity_id = _get_todo_entity_id(hass, mock_config_entry.entry_id)
+    entity_comp = hass.data.get("todo")
+    if entity_comp and hasattr(entity_comp, "get_entity"):
+        entity = entity_comp.get_entity(entity_id)
+        if entity:
+            items = entity.todo_items or []
+            item = next(i for i in items if i.uid == task["id"])
+            assert type(item.due) is date  # plain date, NOT datetime subclass
+
+
+async def test_todo_items_expose_completed_at(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Completed tasks expose TodoItem.completed as a datetime."""
+    from datetime import datetime as _dt
+
+    task = await store.async_add_task("Will complete")
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+
+    entity_id = _get_todo_entity_id(hass, mock_config_entry.entry_id)
+    entity_comp = hass.data.get("todo")
+    if entity_comp and hasattr(entity_comp, "get_entity"):
+        entity = entity_comp.get_entity(entity_id)
+        if entity:
+            items = entity.todo_items or []
+            item = next(i for i in items if i.uid == task["id"])
+            assert item.completed is not None
+            assert isinstance(item.completed, _dt)
+
+
+async def test_todo_items_no_completed_at_when_open(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Open tasks have TodoItem.completed = None."""
+    task = await store.async_add_task("Still open")
+    await hass.async_block_till_done()
+
+    entity_id = _get_todo_entity_id(hass, mock_config_entry.entry_id)
+    entity_comp = hass.data.get("todo")
+    if entity_comp and hasattr(entity_comp, "get_entity"):
+        entity = entity_comp.get_entity(entity_id)
+        if entity:
+            items = entity.todo_items or []
+            item = next(i for i in items if i.uid == task["id"])
+            assert item.completed is None
+
+
+async def test_todo_create_with_due_datetime(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Creating a todo item with a datetime due stores both date and time."""
+    from datetime import datetime
+
+    entity_id = _get_todo_entity_id(hass, mock_config_entry.entry_id)
+    entity_comp = hass.data.get("todo")
+    if entity_comp and hasattr(entity_comp, "get_entity"):
+        entity = entity_comp.get_entity(entity_id)
+        if entity:
+            local_tz = datetime.now().astimezone().tzinfo
+            due_dt = datetime(2027, 8, 20, 9, 30, tzinfo=local_tz)
+            item = TodoItem(summary="Datetime create", due=due_dt)
+            await entity.async_create_todo_item(item)
+            await hass.async_block_till_done()
+            tasks = [t for t in store.tasks if t["title"] == "Datetime create"]
+            assert tasks
+            assert tasks[0]["due_date"] == "2027-08-20"
+            assert tasks[0]["due_time"] == "09:30"
+
+
+async def test_todo_update_with_due_datetime(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Updating with a datetime due stores both date and time."""
+    from datetime import datetime
+
+    task = await store.async_add_task("Set datetime")
+    await hass.async_block_till_done()
+
+    entity_id = _get_todo_entity_id(hass, mock_config_entry.entry_id)
+    entity_comp = hass.data.get("todo")
+    if entity_comp and hasattr(entity_comp, "get_entity"):
+        entity = entity_comp.get_entity(entity_id)
+        if entity:
+            local_tz = datetime.now().astimezone().tzinfo
+            item = TodoItem(
+                uid=task["id"],
+                summary="Set datetime",
+                status=TodoItemStatus.NEEDS_ACTION,
+                due=datetime(2027, 8, 20, 14, 0, tzinfo=local_tz),
+            )
+            await entity.async_update_todo_item(item)
+            await hass.async_block_till_done()
+            updated = store.get_task(task["id"])
+            assert updated["due_date"] == "2027-08-20"
+            assert updated["due_time"] == "14:00"
+
+
+async def test_todo_update_date_only_clears_time(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Updating with a date (not datetime) clears due_time."""
+    task = await store.async_add_task("Had time")
+    await store.async_update_task(task["id"], due_date="2027-05-15", due_time="10:00")
+    await hass.async_block_till_done()
+
+    entity_id = _get_todo_entity_id(hass, mock_config_entry.entry_id)
+    entity_comp = hass.data.get("todo")
+    if entity_comp and hasattr(entity_comp, "get_entity"):
+        entity = entity_comp.get_entity(entity_id)
+        if entity:
+            item = TodoItem(
+                uid=task["id"],
+                summary="Had time",
+                status=TodoItemStatus.NEEDS_ACTION,
+                due=date(2027, 5, 15),  # date only → clears time
+            )
+            await entity.async_update_todo_item(item)
+            await hass.async_block_till_done()
+            updated = store.get_task(task["id"])
+            assert updated["due_date"] == "2027-05-15"
+            assert updated["due_time"] is None
+
+
+async def test_todo_move_item(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """async_move_todo_item reorders tasks correctly."""
+    t1 = await store.async_add_task("First")
+    t2 = await store.async_add_task("Second")
+    t3 = await store.async_add_task("Third")
+    await hass.async_block_till_done()
+
+    entity_id = _get_todo_entity_id(hass, mock_config_entry.entry_id)
+    entity_comp = hass.data.get("todo")
+    if entity_comp and hasattr(entity_comp, "get_entity"):
+        entity = entity_comp.get_entity(entity_id)
+        if entity:
+            # Move "Third" to first position (previous_uid=None)
+            await entity.async_move_todo_item(t3["id"], previous_uid=None)
+            await hass.async_block_till_done()
+            ordered = sorted(store.tasks, key=lambda t: t["sort_order"])
+            assert [t["id"] for t in ordered] == [t3["id"], t1["id"], t2["id"]]
+
+            # Move "First" after "Third"
+            await entity.async_move_todo_item(t1["id"], previous_uid=t3["id"])
+            await hass.async_block_till_done()
+            ordered = sorted(store.tasks, key=lambda t: t["sort_order"])
+            assert [t["id"] for t in ordered] == [t3["id"], t1["id"], t2["id"]]

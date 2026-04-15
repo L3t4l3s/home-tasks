@@ -22,7 +22,7 @@ from .websocket_api import async_register_websocket_commands
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["todo", "sensor", "binary_sensor"]
+PLATFORMS = ["todo", "sensor", "binary_sensor", "calendar"]
 CARD_URL = "/home_tasks/home-tasks-card.js"
 DATA_SETUP_DONE = f"{DOMAIN}_setup_done"
 DATA_RECURRENCE_TIMERS = f"{DOMAIN}_recurrence_timers"
