@@ -3841,7 +3841,8 @@ class HomeTasksCard extends HTMLElement {
       .empty-state { text-align: center; padding: 24px; color: var(--todo-disabled); font-size: 14px; }
       .task {
         border: 1px solid var(--todo-divider); border-radius: var(--todo-radius);
-        background: var(--todo-bg); transition: box-shadow 0.2s, border-color 0.2s;
+        background: rgba(var(--rgb-primary-text-color, 33, 33, 33), 0.06);
+        transition: box-shadow 0.2s, border-color 0.2s;
       }
       .task.dragging { opacity: 0.4; }
       .task-main { display: flex; align-items: center; padding: 10px 12px; gap: 8px; min-height: 44px; cursor: pointer; }
