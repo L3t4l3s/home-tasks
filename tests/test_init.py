@@ -1,10 +1,11 @@
 """Tests for integration setup, services, events, and timer mechanics."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import pytest
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import utcnow
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
@@ -1079,14 +1080,22 @@ async def test_recurrence_timer_updates_due_date(hass: HomeAssistant, mock_confi
     await hass.async_block_till_done()
     assert store.get_task(task["id"])["completed"] is True
 
-    # Advance time to trigger the recurrence timer (> 7 days)
-    async_fire_time_changed(hass, utcnow() + timedelta(days=8))
+    # Derive the expected due_date from the actual completed_at stored in the task.
+    # freeze_time does not reliably patch datetime.now(tz) in all integration modules
+    # on Python 3.14, so we compute the expectation from what the store recorded.
+    completed_at_str = store.get_task(task["id"])["completed_at"]
+    completed_at = datetime.fromisoformat(completed_at_str)
+    local_completed = completed_at.astimezone(dt_util.DEFAULT_TIME_ZONE)
+    days_to_monday = (0 - local_completed.weekday()) % 7 or 7
+    expected_due = (local_completed.date() + timedelta(days=days_to_monday)).isoformat()
+
+    # Advance 14 days — guaranteed to surpass the next Monday regardless of weekday
+    async_fire_time_changed(hass, utcnow() + timedelta(days=14))
     await hass.async_block_till_done()
 
     reopened = store.get_task(task["id"])
     assert reopened["completed"] is False
-    # due_date should have been updated to the next Monday (2026-04-20)
-    assert reopened["due_date"] == "2026-04-20"
+    assert reopened["due_date"] == expected_due
     assert reopened["due_time"] == "10:00"
 
 
