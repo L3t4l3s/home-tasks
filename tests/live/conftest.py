@@ -14,6 +14,7 @@ import pytest_asyncio
 import pytest_socket
 
 from .config import CONFIG, LiveConfig
+from .todoist_verifier import TodoistVerifier
 from .ws_client import HAWebSocketClient
 
 
@@ -212,6 +213,18 @@ async def _wipe_native_list(ws_client: HAWebSocketClient, list_id: str) -> None:
         await ws_client.send_command(
             "home_tasks/delete_task", list_id=list_id, task_id=task["id"]
         )
+
+
+@pytest_asyncio.fixture
+async def todoist_verifier() -> AsyncIterator[TodoistVerifier]:
+    """Direct Todoist REST API client for provider-side verification.
+
+    Skips the test if HT_TODOIST_API_TOKEN is not set.  Extracted from
+    the HA Todoist config entry — see scripts/deploy.py for how the test
+    credentials are sourced.
+    """
+    async with TodoistVerifier.from_config() as tv:
+        yield tv
 
 
 @pytest_asyncio.fixture

@@ -74,9 +74,16 @@ async def _refetch(
 
 
 async def test_create_basic_task(
-    ws_client: HAWebSocketClient, todoist_entity: str
+    ws_client: HAWebSocketClient,
+    todoist_entity: str,
+    todoist_verifier,
 ) -> None:
-    """create_external_task returns a uid that's then visible in get_external_tasks."""
+    """create_external_task must actually reach Todoist.
+
+    Dual-view assertion:
+      - our merged view returns the new task with the uid/title we set
+      - Todoist's REST API, queried by task uid, confirms the same
+    """
     result = await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=todoist_entity,
@@ -86,16 +93,29 @@ async def test_create_basic_task(
     assert new_uid
 
     await asyncio.sleep(TODOIST_SETTLE)
+
+    # our view
     tasks = await _refetch(ws_client, todoist_entity)
-    assert any(t["id"] == new_uid for t in tasks)
-    task = next(t for t in tasks if t["id"] == new_uid)
+    task = next((t for t in tasks if t["id"] == new_uid), None)
+    assert task is not None, "task not in home_tasks/get_external_tasks response"
     assert task["title"] == "Live Todoist task"
+
+    # provider-side truth
+    remote = await todoist_verifier.get_task(new_uid)
+    assert remote.content == "Live Todoist task", (
+        f"Todoist itself does not have this task.  Remote state: {remote!r}"
+    )
 
 
 async def test_create_with_priority_and_notes(
-    ws_client: HAWebSocketClient, todoist_entity: str
+    ws_client: HAWebSocketClient,
+    todoist_entity: str,
+    todoist_verifier,
 ) -> None:
-    """Create with priority + notes; both fields survive a re-fetch."""
+    """priority + notes must be set on Todoist, not only in our view.
+
+    home_tasks priority N maps to Todoist priority N+1 (1=normal … 4=urgent).
+    """
     result = await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=todoist_entity,
@@ -111,11 +131,21 @@ async def test_create_with_priority_and_notes(
     assert task["priority"] == 3
     assert task["notes"] == "Some Todoist notes"
 
+    remote = await todoist_verifier.get_task(uid)
+    assert remote.content == "Priority test"
+    assert remote.priority == 4, (
+        f"Todoist priority is {remote.priority}, expected 4 "
+        "(home_tasks priority 3 → Todoist priority 4)"
+    )
+    assert remote.description == "Some Todoist notes"
+
 
 async def test_create_with_tags(
-    ws_client: HAWebSocketClient, todoist_entity: str
+    ws_client: HAWebSocketClient,
+    todoist_entity: str,
+    todoist_verifier,
 ) -> None:
-    """Tags become Todoist labels and round-trip back."""
+    """home_tasks tags must end up as Todoist labels."""
     result = await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=todoist_entity,
@@ -130,11 +160,17 @@ async def test_create_with_tags(
     assert "live-test" in task["tags"]
     assert "automation" in task["tags"]
 
+    remote = await todoist_verifier.get_task(uid)
+    assert "live-test" in remote.labels
+    assert "automation" in remote.labels
+
 
 async def test_create_with_due_date(
-    ws_client: HAWebSocketClient, todoist_entity: str
+    ws_client: HAWebSocketClient,
+    todoist_entity: str,
+    todoist_verifier,
 ) -> None:
-    """A future due_date round-trips correctly."""
+    """due_date must be stored on Todoist's side, not only in the overlay."""
     result = await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=todoist_entity,
@@ -148,11 +184,20 @@ async def test_create_with_due_date(
     task = next(t for t in tasks if t["id"] == uid)
     assert task["due_date"] == "2027-08-15"
 
+    remote = await todoist_verifier.get_task(uid)
+    assert remote.due is not None, "Todoist stored no due date"
+    # Todoist returns date as "YYYY-MM-DD" for date-only tasks.
+    assert remote.due.date == "2027-08-15", (
+        f"Todoist due.date={remote.due.date!r}, expected '2027-08-15'"
+    )
+
 
 async def test_update_title_priority_notes(
-    ws_client: HAWebSocketClient, todoist_entity: str
+    ws_client: HAWebSocketClient,
+    todoist_entity: str,
+    todoist_verifier,
 ) -> None:
-    """update_external_task changes title, priority, notes individually."""
+    """update_external_task must push title/priority/notes to Todoist."""
     create = await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=todoist_entity,
@@ -173,11 +218,18 @@ async def test_update_title_priority_notes(
     assert task["priority"] == 2
     assert task["notes"] == "New notes"
 
+    remote = await todoist_verifier.get_task(uid)
+    assert remote.content == "Updated"
+    assert remote.priority == 3  # home_tasks 2 → Todoist 3
+    assert remote.description == "New notes"
+
 
 async def test_complete_via_update(
-    ws_client: HAWebSocketClient, todoist_entity: str
+    ws_client: HAWebSocketClient,
+    todoist_entity: str,
+    todoist_verifier,
 ) -> None:
-    """update_external_task with completed=True marks the task done."""
+    """update_external_task with completed=True must close the task at Todoist."""
     create = await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=todoist_entity,
@@ -192,12 +244,15 @@ async def test_complete_via_update(
     )
     await asyncio.sleep(TODOIST_SETTLE)
 
-    tasks = await _refetch(ws_client, todoist_entity)
-    task = next((t for t in tasks if t["id"] == uid), None)
-    # Completed Todoist tasks may or may not be returned by the API depending
-    # on filter; either they're absent or marked completed.
-    if task is not None:
-        assert task["completed"] is True
+    # At Todoist, the task is either is_completed=True (if still reachable)
+    # or 410/404 (if Todoist removes closed tasks from the active endpoint).
+    remote = await todoist_verifier.try_get_task(uid)
+    if remote is not None:
+        assert remote.is_completed is True, (
+            f"Todoist still reports task as open: is_completed={remote.is_completed}"
+        )
+    # (else the task simply isn't in the open-tasks endpoint any more,
+    # which also confirms it was closed.)
 
 
 # ---------------------------------------------------------------------------
@@ -206,9 +261,11 @@ async def test_complete_via_update(
 
 
 async def test_sub_task_lifecycle(
-    ws_client: HAWebSocketClient, todoist_entity: str
+    ws_client: HAWebSocketClient,
+    todoist_entity: str,
+    todoist_verifier,
 ) -> None:
-    """add_sub_task → update → delete via the external API."""
+    """Sub-tasks must live at Todoist with parent_id wiring, not in overlay."""
     parent = await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=todoist_entity,
@@ -225,10 +282,20 @@ async def test_sub_task_lifecycle(
     sub_id = sub["id"]
     await asyncio.sleep(TODOIST_SETTLE)
 
+    # our view
     tasks = await _refetch(ws_client, todoist_entity)
     parent_task = next(t for t in tasks if t["id"] == pid)
     assert any(s["id"] == sub_id for s in parent_task["sub_items"])
 
+    # provider view: sub-task exists AND its parent_id matches at Todoist
+    remote_sub = await todoist_verifier.get_task(sub_id)
+    assert remote_sub.content == "First sub"
+    assert remote_sub.parent_id == pid, (
+        f"Todoist parent_id={remote_sub.parent_id}, expected {pid}.  "
+        "The sub-task was created but is not wired to its parent."
+    )
+
+    # Rename
     await ws_client.send_command(
         "home_tasks/update_external_sub_task",
         entity_id=todoist_entity,
@@ -240,9 +307,13 @@ async def test_sub_task_lifecycle(
 
     tasks = await _refetch(ws_client, todoist_entity)
     parent_task = next(t for t in tasks if t["id"] == pid)
-    sub = next(s for s in parent_task["sub_items"] if s["id"] == sub_id)
-    assert sub["title"] == "Renamed sub"
+    sub_local = next(s for s in parent_task["sub_items"] if s["id"] == sub_id)
+    assert sub_local["title"] == "Renamed sub"
 
+    remote_sub = await todoist_verifier.get_task(sub_id)
+    assert remote_sub.content == "Renamed sub"
+
+    # Delete
     await ws_client.send_command(
         "home_tasks/delete_external_sub_task",
         entity_id=todoist_entity,
@@ -255,6 +326,10 @@ async def test_sub_task_lifecycle(
     parent_task = next(t for t in tasks if t["id"] == pid)
     assert not any(s["id"] == sub_id for s in parent_task["sub_items"])
 
+    assert await todoist_verifier.try_get_task(sub_id) is None, (
+        "Sub-task was removed from our view but still exists at Todoist."
+    )
+
 
 # ---------------------------------------------------------------------------
 # Recurrence
@@ -262,9 +337,11 @@ async def test_sub_task_lifecycle(
 
 
 async def test_recurrence_round_trip(
-    ws_client: HAWebSocketClient, todoist_entity: str
+    ws_client: HAWebSocketClient,
+    todoist_entity: str,
+    todoist_verifier,
 ) -> None:
-    """Setting recurrence on creation produces a recurring task in Todoist."""
+    """Recurrence lives at Todoist — is_recurring=True and due.string set."""
     create = await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=todoist_entity,
@@ -281,14 +358,24 @@ async def test_recurrence_round_trip(
     tasks = await _refetch(ws_client, todoist_entity)
     task = next(t for t in tasks if t["id"] == uid)
     assert task["recurrence_enabled"] is True
-    # Provider may parse "every day" → recurrence_unit=days, value=1
     assert task["recurrence_unit"] == "days"
+
+    remote = await todoist_verifier.get_task(uid)
+    assert remote.due is not None, "Todoist task has no due info"
+    assert remote.due.is_recurring is True, (
+        f"Todoist task isn't recurring: is_recurring={remote.due.is_recurring}, "
+        f"due.string={remote.due.string!r}"
+    )
+    # "every day" is Todoist's canonical shape for daily recurrence
+    assert "day" in (remote.due.string or "").lower()
 
 
 async def test_recurrence_weekdays(
-    ws_client: HAWebSocketClient, todoist_entity: str
+    ws_client: HAWebSocketClient,
+    todoist_entity: str,
+    todoist_verifier,
 ) -> None:
-    """Weekday-based recurrence becomes 'every Mon, Wed, Fri' in Todoist."""
+    """Weekday recurrence lives at Todoist as a recurring natural-language due."""
     create = await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=todoist_entity,
@@ -296,7 +383,7 @@ async def test_recurrence_weekdays(
         due_date="2027-09-01",
         recurrence_enabled=True,
         recurrence_type="weekdays",
-        recurrence_weekdays=[0, 2, 4],
+        recurrence_weekdays=[0, 2, 4],  # Mon, Wed, Fri
     )
     uid = create["uid"]
     await asyncio.sleep(TODOIST_SETTLE)
@@ -304,6 +391,15 @@ async def test_recurrence_weekdays(
     tasks = await _refetch(ws_client, todoist_entity)
     task = next(t for t in tasks if t["id"] == uid)
     assert task["recurrence_enabled"] is True
+
+    remote = await todoist_verifier.get_task(uid)
+    assert remote.due is not None
+    assert remote.due.is_recurring is True
+    due_str = (remote.due.string or "").lower()
+    # Todoist accepts natural-language like "every mon, wed, fri"
+    assert "mon" in due_str or "every" in due_str, (
+        f"Todoist due.string={remote.due.string!r} doesn't look like a weekday recurrence"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -372,9 +468,15 @@ async def test_reminders_premium_only_does_not_destroy_existing(
 
 
 async def test_recurrence_end_type_persists_via_overlay(
-    ws_client: HAWebSocketClient, todoist_entity: str
+    ws_client: HAWebSocketClient,
+    todoist_entity: str,
+    todoist_verifier,
 ) -> None:
-    """recurrence_end_type lives in overlay (Todoist can't store it)."""
+    """recurrence_end_type + recurrence_max_count live ONLY in our overlay.
+
+    Todoist doesn't model "recur N times" so these must never leak onto
+    the Todoist task — polluting Todoist state would corrupt user data.
+    """
     create = await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=todoist_entity,
@@ -390,10 +492,24 @@ async def test_recurrence_end_type_persists_via_overlay(
     )
     await asyncio.sleep(TODOIST_SETTLE)
 
+    # our merged view: overlay fields visible
     tasks = await _refetch(ws_client, todoist_entity)
     task = next(t for t in tasks if t["id"] == uid)
     assert task["recurrence_end_type"] == "count"
     assert task["recurrence_max_count"] == 5
+
+    # Todoist side: the task must still exist unchanged — no weird
+    # extra labels like "count=5" or description pollution.
+    remote = await todoist_verifier.get_task(uid)
+    assert remote.content == "Has end type"
+    # description must stay empty (we didn't set notes)
+    assert remote.description == "", (
+        f"Overlay metadata leaked into Todoist description: {remote.description!r}"
+    )
+    # no labels smuggled in
+    assert remote.labels == [], (
+        f"Overlay metadata leaked into Todoist labels: {remote.labels!r}"
+    )
 
 
 # ---------------------------------------------------------------------------

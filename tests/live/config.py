@@ -60,6 +60,11 @@ class LiveConfig:
     local_todo_entity: str | None
     bring_entity: str | None
 
+    # Provider-side API credentials (for dual-view verification against the
+    # real provider, bypassing HA's integration entity).  Extracted from the
+    # HA config entries — see scripts/extract_provider_tokens.py if needed.
+    todoist_api_token: str | None
+
     # Safety: maximum number of pre-existing items in a test list before
     # we abort with "you probably configured the wrong list" error.
     max_existing_items: int = 50
@@ -77,6 +82,7 @@ def load() -> LiveConfig:
         caldav_entity=os.environ.get("HT_CALDAV_TEST_ENTITY"),
         local_todo_entity=os.environ.get("HT_LOCAL_TODO_TEST_ENTITY"),
         bring_entity=os.environ.get("HT_BRING_TEST_ENTITY"),
+        todoist_api_token=os.environ.get("HT_TODOIST_API_TOKEN"),
         max_existing_items=int(os.environ.get("HT_MAX_EXISTING_ITEMS", "50")),
     )
 
