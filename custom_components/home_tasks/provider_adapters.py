@@ -292,17 +292,17 @@ class GenericAdapter(ProviderAdapter):
 
         for i, uid in enumerate(task_uids):
             try:
+                service_data: dict[str, Any] = {"uid": uid}
+                if i > 0:
+                    service_data["previous_uid"] = task_uids[i - 1]
                 await self._hass.services.async_call(
-                    "todo", "item/move",
-                    {
-                        "entity_id": self._entity_id,
-                        "uid": uid,
-                        "previous_uid": task_uids[i - 1] if i > 0 else None,
-                    },
+                    "todo", "move_item",
+                    service_data,
+                    target={"entity_id": self._entity_id},
                     blocking=True,
                 )
             except Exception:  # noqa: BLE001
-                _LOGGER.warning("Failed to move task %s via todo/item/move", uid)
+                _LOGGER.warning("Failed to move task %s via todo.move_item", uid)
                 return False
         return True
 

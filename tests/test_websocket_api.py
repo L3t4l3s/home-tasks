@@ -537,10 +537,15 @@ async def test_ws_get_external_tasks_merges_overlay(
     assert task_b["completed"] is True
 
 
-async def test_merge_tasks_provider_owns_order_true_ignores_overlay(
+async def test_merge_tasks_overlay_sort_order_always_wins(
     hass: HomeAssistant,
 ) -> None:
-    """When provider_owns_order=True, sort_order equals index, not overlay value."""
+    """Explicit overlay sort_order always wins regardless of provider_owns_order flag.
+
+    Previously, provider_owns_order=True caused overlay sort_order to be ignored,
+    which meant a failed todo.move_item call left tasks in the wrong order.
+    Now, overlay sort_order is always respected when explicitly set.
+    """
     from custom_components.home_tasks.overlay_store import ExternalTaskOverlayStore
     from custom_components.home_tasks.websocket_api import _merge_tasks_with_overlays
 
@@ -552,9 +557,10 @@ async def test_merge_tasks_provider_owns_order_true_ignores_overlay(
         {"uid": "uid-1", "summary": "First", "status": "needs_action", "due": None, "due_time": None, "description": None},
         {"uid": "uid-2", "summary": "Second", "status": "needs_action", "due": None, "due_time": None, "description": None},
     ]
+    # provider_owns_order=True no longer suppresses overlay sort_order
     tasks = _merge_tasks_with_overlays(external_items, overlay_store, provider_owns_order=True)
-    assert tasks[0]["sort_order"] == 0
-    assert tasks[1]["sort_order"] == 1
+    assert tasks[0]["sort_order"] == 99  # overlay value respected
+    assert tasks[1]["sort_order"] == 1   # no overlay → falls back to index
 
 
 async def test_merge_tasks_provider_owns_order_false_uses_overlay_sort(

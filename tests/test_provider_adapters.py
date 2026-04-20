@@ -838,7 +838,7 @@ class TestGenericAdapterDeleteTask:
 
 
 class TestGenericAdapterReorderTasks:
-    """async_reorder_tasks uses todo/item/move when supported."""
+    """async_reorder_tasks uses todo.move_item when MOVE_TODO_ITEM is supported."""
 
     async def test_reorder_unsupported_returns_false(self):
         """Without MOVE_TODO_ITEM (8) feature, returns False (caller uses overlay)."""
@@ -847,18 +847,24 @@ class TestGenericAdapterReorderTasks:
         assert result is False
         hass.services.async_call.assert_not_awaited()
 
-    async def test_reorder_supported_calls_item_move(self):
+    async def test_reorder_supported_calls_move_item(self):
+        """With MOVE_TODO_ITEM, calls todo.move_item once per task."""
         adapter, hass = _make_generic_adapter(supported_features=8)
         result = await adapter.async_reorder_tasks(["a", "b", "c"])
         assert result is True
         # 3 calls, one per item
         assert hass.services.async_call.await_count == 3
-        first = hass.services.async_call.await_args_list[0].args[2]
-        assert first["uid"] == "a"
-        assert first["previous_uid"] is None
-        second = hass.services.async_call.await_args_list[1].args[2]
-        assert second["uid"] == "b"
-        assert second["previous_uid"] == "a"
+        # First call: no previous_uid (first task has nothing before it)
+        first_call = hass.services.async_call.await_args_list[0]
+        assert first_call.args[0] == "todo"
+        assert first_call.args[1] == "move_item"
+        first_data = first_call.args[2]
+        assert first_data["uid"] == "a"
+        assert "previous_uid" not in first_data  # not passed for the first task
+        # Second call: previous_uid="a"
+        second_data = hass.services.async_call.await_args_list[1].args[2]
+        assert second_data["uid"] == "b"
+        assert second_data["previous_uid"] == "a"
 
     async def test_reorder_failure_returns_false(self):
         adapter, hass = _make_generic_adapter(supported_features=8)
