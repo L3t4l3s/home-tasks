@@ -1442,10 +1442,18 @@ class HomeTasksCard extends HTMLElement {
         setTimeout(resolve, 250); // safety fallback
       });
 
-      await this._deleteTaskCmd(colIdx, taskId);
+      // Optimistic: remove locally so surviving tasks animate up immediately,
+      // without waiting for the server round-trip.
+      const cs = this._columns[colIdx];
+      if (cs?.tasks) cs.tasks = cs.tasks.filter(t => String(t.id) !== String(taskId));
       this._expandedTasks.delete(taskId);
-      await this._loadAllTasks();
+      this._render();
       this._applyFlip(before, colIdx, 0.22);
+
+      // Sync with server in the background (re-render after reload is harmless
+      // since the FLIP animation will have completed by then).
+      await this._deleteTaskCmd(colIdx, taskId);
+      await this._loadAllTasks();
 
     } else {
       // Fallback: task not in DOM, delete without animation
@@ -1734,34 +1742,38 @@ class HomeTasksCard extends HTMLElement {
 
   _applyFlip(before, colIdx, duration = 0.3) {
     if (!before || before.size === 0) return;
-    // Pass 1: read ALL new positions first (relative to list top — no style writes yet)
-    const taskListEl = this.shadowRoot.querySelector(`.task-list[data-col-idx="${colIdx}"]`);
-    if (!taskListEl) return;
-    const curListTop = taskListEl.getBoundingClientRect().top;
-    const newPositions = new Map(); // id → relativeTop
-    const elMap = new Map();        // id → element (reused in Pass 2, avoids N re-queries)
-    taskListEl.querySelectorAll(".task[data-task-id]")
-      .forEach(el => {
-        const id = el.dataset.taskId;
-        if (id && before.has(id)) {
-          newPositions.set(id, el.getBoundingClientRect().top - curListTop);
-          elMap.set(id, el);
-        }
-      });
-    // Pass 2: apply transforms
-    const flipEls = [];
-    newPositions.forEach((newTop, id) => {
-      const el = elMap.get(id);
-      if (!el) return;
-      const dy = Math.round(before.get(id) - newTop);
-      if (Math.abs(dy) < 1) return;
-      el.style.transition = "none";
-      el.style.transform = `translateY(${dy}px)`;
-      flipEls.push(el);
-    });
-    if (flipEls.length === 0) return;
-    flipEls[0].getBoundingClientRect(); // single reflow commits all start states
+    // _render() rebuilds the shadow DOM via root.innerHTML="", but ha-card (a LitElement)
+    // commits its layout asynchronously. Reading getBoundingClientRect() synchronously
+    // after _render() returns 0 for all elements. One rAF is enough for the browser to
+    // flush the new layout before we measure positions.
     requestAnimationFrame(() => {
+      // Pass 1: read ALL new positions first (relative to list top — no style writes yet)
+      const taskListEl = this.shadowRoot.querySelector(`.task-list[data-col-idx="${colIdx}"]`);
+      if (!taskListEl) return;
+      const curListTop = taskListEl.getBoundingClientRect().top;
+      const newPositions = new Map(); // id → relativeTop
+      const elMap = new Map();        // id → element (reused in Pass 2, avoids N re-queries)
+      taskListEl.querySelectorAll(".task[data-task-id]")
+        .forEach(el => {
+          const id = el.dataset.taskId;
+          if (id && before.has(id)) {
+            newPositions.set(id, el.getBoundingClientRect().top - curListTop);
+            elMap.set(id, el);
+          }
+        });
+      // Pass 2: apply transforms
+      const flipEls = [];
+      newPositions.forEach((newTop, id) => {
+        const el = elMap.get(id);
+        if (!el) return;
+        const dy = Math.round(before.get(id) - newTop);
+        if (Math.abs(dy) < 1) return;
+        el.style.transition = "none";
+        el.style.transform = `translateY(${dy}px)`;
+        flipEls.push(el);
+      });
+      if (flipEls.length === 0) return;
+      flipEls[0].getBoundingClientRect(); // single reflow commits all start states
       requestAnimationFrame(() => {
         flipEls.forEach(el => {
           el.style.transition = `transform ${duration}s ease`;
