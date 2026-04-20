@@ -248,6 +248,52 @@ def reload_via_websocket(ha_token: str) -> None:
 # Entry point
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Full HA restart — required for Python code changes to be picked up
+# (config_entry reload only re-instantiates entries; Python modules stay cached)
+# ---------------------------------------------------------------------------
+
+def restart_ha(ha_token: str) -> None:
+    import urllib.request as _urlreq
+    import urllib.error as _urlerr
+
+    print("[restart] Triggering HA core restart ...")
+    req = _urlreq.Request(
+        f"{HA_REST_URL}/api/services/homeassistant/restart",
+        data=b"{}",
+        headers={
+            "Authorization": f"Bearer {ha_token}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        _urlreq.urlopen(req, timeout=8)
+    except (TimeoutError, _urlerr.URLError, OSError) as exc:
+        # Connection drop is EXPECTED during restart.
+        print(f"[restart] Restart triggered (connection drop expected): {exc}")
+
+    # Wait for HA to come back
+    print("[restart] Waiting for HA to come back online ...", end="", flush=True)
+    deadline = time.time() + 180
+    ok_req = _urlreq.Request(
+        f"{HA_REST_URL}/api/",
+        headers={"Authorization": f"Bearer {ha_token}"},
+    )
+    while time.time() < deadline:
+        time.sleep(3)
+        try:
+            with _urlreq.urlopen(ok_req, timeout=5) as resp:
+                if resp.status == 200:
+                    print("\n[restart] HA is back online.")
+                    # Give integrations a few seconds to finish loading
+                    time.sleep(5)
+                    return
+        except Exception:
+            print(".", end="", flush=True)
+    raise RuntimeError("HA did not come back online within 3 minutes")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(
         description="Deploy home_tasks to live HA",
@@ -255,15 +301,25 @@ def main() -> None:
         epilog=(
             "Connection params can also be supplied via env vars:\n"
             "  HT_SSH_HOST, HT_SSH_PORT, HT_SSH_USER, HT_SSH_PASSWORD\n"
-            "  HT_HA_URL, HT_HA_TOKEN"
+            "  HT_HA_URL, HT_HA_TOKEN\n"
+            "\n"
+            "Default post-deploy action is a full HA restart (required for\n"
+            "Python code changes).  --reload-only skips the restart and only\n"
+            "reloads config entries (sufficient for data-only changes)."
         ),
     )
     ap.add_argument("--host", default=DEFAULT_HOST, help="SSH host (env: HT_SSH_HOST)")
     ap.add_argument("--port", type=int, default=DEFAULT_PORT, help="SSH port (env: HT_SSH_PORT)")
     ap.add_argument("--user", default=DEFAULT_USER, help="SSH user (env: HT_SSH_USER)")
     ap.add_argument("--password", default=DEFAULT_PASSWORD, help="SSH password (env: HT_SSH_PASSWORD)")
-    ap.add_argument(
-        "--no-reload", action="store_true", help="Skip WebSocket config-entry reload"
+    group = ap.add_mutually_exclusive_group()
+    group.add_argument(
+        "--reload-only", action="store_true",
+        help="Reload config entries instead of restarting HA (data-only changes)",
+    )
+    group.add_argument(
+        "--no-restart", action="store_true",
+        help="Skip the restart AND the reload — deploy files only",
     )
     args = ap.parse_args()
 
@@ -273,16 +329,23 @@ def main() -> None:
 
     deploy_via_tar(args.host, args.port, args.user, args.password)
 
-    if not args.no_reload:
-        ha_token = os.environ.get(HA_TOKEN_ENV, "")
-        if not ha_token:
-            print(
-                f"[reload] {HA_TOKEN_ENV} env var not set — skipping reload.\n"
-                "         Set it or reload manually in HA Settings -> Integrations."
-            )
-        else:
-            time.sleep(1)  # let HA finish writing any pending state
-            reload_via_websocket(ha_token)
+    if args.no_restart:
+        print("[deploy] --no-restart set, skipping restart and reload")
+        return
+
+    ha_token = os.environ.get(HA_TOKEN_ENV, "")
+    if not ha_token:
+        print(
+            f"[deploy] {HA_TOKEN_ENV} env var not set — skipping restart/reload.\n"
+            "         Restart HA manually for Python code changes to take effect."
+        )
+        return
+
+    time.sleep(1)
+    if args.reload_only:
+        reload_via_websocket(ha_token)
+    else:
+        restart_ha(ha_token)
 
 
 if __name__ == "__main__":
