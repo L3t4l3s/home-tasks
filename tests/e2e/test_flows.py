@@ -207,32 +207,77 @@ async def test_reorder_external_tasks_overlay_fallback_flow(
     assert titles_after == ["Gamma", "Alpha", "Beta"]
 
 
-async def test_reorder_external_tasks_adapter_accepts_flow(
+async def test_reorder_external_tasks_generic_adapter_move_flow(
     hass: HomeAssistant,
     hass_ws_client,
     external_entry: MockConfigEntry,
 ) -> None:
-    """Reorder via adapter that returns True (provider_handled=True)."""
+    """GenericAdapter.async_reorder_tasks calls todo.move_item and get returns new order.
+
+    This tests the MOVE_TODO_ITEM path (e.g. Google Tasks):
+    1. GenericAdapter sees supported_features & 8 → calls todo.move_item per task
+    2. The mock simulates HA updating entity.todo_items after each move
+    3. get_external_tasks must reflect the new provider order
+
+    Previously broken because:
+    - Service name was "item/move" (not "move_item") → ServiceNotFound raised
+    - Fallback wrote to overlay, but provider_owns_order=True ignored overlay
+    """
+    from custom_components.home_tasks.provider_adapters import GenericAdapter
+
     entity_id = "todo.e2e_external"
+    items = [
+        MagicMock(uid="t1", summary="Alpha",
+                  status=MagicMock(value="needs_action"), due=None, description=None),
+        MagicMock(uid="t2", summary="Beta",
+                  status=MagicMock(value="needs_action"), due=None, description=None),
+        MagicMock(uid="t3", summary="Gamma",
+                  status=MagicMock(value="needs_action"), due=None, description=None),
+    ]
+    mock_entity = MagicMock()
+    mock_entity.todo_items = list(items)
 
-    # Register a mock adapter that accepts reorder
-    reordered_uids = []
+    mock_comp = MagicMock()
+    mock_comp.get_entity.return_value = mock_entity
+    mock_comp.async_unload_entry = AsyncMock(return_value=True)
+    mock_comp.async_setup_entry = AsyncMock(return_value=True)
+    hass.data["todo"] = mock_comp
+    # supported_features=8 → MOVE_TODO_ITEM → GenericAdapter will call todo.move_item
+    hass.states.async_set(entity_id, "0", {"supported_features": 8})
 
-    class _AcceptAdapter:
-        async def async_reorder_tasks(self, task_uids):
-            reordered_uids.extend(task_uids)
-            return True
+    uid_to_item = {m.uid: m for m in items}
 
-    hass.data.setdefault(f"{DOMAIN}_adapters", {})[entity_id] = _AcceptAdapter()
+    # Register a real todo.move_item service handler that simulates what HA's
+    # Google Tasks integration does: reorder entity.todo_items after each move.
+    # (hass.services.async_call is read-only and cannot be patched directly.)
+    from homeassistant.core import ServiceCall
+
+    async def handle_move_item(call: ServiceCall) -> None:
+        uid = call.data["uid"]
+        prev_uid = call.data.get("previous_uid")
+        current = list(mock_entity.todo_items)
+        moved = uid_to_item[uid]
+        current = [t for t in current if t.uid != uid]
+        if prev_uid is None:
+            current.insert(0, moved)
+        else:
+            idx = next(i for i, t in enumerate(current) if t.uid == prev_uid)
+            current.insert(idx + 1, moved)
+        mock_entity.todo_items = current
+
+    hass.services.async_register("todo", "move_item", handle_move_item)
 
     ws = await _ws(hass, hass_ws_client)
+
     result = await _cmd(ws, 1, "home_tasks/reorder_external_tasks",
                         entity_id=entity_id, task_uids=["t3", "t1", "t2"])
     assert result.get("provider_handled") is True
-    assert reordered_uids == ["t3", "t1", "t2"]
 
-    # Clean up
-    del hass.data[f"{DOMAIN}_adapters"][entity_id]
+    # get_external_tasks must reflect the new order from entity.todo_items
+    ws2 = await _ws(hass, hass_ws_client)
+    result = await _cmd(ws2, 2, "home_tasks/get_external_tasks", entity_id=entity_id)
+    titles = [t["title"] for t in sorted(result["tasks"], key=lambda t: t["sort_order"])]
+    assert titles == ["Gamma", "Alpha", "Beta"]
 
 
 async def test_reorder_external_tasks_adapter_declines_falls_back_to_overlay(
