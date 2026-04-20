@@ -1,21 +1,62 @@
 # Testing
 
+## Philosophy
+
+**The job of a test is to catch broken functionality — not to prove that
+our code ran.**  A test that registers a mock service with exactly the
+name our code calls, then asserts our code called that name, proves
+nothing about whether the real system offers that service.  That pattern
+hid a provider reorder bug for months and must stay out of the suite.
+
+Concretely:
+
+1. **Mocks only from HA's official test infrastructure**
+   (`pytest-homeassistant-custom-component`'s `hass` fixture,
+   `MockConfigEntry`, `hass_ws_client`, `async_fire_time_changed`,
+   official mock entities, etc.).  No hand-rolled `hass.data["todo"] =
+   MagicMock()`, no `hass.services.async_register` of service names our
+   own code is about to call.
+2. **Everything else runs against the real environment and real
+   providers.**  A reorder test is only meaningful if it verifies the
+   change reached the external system — that's what the live-test
+   ``get_provider_items`` helper (calls ``todo.get_items`` directly) is
+   for.
+3. **The card is part of the product.**  Drag-drop, FLIP animation and
+   optimistic delete need browser-level verification (via the Chrome
+   MCP), not only WebSocket-command assertions.
+
 ## Test types
 
 | Type | Directory | Marker | Requirements | Speed |
 |---|---|---|---|---|
-| **Unit** | `tests/unit/` | `unit` | Python only, no HA needed | ~1s |
-| **Integration** | `tests/integration/` | `integration` | in-memory HA (pytest-hacc) | ~5s |
-| **E2E** | `tests/e2e/` | `e2e` | in-memory HA + WebSocket | ~10s |
-| **Live** | `tests/live/` | `live` | Real HA instance + credentials | ~60s |
+| **Unit** | `tests/unit/` | `unit` | Pure Python, no `hass` | ~1s |
+| **Integration** | `tests/integration/` | `integration` | in-memory HA via pytest-hacc | ~5s |
+| **E2E** | `tests/e2e/` | `e2e` | in-memory HA + WebSocket, native flows only | ~10s |
+| **Live** | `tests/live/` | `live` | Real HA instance + real providers | ~60s |
 
-**Unit**: Test individual classes/functions with mocks. No `hass` fixture needed.
+**Unit**: Pure-function tests only (priority mapping, recurrence parsing,
+Todoist payload builders, …).  Testing anything that touches `hass`
+belongs in Integration or Live — a handwritten `hass = MagicMock()`
+mock accepts any call and silently green-lights broken code.
 
-**Integration**: Test the full integration lifecycle within an in-memory HA instance (config entry setup, service registration, platform loading). Uses `pytest-homeassistant-custom-component`.
+**Integration**: Drive real store / websocket_api / platform code against
+pytest-hacc's in-memory `hass`.  Only official fixtures — do **not**
+inject a fake ``hass.data["todo"]`` or register services our own code
+is about to call.
 
-**E2E**: Drive complete WebSocket command chains end-to-end — the same sequence a browser card would issue. Catches multi-command interaction bugs that unit tests miss (e.g. `reorder_external_tasks` → `get_external_tasks` order consistency).
+**E2E**: Full WebSocket command chains for **native** home_tasks lists
+(own store, own sub-tasks, own reorder), all against pytest-hacc's
+`hass`.  External-list flows are **not** tested here — every attempt
+to do so in-memory ends up fabricating provider behaviour.  External
+reorder/create/update is verified in **Live**.
 
-**Live**: Run against a real HA instance. Require a `.env` file with credentials. Not run by default — opt-in with `-m live` or `-m live_google_tasks` etc.
+**Live**: Run against a real HA instance with real providers configured.
+Each reorder test uses a dual-view assertion: it checks both our merged
+`home_tasks/get_external_tasks` response and the provider's own
+`todo.get_items` response.  If the provider doesn't confirm the change,
+the test fails with a precise message — no more silent overlay
+fallbacks.  Live tests opt-in via `-m live` or a provider-specific
+marker.
 
 ---
 
