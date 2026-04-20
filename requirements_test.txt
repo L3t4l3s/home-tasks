@@ -1,2 +1,6 @@
 pytest-homeassistant-custom-component==0.13.323
 freezegun==1.5.2
+
+# Live tests + deploy script
+paramiko>=3.0          # SSH transport used by scripts/deploy.py and live test infra
+websocket-client>=1.6  # WebSocket client used by tests/live/ws_client.py and scripts/deploy.py

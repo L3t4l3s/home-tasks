@@ -161,6 +161,77 @@ Use the `_cmd` / `_cmd_fail` helpers from `tests/e2e/test_flows.py` to issue Web
 
 ---
 
+## Deploying to the live HA instance
+
+`scripts/deploy.py` uploads the integration via SSH (tar-pipe) and then reloads all
+`home_tasks` config entries via the HA WebSocket API.  No Docker or SCP needed.
+
+### Prerequisites
+
+```bash
+pip install paramiko websocket-client   # already in requirements_test.txt
+```
+
+### Usage
+
+Set credentials via environment variables (never hard-code them):
+
+```bash
+export HT_SSH_HOST=<ip-of-ha-vm>
+export HT_SSH_USER=<ssh-user>
+export HT_SSH_PASSWORD=<ssh-password>
+export HT_HA_URL=http://<ha-host>:8123
+export HT_HA_TOKEN=<long-lived-access-token>   # same as live tests .env
+```
+
+Then run:
+
+```bash
+# From D:\projects\Home_Tasks with the venv active:
+python scripts/deploy.py
+
+# Or without activating the venv:
+PYTHONHOME="" PYTHONPATH="" .venv/Scripts/python.exe scripts/deploy.py
+
+# Deploy only (skip the WebSocket reload):
+python scripts/deploy.py --no-reload
+
+# Override individual params on the CLI:
+python scripts/deploy.py --host 192.168.1.x --user myuser --password mypassword
+```
+
+### What it does
+
+1. Builds an in-memory `.tar.gz` of `custom_components/home_tasks/` (excluding `__pycache__`).
+2. SSHs into the target host and extracts the archive into
+   `/homeassistant/custom_components/home_tasks`.  
+   (`/config` → `/homeassistant` are a symlink on most HA VMs — both paths work.)
+3. Calls `homeassistant.reload_config_entry` for every `home_tasks` config entry via
+   the HA WebSocket API so the new code is active without a full restart.
+
+### Full HA restart
+
+If a reload is not enough (e.g. after JS card changes), restart HA core via:
+
+```bash
+python - <<'EOF'
+import urllib.request, os
+token = os.environ["HT_HA_TOKEN"]
+base  = os.environ["HT_HA_URL"]
+req = urllib.request.Request(
+    f"{base}/api/services/homeassistant/restart",
+    data=b"{}", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+    method="POST",
+)
+try:
+    urllib.request.urlopen(req, timeout=10)
+except Exception as e:
+    print(f"Restart triggered (connection drop expected): {e}")
+EOF
+```
+
+---
+
 ## CI / CD notes
 
 Only unit, integration, and e2e tests are suitable for CI. Live tests require external services and should be run manually before releases.
