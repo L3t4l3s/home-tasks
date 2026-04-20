@@ -18,7 +18,7 @@ from .const import DOMAIN, RECURRENCE_UNIT_SECONDS
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 from .overlay_store import ExternalTaskOverlayStore
-from .store import HomeTasksStore
+from .store import HomeTasksStore, _REOPEN_UNCHANGED
 from .websocket_api import async_register_websocket_commands
 
 _LOGGER = logging.getLogger(__name__)
@@ -301,15 +301,14 @@ def _apply_start_date(task: dict, target: datetime) -> datetime:
     return target
 
 
-def _compute_reopen_delay(task: dict, completed_at: datetime) -> float | None:
-    """Compute seconds from now until the task should reopen.
+def _compute_next_reopen_target(task: dict, completed_at: datetime) -> datetime | None:
+    """Compute the target datetime (UTC-aware) when the task should reopen.
 
     - hours: exact elapsed-based interval (e.g. every 3 h → reopen 3 h after completion)
     - days / weeks / months / weekdays: recurrence_time (or midnight) of the target day
     Returns None if recurrence is not configured or end conditions are met.
     """
     rec_type = task.get("recurrence_type", "interval")
-    now = datetime.now(timezone.utc)
     t_h, t_m = _parse_rec_time(task)
 
     if rec_type == "weekdays":
@@ -324,8 +323,7 @@ def _compute_reopen_delay(task: dict, completed_at: datetime) -> float | None:
         )
         if _check_end_date(task, target):
             return None
-        target = _apply_start_date(task, target)
-        return (target.astimezone(timezone.utc) - now).total_seconds()
+        return _apply_start_date(task, target)
 
     unit = task.get("recurrence_unit")
     value = task.get("recurrence_value", 1)
@@ -336,8 +334,7 @@ def _compute_reopen_delay(task: dict, completed_at: datetime) -> float | None:
         reopen_at = completed_at + timedelta(seconds=RECURRENCE_UNIT_SECONDS["hours"] * value)
         if _check_end_date(task, reopen_at):
             return None
-        reopen_at = _apply_start_date(task, reopen_at)
-        return (reopen_at.astimezone(timezone.utc) - now).total_seconds()
+        return _apply_start_date(task, reopen_at)
 
     # days / weeks / months / years → recurrence_time (or midnight) of target day in local timezone
     local_completed = completed_at.astimezone(dt_util.DEFAULT_TIME_ZONE)
@@ -359,8 +356,19 @@ def _compute_reopen_delay(task: dict, completed_at: datetime) -> float | None:
     target_time = target_local.replace(hour=t_h, minute=t_m, second=0, microsecond=0)
     if _check_end_date(task, target_time):
         return None
-    target_time = _apply_start_date(task, target_time)
-    return (target_time.astimezone(timezone.utc) - now).total_seconds()
+    return _apply_start_date(task, target_time)
+
+
+def _compute_reopen_delay(task: dict, completed_at: datetime) -> float | None:
+    """Compute seconds from now until the task should reopen.
+
+    Returns None if recurrence is not configured or end conditions are met.
+    """
+    target = _compute_next_reopen_target(task, completed_at)
+    if target is None:
+        return None
+    now = datetime.now(timezone.utc)
+    return (target.astimezone(timezone.utc) - now).total_seconds()
 
 
 def _schedule_recurrence(hass: HomeAssistant, entry_id: str, task: dict, completed_at: datetime | None = None) -> None:
@@ -402,7 +410,30 @@ async def _async_reopen_task(hass: HomeAssistant, entry_id: str, task_id: str) -
     if not task.get("recurrence_enabled"):
         return
 
-    await store.async_reopen_task(task_id)
+    # Compute the next due_date (only if one was previously set)
+    new_due_date = None
+    new_due_time = _REOPEN_UNCHANGED
+    if task.get("due_date"):
+        completed_at_str = task.get("completed_at")
+        if completed_at_str:
+            try:
+                completed_at = datetime.fromisoformat(completed_at_str)
+                if completed_at.tzinfo is None:
+                    completed_at = completed_at.replace(tzinfo=timezone.utc)
+            except (ValueError, TypeError):
+                completed_at = datetime.now(timezone.utc)
+        else:
+            completed_at = datetime.now(timezone.utc)
+
+        target = _compute_next_reopen_target(task, completed_at)
+        if target is not None:
+            local_target = target.astimezone(dt_util.DEFAULT_TIME_ZONE)
+            new_due_date = local_target.date().isoformat()
+            # Only update due_time if recurrence_time is configured
+            if task.get("recurrence_time"):
+                new_due_time = f"{local_target.hour:02d}:{local_target.minute:02d}"
+
+    await store.async_reopen_task(task_id, new_due_date=new_due_date, new_due_time=new_due_time)
     _LOGGER.info("Recurring task '%s' reopened", task.get("title", task_id))
 
 

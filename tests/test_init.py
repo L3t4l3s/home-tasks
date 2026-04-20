@@ -1018,6 +1018,124 @@ def test_compute_reopen_delay_hours_with_end_date_passed() -> None:
     assert _compute_reopen_delay(task, completed) is None
 
 
+def test_compute_next_reopen_target_weekdays() -> None:
+    """_compute_next_reopen_target returns the correct next weekday target."""
+    from custom_components.home_tasks.__init__ import _compute_next_reopen_target
+    # 2026-01-05 is a Monday (weekday 0)
+    completed_at = datetime(2026, 1, 5, 11, 0, 0, tzinfo=timezone.utc)
+    task = {
+        "recurrence_type": "weekdays",
+        "recurrence_weekdays": [0],  # Monday only
+        "recurrence_time": "10:00",
+    }
+    target = _compute_next_reopen_target(task, completed_at)
+    assert target is not None
+    from homeassistant.util import dt as dt_util
+    local = target.astimezone(dt_util.DEFAULT_TIME_ZONE)
+    # Next Monday is 2026-01-12
+    assert local.date().isoformat() == "2026-01-12"
+    assert local.hour == 10
+    assert local.minute == 0
+
+
+def test_compute_next_reopen_target_days() -> None:
+    """_compute_next_reopen_target with days returns the correct target date."""
+    from custom_components.home_tasks.__init__ import _compute_next_reopen_target
+    completed_at = datetime(2026, 1, 5, 12, 0, 0, tzinfo=timezone.utc)
+    task = {
+        "recurrence_type": "interval",
+        "recurrence_unit": "days",
+        "recurrence_value": 3,
+        "recurrence_time": "09:00",
+    }
+    target = _compute_next_reopen_target(task, completed_at)
+    assert target is not None
+    from homeassistant.util import dt as dt_util
+    local = target.astimezone(dt_util.DEFAULT_TIME_ZONE)
+    assert local.date().isoformat() == "2026-01-08"
+    assert local.hour == 9
+
+
+def test_compute_next_reopen_target_returns_none_when_not_configured() -> None:
+    """_compute_next_reopen_target returns None for unconfigured recurrence."""
+    from custom_components.home_tasks.__init__ import _compute_next_reopen_target
+    completed_at = datetime(2026, 1, 5, 12, 0, 0, tzinfo=timezone.utc)
+    assert _compute_next_reopen_target({"recurrence_type": "interval"}, completed_at) is None
+
+
+async def test_recurrence_timer_updates_due_date(hass: HomeAssistant, mock_config_entry, store) -> None:
+    """After completing a recurring task with a due_date, the due_date is updated on reopen."""
+    task = await store.async_add_task("Recurring with date")
+    await store.async_update_task(
+        task["id"],
+        due_date="2026-04-13",
+        due_time="10:00",
+        recurrence_enabled=True,
+        recurrence_type="weekdays",
+        recurrence_weekdays=[0],  # Monday
+        recurrence_time="10:00",
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+    assert store.get_task(task["id"])["completed"] is True
+
+    # Advance time to trigger the recurrence timer (> 7 days)
+    async_fire_time_changed(hass, utcnow() + timedelta(days=8))
+    await hass.async_block_till_done()
+
+    reopened = store.get_task(task["id"])
+    assert reopened["completed"] is False
+    # due_date should have been updated to the next Monday (2026-04-20)
+    assert reopened["due_date"] == "2026-04-20"
+    assert reopened["due_time"] == "10:00"
+
+
+async def test_recurrence_timer_no_due_date_stays_none(hass: HomeAssistant, mock_config_entry, store) -> None:
+    """A recurring task without a due_date keeps due_date as None after reopen."""
+    task = await store.async_add_task("Recurring no date")
+    await store.async_update_task(
+        task["id"],
+        recurrence_enabled=True,
+        recurrence_unit="hours",
+        recurrence_value=1,
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, utcnow() + timedelta(hours=1, seconds=10))
+    await hass.async_block_till_done()
+
+    reopened = store.get_task(task["id"])
+    assert reopened["completed"] is False
+    assert reopened["due_date"] is None
+
+
+async def test_recurrence_timer_keeps_due_time_without_recurrence_time(hass: HomeAssistant, mock_config_entry, store) -> None:
+    """When recurrence_time is not set, due_time is preserved on reopen."""
+    task = await store.async_add_task("Recurring keep time")
+    await store.async_update_task(
+        task["id"],
+        due_date="2026-01-05",
+        due_time="14:30",
+        recurrence_enabled=True,
+        recurrence_unit="days",
+        recurrence_value=2,
+        # recurrence_time is NOT set
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+
+    async_fire_time_changed(hass, utcnow() + timedelta(days=3))
+    await hass.async_block_till_done()
+
+    reopened = store.get_task(task["id"])
+    assert reopened["completed"] is False
+    # due_date should be updated but due_time should stay unchanged
+    assert reopened["due_date"] is not None
+    assert reopened["due_date"] != "2026-01-05"  # should have advanced
+    assert reopened["due_time"] == "14:30"  # preserved
+
+
 def test_compute_due_datetime_no_due_date() -> None:
     """_compute_due_datetime returns None for tasks without a due_date."""
     from custom_components.home_tasks.__init__ import _compute_due_datetime

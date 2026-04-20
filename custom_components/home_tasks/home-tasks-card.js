@@ -2770,7 +2770,7 @@ class HomeTasksCard extends HTMLElement {
     const recurrenceWeekdays = task.recurrence_weekdays || [];
     const recurrenceStartDate = task.recurrence_start_date || "";
     const recurrenceTime = task.recurrence_time || "00:00";
-    const recurrenceEndType = task.recurrence_end_type === "count" ? "count" : "date";
+    const recurrenceEndType = task.recurrence_end_type === "count" ? "count" : task.recurrence_end_type === "date" ? "date" : "none";
     const recurrenceEndDate = task.recurrence_end_date || "";
     const recurrenceMaxCount = task.recurrence_max_count ?? null;
     const recurrenceRemainingCount = task.recurrence_remaining_count ?? task.recurrence_max_count ?? null;
@@ -2891,7 +2891,7 @@ class HomeTasksCard extends HTMLElement {
     const providerSupportsCount = !this._isExternalCol(colIdx) || !caps || !caps.can_sync_recurrence;
 
     const recurrenceEndSelect = this._el("select", {});
-    const endOptions = [["date", "rec_end_date"]];
+    const endOptions = [["none", "rec_end_never"], ["date", "rec_end_date"]];
     if (providerSupportsCount) endOptions.push(["count", "rec_end_count"]);
     for (const [val, key] of endOptions) {
       const opt = this._el("option", { value: val, textContent: this._t(key) });
@@ -2988,7 +2988,7 @@ class HomeTasksCard extends HTMLElement {
     applyRowVisibility(recurrenceType, recurrenceUnit);
 
     const applyEndTypeVisibility = (endType) => {
-      recurrenceEndDateWrap.style.display = endType === "count" ? "none" : "";
+      recurrenceEndDateWrap.style.display = endType === "date" ? "" : "none";
       recurrenceCountRow.style.display = endType === "count" ? "" : "none";
     };
     applyEndTypeVisibility(recurrenceEndType);
@@ -3061,10 +3061,8 @@ class HomeTasksCard extends HTMLElement {
           recurrenceEndDateInput.value = minEnd;
         }
       }
-      // "date" with empty field = no end (equivalent to old "none" mode)
-      const effectiveEndType = (endType === "date" && !recurrenceEndDateInput.value) ? "none" : endType;
       _saveAndReload(this._updateTaskRouted(colIdx, task.id, {
-        recurrence_end_type: effectiveEndType,
+        recurrence_end_type: endType,
         recurrence_end_date: endType === "date" ? (recurrenceEndDateInput.value || null) : null,
         recurrence_max_count: endType === "count" ? (parseInt(recurrenceMaxCountInput.value) || null) : null,
       }));

@@ -592,6 +592,24 @@ async def test_reopen_already_open_is_noop(hass: HomeAssistant, store) -> None:
     assert result["completed"] is False  # unchanged, no error
 
 
+async def test_reopen_task_updates_due_date(hass: HomeAssistant, store) -> None:
+    """async_reopen_task sets new_due_date and new_due_time when provided."""
+    task = await store.async_add_task("With date")
+    await store.async_update_task(task["id"], due_date="2026-01-05", due_time="10:00", completed=True)
+    reopened = await store.async_reopen_task(task["id"], new_due_date="2026-01-12", new_due_time="10:00")
+    assert reopened["due_date"] == "2026-01-12"
+    assert reopened["due_time"] == "10:00"
+
+
+async def test_reopen_task_preserves_due_time_when_unchanged(hass: HomeAssistant, store) -> None:
+    """async_reopen_task preserves due_time when new_due_time is not passed."""
+    task = await store.async_add_task("Keep time")
+    await store.async_update_task(task["id"], due_date="2026-01-05", due_time="14:30", completed=True)
+    reopened = await store.async_reopen_task(task["id"], new_due_date="2026-01-08")
+    assert reopened["due_date"] == "2026-01-08"
+    assert reopened["due_time"] == "14:30"  # unchanged
+
+
 async def test_on_task_reopened_callback(hass: HomeAssistant) -> None:
     """on_task_reopened fires when a completed task is explicitly reopened."""
     from custom_components.home_tasks.store import HomeTasksStore

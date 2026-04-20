@@ -8,6 +8,8 @@ import uuid
 from collections.abc import Callable
 from datetime import datetime, timezone
 
+_REOPEN_UNCHANGED = object()  # sentinel for "do not change this field"
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
@@ -515,11 +517,19 @@ class HomeTasksStore:
         if new_person != snapshot["assigned_person"] and self.on_task_assigned:
             self.on_task_assigned(task, snapshot["assigned_person"])
 
-    async def async_reopen_task(self, task_id: str, actor: str | None = None) -> dict:
+    async def async_reopen_task(
+        self,
+        task_id: str,
+        actor: str | None = None,
+        new_due_date: str | None = None,
+        new_due_time: object = _REOPEN_UNCHANGED,
+    ) -> dict:
         """Reopen a completed task and reset its sub-tasks.
 
         actor=None means triggered by the recurrence scheduler.
         actor="name" means triggered by a user or automation.
+        new_due_date: if set, update the task's due_date.
+        new_due_time: if not _REOPEN_UNCHANGED, update the task's due_time.
         """
         task = self.get_task(task_id)
         if not task.get("completed"):
@@ -527,6 +537,10 @@ class HomeTasksStore:
 
         task["completed"] = False
         task["completed_at"] = None
+        if new_due_date is not None:
+            task["due_date"] = new_due_date
+        if new_due_time is not _REOPEN_UNCHANGED:
+            task["due_time"] = new_due_time
         for sub in task.get("sub_items", []):
             sub["completed"] = False
         _rec_entry = {"ts": datetime.now(timezone.utc).isoformat(), "action": "reopened", "by": actor or "recurrence"}
