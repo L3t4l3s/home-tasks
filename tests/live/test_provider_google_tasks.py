@@ -179,6 +179,44 @@ async def test_priority_persists_via_overlay(
     assert task["priority"] == 2
 
 
+async def test_reorder_external_tasks(
+    ws_client: HAWebSocketClient, google_entity: str
+) -> None:
+    """reorder_external_tasks persists the new order via todo.move_item.
+
+    Google Tasks supports MOVE_TODO_ITEM (feature bit 8), so
+    GenericAdapter.async_reorder_tasks() calls todo.move_item for each task
+    with blocking=True.  The next get_external_tasks must reflect the
+    new order from the entity's updated todo_items.
+    """
+    # Create 3 tasks
+    uids = []
+    for title in ("Reorder A", "Reorder B", "Reorder C"):
+        r = await ws_client.send_command(
+            "home_tasks/create_external_task",
+            entity_id=google_entity, title=title,
+        )
+        uids.append(r["uid"])
+    await asyncio.sleep(SETTLE)
+
+    # Reorder: C, A, B
+    new_order = [uids[2], uids[0], uids[1]]
+    result = await ws_client.send_command(
+        "home_tasks/reorder_external_tasks",
+        entity_id=google_entity,
+        task_uids=new_order,
+    )
+    assert result["provider_handled"] is True
+    await asyncio.sleep(SETTLE)
+
+    # Verify the new order is reflected in get_external_tasks
+    tasks = await _refetch(ws_client, google_entity)
+    # Filter to our 3 test tasks and sort by sort_order
+    our_tasks = [t for t in tasks if t["id"] in uids]
+    ordered = sorted(our_tasks, key=lambda t: t["sort_order"])
+    assert [t["title"] for t in ordered] == ["Reorder C", "Reorder A", "Reorder B"]
+
+
 async def test_tags_persist_via_overlay(
     ws_client: HAWebSocketClient, google_entity: str
 ) -> None:

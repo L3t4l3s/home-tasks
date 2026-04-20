@@ -295,6 +295,104 @@ async def test_reorder_external_tasks_adapter_declines_falls_back_to_overlay(
 
 
 # ---------------------------------------------------------------------------
+# Rich adapter (Todoist-style) reorder flow
+# ---------------------------------------------------------------------------
+
+
+async def test_reorder_external_tasks_rich_adapter_flow(
+    hass: HomeAssistant,
+    hass_ws_client,
+    external_entry: MockConfigEntry,
+) -> None:
+    """Reorder via a rich adapter (can_sync_order=True) persists through get.
+
+    Rich adapters (e.g. Todoist) go through a completely different code path
+    than GenericAdapter:
+      - get_external_tasks calls adapter.async_read_tasks() and passes the
+        result to _merge_tasks_with_adapter_data(can_sync_order=True)
+      - sort_order comes from item["order"], not from overlay sort_order
+
+    This tests that after reorder_external_tasks the adapter's updated order
+    is reflected by get_external_tasks — catching any bug in the rich-adapter
+    merge path independent of the GenericAdapter/overlay path.
+    """
+    from custom_components.home_tasks.provider_adapters import ProviderAdapter
+
+    entity_id = "todo.e2e_external"
+
+    # A rich adapter that owns its task list and updates it on reorder.
+    # Subclasses ProviderAdapter (not GenericAdapter) so ws_get_external_tasks
+    # takes the rich-adapter branch.
+    class _RichAdapter(ProviderAdapter):
+        provider_type = "rich_mock"
+
+        def __init__(self):
+            # Skip ProviderAdapter.__init__ (needs hass / entity_id / config)
+            self._tasks = [
+                {"uid": "t1", "summary": "Alpha", "order": 0,
+                 "status": "needs_action", "due": None, "due_time": None,
+                 "description": None, "priority": None, "labels": [],
+                 "sub_items": [], "reminders": []},
+                {"uid": "t2", "summary": "Beta",  "order": 1,
+                 "status": "needs_action", "due": None, "due_time": None,
+                 "description": None, "priority": None, "labels": [],
+                 "sub_items": [], "reminders": []},
+                {"uid": "t3", "summary": "Gamma", "order": 2,
+                 "status": "needs_action", "due": None, "due_time": None,
+                 "description": None, "priority": None, "labels": [],
+                 "sub_items": [], "reminders": []},
+            ]
+
+        class capabilities:
+            can_sync_order = True
+
+        async def async_read_tasks(self):
+            return list(self._tasks)
+
+        async def async_create_task(self, title, fields=None):
+            return None
+
+        async def async_update_task(self, task_uid, fields):
+            return {}
+
+        async def async_delete_task(self, task_uid):
+            pass
+
+        async def async_reorder_tasks(self, task_uids):
+            # Simulate provider updating its order (like Todoist sets child_order)
+            uid_to_task = {t["uid"]: t for t in self._tasks}
+            for new_order, uid in enumerate(task_uids):
+                if uid in uid_to_task:
+                    uid_to_task[uid]["order"] = new_order
+            self._tasks = [uid_to_task[uid] for uid in task_uids if uid in uid_to_task]
+            return True
+
+    adapter = _RichAdapter()
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})[entity_id] = adapter
+    hass.states.async_set(entity_id, "0", {"supported_features": 0})
+
+    ws = await _ws(hass, hass_ws_client)
+
+    # Initial order: Alpha(0), Beta(1), Gamma(2)
+    result = await _cmd(ws, 1, "home_tasks/get_external_tasks", entity_id=entity_id)
+    titles_before = [t["title"] for t in sorted(result["tasks"], key=lambda t: t["sort_order"])]
+    assert titles_before == ["Alpha", "Beta", "Gamma"]
+
+    # Reorder: Gamma, Alpha, Beta — rich adapter accepts and updates its state
+    result = await _cmd(ws, 2, "home_tasks/reorder_external_tasks",
+                        entity_id=entity_id, task_uids=["t3", "t1", "t2"])
+    assert result.get("provider_handled") is True
+
+    # get_external_tasks must reflect the new order from adapter.async_read_tasks()
+    result = await _cmd(ws, 3, "home_tasks/get_external_tasks", entity_id=entity_id)
+    titles_after = [t["title"] for t in sorted(result["tasks"], key=lambda t: t["sort_order"])]
+    assert titles_after == ["Gamma", "Alpha", "Beta"]
+
+    # Clean up
+    del hass.data[f"{DOMAIN}_adapters"][entity_id]
+
+
+# ---------------------------------------------------------------------------
 # Sub-task flows
 # ---------------------------------------------------------------------------
 

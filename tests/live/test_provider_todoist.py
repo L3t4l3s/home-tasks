@@ -404,7 +404,12 @@ async def test_recurrence_end_type_persists_via_overlay(
 async def test_reorder_external_tasks(
     ws_client: HAWebSocketClient, todoist_entity: str
 ) -> None:
-    """reorder_external_tasks via the Todoist provider sets child_order."""
+    """reorder_external_tasks via the Todoist provider sets child_order and
+    the new order is reflected by the next get_external_tasks call.
+
+    Todoist uses the rich-adapter path: child_order is set via the REST API,
+    and async_read_tasks() returns items with their updated order field.
+    """
     uids = []
     for title in ("Order 1", "Order 2", "Order 3"):
         r = await ws_client.send_command(
@@ -421,3 +426,13 @@ async def test_reorder_external_tasks(
         task_uids=new_order,
     )
     assert result["provider_handled"] is True
+    await asyncio.sleep(TODOIST_SETTLE)
+
+    # Verify the new order is reflected in get_external_tasks
+    result = await ws_client.send_command(
+        "home_tasks/get_external_tasks", entity_id=todoist_entity,
+    )
+    # Filter to our 3 test tasks and sort by sort_order
+    our_tasks = [t for t in result["tasks"] if t["id"] in uids]
+    ordered = sorted(our_tasks, key=lambda t: t["sort_order"])
+    assert [t["id"] for t in ordered] == new_order
