@@ -248,6 +248,86 @@ async def test_reorder_external_tasks(
     )
 
 
+async def test_reorder_with_completed_task_in_list(
+    ws_client: HAWebSocketClient, google_entity: str
+) -> None:
+    """Reorder over a list that contains a completed task.
+
+    The card builds the reorder UID array from its own cached view, which
+    includes completed tasks.  The adapter therefore gets asked to move a
+    UID whose status is "completed".  If Google's
+    async_move_todo_item raises on completed items, a single exception in
+    GenericAdapter's loop would flip the whole batch to overlay fallback
+    (provider_handled=False), so Google would never receive the reorder
+    of the open tasks either.
+
+    Real-world scenario: a user ticks a task off in the middle of a list,
+    later drags another task to a new position.  Must still reach Google.
+    """
+    # Create 4 open tasks
+    titles = ["MixA", "MixB", "MixC", "MixD"]
+    for title in titles:
+        await ws_client.send_command(
+            "home_tasks/create_external_task",
+            entity_id=google_entity, title=title,
+        )
+    await asyncio.sleep(SETTLE)
+
+    all_items = await _refetch(ws_client, google_entity)
+    uid_by_title = {t["title"]: t["id"] for t in all_items if t["title"] in titles}
+    assert len(uid_by_title) == 4
+    uids = {t: uid_by_title[t] for t in titles}
+
+    # Mark MixC as completed — this is the task we drag together with open ones
+    await ws_client.send_command(
+        "home_tasks/update_external_task",
+        entity_id=google_entity, task_uid=uids["MixC"],
+        completed=True,
+    )
+    await asyncio.sleep(SETTLE)
+
+    # Reorder all four, putting the completed one in the middle — this is
+    # exactly what the card sends when the user drags MixD from the end
+    # to the front and leaves the (already completed) MixC where it sits
+    # in the card's display.
+    new_order = [uids["MixD"], uids["MixA"], uids["MixC"], uids["MixB"]]
+
+    result = await ws_client.send_command(
+        "home_tasks/reorder_external_tasks",
+        entity_id=google_entity,
+        task_uids=new_order,
+    )
+    assert result["provider_handled"] is True, (
+        "Reorder with a completed task in the list was NOT handled by the "
+        "provider — a single problematic UID broke the whole batch and "
+        "triggered overlay fallback.  The open tasks' new order never "
+        "reached Google."
+    )
+    await asyncio.sleep(SETTLE)
+
+    # Provider-side verification.  We don't hard-assert MixC's position in
+    # the "open" list (it isn't there), but the remaining open tasks must
+    # appear in the reorder we asked for, skipping MixC.
+    provider_open = await ws_client.get_provider_items(
+        google_entity, status="needs_action",
+    )
+    open_titles = [
+        i["summary"] for i in provider_open if i["uid"] in uid_by_title.values()
+    ]
+    expected_open = ["MixD", "MixA", "MixB"]  # MixC is completed, not in this list
+    assert open_titles == expected_open, (
+        f"Provider-side open-task order is {open_titles}, expected "
+        f"{expected_open}.  The reorder did not fully reach Google."
+    )
+
+    # MixC is still present on the completed side.
+    provider_completed = await ws_client.get_provider_items(
+        google_entity, status="completed",
+    )
+    completed_uids = [i["uid"] for i in provider_completed]
+    assert uids["MixC"] in completed_uids
+
+
 async def test_tags_persist_via_overlay(
     ws_client: HAWebSocketClient, google_entity: str
 ) -> None:
