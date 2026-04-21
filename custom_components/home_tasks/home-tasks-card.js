@@ -1983,6 +1983,24 @@ class HomeTasksCard extends HTMLElement {
     }
     this._pendingRender = false;
 
+    // Snapshot focus before tearing down the DOM so we can restore it
+    // after the rebuild.  A focused input marked with data-focus-key is
+    // re-queried by (taskId, key) once the new DOM is in place — this
+    // keeps the user's caret put when a save during editing triggers a
+    // foreground re-render (e.g. toggling the recurrence switch while
+    // the cursor is already in a time/date field).
+    let focusSnap = null;
+    const activeForSnap = this.shadowRoot?.activeElement;
+    if (activeForSnap && activeForSnap.dataset && activeForSnap.dataset.focusKey) {
+      const taskEl = activeForSnap.closest?.("[data-task-id]");
+      focusSnap = {
+        taskId: taskEl?.dataset?.taskId ?? null,
+        key: activeForSnap.dataset.focusKey,
+        selStart: activeForSnap.selectionStart ?? null,
+        selEnd: activeForSnap.selectionEnd ?? null,
+      };
+    }
+
     // Remove any stale sort close handler before rebuilding DOM
     if (this._sortCloseHandler) {
       document.removeEventListener("click", this._sortCloseHandler);
@@ -1991,6 +2009,8 @@ class HomeTasksCard extends HTMLElement {
 
     const root = this.shadowRoot;
     root.innerHTML = "";
+    // Stash for use after the rebuild
+    this._pendingFocusRestore = focusSnap;
 
     if (!this._styleEl) {
       this._styleEl = document.createElement("style");
@@ -2002,6 +2022,25 @@ class HomeTasksCard extends HTMLElement {
       this._buildCardContent(),
     ]);
     root.appendChild(card);
+
+    // Restore focus to the element that had it before the DOM rebuild,
+    // if it still exists in the new tree.  Fields tagged with
+    // data-focus-key are identified by (task-id, focus-key); caret
+    // position is restored when the element supports selection ranges.
+    const fs = this._pendingFocusRestore;
+    this._pendingFocusRestore = null;
+    if (fs && fs.key) {
+      const selector = fs.taskId
+        ? `[data-task-id="${CSS.escape(String(fs.taskId))}"] [data-focus-key="${fs.key}"]`
+        : `[data-focus-key="${fs.key}"]`;
+      const target = root.querySelector(selector);
+      if (target && typeof target.focus === "function") {
+        target.focus();
+        if (fs.selStart != null && typeof target.setSelectionRange === "function") {
+          try { target.setSelectionRange(fs.selStart, fs.selEnd ?? fs.selStart); } catch { /* noop */ }
+        }
+      }
+    }
 
     // Close any open sort dropdowns on next outside click
     if (this._columns.some(c => c.sortOpen)) {
@@ -2870,7 +2909,10 @@ class HomeTasksCard extends HTMLElement {
       this._el("span", { textContent: this._t("rec_mode_lbl") }),
     ]);
 
-    const recurrenceValueInput = this._el("input", { type: "number", value: recurrenceValue });
+    const recurrenceValueInput = this._el("input", {
+      type: "number", value: recurrenceValue,
+      "data-focus-key": "recurrence_value",
+    });
     recurrenceValueInput.min = 1;
     recurrenceValueInput.max = 365;
 
@@ -2924,7 +2966,10 @@ class HomeTasksCard extends HTMLElement {
 
     // Start date + reactivation time (start date + time row, time hidden for hours mode)
     const _todayStr = new Date().toISOString().slice(0, 10);
-    const recurrenceStartDateInput = this._el("input", { type: "date", value: recurrenceStartDate, min: _todayStr });
+    const recurrenceStartDateInput = this._el("input", {
+      type: "date", value: recurrenceStartDate, min: _todayStr,
+      "data-focus-key": "recurrence_start_date",
+    });
     const recStartClearBtn = this._el("button", { className: "field-clear-btn", textContent: "\u00D7" });
     recStartClearBtn.addEventListener("click", () => {
       recurrenceStartDateInput.value = "";
@@ -2940,7 +2985,10 @@ class HomeTasksCard extends HTMLElement {
     ]);
     const recurrenceStartDateWrap = this._el("div", { className: "field-with-clear" }, [recStartFieldWrap, recStartClearBtn]);
 
-    const recurrenceTimeInput = this._el("input", { type: "time", value: recurrenceTime });
+    const recurrenceTimeInput = this._el("input", {
+      type: "time", value: recurrenceTime,
+      "data-focus-key": "recurrence_time",
+    });
     const recTimeClearBtn = this._el("button", { className: "field-clear-btn", textContent: "\u00D7" });
     recTimeClearBtn.addEventListener("click", () => {
       recurrenceTimeInput.value = "";
@@ -3001,7 +3049,10 @@ class HomeTasksCard extends HTMLElement {
         recurrenceEndDateInput.value = "";
       }
     };
-    const recurrenceEndDateInput = this._el("input", { type: "date", value: recurrenceEndDate, min: _computeMinEndDate() });
+    const recurrenceEndDateInput = this._el("input", {
+      type: "date", value: recurrenceEndDate, min: _computeMinEndDate(),
+      "data-focus-key": "recurrence_end_date",
+    });
     const recEndClearBtn = this._el("button", { className: "field-clear-btn", textContent: "\u00D7" });
     recEndClearBtn.addEventListener("click", () => {
       recurrenceEndDateInput.value = "";
@@ -3019,7 +3070,10 @@ class HomeTasksCard extends HTMLElement {
       this._el("div", { className: "field-with-clear" }, [recEndFieldWrap, recEndClearBtn]),
     ]);
 
-    const recurrenceMaxCountInput = this._el("input", { type: "number", value: recurrenceMaxCount !== null ? recurrenceMaxCount : "" });
+    const recurrenceMaxCountInput = this._el("input", {
+      type: "number", value: recurrenceMaxCount !== null ? recurrenceMaxCount : "",
+      "data-focus-key": "recurrence_max_count",
+    });
     recurrenceMaxCountInput.min = 1;
     recurrenceMaxCountInput.max = 999;
     const spinUp2 = this._el("button", { className: "spin-btn spin-up", textContent: "\u25b4", type: "button" });
