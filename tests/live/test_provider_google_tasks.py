@@ -59,22 +59,36 @@ async def google_entity(ws_client: HAWebSocketClient) -> str:
 # ---------------------------------------------------------------------------
 
 
+def _find_provider_item(items: list[dict], uid: str) -> dict | None:
+    return next((i for i in items if i.get("uid") == uid), None)
+
+
 async def test_create_basic_task(
     ws_client: HAWebSocketClient, google_entity: str
 ) -> None:
+    """Title must reach Google itself, not only our merged view."""
     await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=google_entity,
         title="Google smoke",
     )
     await asyncio.sleep(SETTLE)
+
     tasks = await _refetch(ws_client, google_entity)
-    assert any(t["title"] == "Google smoke" for t in tasks)
+    task = next((t for t in tasks if t["title"] == "Google smoke"), None)
+    assert task is not None
+
+    # provider-side truth
+    items = await ws_client.get_provider_items(google_entity)
+    pi = _find_provider_item(items, task["id"])
+    assert pi is not None, "Task not present on Google side"
+    assert pi["summary"] == "Google smoke"
 
 
 async def test_create_with_notes(
     ws_client: HAWebSocketClient, google_entity: str
 ) -> None:
+    """Notes must arrive at Google as the task description."""
     await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=google_entity,
@@ -82,14 +96,21 @@ async def test_create_with_notes(
         notes="A Google Tasks description",
     )
     await asyncio.sleep(SETTLE)
+
     tasks = await _refetch(ws_client, google_entity)
     task = next(t for t in tasks if t["title"] == "Google notes")
     assert task["notes"] == "A Google Tasks description"
+
+    items = await ws_client.get_provider_items(google_entity)
+    pi = _find_provider_item(items, task["id"])
+    assert pi is not None
+    assert pi.get("description") == "A Google Tasks description"
 
 
 async def test_create_with_due_date(
     ws_client: HAWebSocketClient, google_entity: str
 ) -> None:
+    """due_date must be stored on Google, not only in our overlay."""
     await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=google_entity,
@@ -97,14 +118,21 @@ async def test_create_with_due_date(
         due_date="2027-12-10",
     )
     await asyncio.sleep(SETTLE)
+
     tasks = await _refetch(ws_client, google_entity)
     task = next(t for t in tasks if t["title"] == "Due Google")
     assert task["due_date"] == "2027-12-10"
+
+    items = await ws_client.get_provider_items(google_entity)
+    pi = _find_provider_item(items, task["id"])
+    assert pi is not None
+    assert pi.get("due") == "2027-12-10"
 
 
 async def test_update_title(
     ws_client: HAWebSocketClient, google_entity: str
 ) -> None:
+    """Renaming must reach Google's summary field."""
     await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=google_entity,
@@ -113,10 +141,11 @@ async def test_update_title(
     await asyncio.sleep(SETTLE)
     tasks = await _refetch(ws_client, google_entity)
     task = next(t for t in tasks if t["title"] == "Google original")
+    uid = task["id"]
 
     await ws_client.send_command(
         "home_tasks/update_external_task",
-        entity_id=google_entity, task_uid=task["id"],
+        entity_id=google_entity, task_uid=uid,
         title="Google renamed",
     )
     await asyncio.sleep(SETTLE)
@@ -124,10 +153,16 @@ async def test_update_title(
     tasks = await _refetch(ws_client, google_entity)
     assert any(t["title"] == "Google renamed" for t in tasks)
 
+    items = await ws_client.get_provider_items(google_entity)
+    pi = _find_provider_item(items, uid)
+    assert pi is not None
+    assert pi["summary"] == "Google renamed"
+
 
 async def test_complete_via_update(
     ws_client: HAWebSocketClient, google_entity: str
 ) -> None:
+    """Check-off must flip the status at Google itself."""
     await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=google_entity,
@@ -136,28 +171,52 @@ async def test_complete_via_update(
     await asyncio.sleep(SETTLE)
     tasks = await _refetch(ws_client, google_entity)
     task = next(t for t in tasks if t["title"] == "Google to complete")
+    uid = task["id"]
 
     await ws_client.send_command(
         "home_tasks/update_external_task",
-        entity_id=google_entity, task_uid=task["id"],
+        entity_id=google_entity, task_uid=uid,
         completed=True,
     )
     await asyncio.sleep(SETTLE)
 
-    tasks = await _refetch(ws_client, google_entity)
-    task = next((t for t in tasks if t["id"] == task["id"]), None)
-    if task is not None:
-        assert task["completed"] is True
+    # Provider side: task must now appear as completed — either in the
+    # "completed" bucket or removed from the open bucket (depending on
+    # how the HA integration filters).  Either outcome is correct as long
+    # as it is NOT in the open list any more.
+    open_items = await ws_client.get_provider_items(
+        google_entity, status="needs_action",
+    )
+    assert _find_provider_item(open_items, uid) is None, (
+        "Completed task is still in the Google Tasks open list — "
+        "the check-off never reached Google."
+    )
+    completed_items = await ws_client.get_provider_items(
+        google_entity, status="completed",
+    )
+    pi = _find_provider_item(completed_items, uid)
+    if pi is not None:
+        # If the integration exposes the status field, it must say completed
+        assert pi.get("status") == "completed"
 
 
 # ---------------------------------------------------------------------------
-# Overlay routing
+# Overlay routing — these fields must NEVER leak into the provider state
 # ---------------------------------------------------------------------------
 
 
-async def test_priority_persists_via_overlay(
+async def test_priority_persists_via_overlay_and_not_on_provider(
     ws_client: HAWebSocketClient, google_entity: str
 ) -> None:
+    """Priority is an overlay-only field — must not corrupt Google's task.
+
+    Google Tasks has no priority concept.  We store it in our overlay.
+    The test asserts two things:
+      (1) Our merged view returns the overlay value.
+      (2) The Google task's description and summary were NOT hijacked to
+          carry the priority value — doing so would corrupt the user's
+          task in the Google Tasks app.
+    """
     await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=google_entity,
@@ -166,10 +225,11 @@ async def test_priority_persists_via_overlay(
     await asyncio.sleep(SETTLE)
     tasks = await _refetch(ws_client, google_entity)
     task = next(t for t in tasks if t["title"] == "Google priority")
+    uid = task["id"]
 
     await ws_client.send_command(
         "home_tasks/update_external_task",
-        entity_id=google_entity, task_uid=task["id"],
+        entity_id=google_entity, task_uid=uid,
         priority=2,
     )
     await asyncio.sleep(SETTLE)
@@ -177,6 +237,18 @@ async def test_priority_persists_via_overlay(
     tasks = await _refetch(ws_client, google_entity)
     task = next(t for t in tasks if t["title"] == "Google priority")
     assert task["priority"] == 2
+
+    # Provider-side: summary unchanged, no priority value smuggled in
+    items = await ws_client.get_provider_items(google_entity)
+    pi = _find_provider_item(items, uid)
+    assert pi is not None
+    assert pi["summary"] == "Google priority", (
+        f"Summary changed to {pi['summary']!r} — priority leaked into Google"
+    )
+    assert not pi.get("description"), (
+        f"Description now contains {pi.get('description')!r} — "
+        "overlay priority leaked into Google's task description"
+    )
 
 
 async def test_reorder_external_tasks(
@@ -328,9 +400,16 @@ async def test_reorder_with_completed_task_in_list(
     assert uids["MixC"] in completed_uids
 
 
-async def test_tags_persist_via_overlay(
+async def test_tags_persist_via_overlay_and_not_on_provider(
     ws_client: HAWebSocketClient, google_entity: str
 ) -> None:
+    """Tags are overlay-only for Google — must not leak into its task data.
+
+    Google Tasks has no label/tag concept.  Our adapter stores tags in the
+    overlay store only.  This test also verifies that the Google task's
+    summary and description stay clean — we must not try to work around
+    Google's limitation by stuffing tags into the description.
+    """
     await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=google_entity,
@@ -339,14 +418,28 @@ async def test_tags_persist_via_overlay(
     await asyncio.sleep(SETTLE)
     tasks = await _refetch(ws_client, google_entity)
     task = next(t for t in tasks if t["title"] == "Google tags")
+    uid = task["id"]
 
     await ws_client.send_command(
         "home_tasks/update_external_task",
-        entity_id=google_entity, task_uid=task["id"],
+        entity_id=google_entity, task_uid=uid,
         tags=["google", "live"],
     )
     await asyncio.sleep(SETTLE)
 
+    # Our overlay keeps the tags
     tasks = await _refetch(ws_client, google_entity)
     task = next(t for t in tasks if t["title"] == "Google tags")
     assert sorted(task["tags"]) == ["google", "live"]
+
+    # Provider-side: summary unchanged, no tags smuggled into description
+    items = await ws_client.get_provider_items(google_entity)
+    pi = _find_provider_item(items, uid)
+    assert pi is not None
+    assert pi["summary"] == "Google tags", (
+        f"Summary changed to {pi['summary']!r} — tags leaked into Google"
+    )
+    assert not pi.get("description"), (
+        f"Description contains {pi.get('description')!r} — "
+        "overlay tags leaked into Google's task description"
+    )
