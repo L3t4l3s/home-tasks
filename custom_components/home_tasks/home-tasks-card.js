@@ -3112,7 +3112,15 @@ class HomeTasksCard extends HTMLElement {
     };
 
     const _saveAndReload = (promise) => {
-      promise?.then(() => { if (this._isExternalCol(colIdx)) this._reloadExternal(); });
+      // After a recurrence field is saved, make sure the local task state is
+      // refreshed so the next render shows the new value.  External columns
+      // need _reloadExternal(); native ones need _loadAllTasks() — without
+      // this, fields like recurrence_time appeared to snap back to "00:00"
+      // on re-expand until an unrelated state event rewrote the cached task.
+      promise?.then(() => {
+        if (this._isExternalCol(colIdx)) this._reloadExternal();
+        else this._loadAllTasks();
+      });
     };
 
     const saveStartDate = () => {
