@@ -1,8 +1,10 @@
 """Live tests for the Bring (shopping list) provider via the GenericAdapter.
 
 Bring is a shopping-list app with a much smaller field surface than other
-providers — basically just title (item name) and category. Most home_tasks
-fields go through the overlay.
+providers — basically just title (item name).  Everything else goes through
+our overlay, and those overlay fields must NEVER leak into Bring's state
+(e.g. someone shoving "priority=3" into the item description would corrupt
+the user's shopping list in the Bring app).
 
 Setup:  HT_BRING_TEST_ENTITY=todo.<your_test_list>
 """
@@ -46,6 +48,10 @@ async def _refetch(ws: HAWebSocketClient, entity_id: str) -> list[dict]:
     return result.get("tasks", [])
 
 
+def _find_provider_item(items: list[dict], uid: str) -> dict | None:
+    return next((i for i in items if i.get("uid") == uid), None)
+
+
 @pytest.fixture
 async def bring_entity(ws_client: HAWebSocketClient) -> str:
     entity_id = CONFIG.bring_entity
@@ -55,28 +61,35 @@ async def bring_entity(ws_client: HAWebSocketClient) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Basic CRUD
+# Basic CRUD — dual-view against todo.get_items
 # ---------------------------------------------------------------------------
 
 
 async def test_create_basic_item(
     ws_client: HAWebSocketClient, bring_entity: str
 ) -> None:
-    """create_external_task adds a Bring shopping item."""
+    """Item created through home_tasks must actually appear in Bring."""
     await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=bring_entity,
         title="Bananen",
     )
     await asyncio.sleep(SETTLE)
+
     tasks = await _refetch(ws_client, bring_entity)
-    assert any(t["title"] == "Bananen" for t in tasks)
+    task = next((t for t in tasks if t["title"] == "Bananen"), None)
+    assert task is not None
+
+    items = await ws_client.get_provider_items(bring_entity)
+    pi = _find_provider_item(items, task["id"])
+    assert pi is not None, "Item not present in Bring itself"
+    assert pi["summary"] == "Bananen"
 
 
 async def test_complete_via_update(
     ws_client: HAWebSocketClient, bring_entity: str
 ) -> None:
-    """Marking a Bring item completed removes it from the active list."""
+    """Marking a Bring item completed must reach Bring's own list."""
     await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=bring_entity,
@@ -85,29 +98,37 @@ async def test_complete_via_update(
     await asyncio.sleep(SETTLE)
     tasks = await _refetch(ws_client, bring_entity)
     task = next(t for t in tasks if t["title"] == "Milch")
+    uid = task["id"]
 
     await ws_client.send_command(
         "home_tasks/update_external_task",
-        entity_id=bring_entity, task_uid=task["id"],
+        entity_id=bring_entity, task_uid=uid,
         completed=True,
     )
     await asyncio.sleep(SETTLE)
 
-    tasks = await _refetch(ws_client, bring_entity)
-    # Bring may either remove completed items or mark them done
-    task = next((t for t in tasks if t["id"] == task["id"]), None)
-    assert task is None or task["completed"] is True
+    # Provider-side: item must NOT be in the open list anymore.  Whether
+    # Bring keeps it in a "completed" bucket or just removes it depends on
+    # the HA integration — both outcomes are fine as long as it's gone
+    # from needs_action.
+    open_items = await ws_client.get_provider_items(
+        bring_entity, status="needs_action",
+    )
+    assert _find_provider_item(open_items, uid) is None, (
+        "Completed Bring item is still in the open list — "
+        "the check-off never reached Bring."
+    )
 
 
 # ---------------------------------------------------------------------------
-# Overlay routing — Bring supports almost no fields, everything goes here
+# Overlay routing — these fields are ours only, must NOT leak into Bring
 # ---------------------------------------------------------------------------
 
 
-async def test_priority_persists_via_overlay(
+async def test_priority_persists_via_overlay_and_not_on_provider(
     ws_client: HAWebSocketClient, bring_entity: str
 ) -> None:
-    """priority is overlay-only for Bring."""
+    """priority is overlay-only; Bring's item data must stay clean."""
     await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=bring_entity,
@@ -116,23 +137,35 @@ async def test_priority_persists_via_overlay(
     await asyncio.sleep(SETTLE)
     tasks = await _refetch(ws_client, bring_entity)
     task = next(t for t in tasks if t["title"] == "Eier")
+    uid = task["id"]
 
     await ws_client.send_command(
         "home_tasks/update_external_task",
-        entity_id=bring_entity, task_uid=task["id"],
+        entity_id=bring_entity, task_uid=uid,
         priority=3,
     )
     await asyncio.sleep(SETTLE)
 
+    # Overlay keeps it
     tasks = await _refetch(ws_client, bring_entity)
     task = next(t for t in tasks if t["title"] == "Eier")
     assert task["priority"] == 3
 
+    # Bring side: summary unchanged, no priority value in the description
+    items = await ws_client.get_provider_items(bring_entity)
+    pi = _find_provider_item(items, uid)
+    assert pi is not None
+    assert pi["summary"] == "Eier"
+    desc = pi.get("description") or ""
+    assert "3" not in desc and "priority" not in desc.lower(), (
+        f"Description now contains {desc!r} — priority leaked into Bring"
+    )
 
-async def test_tags_persist_via_overlay(
+
+async def test_tags_persist_via_overlay_and_not_on_provider(
     ws_client: HAWebSocketClient, bring_entity: str
 ) -> None:
-    """tags are overlay-only for Bring."""
+    """tags are overlay-only; they must not end up in Bring's item data."""
     await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=bring_entity,
@@ -141,10 +174,11 @@ async def test_tags_persist_via_overlay(
     await asyncio.sleep(SETTLE)
     tasks = await _refetch(ws_client, bring_entity)
     task = next(t for t in tasks if t["title"] == "Brot")
+    uid = task["id"]
 
     await ws_client.send_command(
         "home_tasks/update_external_task",
-        entity_id=bring_entity, task_uid=task["id"],
+        entity_id=bring_entity, task_uid=uid,
         tags=["bio", "wochenmarkt"],
     )
     await asyncio.sleep(SETTLE)
@@ -153,11 +187,20 @@ async def test_tags_persist_via_overlay(
     task = next(t for t in tasks if t["title"] == "Brot")
     assert sorted(task["tags"]) == ["bio", "wochenmarkt"]
 
+    items = await ws_client.get_provider_items(bring_entity)
+    pi = _find_provider_item(items, uid)
+    assert pi is not None
+    assert pi["summary"] == "Brot"
+    desc = (pi.get("description") or "").lower()
+    assert "bio" not in desc and "wochenmarkt" not in desc, (
+        f"Description now contains {desc!r} — tags leaked into Bring"
+    )
 
-async def test_assigned_person_persists_via_overlay(
+
+async def test_assigned_person_persists_via_overlay_and_not_on_provider(
     ws_client: HAWebSocketClient, bring_entity: str
 ) -> None:
-    """assigned_person is overlay-only for Bring."""
+    """assigned_person is overlay-only; must not show up in Bring's data."""
     await ws_client.send_command(
         "home_tasks/create_external_task",
         entity_id=bring_entity,
@@ -166,10 +209,11 @@ async def test_assigned_person_persists_via_overlay(
     await asyncio.sleep(SETTLE)
     tasks = await _refetch(ws_client, bring_entity)
     task = next(t for t in tasks if t["title"] == "Käse")
+    uid = task["id"]
 
     await ws_client.send_command(
         "home_tasks/update_external_task",
-        entity_id=bring_entity, task_uid=task["id"],
+        entity_id=bring_entity, task_uid=uid,
         assigned_person="person.kevin",
     )
     await asyncio.sleep(SETTLE)
@@ -177,3 +221,12 @@ async def test_assigned_person_persists_via_overlay(
     tasks = await _refetch(ws_client, bring_entity)
     task = next(t for t in tasks if t["title"] == "Käse")
     assert task["assigned_person"] == "person.kevin"
+
+    items = await ws_client.get_provider_items(bring_entity)
+    pi = _find_provider_item(items, uid)
+    assert pi is not None
+    assert pi["summary"] == "Käse"
+    desc = (pi.get("description") or "").lower()
+    assert "kevin" not in desc and "person" not in desc, (
+        f"Description now contains {desc!r} — assigned_person leaked into Bring"
+    )
