@@ -255,6 +255,93 @@ async def test_complete_via_update(
     # which also confirms it was closed.)
 
 
+async def test_complete_on_recurring_advances_instead_of_closing(
+    ws_client: HAWebSocketClient,
+    todoist_entity: str,
+    todoist_verifier,
+) -> None:
+    """Checking off a recurring task follows Todoist's semantics (Option A).
+
+    For recurring tasks, ``POST /tasks/{id}/close`` in Todoist does NOT close
+    the task — it advances the due date to the next occurrence and leaves
+    ``checked=False``.  This is the behaviour the user wants Home Tasks to
+    mirror: ticking today's instance off means "done for today", not "stop
+    recurring entirely".
+
+    What the test nails down:
+      - is_recurring stays True
+      - due.date moves forward by exactly one day (daily recurrence)
+      - is_completed stays False — the task is still open, just shifted
+      - our merged view still returns the task with its new due_date
+
+    If anyone changes the adapter to stop-recurring-on-complete, this test
+    breaks — by design.  A different semantic would need a different test.
+    """
+    from datetime import date, timedelta
+
+    create = await ws_client.send_command(
+        "home_tasks/create_external_task",
+        entity_id=todoist_entity,
+        title="Daily recurring for complete test",
+        due_date=date.today().isoformat(),
+        recurrence_enabled=True,
+        recurrence_type="interval",
+        recurrence_unit="days",
+        recurrence_value=1,
+    )
+    uid = create["uid"]
+    await asyncio.sleep(TODOIST_SETTLE)
+
+    before = await todoist_verifier.get_task(uid)
+    assert before.due is not None and before.due.is_recurring is True, (
+        "Task did not come back as recurring — adapter mapping broken"
+    )
+    initial_due = before.due.date
+    assert initial_due is not None
+    initial_dt = date.fromisoformat(initial_due)
+
+    # "Check off" via our card-facing WS command
+    await ws_client.send_command(
+        "home_tasks/update_external_task",
+        entity_id=todoist_entity, task_uid=uid,
+        completed=True,
+    )
+    await asyncio.sleep(TODOIST_SETTLE)
+
+    after = await todoist_verifier.get_task(uid)
+    # Option A: recurring close = advance, not end
+    assert after.is_completed is False, (
+        "Recurring task was fully closed instead of advanced — that's not "
+        "Option A (Todoist semantics).  If you intended to change the behaviour, "
+        "update this test with the new expectation."
+    )
+    assert after.due is not None and after.due.is_recurring is True, (
+        "Recurrence was lost after completing a recurring task"
+    )
+    assert after.due.date is not None
+    after_dt = date.fromisoformat(after.due.date)
+    advance = (after_dt - initial_dt).days
+    assert advance == 1, (
+        f"Todoist advanced due.date by {advance} day(s) "
+        f"({initial_due} → {after.due.date}), expected +1 day"
+    )
+
+    # Our merged view must still list the task (with the new due_date), not
+    # hide it — otherwise the UI loses recurring tasks right after a check.
+    tasks = await _refetch(ws_client, todoist_entity)
+    merged = next((t for t in tasks if t["id"] == uid), None)
+    assert merged is not None, (
+        "After checking off a recurring task, home_tasks/get_external_tasks "
+        "no longer returns it.  The task should remain visible with its new "
+        "due date (next occurrence)."
+    )
+    assert merged["completed"] is False, (
+        f"Merged view shows completed={merged['completed']}, expected False — "
+        "the recurring task is still open (just shifted to next occurrence)."
+    )
+    assert merged["due_date"] == after.due.date
+
+
 # ---------------------------------------------------------------------------
 # Sub-tasks
 # ---------------------------------------------------------------------------

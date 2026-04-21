@@ -1374,9 +1374,22 @@ class HomeTasksCard extends HTMLElement {
     const before = this._captureListFlip(colIdx);
 
     if (this._isExternalCol(colIdx) && task) {
-      // Optimistic update: render new state immediately, then sync to provider.
-      // External service calls have latency; the entity may not reflect the
-      // change right away, so we update locally first.
+      // Recurring tasks: providers like Todoist DON'T close a recurring task
+      // on complete — they advance the due_date to the next occurrence and
+      // leave the task open.  Rendering "completed=true" locally would make
+      // the task flash as ticked and then jump back to open on the next reload.
+      // Skip the optimistic flip and let the post-write reload show the real
+      // (advanced) state.
+      if (newCompleted && hasRecurrence) {
+        await this._updateTaskRouted(colIdx, taskId, { completed: newCompleted });
+        await this._reloadExternal(colIdx);
+        this._applyFlip(before, colIdx, 0.28);
+        return;
+      }
+
+      // Optimistic update for non-recurring external tasks: render new state
+      // immediately, then sync to provider.  External service calls have
+      // latency; the entity may not reflect the change right away.
       task.completed = newCompleted;
       this._render();
       this._applyFlip(before, colIdx, 0.28);
