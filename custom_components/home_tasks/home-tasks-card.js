@@ -98,7 +98,7 @@ const _TRANSLATIONS = {
     due_time_lbl: "Time",
     due_date_lbl: "Date",
     rec_mode_lbl: "Mode",
-    rec_time: "Reactivation time", rec_end: "End", rec_end_never: "Never", rec_end_date: "On date", rec_end_count: "After N times",
+    rec_time: "Time", rec_end: "End", rec_end_never: "Never", rec_end_date: "On date", rec_end_count: "After N times",
     rec_end_date_lbl: "End date", rec_max_count_lbl: "max", rec_remaining: "{0} left", rec_start_date_lbl: "Start date",
     history: "History", history_created: "Created", history_completed: "Completed", history_reopened: "Reopened",
     history_reset: "Auto-reset (recurrence)", history_changed: "changed", history_empty: "No history yet", hist_title: "Title", history_disabled: "Disabled",
