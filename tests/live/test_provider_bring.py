@@ -92,6 +92,37 @@ async def test_create_basic_item(
     assert pi["summary"] == "Bananen"
 
 
+async def test_create_with_notes_pushes_description_to_bring(
+    ws_client: HAWebSocketClient, bring_entity: str
+) -> None:
+    """notes on a Bring item must be stored as its description on Bring.
+
+    Bring supports a per-item specification / description (e.g. "2 kg",
+    "organic").  home_tasks maps our `notes` field onto it.  Without a
+    live test the sync silently regresses and the user finds out only
+    in the Bring app.
+    """
+    await ws_client.send_command(
+        "home_tasks/create_external_task",
+        entity_id=bring_entity,
+        title="Tomaten",
+        notes="1 kg, bio",
+    )
+    await asyncio.sleep(SETTLE)
+
+    tasks = await _refetch(ws_client, bring_entity)
+    task = next(t for t in tasks if t["title"] == "Tomaten")
+    assert task["notes"] == "1 kg, bio"
+
+    items = await ws_client.get_provider_items(bring_entity)
+    pi = _find_provider_item(items, task["id"])
+    assert pi is not None, "Item not present in Bring after create"
+    assert pi.get("description") == "1 kg, bio", (
+        f"Bring's item description is {pi.get('description')!r}, "
+        f"expected '1 kg, bio' — the notes field didn't reach Bring."
+    )
+
+
 async def test_complete_via_update(
     ws_client: HAWebSocketClient, bring_entity: str
 ) -> None:
