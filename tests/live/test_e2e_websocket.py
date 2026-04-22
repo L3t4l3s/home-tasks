@@ -535,8 +535,10 @@ async def test_task_reminder_event_fires_for_native_task(
             await ws_client.send_command(
                 "unsubscribe_events", subscription=sub_id,
             )
-        except Exception:
-            pass
+        except Exception as err:  # noqa: BLE001
+            # Best-effort cleanup: if the WS is already gone, log but don't
+            # let it bury the real test failure (if any).
+            print(f"[e2e cleanup] unsubscribe_events failed: {err}")
 
 
 # ---------------------------------------------------------------------------

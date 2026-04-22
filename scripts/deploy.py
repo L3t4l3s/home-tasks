@@ -21,9 +21,11 @@ from __future__ import annotations
 import argparse
 import io
 import os
+import shlex
 import sys
 import tarfile
 import time
+from urllib.parse import urlparse
 
 # ---------------------------------------------------------------------------
 # Third-party (paramiko must be installed: pip install paramiko)
@@ -59,6 +61,20 @@ SRC_DIR = os.path.join(
 DEST_DIR = "/homeassistant/custom_components/home_tasks"
 
 
+def _assert_http_url(url: str, context: str) -> None:
+    """Fail fast if HA_REST_URL is anything other than http(s).
+
+    Protects against ``HT_HA_URL=file:///…`` or other exotic schemes
+    sneaking into ``urllib.request.urlopen`` calls below.
+    """
+    scheme = urlparse(url).scheme.lower()
+    if scheme not in ("http", "https"):
+        raise ValueError(
+            f"{context}: refusing to open URL with scheme {scheme!r} "
+            f"(only http/https allowed): {url}"
+        )
+
+
 # ---------------------------------------------------------------------------
 # Build in-memory tar archive of the source directory
 # ---------------------------------------------------------------------------
@@ -83,8 +99,13 @@ def build_tar(src_dir: str) -> bytes:
 # ---------------------------------------------------------------------------
 
 def _run(chan: paramiko.Channel, cmd: str) -> tuple[int, str]:
-    """Execute a command on an already-open SSH transport."""
-    chan.exec_command(cmd)
+    """Execute a command on an already-open SSH transport.
+
+    Callers are responsible for quoting untrusted values in ``cmd`` — this
+    is a deploy tool and the only "untrusted" inputs are operator-supplied
+    SSH credentials, which we ``shlex.quote`` at the call site.
+    """
+    chan.exec_command(cmd)  # nosec B601 — callers quote untrusted values
     stdout = b""
     stderr = b""
     while True:
@@ -127,10 +148,16 @@ def deploy_via_tar(host: str, port: int, user: str, password: str) -> None:
     # After a full HA restart the `homeassistant` docker container re-
     # creates parts of the tree under root:root, which breaks a plain
     # `rm -rf` run as the ssh user.  Chown first (sudo), then remove.
+    #
+    # ``password`` and ``user`` are shell-quoted so passwords containing
+    # metacharacters (quotes, ``;``, ``$``, …) don't corrupt the command
+    # or open a shell-injection vector.
+    q_password = shlex.quote(password)
+    q_user = shlex.quote(user)
     chan = transport.open_session()
     rc, out = _run(
         chan,
-        f"echo {password} | sudo -S chown -R {user}:{user} {DEST_DIR} 2>/dev/null || true",
+        f"echo {q_password} | sudo -S chown -R {q_user}:{q_user} {DEST_DIR} 2>/dev/null || true",
     )
     chan = transport.open_session()
     rc, out = _run(chan, f"rm -rf {DEST_DIR}")
@@ -138,9 +165,10 @@ def deploy_via_tar(host: str, port: int, user: str, password: str) -> None:
         print(f"[deploy] rm warning: {out}")
 
     # 3. Pipe tar into the remote directory
+    # DEST_DIR is a hard-coded module constant, no interpolation risk.
     extract_cmd = f"mkdir -p {DEST_DIR} && tar -xzf - -C {DEST_DIR}"
     chan = transport.open_session()
-    chan.exec_command(extract_cmd)
+    chan.exec_command(extract_cmd)  # nosec B601 — constant-only command
 
     chunk = 32768
     sent = 0
@@ -197,12 +225,13 @@ def reload_via_websocket(ha_token: str) -> None:
 
     # 1. Fetch entry list via REST — always available
     rest_url = f"{HA_REST_URL}/api/config/config_entries/entry?domain=home_tasks"
+    _assert_http_url(rest_url, "reload config entries")
     req = _urlreq.Request(
         rest_url,
         headers={"Authorization": f"Bearer {ha_token}"},
     )
     try:
-        with _urlreq.urlopen(req, timeout=10) as resp:
+        with _urlreq.urlopen(req, timeout=10) as resp:  # nosec B310 — scheme asserted above
             entries = _json.loads(resp.read())
     except Exception as exc:
         print(f"[reload] Could not list config entries: {exc}")
@@ -266,8 +295,10 @@ def restart_ha(ha_token: str) -> None:
     import urllib.error as _urlerr
 
     print("[restart] Triggering HA core restart ...")
+    restart_url = f"{HA_REST_URL}/api/services/homeassistant/restart"
+    _assert_http_url(restart_url, "restart HA")
     req = _urlreq.Request(
-        f"{HA_REST_URL}/api/services/homeassistant/restart",
+        restart_url,
         data=b"{}",
         headers={
             "Authorization": f"Bearer {ha_token}",
@@ -276,7 +307,7 @@ def restart_ha(ha_token: str) -> None:
         method="POST",
     )
     try:
-        _urlreq.urlopen(req, timeout=8)
+        _urlreq.urlopen(req, timeout=8)  # nosec B310 — scheme asserted above
     except (TimeoutError, _urlerr.URLError, OSError) as exc:
         # Connection drop is EXPECTED during restart.
         print(f"[restart] Restart triggered (connection drop expected): {exc}")
@@ -284,14 +315,16 @@ def restart_ha(ha_token: str) -> None:
     # Wait for HA to come back
     print("[restart] Waiting for HA to come back online ...", end="", flush=True)
     deadline = time.time() + 180
+    ok_url = f"{HA_REST_URL}/api/"
+    _assert_http_url(ok_url, "poll HA readiness")
     ok_req = _urlreq.Request(
-        f"{HA_REST_URL}/api/",
+        ok_url,
         headers={"Authorization": f"Bearer {ha_token}"},
     )
     while time.time() < deadline:
         time.sleep(3)
         try:
-            with _urlreq.urlopen(ok_req, timeout=5) as resp:
+            with _urlreq.urlopen(ok_req, timeout=5) as resp:  # nosec B310 — scheme asserted above
                 if resp.status == 200:
                     print("\n[restart] HA is back online.")
                     # Give integrations a few seconds to finish loading
