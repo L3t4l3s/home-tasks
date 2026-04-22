@@ -111,11 +111,88 @@ def _build_event_data(entry_id: str, task: dict) -> dict:
     return data
 
 
+def _parse_completed_at(task: dict) -> datetime:
+    """Parse task['completed_at'] to a timezone-aware UTC datetime, or fall back to now()."""
+    raw = task.get("completed_at")
+    if raw:
+        try:
+            parsed = datetime.fromisoformat(raw)
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            return parsed
+        except (ValueError, TypeError):
+            pass
+    return datetime.now(timezone.utc)
+
+
+def _record_auto_advance_history(task: dict, old_due_date, new_due_date, old_due_time, new_due_time) -> None:
+    """Append history entries for the auto-advance of due_date/due_time on completion.
+
+    Uses `by: "recurrence"` so the UI renders it like other automatic entries
+    (no "by Kevin" suffix) — matching the existing "Automatisch zurückgesetzt"
+    convention for reopen entries.
+    """
+    if old_due_date == new_due_date and old_due_time == new_due_time:
+        return
+    ts = datetime.now(timezone.utc).isoformat()
+    hist = task.setdefault("history", [])
+    if old_due_date != new_due_date:
+        hist.append({
+            "ts": ts, "action": "updated", "field": "due_date",
+            "from": old_due_date, "to": new_due_date, "by": "recurrence",
+        })
+    if old_due_time != new_due_time:
+        hist.append({
+            "ts": ts, "action": "updated", "field": "due_time",
+            "from": old_due_time, "to": new_due_time, "by": "recurrence",
+        })
+
+
 def _on_task_completed(hass: HomeAssistant, entry_id: str, task: dict) -> None:
-    """Handle task completion: fire event, schedule recurrence, cancel reminders."""
+    """Handle task completion: fire event, advance due_date, schedule reminders + recurrence.
+
+    For a recurring task with a due_date we advance due_date/due_time on the
+    task dict to the next occurrence *immediately* (while still completed).
+    This has two benefits:
+
+    1. Reminders (scheduled right after) target the NEXT occurrence's due
+       moment, so "N days before" reminders can fire during the window
+       between completion and actual reopen.
+    2. The UI / calendar show the task as "completed, next due <future>"
+       rather than "completed, was due <past>".
+
+    The due advance is also recorded in task["history"] (by="recurrence")
+    so the user sees the shift in the task's audit trail.
+
+    The task dict is mutated in place; the store persists it on its next
+    _async_save() (which is triggered by the same update_task call that
+    invoked this callback).
+    """
     hass.bus.async_fire(f"{DOMAIN}_task_completed", _build_event_data(entry_id, task))
-    _schedule_recurrence(hass, entry_id, task)
-    _cancel_reminders(hass, task["id"])
+
+    completed_at = _parse_completed_at(task)
+
+    if task.get("recurrence_enabled") and task.get("due_date"):
+        target = _compute_next_reopen_target(task, completed_at)
+        if target is not None:
+            local_target = target.astimezone(dt_util.DEFAULT_TIME_ZONE)
+            old_due_date = task.get("due_date")
+            old_due_time = task.get("due_time")
+            task["due_date"] = local_target.date().isoformat()
+            # Only overwrite due_time if recurrence_time is configured;
+            # otherwise the user's explicit due_time is preserved.
+            if task.get("recurrence_time"):
+                task["due_time"] = f"{local_target.hour:02d}:{local_target.minute:02d}"
+            _record_auto_advance_history(
+                task,
+                old_due_date, task["due_date"],
+                old_due_time, task.get("due_time"),
+            )
+
+    _schedule_recurrence(hass, entry_id, task, completed_at=completed_at)
+    # _schedule_reminders cancels old timers first, then (for recurring tasks)
+    # reschedules against the newly-advanced due_date.
+    _schedule_reminders(hass, entry_id, task)
 
 
 def _on_task_created(hass: HomeAssistant, entry_id: str, task: dict) -> None:
@@ -372,17 +449,11 @@ def _compute_reopen_delay(task: dict, completed_at: datetime) -> float | None:
 
 
 def _schedule_recurrence(hass: HomeAssistant, entry_id: str, task: dict, completed_at: datetime | None = None) -> None:
-    """Schedule a task to reopen based on its recurrence settings.
+    """Schedule a task to reopen at its next recurrence target.
 
-    Reopen fires slightly earlier than the computed target time when the
-    task has reminders: specifically, at target - max(reminder_offset_minutes).
-    Without this offset the reopen happens at the exact target moment,
-    and _schedule_reminders would then compute every reminder's target as
-    "due_dt - offset = now - offset = past" and silently drop them.
-    Pulling the reopen forward keeps all reminder targets in the future
-    so they schedule normally — the task becomes visibly "open" in the
-    UI a few minutes earlier, which matches the user intent of "remind
-    me N minutes before".
+    Reminders are NOT handled here — _on_task_completed advances the task's
+    due_date/due_time at completion time and calls _schedule_reminders
+    separately, so reminders can fire during the completed→reopen window.
     """
     timers = hass.data.setdefault(DATA_RECURRENCE_TIMERS, {})
     task_id = task["id"]
@@ -395,12 +466,6 @@ def _schedule_recurrence(hass: HomeAssistant, entry_id: str, task: dict, complet
     delay = _compute_reopen_delay(task, completed_at)
     if delay is None:
         return
-
-    reminders = task.get("reminders") or []
-    if reminders:
-        # Subtract the longest reminder offset so every reminder lands
-        # in the future of the reopen moment (see docstring).
-        delay -= max(reminders) * 60
 
     delay = max(0.0, delay)
 
@@ -415,7 +480,14 @@ def _schedule_recurrence(hass: HomeAssistant, entry_id: str, task: dict, complet
 
 
 async def _async_reopen_task(hass: HomeAssistant, entry_id: str, task_id: str) -> None:
-    """Reopen a recurring task and reset its sub-tasks."""
+    """Reopen a recurring task and reset its sub-tasks.
+
+    The due_date/due_time is normally advanced in _on_task_completed, but
+    we recompute here too as a safety net for:
+      - tasks completed before this logic existed (stale due_date in the past)
+      - tasks whose due_date the user cleared after completion
+    The recomputation is idempotent when _on_task_completed already ran.
+    """
     stores = hass.data.get(DOMAIN, {})
     store = stores.get(entry_id)
     if store is None:
@@ -428,26 +500,13 @@ async def _async_reopen_task(hass: HomeAssistant, entry_id: str, task_id: str) -
     if not task.get("recurrence_enabled"):
         return
 
-    # Compute the next due_date (only if one was previously set)
     new_due_date = None
     new_due_time = _REOPEN_UNCHANGED
     if task.get("due_date"):
-        completed_at_str = task.get("completed_at")
-        if completed_at_str:
-            try:
-                completed_at = datetime.fromisoformat(completed_at_str)
-                if completed_at.tzinfo is None:
-                    completed_at = completed_at.replace(tzinfo=timezone.utc)
-            except (ValueError, TypeError):
-                completed_at = datetime.now(timezone.utc)
-        else:
-            completed_at = datetime.now(timezone.utc)
-
-        target = _compute_next_reopen_target(task, completed_at)
+        target = _compute_next_reopen_target(task, _parse_completed_at(task))
         if target is not None:
             local_target = target.astimezone(dt_util.DEFAULT_TIME_ZONE)
             new_due_date = local_target.date().isoformat()
-            # Only update due_time if recurrence_time is configured
             if task.get("recurrence_time"):
                 new_due_time = f"{local_target.hour:02d}:{local_target.minute:02d}"
 
@@ -493,11 +552,20 @@ def _compute_due_datetime(task: dict) -> datetime | None:
 
 
 def _schedule_reminders(hass: HomeAssistant, entry_id: str, task: dict) -> None:
-    """Schedule async_call_later timers for all reminder offsets of a task."""
+    """Schedule async_call_later timers for all reminder offsets of a task.
+
+    Reminders DO fire for completed *recurring* tasks.  When such a task
+    is completed, _on_task_completed advances its due_date/due_time to the
+    next occurrence; reminders then schedule relative to that future due
+    moment and fire during the completed→reopen gap (e.g. a "2 days before"
+    reminder can fire 2 days before the task next becomes active).
+
+    Completed *non-recurring* tasks are done for good — no reminders.
+    """
     task_id = task["id"]
     _cancel_reminders(hass, task_id)
 
-    if task.get("completed"):
+    if task.get("completed") and not task.get("recurrence_enabled"):
         return
 
     due_dt = _compute_due_datetime(task)
@@ -547,13 +615,19 @@ def _cancel_reminders(hass: HomeAssistant, task_id: str) -> None:
 
 
 def _recover_reminder_timers(hass: HomeAssistant, entry_id: str, store: HomeTasksStore) -> None:
-    """On startup, reschedule reminder timers for open tasks with due dates."""
+    """On startup, reschedule reminder timers for tasks with due dates.
+
+    Includes completed *recurring* tasks: their due_date was advanced to
+    the next occurrence at completion, so pending reminders may still need
+    to fire.  _schedule_reminders itself short-circuits for completed
+    non-recurring tasks.
+    """
     for task in store.tasks:
-        if task.get("completed"):
-            continue
         if not task.get("reminders"):
             continue
         if not task.get("due_date"):
+            continue
+        if task.get("completed") and not task.get("recurrence_enabled"):
             continue
         _schedule_reminders(hass, entry_id, task)
 
@@ -564,15 +638,15 @@ def _recover_recurrence_timers(hass: HomeAssistant, entry_id: str, store: HomeTa
         if not task.get("completed") or not task.get("recurrence_enabled"):
             continue
 
-        completed_at_str = task.get("completed_at")
-        if not completed_at_str:
+        # Silently skip tasks with missing/invalid completed_at — there's
+        # nothing to anchor the next target to.
+        if not task.get("completed_at"):
             continue
         try:
-            completed_at = datetime.fromisoformat(completed_at_str)
-            if completed_at.tzinfo is None:
-                completed_at = completed_at.replace(tzinfo=timezone.utc)
+            datetime.fromisoformat(task["completed_at"])
         except (ValueError, TypeError):
             continue
+        completed_at = _parse_completed_at(task)
 
         delay = _compute_reopen_delay(task, completed_at)
         if delay is None:

@@ -695,10 +695,10 @@ async def test_reminder_fires_event_at_offset(
     assert matching[0].data["reminder_offset_minutes"] == 60
 
 
-async def test_reminder_skipped_for_completed_task(
+async def test_reminder_skipped_for_completed_non_recurring_task(
     hass: HomeAssistant, mock_config_entry, store
 ) -> None:
-    """_schedule_reminders does not schedule timers for completed tasks."""
+    """_schedule_reminders short-circuits for completed *non-recurring* tasks."""
     from custom_components.home_tasks import _schedule_reminders, DATA_REMINDER_TIMERS
     from datetime import date as _date
 
@@ -713,6 +713,42 @@ async def test_reminder_skipped_for_completed_task(
     _schedule_reminders(hass, mock_config_entry.entry_id, store.get_task(task["id"]))
     timers = hass.data.get(DATA_REMINDER_TIMERS, {})
     assert not any(k.startswith(f"{task['id']}_r") for k in timers)
+
+
+async def test_reminder_scheduled_for_completed_recurring_task(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Completed *recurring* tasks keep reminders (against advanced due_date).
+
+    Covers the user-reported case: Mi/Fr 11:55 recurrence + "2 days before"
+    reminder.  Completing on Wed advances due_date to Fri; the 2-day reminder
+    should then be scheduled to fire on Wed, *while the task is still completed*.
+    """
+    from custom_components.home_tasks import _schedule_reminders, DATA_REMINDER_TIMERS
+    from datetime import date as _date
+
+    # Put due_date in the future so reminders with large offsets still land
+    # ahead of "now".
+    far_future = (_date.today() + timedelta(days=5)).isoformat()
+    task = await store.async_add_task("Recurring with reminder")
+    await store.async_update_task(
+        task["id"],
+        due_date=far_future,
+        due_time="11:55",
+        reminders=[0, 2880],  # at due, 2 days before
+        recurrence_enabled=True,
+        recurrence_type="weekdays",
+        recurrence_weekdays=[2, 4],
+        recurrence_time="11:55",
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+
+    timers = hass.data.get(DATA_REMINDER_TIMERS, {})
+    reminder_keys = [k for k in timers if k.startswith(f"{task['id']}_r")]
+    # Both reminder offsets should have a scheduled timer — the task is
+    # completed but recurring, and its due_date points to the next occurrence.
+    assert len(reminder_keys) == 2, f"expected 2 reminder timers, got {reminder_keys}"
 
 
 async def test_reminder_skipped_without_due_date(
@@ -750,27 +786,20 @@ async def test_reminder_silent_miss_for_past_offset(
     assert not any(k.startswith(f"{task['id']}_r") for k in timers)
 
 
-async def test_schedule_recurrence_pulls_reopen_back_by_max_reminder(
+async def test_schedule_recurrence_delay_independent_of_reminders(
     hass: HomeAssistant, mock_config_entry, store
 ) -> None:
-    """_schedule_recurrence shortens its delay by max(reminders) minutes.
+    """_schedule_recurrence's delay is independent of reminder offsets.
 
-    Before the fix the reopen timer landed at the exact recurrence
-    target time.  When _schedule_reminders then ran, each reminder's
-    target (`due_dt - offset`) was computed as `now - offset`, fell in
-    the past, and the reminder was silently dropped.
-
-    The fix subtracts max(reminders)*60 seconds from the reopen delay so
-    every reminder re-schedules in the future.  This test captures the
-    actual delay passed to async_call_later and compares the two cases
-    (with and without reminders).
+    Previously the delay was shortened by max(reminders)*60 s so reminders
+    could fire after reopen.  That coupling is gone: reminders are now
+    scheduled at completion time (see _on_task_completed) against the
+    advanced due_date, so the reopen timer can stay at the exact target.
     """
     from unittest.mock import patch
     from freezegun import freeze_time
     from custom_components.home_tasks import _schedule_recurrence
 
-    # Fixed clock: now = 2026-04-21 12:00 UTC, next occurrence tomorrow
-    # 12:00 UTC → base delay = 86400 s.
     T0 = "2026-04-21 12:00:00"
     captured: dict[str, float] = {}
 
@@ -782,8 +811,7 @@ async def test_schedule_recurrence_pulls_reopen_back_by_max_reminder(
         "custom_components.home_tasks.async_call_later",
         side_effect=fake_async_call_later,
     ):
-        # Case A: no reminders → expect full 24 h delay
-        task_no_rem = {
+        base_task = {
             "id": "t1",
             "recurrence_enabled": True,
             "recurrence_type": "interval",
@@ -793,40 +821,180 @@ async def test_schedule_recurrence_pulls_reopen_back_by_max_reminder(
             "reminders": [],
         }
         _schedule_recurrence(
-            hass, mock_config_entry.entry_id, task_no_rem,
+            hass, mock_config_entry.entry_id, base_task,
             completed_at=datetime(2026, 4, 21, 12, 0, 0, tzinfo=dt_util.UTC),
         )
         delay_no_rem = captured["delay"]
 
-        # Case B: reminder 15 min → expect delay shortened by 900 s
-        task_with_rem = {**task_no_rem, "id": "t2", "reminders": [15]}
+        task_with_rem = {**base_task, "id": "t2", "reminders": [15]}
         _schedule_recurrence(
             hass, mock_config_entry.entry_id, task_with_rem,
             completed_at=datetime(2026, 4, 21, 12, 0, 0, tzinfo=dt_util.UTC),
         )
         delay_with_rem = captured["delay"]
 
-        # Case C: two reminders (15 and 60 min) → shortened by max(60)=3600 s
-        task_two_rem = {**task_no_rem, "id": "t3", "reminders": [15, 60]}
+        task_big_rem = {**base_task, "id": "t3", "reminders": [2880]}
         _schedule_recurrence(
-            hass, mock_config_entry.entry_id, task_two_rem,
+            hass, mock_config_entry.entry_id, task_big_rem,
             completed_at=datetime(2026, 4, 21, 12, 0, 0, tzinfo=dt_util.UTC),
         )
-        delay_two_rem = captured["delay"]
+        delay_big_rem = captured["delay"]
 
-    # We don't assert the absolute delay (it depends on HA's default
-    # time zone in the test env) — only the DIFFERENCES between the
-    # cases, which are zone-invariant.
-    assert delay_no_rem - delay_with_rem == pytest.approx(15 * 60, abs=2), (
-        f"Reminder offset 15 min should shorten the reopen delay by "
-        f"900 s; got {delay_no_rem} → {delay_with_rem} "
-        f"(diff = {delay_no_rem - delay_with_rem})"
+    # The absolute delay depends on HA's default time zone, but all three
+    # must be identical — reminders no longer affect the recurrence delay.
+    assert delay_no_rem == pytest.approx(delay_with_rem, abs=2), (
+        f"15-min reminder must not affect reopen delay: "
+        f"{delay_no_rem} vs {delay_with_rem}"
     )
-    assert delay_no_rem - delay_two_rem == pytest.approx(60 * 60, abs=2), (
-        f"With reminders [15, 60] the reopen delay should shorten by "
-        f"max=60 min = 3600 s; got {delay_no_rem} → {delay_two_rem} "
-        f"(diff = {delay_no_rem - delay_two_rem})"
+    assert delay_no_rem == pytest.approx(delay_big_rem, abs=2), (
+        f"2-day reminder must not affect reopen delay: "
+        f"{delay_no_rem} vs {delay_big_rem}"
     )
+
+
+async def test_completion_advances_due_date_for_recurring_task(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Completing a recurring task with a due_date advances due_date/due_time now.
+
+    This is the new behavior that replaces the pull-reopen-back-by-reminder
+    hack: the due fields point to the next occurrence *immediately*, so the
+    UI, the calendar, AND reminders all operate on the correct target.
+    """
+    from datetime import date as _date
+
+    today = _date.today()
+    task = await store.async_add_task("Advance me")
+    await store.async_update_task(
+        task["id"],
+        due_date=today.isoformat(),
+        due_time="14:00",
+        recurrence_enabled=True,
+        recurrence_type="interval",
+        recurrence_unit="days",
+        recurrence_value=1,
+        recurrence_time="14:00",
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+
+    stored = store.get_task(task["id"])
+    assert stored["completed"] is True
+    # due_date must now be tomorrow (next daily occurrence)
+    assert stored["due_date"] == (today + timedelta(days=1)).isoformat()
+    assert stored["due_time"] == "14:00"
+
+
+async def test_completion_preserves_due_time_without_recurrence_time(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """If recurrence_time is unset, completion advances due_date but keeps due_time."""
+    from datetime import date as _date
+
+    today = _date.today()
+    task = await store.async_add_task("Keep my time")
+    await store.async_update_task(
+        task["id"],
+        due_date=today.isoformat(),
+        due_time="08:30",
+        recurrence_enabled=True,
+        recurrence_type="interval",
+        recurrence_unit="days",
+        recurrence_value=1,
+        # no recurrence_time
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+
+    stored = store.get_task(task["id"])
+    assert stored["due_date"] == (today + timedelta(days=1)).isoformat()
+    assert stored["due_time"] == "08:30"  # preserved
+
+
+async def test_completion_auto_advance_is_recorded_in_history(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """The auto-advance of due_date at completion produces a history entry.
+
+    The entry uses `by: "recurrence"` so the card renders it without a
+    "by <user>" suffix (same convention as the "Automatisch zurückgesetzt"
+    entry for actual reopen).
+    """
+    from datetime import date as _date
+
+    today = _date.today()
+    task = await store.async_add_task("Advance with history")
+    await store.async_update_task(
+        task["id"],
+        due_date=today.isoformat(),
+        due_time="14:00",
+        recurrence_enabled=True,
+        recurrence_type="interval",
+        recurrence_unit="days",
+        recurrence_value=1,
+        recurrence_time="11:55",
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+
+    hist = store.get_task(task["id"]).get("history", [])
+    date_entries = [
+        e for e in hist
+        if e.get("action") == "updated" and e.get("field") == "due_date"
+        and e.get("by") == "recurrence"
+    ]
+    time_entries = [
+        e for e in hist
+        if e.get("action") == "updated" and e.get("field") == "due_time"
+        and e.get("by") == "recurrence"
+    ]
+    assert len(date_entries) == 1, f"expected 1 auto-advance date entry, got {date_entries}"
+    assert date_entries[0]["from"] == today.isoformat()
+    assert date_entries[0]["to"] == (today + timedelta(days=1)).isoformat()
+    assert len(time_entries) == 1
+    assert time_entries[0]["from"] == "14:00"
+    assert time_entries[0]["to"] == "11:55"
+
+
+def test_record_auto_advance_history_skips_when_unchanged() -> None:
+    """_record_auto_advance_history writes nothing when both values are unchanged."""
+    from custom_components.home_tasks import _record_auto_advance_history
+    task = {"history": []}
+    _record_auto_advance_history(task, "2026-04-22", "2026-04-22", "11:55", "11:55")
+    assert task["history"] == []
+
+
+def test_record_auto_advance_history_only_changed_field() -> None:
+    """_record_auto_advance_history writes a single entry when only due_date shifts."""
+    from custom_components.home_tasks import _record_auto_advance_history
+    task = {"history": []}
+    _record_auto_advance_history(task, "2026-04-22", "2026-04-24", "11:55", "11:55")
+    assert len(task["history"]) == 1
+    e = task["history"][0]
+    assert e["field"] == "due_date"
+    assert e["from"] == "2026-04-22"
+    assert e["to"] == "2026-04-24"
+    assert e["by"] == "recurrence"
+    assert e["action"] == "updated"
+
+
+async def test_completion_without_due_date_stays_none(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Recurring tasks without a due_date still complete cleanly (no advance)."""
+    task = await store.async_add_task("No due date")
+    await store.async_update_task(
+        task["id"],
+        recurrence_enabled=True,
+        recurrence_unit="hours",
+        recurrence_value=1,
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+
+    stored = store.get_task(task["id"])
+    assert stored["completed"] is True
+    assert stored.get("due_date") is None
 
 
 async def test_cancel_reminders_removes_pending_timers(
