@@ -123,7 +123,15 @@ def deploy_via_tar(host: str, port: int, user: str, password: str) -> None:
     if rc != 0:
         print(f"[deploy] mkdir warning: {out}")
 
-    # 2. Remove old files
+    # 2. Take ownership of any existing files, then clear them out.
+    # After a full HA restart the `homeassistant` docker container re-
+    # creates parts of the tree under root:root, which breaks a plain
+    # `rm -rf` run as the ssh user.  Chown first (sudo), then remove.
+    chan = transport.open_session()
+    rc, out = _run(
+        chan,
+        f"echo {password} | sudo -S chown -R {user}:{user} {DEST_DIR} 2>/dev/null || true",
+    )
     chan = transport.open_session()
     rc, out = _run(chan, f"rm -rf {DEST_DIR}")
     if rc != 0:

@@ -482,11 +482,13 @@ def _schedule_recurrence(hass: HomeAssistant, entry_id: str, task: dict, complet
 async def _async_reopen_task(hass: HomeAssistant, entry_id: str, task_id: str) -> None:
     """Reopen a recurring task and reset its sub-tasks.
 
-    The due_date/due_time is normally advanced in _on_task_completed, but
-    we recompute here too as a safety net for:
-      - tasks completed before this logic existed (stale due_date in the past)
-      - tasks whose due_date the user cleared after completion
-    The recomputation is idempotent when _on_task_completed already ran.
+    No due_date/due_time manipulation here: the advance happens at
+    completion time (see _on_task_completed).  This timer callback's
+    only job is to flip completed=False and reset sub-task completion
+    state — the store does that for us.  Decoupling keeps the
+    user-owned due fields untouched, lets manual edits between
+    completion and reopen survive, and makes the reopen semantics
+    explicit ("flip back to open, nothing else").
     """
     stores = hass.data.get(DOMAIN, {})
     store = stores.get(entry_id)
@@ -500,18 +502,10 @@ async def _async_reopen_task(hass: HomeAssistant, entry_id: str, task_id: str) -
     if not task.get("recurrence_enabled"):
         return
 
-    new_due_date = None
-    if task.get("due_date"):
-        target = _compute_next_reopen_target(task, _parse_completed_at(task))
-        if target is not None:
-            local_target = target.astimezone(dt_util.DEFAULT_TIME_ZONE)
-            new_due_date = local_target.date().isoformat()
-
-    # due_time is deliberately never touched — see _on_task_completed:
-    # recurrence_time schedules the reopen timer, it is not a replacement
-    # for the task's user-owned due_time.  Pass _REOPEN_UNCHANGED.
     await store.async_reopen_task(
-        task_id, new_due_date=new_due_date, new_due_time=_REOPEN_UNCHANGED,
+        task_id,
+        new_due_date=None,           # leave due_date as-is
+        new_due_time=_REOPEN_UNCHANGED,  # and due_time too
     )
     _LOGGER.info("Recurring task '%s' reopened", task.get("title", task_id))
 
