@@ -18,6 +18,8 @@ from .const import (
     MAX_RECURRENCE_VALUE,
     MAX_REMINDER_OFFSET_MINUTES,
     MAX_REMINDERS_PER_TASK,
+    MAX_SECTION_NAME_LENGTH,
+    MAX_SECTIONS_PER_LIST,
     MAX_SUB_TASKS_PER_TASK,
     MAX_TAG_LENGTH,
     MAX_TAGS_PER_TASK,
@@ -330,12 +332,19 @@ class HomeTasksStore:
         """Load data from disk."""
         data = await self._store.async_load()
         if data is None:
-            self._data = {"tasks": []}
+            self._data = {"tasks": [], "sections": []}
             await self._async_save()
         else:
             self._data = data
+            self._data.setdefault("sections", [])
             self._backfill_recurrence_fields()
+            self._backfill_section_id()
             self._migrate_v1_to_v2()
+
+    def _backfill_section_id(self) -> None:
+        """Ensure every task has a section_id field (default None)."""
+        for task in self._data.get("tasks", []):
+            task.setdefault("section_id", None)
 
     def _migrate_v1_to_v2(self) -> None:
         """Add external sync fields (v1 → v2)."""
@@ -440,6 +449,7 @@ class HomeTasksStore:
             "history": [created_entry],
             "external_id": None,
             "sync_source": None,
+            "section_id": None,
         }
         self._data["tasks"].append(task)
         await self._async_save()
@@ -462,13 +472,15 @@ class HomeTasksStore:
         "recurrence_max_count", "recurrence_remaining_count",
         "recurrence_month_pattern", "recurrence_day_of_month",
         "recurrence_nth_week", "recurrence_anniversary",
-        "assigned_person", "tags",
+        "assigned_person", "tags", "section_id",
     )
 
     async def async_update_task(self, task_id: str, actor: str | None = None, **kwargs) -> dict:
         """Update a task's fields."""
         task = self.get_task(task_id)
         self._validate_update_kwargs(kwargs)
+        if "section_id" in kwargs:
+            self._validate_section_id(kwargs["section_id"])
         snapshot = self._snapshot_task(task)
         self._apply_field_updates(task, kwargs)
         self._handle_completion_transition(task, snapshot, kwargs)
@@ -713,4 +725,77 @@ class HomeTasksStore:
         task["sub_items"] = [s for s in task["sub_items"] if s["id"] != sub_task_id]
         if len(task["sub_items"]) == original_len:
             raise ValueError("Sub-task not found")
+        await self._async_save()
+
+    # --- Sections ---
+
+    @property
+    def sections(self) -> list[dict]:
+        """Return all sections sorted by order."""
+        return sorted(self._data.get("sections", []), key=lambda s: s.get("sort_order", 0))
+
+    def _validate_section_id(self, section_id: str | None) -> None:
+        """Raise ValueError if section_id is not None and not a known section."""
+        if section_id is None:
+            return
+        if not isinstance(section_id, str):
+            raise ValueError("section_id must be a string or null")
+        if not any(s["id"] == section_id for s in self._data.get("sections", [])):
+            raise ValueError("Unknown section_id")
+
+    async def async_add_section(self, name: str, icon: str | None = None) -> dict:
+        """Add a section."""
+        name = validate_text(name, MAX_SECTION_NAME_LENGTH, "Section name")
+        sections = self._data.setdefault("sections", [])
+        if len(sections) >= MAX_SECTIONS_PER_LIST:
+            raise ValueError(f"Maximum number of sections ({MAX_SECTIONS_PER_LIST}) reached")
+        if icon is not None and not isinstance(icon, str):
+            raise ValueError("icon must be a string or null")
+        max_order = max((s.get("sort_order", -1) for s in sections), default=-1)
+        section = {
+            "id": str(uuid.uuid4()),
+            "name": name,
+            "icon": icon or None,
+            "sort_order": max_order + 1,
+        }
+        sections.append(section)
+        await self._async_save()
+        return section
+
+    async def async_update_section(self, section_id: str, **kwargs) -> dict:
+        """Update a section's name/icon."""
+        sections = self._data.get("sections", [])
+        section = next((s for s in sections if s["id"] == section_id), None)
+        if section is None:
+            raise ValueError("Section not found")
+        if "name" in kwargs:
+            section["name"] = validate_text(kwargs["name"], MAX_SECTION_NAME_LENGTH, "Section name")
+        if "icon" in kwargs:
+            icon = kwargs["icon"]
+            if icon is not None and not isinstance(icon, str):
+                raise ValueError("icon must be a string or null")
+            section["icon"] = icon or None
+        await self._async_save()
+        return section
+
+    async def async_delete_section(self, section_id: str) -> None:
+        """Delete a section; tasks in it fall back to section_id=None."""
+        sections = self._data.get("sections", [])
+        if not any(s["id"] == section_id for s in sections):
+            raise ValueError("Section not found")
+        self._data["sections"] = [s for s in sections if s["id"] != section_id]
+        for task in self._data.get("tasks", []):
+            if task.get("section_id") == section_id:
+                task["section_id"] = None
+        await self._async_save()
+
+    async def async_reorder_sections(self, section_ids: list[str]) -> None:
+        """Reorder sections by the supplied id list."""
+        sections = self._data.get("sections", [])
+        if len(section_ids) > len(sections):
+            raise ValueError("Too many section IDs provided")
+        section_map = {s["id"]: s for s in sections}
+        for index, sid in enumerate(section_ids):
+            if sid in section_map:
+                section_map[sid]["sort_order"] = index
         await self._async_save()

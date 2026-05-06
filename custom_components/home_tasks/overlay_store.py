@@ -21,6 +21,8 @@ from .const import (
     MAX_RECURRENCE_VALUE,
     MAX_REMINDER_OFFSET_MINUTES,
     MAX_REMINDERS_PER_TASK,
+    MAX_SECTION_NAME_LENGTH,
+    MAX_SECTIONS_PER_LIST,
     MAX_SUB_TASKS_PER_TASK,
     MAX_TAG_LENGTH,
     MAX_TAGS_PER_TASK,
@@ -61,6 +63,7 @@ OVERLAY_FIELDS = (
     "recurrence_anniversary",
     "history",
     "completed_at",
+    "section_id",
 )
 
 _MAX_HISTORY = 50
@@ -95,6 +98,7 @@ def _empty_overlay() -> dict:
         "recurrence_anniversary": None,
         "history": [],
         "completed_at": None,
+        "section_id": None,
     }
 
 
@@ -131,10 +135,11 @@ class ExternalTaskOverlayStore:
         """Load overlay data from disk."""
         data = await self._store.async_load()
         if data is None:
-            self._data = {"overlays": {}}
+            self._data = {"overlays": {}, "sections": []}
             await self._async_save()
         else:
             self._data = data
+            self._data.setdefault("sections", [])
             self._strip_default_overlays()
 
     def _strip_default_overlays(self) -> None:
@@ -191,6 +196,8 @@ class ExternalTaskOverlayStore:
         the rules in HomeTasksStore.async_update_task.
         """
         self._validate_overlay_fields(kwargs)
+        if "section_id" in kwargs:
+            self._validate_section_id(kwargs["section_id"])
 
         overlays = self._data.setdefault("overlays", {})
         if task_uid not in overlays:
@@ -263,6 +270,74 @@ class ExternalTaskOverlayStore:
             raise ValueError("Overlay not found")
         id_to_sub = {s["id"]: s for s in overlay.get("sub_items", [])}
         overlay["sub_items"] = [id_to_sub[sid] for sid in sub_task_ids if sid in id_to_sub]
+        await self._async_save()
+
+    # -- sections --
+
+    @property
+    def sections(self) -> list[dict]:
+        """Return sections sorted by order."""
+        return sorted(self._data.get("sections", []), key=lambda s: s.get("sort_order", 0))
+
+    def _validate_section_id(self, section_id: str | None) -> None:
+        if section_id is None:
+            return
+        if not isinstance(section_id, str):
+            raise ValueError("section_id must be a string or null")
+        if not any(s["id"] == section_id for s in self._data.get("sections", [])):
+            raise ValueError("Unknown section_id")
+
+    async def async_add_section(self, name: str, icon: str | None = None) -> dict:
+        name = validate_text(name, MAX_SECTION_NAME_LENGTH, "Section name")
+        sections = self._data.setdefault("sections", [])
+        if len(sections) >= MAX_SECTIONS_PER_LIST:
+            raise ValueError(f"Maximum number of sections ({MAX_SECTIONS_PER_LIST}) reached")
+        if icon is not None and not isinstance(icon, str):
+            raise ValueError("icon must be a string or null")
+        max_order = max((s.get("sort_order", -1) for s in sections), default=-1)
+        section = {
+            "id": str(uuid.uuid4()),
+            "name": name,
+            "icon": icon or None,
+            "sort_order": max_order + 1,
+        }
+        sections.append(section)
+        await self._async_save()
+        return section
+
+    async def async_update_section(self, section_id: str, **kwargs) -> dict:
+        sections = self._data.get("sections", [])
+        section = next((s for s in sections if s["id"] == section_id), None)
+        if section is None:
+            raise ValueError("Section not found")
+        if "name" in kwargs:
+            section["name"] = validate_text(kwargs["name"], MAX_SECTION_NAME_LENGTH, "Section name")
+        if "icon" in kwargs:
+            icon = kwargs["icon"]
+            if icon is not None and not isinstance(icon, str):
+                raise ValueError("icon must be a string or null")
+            section["icon"] = icon or None
+        await self._async_save()
+        return section
+
+    async def async_delete_section(self, section_id: str) -> None:
+        sections = self._data.get("sections", [])
+        if not any(s["id"] == section_id for s in sections):
+            raise ValueError("Section not found")
+        self._data["sections"] = [s for s in sections if s["id"] != section_id]
+        for overlay in self._data.get("overlays", {}).values():
+            if overlay.get("section_id") == section_id:
+                overlay["section_id"] = None
+        await self._async_save()
+
+    async def async_reorder_sections(self, section_ids: list[str]) -> None:
+        sections = self._data.get("sections", [])
+        if len(section_ids) > len(sections):
+            raise ValueError("Too many section IDs provided")
+        section_map = {s["id"]: s for s in sections}
+        for index, sid in enumerate(section_ids):
+            if sid in section_map:
+                section_map[sid]["sort_order"] = index
         await self._async_save()
 
     # -- validation helpers --

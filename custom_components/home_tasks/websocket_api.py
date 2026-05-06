@@ -57,6 +57,12 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_create_external_task)
     websocket_api.async_register_command(hass, ws_update_external_task)
     websocket_api.async_register_command(hass, ws_reorder_external_tasks)
+    # Section commands (work for both native and external lists)
+    websocket_api.async_register_command(hass, ws_get_sections)
+    websocket_api.async_register_command(hass, ws_add_section)
+    websocket_api.async_register_command(hass, ws_update_section)
+    websocket_api.async_register_command(hass, ws_delete_section)
+    websocket_api.async_register_command(hass, ws_reorder_sections)
 
 
 def _get_store(hass, entry_id):
@@ -122,7 +128,7 @@ async def ws_get_tasks(hass, connection, msg):
     """Get all tasks for a list."""
     try:
         store = _get_store(hass, msg["list_id"])
-        connection.send_result(msg["id"], {"tasks": store.tasks})
+        connection.send_result(msg["id"], {"tasks": store.tasks, "sections": store.sections})
     except Exception as err:
         _handle_error(connection, msg["id"], err)
 
@@ -179,6 +185,7 @@ async def ws_add_task(hass, connection, msg):
         vol.Optional("recurrence_anniversary"): _val_anniversary,
         vol.Optional("assigned_person"): vol.Any(str, None),
         vol.Optional("tags"): vol.All(list, vol.Length(max=MAX_TAGS_PER_TASK)),
+        vol.Optional("section_id"): vol.Any(_val_id, None),
     }
 )
 @websocket_api.async_response
@@ -195,7 +202,7 @@ async def ws_update_task(hass, connection, msg):
             "recurrence_end_type", "recurrence_end_date", "recurrence_max_count",
             "recurrence_remaining_count", "recurrence_month_pattern",
             "recurrence_day_of_month", "recurrence_nth_week", "recurrence_anniversary",
-            "assigned_person", "tags",
+            "assigned_person", "tags", "section_id",
         ):
             if key in msg:
                 kwargs[key] = msg[key]
@@ -869,7 +876,7 @@ async def ws_get_external_tasks(hass, connection, msg):
             provider_owns_order = bool(features & 8)  # MOVE_TODO_ITEM
             tasks = _merge_tasks_with_overlays(external_items, overlay_store, provider_owns_order)
 
-        connection.send_result(msg["id"], {"tasks": tasks})
+        connection.send_result(msg["id"], {"tasks": tasks, "sections": overlay_store.sections})
     except Exception as err:
         _handle_error(connection, msg["id"], err)
 
@@ -904,6 +911,7 @@ async def ws_get_external_tasks(hass, connection, msg):
         vol.Optional("recurrence_day_of_month"): vol.Any(vol.All(int, vol.Range(min=1, max=31)), "last", None),
         vol.Optional("recurrence_nth_week"): vol.Any(vol.All(int, vol.Range(min=1, max=4)), "last", None),
         vol.Optional("recurrence_anniversary"): _val_anniversary,
+        vol.Optional("section_id"): vol.Any(_val_id, None),
     }
 )
 @websocket_api.async_response
@@ -1226,6 +1234,124 @@ async def ws_delete_external_overlay(hass, connection, msg):
     try:
         overlay_store = _get_overlay_store(hass, msg["entity_id"])
         await overlay_store.async_delete_overlay(msg["task_uid"])
+        connection.send_result(msg["id"])
+    except Exception as err:
+        _handle_error(connection, msg["id"], err)
+
+
+# --- Sections (work for both native lists via list_id and external lists via entity_id) ---
+
+
+_val_icon = vol.Any(vol.All(str, vol.Length(min=1, max=64)), None)
+_val_section_name = vol.All(str, vol.Length(min=1, max=100))
+
+
+def _get_sections_store(hass, msg):
+    """Return the store (native or overlay) that holds sections for this target."""
+    if "list_id" in msg:
+        return _get_store(hass, msg["list_id"])
+    if "entity_id" in msg:
+        return _get_overlay_store(hass, msg["entity_id"])
+    raise ValueError("Either list_id or entity_id is required")
+
+
+_SECTION_TARGET = {
+    vol.Exclusive("list_id", "target"): _val_id,
+    vol.Exclusive("entity_id", "target"): _val_entity_id,
+}
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "home_tasks/get_sections",
+        **_SECTION_TARGET,
+    }
+)
+@websocket_api.async_response
+async def ws_get_sections(hass, connection, msg):
+    """Return sections for a list."""
+    try:
+        store = _get_sections_store(hass, msg)
+        connection.send_result(msg["id"], {"sections": store.sections})
+    except Exception as err:
+        _handle_error(connection, msg["id"], err)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "home_tasks/add_section",
+        vol.Required("name"): _val_section_name,
+        vol.Optional("icon"): _val_icon,
+        **_SECTION_TARGET,
+    }
+)
+@websocket_api.async_response
+async def ws_add_section(hass, connection, msg):
+    """Create a new section."""
+    try:
+        store = _get_sections_store(hass, msg)
+        section = await store.async_add_section(msg["name"], icon=msg.get("icon"))
+        connection.send_result(msg["id"], section)
+    except Exception as err:
+        _handle_error(connection, msg["id"], err)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "home_tasks/update_section",
+        vol.Required("section_id"): _val_id,
+        vol.Optional("name"): _val_section_name,
+        vol.Optional("icon"): _val_icon,
+        **_SECTION_TARGET,
+    }
+)
+@websocket_api.async_response
+async def ws_update_section(hass, connection, msg):
+    """Update a section's name and/or icon."""
+    try:
+        store = _get_sections_store(hass, msg)
+        kwargs = {}
+        if "name" in msg:
+            kwargs["name"] = msg["name"]
+        if "icon" in msg:
+            kwargs["icon"] = msg["icon"]
+        section = await store.async_update_section(msg["section_id"], **kwargs)
+        connection.send_result(msg["id"], section)
+    except Exception as err:
+        _handle_error(connection, msg["id"], err)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "home_tasks/delete_section",
+        vol.Required("section_id"): _val_id,
+        **_SECTION_TARGET,
+    }
+)
+@websocket_api.async_response
+async def ws_delete_section(hass, connection, msg):
+    """Delete a section; tasks fall back to section_id=None."""
+    try:
+        store = _get_sections_store(hass, msg)
+        await store.async_delete_section(msg["section_id"])
+        connection.send_result(msg["id"])
+    except Exception as err:
+        _handle_error(connection, msg["id"], err)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "home_tasks/reorder_sections",
+        vol.Required("section_ids"): vol.All(list, vol.Length(max=MAX_REORDER_IDS), [_val_id]),
+        **_SECTION_TARGET,
+    }
+)
+@websocket_api.async_response
+async def ws_reorder_sections(hass, connection, msg):
+    """Reorder sections."""
+    try:
+        store = _get_sections_store(hass, msg)
+        await store.async_reorder_sections(msg["section_ids"])
         connection.send_result(msg["id"])
     except Exception as err:
         _handle_error(connection, msg["id"], err)

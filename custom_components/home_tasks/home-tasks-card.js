@@ -119,6 +119,20 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "In 2 days", due_day_before_yesterday: "2 days ago",
     due_in_hours: "In {0}h {1}m", due_in_minutes: "In {0} min", due_in_seconds: "Now",
     due_ago_hours: "{0}h {1}m ago", due_ago_minutes: "{0} min ago", due_ago_seconds: "Just now",
+    done_section_header: "Done",
+    ed_show_section_headers: "Section headers",
+    ed_sec_sections: "Sections",
+    ed_section_name: "Name",
+    ed_section_icon: "Icon",
+    ed_add_section: "+ Add section",
+    ed_delete_section: "Delete section",
+    ed_section_name_prompt: "Section name:",
+    ed_sections_select_list_hint: "Select a list first to manage its sections.",
+    ed_sections_empty: "No sections yet — tasks will render flat.",
+    ed_loading: "Loading…",
+    ed_move_up: "Move up",
+    ed_move_down: "Move down",
+    confirm_delete_section: "Delete this section? Tasks inside will become unsorted.",
   },
   nl: {
     my_tasks: "Mijn taken",
@@ -1036,6 +1050,20 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "\u00dcbermorgen", due_day_before_yesterday: "Vorgestern",
     due_in_hours: "In {0} Std {1} Min", due_in_minutes: "In {0} Min", due_in_seconds: "Jetzt",
     due_ago_hours: "Vor {0} Std {1} Min", due_ago_minutes: "Vor {0} Min", due_ago_seconds: "Gerade eben",
+    done_section_header: "Erledigt",
+    ed_show_section_headers: "Bereichsüberschriften",
+    ed_sec_sections: "Bereiche",
+    ed_section_name: "Name",
+    ed_section_icon: "Symbol",
+    ed_add_section: "+ Bereich hinzufügen",
+    ed_delete_section: "Bereich löschen",
+    ed_section_name_prompt: "Name des Bereichs:",
+    ed_sections_select_list_hint: "Erst eine Liste wählen, dann Bereiche verwalten.",
+    ed_sections_empty: "Noch keine Bereiche – Aufgaben werden flach angezeigt.",
+    ed_loading: "Lädt…",
+    ed_move_up: "Nach oben",
+    ed_move_down: "Nach unten",
+    confirm_delete_section: "Diesen Bereich wirklich löschen? Enthaltene Aufgaben werden unsortiert.",
   },
 };
 
@@ -1098,7 +1126,7 @@ class HomeTasksCard extends HTMLElement {
   }
 
   _defaultColState() {
-    return { filter: "all", sortBy: "manual", sortOpen: false, tagFilters: new Set(), personFilters: new Set(), tasks: [], newTaskTitle: "" };
+    return { filter: "all", sortBy: "manual", sortOpen: false, tagFilters: new Set(), personFilters: new Set(), tasks: [], sections: [], newTaskTitle: "" };
   }
 
   _t(key, ...args) {
@@ -1428,12 +1456,15 @@ class HomeTasksCard extends HTMLElement {
         // External column — fetch from external entity + overlay
         const r = await this._callWs("home_tasks/get_external_tasks", { entity_id: col.entity_id });
         this._columns[i].tasks = r?.tasks ?? [];
+        this._columns[i].sections = r?.sections ?? [];
       } else if (col.list_id) {
         // Native column
         const r = await this._callWs("home_tasks/get_tasks", { list_id: col.list_id });
         this._columns[i].tasks = r?.tasks ?? [];
+        this._columns[i].sections = r?.sections ?? [];
       } else {
         this._columns[i].tasks = [];
+        this._columns[i].sections = [];
       }
     }));
     this._render();
@@ -1763,6 +1794,50 @@ class HomeTasksCard extends HTMLElement {
         task.sub_items = subTaskIds.map(id => idToSub[id]).filter(Boolean);
       }
     }
+  }
+
+  // Apply pending section_id changes to tasks that crossed a section header
+  // during the drag, then persist the new order. Tasks dropped under the
+  // global Done header keep their original section_id so reactivation
+  // returns them to the right bucket.
+  async _applySectionChangesAndReorder(colIdx, sectionedOrder) {
+    const cs = this._columns[colIdx];
+    const tasksById = new Map((cs.tasks || []).map((t) => [t.id, t]));
+    const knownSectionIds = new Set((cs.sections || []).map((s) => s.id));
+    const isExternal = this._isExternalCol(colIdx);
+    const updates = [];
+    for (const { taskId, sectionId } of sectionedOrder) {
+      const task = tasksById.get(taskId);
+      if (!task) continue;
+      if (sectionId === "__done__") continue; // dropped onto Done header — leave section_id alone
+      const targetSectionId = sectionId && knownSectionIds.has(sectionId) ? sectionId : null;
+      const currentSectionId = task.section_id || null;
+      if (targetSectionId !== currentSectionId) {
+        updates.push({ taskId, section_id: targetSectionId });
+      }
+    }
+    for (const u of updates) {
+      try {
+        if (isExternal) {
+          await this._callWs("home_tasks/update_external_overlay", {
+            entity_id: this._colEntityId(colIdx),
+            task_uid: u.taskId,
+            section_id: u.section_id,
+          });
+        } else {
+          await this._callWs("home_tasks/update_task", {
+            list_id: this._colListId(colIdx),
+            task_id: u.taskId,
+            section_id: u.section_id,
+          });
+        }
+      } catch (err) {
+        this._showError(`Section update failed: ${err.message || err}`);
+      }
+    }
+    const visibleOrder = sectionedOrder.map((p) => p.taskId);
+    const fullOrder = this._mergeHiddenTasks(colIdx, visibleOrder);
+    await this._reorderTasks(fullOrder, colIdx);
   }
 
   async _reorderTasks(taskIds, colIdx) {
@@ -2507,15 +2582,65 @@ class HomeTasksCard extends HTMLElement {
   }
 
   _buildColumnTaskList(filteredTasks, colIdx) {
+    const cs = this._columns[colIdx];
+    const col = this._config.columns[colIdx];
+    const showHeaders = col.show_section_headers !== false;
+    const sections = (cs.sections || []).slice().sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+
     const taskListChildren = [];
     if (filteredTasks.length === 0) {
       taskListChildren.push(
         this._el("div", { className: "empty-state", textContent: this._t("empty") })
       );
+    } else if (!showHeaders || sections.length === 0) {
+      // Flat rendering — original behavior, plus optional Done header at the
+      // bottom for visual consistency when both open and completed are visible.
+      const openTasks = filteredTasks.filter((t) => !t.completed);
+      const doneTasks = filteredTasks.filter((t) => t.completed);
+      for (const task of openTasks) taskListChildren.push(this._buildTask(task, colIdx));
+      if (doneTasks.length > 0 && openTasks.length > 0) {
+        taskListChildren.push(this._buildDoneHeader(colIdx));
+        for (const task of doneTasks) {
+          if (!this._isSectionCollapsed(colIdx, "__done__")) {
+            taskListChildren.push(this._buildTask(task, colIdx));
+          }
+        }
+      } else {
+        for (const task of doneTasks) taskListChildren.push(this._buildTask(task, colIdx));
+      }
+    } else {
+      const knownIds = new Set(sections.map((s) => s.id));
+      const openTasks = filteredTasks.filter((t) => !t.completed);
+      const doneTasks = filteredTasks.filter((t) => t.completed);
+      const unsorted = openTasks.filter((t) => !t.section_id || !knownIds.has(t.section_id));
+      const bySection = new Map(sections.map((s) => [s.id, []]));
+      for (const t of openTasks) {
+        if (t.section_id && knownIds.has(t.section_id)) bySection.get(t.section_id).push(t);
+      }
+
+      // Top: unsorted, no header
+      for (const t of unsorted) taskListChildren.push(this._buildTask(t, colIdx));
+
+      // Each section in sort order
+      for (const section of sections) {
+        const tasksIn = bySection.get(section.id) || [];
+        const collapsed = this._isSectionCollapsed(colIdx, section.id);
+        taskListChildren.push(this._buildSectionHeader(section, colIdx, { collapsed, count: tasksIn.length }));
+        if (!collapsed) {
+          for (const t of tasksIn) taskListChildren.push(this._buildTask(t, colIdx));
+        }
+      }
+
+      // Done at end (only if there are completed tasks)
+      if (doneTasks.length > 0) {
+        const collapsed = this._isSectionCollapsed(colIdx, "__done__");
+        taskListChildren.push(this._buildDoneHeader(colIdx, { collapsed, count: doneTasks.length }));
+        if (!collapsed) {
+          for (const t of doneTasks) taskListChildren.push(this._buildTask(t, colIdx));
+        }
+      }
     }
-    for (const task of filteredTasks) {
-      taskListChildren.push(this._buildTask(task, colIdx));
-    }
+
     const taskList = this._el("div", {
       className: "task-list",
       "data-col-idx": String(colIdx),
@@ -2552,6 +2677,138 @@ class HomeTasksCard extends HTMLElement {
       this._animateFilterChange(colIdx, () => { cs.filter = value; });
     });
     return btn;
+  }
+
+  _columnStorageKey(colIdx) {
+    const col = this._config.columns[colIdx] || {};
+    return col.list_id || col.entity_id || `col_${colIdx}`;
+  }
+
+  _isSectionCollapsed(colIdx, sectionId) {
+    try {
+      const key = `home_tasks_card:section_collapse:${this._columnStorageKey(colIdx)}:${sectionId}`;
+      return window.localStorage.getItem(key) === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  _setSectionCollapsed(colIdx, sectionId, collapsed) {
+    try {
+      const key = `home_tasks_card:section_collapse:${this._columnStorageKey(colIdx)}:${sectionId}`;
+      if (collapsed) window.localStorage.setItem(key, "1");
+      else window.localStorage.removeItem(key);
+    } catch (e) {
+      /* localStorage unavailable — collapse state is session-only */
+    }
+  }
+
+  _toggleSectionCollapsed(colIdx, sectionId) {
+    const before = this._captureListFlip(colIdx);
+    const next = !this._isSectionCollapsed(colIdx, sectionId);
+    this._setSectionCollapsed(colIdx, sectionId, next);
+    this._render();
+    this._applyFlip(before, colIdx, 0.25);
+  }
+
+  _buildSectionHeader(section, colIdx, opts = {}) {
+    const { collapsed = false, count = 0, isDone = false } = opts;
+    let className = "section-header";
+    if (collapsed) className += " collapsed";
+    if (isDone) className += " done-header";
+    const header = this._el("div", { className });
+    header.dataset.sectionId = section.id;
+    if (section.icon) {
+      const icon = document.createElement("ha-icon");
+      icon.setAttribute("icon", section.icon);
+      header.appendChild(icon);
+    }
+    const name = this._el("span", { className: "section-name", textContent: section.name });
+    header.appendChild(name);
+    if (count > 0) {
+      header.appendChild(this._el("span", { className: "sub-badge", textContent: String(count) }));
+    }
+    const caret = document.createElement("ha-icon");
+    caret.setAttribute("icon", "mdi:chevron-down");
+    caret.className = "section-caret";
+    header.appendChild(caret);
+    header.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this._toggleSectionCollapsed(colIdx, section.id);
+    });
+    this._attachDragToSectionHeader(header, section.id, colIdx, opts.isDone === true);
+    return header;
+  }
+
+  _attachDragToSectionHeader(headerEl, sectionId, colIdx, isDoneHeader) {
+    const onEnter = () => {
+      if (!this._draggedTaskId) return;
+      headerEl.classList.add("drop-target");
+      // Spring-loaded: open a collapsed section after a short hover so
+      // the user can drop into it. Skip for the Done header.
+      if (!isDoneHeader && this._isSectionCollapsed(colIdx, sectionId)) {
+        if (this._springLoadTimer) clearTimeout(this._springLoadTimer);
+        this._springLoadOriginallyCollapsed = sectionId;
+        this._springLoadTimer = setTimeout(() => {
+          this._setSectionCollapsed(colIdx, sectionId, false);
+          this._render();
+        }, 600);
+      }
+    };
+    const onLeave = () => {
+      headerEl.classList.remove("drop-target");
+      if (this._springLoadTimer) {
+        clearTimeout(this._springLoadTimer);
+        this._springLoadTimer = null;
+      }
+    };
+    const onOver = (e) => {
+      if (!this._draggedTaskId) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = isDoneHeader ? "none" : "move";
+      headerEl.classList.add("drop-target");
+      if (isDoneHeader) return; // never reposition into Done bucket via drag
+      const draggedEl = this.shadowRoot.querySelector(`.task[data-task-id="${CSS.escape(String(this._draggedTaskId))}"]`);
+      if (!draggedEl) return;
+      // Insert the dragged element immediately after this section header so
+      // it lands as the first task of the section.
+      if (draggedEl.previousSibling !== headerEl) {
+        const list = headerEl.parentNode;
+        const siblings = [...list.querySelectorAll(".task:not(.dragging), .section-header")];
+        const before = new Map(siblings.map((el) => [el, el.getBoundingClientRect().top]));
+        list.insertBefore(draggedEl, headerEl.nextSibling);
+        siblings.forEach((el) => {
+          const dy = (before.get(el) ?? el.getBoundingClientRect().top) - el.getBoundingClientRect().top;
+          if (Math.abs(dy) < 1) return;
+          el.style.transition = "none";
+          el.style.transform = `translateY(${dy}px)`;
+          requestAnimationFrame(() => {
+            el.style.transition = "transform 0.18s ease";
+            el.style.transform = "";
+            el.addEventListener("transitionend", () => {
+              el.style.transition = "";
+              el.style.transform = "";
+            }, { once: true });
+          });
+        });
+      }
+    };
+    headerEl.addEventListener("dragenter", onEnter);
+    headerEl.addEventListener("dragleave", onLeave);
+    headerEl.addEventListener("dragover", onOver);
+    headerEl.addEventListener("drop", (e) => {
+      e.preventDefault();
+      headerEl.classList.remove("drop-target");
+      this._finishDrag();
+    });
+  }
+
+  _buildDoneHeader(colIdx, opts = {}) {
+    return this._buildSectionHeader(
+      { id: "__done__", name: this._t("done_section_header"), icon: "mdi:check-circle-outline" },
+      colIdx,
+      { ...opts, isDone: true }
+    );
   }
 
   _buildTask(task, colIdx) {
@@ -4472,6 +4729,24 @@ class HomeTasksCard extends HTMLElement {
     return Array.from(taskList.querySelectorAll(".task")).map((el) => el.dataset.taskId);
   }
 
+  // Walks the rendered list in order and returns [{taskId, sectionId}] pairs
+  // where sectionId is the id of the most recent section header (or null if
+  // the task sits in the unsorted top bucket / "__done__" for the Done bucket).
+  _getOrderWithSectionFromDom(colIdx) {
+    const taskList = this.shadowRoot.querySelector(`.task-list[data-col-idx="${CSS.escape(String(colIdx))}"]`);
+    if (!taskList) return [];
+    const result = [];
+    let currentSection = null;
+    for (const el of taskList.children) {
+      if (el.classList.contains("section-header")) {
+        currentSection = el.dataset.sectionId || null;
+      } else if (el.classList.contains("task")) {
+        result.push({ taskId: el.dataset.taskId, sectionId: currentSection });
+      }
+    }
+    return result;
+  }
+
   _mergeHiddenTasks(colIdx, visibleOrder) {
     const cs = this._columns[colIdx];
     const filteredIds = new Set(visibleOrder);
@@ -4496,7 +4771,7 @@ class HomeTasksCard extends HTMLElement {
     const targetList = targetEl.parentNode;
     if (!targetList) return;
 
-    const siblings = [...targetList.querySelectorAll(".task:not(.dragging)")];
+    const siblings = [...targetList.querySelectorAll(".task:not(.dragging), .section-header")];
     const before = new Map(siblings.map(el => [el, el.getBoundingClientRect().top]));
 
     const targetRect = targetEl.getBoundingClientRect();
@@ -4589,6 +4864,14 @@ class HomeTasksCard extends HTMLElement {
     this.shadowRoot.querySelectorAll(".card-column").forEach((el) => {
       el.classList.remove("drag-target");
     });
+    this.shadowRoot.querySelectorAll(".section-header.drop-target").forEach((el) => {
+      el.classList.remove("drop-target");
+    });
+    if (this._springLoadTimer) {
+      clearTimeout(this._springLoadTimer);
+      this._springLoadTimer = null;
+    }
+    this._springLoadOriginallyCollapsed = null;
     if (this._touchClone) { this._touchClone.remove(); this._touchClone = null; }
     if (this._touchStartTimer) { clearTimeout(this._touchStartTimer); this._touchStartTimer = null; }
 
@@ -4599,11 +4882,11 @@ class HomeTasksCard extends HTMLElement {
       const targetTaskIds = this._getOrderFromDom(tgtColIdx);
       this._moveTask(srcColIdx, tgtColIdx, draggedId, targetTaskIds);
     } else {
-      // Same-column reorder
-      const visibleOrder = this._getOrderFromDom(srcColIdx ?? 0);
-      if (visibleOrder.length > 0) {
-        const fullOrder = this._mergeHiddenTasks(srcColIdx ?? 0, visibleOrder);
-        this._reorderTasks(fullOrder, srcColIdx ?? 0);
+      // Same-column reorder — also detect cross-section changes
+      const idx = srcColIdx ?? 0;
+      const sectionedOrder = this._getOrderWithSectionFromDom(idx);
+      if (sectionedOrder.length > 0) {
+        this._applySectionChangesAndReorder(idx, sectionedOrder);
       }
     }
 
@@ -4731,9 +5014,15 @@ class HomeTasksCard extends HTMLElement {
       if (this._touchClone) this._touchClone.style.display = "";
 
       const target = shadowEl ? shadowEl.closest(".task") : null;
+      const sectionHeader = shadowEl ? shadowEl.closest(".section-header") : null;
       if (target && target.dataset.taskId && target.dataset.taskId !== this._draggedTaskId && !target.classList.contains("drag-clone")) {
         const draggedEl = this.shadowRoot.querySelector(`.task[data-task-id="${CSS.escape(String(this._draggedTaskId))}"]`);
         this._liveMoveTask(draggedEl, target, touch.clientY);
+      } else if (sectionHeader && sectionHeader.dataset.sectionId !== "__done__") {
+        const draggedEl = this.shadowRoot.querySelector(`.task[data-task-id="${CSS.escape(String(this._draggedTaskId))}"]`);
+        if (draggedEl && draggedEl.previousSibling !== sectionHeader) {
+          sectionHeader.parentNode.insertBefore(draggedEl, sectionHeader.nextSibling);
+        }
       }
     };
 
@@ -4824,6 +5113,24 @@ class HomeTasksCard extends HTMLElement {
       .sort-option.active { color: var(--todo-primary); font-weight: 500; }
       .task-list { display: flex; flex-direction: column; gap: 6px; min-height: 40px; }
       .empty-state { text-align: center; padding: 24px; color: var(--todo-disabled); font-size: 14px; }
+      .section-header {
+        display: flex; align-items: center; gap: 8px;
+        padding: 10px 12px; min-height: 44px;
+        border: 1px solid var(--todo-divider); border-radius: var(--todo-radius);
+        background: rgba(var(--rgb-primary-text-color, 33, 33, 33), 0.03);
+        cursor: pointer; user-select: none; font-size: 14px; color: var(--todo-text);
+        transition: background 0.15s, box-shadow 0.2s, border-color 0.2s;
+      }
+      .section-header:hover { background: rgba(var(--rgb-primary-text-color, 33, 33, 33), 0.06); }
+      .section-header.drop-target { border-color: var(--todo-primary); box-shadow: 0 0 0 1px var(--todo-primary) inset; }
+      .section-header ha-icon { --mdc-icon-size: 18px; color: var(--todo-secondary-text); flex-shrink: 0; }
+      .section-header .section-name { flex: 1; min-width: 0; word-break: break-word; line-height: 1.3; }
+      .section-header .section-caret {
+        --mdc-icon-size: 18px; color: var(--todo-secondary-text);
+        transition: transform 0.2s; flex-shrink: 0;
+      }
+      .section-header.collapsed .section-caret { transform: rotate(-90deg); }
+      .section-header.done-header { background: transparent; }
       .task {
         border: 1px solid var(--todo-divider); border-radius: var(--todo-radius);
         background: rgba(var(--rgb-primary-text-color, 33, 33, 33), 0.06);
@@ -5252,6 +5559,41 @@ class HomeTasksCardEditor extends HTMLElement {
     this._editorCodeMode = {};  // { tabIdx: bool }
     this._sectionOpen = {};     // { translationKey: bool } — persists across re-renders
     this._ignoreNextSetConfig = false; // skip the echo setConfig() call after _fireChanged
+    this._listSections = {};    // { sourceKey: [{id,name,icon,sort_order}] } — server-loaded sections
+  }
+
+  _sourceKeyForCol(col) {
+    if (!col) return null;
+    if (col.entity_id) return `ext:${col.entity_id}`;
+    if (col.list_id) return col.list_id;
+    return null;
+  }
+
+  _sectionsTargetPayload(col) {
+    if (col.entity_id) return { entity_id: col.entity_id };
+    if (col.list_id) return { list_id: col.list_id };
+    return null;
+  }
+
+  async _loadSectionsFor(col) {
+    const target = this._sectionsTargetPayload(col);
+    if (!target) return [];
+    const key = this._sourceKeyForCol(col);
+    try {
+      const r = await this._hass.callWS({ type: "home_tasks/get_sections", ...target });
+      const arr = (r && r.sections) || [];
+      this._listSections[key] = arr;
+      return arr;
+    } catch (e) {
+      this._listSections[key] = [];
+      return [];
+    }
+  }
+
+  async _wsCallSection(col, type, extra = {}) {
+    const target = this._sectionsTargetPayload(col);
+    if (!target) throw new Error("No list selected");
+    return this._hass.callWS({ type, ...target, ...extra });
   }
 
   _t(key, ...args) {
@@ -5430,6 +5772,16 @@ class HomeTasksCardEditor extends HTMLElement {
       .spin-btn { background: none; border: none; padding: 2px 4px; cursor: pointer; color: var(--secondary-text-color); line-height: 1; font-size: 12px; }
       .spin-btn:hover { color: var(--primary-color); }
       ha-yaml-editor { display: block; }
+      .sections-editor-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; }
+      .sections-editor-row ha-textfield { flex: 1; min-width: 0; }
+      .sections-editor-row ha-icon-picker { min-width: 0; }
+      .icon-btn { background: none; border: 1px solid var(--divider-color, rgba(255,255,255,0.12)); border-radius: 6px; padding: 6px; cursor: pointer; color: var(--primary-text-color); display: inline-flex; align-items: center; justify-content: center; }
+      .icon-btn:hover:not(:disabled) { background: var(--secondary-background-color, rgba(0,0,0,0.05)); }
+      .icon-btn:disabled { opacity: 0.4; cursor: default; }
+      .icon-btn.del { color: var(--error-color, #db4437); }
+      .icon-btn ha-icon { --mdc-icon-size: 18px; }
+      .add-section-btn { margin-top: 8px; padding: 8px 14px; border: 1px dashed var(--primary-color); border-radius: 6px; background: transparent; color: var(--primary-color); cursor: pointer; font-family: inherit; font-size: 14px; }
+      .add-section-btn:hover { background: rgba(3,169,244,0.08); }
     `;
     root.appendChild(style);
 
@@ -5867,9 +6219,144 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-reminders", "ed_show_reminders", "show_reminders", true),
           makeToggle("show-recurrence", "ed_show_recurrence", "show_recurrence", true),
           makeToggle("show-history", "ed_show_history", "show_history", false),
+          makeToggle("show-section-headers", "ed_show_section_headers", "show_section_headers", true),
         ]),
       ], false),
+      this._buildSectionsEditor(col),
     ]);
+  }
+
+  _buildSectionsEditor(col) {
+    const key = this._sourceKeyForCol(col);
+    const cached = key ? this._listSections[key] : null;
+    if (!key) {
+      return this._el("div", { className: "field" }, [
+        this._el("span", { className: "hint", textContent: this._t("ed_sections_select_list_hint") }),
+      ]);
+    }
+    const list = (cached || []).slice().sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+
+    // Build a collapsible <details> section using the same makeSection-style markup,
+    // but inline (we cannot reuse makeSection because it lives in the closure of
+    // _buildVisualEditor — we replicate the visual structure via the same classes).
+    const det = document.createElement("details");
+    if (this._sectionOpen.sections) det.open = true;
+    const sum = document.createElement("summary");
+    const ico = document.createElement("ha-icon");
+    ico.setAttribute("icon", "mdi:folder-multiple");
+    ico.style.cssText = "--mdc-icon-size:20px;width:20px;height:20px;flex-shrink:0;";
+    const chevWrap = document.createElement("span");
+    chevWrap.className = "sum-chevron";
+    const chev = document.createElement("ha-icon");
+    chev.setAttribute("icon", "mdi:chevron-down");
+    chev.style.cssText = "--mdc-icon-size:20px;width:20px;height:20px;";
+    chevWrap.appendChild(chev);
+    sum.appendChild(ico);
+    sum.appendChild(document.createTextNode(this._t("ed_sec_sections")));
+    sum.appendChild(chevWrap);
+    sum.addEventListener("click", () => {
+      this._sectionOpen.sections = !det.open;
+    });
+    det.appendChild(sum);
+
+    const content = document.createElement("div");
+    content.className = "section-content";
+
+    if (cached === null || cached === undefined) {
+      // Trigger lazy load — re-render once it arrives
+      this._loadSectionsFor(col).then(() => this._render());
+      content.appendChild(this._el("span", { className: "hint", textContent: this._t("ed_loading") || "…" }));
+    } else if (list.length === 0) {
+      content.appendChild(this._el("span", { className: "hint", textContent: this._t("ed_sections_empty") }));
+    }
+
+    for (let i = 0; i < list.length; i++) {
+      const section = list[i];
+      const row = this._el("div", { className: "sections-editor-row" });
+
+      const upBtn = this._el("button", { className: "icon-btn", type: "button", title: this._t("ed_move_up") || "Up" });
+      upBtn.appendChild((() => { const ic = document.createElement("ha-icon"); ic.setAttribute("icon", "mdi:arrow-up"); return ic; })());
+      upBtn.disabled = i === 0;
+      upBtn.addEventListener("click", async () => {
+        if (i === 0) return;
+        const ids = list.map((s) => s.id);
+        [ids[i - 1], ids[i]] = [ids[i], ids[i - 1]];
+        await this._wsCallSection(col, "home_tasks/reorder_sections", { section_ids: ids });
+        await this._loadSectionsFor(col);
+        this._render();
+      });
+      row.appendChild(upBtn);
+
+      const downBtn = this._el("button", { className: "icon-btn", type: "button", title: this._t("ed_move_down") || "Down" });
+      downBtn.appendChild((() => { const ic = document.createElement("ha-icon"); ic.setAttribute("icon", "mdi:arrow-down"); return ic; })());
+      downBtn.disabled = i === list.length - 1;
+      downBtn.addEventListener("click", async () => {
+        if (i === list.length - 1) return;
+        const ids = list.map((s) => s.id);
+        [ids[i], ids[i + 1]] = [ids[i + 1], ids[i]];
+        await this._wsCallSection(col, "home_tasks/reorder_sections", { section_ids: ids });
+        await this._loadSectionsFor(col);
+        this._render();
+      });
+      row.appendChild(downBtn);
+
+      const nameInput = document.createElement("ha-textfield");
+      nameInput.label = this._t("ed_section_name");
+      nameInput.value = section.name;
+      nameInput.style.flex = "1";
+      nameInput.addEventListener("change", async (e) => {
+        const newName = (e.target.value || "").trim();
+        if (!newName || newName === section.name) return;
+        await this._wsCallSection(col, "home_tasks/update_section", { section_id: section.id, name: newName });
+        await this._loadSectionsFor(col);
+        this._render();
+      });
+      row.appendChild(nameInput);
+
+      const iconPicker = document.createElement("ha-icon-picker");
+      iconPicker.label = this._t("ed_section_icon");
+      iconPicker.value = section.icon || "";
+      iconPicker.addEventListener("value-changed", async (e) => {
+        const newIcon = e.detail.value || null;
+        await this._wsCallSection(col, "home_tasks/update_section", { section_id: section.id, icon: newIcon });
+        await this._loadSectionsFor(col);
+        this._render();
+      });
+      row.appendChild(iconPicker);
+
+      const delBtn = this._el("button", { className: "icon-btn del", type: "button", title: this._t("ed_delete_section") });
+      delBtn.appendChild((() => { const ic = document.createElement("ha-icon"); ic.setAttribute("icon", "mdi:delete"); return ic; })());
+      delBtn.addEventListener("click", async () => {
+        if (!window.confirm(this._t("confirm_delete_section"))) return;
+        await this._wsCallSection(col, "home_tasks/delete_section", { section_id: section.id });
+        await this._loadSectionsFor(col);
+        this._render();
+      });
+      row.appendChild(delBtn);
+
+      content.appendChild(row);
+    }
+
+    if (cached !== null && cached !== undefined) {
+      const addBtn = this._el("button", { className: "add-section-btn", type: "button", textContent: this._t("ed_add_section") });
+      addBtn.addEventListener("click", async () => {
+        const name = window.prompt(this._t("ed_section_name_prompt"));
+        if (!name || !name.trim()) return;
+        try {
+          await this._wsCallSection(col, "home_tasks/add_section", { name: name.trim() });
+          await this._loadSectionsFor(col);
+          this._render();
+        } catch (err) {
+          window.alert(err.message || String(err));
+        }
+      });
+      content.appendChild(addBtn);
+    }
+
+    const wrap = document.createElement("div");
+    wrap.appendChild(content);
+    det.appendChild(wrap);
+    return det;
   }
 
   _fireChanged() {

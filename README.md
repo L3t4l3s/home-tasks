@@ -80,11 +80,20 @@ Home Tasks uses its **own lightweight REST API client** (no dependency on `todoi
 - **Favorites** — marking tasks or projects as favorites
 - **Saved filters** — Todoist's own filter query language
 
+### Sections
+
+Group tasks within a list under named, optionally icon-bearing **sections** that render as headers between rows. Auto-sort runs *within* each section so manual order is preserved across groups; completed tasks pool in a single "Done" header at the bottom and return to their original section on reopen. Sections live with the list (server-side), so every card and every dashboard sees the same sections — and tasks created from voice, automations, or HA's todo entity can be assigned to a section just like via the card.
+
+Manage sections from the **card editor → Sections**: add, rename, change icon, reorder, delete (tasks fall back to "no section" — never lost). On the card itself, sections can be **collapsed / expanded** with a tap on the header (state persists per browser); during drag & drop, hovering a collapsed section header for ~600 ms automatically opens it ("spring-loaded folder") so you can drop into it. The "Done" header is the only header that's not a drop target — completion is changed via the checkbox.
+
+Typical use: a shopping list whose sections are store aisles ("Produce", "Frozen", "Bakery"), a project list grouped by status, or a chore list grouped by room. v1 supports manual assignment; auto-assignment by tag, title keyword, or learned history is on the roadmap.
+
 ### Dashboard Card
 
 - **Multi-column layout** — display multiple lists side-by-side on a single card
 - **Per-column configuration** — title, icon, default filter, default sort, show/hide every field individually
-- **Drag & drop** reordering on desktop and mobile
+- **Sections** — group tasks under named headers with optional icons (see above)
+- **Drag & drop** reordering on desktop and mobile, including across sections
 - **Cross-list drag & drop** — move tasks between columns (multi-column cards only)
 - **Click anywhere** to expand / collapse task details
 - **Double-click title** to rename inline
@@ -135,7 +144,7 @@ English · German · French · Spanish · Portuguese · Italian · Dutch · Poli
 
 1. Go to **Settings** → **Devices & Services** → **Add Integration**
 2. Search for **Home Tasks**
-3. Click **Add Device**
+3. Click **Add Service**
 4. Choose **Create a new task list**
 5. Enter a name for your list
 6. Repeat for additional lists
@@ -145,7 +154,7 @@ English · German · French · Spanish · Portuguese · Italian · Dutch · Poli
 1. Set up the external provider's HA integration first (e.g. CalDAV, Google Tasks, Todoist)
 2. Go to **Settings** → **Devices & Services** → **Add Integration**
 3. Search for **Home Tasks**
-4. Click **Add Device**
+4. Click **Add Service**
 5. Choose **Link an external todo list**
 6. Select the todo entity from the dropdown
 7. The external list is now available in the card editor
