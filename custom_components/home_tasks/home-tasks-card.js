@@ -46,11 +46,11 @@ const _TRANSLATIONS = {
     ed_display: "Display",
     ed_show_title: "Title",
     ed_show_progress: "Progress",
-    ed_show_due_date: "Due date",
+    ed_show_due_date: "Due dates",
     ed_show_notes: "Notes",
-    ed_show_recurrence: "Recurrence",
+    ed_show_recurrence: "Recurrences",
     ed_show_sub_items: "Sub-tasks",
-    ed_show_person: "Person",
+    ed_show_person: "Assignees",
     ed_auto_delete: "Delete completed immediately",
     ed_compact: "Compact",
     ed_show_tags: "Tags",
@@ -71,7 +71,7 @@ const _TRANSLATIONS = {
     sort_title: "Title (A\u2013Z)",
     sort_person: "Assigned",
     ed_show_sort: "Sort",
-    ed_show_priority: "Priority",
+    ed_show_priority: "Priorities",
     ed_default_sort: "Default sort",
     reminder: "Reminders",
     rem_add: "+ Add reminder",
@@ -113,7 +113,7 @@ const _TRANSLATIONS = {
     rec_todoist_pattern_unsupported: "Sub-patterns aren't supported when the interval is greater than 1.",
     history: "History", history_created: "Created", history_completed: "Completed", history_reopened: "Reopened",
     history_reset: "Auto-reset (recurrence)", history_changed: "changed", history_empty: "No history yet", hist_title: "Title", history_disabled: "Disabled",
-    ed_show_history: "Show history", hist_by_user: "User",
+    ed_show_history: "Histories", hist_by_user: "User",
     assigned_unknown: "Unknown (%s)", recurrence_readonly: "Managed by %s", synced_with: "Synced with %s",
     due_today: "Today", due_tomorrow: "Tomorrow", due_yesterday: "Yesterday",
     due_day_after_tomorrow: "In 2 days", due_day_before_yesterday: "2 days ago",
@@ -148,7 +148,7 @@ const _TRANSLATIONS = {
     rec_hours: "Uren", rec_days: "Dagen", rec_weeks: "Weken", rec_months: "Maanden", rec_years: "Jaren",
     rec_short_h: "u", rec_short_d: "d", rec_short_w: "w", rec_short_m: "m", rec_short_y: "j",
     priority: "Prioriteit", pri_high: "Hoog", pri_medium: "Middel", pri_low: "Laag",
-    ed_show_priority: "Prioriteit",
+    ed_show_priority: "Prioriteiten",
     rec_hourly: "Uurlijks", rec_daily: "Dagelijks", rec_weekly: "Wekelijks", rec_monthly: "Maandelijks", rec_yearly: "Jaarlijks",
     rec_type_interval: "Elke \u2026", rec_type_weekdays: "Op weekdagen",
     rec_wd_0: "Ma", rec_wd_1: "Di", rec_wd_2: "Wo", rec_wd_3: "Do", rec_wd_4: "Vr", rec_wd_5: "Za", rec_wd_6: "Zo",
@@ -157,8 +157,8 @@ const _TRANSLATIONS = {
     ed_default_filter: "Standaardfilter", ed_list: "Lijst",
     ed_title: "Titel (optioneel)", ed_title_placeholder: "Standaard: lijstnaam",
     ed_display: "Weergave", ed_show_title: "Titel", ed_show_progress: "Voortgang",
-    ed_show_due_date: "Deadline", ed_show_notes: "Notities", ed_show_recurrence: "Herhaling",
-    ed_show_sub_items: "Subtaken", ed_show_person: "Persoon",
+    ed_show_due_date: "Deadlines", ed_show_notes: "Notities", ed_show_recurrence: "Herhalingen",
+    ed_show_sub_items: "Subtaken", ed_show_person: "Personen",
     ed_auto_delete: "Voltooide meteen verwijderen", ed_compact: "Compact", ed_show_tags: "Tags",
     ed_hint: "Nieuwe lijsten kunnen worden aangemaakt via Instellingen \u2192 Integraties \u2192 Home Tasks.",
     tags: "Tags", add_tag: "+ Tag toevoegen", tag_placeholder: "Nieuwe tag...", remove_tag: "Verwijderen", tag_suggestions_label: "Bestaande tags", tag_no_matches: "Geen overeenkomende tags",
@@ -189,7 +189,7 @@ const _TRANSLATIONS = {
     rec_todoist_pattern_unsupported: "Subpatronen werken niet als het interval groter is dan 1.",
     history: "Geschiedenis", history_created: "Aangemaakt", history_completed: "Voltooid", history_reopened: "Heropend",
     history_reset: "Automatisch teruggezet", history_changed: "gewijzigd", history_empty: "Geen geschiedenis", hist_title: "Titel", history_disabled: "Uitgeschakeld",
-    ed_show_history: "Geschiedenis tonen", hist_by_user: "Gebruiker",
+    ed_show_history: "Geschiedenissen", hist_by_user: "Gebruiker",
     assigned_unknown: "Onbekend (%s)", recurrence_readonly: "Beheerd door %s", synced_with: "Gesynchroniseerd met %s",
     due_today: "Vandaag", due_tomorrow: "Morgen", due_yesterday: "Gisteren",
     due_day_after_tomorrow: "Overmorgen", due_day_before_yesterday: "Eergisteren",
@@ -219,8 +219,8 @@ const _TRANSLATIONS = {
     ed_default_filter: "Filtro predefinito", ed_list: "Lista",
     ed_title: "Titolo (opzionale)", ed_title_placeholder: "Predefinito: nome lista",
     ed_display: "Visualizzazione", ed_show_title: "Titolo", ed_show_progress: "Avanzamento",
-    ed_show_due_date: "Scadenza", ed_show_notes: "Note", ed_show_recurrence: "Ricorrenza",
-    ed_show_sub_items: "Sotto-attivit\u00e0", ed_show_person: "Persona",
+    ed_show_due_date: "Scadenze", ed_show_notes: "Note", ed_show_recurrence: "Ricorrenze",
+    ed_show_sub_items: "Sotto-attivit\u00e0", ed_show_person: "Persone",
     ed_auto_delete: "Elimina completate immediatamente", ed_compact: "Compatto", ed_show_tags: "Tag",
     ed_hint: "Nuove liste possono essere create in Impostazioni \u2192 Integrazioni \u2192 Home Tasks.",
     tags: "Tag", add_tag: "+ Aggiungi tag", tag_placeholder: "Nuovo tag...", remove_tag: "Rimuovi", tag_suggestions_label: "Tag esistenti", tag_no_matches: "Nessun tag corrispondente",
@@ -251,7 +251,7 @@ const _TRANSLATIONS = {
     rec_todoist_pattern_unsupported: "I sottoschemi non sono supportati con intervallo maggiore di 1.",
     history: "Cronologia", history_created: "Creato", history_completed: "Completato", history_reopened: "Riaperto",
     history_reset: "Ripristino automatico", history_changed: "modificato", history_empty: "Nessuna cronologia", hist_title: "Titolo", history_disabled: "Disabilitato",
-    ed_show_history: "Mostra cronologia", hist_by_user: "Utente",
+    ed_show_history: "Cronologie", hist_by_user: "Utente",
     assigned_unknown: "Sconosciuto (%s)", recurrence_readonly: "Gestito da %s", synced_with: "Sincronizzato con %s",
     due_today: "Oggi", due_tomorrow: "Domani", due_yesterday: "Ieri",
     due_day_after_tomorrow: "Dopodomani", due_day_before_yesterday: "L'altroieri",
@@ -272,7 +272,7 @@ const _TRANSLATIONS = {
     rec_hours: "Godziny", rec_days: "Dni", rec_weeks: "Tygodnie", rec_months: "Miesi\u0105ce", rec_years: "Lata",
     rec_short_h: "g", rec_short_d: "d", rec_short_w: "t", rec_short_m: "m", rec_short_y: "r",
     priority: "Priorytet", pri_high: "Wysoki", pri_medium: "\u015arednij", pri_low: "Niski",
-    ed_show_priority: "Priorytet",
+    ed_show_priority: "Priorytety",
     rec_hourly: "Co godz.", rec_daily: "Codziennie", rec_weekly: "Co tydz.", rec_monthly: "Co mies.", rec_yearly: "Rocznie",
     rec_type_interval: "Co \u2026", rec_type_weekdays: "W dni robocze",
     rec_wd_0: "Pn", rec_wd_1: "Wt", rec_wd_2: "\u015ar", rec_wd_3: "Cz", rec_wd_4: "Pt", rec_wd_5: "So", rec_wd_6: "Nd",
@@ -281,8 +281,8 @@ const _TRANSLATIONS = {
     ed_default_filter: "Domy\u015blny filtr", ed_list: "Lista",
     ed_title: "Tytu\u0142 (opcjonalnie)", ed_title_placeholder: "Domy\u015blnie: nazwa listy",
     ed_display: "Wy\u015bwietlanie", ed_show_title: "Tytu\u0142", ed_show_progress: "Post\u0119p",
-    ed_show_due_date: "Termin", ed_show_notes: "Notatki", ed_show_recurrence: "Powtarzanie",
-    ed_show_sub_items: "Podzadania", ed_show_person: "Osoba",
+    ed_show_due_date: "Terminy", ed_show_notes: "Notatki", ed_show_recurrence: "Powtórzenia",
+    ed_show_sub_items: "Podzadania", ed_show_person: "Osoby",
     ed_auto_delete: "Natychmiast usu\u0144 uko\u0144czone", ed_compact: "Kompaktowy", ed_show_tags: "Tagi",
     ed_hint: "Nowe listy mo\u017cna tworzy\u0107 w Ustawienia \u2192 Integracje \u2192 Home Tasks.",
     tags: "Tagi", add_tag: "+ Dodaj tag", tag_placeholder: "Nowy tag...", remove_tag: "Usu\u0144", tag_suggestions_label: "Istniej\u0105ce tagi", tag_no_matches: "Brak pasuj\u0105cych tag\u00f3w",
@@ -313,7 +313,7 @@ const _TRANSLATIONS = {
     rec_todoist_pattern_unsupported: "Podwzorce nie s\u0105 obs\u0142ugiwane, gdy interwa\u0142 jest wi\u0119kszy ni\u017c 1.",
     history: "Historia", history_created: "Utworzono", history_completed: "Uko\u0144czono", history_reopened: "Ponownie otwarto",
     history_reset: "Auto-reset", history_changed: "zmieniono", history_empty: "Brak historii", hist_title: "Tytu\u0142", history_disabled: "Wy\u0142\u0105czono",
-    ed_show_history: "Poka\u017c histori\u0119", hist_by_user: "U\u017cytkownik",
+    ed_show_history: "Historie", hist_by_user: "U\u017cytkownik",
     assigned_unknown: "Nieznany (%s)", recurrence_readonly: "Zarz\u0105dzane przez %s", synced_with: "Zsynchronizowane z %s",
     due_today: "Dzisiaj", due_tomorrow: "Jutro", due_yesterday: "Wczoraj",
     due_day_after_tomorrow: "Pojutrze", due_day_before_yesterday: "Przedwczoraj",
@@ -334,7 +334,7 @@ const _TRANSLATIONS = {
     rec_hours: "Timmar", rec_days: "Dagar", rec_weeks: "Veckor", rec_months: "M\u00e5nader", rec_years: "\u00c5r",
     rec_short_h: "t", rec_short_d: "d", rec_short_w: "v", rec_short_m: "m\u00e5n", rec_short_y: "\u00e5r",
     priority: "Prioritet", pri_high: "H\u00f6g", pri_medium: "Medel", pri_low: "L\u00e5g",
-    ed_show_priority: "Prioritet",
+    ed_show_priority: "Prioriteter",
     rec_hourly: "Varje timme", rec_daily: "Dagligen", rec_weekly: "Veckovis", rec_monthly: "M\u00e5nadsvis", rec_yearly: "\u00c5rligen",
     rec_type_interval: "Var \u2026", rec_type_weekdays: "P\u00e5 vardagar",
     rec_wd_0: "M\u00e5n", rec_wd_1: "Tis", rec_wd_2: "Ons", rec_wd_3: "Tor", rec_wd_4: "Fre", rec_wd_5: "L\u00f6r", rec_wd_6: "S\u00f6n",
@@ -343,8 +343,8 @@ const _TRANSLATIONS = {
     ed_default_filter: "Standardfilter", ed_list: "Lista",
     ed_title: "Titel (valfritt)", ed_title_placeholder: "Standard: listnamn",
     ed_display: "Visning", ed_show_title: "Titel", ed_show_progress: "Framsteg",
-    ed_show_due_date: "F\u00f6rfallodatum", ed_show_notes: "Anteckningar", ed_show_recurrence: "Upprepning",
-    ed_show_sub_items: "Deluppgifter", ed_show_person: "Person",
+    ed_show_due_date: "F\u00f6rfallodatum", ed_show_notes: "Anteckningar", ed_show_recurrence: "Upprepningar",
+    ed_show_sub_items: "Deluppgifter", ed_show_person: "Personer",
     ed_auto_delete: "Ta bort slutf\u00f6rda omedelbart", ed_compact: "Kompakt", ed_show_tags: "Taggar",
     ed_hint: "Nya listor kan skapas under Inst\u00e4llningar \u2192 Integrationer \u2192 Home Tasks.",
     tags: "Taggar", add_tag: "+ L\u00e4gg till tagg", tag_placeholder: "Ny tagg...", remove_tag: "Ta bort", tag_suggestions_label: "Befintliga taggar", tag_no_matches: "Inga matchande taggar",
@@ -375,7 +375,7 @@ const _TRANSLATIONS = {
     rec_todoist_pattern_unsupported: "Underm\u00f6nster st\u00f6ds inte n\u00e4r intervallet \u00e4r st\u00f6rre \u00e4n 1.",
     history: "Historik", history_created: "Skapad", history_completed: "Avklarad", history_reopened: "\u00d6ppnad igen",
     history_reset: "Auto-\u00e5terst\u00e4lld", history_changed: "\u00e4ndrad", history_empty: "Ingen historik", hist_title: "Titel", history_disabled: "Inaktiverad",
-    ed_show_history: "Visa historik", hist_by_user: "Anv\u00e4ndare",
+    ed_show_history: "Historiker", hist_by_user: "Anv\u00e4ndare",
     assigned_unknown: "Ok\u00e4nd (%s)", recurrence_readonly: "Hanteras av %s", synced_with: "Synkroniserat med %s",
     due_today: "Idag", due_tomorrow: "Imorgon", due_yesterday: "Ig\u00e5r",
     due_day_after_tomorrow: "\u00d6vermorgon", due_day_before_yesterday: "F\u00f6rrg\u00e5r",
@@ -396,7 +396,7 @@ const _TRANSLATIONS = {
     rec_hours: "Heures", rec_days: "Jours", rec_weeks: "Semaines", rec_months: "Mois", rec_years: "Ann\u00e9es",
     rec_short_h: "h", rec_short_d: "j", rec_short_w: "s", rec_short_m: "m", rec_short_y: "a",
     priority: "Priorit\u00e9", pri_high: "Haute", pri_medium: "Moyenne", pri_low: "Basse",
-    ed_show_priority: "Priorit\u00e9",
+    ed_show_priority: "Priorit\u00e9s",
     rec_hourly: "Horaire", rec_daily: "Quotidien", rec_weekly: "Hebdomadaire", rec_monthly: "Mensuel", rec_yearly: "Annuel",
     rec_type_interval: "Tous les \u2026", rec_type_weekdays: "Les jours de semaine",
     rec_wd_0: "Lun", rec_wd_1: "Mar", rec_wd_2: "Mer", rec_wd_3: "Jeu", rec_wd_4: "Ven", rec_wd_5: "Sam", rec_wd_6: "Dim",
@@ -405,8 +405,8 @@ const _TRANSLATIONS = {
     ed_default_filter: "Filtre par d\u00e9faut", ed_list: "Liste",
     ed_title: "Titre (optionnel)", ed_title_placeholder: "Par d\u00e9faut\u00a0: nom de la liste",
     ed_display: "Affichage", ed_show_title: "Titre", ed_show_progress: "Progression",
-    ed_show_due_date: "\u00c9ch\u00e9ance", ed_show_notes: "Notes", ed_show_recurrence: "R\u00e9currence",
-    ed_show_sub_items: "Sous-t\u00e2ches", ed_show_person: "Personne",
+    ed_show_due_date: "\u00c9ch\u00e9ances", ed_show_notes: "Notes", ed_show_recurrence: "R\u00e9currences",
+    ed_show_sub_items: "Sous-t\u00e2ches", ed_show_person: "Personnes",
     ed_auto_delete: "Supprimer les termin\u00e9es imm\u00e9diatement", ed_compact: "Compact", ed_show_tags: "\u00c9tiquettes",
     ed_hint: "De nouvelles listes peuvent \u00eatre cr\u00e9\u00e9es dans Param\u00e8tres \u2192 Int\u00e9grations \u2192 Home Tasks.",
     tags: "\u00c9tiquettes", add_tag: "+ Ajouter une \u00e9tiquette", tag_placeholder: "Nouvelle \u00e9tiquette...", remove_tag: "Supprimer", tag_suggestions_label: "\u00c9tiquettes existantes", tag_no_matches: "Aucune \u00e9tiquette correspondante",
@@ -437,7 +437,7 @@ const _TRANSLATIONS = {
     rec_todoist_pattern_unsupported: "Les sous-mod\u00e8les ne sont pas pris en charge si l'intervalle est sup\u00e9rieur \u00e0 1.",
     history: "Historique", history_created: "Cr\u00e9\u00e9", history_completed: "Termin\u00e9", history_reopened: "R\u00e9ouvert",
     history_reset: "R\u00e9initialisation auto.", history_changed: "modifi\u00e9", history_empty: "Aucun historique", hist_title: "Titre", history_disabled: "D\u00e9sactiv\u00e9",
-    ed_show_history: "Afficher l'historique", hist_by_user: "Utilisateur",
+    ed_show_history: "Historiques", hist_by_user: "Utilisateur",
     assigned_unknown: "Inconnu (%s)", recurrence_readonly: "G\u00e9r\u00e9 par %s", synced_with: "Synchronis\u00e9 avec %s",
     due_today: "Aujourd'hui", due_tomorrow: "Demain", due_yesterday: "Hier",
     due_day_after_tomorrow: "Apr\u00e8s-demain", due_day_before_yesterday: "Avant-hier",
@@ -458,7 +458,7 @@ const _TRANSLATIONS = {
     rec_hours: "Horas", rec_days: "Dias", rec_weeks: "Semanas", rec_months: "Meses", rec_years: "Anos",
     rec_short_h: "h", rec_short_d: "d", rec_short_w: "s", rec_short_m: "m", rec_short_y: "a",
     priority: "Prioridade", pri_high: "Alta", pri_medium: "M\u00e9dia", pri_low: "Baixa",
-    ed_show_priority: "Prioridade",
+    ed_show_priority: "Prioridades",
     rec_hourly: "Por hora", rec_daily: "Di\u00e1rio", rec_weekly: "Semanal", rec_monthly: "Mensal", rec_yearly: "Anual",
     rec_type_interval: "A cada \u2026", rec_type_weekdays: "Nos dias \u00fateis",
     rec_wd_0: "Seg", rec_wd_1: "Ter", rec_wd_2: "Qua", rec_wd_3: "Qui", rec_wd_4: "Sex", rec_wd_5: "S\u00e1b", rec_wd_6: "Dom",
@@ -467,8 +467,8 @@ const _TRANSLATIONS = {
     ed_default_filter: "Filtro padr\u00e3o", ed_list: "Lista",
     ed_title: "T\u00edtulo (opcional)", ed_title_placeholder: "Padr\u00e3o: nome da lista",
     ed_display: "Exibi\u00e7\u00e3o", ed_show_title: "T\u00edtulo", ed_show_progress: "Progresso",
-    ed_show_due_date: "Prazo", ed_show_notes: "Notas", ed_show_recurrence: "Recorr\u00eancia",
-    ed_show_sub_items: "Subtarefas", ed_show_person: "Pessoa",
+    ed_show_due_date: "Prazos", ed_show_notes: "Notas", ed_show_recurrence: "Recorr\u00eancias",
+    ed_show_sub_items: "Subtarefas", ed_show_person: "Pessoas",
     ed_auto_delete: "Excluir conclu\u00eddas imediatamente", ed_compact: "Compacto", ed_show_tags: "Etiquetas",
     ed_hint: "Novas listas podem ser criadas em Configura\u00e7\u00f5es \u2192 Integra\u00e7\u00f5es \u2192 Home Tasks.",
     tags: "Etiquetas", add_tag: "+ Adicionar etiqueta", tag_placeholder: "Nova etiqueta...", remove_tag: "Remover", tag_suggestions_label: "Etiquetas existentes", tag_no_matches: "Nenhuma etiqueta correspondente",
@@ -499,7 +499,7 @@ const _TRANSLATIONS = {
     rec_todoist_pattern_unsupported: "Subpadr\u00f5es n\u00e3o s\u00e3o suportados quando o intervalo \u00e9 maior que 1.",
     history: "Hist\u00f3rico", history_created: "Criado", history_completed: "Conclu\u00eddo", history_reopened: "Reaberto",
     history_reset: "Reiniciado automaticamente", history_changed: "alterado", history_empty: "Sem hist\u00f3rico", hist_title: "T\u00edtulo", history_disabled: "Desativado",
-    ed_show_history: "Mostrar hist\u00f3rico", hist_by_user: "Utilizador",
+    ed_show_history: "Hist\u00f3ricos", hist_by_user: "Utilizador",
     assigned_unknown: "Desconhecido (%s)", recurrence_readonly: "Gerenciado por %s", synced_with: "Sincronizado com %s",
     due_today: "Hoje", due_tomorrow: "Amanh\u00e3", due_yesterday: "Ontem",
     due_day_after_tomorrow: "Depois de amanh\u00e3", due_day_before_yesterday: "Anteontem",
@@ -520,7 +520,7 @@ const _TRANSLATIONS = {
     rec_hours: "Horas", rec_days: "D\u00edas", rec_weeks: "Semanas", rec_months: "Meses", rec_years: "A\u00f1os",
     rec_short_h: "h", rec_short_d: "d", rec_short_w: "s", rec_short_m: "m", rec_short_y: "a",
     priority: "Prioridad", pri_high: "Alta", pri_medium: "Media", pri_low: "Baja",
-    ed_show_priority: "Prioridad",
+    ed_show_priority: "Prioridades",
     rec_hourly: "Por hora", rec_daily: "Diaria", rec_weekly: "Semanal", rec_monthly: "Mensual", rec_yearly: "Anual",
     rec_type_interval: "Cada \u2026", rec_type_weekdays: "En d\u00edas laborables",
     rec_wd_0: "Lun", rec_wd_1: "Mar", rec_wd_2: "Mi\u00e9", rec_wd_3: "Jue", rec_wd_4: "Vie", rec_wd_5: "S\u00e1b", rec_wd_6: "Dom",
@@ -529,8 +529,8 @@ const _TRANSLATIONS = {
     ed_default_filter: "Filtro predeterminado", ed_list: "Lista",
     ed_title: "T\u00edtulo (opcional)", ed_title_placeholder: "Predeterminado: nombre de lista",
     ed_display: "Visualizaci\u00f3n", ed_show_title: "T\u00edtulo", ed_show_progress: "Progreso",
-    ed_show_due_date: "Vencimiento", ed_show_notes: "Notas", ed_show_recurrence: "Recurrencia",
-    ed_show_sub_items: "Subtareas", ed_show_person: "Persona",
+    ed_show_due_date: "Vencimientos", ed_show_notes: "Notas", ed_show_recurrence: "Recurrencias",
+    ed_show_sub_items: "Subtareas", ed_show_person: "Personas",
     ed_auto_delete: "Eliminar completadas inmediatamente", ed_compact: "Compacto", ed_show_tags: "Etiquetas",
     ed_hint: "Se pueden crear nuevas listas en Configuraci\u00f3n \u2192 Integraciones \u2192 Home Tasks.",
     tags: "Etiquetas", add_tag: "+ A\u00f1adir etiqueta", tag_placeholder: "Nueva etiqueta...", remove_tag: "Eliminar", tag_suggestions_label: "Etiquetas existentes", tag_no_matches: "No hay etiquetas coincidentes",
@@ -561,7 +561,7 @@ const _TRANSLATIONS = {
     rec_todoist_pattern_unsupported: "Los subpatrones no son compatibles cuando el intervalo es mayor que 1.",
     history: "Historial", history_created: "Creado", history_completed: "Completado", history_reopened: "Reabierto",
     history_reset: "Restablecimiento autom.", history_changed: "modificado", history_empty: "Sin historial", hist_title: "T\u00edtulo", history_disabled: "Desactivado",
-    ed_show_history: "Mostrar historial", hist_by_user: "Usuario",
+    ed_show_history: "Historiales", hist_by_user: "Usuario",
     assigned_unknown: "Desconocido (%s)", recurrence_readonly: "Gestionado por %s", synced_with: "Sincronizado con %s",
     due_today: "Hoy", due_tomorrow: "Ma\u00f1ana", due_yesterday: "Ayer",
     due_day_after_tomorrow: "Pasado ma\u00f1ana", due_day_before_yesterday: "Anteayer",
@@ -582,7 +582,7 @@ const _TRANSLATIONS = {
     rec_hours: "\u0427\u0430\u0441\u044b", rec_days: "\u0414\u043d\u0438", rec_weeks: "\u041d\u0435\u0434\u0435\u043b\u0438", rec_months: "\u041c\u0435\u0441\u044f\u0446\u044b", rec_years: "Годы",
     rec_short_h: "\u0447", rec_short_d: "\u0434", rec_short_w: "\u043d", rec_short_m: "\u043c", rec_short_y: "\u0433",
     priority: "\u041f\u0440\u0438\u043e\u0440\u0438\u0442\u0435\u0442", pri_high: "\u0412\u044b\u0441\u043e\u043a\u0438\u0439", pri_medium: "\u0421\u0440\u0435\u0434\u043d\u0438\u0439", pri_low: "\u041d\u0438\u0437\u043a\u0438\u0439",
-    ed_show_priority: "\u041f\u0440\u0438\u043e\u0440\u0438\u0442\u0435\u0442",
+    ed_show_priority: "\u041f\u0440\u0438\u043e\u0440\u0438\u0442\u0435\u0442\u044b",
     rec_hourly: "\u0415\u0436\u0435\u0447\u0430\u0441\u043d\u043e", rec_daily: "\u0415\u0436\u0435\u0434\u043d\u0435\u0432\u043d\u043e", rec_weekly: "\u0415\u0436\u0435\u043d\u0435\u0434\u0435\u043b\u044c\u043d\u043e", rec_monthly: "\u0415\u0436\u0435\u043c\u0435\u0441\u044f\u0447\u043d\u043e", rec_yearly: "\u0415\u0436\u0435\u0433\u043e\u0434\u043d\u043e",
     rec_type_interval: "\u041a\u0430\u0436\u0434\u044b\u0435 \u2026", rec_type_weekdays: "\u041f\u043e \u0431\u0443\u0434\u043d\u044f\u043c",
     rec_wd_0: "\u041f\u043d", rec_wd_1: "\u0412\u0442", rec_wd_2: "\u0421\u0440", rec_wd_3: "\u0427\u0442", rec_wd_4: "\u041f\u0442", rec_wd_5: "\u0421\u0431", rec_wd_6: "\u0412\u0441",
@@ -591,8 +591,8 @@ const _TRANSLATIONS = {
     ed_default_filter: "\u0424\u0438\u043b\u044c\u0442\u0440 \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e", ed_list: "\u0421\u043f\u0438\u0441\u043e\u043a",
     ed_title: "\u0417\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a (\u043d\u0435\u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u043e)", ed_title_placeholder: "\u041f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e: \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 \u0441\u043f\u0438\u0441\u043a\u0430",
     ed_display: "\u041e\u0442\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u0435", ed_show_title: "\u0417\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a", ed_show_progress: "\u041f\u0440\u043e\u0433\u0440\u0435\u0441\u0441",
-    ed_show_due_date: "\u0421\u0440\u043e\u043a", ed_show_notes: "\u0417\u0430\u043c\u0435\u0442\u043a\u0438", ed_show_recurrence: "\u041f\u043e\u0432\u0442\u043e\u0440\u0435\u043d\u0438\u0435",
-    ed_show_sub_items: "\u041f\u043e\u0434\u0437\u0430\u0434\u0430\u0447\u0438", ed_show_person: "\u041f\u0435\u0440\u0441\u043e\u043d\u0430",
+    ed_show_due_date: "\u0421\u0440\u043e\u043a\u0438", ed_show_notes: "\u0417\u0430\u043c\u0435\u0442\u043a\u0438", ed_show_recurrence: "\u041f\u043e\u0432\u0442\u043e\u0440\u0435\u043d\u0438\u044f",
+    ed_show_sub_items: "\u041f\u043e\u0434\u0437\u0430\u0434\u0430\u0447\u0438", ed_show_person: "\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u0438",
     ed_auto_delete: "\u0421\u0440\u0430\u0437\u0443 \u0443\u0434\u0430\u043b\u044f\u0442\u044c \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043d\u044b\u0435", ed_compact: "\u041a\u043e\u043c\u043f\u0430\u043a\u0442\u043d\u044b\u0439", ed_show_tags: "\u0422\u0435\u0433\u0438",
     ed_hint: "\u041d\u043e\u0432\u044b\u0435 \u0441\u043f\u0438\u0441\u043a\u0438 \u043c\u043e\u0436\u043d\u043e \u0441\u043e\u0437\u0434\u0430\u0442\u044c \u0432 \u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 \u2192 \u0418\u043d\u0442\u0435\u0433\u0440\u0430\u0446\u0438\u0438 \u2192 Home Tasks.",
     tags: "\u0422\u0435\u0433\u0438", add_tag: "+ \u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0442\u0435\u0433", tag_placeholder: "\u041d\u043e\u0432\u044b\u0439 \u0442\u0435\u0433...", remove_tag: "\u0423\u0434\u0430\u043b\u0438\u0442\u044c", tag_suggestions_label: "\u0421\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u044e\u0449\u0438\u0435 \u0442\u0435\u0433\u0438", tag_no_matches: "\u041d\u0435\u0442 \u0441\u043e\u0432\u043f\u0430\u0434\u0430\u044e\u0449\u0438\u0445 \u0442\u0435\u0433\u043e\u0432",
@@ -623,7 +623,7 @@ const _TRANSLATIONS = {
     rec_todoist_pattern_unsupported: "\u0421\u0443\u0431\u0448\u0430\u0431\u043b\u043e\u043d\u044b \u043d\u0435 \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u044e\u0442\u0441\u044f \u043f\u0440\u0438 \u0438\u043d\u0442\u0435\u0440\u0432\u0430\u043b\u0435 \u0431\u043e\u043b\u044c\u0448\u0435 1.",
     history: "\u0418\u0441\u0442\u043e\u0440\u0438\u044f", history_created: "\u0421\u043e\u0437\u0434\u0430\u043d\u043e", history_completed: "\u0412\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043e", history_reopened: "\u041f\u0435\u0440\u0435\u043e\u0442\u043a\u0440\u044b\u0442\u043e",
     history_reset: "\u0410\u0432\u0442\u043e\u0441\u0431\u0440\u043e\u0441", history_changed: "\u0438\u0437\u043c\u0435\u043d\u0435\u043d\u043e", history_empty: "\u041d\u0435\u0442 \u0438\u0441\u0442\u043e\u0440\u0438\u0438", hist_title: "\u0417\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a", history_disabled: "\u041e\u0442\u043a\u043b\u044e\u0447\u0435\u043d\u043e",
-    ed_show_history: "\u041f\u043e\u043a\u0430\u0437\u044b\u0432\u0430\u0442\u044c \u0438\u0441\u0442\u043e\u0440\u0438\u044e", hist_by_user: "\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c",
+    ed_show_history: "\u0418\u0441\u0442\u043e\u0440\u0438\u0438", hist_by_user: "\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u044c",
     assigned_unknown: "\u041d\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0439 (%s)", recurrence_readonly: "\u0423\u043f\u0440\u0430\u0432\u043b\u044f\u0435\u0442\u0441\u044f %s", synced_with: "\u0421\u0438\u043d\u0445\u0440\u043e\u043d\u0438\u0437\u0438\u0440\u043e\u0432\u0430\u043d\u043e \u0441 %s",
     due_today: "\u0421\u0435\u0433\u043e\u0434\u043d\u044f", due_tomorrow: "\u0417\u0430\u0432\u0442\u0440\u0430", due_yesterday: "\u0412\u0447\u0435\u0440\u0430",
     due_day_after_tomorrow: "\u041f\u043e\u0441\u043b\u0435\u0437\u0430\u0432\u0442\u0440\u0430", due_day_before_yesterday: "\u041f\u043e\u0437\u0430\u0432\u0447\u0435\u0440\u0430",
@@ -644,7 +644,7 @@ const _TRANSLATIONS = {
     rec_hours: "Hodiny", rec_days: "Dny", rec_weeks: "T\u00fddny", rec_months: "M\u011bs\u00edce", rec_years: "Roky",
     rec_short_h: "h", rec_short_d: "d", rec_short_w: "t", rec_short_m: "m", rec_short_y: "r",
     priority: "Priorita", pri_high: "Vysok\u00e1", pri_medium: "St\u0159edn\u00ed", pri_low: "N\u00edzk\u00e1",
-    ed_show_priority: "Priorita",
+    ed_show_priority: "Priority",
     rec_hourly: "Hodinov\u011b", rec_daily: "Denn\u011b", rec_weekly: "T\u00fddn\u011b", rec_monthly: "M\u011bs\u00ed\u010dn\u011b", rec_yearly: "Ročně",
     rec_type_interval: "Ka\u017ed\u00fd \u2026", rec_type_weekdays: "Ve v\u0161ední dny",
     rec_wd_0: "Po", rec_wd_1: "\u00dat", rec_wd_2: "St", rec_wd_3: "\u010ct", rec_wd_4: "P\u00e1", rec_wd_5: "So", rec_wd_6: "Ne",
@@ -653,8 +653,8 @@ const _TRANSLATIONS = {
     ed_default_filter: "V\u00fdchoz\u00ed filtr", ed_list: "Seznam",
     ed_title: "N\u00e1zev (voliteln\u011b)", ed_title_placeholder: "V\u00fdchoz\u00ed: n\u00e1zev seznamu",
     ed_display: "Zobrazen\u00ed", ed_show_title: "N\u00e1zev", ed_show_progress: "Pokrok",
-    ed_show_due_date: "Term\u00edn", ed_show_notes: "Pozn\u00e1mky", ed_show_recurrence: "Opakov\u00e1n\u00ed",
-    ed_show_sub_items: "Pod\u00fakoly", ed_show_person: "Osoba",
+    ed_show_due_date: "Term\u00edny", ed_show_notes: "Pozn\u00e1mky", ed_show_recurrence: "Opakov\u00e1n\u00ed",
+    ed_show_sub_items: "Pod\u00fakoly", ed_show_person: "Osoby",
     ed_auto_delete: "Okam\u017eit\u011b smazat dokon\u010den\u00e9", ed_compact: "Kompaktn\u00ed", ed_show_tags: "\u0160t\u00edtky",
     ed_hint: "Nov\u00e9 seznamy lze vytvo\u0159it v Nastaven\u00ed \u2192 Integrace \u2192 Home Tasks.",
     tags: "\u0160t\u00edtky", add_tag: "+ P\u0159idat \u0161t\u00edtek", tag_placeholder: "Nov\u00fd \u0161t\u00edtek...", remove_tag: "Odebrat", tag_suggestions_label: "Existuj\u00edc\u00ed \u0161t\u00edtky", tag_no_matches: "\u017d\u00e1dn\u00e9 odpov\u00eddaj\u00edc\u00ed \u0161t\u00edtky",
@@ -685,7 +685,7 @@ const _TRANSLATIONS = {
     rec_todoist_pattern_unsupported: "Podvzory nejsou podporov\u00e1ny, pokud je interval v\u011bt\u0161\u00ed ne\u017e 1.",
     history: "Historie", history_created: "Vytvo\u0159eno", history_completed: "Dokon\u010deno", history_reopened: "Znovu otev\u0159eno",
     history_reset: "Automaticky obnoveno", history_changed: "zm\u011bn\u011bno", history_empty: "\u017d\u00e1dn\u00e1 historie", hist_title: "N\u00e1zev", history_disabled: "Deaktivov\u00e1no",
-    ed_show_history: "Zobrazit historii", hist_by_user: "U\u017eivatel",
+    ed_show_history: "Historie", hist_by_user: "U\u017eivatel",
     assigned_unknown: "Nezn\u00e1m\u00fd (%s)", recurrence_readonly: "Spravov\u00e1no %s", synced_with: "Synchronizov\u00e1no s %s",
     due_today: "Dnes", due_tomorrow: "Z\u00edtra", due_yesterday: "V\u010dera",
     due_day_after_tomorrow: "Poz\u00edt\u0159\u00ed", due_day_before_yesterday: "P\u0159edev\u010d\u00edrem",
@@ -706,7 +706,7 @@ const _TRANSLATIONS = {
     rec_hours: "Timer", rec_days: "Dage", rec_weeks: "Uger", rec_months: "M\u00e5neder", rec_years: "År",
     rec_short_h: "t", rec_short_d: "d", rec_short_w: "u", rec_short_m: "md", rec_short_y: "år",
     priority: "Prioritet", pri_high: "H\u00f8j", pri_medium: "Mellem", pri_low: "Lav",
-    ed_show_priority: "Prioritet",
+    ed_show_priority: "Prioriteter",
     rec_hourly: "Hver time", rec_daily: "Dagligt", rec_weekly: "Ugentligt", rec_monthly: "M\u00e5nedligt", rec_yearly: "Årligt",
     rec_type_interval: "Hver \u2026", rec_type_weekdays: "P\u00e5 hverdage",
     rec_wd_0: "Man", rec_wd_1: "Tir", rec_wd_2: "Ons", rec_wd_3: "Tor", rec_wd_4: "Fre", rec_wd_5: "L\u00f8r", rec_wd_6: "S\u00f8n",
@@ -715,8 +715,8 @@ const _TRANSLATIONS = {
     ed_default_filter: "Standardfilter", ed_list: "Liste",
     ed_title: "Titel (valgfrit)", ed_title_placeholder: "Standard: listenavn",
     ed_display: "Visning", ed_show_title: "Titel", ed_show_progress: "Fremgang",
-    ed_show_due_date: "Forfald", ed_show_notes: "Noter", ed_show_recurrence: "Gentagelse",
-    ed_show_sub_items: "Delopgaver", ed_show_person: "Person",
+    ed_show_due_date: "Forfaldsdatoer", ed_show_notes: "Noter", ed_show_recurrence: "Gentagelser",
+    ed_show_sub_items: "Delopgaver", ed_show_person: "Personer",
     ed_auto_delete: "Slet f\u00e6rdige \u00f8jeblikkeligt", ed_compact: "Kompakt", ed_show_tags: "Tags",
     ed_hint: "Nye lister kan oprettes under Indstillinger \u2192 Integrationer \u2192 Home Tasks.",
     tags: "Tags", add_tag: "+ Tilf\u00f8j tag", tag_placeholder: "Nyt tag...", remove_tag: "Fjern", tag_suggestions_label: "Eksisterende tags", tag_no_matches: "Ingen matchende tags",
@@ -747,7 +747,7 @@ const _TRANSLATIONS = {
     rec_todoist_pattern_unsupported: "Underm\u00f8nstre underst\u00f8ttes ikke, n\u00e5r intervallet er st\u00f8rre end 1.",
     history: "Historik", history_created: "Oprettet", history_completed: "F\u00e6rdiggjort", history_reopened: "\u00c5bnet igen",
     history_reset: "Auto-nulstillet", history_changed: "\u00e6ndret", history_empty: "Ingen historik", hist_title: "Titel", history_disabled: "Deaktiveret",
-    ed_show_history: "Vis historik", hist_by_user: "Bruger",
+    ed_show_history: "Historikker", hist_by_user: "Bruger",
     assigned_unknown: "Ukendt (%s)", recurrence_readonly: "Styret af %s", synced_with: "Synkroniseret med %s",
     due_today: "I dag", due_tomorrow: "I morgen", due_yesterday: "I g\u00e5r",
     due_day_after_tomorrow: "I overmorgen", due_day_before_yesterday: "I forg\u00e5rs",
@@ -768,7 +768,7 @@ const _TRANSLATIONS = {
     rec_hours: "Timer", rec_days: "Dager", rec_weeks: "Uker", rec_months: "M\u00e5neder", rec_years: "År",
     rec_short_h: "t", rec_short_d: "d", rec_short_w: "u", rec_short_m: "md", rec_short_y: "år",
     priority: "Prioritet", pri_high: "H\u00f8y", pri_medium: "Middels", pri_low: "Lav",
-    ed_show_priority: "Prioritet",
+    ed_show_priority: "Prioriteter",
     rec_hourly: "Hver time", rec_daily: "Daglig", rec_weekly: "Ukentlig", rec_monthly: "M\u00e5nedlig", rec_yearly: "Årlig",
     rec_type_interval: "Hver \u2026", rec_type_weekdays: "P\u00e5 hverdager",
     rec_wd_0: "Man", rec_wd_1: "Tir", rec_wd_2: "Ons", rec_wd_3: "Tor", rec_wd_4: "Fre", rec_wd_5: "L\u00f8r", rec_wd_6: "S\u00f8n",
@@ -777,8 +777,8 @@ const _TRANSLATIONS = {
     ed_default_filter: "Standardfilter", ed_list: "Liste",
     ed_title: "Tittel (valgfritt)", ed_title_placeholder: "Standard: listenavn",
     ed_display: "Visning", ed_show_title: "Tittel", ed_show_progress: "Fremgang",
-    ed_show_due_date: "Frist", ed_show_notes: "Notater", ed_show_recurrence: "Gjentakelse",
-    ed_show_sub_items: "Deloppgaver", ed_show_person: "Person",
+    ed_show_due_date: "Frister", ed_show_notes: "Notater", ed_show_recurrence: "Gjentakelser",
+    ed_show_sub_items: "Deloppgaver", ed_show_person: "Personer",
     ed_auto_delete: "Slett ferdige umiddelbart", ed_compact: "Kompakt", ed_show_tags: "Tagger",
     ed_hint: "Nye lister kan opprettes under Innstillinger \u2192 Integrasjoner \u2192 Home Tasks.",
     tags: "Tagger", add_tag: "+ Legg til tagg", tag_placeholder: "Ny tagg...", remove_tag: "Fjern", tag_suggestions_label: "Eksisterende tagger", tag_no_matches: "Ingen samsvarende tagger",
@@ -809,7 +809,7 @@ const _TRANSLATIONS = {
     rec_todoist_pattern_unsupported: "Underm\u00f8nstre st\u00f8ttes ikke n\u00e5r intervallet er st\u00f8rre enn 1.",
     history: "Historikk", history_created: "Opprettet", history_completed: "Fullf\u00f8rt", history_reopened: "\u00c5pnet igjen",
     history_reset: "Auto-tilbakestilt", history_changed: "endret", history_empty: "Ingen historikk", hist_title: "Tittel", history_disabled: "Deaktivert",
-    ed_show_history: "Vis historikk", hist_by_user: "Bruker",
+    ed_show_history: "Historikker", hist_by_user: "Bruker",
     assigned_unknown: "Ukjent (%s)", recurrence_readonly: "Administrert av %s", synced_with: "Synkronisert med %s",
     due_today: "I dag", due_tomorrow: "I morgen", due_yesterday: "I g\u00e5r",
     due_day_after_tomorrow: "I overmorgen", due_day_before_yesterday: "I forg\u00e5rs",
@@ -830,7 +830,7 @@ const _TRANSLATIONS = {
     rec_hours: "Tunnit", rec_days: "P\u00e4iv\u00e4t", rec_weeks: "Viikot", rec_months: "Kuukaudet", rec_years: "Vuodet",
     rec_short_h: "t", rec_short_d: "p", rec_short_w: "v", rec_short_m: "kk", rec_short_y: "v",
     priority: "Prioriteetti", pri_high: "Korkea", pri_medium: "Keskitaso", pri_low: "Matala",
-    ed_show_priority: "Prioriteetti",
+    ed_show_priority: "Prioriteetit",
     rec_hourly: "Tunneittain", rec_daily: "P\u00e4ivitt\u00e4in", rec_weekly: "Viikoittain", rec_monthly: "Kuukausittain", rec_yearly: "Vuosittain",
     rec_type_interval: "Joka \u2026", rec_type_weekdays: "Arkip\u00e4ivin\u00e4",
     rec_wd_0: "Ma", rec_wd_1: "Ti", rec_wd_2: "Ke", rec_wd_3: "To", rec_wd_4: "Pe", rec_wd_5: "La", rec_wd_6: "Su",
@@ -839,8 +839,8 @@ const _TRANSLATIONS = {
     ed_default_filter: "Oletussuodatin", ed_list: "Lista",
     ed_title: "Otsikko (valinnainen)", ed_title_placeholder: "Oletus: listan nimi",
     ed_display: "N\u00e4ytt\u00f6", ed_show_title: "Otsikko", ed_show_progress: "Edistyminen",
-    ed_show_due_date: "Er\u00e4p\u00e4iv\u00e4", ed_show_notes: "Muistiinpanot", ed_show_recurrence: "Toistuvuus",
-    ed_show_sub_items: "Aliteht\u00e4v\u00e4t", ed_show_person: "Henkil\u00f6",
+    ed_show_due_date: "Er\u00e4p\u00e4iv\u00e4t", ed_show_notes: "Muistiinpanot", ed_show_recurrence: "Toistot",
+    ed_show_sub_items: "Aliteht\u00e4v\u00e4t", ed_show_person: "Henkil\u00f6t",
     ed_auto_delete: "Poista valmiit v\u00e4litt\u00f6m\u00e4sti", ed_compact: "Kompakti", ed_show_tags: "Tunnisteet",
     ed_hint: "Uusia listoja voi luoda kohdassa Asetukset \u2192 Integraatiot \u2192 Home Tasks.",
     tags: "Tunnisteet", add_tag: "+ Lis\u00e4\u00e4 tunniste", tag_placeholder: "Uusi tunniste...", remove_tag: "Poista", tag_suggestions_label: "Olemassa olevat tunnisteet", tag_no_matches: "Ei vastaavia tunnisteita",
@@ -871,7 +871,7 @@ const _TRANSLATIONS = {
     rec_todoist_pattern_unsupported: "Alikaavat eiv\u00e4t ole tuettuja, kun aikav\u00e4li on suurempi kuin 1.",
     history: "Historia", history_created: "Luotu", history_completed: "Valmis", history_reopened: "Avattu uudelleen",
     history_reset: "Automaattinen palautus", history_changed: "muutettu", history_empty: "Ei historiaa", hist_title: "Otsikko", history_disabled: "K\u00e4yt\u00f6ss\u00e4 poistettu",
-    ed_show_history: "N\u00e4yt\u00e4 historia", hist_by_user: "K\u00e4ytt\u00e4j\u00e4",
+    ed_show_history: "Historiat", hist_by_user: "K\u00e4ytt\u00e4j\u00e4",
     assigned_unknown: "Tuntematon (%s)", recurrence_readonly: "Hallinnoi %s", synced_with: "Synkronoitu %s kanssa",
     due_today: "T\u00e4n\u00e4\u00e4n", due_tomorrow: "Huomenna", due_yesterday: "Eilen",
     due_day_after_tomorrow: "Ylihuomenna", due_day_before_yesterday: "Toissap\u00e4iv\u00e4n\u00e4",
@@ -892,7 +892,7 @@ const _TRANSLATIONS = {
     rec_hours: "\u00d3ra", rec_days: "Nap", rec_weeks: "H\u00e9t", rec_months: "H\u00f3nap", rec_years: "Év",
     rec_short_h: "\u00f3", rec_short_d: "n", rec_short_w: "h", rec_short_m: "h\u00f3", rec_short_y: "év",
     priority: "Priorit\u00e1s", pri_high: "Magas", pri_medium: "K\u00f6zepes", pri_low: "Alacsony",
-    ed_show_priority: "Priorit\u00e1s",
+    ed_show_priority: "Priorit\u00e1sok",
     rec_hourly: "\u00d3r\u00e1nk\u00e9nt", rec_daily: "Naponta", rec_weekly: "Hetente", rec_monthly: "Havonta", rec_yearly: "Évente",
     rec_type_interval: "Minden \u2026", rec_type_weekdays: "Munkanapokon",
     rec_wd_0: "H", rec_wd_1: "K", rec_wd_2: "Sze", rec_wd_3: "Cs", rec_wd_4: "P", rec_wd_5: "Szo", rec_wd_6: "V",
@@ -901,8 +901,8 @@ const _TRANSLATIONS = {
     ed_default_filter: "Alap\u00e9rtelmezett sz\u0171r\u0151", ed_list: "Lista",
     ed_title: "C\u00edm (nem k\u00f6telez\u0151)", ed_title_placeholder: "Alap\u00e9rtelmezett: lista neve",
     ed_display: "Megjelen\u00edt\u00e9s", ed_show_title: "C\u00edm", ed_show_progress: "Halad\u00e1s",
-    ed_show_due_date: "Hat\u00e1rid\u0151", ed_show_notes: "Megjegyz\u00e9sek", ed_show_recurrence: "Ism\u00e9tl\u00e9s",
-    ed_show_sub_items: "Alfeladatok", ed_show_person: "Szem\u00e9ly",
+    ed_show_due_date: "Hat\u00e1rid\u0151k", ed_show_notes: "Megjegyz\u00e9sek", ed_show_recurrence: "Ism\u00e9tl\u00e9sek",
+    ed_show_sub_items: "Alfeladatok", ed_show_person: "Szem\u00e9lyek",
     ed_auto_delete: "K\u00e9sz feladatok azonnali t\u00f6rl\u00e9se", ed_compact: "Kompakt", ed_show_tags: "C\u00edmk\u00e9k",
     ed_hint: "\u00daj list\u00e1k a Be\u00e1ll\u00edt\u00e1sok \u2192 Integr\u00e1ci\u00f3k \u2192 Home Tasks alatt hozhat\u00f3k l\u00e9tre.",
     tags: "C\u00edmk\u00e9k", add_tag: "+ C\u00edmke hozz\u00e1ad\u00e1sa", tag_placeholder: "\u00daj c\u00edmke...", remove_tag: "Elt\u00e1vol\u00edt\u00e1s", tag_suggestions_label: "L\u00e9tez\u0151 c\u00edmk\u00e9k", tag_no_matches: "Nincs egyez\u0151 c\u00edmke",
@@ -933,7 +933,7 @@ const _TRANSLATIONS = {
     rec_todoist_pattern_unsupported: "Az almint\u00e1zatok nem t\u00e1mogatottak, ha az id\u0151k\u00f6z nagyobb mint 1.",
     history: "El\u0151zm\u00e9nyek", history_created: "L\u00e9trehozva", history_completed: "Teljes\u00edtve", history_reopened: "\u00dajranyitva",
     history_reset: "Automatikus visszavonas", history_changed: "m\u00f3dos\u00edtva", history_empty: "Nincs el\u0151zm\u00e9ny", hist_title: "C\u00edm", history_disabled: "Letiltva",
-    ed_show_history: "El\u0151zm\u00e9nyek mutat\u00e1sa", hist_by_user: "Felhaszn\u00e1l\u00f3",
+    ed_show_history: "El\u0151zm\u00e9nyek", hist_by_user: "Felhaszn\u00e1l\u00f3",
     assigned_unknown: "Ismeretlen (%s)", recurrence_readonly: "Kezeli: %s", synced_with: "Szinkroniz\u00e1lva: %s",
     due_today: "Ma", due_tomorrow: "Holnap", due_yesterday: "Tegnap",
     due_day_after_tomorrow: "Holnaput\u00e1n", due_day_before_yesterday: "Tegnapel\u0151tt",
@@ -964,7 +964,7 @@ const _TRANSLATIONS = {
     rec_short_h: "Std.", rec_short_d: "T.", rec_short_w: "Wo.", rec_short_m: "Mon.", rec_short_y: "J.",
     priority: "Priorit\u00e4t",
     pri_high: "Hoch", pri_medium: "Mittel", pri_low: "Niedrig",
-    ed_show_priority: "Priorit\u00e4t",
+    ed_show_priority: "Priorit\u00e4ten",
     rec_hourly: "St\u00fcndl.", rec_daily: "T\u00e4glich", rec_weekly: "W\u00f6chentl.", rec_monthly: "Monatl.", rec_yearly: "J\u00e4hrl.",
     rec_type_interval: "Alle \u2026", rec_type_weekdays: "An Wochentagen",
     rec_wd_0: "Mo", rec_wd_1: "Di", rec_wd_2: "Mi", rec_wd_3: "Do", rec_wd_4: "Fr", rec_wd_5: "Sa", rec_wd_6: "So",
@@ -979,11 +979,11 @@ const _TRANSLATIONS = {
     ed_display: "Anzeige",
     ed_show_title: "Titel",
     ed_show_progress: "Fortschritt",
-    ed_show_due_date: "F\u00e4lligkeit",
+    ed_show_due_date: "F\u00e4lligkeiten",
     ed_show_notes: "Notizen",
-    ed_show_recurrence: "Wiederholung",
+    ed_show_recurrence: "Wiederholungen",
     ed_show_sub_items: "Unteraufgaben",
-    ed_show_person: "Person",
+    ed_show_person: "Personen",
     ed_auto_delete: "Erledigte sofort l\u00f6schen",
     ed_compact: "Kompakt",
     ed_show_tags: "Tags",
@@ -1044,7 +1044,7 @@ const _TRANSLATIONS = {
     rec_todoist_pattern_unsupported: "Untermuster sind nicht m\u00f6glich, wenn das Intervall gr\u00f6\u00dfer als 1 ist.",
     history: "Verlauf", history_created: "Erstellt", history_completed: "Erledigt", history_reopened: "Wieder ge\u00f6ffnet",
     history_reset: "Automatisch zur\u00fcckgesetzt", history_changed: "ge\u00e4ndert", history_empty: "Noch kein Verlauf", hist_title: "Titel", history_disabled: "Deaktiviert",
-    ed_show_history: "Verlauf anzeigen", hist_by_user: "Benutzer",
+    ed_show_history: "Verläufe", hist_by_user: "Benutzer",
     assigned_unknown: "Unbekannt (%s)", recurrence_readonly: "Verwaltet von %s", synced_with: "Synchronisiert mit %s",
     due_today: "Heute", due_tomorrow: "Morgen", due_yesterday: "Gestern",
     due_day_after_tomorrow: "\u00dcbermorgen", due_day_before_yesterday: "Vorgestern",
@@ -2344,7 +2344,12 @@ class HomeTasksCard extends HTMLElement {
     const filteredTasks = this._filteredTasks(colIdx);
     const completedCount = this._getCompletedCount(colIdx);
     const totalCount = cs.tasks.length;
-    const hideFilters = col.auto_delete_completed === true;
+    // auto_delete_completed makes the All/Open/Done set redundant, but the
+    // Due-Soon filter is still meaningful (it filters open tasks by upcoming
+    // due date). When both are on, keep a slimmed-down row with just All +
+    // Due Soon so the user can still toggle between "everything" and
+    // "due soon only".
+    const hideFilters = col.auto_delete_completed === true && col.show_due_soon_filter !== true;
 
     const header = this._buildColumnHeader(col, colIdx, completedCount, totalCount);
     const addTask = this._buildColumnAddTask(cs, colIdx);
@@ -2557,25 +2562,38 @@ class HomeTasksCard extends HTMLElement {
   }
 
   _buildColumnFilterRow(hideFilters, sortBtnWrapper, sortInTagRow, sortInPersonRow, colIdx) {
+    const col = this._config.columns[colIdx];
+    const autoDelete = col.auto_delete_completed === true;
+    const dueSoonEnabled = col.show_due_soon_filter === true;
     const children = [];
-    if (!hideFilters) {
-      children.push(
-        this._buildFilterBtn(this._t("filter_all"), "all", colIdx),
-        this._buildFilterBtn(this._t("filter_open"), "open", colIdx),
-        this._buildFilterBtn(this._t("filter_done"), "done", colIdx),
-      );
-      const col = this._config.columns[colIdx];
-      if (col.show_due_soon_filter === true) {
+
+    if (hideFilters) {
+      // Fully suppressed (auto-delete on AND no due-soon): only the sort
+      // button may end up here, when it can't be tucked into the tag/person
+      // chip rows.
+      if (sortBtnWrapper && !sortInTagRow && !sortInPersonRow) {
+        children.push(this._el("div", { className: "filter-spacer" }));
+        children.push(sortBtnWrapper);
+      }
+    } else {
+      if (autoDelete) {
+        // Auto-delete suppresses Open/Done (Done is always empty, Open ≡ All).
+        // Keep All so the user can return after picking Due Soon.
+        children.push(this._buildFilterBtn(this._t("filter_all"), "all", colIdx));
+      } else {
         children.push(
-          this._buildFilterBtn(this._t("filter_due_soon"), "due_soon", colIdx),
+          this._buildFilterBtn(this._t("filter_all"), "all", colIdx),
+          this._buildFilterBtn(this._t("filter_open"), "open", colIdx),
+          this._buildFilterBtn(this._t("filter_done"), "done", colIdx),
         );
+      }
+      if (dueSoonEnabled) {
+        children.push(this._buildFilterBtn(this._t("filter_due_soon"), "due_soon", colIdx));
       }
       children.push(this._el("div", { className: "filter-spacer" }));
       if (sortBtnWrapper) children.push(sortBtnWrapper);
-    } else if (sortBtnWrapper && !sortInTagRow && !sortInPersonRow) {
-      children.push(this._el("div", { className: "filter-spacer" }));
-      children.push(sortBtnWrapper);
     }
+
     return children.length > 0
       ? this._el("div", { className: "filters" }, children)
       : null;
@@ -6283,6 +6301,8 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("auto-delete", "ed_auto_delete", "auto_delete_completed", false),
           makeToggle("show-sort", "ed_show_sort", "show_sort", true),
           makeToggle("compact", "ed_compact", "compact", false),
+          makeToggle("show-section-headers", "ed_show_section_headers", "show_section_headers", true),
+          makeToggle("show-history", "ed_show_history", "show_history", false),
           (() => {
             const dueSoonChecked = col.show_due_soon_filter === true;
             const sw = document.createElement("ha-switch");
@@ -6342,8 +6362,6 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-due-date", "ed_show_due_date", "show_due_date", true),
           makeToggle("show-reminders", "ed_show_reminders", "show_reminders", true),
           makeToggle("show-recurrence", "ed_show_recurrence", "show_recurrence", true),
-          makeToggle("show-history", "ed_show_history", "show_history", false),
-          makeToggle("show-section-headers", "ed_show_section_headers", "show_section_headers", true),
         ]),
       ], false),
       this._buildSectionsEditor(col),
