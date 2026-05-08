@@ -1051,7 +1051,7 @@ const _TRANSLATIONS = {
     due_in_hours: "In {0} Std {1} Min", due_in_minutes: "In {0} Min", due_in_seconds: "Jetzt",
     due_ago_hours: "Vor {0} Std {1} Min", due_ago_minutes: "Vor {0} Min", due_ago_seconds: "Gerade eben",
     done_section_header: "Erledigt",
-    ed_show_section_headers: "Bereichsüberschriften",
+    ed_show_section_headers: "Bereiche",
     ed_sec_sections: "Bereiche",
     ed_section_name: "Name",
     ed_section_icon: "Symbol",
@@ -5915,8 +5915,8 @@ class HomeTasksCardEditor extends HTMLElement {
       .spin-btn:hover { color: var(--primary-color); }
       ha-yaml-editor { display: block; }
       .sections-editor-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; }
-      .sections-editor-row ha-textfield { flex: 1; min-width: 0; }
-      .sections-editor-row ha-icon-picker { min-width: 0; }
+      .sections-editor-row .field-wrap { flex: 1 1 0; min-width: 80px; }
+      .sections-editor-row ha-icon-picker { flex: 1 1 0; min-width: 0; }
       .icon-btn { background: none; border: 1px solid var(--divider-color, rgba(255,255,255,0.12)); border-radius: 6px; padding: 6px; cursor: pointer; color: var(--primary-text-color); display: inline-flex; align-items: center; justify-content: center; }
       .icon-btn:hover:not(:disabled) { background: var(--secondary-background-color, rgba(0,0,0,0.05)); }
       .icon-btn:disabled { opacity: 0.4; cursor: default; }
@@ -6442,18 +6442,23 @@ class HomeTasksCardEditor extends HTMLElement {
       });
       row.appendChild(downBtn);
 
-      const nameInput = document.createElement("ha-textfield");
-      nameInput.label = this._t("ed_section_name");
+      const nameInput = this._el("input", { type: "text", autocomplete: "off" });
       nameInput.value = section.name;
-      nameInput.style.flex = "1";
       nameInput.addEventListener("change", async (e) => {
         const newName = (e.target.value || "").trim();
-        if (!newName || newName === section.name) return;
+        if (!newName || newName === section.name) {
+          e.target.value = section.name;
+          return;
+        }
         await this._wsCallSection(col, "home_tasks/update_section", { section_id: section.id, name: newName });
         await this._loadSectionsFor(col);
         this._render();
       });
-      row.appendChild(nameInput);
+      const nameWrap = this._el("div", { className: "field-wrap" }, [
+        nameInput,
+        this._el("span", { textContent: this._t("ed_section_name") }),
+      ]);
+      row.appendChild(nameWrap);
 
       const iconPicker = document.createElement("ha-icon-picker");
       iconPicker.label = this._t("ed_section_icon");
