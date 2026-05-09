@@ -120,7 +120,6 @@ const _TRANSLATIONS = {
     due_in_hours: "In {0}h {1}m", due_in_minutes: "In {0} min", due_in_seconds: "Now",
     due_ago_hours: "{0}h {1}m ago", due_ago_minutes: "{0} min ago", due_ago_seconds: "Just now",
     done_section_header: "Done",
-    ed_show_section_headers: "Section headers",
     ed_sec_sections: "Sections",
     ed_section_name: "Name",
     ed_section_icon: "Icon",
@@ -1051,7 +1050,6 @@ const _TRANSLATIONS = {
     due_in_hours: "In {0} Std {1} Min", due_in_minutes: "In {0} Min", due_in_seconds: "Jetzt",
     due_ago_hours: "Vor {0} Std {1} Min", due_ago_minutes: "Vor {0} Min", due_ago_seconds: "Gerade eben",
     done_section_header: "Erledigt",
-    ed_show_section_headers: "Bereiche",
     ed_sec_sections: "Bereiche",
     ed_section_name: "Name",
     ed_section_icon: "Symbol",
@@ -2602,7 +2600,6 @@ class HomeTasksCard extends HTMLElement {
   _buildColumnTaskList(filteredTasks, colIdx) {
     const cs = this._columns[colIdx];
     const col = this._config.columns[colIdx];
-    const showHeaders = col.show_section_headers !== false;
     const sections = (cs.sections || []).slice().sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
 
     const taskListChildren = [];
@@ -2610,7 +2607,7 @@ class HomeTasksCard extends HTMLElement {
       taskListChildren.push(
         this._el("div", { className: "empty-state", textContent: this._t("empty") })
       );
-    } else if (!showHeaders || sections.length === 0) {
+    } else if (sections.length === 0) {
       // Flat rendering — original behavior, plus optional Done header at the
       // bottom for visual consistency when both open and completed are visible.
       const openTasks = filteredTasks.filter((t) => !t.completed);
@@ -6301,7 +6298,6 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("auto-delete", "ed_auto_delete", "auto_delete_completed", false),
           makeToggle("show-sort", "ed_show_sort", "show_sort", true),
           makeToggle("compact", "ed_compact", "compact", false),
-          makeToggle("show-section-headers", "ed_show_section_headers", "show_section_headers", true),
           makeToggle("show-history", "ed_show_history", "show_history", false),
           (() => {
             const dueSoonChecked = col.show_due_soon_filter === true;
