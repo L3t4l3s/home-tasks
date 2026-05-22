@@ -587,6 +587,10 @@ class TodoistAdapter(ProviderAdapter):
         self._api: Any = None  # TodoistAPIClient, lazy-initialised
         self._project_id: str | None = config_data.get("todoist_project_id")
         self._collaborators: list[Any] = []
+        # Cache of {task_id: [reminder_dict, ...]} from the last async_read_tasks().
+        # Used as a snapshot source when a due-date change would wipe Todoist reminders,
+        # avoiding an extra get_reminders() API call per updated task.
+        self._reminders_cache: dict[str, list[dict]] = {}
         self.capabilities = ProviderCapabilities(
             can_sync_priority=True,
             can_sync_labels=True,
@@ -1119,6 +1123,8 @@ class TodoistAdapter(ProviderAdapter):
             _LOGGER.debug("Could not read reminders: %s", err.message)
             reminders_by_task = defaultdict(list)
 
+        self._reminders_cache = dict(reminders_by_task)
+
         # Separate main tasks from sub-tasks
         main_tasks = [t for t in all_tasks if not t.parent_id]
         sub_tasks_by_parent: dict[str, list[Any]] = defaultdict(list)
@@ -1273,11 +1279,13 @@ class TodoistAdapter(ProviderAdapter):
         has_due_change = "due_string" in api_fields or "due_date" in api_fields or "due_datetime" in api_fields
         saved_reminders: list[int] | None = None
         if has_due_change:
-            try:
-                existing = await api.get_reminders(task_uid)
-                saved_reminders = [r["minute_offset"] for r in existing if r.get("minute_offset") is not None]
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.debug("Could not snapshot reminders for %s: %s", task_uid, err)
+            # Use the cached reminder snapshot from the last async_read_tasks() instead
+            # of a live get_reminders() call — avoids one API request per updated task.
+            saved_reminders = [
+                r["minute_offset"]
+                for r in self._reminders_cache.get(task_uid, [])
+                if r.get("minute_offset") is not None
+            ] or None
 
         if "completed" in fields:
             try:
