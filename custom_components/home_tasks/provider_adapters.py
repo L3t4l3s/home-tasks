@@ -1191,10 +1191,12 @@ class TodoistAdapter(ProviderAdapter):
 
         task = await api.add_task(**kwargs)
 
-        # Create reminders
+        # Create reminders — all in parallel (no rollback needed here; task already exists)
         if fields.get("reminders"):
-            for offset in fields["reminders"]:
-                await api.add_reminder(task.id, reminder_type="relative", minute_offset=offset)
+            await asyncio.gather(*(
+                api.add_reminder(task.id, reminder_type="relative", minute_offset=offset)
+                for offset in fields["reminders"]
+            ))
 
         # Todoist syncs nearly every field via the API; the caller still
         # writes the remaining overlay-only fields (recurrence_end_type,
@@ -1395,49 +1397,70 @@ class TodoistAdapter(ProviderAdapter):
         }
         new_set = set(new_offsets)
 
-        # Step 1: try to ADD new reminders first.  If the API rejects any
-        # of them (e.g. PREMIUM_ONLY for non-zero offsets on Free accounts),
-        # abort the whole sync so we don't delete the existing reminders.
+        # Step 1: try to ADD new reminders first — all in parallel.
+        # If ANY call fails (e.g. PREMIUM_ONLY on Free accounts), roll back the
+        # ones that succeeded and abort so existing reminders are preserved.
         offsets_to_add = [o for o in new_offsets if o not in existing_map]
-        added_ids: list[str] = []
-        for offset in offsets_to_add:
-            try:
-                result = await api.add_reminder(
-                    task_uid, reminder_type="relative", minute_offset=offset
-                )
-                if result and result.get("id"):
-                    added_ids.append(result["id"])
-            except TodoistAPIError as err:
-                if err.is_premium_only:
+        if offsets_to_add:
+            add_results = await asyncio.gather(
+                *(
+                    api.add_reminder(task_uid, reminder_type="relative", minute_offset=offset)
+                    for offset in offsets_to_add
+                ),
+                return_exceptions=True,
+            )
+
+            failed = [
+                (offsets_to_add[i], r)
+                for i, r in enumerate(add_results)
+                if isinstance(r, BaseException)
+            ]
+            succeeded_ids = [
+                r["id"]
+                for r in add_results
+                if isinstance(r, dict) and r and r.get("id")
+            ]
+
+            if failed:
+                first_offset, first_err = failed[0]
+                if isinstance(first_err, TodoistAPIError) and first_err.is_premium_only:
                     _LOGGER.warning(
                         "Todoist rejected reminder offset=%d for task %s: %s. "
                         "Reminders with non-zero offsets require Todoist Premium. "
                         "Aborting reminder sync to preserve existing reminders.",
-                        offset, task_uid, err.message,
+                        first_offset, task_uid, first_err.message,
                     )
                 else:
                     _LOGGER.warning(
                         "Todoist rejected reminder offset=%d for task %s: %s. "
                         "Aborting reminder sync.",
-                        offset, task_uid, err.message,
+                        first_offset, task_uid,
+                        first_err.message if isinstance(first_err, TodoistAPIError) else first_err,
                     )
-                # Roll back: delete any reminders we just created in this call
-                for rid in added_ids:
-                    try:
-                        await api.delete_reminder(rid)
-                    except TodoistAPIError:
-                        pass
+                # Roll back: delete all reminders we just created in parallel
+                if succeeded_ids:
+                    await asyncio.gather(
+                        *(api.delete_reminder(rid) for rid in succeeded_ids),
+                        return_exceptions=True,
+                    )
                 return
 
-        # Step 2: all adds succeeded, now safe to delete the obsolete ones.
-        for offset, rid in existing_map.items():
-            if offset not in new_set:
-                try:
-                    await api.delete_reminder(rid)
-                except TodoistAPIError as err:
+        # Step 2: all adds succeeded, now safe to delete the obsolete ones — in parallel.
+        offsets_to_delete = [
+            (offset, rid)
+            for offset, rid in existing_map.items()
+            if offset not in new_set
+        ]
+        if offsets_to_delete:
+            delete_results = await asyncio.gather(
+                *(api.delete_reminder(rid) for _, rid in offsets_to_delete),
+                return_exceptions=True,
+            )
+            for (offset, rid), result in zip(offsets_to_delete, delete_results):
+                if isinstance(result, TodoistAPIError):
                     _LOGGER.warning(
                         "Failed to delete obsolete reminder %s for task %s: %s",
-                        rid, task_uid, err.message,
+                        rid, task_uid, result.message,
                     )
 
 
