@@ -753,3 +753,65 @@ describe('due soon filter', () => {
     assert.deepEqual(titles, ['Today']);
   });
 });
+
+describe('preset filters', () => {
+  const TASKS = [
+    { id: 'P1', title: 'Ben homework', assigned_person: 'Ben',  tags: ['School'],          completed: false, sort_order: 0, sub_items: [] },
+    { id: 'P2', title: 'Ben chores',   assigned_person: 'Ben',  tags: ['Home'],            completed: false, sort_order: 1, sub_items: [] },
+    { id: 'P3', title: 'Anna music',   assigned_person: 'Anna', tags: ['School', 'Music'], completed: false, sort_order: 2, sub_items: [] },
+    { id: 'P4', title: 'Anna done',    assigned_person: 'Anna', tags: ['Home'],            completed: true,  sort_order: 3, sub_items: [] },
+    { id: 'P5', title: 'Unassigned',   assigned_person: null,                              completed: false, sort_order: 4, sub_items: [] },
+  ];
+
+  const setup = async (colConfig) => {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'Test' }] },
+      'home_tasks/get_tasks': { tasks: TASKS },
+    });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{ list_id: 'L1', ...colConfig }] });
+    card.hass = hass;
+    await flush(card);
+    return card;
+  };
+
+  const titlesOf = (card) => [...card.shadowRoot.querySelectorAll('.task')]
+    .map(el => el.querySelector('.task-title')?.textContent?.trim());
+
+  test('assignees preset limits the column to those people', async () => {
+    const card = await setup({ filters: { assignees: ['Ben'] } });
+    assert.deepEqual(titlesOf(card).sort(), ['Ben chores', 'Ben homework']);
+  });
+
+  test('labels preset limits the column to tasks with those tags', async () => {
+    const card = await setup({ filters: { labels: ['School'] } });
+    assert.deepEqual(titlesOf(card).sort(), ['Anna music', 'Ben homework']);
+  });
+
+  test('assignees and labels presets combine (AND)', async () => {
+    const card = await setup({ filters: { assignees: ['Anna'], labels: ['School'] } });
+    assert.deepEqual(titlesOf(card), ['Anna music']);
+  });
+
+  test('labels preset on a list with tag-less tasks does not error', async () => {
+    // P5 has no `tags` property at all — it must be silently excluded, not throw.
+    const card = await setup({ filters: { labels: ['Home'] } });
+    const titles = titlesOf(card);
+    assert.ok(!titles.includes('Unassigned'), 'tag-less task excluded by a label preset');
+    assert.ok(titles.includes('Ben chores'));
+    assert.equal(card._preFilteredTasks(0).length, 2);
+  });
+
+  test('preset filter composes with the runtime filter', async () => {
+    const card = await setup({ filters: { assignees: ['Anna'] } });
+    card._columns[0].filter = 'done';
+    card._render();
+    assert.deepEqual(titlesOf(card), ['Anna done']);
+  });
+
+  test('no filters key — all tasks pass through _preFilteredTasks', async () => {
+    const card = await setup({});
+    assert.equal(card._preFilteredTasks(0).length, 5);
+  });
+});

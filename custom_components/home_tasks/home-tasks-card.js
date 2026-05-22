@@ -133,11 +133,10 @@ const _TRANSLATIONS = {
     ed_move_up: "Move up",
     ed_move_down: "Move down",
     confirm_delete_section: "Delete this section? Tasks inside will become unsorted.",
-    ed_sec_preset_filters: "Preset Filters",
-    ed_preset_assignees: "Assignees (comma-separated entity IDs)",
-    ed_preset_assignees_placeholder: "e.g. person.ben, person.anna",
-    ed_preset_labels: "Labels (comma-separated)",
-    ed_preset_labels_placeholder: "e.g. School, Morning Routine",
+    ed_sec_filters: "Filters",
+    ed_preset_assignees: "Limit to assignees",
+    ed_preset_labels: "Limit to tags",
+    ed_ms_add: "Add…",
   },
   nl: {
     my_tasks: "Mijn taken",
@@ -182,6 +181,10 @@ const _TRANSLATIONS = {
     ed_icon: "Pictogram (optioneel)", ed_card_title: "Kaarttitel (optioneel)",
     ed_card_title_placeholder: "Titel boven kolommen",
     ed_sec_view: "Weergave", ed_sec_display: "Configuratie",
+    ed_sec_filters: "Filters",
+    ed_preset_assignees: "Beperken tot personen",
+    ed_preset_labels: "Beperken tot tags",
+    ed_ms_add: "Toevoegen…",
     due_time_lbl: "Tijd", due_date_lbl: "Datum", rec_mode_lbl: "Modus",
     rec_time: "Tijdstip", rec_end: "Einde", rec_end_never: "Nooit", rec_end_date: "Tot", rec_end_count: "X keer",
     rec_end_date_lbl: "Tot", rec_max_count_lbl: "Aantal", rec_remaining: "nog {0}", rec_start_date_lbl: "Vanaf",
@@ -244,6 +247,10 @@ const _TRANSLATIONS = {
     ed_icon: "Icona (opzionale)", ed_card_title: "Titolo scheda (opzionale)",
     ed_card_title_placeholder: "Titolo sopra le colonne",
     ed_sec_view: "Visualizzazione", ed_sec_display: "Configurazione",
+    ed_sec_filters: "Filtri",
+    ed_preset_assignees: "Limita alle persone",
+    ed_preset_labels: "Limita ai tag",
+    ed_ms_add: "Aggiungi\u2026",
     due_time_lbl: "Ora", due_date_lbl: "Data", rec_mode_lbl: "Modalit\u00e0",
     rec_time: "Orario", rec_end: "Fine", rec_end_never: "Mai", rec_end_date: "Fino al", rec_end_count: "X volte",
     rec_end_date_lbl: "Fino al", rec_max_count_lbl: "Numero", rec_remaining: "ancora {0}", rec_start_date_lbl: "Dal",
@@ -306,6 +313,10 @@ const _TRANSLATIONS = {
     ed_icon: "Ikona (opcjonalnie)", ed_card_title: "Tytu\u0142 karty (opcjonalnie)",
     ed_card_title_placeholder: "Tytu\u0142 nad kolumnami",
     ed_sec_view: "Wy\u015bwietlanie", ed_sec_display: "Konfiguracja",
+    ed_sec_filters: "Filtry",
+    ed_preset_assignees: "Ogranicz do os\u00f3b",
+    ed_preset_labels: "Ogranicz do tag\u00f3w",
+    ed_ms_add: "Dodaj\u2026",
     due_time_lbl: "Czas", due_date_lbl: "Data", rec_mode_lbl: "Tryb",
     rec_time: "Godzina", rec_end: "Koniec", rec_end_never: "Nigdy", rec_end_date: "Do", rec_end_count: "X razy",
     rec_end_date_lbl: "Do", rec_max_count_lbl: "Liczba", rec_remaining: "jeszcze {0}", rec_start_date_lbl: "Od",
@@ -368,6 +379,10 @@ const _TRANSLATIONS = {
     ed_icon: "Ikon (valfritt)", ed_card_title: "Korttitel (valfritt)",
     ed_card_title_placeholder: "Titel ovanf\u00f6r kolumner",
     ed_sec_view: "Visning", ed_sec_display: "Konfiguration",
+    ed_sec_filters: "Filter",
+    ed_preset_assignees: "Begr\u00e4nsa till personer",
+    ed_preset_labels: "Begr\u00e4nsa till taggar",
+    ed_ms_add: "L\u00e4gg till\u2026",
     due_time_lbl: "Tid", due_date_lbl: "Datum", rec_mode_lbl: "L\u00e4ge",
     rec_time: "Tid", rec_end: "Slut", rec_end_never: "Aldrig", rec_end_date: "Till", rec_end_count: "X g\u00e5nger",
     rec_end_date_lbl: "Till", rec_max_count_lbl: "Antal", rec_remaining: "{0} kvar", rec_start_date_lbl: "Fr\u00e5n",
@@ -430,6 +445,10 @@ const _TRANSLATIONS = {
     ed_icon: "Ic\u00f4ne (optionnel)", ed_card_title: "Titre de la carte (optionnel)",
     ed_card_title_placeholder: "Titre au-dessus des colonnes",
     ed_sec_view: "Affichage", ed_sec_display: "Configuration",
+    ed_sec_filters: "Filtres",
+    ed_preset_assignees: "Limiter aux personnes",
+    ed_preset_labels: "Limiter aux étiquettes",
+    ed_ms_add: "Ajouter…",
     due_time_lbl: "Heure", due_date_lbl: "Date", rec_mode_lbl: "Mode",
     rec_time: "Heure", rec_end: "Fin", rec_end_never: "Jamais", rec_end_date: "Jusqu'au", rec_end_count: "X fois",
     rec_end_date_lbl: "Jusqu'au", rec_max_count_lbl: "Nombre", rec_remaining: "encore {0}", rec_start_date_lbl: "\u00c0 partir du",
@@ -492,6 +511,10 @@ const _TRANSLATIONS = {
     ed_icon: "\u00cdcone (opcional)", ed_card_title: "T\u00edtulo do cart\u00e3o (opcional)",
     ed_card_title_placeholder: "T\u00edtulo acima das colunas",
     ed_sec_view: "Exibi\u00e7\u00e3o", ed_sec_display: "Configura\u00e7\u00e3o",
+    ed_sec_filters: "Filtros",
+    ed_preset_assignees: "Limitar a pessoas",
+    ed_preset_labels: "Limitar a etiquetas",
+    ed_ms_add: "Adicionar\u2026",
     due_time_lbl: "Hora", due_date_lbl: "Data", rec_mode_lbl: "Modo",
     rec_time: "Hora", rec_end: "Fim", rec_end_never: "Nunca", rec_end_date: "At\u00e9", rec_end_count: "X vezes",
     rec_end_date_lbl: "At\u00e9", rec_max_count_lbl: "Quantidade", rec_remaining: "ainda {0}", rec_start_date_lbl: "De",
@@ -554,6 +577,10 @@ const _TRANSLATIONS = {
     ed_icon: "Icono (opcional)", ed_card_title: "T\u00edtulo de la tarjeta (opcional)",
     ed_card_title_placeholder: "T\u00edtulo sobre las columnas",
     ed_sec_view: "Visualizaci\u00f3n", ed_sec_display: "Configuraci\u00f3n",
+    ed_sec_filters: "Filtros",
+    ed_preset_assignees: "Limitar a personas",
+    ed_preset_labels: "Limitar a etiquetas",
+    ed_ms_add: "A\u00f1adir\u2026",
     due_time_lbl: "Hora", due_date_lbl: "Fecha", rec_mode_lbl: "Modo",
     rec_time: "Hora", rec_end: "Fin", rec_end_never: "Nunca", rec_end_date: "Hasta", rec_end_count: "X veces",
     rec_end_date_lbl: "Hasta", rec_max_count_lbl: "Cantidad", rec_remaining: "a\u00fan {0}", rec_start_date_lbl: "Desde",
@@ -616,6 +643,10 @@ const _TRANSLATIONS = {
     ed_icon: "\u0418\u043a\u043e\u043d\u043a\u0430 (\u043d\u0435\u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u043e)", ed_card_title: "\u0417\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a \u043a\u0430\u0440\u0442\u043e\u0447\u043a\u0438 (\u043d\u0435\u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u043e)",
     ed_card_title_placeholder: "\u0417\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a \u043d\u0430\u0434 \u0441\u0442\u043e\u043b\u0431\u0446\u0430\u043c\u0438",
     ed_sec_view: "\u041e\u0442\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u0435", ed_sec_display: "\u041a\u043e\u043d\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044f",
+    ed_sec_filters: "\u0424\u0438\u043b\u044c\u0442\u0440\u044b",
+    ed_preset_assignees: "\u041e\u0433\u0440\u0430\u043d\u0438\u0447\u0438\u0442\u044c \u043f\u043e \u043b\u044e\u0434\u044f\u043c",
+    ed_preset_labels: "\u041e\u0433\u0440\u0430\u043d\u0438\u0447\u0438\u0442\u044c \u043f\u043e \u0442\u0435\u0433\u0430\u043c",
+    ed_ms_add: "\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c\u2026",
     due_time_lbl: "\u0412\u0440\u0435\u043c\u044f", due_date_lbl: "\u0414\u0430\u0442\u0430", rec_mode_lbl: "\u0420\u0435\u0436\u0438\u043c",
     rec_time: "\u0412\u0440\u0435\u043c\u044f", rec_end: "\u041e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u0435", rec_end_never: "\u041d\u0438\u043a\u043e\u0433\u0434\u0430", rec_end_date: "\u0414\u043e", rec_end_count: "X \u0440\u0430\u0437",
     rec_end_date_lbl: "\u0414\u043e", rec_max_count_lbl: "\u041a\u043e\u043b\u0438\u0447\u0435\u0441\u0442\u0432\u043e", rec_remaining: "\u0435\u0449\u0451 {0}", rec_start_date_lbl: "\u0421",
@@ -678,6 +709,10 @@ const _TRANSLATIONS = {
     ed_icon: "Ikona (voliteln\u011b)", ed_card_title: "N\u00e1zev karty (voliteln\u011b)",
     ed_card_title_placeholder: "N\u00e1zev nad sloupci",
     ed_sec_view: "Zobrazen\u00ed", ed_sec_display: "Konfigurace",
+    ed_sec_filters: "Filtry",
+    ed_preset_assignees: "Omezit na osoby",
+    ed_preset_labels: "Omezit na \u0161t\u00edtky",
+    ed_ms_add: "P\u0159idat\u2026",
     due_time_lbl: "\u010cas", due_date_lbl: "Datum", rec_mode_lbl: "Re\u017eim",
     rec_time: "\u010cas", rec_end: "Konec", rec_end_never: "Nikdy", rec_end_date: "Do", rec_end_count: "X kr\u00e1t",
     rec_end_date_lbl: "Do", rec_max_count_lbl: "Po\u010det", rec_remaining: "je\u0161t\u011b {0}", rec_start_date_lbl: "Od",
@@ -740,6 +775,10 @@ const _TRANSLATIONS = {
     ed_icon: "Ikon (valgfrit)", ed_card_title: "Korttitel (valgfrit)",
     ed_card_title_placeholder: "Titel over kolonner",
     ed_sec_view: "Visning", ed_sec_display: "Konfiguration",
+    ed_sec_filters: "Filtre",
+    ed_preset_assignees: "Begræns til personer",
+    ed_preset_labels: "Begræns til tags",
+    ed_ms_add: "Tilføj…",
     due_time_lbl: "Tid", due_date_lbl: "Dato", rec_mode_lbl: "Tilstand",
     rec_time: "Tidspunkt", rec_end: "Slut", rec_end_never: "Aldrig", rec_end_date: "Til", rec_end_count: "X gange",
     rec_end_date_lbl: "Til", rec_max_count_lbl: "Antal", rec_remaining: "{0} tilbage", rec_start_date_lbl: "Fra",
@@ -802,6 +841,10 @@ const _TRANSLATIONS = {
     ed_icon: "Ikon (valgfritt)", ed_card_title: "Korttittel (valgfritt)",
     ed_card_title_placeholder: "Tittel over kolonner",
     ed_sec_view: "Visning", ed_sec_display: "Konfigurasjon",
+    ed_sec_filters: "Filtre",
+    ed_preset_assignees: "Begrens til personer",
+    ed_preset_labels: "Begrens til tagger",
+    ed_ms_add: "Legg til…",
     due_time_lbl: "Tid", due_date_lbl: "Dato", rec_mode_lbl: "Modus",
     rec_time: "Klokkeslett", rec_end: "Slutt", rec_end_never: "Aldri", rec_end_date: "Til", rec_end_count: "X ganger",
     rec_end_date_lbl: "Til", rec_max_count_lbl: "Antall", rec_remaining: "{0} igjen", rec_start_date_lbl: "Fra",
@@ -864,6 +907,10 @@ const _TRANSLATIONS = {
     ed_icon: "Kuvake (valinnainen)", ed_card_title: "Kortin otsikko (valinnainen)",
     ed_card_title_placeholder: "Otsikko sarakkeiden yl\u00e4puolella",
     ed_sec_view: "N\u00e4ytt\u00f6", ed_sec_display: "Konfiguraatio",
+    ed_sec_filters: "Suodattimet",
+    ed_preset_assignees: "Rajaa henkil\u00f6ihin",
+    ed_preset_labels: "Rajaa tunnisteisiin",
+    ed_ms_add: "Lis\u00e4\u00e4\u2026",
     due_time_lbl: "Aika", due_date_lbl: "P\u00e4iv\u00e4m\u00e4\u00e4r\u00e4", rec_mode_lbl: "Tila",
     rec_time: "Aika", rec_end: "Loppu", rec_end_never: "Ei koskaan", rec_end_date: "Asti", rec_end_count: "X kertaa",
     rec_end_date_lbl: "Asti", rec_max_count_lbl: "M\u00e4\u00e4r\u00e4", rec_remaining: "{0} j\u00e4ljell\u00e4", rec_start_date_lbl: "Alkaen",
@@ -926,6 +973,10 @@ const _TRANSLATIONS = {
     ed_icon: "Ikon (nem k\u00f6telez\u0151)", ed_card_title: "K\u00e1rtya c\u00edme (nem k\u00f6telez\u0151)",
     ed_card_title_placeholder: "C\u00edm az oszlopok felett",
     ed_sec_view: "Megjelen\u00edt\u00e9s", ed_sec_display: "Konfigur\u00e1ci\u00f3",
+    ed_sec_filters: "Sz\u0171r\u0151k",
+    ed_preset_assignees: "Korl\u00e1toz\u00e1s szem\u00e9lyekre",
+    ed_preset_labels: "Korl\u00e1toz\u00e1s c\u00edmk\u00e9kre",
+    ed_ms_add: "Hozz\u00e1ad\u00e1s\u2026",
     due_time_lbl: "Id\u0151pont", due_date_lbl: "D\u00e1tum", rec_mode_lbl: "M\u00f3d",
     rec_time: "Id\u0151pont", rec_end: "V\u00e9ge", rec_end_never: "Soha", rec_end_date: "Eddig", rec_end_count: "X alkalom",
     rec_end_date_lbl: "Eddig", rec_max_count_lbl: "Darabsz\u00e1m", rec_remaining: "m\u00e9g {0}", rec_start_date_lbl: "Ett\u0151l",
@@ -1069,11 +1120,10 @@ const _TRANSLATIONS = {
     ed_move_up: "Nach oben",
     ed_move_down: "Nach unten",
     confirm_delete_section: "Diesen Bereich wirklich löschen? Enthaltene Aufgaben werden unsortiert.",
-    ed_sec_preset_filters: "Voreingestellte Filter",
-    ed_preset_assignees: "Personen (kommagetrennte Entity-IDs)",
-    ed_preset_assignees_placeholder: "z.B. person.ben, person.anna",
-    ed_preset_labels: "Labels (kommagetrennt)",
-    ed_preset_labels_placeholder: "z.B. Schule, Morgenroutine",
+    ed_sec_filters: "Filter",
+    ed_preset_assignees: "Auf Personen begrenzen",
+    ed_preset_labels: "Auf Tags begrenzen",
+    ed_ms_add: "Hinzufügen…",
   },
 };
 
@@ -5736,6 +5786,7 @@ class HomeTasksCardEditor extends HTMLElement {
     this._sectionOpen = {};     // { translationKey: bool } — persists across re-renders
     this._ignoreNextSetConfig = false; // skip the echo setConfig() call after _fireChanged
     this._listSections = {};    // { sourceKey: [{id,name,icon,sort_order}] } — server-loaded sections
+    this._listMeta = {};        // { sourceKey: {tags:[], persons:[]} } — derived from the list's tasks
   }
 
   _sourceKeyForCol(col) {
@@ -5764,6 +5815,34 @@ class HomeTasksCardEditor extends HTMLElement {
       this._listSections[key] = [];
       return [];
     }
+  }
+
+  // Fetch the column's tasks once to derive the tag + assignee-name sets used
+  // as autocomplete suggestions in the preset-filter multi-selects. Cached per
+  // source key like _listSections; missing/empty is fine (free-text entry).
+  async _loadMetaFor(col) {
+    const key = this._sourceKeyForCol(col);
+    if (!key) return { tags: [], persons: [] };
+    try {
+      let tasks = [];
+      if (col.entity_id) {
+        const r = await this._hass.callWS({ type: "home_tasks/get_external_tasks", entity_id: col.entity_id });
+        tasks = (r && r.tasks) || [];
+      } else if (col.list_id) {
+        const r = await this._hass.callWS({ type: "home_tasks/get_tasks", list_id: col.list_id });
+        tasks = (r && r.tasks) || [];
+      }
+      const tags = new Set();
+      const persons = new Set();
+      for (const t of tasks) {
+        for (const tag of (t.tags || [])) tags.add(tag);
+        if (t.assigned_person) persons.add(t.assigned_person);
+      }
+      this._listMeta[key] = { tags: [...tags].sort(), persons: [...persons].sort() };
+    } catch (e) {
+      this._listMeta[key] = { tags: [], persons: [] };
+    }
+    return this._listMeta[key];
   }
 
   async _wsCallSection(col, type, extra = {}) {
@@ -5958,6 +6037,14 @@ class HomeTasksCardEditor extends HTMLElement {
       .icon-btn ha-icon { --mdc-icon-size: 18px; }
       .add-section-btn { margin-top: 8px; padding: 8px 14px; border: 1px dashed var(--primary-color); border-radius: 6px; background: transparent; color: var(--primary-color); cursor: pointer; font-family: inherit; font-size: 14px; }
       .add-section-btn:hover { background: rgba(3,169,244,0.08); }
+      .ms-field { display: flex; flex-direction: column; gap: 6px; }
+      .ms-label { font-size: 11px; font-weight: 400; color: var(--secondary-text-color); }
+      .ms-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-height: 48px; box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; background: var(--mdc-text-field-fill-color, var(--input-fill-color, transparent)); }
+      .ms-chips:focus-within { border: 2px solid var(--primary-color); padding: 7px 9px; }
+      .ms-chip { display: inline-flex; align-items: center; gap: 4px; background: var(--primary-color); color: var(--text-primary-color, #fff); border-radius: 12px; padding: 2px 4px 2px 10px; font-size: 13px; line-height: 1.7; }
+      .ms-chip-x { border: none; background: rgba(0,0,0,0.22); color: inherit; width: 18px; height: 18px; border-radius: 50%; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; line-height: 1; padding: 0; }
+      .ms-chip-x:hover { background: rgba(0,0,0,0.42); }
+      .ms-input { flex: 1 1 80px; min-width: 80px; border: none; outline: none; background: transparent; color: var(--primary-text-color); font-size: 14px; font-family: inherit; padding: 4px 2px; }
     `;
     root.appendChild(style);
 
@@ -6324,6 +6411,74 @@ class HomeTasksCardEditor extends HTMLElement {
       return det;
     };
 
+    // Preset filters live under col.filters.{assignees,labels}. Merge against
+    // the LIVE config (not the render-time `col` snapshot) so two sequential
+    // edits don't clobber each other before the next re-render.
+    const updateFilters = (patch) => {
+      const live = this._config.columns[tabIdx] || {};
+      const filters = { ...(live.filters || {}), ...patch };
+      for (const k of Object.keys(filters)) {
+        const v = filters[k];
+        if (v == null || (Array.isArray(v) && v.length === 0)) delete filters[k];
+      }
+      updateCol({ filters: Object.keys(filters).length ? filters : undefined });
+    };
+
+    // Tag / assignee values for the multi-select autocomplete, derived from
+    // the list's tasks (lazy-loaded, cached per source key). Empty is fine \u2014
+    // the multi-select still allows free-text entry.
+    const metaKey = this._sourceKeyForCol(col);
+    if (metaKey && this._listMeta[metaKey] === undefined) {
+      this._loadMetaFor(col).then(() => this._render());
+    }
+    const meta = (metaKey && this._listMeta[metaKey]) || { tags: [], persons: [] };
+
+    // Due-soon filter toggle
+    const dueSoonToggle = (() => {
+      const sw = document.createElement("ha-switch");
+      sw.checked = col.show_due_soon_filter === true;
+      sw.setAttribute("aria-label", this._t("ed_show_due_soon_filter"));
+      sw.addEventListener("change", () => {
+        const updates = { show_due_soon_filter: sw.checked };
+        if (!sw.checked && col.default_filter === "due_soon") updates.default_filter = "all";
+        updateCol(updates);
+        this._render();
+      });
+      return this._el("div", { className: "toggle-row" }, [
+        this._el("span", { className: "toggle-label", textContent: this._t("ed_show_due_soon_filter") }),
+        sw,
+      ]);
+    })();
+
+    // Days-ahead + hide-overdue \u2014 only shown when the due-soon filter is on
+    const dueSoonDetail = col.show_due_soon_filter === true ? [(() => {
+      const daysInput = this._el("input", { type: "number", value: col.due_soon_days ?? 7 });
+      daysInput.min = 0;
+      daysInput.max = 90;
+      // 0 = "due today only"; guard the NaN case so a valid 0 isn't reset to 7.
+      const clampDays = (n) => Math.max(0, Math.min(90, Number.isNaN(n) ? 7 : n));
+      daysInput.addEventListener("change", () => {
+        const v = clampDays(parseInt(daysInput.value, 10));
+        daysInput.value = v;
+        updateCol({ due_soon_days: v });
+      });
+      const spinUp = this._el("button", { className: "spin-btn spin-up", textContent: "\u25b4", type: "button" });
+      const spinDown = this._el("button", { className: "spin-btn spin-down", textContent: "\u25be", type: "button" });
+      spinUp.addEventListener("click", () => {
+        daysInput.value = clampDays(parseInt(daysInput.value, 10)) + 1;
+        daysInput.dispatchEvent(new Event("change"));
+      });
+      spinDown.addEventListener("click", () => {
+        daysInput.value = clampDays(parseInt(daysInput.value, 10)) - 1;
+        daysInput.dispatchEvent(new Event("change"));
+      });
+      return this._el("div", { className: "field-wrap inline" }, [
+        daysInput,
+        this._el("span", { textContent: this._t("ed_due_soon_days") }),
+        this._el("div", { className: "spin-btns" }, [spinUp, spinDown]),
+      ]);
+    })(), makeToggle("hide-overdue", "ed_hide_overdue", "hide_overdue", false)] : [];
+
     return this._el("div", { className: "visual-editor" }, [
       this._el("div", { className: "field" }, [listLabel, listSelect, hint]),
       makeSection("view", "mdi:eye", "ed_sec_view", [
@@ -6336,55 +6491,25 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-sort", "ed_show_sort", "show_sort", true),
           makeToggle("compact", "ed_compact", "compact", false),
           makeToggle("show-history", "ed_show_history", "show_history", false),
-          (() => {
-            const dueSoonChecked = col.show_due_soon_filter === true;
-            const sw = document.createElement("ha-switch");
-            sw.checked = dueSoonChecked;
-            sw.setAttribute("aria-label", this._t("ed_show_due_soon_filter"));
-            sw.addEventListener("change", () => {
-              const updates = { show_due_soon_filter: sw.checked };
-              if (!sw.checked && col.default_filter === "due_soon") {
-                updates.default_filter = "all";
-              }
-              updateCol(updates);
-              this._render();
-            });
-            return this._el("div", { className: "toggle-row" }, [
-              this._el("span", { className: "toggle-label", textContent: this._t("ed_show_due_soon_filter") }),
-              sw,
-            ]);
-          })(),
         ]),
-        ...(col.show_due_soon_filter === true ? [(() => {
-          const daysInput = this._el("input", { type: "number", value: col.due_soon_days ?? 7 });
-          daysInput.min = 0;
-          daysInput.max = 90;
-          // 0 means "due today only" \u2014 must survive parsing, so guard against
-          // the `|| 7` falsy trap that would turn a valid 0 back into 7.
-          const clampDays = (n) => Math.max(0, Math.min(90, Number.isNaN(n) ? 7 : n));
-          daysInput.addEventListener("change", () => {
-            const v = clampDays(parseInt(daysInput.value, 10));
-            daysInput.value = v;
-            updateCol({ due_soon_days: v });
-          });
-          const spinUp = this._el("button", { className: "spin-btn spin-up", textContent: "\u25b4", type: "button" });
-          const spinDown = this._el("button", { className: "spin-btn spin-down", textContent: "\u25be", type: "button" });
-          spinUp.addEventListener("click", () => {
-            daysInput.value = clampDays(parseInt(daysInput.value, 10)) + 1;
-            daysInput.dispatchEvent(new Event("change"));
-          });
-          spinDown.addEventListener("click", () => {
-            daysInput.value = clampDays(parseInt(daysInput.value, 10)) - 1;
-            daysInput.dispatchEvent(new Event("change"));
-          });
-          return this._el("div", { className: "field-wrap inline" }, [
-            daysInput,
-            this._el("span", { textContent: this._t("ed_due_soon_days") }),
-            this._el("div", { className: "spin-btns" }, [spinUp, spinDown]),
-          ]);
-        })(), makeToggle("hide-overdue", "ed_hide_overdue", "hide_overdue", false)] : []),
-        this._el("div", { className: "field" }, [filterLabel, filterSelect]),
         this._el("div", { className: "field" }, [sortLabel, sortSelect]),
+      ]),
+      makeSection("filters", "mdi:filter-variant", "ed_sec_filters", [
+        this._el("div", { className: "field" }, [filterLabel, filterSelect]),
+        dueSoonToggle,
+        ...dueSoonDetail,
+        this._buildMultiSelect(
+          this._t("ed_preset_assignees"),
+          col.filters?.assignees || [],
+          meta.persons,
+          (vals) => updateFilters({ assignees: vals }),
+        ),
+        this._buildMultiSelect(
+          this._t("ed_preset_labels"),
+          col.filters?.labels || [],
+          meta.tags,
+          (vals) => updateFilters({ labels: vals }),
+        ),
       ]),
       makeSection("config", "mdi:tune", "ed_sec_display", [
         this._el("div", { className: "toggle-grid" }, [
@@ -6398,43 +6523,74 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-recurrence", "ed_show_recurrence", "show_recurrence", true),
         ]),
       ], false),
-      makeSection("preset-filters", "mdi:filter-settings", "ed_sec_preset_filters", [
-        (() => {
-          const input = this._el("input", {
-            type: "text",
-            value: (col.filters?.assignees || []).join(", "),
-            placeholder: this._t("ed_preset_assignees_placeholder"),
-          });
-          input.addEventListener("change", () => {
-            const vals = input.value.split(",").map((s) => s.trim()).filter(Boolean);
-            const filters = { ...(col.filters || {}), assignees: vals.length ? vals : undefined };
-            if (!filters.assignees) delete filters.assignees;
-            updateCol({ filters: Object.keys(filters).length ? filters : undefined });
-          });
-          return this._el("div", { className: "field-wrap" }, [
-            input,
-            this._el("span", { textContent: this._t("ed_preset_assignees") }),
-          ]);
-        })(),
-        (() => {
-          const input = this._el("input", {
-            type: "text",
-            value: (col.filters?.labels || []).join(", "),
-            placeholder: this._t("ed_preset_labels_placeholder"),
-          });
-          input.addEventListener("change", () => {
-            const vals = input.value.split(",").map((s) => s.trim()).filter(Boolean);
-            const filters = { ...(col.filters || {}), labels: vals.length ? vals : undefined };
-            if (!filters.labels) delete filters.labels;
-            updateCol({ filters: Object.keys(filters).length ? filters : undefined });
-          });
-          return this._el("div", { className: "field-wrap" }, [
-            input,
-            this._el("span", { textContent: this._t("ed_preset_labels") }),
-          ]);
-        })(),
-      ], false),
       this._buildSectionsEditor(col),
+    ]);
+  }
+
+  // Chip multi-select: removable chips for the selected values plus a text
+  // input with datalist autocomplete from `suggestions`. Free-text entry is
+  // allowed (Enter / comma / blur), so a value can be preset even when no
+  // task currently uses it. Renders fine with zero suggestions.
+  _buildMultiSelect(labelText, currentValues, suggestions, onChange) {
+    const values = Array.isArray(currentValues) ? currentValues.slice() : [];
+    const dlId = "ms-dl-" + Math.random().toString(36).slice(2, 9);
+    const input = this._el("input", { className: "ms-input", type: "text", list: dlId, placeholder: this._t("ed_ms_add") });
+    const chipBox = this._el("div", { className: "ms-chips" });
+
+    const datalist = document.createElement("datalist");
+    datalist.id = dlId;
+    for (const s of (suggestions || [])) {
+      const o = document.createElement("option");
+      o.value = s;
+      datalist.appendChild(o);
+    }
+
+    const renderChips = () => {
+      chipBox.innerHTML = "";
+      for (const v of values) {
+        const x = this._el("button", { className: "ms-chip-x", type: "button", textContent: "×" });
+        x.addEventListener("click", () => {
+          const i = values.indexOf(v);
+          if (i < 0) return;
+          values.splice(i, 1);
+          renderChips();
+          onChange(values.slice());
+          input.focus();
+        });
+        chipBox.appendChild(this._el("span", { className: "ms-chip" }, [
+          this._el("span", { textContent: v }), x,
+        ]));
+      }
+      chipBox.appendChild(input);
+    };
+
+    const addValue = (raw) => {
+      const v = (raw || "").trim();
+      input.value = "";
+      if (!v || values.includes(v)) return;
+      values.push(v);
+      renderChips();
+      onChange(values.slice());
+      input.focus();
+    };
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === ",") {
+        e.preventDefault();
+        addValue(input.value);
+      } else if (e.key === "Backspace" && !input.value && values.length) {
+        values.pop();
+        renderChips();
+        onChange(values.slice());
+      }
+    });
+    input.addEventListener("blur", () => { if (input.value.trim()) addValue(input.value); });
+
+    renderChips();
+    return this._el("div", { className: "ms-field" }, [
+      this._el("span", { className: "ms-label", textContent: labelText }),
+      chipBox,
+      datalist,
     ]);
   }
 
