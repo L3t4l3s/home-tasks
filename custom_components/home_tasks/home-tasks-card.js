@@ -17,6 +17,7 @@ const _TRANSLATIONS = {
     filter_due_soon: "Due Soon",
     ed_show_due_soon_filter: "Due soon filter",
     ed_due_soon_days: "Days ahead",
+    ed_hide_overdue: "Hide overdue",
     progress: "{0} of {1} done",
     empty: "No tasks",
     drag_handle: "Drag to reorder",
@@ -137,7 +138,7 @@ const _TRANSLATIONS = {
     my_tasks: "Mijn taken",
     add_placeholder: "Nieuwe taak toevoegen...",
     filter_all: "Alle", filter_open: "Open", filter_done: "Klaar", filter_due_soon: "Binnenkort",
-    ed_show_due_soon_filter: "Binnenkort-filter", ed_due_soon_days: "Dagen vooruit",
+    ed_show_due_soon_filter: "Binnenkort-filter", ed_due_soon_days: "Dagen vooruit", ed_hide_overdue: "Verlopen verbergen",
     progress: "{0} van {1} klaar",
     empty: "Geen taken",
     drag_handle: "Slepen om te herordenen",
@@ -199,7 +200,7 @@ const _TRANSLATIONS = {
     my_tasks: "Le mie attivit\u00e0",
     add_placeholder: "Aggiungi nuova attivit\u00e0...",
     filter_all: "Tutte", filter_open: "Aperte", filter_done: "Completate", filter_due_soon: "In scadenza",
-    ed_show_due_soon_filter: "Filtro in scadenza", ed_due_soon_days: "Giorni avanti",
+    ed_show_due_soon_filter: "Filtro in scadenza", ed_due_soon_days: "Giorni avanti", ed_hide_overdue: "Nascondi scadute",
     progress: "{0} di {1} completate",
     empty: "Nessuna attivit\u00e0",
     drag_handle: "Trascina per riordinare",
@@ -261,7 +262,7 @@ const _TRANSLATIONS = {
     my_tasks: "Moje zadania",
     add_placeholder: "Dodaj nowe zadanie...",
     filter_all: "Wszystkie", filter_open: "Otwarte", filter_done: "Uko\u0144czone", filter_due_soon: "Wkr\u00f3tce",
-    ed_show_due_soon_filter: "Filtr wkr\u00f3tce", ed_due_soon_days: "Dni naprz\u00f3d",
+    ed_show_due_soon_filter: "Filtr wkr\u00f3tce", ed_due_soon_days: "Dni naprz\u00f3d", ed_hide_overdue: "Ukryj zaleg\u0142e",
     progress: "{0} z {1} uko\u0144czono",
     empty: "Brak zada\u0144",
     drag_handle: "Przeci\u0105gnij, aby zmieni\u0107 kolejno\u015b\u0107",
@@ -323,7 +324,7 @@ const _TRANSLATIONS = {
     my_tasks: "Mina uppgifter",
     add_placeholder: "L\u00e4gg till ny uppgift...",
     filter_all: "Alla", filter_open: "\u00d6ppna", filter_done: "Klara", filter_due_soon: "Snart",
-    ed_show_due_soon_filter: "Snart-filter", ed_due_soon_days: "Dagar fram\u00e5t",
+    ed_show_due_soon_filter: "Snart-filter", ed_due_soon_days: "Dagar fram\u00e5t", ed_hide_overdue: "D\u00f6lj f\u00f6rsenade",
     progress: "{0} av {1} klara",
     empty: "Inga uppgifter",
     drag_handle: "Dra f\u00f6r att \u00e4ndra ordning",
@@ -385,7 +386,7 @@ const _TRANSLATIONS = {
     my_tasks: "Mes t\u00e2ches",
     add_placeholder: "Ajouter une nouvelle t\u00e2che...",
     filter_all: "Toutes", filter_open: "Ouvertes", filter_done: "Termin\u00e9es", filter_due_soon: "Bient\u00f4t",
-    ed_show_due_soon_filter: "Filtre bient\u00f4t", ed_due_soon_days: "Jours \u00e0 venir",
+    ed_show_due_soon_filter: "Filtre bient\u00f4t", ed_due_soon_days: "Jours \u00e0 venir", ed_hide_overdue: "Masquer en retard",
     progress: "{0} sur {1} termin\u00e9es",
     empty: "Aucune t\u00e2che",
     drag_handle: "Glisser pour r\u00e9organiser",
@@ -447,7 +448,7 @@ const _TRANSLATIONS = {
     my_tasks: "Minhas tarefas",
     add_placeholder: "Adicionar nova tarefa...",
     filter_all: "Todas", filter_open: "Abertas", filter_done: "Conclu\u00eddas", filter_due_soon: "Em breve",
-    ed_show_due_soon_filter: "Filtro em breve", ed_due_soon_days: "Dias \u00e0 frente",
+    ed_show_due_soon_filter: "Filtro em breve", ed_due_soon_days: "Dias \u00e0 frente", ed_hide_overdue: "Ocultar atrasadas",
     progress: "{0} de {1} conclu\u00eddas",
     empty: "Nenhuma tarefa",
     drag_handle: "Arrastar para reordenar",
@@ -509,7 +510,7 @@ const _TRANSLATIONS = {
     my_tasks: "Mis tareas",
     add_placeholder: "A\u00f1adir nueva tarea...",
     filter_all: "Todas", filter_open: "Abiertas", filter_done: "Completadas", filter_due_soon: "Pr\u00f3ximamente",
-    ed_show_due_soon_filter: "Filtro pr\u00f3ximo", ed_due_soon_days: "D\u00edas adelante",
+    ed_show_due_soon_filter: "Filtro pr\u00f3ximo", ed_due_soon_days: "D\u00edas adelante", ed_hide_overdue: "Ocultar vencidas",
     progress: "{0} de {1} completadas",
     empty: "Sin tareas",
     drag_handle: "Arrastrar para reordenar",
@@ -571,7 +572,7 @@ const _TRANSLATIONS = {
     my_tasks: "\u041c\u043e\u0438 \u0437\u0430\u0434\u0430\u0447\u0438",
     add_placeholder: "\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043d\u043e\u0432\u0443\u044e \u0437\u0430\u0434\u0430\u0447\u0443...",
     filter_all: "\u0412\u0441\u0435", filter_open: "\u041e\u0442\u043a\u0440\u044b\u0442\u044b\u0435", filter_done: "\u0412\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043d\u044b\u0435", filter_due_soon: "\u0421\u043a\u043e\u0440\u043e",
-    ed_show_due_soon_filter: "\u0424\u0438\u043b\u044c\u0442\u0440 \u0441\u043a\u043e\u0440\u043e", ed_due_soon_days: "\u0414\u043d\u0435\u0439 \u0432\u043f\u0435\u0440\u0451\u0434",
+    ed_show_due_soon_filter: "\u0424\u0438\u043b\u044c\u0442\u0440 \u0441\u043a\u043e\u0440\u043e", ed_due_soon_days: "\u0414\u043d\u0435\u0439 \u0432\u043f\u0435\u0440\u0451\u0434", ed_hide_overdue: "\u0421\u043a\u0440\u044b\u0442\u044c \u043f\u0440\u043e\u0441\u0440\u043e\u0447\u0435\u043d\u043d\u044b\u0435",
     progress: "{0} \u0438\u0437 {1} \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043e",
     empty: "\u041d\u0435\u0442 \u0437\u0430\u0434\u0430\u0447",
     drag_handle: "\u041f\u0435\u0440\u0435\u0442\u0430\u0449\u0438\u0442\u044c \u0434\u043b\u044f \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f \u043f\u043e\u0440\u044f\u0434\u043a\u0430",
@@ -633,7 +634,7 @@ const _TRANSLATIONS = {
     my_tasks: "Moje \u00fakoly",
     add_placeholder: "P\u0159idat nov\u00fd \u00fakol...",
     filter_all: "V\u0161e", filter_open: "Otev\u0159en\u00e9", filter_done: "Dokon\u010den\u00e9", filter_due_soon: "Brzy",
-    ed_show_due_soon_filter: "Filtr brzy", ed_due_soon_days: "Dn\u016f dop\u0159edu",
+    ed_show_due_soon_filter: "Filtr brzy", ed_due_soon_days: "Dn\u016f dop\u0159edu", ed_hide_overdue: "Skr\u00fdt po term\u00ednu",
     progress: "{0} z {1} dokon\u010deno",
     empty: "\u017d\u00e1dn\u00e9 \u00fakoly",
     drag_handle: "P\u0159et\u00e1hnout pro zm\u011bnu po\u0159ad\u00ed",
@@ -695,7 +696,7 @@ const _TRANSLATIONS = {
     my_tasks: "Mine opgaver",
     add_placeholder: "Tilf\u00f8j ny opgave...",
     filter_all: "Alle", filter_open: "\u00c5bne", filter_done: "F\u00e6rdige", filter_due_soon: "Snart",
-    ed_show_due_soon_filter: "Snart-filter", ed_due_soon_days: "Dage frem",
+    ed_show_due_soon_filter: "Snart-filter", ed_due_soon_days: "Dage frem", ed_hide_overdue: "Skjul forfaldne",
     progress: "{0} af {1} f\u00e6rdige",
     empty: "Ingen opgaver",
     drag_handle: "Tr\u00e6k for at sortere",
@@ -757,7 +758,7 @@ const _TRANSLATIONS = {
     my_tasks: "Mine oppgaver",
     add_placeholder: "Legg til ny oppgave...",
     filter_all: "Alle", filter_open: "\u00c5pne", filter_done: "Ferdige", filter_due_soon: "Snart",
-    ed_show_due_soon_filter: "Snart-filter", ed_due_soon_days: "Dager fremover",
+    ed_show_due_soon_filter: "Snart-filter", ed_due_soon_days: "Dager fremover", ed_hide_overdue: "Skjul forfalte",
     progress: "{0} av {1} ferdige",
     empty: "Ingen oppgaver",
     drag_handle: "Dra for \u00e5 endre rekkefl\u00f8lge",
@@ -819,7 +820,7 @@ const _TRANSLATIONS = {
     my_tasks: "Omat teht\u00e4v\u00e4t",
     add_placeholder: "Lis\u00e4\u00e4 uusi teht\u00e4v\u00e4...",
     filter_all: "Kaikki", filter_open: "Avoimet", filter_done: "Valmiit", filter_due_soon: "Pian",
-    ed_show_due_soon_filter: "Pian-suodatin", ed_due_soon_days: "P\u00e4ivi\u00e4 eteenp\u00e4in",
+    ed_show_due_soon_filter: "Pian-suodatin", ed_due_soon_days: "P\u00e4ivi\u00e4 eteenp\u00e4in", ed_hide_overdue: "Piilota my\u00f6h\u00e4ss\u00e4 olevat",
     progress: "{0} / {1} valmis",
     empty: "Ei teht\u00e4vi\u00e4",
     drag_handle: "Vet\u00e4\u00e4 j\u00e4rjest\u00e4\u00e4ksesi",
@@ -881,7 +882,7 @@ const _TRANSLATIONS = {
     my_tasks: "Feladataim",
     add_placeholder: "\u00daj feladat hozz\u00e1ad\u00e1sa...",
     filter_all: "\u00d6sszes", filter_open: "Nyitott", filter_done: "K\u00e9sz", filter_due_soon: "Hamarosan",
-    ed_show_due_soon_filter: "Hamarosan sz\u0171r\u0151", ed_due_soon_days: "Napok el\u0151re",
+    ed_show_due_soon_filter: "Hamarosan sz\u0171r\u0151", ed_due_soon_days: "Napok el\u0151re", ed_hide_overdue: "Lej\u00e1rtak elrejt\u00e9se",
     progress: "{0} / {1} k\u00e9sz",
     empty: "Nincsenek feladatok",
     drag_handle: "H\u00fazza az \u00e1trendez\u00e9shez",
@@ -948,6 +949,7 @@ const _TRANSLATIONS = {
     filter_due_soon: "Bald f\u00e4llig",
     ed_show_due_soon_filter: "Bald-f\u00e4llig-Filter",
     ed_due_soon_days: "Tage voraus",
+    ed_hide_overdue: "\u00dcberf\u00e4llige ausblenden",
     progress: "{0} von {1} erledigt",
     empty: "Keine Aufgaben vorhanden",
     drag_handle: "Verschieben",
@@ -1933,9 +1935,10 @@ class HomeTasksCard extends HTMLElement {
       case "due_soon": {
         const col = this._config.columns[colIdx];
         const days = col.due_soon_days ?? 7;
+        const hideOverdue = col.hide_overdue === true;
         tasks = cs.tasks.filter((t) =>
           !t.completed && t.due_date &&
-          (this._isDueDateOverdue(t.due_date) || this._isDueDateWithinDays(t.due_date, days))
+          ((!hideOverdue && this._isDueDateOverdue(t.due_date)) || this._isDueDateWithinDays(t.due_date, days))
         );
         break;
       }
@@ -6320,23 +6323,24 @@ class HomeTasksCardEditor extends HTMLElement {
         ]),
         ...(col.show_due_soon_filter === true ? [(() => {
           const daysInput = this._el("input", { type: "number", value: col.due_soon_days ?? 7 });
-          daysInput.min = 1;
+          daysInput.min = 0;
           daysInput.max = 90;
+          // 0 means "due today only" \u2014 must survive parsing, so guard against
+          // the `|| 7` falsy trap that would turn a valid 0 back into 7.
+          const clampDays = (n) => Math.max(0, Math.min(90, Number.isNaN(n) ? 7 : n));
           daysInput.addEventListener("change", () => {
-            const v = Math.max(1, Math.min(90, parseInt(daysInput.value) || 7));
+            const v = clampDays(parseInt(daysInput.value, 10));
             daysInput.value = v;
             updateCol({ due_soon_days: v });
           });
           const spinUp = this._el("button", { className: "spin-btn spin-up", textContent: "\u25b4", type: "button" });
           const spinDown = this._el("button", { className: "spin-btn spin-down", textContent: "\u25be", type: "button" });
           spinUp.addEventListener("click", () => {
-            const v = Math.min(90, (parseInt(daysInput.value) || 7) + 1);
-            daysInput.value = v;
+            daysInput.value = clampDays(parseInt(daysInput.value, 10)) + 1;
             daysInput.dispatchEvent(new Event("change"));
           });
           spinDown.addEventListener("click", () => {
-            const v = Math.max(1, (parseInt(daysInput.value) || 7) - 1);
-            daysInput.value = v;
+            daysInput.value = clampDays(parseInt(daysInput.value, 10)) - 1;
             daysInput.dispatchEvent(new Event("change"));
           });
           return this._el("div", { className: "field-wrap inline" }, [
@@ -6344,7 +6348,7 @@ class HomeTasksCardEditor extends HTMLElement {
             this._el("span", { textContent: this._t("ed_due_soon_days") }),
             this._el("div", { className: "spin-btns" }, [spinUp, spinDown]),
           ]);
-        })()] : []),
+        })(), makeToggle("hide-overdue", "ed_hide_overdue", "hide_overdue", false)] : []),
         this._el("div", { className: "field" }, [filterLabel, filterSelect]),
         this._el("div", { className: "field" }, [sortLabel, sortSelect]),
       ]),

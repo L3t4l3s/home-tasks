@@ -192,7 +192,8 @@ All options are available in the visual card editor. The examples below cover th
 | `auto_delete_completed` | `false` | Automatically delete completed tasks |
 | `show_history` | `false` | Show/hide the task change history |
 | `show_due_soon_filter` | `false` | Enable the "Due Soon" filter button |
-| `due_soon_days` | `7` | Number of days ahead for the "Due Soon" filter (1–90) |
+| `due_soon_days` | `7` | Number of days ahead for the "Due Soon" filter (0–90, 0 = due today only) |
+| `hide_overdue` | `false` | Hide overdue tasks in the "Due Soon" filter (overdue shown by default) |
 
 The old flat format (`list_id` at root level) is still supported and migrated automatically.
 

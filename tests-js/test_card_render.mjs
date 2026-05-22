@@ -689,4 +689,67 @@ describe('due soon filter', () => {
     assert.ok(!titles.includes('Done'), 'completed tasks should be excluded');
     assert.equal(taskEls.length, 3);
   });
+
+  test('due_soon filter with due_soon_days 0 shows only today and overdue', async () => {
+    const { HomeTasksCard } = await loadCard({ force: true, frozenNow: '2027-06-15T12:00:00Z' });
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'Test' }] },
+      'home_tasks/get_tasks': { tasks: TASKS },
+    });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{ list_id: 'L1', show_due_soon_filter: true, due_soon_days: 0 }] });
+    card.hass = hass;
+    await flush(card);
+
+    card._columns[0].filter = 'due_soon';
+    card._render();
+
+    const titles = [...card.shadowRoot.querySelectorAll('.task')]
+      .map(el => el.querySelector('.task-title')?.textContent?.trim());
+    assert.ok(titles.includes('Overdue'), 'overdue still included by default');
+    assert.ok(titles.includes('Today'), 'today included');
+    assert.ok(!titles.includes('In 3 days'), 'future tasks excluded when days is 0');
+    assert.equal(titles.length, 2);
+  });
+
+  test('hide_overdue excludes overdue tasks from due_soon filter', async () => {
+    const { HomeTasksCard } = await loadCard({ force: true, frozenNow: '2027-06-15T12:00:00Z' });
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'Test' }] },
+      'home_tasks/get_tasks': { tasks: TASKS },
+    });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{ list_id: 'L1', show_due_soon_filter: true, due_soon_days: 7, hide_overdue: true }] });
+    card.hass = hass;
+    await flush(card);
+
+    card._columns[0].filter = 'due_soon';
+    card._render();
+
+    const titles = [...card.shadowRoot.querySelectorAll('.task')]
+      .map(el => el.querySelector('.task-title')?.textContent?.trim());
+    assert.ok(!titles.includes('Overdue'), 'overdue excluded when hide_overdue is set');
+    assert.ok(titles.includes('Today'), 'today still included');
+    assert.ok(titles.includes('In 3 days'), 'upcoming still included');
+    assert.equal(titles.length, 2);
+  });
+
+  test('due_soon_days 0 with hide_overdue shows only tasks due today', async () => {
+    const { HomeTasksCard } = await loadCard({ force: true, frozenNow: '2027-06-15T12:00:00Z' });
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'Test' }] },
+      'home_tasks/get_tasks': { tasks: TASKS },
+    });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{ list_id: 'L1', show_due_soon_filter: true, due_soon_days: 0, hide_overdue: true }] });
+    card.hass = hass;
+    await flush(card);
+
+    card._columns[0].filter = 'due_soon';
+    card._render();
+
+    const titles = [...card.shadowRoot.querySelectorAll('.task')]
+      .map(el => el.querySelector('.task-title')?.textContent?.trim());
+    assert.deepEqual(titles, ['Today']);
+  });
 });
