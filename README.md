@@ -1,6 +1,6 @@
 # Home Tasks
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/)
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://hacs.xyz/)
 [![Validate](https://github.com/L3t4l3s/home-tasks/actions/workflows/validate.yaml/badge.svg)](https://github.com/L3t4l3s/home-tasks/actions/workflows/validate.yaml)
 
 A feature-rich, highly customizable task management solution for Home Assistant — combining a native **integration** (sensors, calendar, events, services) with a versatile Lovelace **dashboard card**. Supports linking **external todo lists** from CalDAV, Google Tasks, Todoist, Bring, Local Todo, and other providers.
@@ -126,12 +126,13 @@ English · German · French · Spanish · Portuguese · Italian · Dutch · Poli
 
 ### HACS (recommended)
 
-1. Open HACS in Home Assistant
-2. Click the **three dots** menu (top right) → **Custom repositories**
-3. Paste `https://github.com/L3t4l3s/home-tasks` and select category **Integration**
-4. Click **Add**
-5. Search for **Home Tasks** in HACS Integrations and click **Download**
-6. Restart Home Assistant
+Home Tasks is available in the HACS default repository.
+
+[![Open your Home Assistant instance and open the Home Tasks repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=L3t4l3s&repository=home-tasks&category=integration)
+
+1. Click the button above — or open HACS and search for **Home Tasks**
+2. Click **Download**
+3. Restart Home Assistant
 
 ### Manual
 
