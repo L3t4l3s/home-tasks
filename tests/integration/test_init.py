@@ -318,6 +318,65 @@ async def test_service_reopen_task_by_tag(hass: HomeAssistant, mock_config_entry
     assert store.get_task(t3["id"])["completed"] is True  # no tag match
 
 
+async def test_service_reopen_task_by_tags_all_must_match(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """reopen_task with tags= uses AND-logic: all tags must be present."""
+    t1 = await store.async_add_task("Has both tags")
+    t2 = await store.async_add_task("Has only first tag")
+    t3 = await store.async_add_task("Has only second tag")
+    t4 = await store.async_add_task("Has neither tag")
+    await store.async_update_task(t1["id"], tags=["fussball_mittag", "ferien_ja"])
+    await store.async_update_task(t2["id"], tags=["fussball_mittag"])
+    await store.async_update_task(t3["id"], tags=["ferien_ja"])
+    await store.async_update_task(t4["id"], tags=["other"])
+    for t in (t1, t2, t3, t4):
+        await store.async_update_task(t["id"], completed=True)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "reopen_task",
+        {"list_name": "Test List", "tags": "fussball_mittag, ferien_ja"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert store.get_task(t1["id"])["completed"] is False  # both tags → reopened
+    assert store.get_task(t2["id"])["completed"] is True   # missing ferien_ja → skipped
+    assert store.get_task(t3["id"])["completed"] is True   # missing fussball_mittag → skipped
+    assert store.get_task(t4["id"])["completed"] is True   # no matching tags → skipped
+
+
+async def test_service_reopen_task_tags_with_assigned_person(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """reopen_task with tags= and assigned_person= narrows by both."""
+    t1 = await store.async_add_task("Laurin fussball ferien")
+    t2 = await store.async_add_task("Lina fussball ferien")
+    t3 = await store.async_add_task("Laurin fussball no ferien")
+    for t, person, tags in [
+        (t1, "person.laurin", ["fussball_mittag", "ferien_ja"]),
+        (t2, "person.lina",   ["fussball_mittag", "ferien_ja"]),
+        (t3, "person.laurin", ["fussball_mittag"]),
+    ]:
+        await store.async_update_task(t["id"], assigned_person=person, tags=tags)
+        await store.async_update_task(t["id"], completed=True)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "reopen_task",
+        {
+            "list_name": "Test List",
+            "tags": "fussball_mittag, ferien_ja",
+            "assigned_person": "person.laurin",
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert store.get_task(t1["id"])["completed"] is False  # Laurin + both tags → reopened
+    assert store.get_task(t2["id"])["completed"] is True   # wrong person → skipped
+    assert store.get_task(t3["id"])["completed"] is True   # missing ferien_ja → skipped
+
+
 async def test_service_reopen_task_by_assigned_person(
     hass: HomeAssistant, mock_config_entry, store
 ) -> None:

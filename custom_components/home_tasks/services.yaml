@@ -143,3 +143,12 @@ reopen_task:
         assigned_person to narrow the selection.
       selector:
         text:
+    tags:
+      name: Tags (ALL must match)
+      description: >-
+        Comma-separated list of tags. Only tasks that carry ALL specified tags
+        are reopened (AND-logic). Supersedes the single `tag` field when both
+        are provided. Can be combined with assigned_person.
+        Example: "fussball_mittag, ferien_ja"
+      selector:
+        text:

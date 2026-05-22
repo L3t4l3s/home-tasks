@@ -956,27 +956,39 @@ def _async_register_services(hass: HomeAssistant) -> None:
         task_title = call.data.get("task_title")
         assigned_person = call.data.get("assigned_person")
         tag = call.data.get("tag")
+        tags_raw = call.data.get("tags")
+
+        # Build the required tag set.  `tags` (comma-separated, AND-logic) takes
+        # precedence over the legacy `tag` (single value).  Both remain supported
+        # for backwards compatibility.
+        if tags_raw:
+            required_tags = {t.strip().lower() for t in tags_raw.split(",") if t.strip()}
+        elif tag:
+            required_tags = {tag.strip().lower()}
+        else:
+            required_tags = set()
 
         if task_id or task_title:
             # Reopen a single task
             task = _resolve_task(store, call.data)
             if task.get("completed"):
                 await store.async_reopen_task(task["id"], actor=actor)
-        elif assigned_person or tag:
-            # Reopen completed tasks matching person and/or tag
+        elif assigned_person or required_tags:
+            # Reopen completed tasks matching person and/or tag(s).
+            # When multiple tags are given, ALL must be present on the task (AND).
             for task in store.tasks:
                 if not task.get("completed"):
                     continue
                 if assigned_person and task.get("assigned_person") != assigned_person:
                     continue
-                if tag and tag.strip().lower() not in (
-                    t.lower() for t in task.get("tags", [])
-                ):
-                    continue
+                if required_tags:
+                    task_tags = {t.lower() for t in task.get("tags", [])}
+                    if not required_tags.issubset(task_tags):
+                        continue
                 await store.async_reopen_task(task["id"], actor=actor)
         else:
             raise vol.Invalid(
-                "Either task_id, task_title, assigned_person, or tag must be provided"
+                "Either task_id, task_title, assigned_person, tag, or tags must be provided"
             )
 
     hass.services.async_register(
@@ -1019,6 +1031,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
             vol.Optional("task_title"): cv.string,
             vol.Optional("assigned_person"): cv.string,
             vol.Optional("tag"): cv.string,
+            vol.Optional("tags"): cv.string,
         }),
     )
     _LOGGER.info("Home Tasks services registered")
