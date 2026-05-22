@@ -5838,7 +5838,13 @@ class HomeTasksCardEditor extends HTMLElement {
         for (const tag of (t.tags || [])) tags.add(tag);
         if (t.assigned_person) persons.add(t.assigned_person);
       }
-      this._listMeta[key] = { tags: [...tags].sort(), persons: [...persons].sort() };
+      // Persons may be stored as `person.*` entity ids — resolve each to its
+      // friendly name for display while keeping the raw value for matching.
+      const personOpts = [...persons].sort().map((v) => ({
+        value: v,
+        label: this._hass?.states?.[v]?.attributes?.friendly_name || v,
+      }));
+      this._listMeta[key] = { tags: [...tags].sort(), persons: personOpts };
     } catch (e) {
       this._listMeta[key] = { tags: [], persons: [] };
     }
@@ -6531,18 +6537,30 @@ class HomeTasksCardEditor extends HTMLElement {
   // input with datalist autocomplete from `suggestions`. Free-text entry is
   // allowed (Enter / comma / blur), so a value can be preset even when no
   // task currently uses it. Renders fine with zero suggestions.
+  //
+  // `suggestions` items are plain strings or {value,label} objects. Chips and
+  // the datalist show the label; the stored value (e.g. a `person.*` entity
+  // id) is what the filter matches — so the editor can show "Ben" while the
+  // config keeps `person.ben`.
   _buildMultiSelect(labelText, currentValues, suggestions, onChange) {
     const values = Array.isArray(currentValues) ? currentValues.slice() : [];
+    const opts = (suggestions || []).map((s) =>
+      (s && typeof s === "object") ? { value: s.value, label: s.label || s.value } : { value: s, label: s });
+    const labelOf = (v) => { const o = opts.find((o) => o.value === v); return o ? o.label : v; };
+    const valueOf = (typed) => {
+      const o = opts.find((o) => o.label === typed || o.value === typed);
+      return o ? o.value : typed;
+    };
     const dlId = "ms-dl-" + Math.random().toString(36).slice(2, 9);
     const input = this._el("input", { className: "ms-input", type: "text", list: dlId, placeholder: this._t("ed_ms_add") });
     const chipBox = this._el("div", { className: "ms-chips" });
 
     const datalist = document.createElement("datalist");
     datalist.id = dlId;
-    for (const s of (suggestions || [])) {
-      const o = document.createElement("option");
-      o.value = s;
-      datalist.appendChild(o);
+    for (const o of opts) {
+      const opt = document.createElement("option");
+      opt.value = o.label;
+      datalist.appendChild(opt);
     }
 
     const renderChips = () => {
@@ -6558,16 +6576,18 @@ class HomeTasksCardEditor extends HTMLElement {
           input.focus();
         });
         chipBox.appendChild(this._el("span", { className: "ms-chip" }, [
-          this._el("span", { textContent: v }), x,
+          this._el("span", { textContent: labelOf(v) }), x,
         ]));
       }
       chipBox.appendChild(input);
     };
 
     const addValue = (raw) => {
-      const v = (raw || "").trim();
+      const typed = (raw || "").trim();
       input.value = "";
-      if (!v || values.includes(v)) return;
+      if (!typed) return;
+      const v = valueOf(typed);
+      if (values.includes(v)) return;
       values.push(v);
       renderChips();
       onChange(values.slice());
