@@ -295,6 +295,14 @@ class TodoistAPIClient:
         items = await self._get_all("reminders", params={"task_id": task_id})
         return items
 
+    async def get_all_reminders(self) -> list[dict]:
+        """Get all reminders at once (no task_id filter).
+
+        Use this for bulk loading — one API call instead of one per task.
+        Raises TodoistAPIError on failure.
+        """
+        return await self._get_all("reminders")
+
     async def add_reminder(
         self,
         task_id: str,

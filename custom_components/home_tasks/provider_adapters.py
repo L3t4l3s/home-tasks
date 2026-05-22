@@ -1102,12 +1102,22 @@ class TodoistAdapter(ProviderAdapter):
     # -- Task CRUD ----------------------------------------------------------
 
     async def async_read_tasks(self) -> list[dict]:
+        from .todoist_api import TodoistAPIError  # noqa: WPS433
         api = await self._ensure_api()
-        kwargs: dict[str, Any] = {}
-        if self._project_id:
-            kwargs["project_id"] = self._project_id
 
         all_tasks = await api.get_tasks(project_id=self._project_id)
+
+        # Fetch all reminders in a single API call and group by task_id.
+        try:
+            all_reminders = await api.get_all_reminders()
+            reminders_by_task: dict[str, list[dict]] = defaultdict(list)
+            for r in all_reminders:
+                tid = r.get("task_id")
+                if tid:
+                    reminders_by_task[tid].append(r)
+        except TodoistAPIError as err:
+            _LOGGER.debug("Could not read reminders: %s", err.message)
+            reminders_by_task = defaultdict(list)
 
         # Separate main tasks from sub-tasks
         main_tasks = [t for t in all_tasks if not t.parent_id]
@@ -1125,19 +1135,10 @@ class TodoistAdapter(ProviderAdapter):
                 for st in children
             ]
 
-            # Parse recurrence from due object
             recurrence = self._parse_recurrence_from_due(task.due)
 
-            # Read reminders — best-effort, swallow API errors here so a
-            # single failed reminders call doesn't break the whole task list.
-            try:
-                from .todoist_api import TodoistAPIError  # noqa: WPS433
-                raw_reminders = await api.get_reminders(task.id)
-            except TodoistAPIError as err:
-                _LOGGER.debug("Could not read reminders for task %s: %s", task.id, err.message)
-                raw_reminders = []
             reminders = [
-                r["minute_offset"] for r in raw_reminders
+                r["minute_offset"] for r in reminders_by_task.get(task.id, [])
                 if r.get("minute_offset") is not None
             ]
 
