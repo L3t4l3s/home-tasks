@@ -1,0 +1,73 @@
+name: Prepare release
+
+# Manually triggered. Bumps the version in manifest.json and the card banner,
+# commits to main, then creates the tag and a GitHub pre-release from THAT
+# commit. The version must be correct in the commit the tag points to, because
+# HACS installs the integration files from the release tag — not from main.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version, e.g. 1.12.3 (no leading v)"
+        required: true
+        type: string
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Validate version
+        run: |
+          VERSION="${{ inputs.version }}"
+          VERSION="${VERSION#v}"
+          if ! printf '%s' "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Version '$VERSION' must be X.Y.Z (digits and dots only)"
+            exit 1
+          fi
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "::error::Tag v$VERSION already exists"
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Bump version in manifest and card banner
+        run: |
+          sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$VERSION\"/" \
+            custom_components/home_tasks/manifest.json
+          sed -i "s/HOME-TASKS-CARD %c v[0-9][0-9.]*/HOME-TASKS-CARD %c v$VERSION/" \
+            custom_components/home_tasks/home-tasks-card.js
+          grep -q "\"version\": \"$VERSION\"" custom_components/home_tasks/manifest.json \
+            || { echo "::error::manifest.json bump did not apply"; exit 1; }
+          grep -q "HOME-TASKS-CARD %c v$VERSION" custom_components/home_tasks/home-tasks-card.js \
+            || { echo "::error::card banner bump did not apply"; exit 1; }
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add custom_components/home_tasks/manifest.json \
+                  custom_components/home_tasks/home-tasks-card.js
+          if git diff --staged --quiet; then
+            echo "::error::Nothing changed — is the version already $VERSION?"
+            exit 1
+          fi
+          git commit -m "chore(release): v$VERSION"
+          git push origin HEAD:main
+
+      - name: Create tag and pre-release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "v$VERSION" \
+            --target "$(git rev-parse HEAD)" \
+            --title "v$VERSION" \
+            --prerelease \
+            --generate-notes

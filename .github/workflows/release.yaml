@@ -1,33 +1,33 @@
-name: Release
+name: Release version check
+
+# Runs when a release becomes a full release — the `released` event fires when
+# a release is published as non-prerelease, or when a pre-release is promoted
+# to "latest". Verifies the tagged manifest.json version matches the tag, as a
+# guard against releases cut outside the "Prepare release" workflow.
 
 on:
   release:
-    types: [published]
+    types: [released]
 
 jobs:
-  update-version:
+  verify-version:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
 
-      - name: Update manifest version from release tag
-        if: ${{ !github.event.release.prerelease }}
+      - name: Manifest version must match the release tag
         run: |
-          VERSION="${GITHUB_REF#refs/tags/v}"
-          echo "Setting version to $VERSION"
-          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" \
-            custom_components/home_tasks/manifest.json
-          sed -i "s/v[0-9]*\.[0-9]*\.[0-9]*/v$VERSION/" \
-            custom_components/home_tasks/home-tasks-card.js
-
-      - name: Commit and push version bump
-        if: ${{ !github.event.release.prerelease }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add custom_components/home_tasks/manifest.json custom_components/home_tasks/home-tasks-card.js
-          git diff --staged --quiet && exit 0
-          git commit -m "Bump version to ${GITHUB_REF#refs/tags/v}"
-          git push origin HEAD:main
+          TAG="${{ github.event.release.tag_name }}"
+          EXPECTED="${TAG#v}"
+          ACTUAL="$(jq -r .version custom_components/home_tasks/manifest.json)"
+          echo "Release tag: $TAG -> expected version: $EXPECTED"
+          echo "manifest.json version: $ACTUAL"
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "::error::manifest.json version '$ACTUAL' does not match release tag '$EXPECTED'. Cut releases with the 'Prepare release' workflow so the version is bumped before tagging."
+            exit 1
+          fi
+          echo "Version OK."
