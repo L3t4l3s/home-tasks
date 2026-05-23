@@ -1296,14 +1296,28 @@ class HomeTasksCard extends HTMLElement {
       this._loadLists();
       return;
     }
-    // Reload when any external entity's state object changes (new reference = entity updated)
+    // Reload when any watched entity's state object changes (new reference = entity updated).
+    // Covers both external todo entities and native-list sensor entities (for cross-device sync).
     if (prev && hass) {
       for (const col of this._config.columns) {
-        if (!col.entity_id) continue;
-        if (prev.states?.[col.entity_id] !== hass.states?.[col.entity_id]) {
-          this._isBackgroundUpdate = true;
-          this._loadAllTasks().finally(() => { this._isBackgroundUpdate = false; });
-          return;
+        // --- External list: watch the todo entity directly ---
+        if (col.entity_id) {
+          if (prev.states?.[col.entity_id] !== hass.states?.[col.entity_id]) {
+            this._isBackgroundUpdate = true;
+            this._loadAllTasks().finally(() => { this._isBackgroundUpdate = false; });
+            return;
+          }
+        }
+        // --- Native list: watch its open-tasks sensor so changes on other
+        //     devices/tabs propagate here without manual refresh ---
+        if (col.list_id) {
+          const list = (this._lists || []).find(l => l.id === col.list_id);
+          const seid = list?.sensor_entity_id;
+          if (seid && prev.states?.[seid] !== hass.states?.[seid]) {
+            this._isBackgroundUpdate = true;
+            this._loadAllTasks().finally(() => { this._isBackgroundUpdate = false; });
+            return;
+          }
         }
       }
     }

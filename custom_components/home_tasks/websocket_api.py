@@ -96,18 +96,25 @@ async def ws_get_lists(hass, connection, msg):
     """Get all lists (native config entries only)."""
     try:
         from .store import HomeTasksStore
+        from homeassistant.helpers import entity_registry as er
 
         stores = hass.data.get(DOMAIN, {})
         entries = hass.config_entries.async_entries(DOMAIN)
+        entity_reg = er.async_get(hass)
         lists = []
         for entry in entries:
             if entry.data.get("type") == "external":
                 continue  # external lists handled by ws_get_external_lists
             store = stores.get(entry.entry_id)
+            # Resolve the sensor entity ID so the frontend can subscribe to
+            # state-changed events for real-time cross-device updates.
+            sensor_unique_id = f"{entry.entry_id}_open_tasks"
+            sensor_entity_id = entity_reg.async_get_entity_id("sensor", DOMAIN, sensor_unique_id)
             lists.append({
                 "id": entry.entry_id,
                 "name": entry.data.get("name", entry.title),
                 "task_count": len(store.tasks) if store and isinstance(store, HomeTasksStore) else 0,
+                "sensor_entity_id": sensor_entity_id,
             })
         connection.send_result(msg["id"], {"lists": lists})
     except Exception as err:
