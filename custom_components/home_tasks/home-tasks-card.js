@@ -1202,6 +1202,7 @@ class HomeTasksCard extends HTMLElement {
     // takes over) or they pick "Ab Erledigung" (which clears the override).
     this._weekPatternOverride = new Map();   // task.id → "on"
     this._yearPatternOverride = new Map();   // task.id → "on"
+    this._voiceActive = new Map();           // colIdx → SpeechRecognition
   }
 
   _defaultColState() {
@@ -2525,6 +2526,53 @@ class HomeTasksCard extends HTMLElement {
       : null;
   }
 
+  _startVoiceInput(colIdx) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      alert("Spracheingabe wird von diesem Browser nicht unterstützt (Chrome/Edge/Safari).");
+      return;
+    }
+    // Toggle off if already recording
+    if (this._voiceActive.has(colIdx)) {
+      this._voiceActive.get(colIdx).abort();
+      this._voiceActive.delete(colIdx);
+      this._render();
+      return;
+    }
+    const recognition = new SR();
+    recognition.lang = this._config.voice_lang || "de-DE";
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+    recognition.continuous = false;
+    this._voiceActive.set(colIdx, recognition);
+    this._render();
+    recognition.onresult = (event) => {
+      const result = event.results[event.results.length - 1];
+      const cs = this._columns[colIdx];
+      if (cs) cs.newTaskTitle = result[0].transcript;
+      if (result.isFinal) {
+        this._voiceActive.delete(colIdx);
+        this._render();
+      } else {
+        // Update input live for interim results without full re-render
+        const inp = this.shadowRoot.querySelector(`.add-input[data-focus-key="add_task_col_${colIdx}"]`);
+        if (inp) inp.value = result[0].transcript;
+      }
+    };
+    recognition.onerror = (e) => {
+      console.warn("voice input error:", e.error);
+      this._voiceActive.delete(colIdx);
+      this._render();
+    };
+    recognition.onend = () => {
+      if (this._voiceActive.has(colIdx)) {
+        this._voiceActive.delete(colIdx);
+        this._render();
+      }
+    };
+    recognition.start();
+  }
+
   _buildColumnAddTask(cs, colIdx) {
     const addInput = this._el("input", {
       type: "text",
@@ -2537,9 +2585,18 @@ class HomeTasksCard extends HTMLElement {
     addInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") this._addTask(colIdx);
     });
+    const isRecording = this._voiceActive.has(colIdx);
+    const micBtn = this._el("button", {
+      className: "mic-btn" + (isRecording ? " recording" : ""),
+      title: isRecording ? "Aufnahme stoppen" : "Spracheingabe",
+      innerHTML: isRecording
+        ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>`
+        : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 15c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V6zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-2.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>`,
+    });
+    micBtn.addEventListener("click", () => this._startVoiceInput(colIdx));
     const addBtn = this._el("button", { className: "add-btn", textContent: "+" });
     addBtn.addEventListener("click", () => this._addTask(colIdx));
-    return this._el("div", { className: "add-task" }, [addInput, addBtn]);
+    return this._el("div", { className: "add-task" }, [addInput, micBtn, addBtn]);
   }
 
   _buildColumnSortControl(col, cs, colIdx) {
@@ -5464,6 +5521,23 @@ class HomeTasksCard extends HTMLElement {
         font-weight: 500; cursor: pointer; white-space: nowrap; font-family: inherit;
       }
       .add-btn:hover { opacity: 0.9; }
+      .mic-btn {
+        flex-shrink: 0; width: 38px; height: 38px; padding: 0;
+        border: 1px solid var(--todo-divider); border-radius: var(--todo-radius);
+        background: var(--todo-bg); color: var(--todo-secondary-text);
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        transition: border-color 0.2s, color 0.2s;
+      }
+      .mic-btn:hover { border-color: var(--todo-primary); color: var(--todo-primary); }
+      .mic-btn svg { width: 18px; height: 18px; fill: currentColor; }
+      .mic-btn.recording {
+        border-color: #e53935; color: #e53935;
+        animation: mic-pulse 1s ease-in-out infinite;
+      }
+      @keyframes mic-pulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(229, 57, 53, 0.4); }
+        50% { box-shadow: 0 0 0 6px rgba(229, 57, 53, 0); }
+      }
       .filters { display: flex; gap: 4px; margin-bottom: 12px; align-items: center; }
       .filter-spacer { flex: 1; }
       .filter-btn {
@@ -5854,6 +5928,8 @@ class HomeTasksCard extends HTMLElement {
       .compact .add-task { margin-bottom: 10px; }
       .compact .add-input { padding: 6px 10px; font-size: 13px; }
       .compact .add-btn { padding: 6px 14px; font-size: 13px; }
+      .compact .mic-btn { width: 32px; height: 32px; }
+      .compact .mic-btn svg { width: 15px; height: 15px; }
       .compact .filters { margin-bottom: 8px; }
       .compact .filter-btn { padding: 4px 12px; font-size: 12px; }
       .compact .tag-chips { margin-bottom: 8px; gap: 3px; }
