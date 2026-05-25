@@ -6043,14 +6043,18 @@ class HomeTasksCardEditor extends HTMLElement {
       .icon-btn ha-icon { --mdc-icon-size: 18px; }
       .add-section-btn { margin-top: 8px; padding: 8px 14px; border: 1px dashed var(--primary-color); border-radius: 6px; background: transparent; color: var(--primary-color); cursor: pointer; font-family: inherit; font-size: 14px; }
       .add-section-btn:hover { background: rgba(3,169,244,0.08); }
-      .ms-field { display: flex; flex-direction: column; gap: 6px; }
-      .ms-label { font-size: 11px; font-weight: 400; color: var(--secondary-text-color); }
-      .ms-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-height: 48px; box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; background: var(--mdc-text-field-fill-color, var(--input-fill-color, transparent)); }
-      .ms-chips:focus-within { border: 2px solid var(--primary-color); padding: 7px 9px; }
+      .field-wrap select { width: 100%; box-sizing: border-box; padding: 20px 12px 6px; height: 48px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; background: var(--mdc-text-field-fill-color, var(--input-fill-color, transparent)); color: var(--primary-text-color); font-size: 0.875rem; font-family: inherit; outline: none; cursor: pointer; }
+      .field-wrap select:focus { border: 2px solid var(--primary-color); padding: 19px 11px 5px; }
+      .field-wrap select:focus ~ span { color: var(--primary-color); }
+      .ms-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-height: 48px; box-sizing: border-box; padding: 20px 10px 6px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; background: var(--mdc-text-field-fill-color, var(--input-fill-color, transparent)); }
+      .ms-chips:focus-within { border: 2px solid var(--primary-color); padding: 19px 9px 5px; }
+      .field-wrap .ms-chips:focus-within ~ span { color: var(--primary-color); }
       .ms-chip { display: inline-flex; align-items: center; gap: 4px; background: var(--primary-color); color: var(--text-primary-color, #fff); border-radius: 12px; padding: 2px 4px 2px 10px; font-size: 13px; line-height: 1.7; }
       .ms-chip-x { border: none; background: rgba(0,0,0,0.22); color: inherit; width: 18px; height: 18px; border-radius: 50%; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; line-height: 1; padding: 0; }
       .ms-chip-x:hover { background: rgba(0,0,0,0.42); }
       .ms-input { flex: 1 1 80px; min-width: 80px; border: none; outline: none; background: transparent; color: var(--primary-text-color); font-size: 14px; font-family: inherit; padding: 4px 2px; }
+      /* Reset the generic .field-wrap input box styles (border/height/full-width) for the chip-input */
+      .field-wrap .ms-input, .field-wrap .ms-input:focus { width: auto; height: auto; padding: 4px 2px; border: none; background: transparent; }
     `;
     root.appendChild(style);
 
@@ -6211,7 +6215,6 @@ class HomeTasksCardEditor extends HTMLElement {
     };
 
     const makeSelect = (labelKey, options, currentVal, onChange) => {
-      const label = this._el("label", { textContent: this._t(labelKey) });
       const sel = document.createElement("select");
       sel.className = "editor-native-select";
       for (const [val, key] of options) {
@@ -6222,11 +6225,13 @@ class HomeTasksCardEditor extends HTMLElement {
         sel.appendChild(opt);
       }
       sel.addEventListener("change", () => onChange(sel.value));
-      return [label, sel];
+      return this._el("div", { className: "field-wrap" }, [
+        sel,
+        this._el("span", { textContent: this._t(labelKey) }),
+      ]);
     };
 
     // List select — native lists + linked external entities
-    const listLabel = this._el("label", { textContent: this._t("ed_list") });
     const listSelect = document.createElement("select");
     listSelect.className = "editor-native-select";
     const currentSource = col.entity_id ? `ext:${col.entity_id}` : (col.list_id || "");
@@ -6321,14 +6326,14 @@ class HomeTasksCardEditor extends HTMLElement {
     if (col.show_due_soon_filter === true) {
       filterOptions.push(["due_soon", "filter_due_soon"]);
     }
-    const [filterLabel, filterSelect] = makeSelect(
+    const filterField = makeSelect(
       "ed_default_filter",
       filterOptions,
       col.default_filter || "all",
       (val) => { if (val !== (col.default_filter || "all")) updateCol({ default_filter: val }); }
     );
 
-    const [sortLabel, sortSelect] = makeSelect(
+    const sortField = makeSelect(
       "ed_default_sort",
       [["manual", "sort_manual"], ["due", "sort_due"], ["priority", "sort_priority"],
        ["title", "sort_title"], ["person", "sort_person"]],
@@ -6486,7 +6491,10 @@ class HomeTasksCardEditor extends HTMLElement {
     })(), makeToggle("hide-overdue", "ed_hide_overdue", "hide_overdue", false)] : [];
 
     return this._el("div", { className: "visual-editor" }, [
-      this._el("div", { className: "field" }, [listLabel, listSelect, hint]),
+      this._el("div", { className: "field" }, [
+        this._el("div", { className: "field-wrap" }, [listSelect, this._el("span", { textContent: this._t("ed_list") })]),
+        hint,
+      ]),
       makeSection("view", "mdi:eye", "ed_sec_view", [
         this._el("div", { className: "field" }, [titleInput]),
         this._el("div", { className: "field" }, [iconPicker]),
@@ -6498,10 +6506,10 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("compact", "ed_compact", "compact", false),
           makeToggle("show-history", "ed_show_history", "show_history", false),
         ]),
-        this._el("div", { className: "field" }, [sortLabel, sortSelect]),
+        sortField,
       ]),
       makeSection("filters", "mdi:filter-variant", "ed_sec_filters", [
-        this._el("div", { className: "field" }, [filterLabel, filterSelect]),
+        filterField,
         dueSoonToggle,
         ...dueSoonDetail,
         this._buildMultiSelect(
@@ -6607,9 +6615,9 @@ class HomeTasksCardEditor extends HTMLElement {
     input.addEventListener("blur", () => { if (input.value.trim()) addValue(input.value); });
 
     renderChips();
-    return this._el("div", { className: "ms-field" }, [
-      this._el("span", { className: "ms-label", textContent: labelText }),
+    return this._el("div", { className: "field-wrap" }, [
       chipBox,
+      this._el("span", { textContent: labelText }),
       datalist,
     ]);
   }
