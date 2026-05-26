@@ -116,6 +116,7 @@ const _TRANSLATIONS = {
     history: "History", history_created: "Created", history_completed: "Completed", history_reopened: "Reopened",
     history_reset: "Auto-reset (recurrence)", history_changed: "changed", history_empty: "No history yet", hist_title: "Title", history_disabled: "Disabled",
     ed_show_history: "Histories", hist_by_user: "User",
+    ed_show_images: "Images",
     ed_view_mode: "View mode", ed_view_mode_list: "List", ed_view_mode_tiles: "Tiles",
     ed_show_tile_title: "Title in tiles",
     assigned_unknown: "Unknown (%s)", recurrence_readonly: "Managed by %s", synced_with: "Synced with %s",
@@ -1119,6 +1120,7 @@ const _TRANSLATIONS = {
     history: "Verlauf", history_created: "Erstellt", history_completed: "Erledigt", history_reopened: "Wieder ge\u00f6ffnet",
     history_reset: "Automatisch zur\u00fcckgesetzt", history_changed: "ge\u00e4ndert", history_empty: "Noch kein Verlauf", hist_title: "Titel", history_disabled: "Deaktiviert",
     ed_show_history: "Verläufe", hist_by_user: "Benutzer",
+    ed_show_images: "Bilder",
     ed_view_mode: "Ansichtsmodus", ed_view_mode_list: "Liste", ed_view_mode_tiles: "Kacheln",
     ed_show_tile_title: "Titel in Kacheln",
     assigned_unknown: "Unbekannt (%s)", recurrence_readonly: "Verwaltet von %s", synced_with: "Synchronisiert mit %s",
@@ -1174,6 +1176,7 @@ class HomeTasksCard extends HTMLElement {
     // Per-column state: [{filter, sortBy, sortOpen, tagFilters, personFilters, tasks, newTaskTitle}]
     this._columns = [];
     this._expandedTasks = new Set();
+    this._uploadingImage = new Set();
     this._editingTaskId = null;
     this._editingSubTaskId = null;
     this._draggedTaskId = null;
@@ -2883,8 +2886,8 @@ class HomeTasksCard extends HTMLElement {
 
   _buildTaskTile(task, colIdx) {
     const col = this._config.columns[colIdx];
-    // Use image_url if available (populated once the image feature is enabled)
-    const thumbUrl = task.image_url || null;
+    const showImages = col.show_images === true;
+    const thumbUrl = showImages ? (this._thumbUrl(task.image_url) || task.image_url) : null;
 
     const cls = [
       "task-tile",
@@ -2894,6 +2897,7 @@ class HomeTasksCard extends HTMLElement {
 
     const tile = this._el("div", { className: cls });
 
+    // Background image (only when show_images is enabled)
     if (thumbUrl) {
       const img = this._el("img", { className: "tile-bg", src: thumbUrl, alt: "" });
       tile.appendChild(img);
@@ -2922,7 +2926,7 @@ class HomeTasksCard extends HTMLElement {
     }
 
     // Tap anywhere on the tile = toggle complete (no detail opening)
-    tile.addEventListener("click", () => {
+    tile.addEventListener("click", (e) => {
       this._toggleTask(task.id, task.completed, colIdx);
     });
 
@@ -3215,10 +3219,10 @@ class HomeTasksCard extends HTMLElement {
     const expandBtn = this._buildTaskExpandButton(isExpanded);
 
     const mainRowChildren = [checkboxEl, contentEl];
-    if (task.image_url && !isEditing) {
+    if (task.image_url && !isEditing && col.show_images === true) {
       const thumb = this._el("img", {
         className: "task-thumb",
-        src: task.image_url,
+        src: this._thumbUrl(task.image_url) || task.image_url,
         alt: "",
         title: task.title,
       });
@@ -3292,6 +3296,13 @@ class HomeTasksCard extends HTMLElement {
       children.push(titleSpan);
     }
     return children;
+  }
+
+  // Returns the thumbnail URL for a task image (300×300 JPEG).
+  // Falls back to the full image URL if no thumbnail exists yet.
+  _thumbUrl(imageUrl) {
+    if (!imageUrl) return null;
+    return imageUrl.replace(/\/task_([a-f0-9]+)\.png(\?.*)?$/, '/task_$1_thumb.jpg');
   }
 
   _buildTaskExpandButton(isExpanded) {
@@ -3597,7 +3608,7 @@ class HomeTasksCard extends HTMLElement {
     if (col.show_reminders !== false) details.push(this._buildRemindersSection(task, colIdx));
     if (col.show_recurrence !== false) details.push(this._buildRecurrenceSection(task, colIdx));
     if (col.show_history) details.push(this._buildHistorySection(task));
-    if (!this._isExternalCol(colIdx)) details.push(this._buildImageSection(task, colIdx));
+    if (!this._isExternalCol(colIdx) && col.show_images === true) details.push(this._buildImageSection(task, colIdx));
     details.push(this._buildActionsSection(task, colIdx));
 
     const inner = this._el("div", { className: "task-details-inner" }, details);
@@ -4919,44 +4930,78 @@ class HomeTasksCard extends HTMLElement {
       imgWrap.appendChild(img);
 
       // Remove image button (×)
-      const removeBtn = this._el("button", {
-        className: "task-image-remove",
-        title: "Bild entfernen",
-        innerHTML: "×",
-      });
+      const removeBtn = this._el("button", { className: "task-image-remove", title: "Bild entfernen" });
+      removeBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>`;
       removeBtn.addEventListener("click", async () => {
-        await this._hass.callWS({
-          type: "home_tasks/update_task",
-          entry_id: col.entry_id,
-          task_id: task.id,
-          image_url: null,
-        });
+        try {
+          await this._hass.callWS({
+            type: "home_tasks/update_task",
+            list_id: col.list_id,
+            task_id: task.id,
+            image_url: null,
+          });
+          const cs = this._columns[colIdx];
+          if (cs && cs.tasks) {
+            const idx = cs.tasks.findIndex(t => t.id === task.id);
+            if (idx >= 0) cs.tasks[idx] = { ...cs.tasks[idx], image_url: null };
+          }
+        } catch (err) {
+          console.error("Failed to remove image:", err);
+          alert("Bild entfernen fehlgeschlagen: " + (err.message || err));
+        }
         this._render();
       });
       imgWrap.appendChild(removeBtn);
       children.push(imgWrap);
     }
 
-    // --- Generate button ---
+    // --- Action buttons row ---
+    const isUploading = this._uploadingImage && this._uploadingImage.has(task.id);
+    const busy = isGenerating || isUploading;
+
+    // Generate button
     const genBtn = this._el("button", {
-      className: "generate-image-btn" + (isGenerating ? " generating" : ""),
-      disabled: isGenerating,
+      className: "generate-image-btn" + (busy ? " generating" : ""),
+      disabled: busy,
     });
     if (isGenerating) {
       genBtn.innerHTML = `<span class="spinner"></span> Generiere…`;
     } else {
-      genBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right:6px;vertical-align:-3px"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>${task.image_url ? "Bild neu generieren" : "✨ Bild generieren"}`;
+      genBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right:6px;vertical-align:-3px"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-1 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>${task.image_url ? "Neu generieren" : "✨ Generieren"}`;
     }
-    genBtn.addEventListener("click", () => this._generateTaskImage(task, colIdx));
+    genBtn.addEventListener("click", () => this._generateTaskImage(task, colIdx, !!task.image_url));
     children.push(genBtn);
+
+    // Upload button + hidden file input
+    const uploadBtn = this._el("button", {
+      className: "generate-image-btn" + (busy ? " generating" : ""),
+      disabled: busy,
+    });
+    if (isUploading) {
+      uploadBtn.innerHTML = `<span class="spinner"></span> Lade hoch…`;
+    } else {
+      uploadBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right:6px;vertical-align:-3px"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>Hochladen`;
+    }
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*";
+    fileInput.style.display = "none";
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files[0];
+      if (file) this._uploadTaskImage(task, colIdx, file);
+      fileInput.value = "";
+    });
+    uploadBtn.addEventListener("click", () => fileInput.click());
+    children.push(uploadBtn);
 
     return this._el("div", { className: "detail-section detail-section--image" }, [
       this._el("label", { className: "detail-label", textContent: "Bild" }),
       this._el("div", { className: "image-section-body" }, children),
+      fileInput,
     ]);
   }
 
-  async _generateTaskImage(task, colIdx) {
+  async _generateTaskImage(task, colIdx, force = false) {
     const col = this._config.columns[colIdx];
     const imgCfg = this._config.image_generation || {};
 
@@ -4965,8 +5010,9 @@ class HomeTasksCard extends HTMLElement {
 
     const payload = {
       type: "home_tasks/generate_task_image",
-      entry_id: col.entry_id,
+      entry_id: col.list_id,
       task_id: task.id,
+      force: force,
     };
     if (imgCfg.api_key) payload.api_key = imgCfg.api_key;
     if (imgCfg.endpoint) payload.endpoint = imgCfg.endpoint;
@@ -4988,6 +5034,51 @@ class HomeTasksCard extends HTMLElement {
       alert("Bildgenerierung fehlgeschlagen: " + (err.message || err));
     } finally {
       this._generatingImage.delete(task.id);
+      this._render();
+    }
+  }
+
+  async _uploadTaskImage(task, colIdx, file) {
+    const col = this._config.columns[colIdx];
+
+    this._uploadingImage.add(task.id);
+    this._render();
+
+    try {
+      const formData = new FormData();
+      formData.append("entry_id", col.list_id);
+      formData.append("task_id", task.id);
+      formData.append("image", file);
+
+      // Use hass.fetchWithAuth if available (HA ≥ 2022), else add header manually
+      let resp;
+      if (typeof this._hass.fetchWithAuth === "function") {
+        resp = await this._hass.fetchWithAuth("/api/home_tasks/upload_image", { method: "POST", body: formData });
+      } else {
+        resp = await fetch("/api/home_tasks/upload_image", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${this._hass.auth.data.access_token}` },
+          body: formData,
+        });
+      }
+
+      if (!resp.ok) {
+        const body = await resp.text();
+        throw new Error(body || resp.statusText);
+      }
+      const result = await resp.json();
+
+      // Update local state immediately
+      const cs = this._columns[colIdx];
+      if (cs && cs.tasks && result.task) {
+        const idx = cs.tasks.findIndex(t => t.id === task.id);
+        if (idx >= 0) cs.tasks[idx] = result.task;
+      }
+    } catch (err) {
+      console.error("Image upload failed:", err);
+      alert("Bild hochladen fehlgeschlagen: " + (err.message || err));
+    } finally {
+      this._uploadingImage.delete(task.id);
       this._render();
     }
   }
@@ -6926,6 +7017,7 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-sort", "ed_show_sort", "show_sort", true),
           makeToggle("compact", "ed_compact", "compact", false),
           makeToggle("show-history", "ed_show_history", "show_history", false),
+          makeToggle("show-images", "ed_show_images", "show_images", false),
           makeToggle("show-tile-title", "ed_show_tile_title", "show_tile_title", true),
         ]),
         sortField,

@@ -9,6 +9,7 @@ import re
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -68,8 +69,9 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_update_section)
     websocket_api.async_register_command(hass, ws_delete_section)
     websocket_api.async_register_command(hass, ws_reorder_sections)
-    # Image generation
+    # Image generation + upload
     websocket_api.async_register_command(hass, ws_generate_task_image)
+    hass.http.register_view(TaskImageUploadView(hass))
 
 
 def _get_store(hass, entry_id):
@@ -200,6 +202,7 @@ async def ws_add_task(hass, connection, msg):
         vol.Optional("assigned_person"): vol.Any(str, None),
         vol.Optional("tags"): vol.All(list, vol.Length(max=MAX_TAGS_PER_TASK)),
         vol.Optional("section_id"): vol.Any(_val_id, None),
+        vol.Optional("image_url"): vol.Any(str, None),
     }
 )
 @websocket_api.async_response
@@ -216,7 +219,7 @@ async def ws_update_task(hass, connection, msg):
             "recurrence_end_type", "recurrence_end_date", "recurrence_max_count",
             "recurrence_remaining_count", "recurrence_month_pattern",
             "recurrence_day_of_month", "recurrence_nth_week", "recurrence_anniversary",
-            "assigned_person", "tags", "section_id",
+            "assigned_person", "tags", "section_id", "image_url",
         ):
             if key in msg:
                 kwargs[key] = msg[key]
@@ -1387,6 +1390,92 @@ def _get_openai_api_key(hass: HomeAssistant) -> str | None:
 _SAFE_FILENAME = re.compile(r"[^a-zA-Z0-9_\-]")
 
 
+class TaskImageUploadView(HomeAssistantView):
+    """HTTP endpoint for uploading a local image file to a task.
+
+    POST /api/home_tasks/upload_image
+    Multipart form fields: entry_id, task_id, image (file)
+    """
+
+    url = "/api/home_tasks/upload_image"
+    name = "api:home_tasks:upload_image"
+    requires_auth = True
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        self.hass = hass
+
+    async def post(self, request):
+        import hashlib
+
+        try:
+            data = await request.post()
+            entry_id = data.get("entry_id")
+            task_id = data.get("task_id")
+            image_field = data.get("image")
+
+            if not entry_id or not task_id or not image_field:
+                return self.json_message("Missing required fields: entry_id, task_id, image", status_code=400)
+
+            store = _get_store(self.hass, entry_id)
+            task = store.get_task(task_id)
+
+            image_bytes = image_field.file.read()
+            if not image_bytes:
+                return self.json_message("Empty image file", status_code=400)
+
+            title = task.get("title", "")
+            title_key = title.strip().lower()
+            title_hash = hashlib.md5(title_key.encode()).hexdigest()[:16]
+            filename = f"task_{title_hash}.png"
+            local_url = f"/local/home_tasks_images/{filename}"
+
+            www_dir = self.hass.config.path("www", "home_tasks_images")
+            file_path = os.path.join(www_dir, filename)
+            thumb_filename = filename.replace(".png", "_thumb.jpg")
+            thumb_path = os.path.join(www_dir, thumb_filename)
+
+            def _write_and_thumb(path, thumb, data):
+                os.makedirs(os.path.dirname(path), exist_ok=True)
+                with open(path, "wb") as fh:
+                    fh.write(data)
+                try:
+                    from PIL import Image
+                    import io as _io
+                    with Image.open(_io.BytesIO(data)) as img:
+                        img = img.convert("RGB")
+                        img.thumbnail((300, 300), Image.LANCZOS)
+                        img.save(thumb, "JPEG", quality=82, optimize=True)
+                except Exception:
+                    with open(thumb, "wb") as fh:
+                        fh.write(data)
+
+            await self.hass.async_add_executor_job(_write_and_thumb, file_path, thumb_path, image_bytes)
+
+            # Update requesting task
+            updated_task = await store.async_update_task(task_id, image_url=local_url)
+
+            # Propagate to other tasks with the same title
+            all_stores = self.hass.data.get(DOMAIN, {})
+            for s in all_stores.values():
+                if not hasattr(s, "tasks"):
+                    continue
+                for t in s.tasks:
+                    if (
+                        t.get("title", "").strip().lower() == title_key
+                        and t.get("image_url") != local_url
+                        and t["id"] != task_id
+                    ):
+                        await s.async_update_task(t["id"], image_url=local_url)
+
+            return self.json({"task": updated_task, "image_url": local_url})
+
+        except KeyError:
+            return self.json_message("List or task not found", status_code=404)
+        except Exception as err:
+            _LOGGER.error("Image upload error: %s", err)
+            return self.json_message(str(err), status_code=500)
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "home_tasks/generate_task_image",
@@ -1397,18 +1486,76 @@ _SAFE_FILENAME = re.compile(r"[^a-zA-Z0-9_\-]")
         vol.Optional("endpoint"): vol.All(str, vol.Length(min=1, max=512)),
         vol.Optional("model"): vol.All(str, vol.Length(min=1, max=100)),
         vol.Optional("size"): vol.In(["256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"]),
-        vol.Optional("quality"): vol.In(["standard", "hd"]),
+        vol.Optional("quality"): vol.In(["standard", "hd", "low", "medium", "high"]),
         vol.Optional("prompt_prefix"): vol.All(str, vol.Length(max=200)),
+        vol.Optional("force"): bool,
     }
 )
 @websocket_api.async_response
 async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
-    """Generate an AI image for a task and save it to www/home_tasks_images/."""
+    """Generate an AI image for a task and save it to www/home_tasks_images/.
+
+    Tasks with the same title share a single image:
+    - Before calling the API, all stores are searched for an existing image for
+      the same normalised title.  If one is found it is reused immediately.
+    - After a new image is generated the URL is propagated to every task across
+      all stores that carries the same normalised title.
+    """
+    import hashlib
+
     try:
         store = _get_store(hass, msg["entry_id"])
         task = store.get_task(msg["task_id"])
 
-        # --- Resolve API key ---
+        title = task.get("title", "")
+        title_key = title.strip().lower()   # normalised key for matching
+
+        # Stable, title-based filename so all tasks with the same title
+        # always point at the same file on disk.
+        title_hash = hashlib.md5(title_key.encode()).hexdigest()[:16]
+        filename = f"task_{title_hash}.png"
+        local_url = f"/local/home_tasks_images/{filename}"
+
+        all_stores = hass.data.get(DOMAIN, {})
+
+        # ------------------------------------------------------------------
+        # 1. Reuse: if any task with the same title already has this image
+        #    (or the file already exists on disk) skip the API call entirely.
+        #    Skipped when force=True (user clicked "Bild neu generieren").
+        # ------------------------------------------------------------------
+        force = msg.get("force", False)
+        www_dir = hass.config.path("www", "home_tasks_images")
+        file_path = os.path.join(www_dir, filename)
+
+        if not force:
+            file_exists = await hass.async_add_executor_job(os.path.exists, file_path)
+
+            existing_url: str | None = None
+            if file_exists:
+                existing_url = local_url
+            else:
+                for s in all_stores.values():
+                    if not hasattr(s, "tasks"):
+                        continue
+                    for t in s.tasks:
+                        if t.get("title", "").strip().lower() == title_key and t.get("image_url"):
+                            existing_url = t["image_url"]
+                            break
+                    if existing_url:
+                        break
+
+            if existing_url:
+                # Just stamp the URL on the requesting task and return.
+                updated_task = await store.async_update_task(
+                    msg["task_id"],
+                    image_url=existing_url,
+                )
+                connection.send_result(msg["id"], {"task": updated_task})
+                return
+
+        # ------------------------------------------------------------------
+        # 2. Generate: call the image API.
+        # ------------------------------------------------------------------
         api_key = msg.get("api_key") or _get_openai_api_key(hass)
         if not api_key:
             raise ValueError(
@@ -1422,25 +1569,28 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
         quality = msg.get("quality", "standard")
         prompt_prefix = msg.get("prompt_prefix", "")
 
-        title = task.get("title", "")
         prompt = f"{prompt_prefix}{title}" if prompt_prefix else title
 
-        # --- Call image generation API ---
+        # Never send response_format — older models return a URL, newer ones
+        # (gpt-image-1) return b64_json.  We handle both below.
+        # gpt-image-1 quality values: low / medium / high (not standard/hd).
+        is_gpt_image = model.startswith("gpt-image")
         session = async_get_clientsession(hass)
-        payload = {
+        payload: dict = {
             "model": model,
             "prompt": prompt,
             "n": 1,
             "size": size,
-            "quality": quality,
-            "response_format": "url",
         }
+        if not is_gpt_image or quality not in ("standard", "hd"):
+            payload["quality"] = quality
+
         headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
 
-        async with session.post(endpoint, json=payload, headers=headers, timeout=60) as resp:
+        async with session.post(endpoint, json=payload, headers=headers, timeout=120) as resp:
             if resp.status != 200:
                 body = await resp.text()
                 _LOGGER.error("Image generation API error %s: %s", resp.status, body[:500])
@@ -1453,35 +1603,62 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
                 raise ValueError(f"Image generation failed: {msg_text}")
             data = await resp.json()
 
-        image_url_remote = data["data"][0]["url"]
+        api_entry = data["data"][0]
 
-        # --- Download image ---
-        async with session.get(image_url_remote, timeout=60) as img_resp:
-            if img_resp.status != 200:
-                raise ValueError("Failed to download generated image")
-            image_bytes = await img_resp.read()
+        # Obtain raw image bytes (b64 or remote URL)
+        if "b64_json" in api_entry:
+            import base64 as _b64
+            image_bytes = _b64.b64decode(api_entry["b64_json"])
+        else:
+            image_url_remote = api_entry["url"]
+            async with session.get(image_url_remote, timeout=60) as img_resp:
+                if img_resp.status != 200:
+                    raise ValueError("Failed to download generated image")
+                image_bytes = await img_resp.read()
 
-        # --- Save to www/home_tasks_images/ ---
-        www_dir = hass.config.path("www", "home_tasks_images")
+        # ------------------------------------------------------------------
+        # 3. Save full image + generate thumbnail
+        # ------------------------------------------------------------------
         os.makedirs(www_dir, exist_ok=True)
 
-        safe_task_id = _SAFE_FILENAME.sub("_", msg["task_id"])
-        filename = f"{safe_task_id}.png"
-        file_path = os.path.join(www_dir, filename)
+        thumb_filename = filename.replace(".png", "_thumb.jpg")
+        thumb_path = os.path.join(www_dir, thumb_filename)
 
-        def _write(path, data):
+        def _write_and_thumb(path, thumb, data):
+            # Write full image
             with open(path, "wb") as fh:
                 fh.write(data)
+            # Generate 300×300 JPEG thumbnail with Pillow (optional dep)
+            try:
+                from PIL import Image
+                import io as _io
+                with Image.open(_io.BytesIO(data)) as img:
+                    img = img.convert("RGB")
+                    img.thumbnail((300, 300), Image.LANCZOS)
+                    img.save(thumb, "JPEG", quality=82, optimize=True)
+            except Exception:
+                # Pillow not available — copy full image as thumbnail fallback
+                with open(thumb, "wb") as fh:
+                    fh.write(data)
 
-        await hass.async_add_executor_job(_write, file_path, image_bytes)
+        await hass.async_add_executor_job(_write_and_thumb, file_path, thumb_path, image_bytes)
 
-        local_url = f"/local/home_tasks_images/{filename}"
+        # ------------------------------------------------------------------
+        # 4. Propagate: stamp every task with the same title across all lists.
+        # ------------------------------------------------------------------
+        updated_task = None
+        for s in all_stores.values():
+            if not hasattr(s, "tasks"):
+                continue
+            for t in s.tasks:
+                if t.get("title", "").strip().lower() == title_key and t.get("image_url") != local_url:
+                    result = await s.async_update_task(t["id"], image_url=local_url)
+                    if t["id"] == msg["task_id"]:
+                        updated_task = result
 
-        # --- Persist URL on task ---
-        updated_task = await store.async_update_task(
-            msg["task_id"],
-            image_url=local_url,
-        )
+        # Fallback: if the requesting task wasn't caught above (shouldn't happen)
+        if updated_task is None:
+            updated_task = await store.async_update_task(msg["task_id"], image_url=local_url)
 
         connection.send_result(msg["id"], {"task": updated_task})
 
