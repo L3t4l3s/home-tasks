@@ -3204,7 +3204,7 @@ class HomeTasksCard extends HTMLElement {
     const taskEl = this._el("div", { className, draggable: !isEditing && !isExpanded });
     taskEl.dataset.taskId = task.id;
 
-    // --- main row: checkbox + content + expand button ---
+    // --- main row: checkbox + content + [thumb] + expand button ---
     const checkboxEl = this._buildTaskCheckbox(task, colIdx);
     const contentChildren = this._buildTaskContentChildren(task, colIdx, isEditing);
     const metaBadges = this._buildTaskMetaBadges(task, col, cs, colIdx);
@@ -3214,7 +3214,26 @@ class HomeTasksCard extends HTMLElement {
     const contentEl = this._el("div", { className: "task-content" }, contentChildren);
     const expandBtn = this._buildTaskExpandButton(isExpanded);
 
-    const mainRow = this._el("div", { className: "task-main" }, [checkboxEl, contentEl, expandBtn]);
+    const mainRowChildren = [checkboxEl, contentEl];
+    if (task.image_url && !isEditing) {
+      const thumb = this._el("img", {
+        className: "task-thumb",
+        src: task.image_url,
+        alt: "",
+        title: task.title,
+      });
+      // Click on thumbnail expands the task to show full image
+      thumb.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (isExpanded) this._expandedTasks.delete(task.id);
+        else this._expandedTasks.add(task.id);
+        this._render();
+      });
+      mainRowChildren.push(thumb);
+    }
+    mainRowChildren.push(expandBtn);
+
+    const mainRow = this._el("div", { className: "task-main" }, mainRowChildren);
     this._attachTaskExpandClickHandler(mainRow, task, taskEl);
     taskEl.appendChild(mainRow);
 
@@ -3271,15 +3290,6 @@ class HomeTasksCard extends HTMLElement {
         this._render();
       });
       children.push(titleSpan);
-      // Thumbnail in task row if image exists
-      if (task.image_url) {
-        children.push(this._el("img", {
-          className: "task-thumb",
-          src: task.image_url,
-          alt: "",
-          title: task.title,
-        }));
-      }
     }
     return children;
   }
@@ -5940,11 +5950,12 @@ class HomeTasksCard extends HTMLElement {
 
       /* --- Task image --- */
       .task-thumb {
-        width: 36px; height: 36px; border-radius: 4px; object-fit: cover;
-        flex-shrink: 0; margin-left: 6px; opacity: 0.85; transition: opacity 0.2s;
-        cursor: pointer;
+        width: 40px; height: 40px; border-radius: 6px; object-fit: cover;
+        flex-shrink: 0; opacity: 0.88; transition: opacity 0.2s, transform 0.15s;
+        cursor: pointer; border: 1px solid var(--todo-divider);
       }
-      .task-thumb:hover { opacity: 1; }
+      .task-thumb:hover { opacity: 1; transform: scale(1.05); }
+      .task.completed .task-thumb { opacity: 0.45; }
       .detail-section--image .image-section-body { display: flex; flex-direction: column; gap: 10px; }
       .task-image-wrap {
         position: relative; display: inline-block; width: 100%;
@@ -6011,6 +6022,7 @@ class HomeTasksCard extends HTMLElement {
       .compact .task-main { padding: 6px 8px; gap: 6px; min-height: 32px; }
       .compact .task-title { font-size: 13px; }
       .compact .task-meta { gap: 4px; }
+      .compact .task-thumb { width: 30px; height: 30px; border-radius: 4px; }
       .compact .sub-badge, .compact .due-date, .compact .priority-badge, .compact .recurrence-badge,
       .compact .assigned-badge, .compact .tag-badge, .compact .reminder-badge { font-size: 10px; padding: 1px 6px; }
       .compact .checkmark { height: 16px; width: 16px; }
