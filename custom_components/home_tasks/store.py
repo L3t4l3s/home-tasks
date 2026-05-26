@@ -396,6 +396,7 @@ class HomeTasksStore:
             task.setdefault("assigned_person", None)
             task.setdefault("tags", [])
             task.setdefault("history", [])
+            task.setdefault("image_url", None)
 
     async def _async_save(self) -> None:
         """Save data to disk."""
@@ -446,6 +447,7 @@ class HomeTasksStore:
             "completed_at": None,
             "assigned_person": None,
             "tags": [],
+            "image_url": None,
             "history": [created_entry],
             "external_id": None,
             "sync_source": None,
@@ -472,7 +474,7 @@ class HomeTasksStore:
         "recurrence_max_count", "recurrence_remaining_count",
         "recurrence_month_pattern", "recurrence_day_of_month",
         "recurrence_nth_week", "recurrence_anniversary",
-        "assigned_person", "tags", "section_id",
+        "assigned_person", "tags", "section_id", "image_url",
     )
 
     async def async_update_task(self, task_id: str, actor: str | None = None, **kwargs) -> dict:

@@ -842,6 +842,50 @@ async def test_new_task_has_new_recurrence_fields(hass: HomeAssistant, store) ->
     assert task["recurrence_anniversary"] is None
 
 
+async def test_new_task_has_image_url_field(hass: HomeAssistant, store) -> None:
+    """A freshly created task has image_url defaulted to None."""
+    task = await store.async_add_task("Task with image field")
+    assert "image_url" in task
+    assert task["image_url"] is None
+
+
+async def test_image_url_is_updatable(hass: HomeAssistant, store) -> None:
+    """image_url can be updated on an existing task."""
+    task = await store.async_add_task("Task for image")
+    updated = await store.async_update_task(task["id"], image_url="/local/home_tasks_images/abc.png")
+    assert updated["image_url"] == "/local/home_tasks_images/abc.png"
+
+    # Can also clear it
+    cleared = await store.async_update_task(task["id"], image_url=None)
+    assert cleared["image_url"] is None
+
+
+async def test_image_url_migration(hass: HomeAssistant, tmp_path) -> None:
+    """Tasks loaded from storage without image_url get it backfilled to None."""
+    from custom_components.home_tasks.store import HomeTasksStore
+
+    s = HomeTasksStore(hass, "test_img_migration")
+    s._data = {
+        "tasks": [
+            {
+                "id": "t-img",
+                "title": "Old task",
+                "completed": False,
+                "sort_order": 0,
+                "sub_items": [],
+                "recurrence_enabled": False,
+                "recurrence_type": "interval",
+                "external_id": None,
+                "sync_source": None,
+            }
+        ]
+    }
+    s._backfill_recurrence_fields()
+    s._migrate_v1_to_v2()
+    t = s._data["tasks"][0]
+    assert t.get("image_url") is None
+
+
 async def test_legacy_weekdays_mode_normalised_on_load(hass: HomeAssistant, tmp_path) -> None:
     """A v1 task with recurrence_type='weekdays' is migrated to interval+weeks."""
     from custom_components.home_tasks.store import HomeTasksStore

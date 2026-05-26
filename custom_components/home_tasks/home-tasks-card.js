@@ -1202,6 +1202,7 @@ class HomeTasksCard extends HTMLElement {
     // takes over) or they pick "Ab Erledigung" (which clears the override).
     this._weekPatternOverride = new Map();   // task.id → "on"
     this._yearPatternOverride = new Map();   // task.id → "on"
+    this._generatingImage = new Set();       // task IDs currently generating
   }
 
   _defaultColState() {
@@ -3270,6 +3271,15 @@ class HomeTasksCard extends HTMLElement {
         this._render();
       });
       children.push(titleSpan);
+      // Thumbnail in task row if image exists
+      if (task.image_url) {
+        children.push(this._el("img", {
+          className: "task-thumb",
+          src: task.image_url,
+          alt: "",
+          title: task.title,
+        }));
+      }
     }
     return children;
   }
@@ -3577,6 +3587,7 @@ class HomeTasksCard extends HTMLElement {
     if (col.show_reminders !== false) details.push(this._buildRemindersSection(task, colIdx));
     if (col.show_recurrence !== false) details.push(this._buildRecurrenceSection(task, colIdx));
     if (col.show_history) details.push(this._buildHistorySection(task));
+    if (!this._isExternalCol(colIdx)) details.push(this._buildImageSection(task, colIdx));
     details.push(this._buildActionsSection(task, colIdx));
 
     const inner = this._el("div", { className: "task-details-inner" }, details);
@@ -4883,6 +4894,94 @@ class HomeTasksCard extends HTMLElement {
     return this._el("div", { className: "detail-actions" }, [deleteBtn]);
   }
 
+  _buildImageSection(task, colIdx) {
+    const col = this._config.columns[colIdx];
+    const imgCfg = this._config.image_generation || {};
+    const isGenerating = this._generatingImage.has(task.id);
+
+    const children = [];
+
+    // --- Show existing image ---
+    if (task.image_url) {
+      const imgWrap = this._el("div", { className: "task-image-wrap" });
+
+      const img = this._el("img", { className: "task-image", src: task.image_url, alt: task.title });
+      imgWrap.appendChild(img);
+
+      // Remove image button (×)
+      const removeBtn = this._el("button", {
+        className: "task-image-remove",
+        title: "Bild entfernen",
+        innerHTML: "×",
+      });
+      removeBtn.addEventListener("click", async () => {
+        await this._hass.callWS({
+          type: "home_tasks/update_task",
+          entry_id: col.entry_id,
+          task_id: task.id,
+          image_url: null,
+        });
+        this._render();
+      });
+      imgWrap.appendChild(removeBtn);
+      children.push(imgWrap);
+    }
+
+    // --- Generate button ---
+    const genBtn = this._el("button", {
+      className: "generate-image-btn" + (isGenerating ? " generating" : ""),
+      disabled: isGenerating,
+    });
+    if (isGenerating) {
+      genBtn.innerHTML = `<span class="spinner"></span> Generiere…`;
+    } else {
+      genBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right:6px;vertical-align:-3px"><path d="M12 2a10 10 0 100 20A10 10 0 0012 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>${task.image_url ? "Bild neu generieren" : "✨ Bild generieren"}`;
+    }
+    genBtn.addEventListener("click", () => this._generateTaskImage(task, colIdx));
+    children.push(genBtn);
+
+    return this._el("div", { className: "detail-section detail-section--image" }, [
+      this._el("label", { className: "detail-label", textContent: "Bild" }),
+      this._el("div", { className: "image-section-body" }, children),
+    ]);
+  }
+
+  async _generateTaskImage(task, colIdx) {
+    const col = this._config.columns[colIdx];
+    const imgCfg = this._config.image_generation || {};
+
+    this._generatingImage.add(task.id);
+    this._render();
+
+    const payload = {
+      type: "home_tasks/generate_task_image",
+      entry_id: col.entry_id,
+      task_id: task.id,
+    };
+    if (imgCfg.api_key) payload.api_key = imgCfg.api_key;
+    if (imgCfg.endpoint) payload.endpoint = imgCfg.endpoint;
+    if (imgCfg.model) payload.model = imgCfg.model;
+    if (imgCfg.size) payload.size = imgCfg.size;
+    if (imgCfg.quality) payload.quality = imgCfg.quality;
+    if (imgCfg.prompt_prefix) payload.prompt_prefix = imgCfg.prompt_prefix;
+
+    try {
+      const result = await this._hass.callWS(payload);
+      // Update local task state immediately so image shows without full reload
+      const cs = this._columns[colIdx];
+      if (cs && cs.tasks) {
+        const idx = cs.tasks.findIndex(t => t.id === task.id);
+        if (idx >= 0) cs.tasks[idx] = result.task;
+      }
+    } catch (err) {
+      console.error("Image generation failed:", err);
+      alert("Bildgenerierung fehlgeschlagen: " + (err.message || err));
+    } finally {
+      this._generatingImage.delete(task.id);
+      this._render();
+    }
+  }
+
   _buildHistorySection(task) {
     const taskHistory = (task.history || []).slice().reverse();
     const histContent = this._el("div", { className: "history-list" });
@@ -5838,6 +5937,50 @@ class HomeTasksCard extends HTMLElement {
         padding: 6px 14px; border-radius: 4px; font-size: 12px; cursor: pointer; font-family: inherit;
       }
       .delete-task-btn:hover { background: rgba(244, 67, 54, 0.15); }
+
+      /* --- Task image --- */
+      .task-thumb {
+        width: 36px; height: 36px; border-radius: 4px; object-fit: cover;
+        flex-shrink: 0; margin-left: 6px; opacity: 0.85; transition: opacity 0.2s;
+        cursor: pointer;
+      }
+      .task-thumb:hover { opacity: 1; }
+      .detail-section--image .image-section-body { display: flex; flex-direction: column; gap: 10px; }
+      .task-image-wrap {
+        position: relative; display: inline-block; width: 100%;
+        border-radius: 8px; overflow: hidden;
+        max-height: 300px;
+      }
+      .task-image {
+        width: 100%; max-height: 300px; object-fit: cover;
+        border-radius: 8px; display: block;
+      }
+      .task-image-remove {
+        position: absolute; top: 6px; right: 6px; width: 24px; height: 24px;
+        border-radius: 50%; background: rgba(0,0,0,0.55); color: #fff;
+        border: none; font-size: 16px; line-height: 1; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: background 0.15s;
+      }
+      .task-image-remove:hover { background: rgba(0,0,0,0.8); }
+      .generate-image-btn {
+        display: inline-flex; align-items: center; padding: 7px 14px;
+        border: 1px solid var(--todo-primary); background: transparent;
+        color: var(--todo-primary); border-radius: var(--todo-radius);
+        font-size: 13px; cursor: pointer; font-family: inherit;
+        transition: background 0.15s, opacity 0.15s;
+      }
+      .generate-image-btn:hover:not(:disabled) { background: rgba(var(--rgb-primary-color, 33,150,243), 0.1); }
+      .generate-image-btn:disabled { opacity: 0.6; cursor: default; }
+      .generate-image-btn.generating { border-style: dashed; }
+      .spinner {
+        display: inline-block; width: 14px; height: 14px;
+        border: 2px solid currentColor; border-top-color: transparent;
+        border-radius: 50%; animation: spin 0.7s linear infinite;
+        margin-right: 6px; flex-shrink: 0;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
       .toast-error {
         position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
         background: var(--todo-error, #db4437); color: #fff; padding: 10px 20px;

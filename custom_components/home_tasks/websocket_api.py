@@ -1,13 +1,18 @@
 """WebSocket API for Home Tasks - extended features (sub-tasks, reorder, external)."""
 
+import asyncio
+import json
 import logging
+import os
+import re
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, MAX_REORDER_IDS, MAX_RECURRENCE_VALUE, MAX_REMINDER_OFFSET_MINUTES, MAX_REMINDERS_PER_TASK, MAX_SUB_TASKS_PER_TASK, MAX_TAGS_PER_TASK, MAX_TITLE_LENGTH, VALID_RECURRENCE_UNITS
+from .const import DOMAIN, MAX_IMAGE_URL_LENGTH, MAX_REORDER_IDS, MAX_RECURRENCE_VALUE, MAX_REMINDER_OFFSET_MINUTES, MAX_REMINDERS_PER_TASK, MAX_SUB_TASKS_PER_TASK, MAX_TAGS_PER_TASK, MAX_TITLE_LENGTH, VALID_RECURRENCE_UNITS
 from .overlay_store import ExternalTaskOverlayStore, OVERLAY_FIELDS
 from .provider_adapters import ProviderAdapter, GenericAdapter, _get_external_todo_items
 
@@ -63,6 +68,8 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_update_section)
     websocket_api.async_register_command(hass, ws_delete_section)
     websocket_api.async_register_command(hass, ws_reorder_sections)
+    # Image generation
+    websocket_api.async_register_command(hass, ws_generate_task_image)
 
 
 def _get_store(hass, entry_id):
@@ -1360,5 +1367,123 @@ async def ws_reorder_sections(hass, connection, msg):
         store = _get_sections_store(hass, msg)
         await store.async_reorder_sections(msg["section_ids"])
         connection.send_result(msg["id"])
+    except Exception as err:
+        _handle_error(connection, msg["id"], err)
+
+
+# ---------------------------------------------------------------------------
+# Image generation
+# ---------------------------------------------------------------------------
+
+def _get_openai_api_key(hass: HomeAssistant) -> str | None:
+    """Try to obtain an OpenAI API key from an existing openai_conversation config entry."""
+    for entry in hass.config_entries.async_entries("openai_conversation"):
+        key = entry.data.get("api_key") or entry.data.get("openai_api_key")
+        if key:
+            return key
+    return None
+
+
+_SAFE_FILENAME = re.compile(r"[^a-zA-Z0-9_\-]")
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "home_tasks/generate_task_image",
+        vol.Required("entry_id"): _val_id,
+        vol.Required("task_id"): _val_id,
+        # Optional overrides — if not provided, auto-detect from HA config entries
+        vol.Optional("api_key"): vol.All(str, vol.Length(min=1, max=512)),
+        vol.Optional("endpoint"): vol.All(str, vol.Length(min=1, max=512)),
+        vol.Optional("model"): vol.All(str, vol.Length(min=1, max=100)),
+        vol.Optional("size"): vol.In(["256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"]),
+        vol.Optional("quality"): vol.In(["standard", "hd"]),
+        vol.Optional("prompt_prefix"): vol.All(str, vol.Length(max=200)),
+    }
+)
+@websocket_api.async_response
+async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
+    """Generate an AI image for a task and save it to www/home_tasks_images/."""
+    try:
+        store = _get_store(hass, msg["entry_id"])
+        task = store.get_task(msg["task_id"])
+
+        # --- Resolve API key ---
+        api_key = msg.get("api_key") or _get_openai_api_key(hass)
+        if not api_key:
+            raise ValueError(
+                "No OpenAI API key found. Either configure the openai_conversation "
+                "integration in Home Assistant or provide api_key in the card config."
+            )
+
+        endpoint = msg.get("endpoint", "https://api.openai.com/v1/images/generations")
+        model = msg.get("model", "dall-e-3")
+        size = msg.get("size", "1024x1024")
+        quality = msg.get("quality", "standard")
+        prompt_prefix = msg.get("prompt_prefix", "")
+
+        title = task.get("title", "")
+        prompt = f"{prompt_prefix}{title}" if prompt_prefix else title
+
+        # --- Call image generation API ---
+        session = async_get_clientsession(hass)
+        payload = {
+            "model": model,
+            "prompt": prompt,
+            "n": 1,
+            "size": size,
+            "quality": quality,
+            "response_format": "url",
+        }
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+
+        async with session.post(endpoint, json=payload, headers=headers, timeout=60) as resp:
+            if resp.status != 200:
+                body = await resp.text()
+                _LOGGER.error("Image generation API error %s: %s", resp.status, body[:500])
+                try:
+                    import json as _json
+                    err_data = _json.loads(body)
+                    msg_text = err_data.get("error", {}).get("message", body[:200])
+                except Exception:
+                    msg_text = body[:200]
+                raise ValueError(f"Image generation failed: {msg_text}")
+            data = await resp.json()
+
+        image_url_remote = data["data"][0]["url"]
+
+        # --- Download image ---
+        async with session.get(image_url_remote, timeout=60) as img_resp:
+            if img_resp.status != 200:
+                raise ValueError("Failed to download generated image")
+            image_bytes = await img_resp.read()
+
+        # --- Save to www/home_tasks_images/ ---
+        www_dir = hass.config.path("www", "home_tasks_images")
+        os.makedirs(www_dir, exist_ok=True)
+
+        safe_task_id = _SAFE_FILENAME.sub("_", msg["task_id"])
+        filename = f"{safe_task_id}.png"
+        file_path = os.path.join(www_dir, filename)
+
+        def _write(path, data):
+            with open(path, "wb") as fh:
+                fh.write(data)
+
+        await hass.async_add_executor_job(_write, file_path, image_bytes)
+
+        local_url = f"/local/home_tasks_images/{filename}"
+
+        # --- Persist URL on task ---
+        updated_task = await store.async_update_task(
+            msg["task_id"],
+            image_url=local_url,
+        )
+
+        connection.send_result(msg["id"], {"task": updated_task})
+
     except Exception as err:
         _handle_error(connection, msg["id"], err)
