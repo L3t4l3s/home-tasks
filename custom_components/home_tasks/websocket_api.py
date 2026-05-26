@@ -9,7 +9,6 @@ import re
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -69,9 +68,8 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_update_section)
     websocket_api.async_register_command(hass, ws_delete_section)
     websocket_api.async_register_command(hass, ws_reorder_sections)
-    # Image generation + upload
+    # Image generation
     websocket_api.async_register_command(hass, ws_generate_task_image)
-    hass.http.register_view(TaskImageUploadView(hass))
 
 
 def _get_store(hass, entry_id):
@@ -1388,92 +1386,6 @@ def _get_openai_api_key(hass: HomeAssistant) -> str | None:
 
 
 _SAFE_FILENAME = re.compile(r"[^a-zA-Z0-9_\-]")
-
-
-class TaskImageUploadView(HomeAssistantView):
-    """HTTP endpoint for uploading a local image file to a task.
-
-    POST /api/home_tasks/upload_image
-    Multipart form fields: entry_id, task_id, image (file)
-    """
-
-    url = "/api/home_tasks/upload_image"
-    name = "api:home_tasks:upload_image"
-    requires_auth = True
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        self.hass = hass
-
-    async def post(self, request):
-        import hashlib
-
-        try:
-            data = await request.post()
-            entry_id = data.get("entry_id")
-            task_id = data.get("task_id")
-            image_field = data.get("image")
-
-            if not entry_id or not task_id or not image_field:
-                return self.json_message("Missing required fields: entry_id, task_id, image", status_code=400)
-
-            store = _get_store(self.hass, entry_id)
-            task = store.get_task(task_id)
-
-            image_bytes = image_field.file.read()
-            if not image_bytes:
-                return self.json_message("Empty image file", status_code=400)
-
-            title = task.get("title", "")
-            title_key = title.strip().lower()
-            title_hash = hashlib.md5(title_key.encode()).hexdigest()[:16]
-            filename = f"task_{title_hash}.png"
-            local_url = f"/local/home_tasks_images/{filename}"
-
-            www_dir = self.hass.config.path("www", "home_tasks_images")
-            file_path = os.path.join(www_dir, filename)
-            thumb_filename = filename.replace(".png", "_thumb.jpg")
-            thumb_path = os.path.join(www_dir, thumb_filename)
-
-            def _write_and_thumb(path, thumb, data):
-                os.makedirs(os.path.dirname(path), exist_ok=True)
-                with open(path, "wb") as fh:
-                    fh.write(data)
-                try:
-                    from PIL import Image
-                    import io as _io
-                    with Image.open(_io.BytesIO(data)) as img:
-                        img = img.convert("RGB")
-                        img.thumbnail((300, 300), Image.LANCZOS)
-                        img.save(thumb, "JPEG", quality=82, optimize=True)
-                except Exception:
-                    with open(thumb, "wb") as fh:
-                        fh.write(data)
-
-            await self.hass.async_add_executor_job(_write_and_thumb, file_path, thumb_path, image_bytes)
-
-            # Update requesting task
-            updated_task = await store.async_update_task(task_id, image_url=local_url)
-
-            # Propagate to other tasks with the same title
-            all_stores = self.hass.data.get(DOMAIN, {})
-            for s in all_stores.values():
-                if not hasattr(s, "tasks"):
-                    continue
-                for t in s.tasks:
-                    if (
-                        t.get("title", "").strip().lower() == title_key
-                        and t.get("image_url") != local_url
-                        and t["id"] != task_id
-                    ):
-                        await s.async_update_task(t["id"], image_url=local_url)
-
-            return self.json({"task": updated_task, "image_url": local_url})
-
-        except KeyError:
-            return self.json_message("List or task not found", status_code=404)
-        except Exception as err:
-            _LOGGER.error("Image upload error: %s", err)
-            return self.json_message(str(err), status_code=500)
 
 
 @websocket_api.websocket_command(

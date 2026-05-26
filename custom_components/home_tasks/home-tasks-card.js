@@ -1176,7 +1176,6 @@ class HomeTasksCard extends HTMLElement {
     // Per-column state: [{filter, sortBy, sortOpen, tagFilters, personFilters, tasks, newTaskTitle}]
     this._columns = [];
     this._expandedTasks = new Set();
-    this._uploadingImage = new Set();
     this._editingTaskId = null;
     this._editingSubTaskId = null;
     this._draggedTaskId = null;
@@ -4956,8 +4955,7 @@ class HomeTasksCard extends HTMLElement {
     }
 
     // --- Action buttons row ---
-    const isUploading = this._uploadingImage && this._uploadingImage.has(task.id);
-    const busy = isGenerating || isUploading;
+    const busy = isGenerating;
 
     // Generate button
     const genBtn = this._el("button", {
@@ -4972,32 +4970,40 @@ class HomeTasksCard extends HTMLElement {
     genBtn.addEventListener("click", () => this._generateTaskImage(task, colIdx, !!task.image_url));
     children.push(genBtn);
 
-    // Upload button + hidden file input
-    const uploadBtn = this._el("button", {
-      className: "generate-image-btn" + (busy ? " generating" : ""),
+    // "Select from media" button — toggles ha-selector inline
+    const selectBtn = this._el("button", {
+      className: "generate-image-btn",
       disabled: busy,
     });
-    if (isUploading) {
-      uploadBtn.innerHTML = `<span class="spinner"></span> Lade hoch…`;
-    } else {
-      uploadBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right:6px;vertical-align:-3px"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>Hochladen`;
-    }
-    const fileInput = document.createElement("input");
-    fileInput.type = "file";
-    fileInput.accept = "image/*";
-    fileInput.style.display = "none";
-    fileInput.addEventListener("change", () => {
-      const file = fileInput.files[0];
-      if (file) this._uploadTaskImage(task, colIdx, file);
-      fileInput.value = "";
+    selectBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right:6px;vertical-align:-3px"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg>Aus Mediathek`;
+    children.push(selectBtn);
+
+    // ha-selector (HA's built-in image/media picker) — shown on demand
+    const selectorWrap = document.createElement("div");
+    selectorWrap.className = "media-selector-wrap";
+    selectorWrap.style.display = "none";
+
+    const haSelector = document.createElement("ha-selector");
+    haSelector.hass = this._hass;
+    haSelector.selector = { image: {} };
+    haSelector.value = task.image_url || "";
+    haSelector.addEventListener("value-changed", (e) => {
+      const url = e.detail.value;
+      if (url !== undefined && url !== task.image_url) {
+        this._saveImageUrl(task, colIdx, url || null);
+        selectorWrap.style.display = "none";
+      }
     });
-    uploadBtn.addEventListener("click", () => fileInput.click());
-    children.push(uploadBtn);
+    selectorWrap.appendChild(haSelector);
+
+    selectBtn.addEventListener("click", () => {
+      selectorWrap.style.display = selectorWrap.style.display === "none" ? "block" : "none";
+    });
 
     return this._el("div", { className: "detail-section detail-section--image" }, [
       this._el("label", { className: "detail-label", textContent: "Bild" }),
       this._el("div", { className: "image-section-body" }, children),
-      fileInput,
+      selectorWrap,
     ]);
   }
 
@@ -5038,48 +5044,24 @@ class HomeTasksCard extends HTMLElement {
     }
   }
 
-  async _uploadTaskImage(task, colIdx, file) {
+  async _saveImageUrl(task, colIdx, url) {
     const col = this._config.columns[colIdx];
-
-    this._uploadingImage.add(task.id);
-    this._render();
-
     try {
-      const formData = new FormData();
-      formData.append("entry_id", col.list_id);
-      formData.append("task_id", task.id);
-      formData.append("image", file);
-
-      // Use hass.fetchWithAuth if available (HA ≥ 2022), else add header manually
-      let resp;
-      if (typeof this._hass.fetchWithAuth === "function") {
-        resp = await this._hass.fetchWithAuth("/api/home_tasks/upload_image", { method: "POST", body: formData });
-      } else {
-        resp = await fetch("/api/home_tasks/upload_image", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${this._hass.auth.data.access_token}` },
-          body: formData,
-        });
-      }
-
-      if (!resp.ok) {
-        const body = await resp.text();
-        throw new Error(body || resp.statusText);
-      }
-      const result = await resp.json();
-
-      // Update local state immediately
+      const result = await this._hass.callWS({
+        type: "home_tasks/update_task",
+        list_id: col.list_id,
+        task_id: task.id,
+        image_url: url,
+      });
       const cs = this._columns[colIdx];
-      if (cs && cs.tasks && result.task) {
+      if (cs && cs.tasks) {
         const idx = cs.tasks.findIndex(t => t.id === task.id);
-        if (idx >= 0) cs.tasks[idx] = result.task;
+        if (idx >= 0) cs.tasks[idx] = result;
       }
-    } catch (err) {
-      console.error("Image upload failed:", err);
-      alert("Bild hochladen fehlgeschlagen: " + (err.message || err));
-    } finally {
-      this._uploadingImage.delete(task.id);
       this._render();
+    } catch (err) {
+      console.error("Failed to save image URL:", err);
+      alert("Bild speichern fehlgeschlagen: " + (err.message || err));
     }
   }
 
@@ -6048,6 +6030,9 @@ class HomeTasksCard extends HTMLElement {
       .task-thumb:hover { opacity: 1; transform: scale(1.05); }
       .task.completed .task-thumb { opacity: 0.45; }
       .detail-section--image .image-section-body { display: flex; flex-direction: column; gap: 10px; }
+      .media-selector-wrap { margin-top: 6px; }
+      .image-section-body { gap: 6px; }
+      .image-section-body .generate-image-btn { flex: 1; }
       .task-image-wrap {
         position: relative; display: inline-block; width: 100%;
         border-radius: 8px; overflow: hidden;
