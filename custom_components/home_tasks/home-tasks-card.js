@@ -1202,7 +1202,7 @@ class HomeTasksCard extends HTMLElement {
     // takes over) or they pick "Ab Erledigung" (which clears the override).
     this._weekPatternOverride = new Map();   // task.id → "on"
     this._yearPatternOverride = new Map();   // task.id → "on"
-    this._voiceActive = new Map();           // colIdx → SpeechRecognition
+    this._voiceActive = new Map();           // colIdx → cleanup function
   }
 
   _defaultColState() {
@@ -1388,6 +1388,8 @@ class HomeTasksCard extends HTMLElement {
         el.title = val;
       } else if (key === "htmlFor") {
         el.htmlFor = val;
+      } else if (key === "innerHTML") {
+        el.innerHTML = val;
       } else {
         el.setAttribute(key, val);
       }
@@ -2526,51 +2528,220 @@ class HomeTasksCard extends HTMLElement {
       : null;
   }
 
-  _startVoiceInput(colIdx) {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-      alert("Spracheingabe wird von diesem Browser nicht unterstützt (Chrome/Edge/Safari).");
-      return;
-    }
+  // Start voice input. colIdx identifies the column; inputEl is the <input>
+  // element to fill (list-row input or tile-dialog input). If omitted the
+  // column's newTaskTitle state is updated instead (legacy path).
+  _startVoiceInput(colIdx, inputEl = null) {
     // Toggle off if already recording
     if (this._voiceActive.has(colIdx)) {
-      this._voiceActive.get(colIdx).abort();
-      this._voiceActive.delete(colIdx);
-      this._render();
+      this._voiceActive.get(colIdx)(); // call cleanup
       return;
+    }
+
+    // Helper: update the visible input + column state
+    const setTranscript = (text) => {
+      const cs = this._columns[colIdx];
+      if (cs) cs.newTaskTitle = text;
+      if (inputEl) {
+        inputEl.value = text;
+      } else {
+        const inp = this.shadowRoot.querySelector(`.add-input[data-focus-key="add_task_col_${colIdx}"]`);
+        if (inp) inp.value = text;
+      }
+    };
+
+    const stopRecording = () => {
+      const cleanup = this._voiceActive.get(colIdx);
+      if (cleanup) cleanup();
+    };
+
+    // Try HA assist_pipeline first, then fall back to Web Speech API
+    this._startHAStt(colIdx, inputEl, setTranscript, stopRecording)
+      .catch(() => this._startWebSpeech(colIdx, inputEl, setTranscript));
+  }
+
+  // Primary: HA assist_pipeline/run STT (streams raw PCM to HA's STT backend)
+  async _startHAStt(colIdx, inputEl, setTranscript) {
+    if (!this.hass || !this.hass.connection) throw new Error("no hass");
+
+    // Request microphone access early so we can fail fast if denied
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+      throw new Error("mic denied: " + err.message);
+    }
+
+    const lang = this._config.voice_lang || (this.hass.language || "de-DE");
+
+    // Mutable refs inside the shared cleanup closure
+    let audioRefs = null; // { audioCtx, processor }
+    let unsub = null;
+    let cleaned = false;
+
+    const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
+      if (audioRefs) {
+        try { audioRefs.processor.disconnect(); } catch (_) {}
+        try { audioRefs.audioCtx.close(); } catch (_) {}
+        // Send empty buffer to signal end of audio stream to HA
+        try { this.hass.connection.socket.send(new ArrayBuffer(0)); } catch (_) {}
+        audioRefs = null;
+      }
+      if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+      if (unsub) { try { unsub(); } catch (_) {} unsub = null; }
+      this._voiceActive.delete(colIdx);
+      this._updateMicBtn(colIdx, inputEl, false);
+    };
+
+    this._voiceActive.set(colIdx, cleanup);
+    this._updateMicBtn(colIdx, inputEl, true);
+
+    // Subscribe to pipeline events
+    try {
+      unsub = await this.hass.connection.subscribeMessage(
+        (event) => {
+          if (!event || !event.type) return;
+          if (event.type === "stt-start") {
+            // HA is ready – start streaming audio
+            audioRefs = this._streamPcmAudio(stream, cleanup);
+          } else if (event.type === "stt-end") {
+            const text = event.data?.stt_output?.text || "";
+            if (text) setTranscript(text);
+            cleanup();
+          } else if (event.type === "error") {
+            console.warn("HA STT error:", event.data);
+            cleanup();
+            // Fall back to Web Speech
+            this._startWebSpeech(colIdx, inputEl, setTranscript);
+          } else if (event.type === "run-end") {
+            cleanup();
+          }
+        },
+        {
+          type: "assist_pipeline/run",
+          start_stage: "stt",
+          end_stage: "stt",
+          input: { sample_rate: 16000 },
+          language: lang,
+        }
+      );
+    } catch (err) {
+      cleanup();
+      throw err; // triggers fallback in _startVoiceInput
+    }
+  }
+
+  // Stream PCM audio from the MediaStream to HA via binary WebSocket frames.
+  // Returns { audioCtx, processor } for the caller to store and disconnect later.
+  _streamPcmAudio(stream, onError) {
+    const SAMPLE_RATE = 16000;
+    const BUFFER_SIZE = 4096;
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: SAMPLE_RATE });
+      const source = audioCtx.createMediaStreamSource(stream);
+      const processor = audioCtx.createScriptProcessor(BUFFER_SIZE, 1, 1);
+
+      processor.onaudioprocess = (e) => {
+        const float32 = e.inputBuffer.getChannelData(0);
+        const pcm16 = new Int16Array(float32.length);
+        for (let i = 0; i < float32.length; i++) {
+          pcm16[i] = Math.max(-32768, Math.min(32767, float32[i] * 32767));
+        }
+        try {
+          this.hass.connection.socket.send(pcm16.buffer);
+        } catch (err) {
+          if (onError) onError(err);
+        }
+      };
+
+      source.connect(processor);
+      processor.connect(audioCtx.destination);
+      return { audioCtx, processor };
+    } catch (err) {
+      console.warn("PCM stream setup failed:", err);
+      // Send empty buffer to signal end of audio
+      try { this.hass.connection.socket.send(new ArrayBuffer(0)); } catch (_) {}
+      if (onError) onError(err);
+      return null;
+    }
+  }
+
+  // Fallback: Web Speech API (browser-native, less accurate)
+  _startWebSpeech(colIdx, inputEl, setTranscript) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      this._updateMicBtn(colIdx, inputEl, false);
+      return; // silently skip if not supported
+    }
+    // Don't start if already cancelled (user toggled off)
+    if (!this._voiceActive.has(colIdx)) {
+      // Was already cleaned up; mark as active again for Web Speech
     }
     const recognition = new SR();
     recognition.lang = this._config.voice_lang || "de-DE";
     recognition.interimResults = true;
-    recognition.maxAlternatives = 1;
+    recognition.maxAlternatives = 3;
     recognition.continuous = false;
-    this._voiceActive.set(colIdx, recognition);
-    this._render();
+
+    const cleanup = () => {
+      try { recognition.abort(); } catch (_) {}
+      this._voiceActive.delete(colIdx);
+      this._updateMicBtn(colIdx, inputEl, false);
+    };
+    this._voiceActive.set(colIdx, cleanup);
+    this._updateMicBtn(colIdx, inputEl, true);
+
     recognition.onresult = (event) => {
       const result = event.results[event.results.length - 1];
-      const cs = this._columns[colIdx];
-      if (cs) cs.newTaskTitle = result[0].transcript;
+      const transcript = result[0].transcript;
+      setTranscript(transcript);
       if (result.isFinal) {
         this._voiceActive.delete(colIdx);
-        this._render();
-      } else {
-        // Update input live for interim results without full re-render
-        const inp = this.shadowRoot.querySelector(`.add-input[data-focus-key="add_task_col_${colIdx}"]`);
-        if (inp) inp.value = result[0].transcript;
+        this._updateMicBtn(colIdx, inputEl, false);
       }
     };
     recognition.onerror = (e) => {
-      console.warn("voice input error:", e.error);
-      this._voiceActive.delete(colIdx);
-      this._render();
+      console.warn("Web Speech error:", e.error);
+      cleanup();
     };
     recognition.onend = () => {
-      if (this._voiceActive.has(colIdx)) {
-        this._voiceActive.delete(colIdx);
-        this._render();
-      }
+      if (this._voiceActive.has(colIdx)) cleanup();
     };
-    recognition.start();
+    try {
+      recognition.start();
+    } catch (err) {
+      cleanup();
+    }
+  }
+
+  // Update the mic button state without a full re-render.
+  // inputEl: if set, update a mic-btn inside the tile dialog; else find
+  // the column-level mic-btn via data attribute.
+  _updateMicBtn(colIdx, inputEl, recording) {
+    const MIC_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 15c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V6zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-2.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>`;
+    const STOP_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>`;
+
+    let btn;
+    if (inputEl) {
+      // Tile dialog mic button is a sibling of the input inside the dialog
+      btn = inputEl.closest(".tile-dialog")?.querySelector(".mic-btn");
+    } else {
+      btn = this.shadowRoot.querySelector(`.mic-btn[data-col-idx="${colIdx}"]`);
+    }
+    if (!btn) {
+      // Fall back to full re-render if button not found
+      this._render();
+      return;
+    }
+    btn.innerHTML = recording ? STOP_SVG : MIC_SVG;
+    btn.title = recording ? "Aufnahme stoppen" : "Spracheingabe";
+    if (recording) {
+      btn.classList.add("recording");
+    } else {
+      btn.classList.remove("recording");
+    }
   }
 
   _buildColumnAddTask(cs, colIdx) {
@@ -2589,6 +2760,7 @@ class HomeTasksCard extends HTMLElement {
     const micBtn = this._el("button", {
       className: "mic-btn" + (isRecording ? " recording" : ""),
       title: isRecording ? "Aufnahme stoppen" : "Spracheingabe",
+      "data-col-idx": String(colIdx),
       innerHTML: isRecording
         ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>`
         : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 15c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V6zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-2.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>`,
