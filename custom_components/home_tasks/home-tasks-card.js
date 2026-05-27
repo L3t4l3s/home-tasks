@@ -2835,41 +2835,49 @@ class HomeTasksCard extends HTMLElement {
 
   _showTileAddDialog(colIdx) {
     const cs = this._columns[colIdx];
+    this.shadowRoot.querySelector(".tile-add-overlay")?.remove();
 
+    const close = () => overlay.remove();
     const doAdd = async () => {
-      const title = (tf.value || "").trim();
+      const title = input.value.trim();
       if (!title) return;
-      dlg.open = false;
+      close();
       cs.newTaskTitle = title;
       await this._addTask(colIdx);
     };
 
-    const tf = document.createElement("ha-textfield");
-    tf.setAttribute("label", this._t("add_placeholder"));
-    tf.setAttribute("dialogInitialFocus", "");
-    tf.style.width = "100%";
-    tf.addEventListener("keydown", (e) => {
+    const input = this._el("input", {
+      type: "text", className: "tile-dialog-input",
+      placeholder: this._t("add_placeholder"),
+    });
+    input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") doAdd();
-      if (e.key === "Escape") { dlg.open = false; }
+      if (e.key === "Escape") close();
     });
 
-    const cancelBtn = document.createElement("mwc-button");
-    cancelBtn.slot = "secondaryAction";
-    cancelBtn.setAttribute("dialogAction", "close");
-    cancelBtn.textContent = this._t("dialog_cancel");
+    const cancelBtn = this._el("button", {
+      className: "tile-dialog-btn tile-dialog-cancel",
+      textContent: this._t("dialog_cancel"),
+    });
+    cancelBtn.addEventListener("click", close);
 
-    const confirmBtn = document.createElement("mwc-button");
-    confirmBtn.slot = "primaryAction";
-    confirmBtn.setAttribute("raised", "");
-    confirmBtn.textContent = this._t("dialog_add");
+    const confirmBtn = this._el("button", {
+      className: "tile-dialog-btn tile-dialog-confirm",
+      textContent: this._t("dialog_add"),
+    });
     confirmBtn.addEventListener("click", doAdd);
 
-    const dlg = document.createElement("ha-dialog");
-    dlg.heading = this._t("add_placeholder");
-    dlg.open = true;
-    dlg.append(tf, cancelBtn, confirmBtn);
-    dlg.addEventListener("closed", () => dlg.remove(), { once: true });
-    document.body.appendChild(dlg);
+    const dialog = this._el("div", { className: "tile-dialog" }, [
+      input,
+      this._el("div", { className: "tile-dialog-actions" }, [cancelBtn, confirmBtn]),
+    ]);
+    dialog.addEventListener("click", (e) => e.stopPropagation());
+
+    const overlay = this._el("div", { className: "tile-add-overlay" }, [dialog]);
+    overlay.addEventListener("click", close);
+
+    this.shadowRoot.appendChild(overlay);
+    requestAnimationFrame(() => input.focus());
   }
 
   _buildTaskTile(task, colIdx) {
@@ -5935,6 +5943,38 @@ class HomeTasksCard extends HTMLElement {
         background: color-mix(in srgb, var(--primary-color) 8%, transparent);
       }
       .add-tile-icon { font-size: 2.2rem; font-weight: 300; line-height: 1; pointer-events: none; }
+
+      /* Add-task dialog overlay */
+      .tile-add-overlay {
+        position: fixed; inset: 0; z-index: 9999;
+        background: rgba(0,0,0,0.42);
+        display: flex; align-items: center; justify-content: center;
+      }
+      .tile-dialog {
+        background: var(--ha-card-background, var(--card-background-color, #1c1c1c));
+        border-radius: 28px; padding: 24px 24px 16px;
+        min-width: 280px; max-width: min(420px, 90vw);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        display: flex; flex-direction: column; gap: 16px;
+      }
+      .tile-dialog-input {
+        width: 100%; box-sizing: border-box;
+        padding: 14px 0 10px;
+        border: none; border-bottom: 2px solid var(--divider-color, rgba(255,255,255,0.12));
+        background: transparent; color: var(--primary-text-color);
+        font-size: 16px; font-family: inherit; outline: none;
+      }
+      .tile-dialog-input:focus { border-bottom-color: var(--primary-color); }
+      .tile-dialog-input::placeholder { color: var(--secondary-text-color); }
+      .tile-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
+      .tile-dialog-btn {
+        padding: 10px 20px; border: none; border-radius: 20px;
+        font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer;
+      }
+      .tile-dialog-cancel { background: transparent; color: var(--primary-color); }
+      .tile-dialog-cancel:hover { background: color-mix(in srgb, var(--primary-color) 10%, transparent); }
+      .tile-dialog-confirm { background: var(--primary-color); color: var(--text-primary-color, #fff); }
+      .tile-dialog-confirm:hover { filter: brightness(1.08); }
 
       /* Compact tile variant */
       .compact .tile-grid-inner { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 7px; }
