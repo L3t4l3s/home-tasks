@@ -1205,6 +1205,7 @@ class HomeTasksCard extends HTMLElement {
     this._weekPatternOverride = new Map();   // task.id → "on"
     this._yearPatternOverride = new Map();   // task.id → "on"
     this._generatingImage = new Set();       // task IDs currently generating
+    this._mediaSelectorOpen = new Set();     // task IDs with media selector visible
   }
 
   _defaultColState() {
@@ -1273,10 +1274,13 @@ class HomeTasksCard extends HTMLElement {
       const taskStillExists = this._columns.some(cs => cs.tasks?.some(t => t.id === this._editingTaskId));
       if (!taskStillExists) this._editingTaskId = null;
     }
-    // _expandedTasks is a Set of task IDs — clean up IDs no longer in any column
+    // _expandedTasks / _mediaSelectorOpen: clean up IDs no longer in any column
     const allTaskIds = new Set(this._columns.flatMap(cs => (cs.tasks || []).map(t => t.id)));
     for (const id of this._expandedTasks) {
       if (!allTaskIds.has(id)) this._expandedTasks.delete(id);
+    }
+    for (const id of this._mediaSelectorOpen) {
+      if (!allTaskIds.has(id)) this._mediaSelectorOpen.delete(id);
     }
 
     // Reset per-column filter/sort when list or defaults change
@@ -4916,7 +4920,6 @@ class HomeTasksCard extends HTMLElement {
 
   _buildImageSection(task, colIdx) {
     const col = this._config.columns[colIdx];
-    const imgCfg = this._config.image_generation || {};
     const isGenerating = this._generatingImage.has(task.id);
 
     const children = [];
@@ -4970,41 +4973,47 @@ class HomeTasksCard extends HTMLElement {
     genBtn.addEventListener("click", () => this._generateTaskImage(task, colIdx, !!task.image_url));
     children.push(genBtn);
 
-    // "Select from media" button — toggles ha-selector inline
+    // "Aus Mediathek" button — opens HA's native media browser dialog
     const selectBtn = this._el("button", {
       className: "generate-image-btn",
       disabled: busy,
     });
     selectBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right:6px;vertical-align:-3px"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg>Aus Mediathek`;
+    selectBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this._openMediaPicker(task, colIdx);
+    });
     children.push(selectBtn);
-
-    // ha-selector (HA's built-in image/media picker) — shown on demand
-    const selectorWrap = document.createElement("div");
-    selectorWrap.className = "media-selector-wrap";
-    selectorWrap.style.display = "none";
-
-    const haSelector = document.createElement("ha-selector");
-    haSelector.hass = this._hass;
-    haSelector.selector = { image: {} };
-    haSelector.value = task.image_url || "";
-    haSelector.addEventListener("value-changed", (e) => {
-      const url = e.detail.value;
-      if (url !== undefined && url !== task.image_url) {
-        this._saveImageUrl(task, colIdx, url || null);
-        selectorWrap.style.display = "none";
-      }
-    });
-    selectorWrap.appendChild(haSelector);
-
-    selectBtn.addEventListener("click", () => {
-      selectorWrap.style.display = selectorWrap.style.display === "none" ? "block" : "none";
-    });
 
     return this._el("div", { className: "detail-section detail-section--image" }, [
       this._el("label", { className: "detail-label", textContent: "Bild" }),
       this._el("div", { className: "image-section-body" }, children),
-      selectorWrap,
     ]);
+  }
+
+  _openMediaPicker(task, colIdx) {
+    // Open HA's native media browser dialog via the show-dialog event.
+    // composed:true lets the event cross shadow DOM boundaries up to
+    // the top-level <home-assistant> element which handles show-dialog.
+    this.dispatchEvent(new CustomEvent("show-dialog", {
+      bubbles: true,
+      composed: true,
+      detail: {
+        dialogTag: "ha-media-player-browse-dialog",
+        dialogImport: () =>
+          customElements.get("ha-media-player-browse-dialog")
+            ? Promise.resolve()
+            : import("/frontend_latest/chunk.js").catch(() => Promise.resolve()),
+        dialogParams: {
+          action: "pick",
+          navigateIds: [{ params: {}, id: "media-source://media_source" }],
+          mediaPickedCallback: (item) => {
+            const url = item?.media_content_id;
+            if (url) this._saveImageUrl(task, colIdx, url);
+          },
+        },
+      },
+    }));
   }
 
   async _generateTaskImage(task, colIdx, force = false) {
@@ -5020,11 +5029,8 @@ class HomeTasksCard extends HTMLElement {
       task_id: task.id,
       force: force,
     };
-    if (imgCfg.api_key) payload.api_key = imgCfg.api_key;
-    if (imgCfg.endpoint) payload.endpoint = imgCfg.endpoint;
-    if (imgCfg.model) payload.model = imgCfg.model;
-    if (imgCfg.size) payload.size = imgCfg.size;
-    if (imgCfg.quality) payload.quality = imgCfg.quality;
+    // prompt_prefix is the only card-level config; model/key/quality are
+    // handled by the ai_task integration on the server side.
     if (imgCfg.prompt_prefix) payload.prompt_prefix = imgCfg.prompt_prefix;
 
     try {
@@ -6030,7 +6036,6 @@ class HomeTasksCard extends HTMLElement {
       .task-thumb:hover { opacity: 1; transform: scale(1.05); }
       .task.completed .task-thumb { opacity: 0.45; }
       .detail-section--image .image-section-body { display: flex; flex-direction: column; gap: 10px; }
-      .media-selector-wrap { margin-top: 6px; }
       .image-section-body { gap: 6px; }
       .image-section-body .generate-image-btn { flex: 1; }
       .task-image-wrap {
