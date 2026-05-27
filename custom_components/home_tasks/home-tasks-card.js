@@ -5,7 +5,7 @@
  * Security: All user-controlled content is set via textContent or DOM properties,
  * never via innerHTML with unsanitized data.
  */
-console.info("%c HOME-TASKS-CARD %c v1.13.1 ", "color: white; background: #03a9f4; font-weight: bold;", "color: #03a9f4; background: white; font-weight: bold;");
+console.info("%c HOME-TASKS-CARD %c v1.14.0 ", "color: white; background: #03a9f4; font-weight: bold;", "color: #03a9f4; background: white; font-weight: bold;");
 
 const _TRANSLATIONS = {
   en: {
@@ -115,6 +115,8 @@ const _TRANSLATIONS = {
     history: "History", history_created: "Created", history_completed: "Completed", history_reopened: "Reopened",
     history_reset: "Auto-reset (recurrence)", history_changed: "changed", history_empty: "No history yet", hist_title: "Title", history_disabled: "Disabled",
     ed_show_history: "Histories", hist_by_user: "User",
+    ed_view_mode: "View mode", ed_view_mode_list: "List", ed_view_mode_tiles: "Tiles",
+    ed_show_tile_title: "Title in tiles",
     assigned_unknown: "Unknown (%s)", recurrence_readonly: "Managed by %s", synced_with: "Synced with %s",
     due_today: "Today", due_tomorrow: "Tomorrow", due_yesterday: "Yesterday",
     due_day_after_tomorrow: "In 2 days", due_day_before_yesterday: "2 days ago",
@@ -1102,6 +1104,8 @@ const _TRANSLATIONS = {
     history: "Verlauf", history_created: "Erstellt", history_completed: "Erledigt", history_reopened: "Wieder ge\u00f6ffnet",
     history_reset: "Automatisch zur\u00fcckgesetzt", history_changed: "ge\u00e4ndert", history_empty: "Noch kein Verlauf", hist_title: "Titel", history_disabled: "Deaktiviert",
     ed_show_history: "Verläufe", hist_by_user: "Benutzer",
+    ed_view_mode: "Ansichtsmodus", ed_view_mode_list: "Liste", ed_view_mode_tiles: "Kacheln",
+    ed_show_tile_title: "Titel in Kacheln",
     assigned_unknown: "Unbekannt (%s)", recurrence_readonly: "Verwaltet von %s", synced_with: "Synchronisiert mit %s",
     due_today: "Heute", due_tomorrow: "Morgen", due_yesterday: "Gestern",
     due_day_after_tomorrow: "\u00dcbermorgen", due_day_before_yesterday: "Vorgestern",
@@ -2462,17 +2466,20 @@ class HomeTasksCard extends HTMLElement {
       ? this._el("div", { className: "person-chips-row" }, [personChips, sortBtnWrapper])
       : personChips;
 
-    const taskList = this._buildColumnTaskList(filteredTasks, colIdx);
+    const isTiles = col.view_mode === "tiles";
+    const taskList = isTiles
+      ? this._buildColumnTileGrid(filteredTasks, colIdx)
+      : this._buildColumnTaskList(filteredTasks, colIdx);
 
     const children = [];
     if (header) children.push(header);
-    children.push(addTask);
-    if (filters) children.push(filters);
-    if (tagChipsEl) children.push(tagChipsEl);
-    if (personChipsEl) children.push(personChipsEl);
+    if (!isTiles) children.push(addTask);
+    if (!isTiles && filters) children.push(filters);
+    if (!isTiles && tagChipsEl) children.push(tagChipsEl);
+    if (!isTiles && personChipsEl) children.push(personChipsEl);
     children.push(taskList);
 
-    const className = "card-column" + (col.compact === true ? " compact" : "");
+    const className = "card-column" + (col.compact === true ? " compact" : "") + (isTiles ? " tiles-mode" : "");
     return this._el("div", { className }, children);
   }
 
@@ -2779,6 +2786,74 @@ class HomeTasksCard extends HTMLElement {
       this._finishDrag();
     });
     return taskList;
+  }
+
+  // ── Tile / Kachel view ─────────────────────────────────────────────────────
+
+  _buildColumnTileGrid(filteredTasks, colIdx) {
+    const col = this._config.columns[colIdx];
+
+    if (filteredTasks.length === 0) {
+      const empty = this._el("div", { className: "empty-state", textContent: this._t("empty") });
+      return this._el("div", { className: "tile-grid-wrap", "data-col-idx": String(colIdx) }, [empty]);
+    }
+
+    // Open tasks first, completed after
+    const openTasks = filteredTasks.filter(t => !t.completed);
+    const doneTasks = filteredTasks.filter(t => t.completed);
+    const ordered = [...openTasks, ...doneTasks];
+
+    const tileEls = ordered.map(task => this._buildTaskTile(task, colIdx));
+    const grid = this._el("div", { className: "tile-grid-inner" }, tileEls);
+    return this._el("div", { className: "tile-grid-wrap", "data-col-idx": String(colIdx) }, [grid]);
+  }
+
+  _buildTaskTile(task, colIdx) {
+    const col = this._config.columns[colIdx];
+    // Use image_url if available (populated once the image feature is enabled)
+    const thumbUrl = task.image_url || null;
+
+    const cls = [
+      "task-tile",
+      task.completed ? "completed" : "",
+      thumbUrl ? "has-image" : "",
+    ].filter(Boolean).join(" ");
+
+    const tile = this._el("div", { className: cls });
+
+    if (thumbUrl) {
+      const img = this._el("img", { className: "tile-bg", src: thumbUrl, alt: "" });
+      tile.appendChild(img);
+    } else {
+      // Placeholder: first letter on gradient background
+      const placeholder = this._el("div", {
+        className: "tile-placeholder",
+        textContent: (task.title || "?").charAt(0).toUpperCase(),
+      });
+      tile.appendChild(placeholder);
+    }
+
+    // Bottom overlay: title (optional) + done badge
+    const showTitle = col.show_tile_title !== false;
+    if (showTitle || task.completed) {
+      const overlay = this._el("div", { className: "tile-overlay" });
+      if (showTitle) {
+        const titleEl = this._el("div", { className: "tile-title", textContent: task.title || "" });
+        overlay.appendChild(titleEl);
+      }
+      if (task.completed) {
+        const badge = this._el("div", { className: "tile-done-badge", textContent: "✓" });
+        overlay.appendChild(badge);
+      }
+      tile.appendChild(overlay);
+    }
+
+    // Tap anywhere on the tile = toggle complete (no detail opening)
+    tile.addEventListener("click", () => {
+      this._toggleTask(task.id, task.completed, colIdx);
+    });
+
+    return tile;
   }
 
   _buildFilterBtn(label, value, colIdx) {
@@ -5730,6 +5805,63 @@ class HomeTasksCard extends HTMLElement {
       .compact .empty-state { padding: 16px; font-size: 13px; }
       .compact .task-details-inner { padding: 8px 10px; }
 
+      /* ── Tile / Kachel view ──────────────────────────────────── */
+      .tile-grid-wrap { display: flex; flex-direction: column; gap: 12px; padding: 4px 0; }
+      .tile-grid-inner {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+      }
+      .task-tile {
+        position: relative; border-radius: 14px; overflow: hidden;
+        aspect-ratio: 1 / 1; cursor: pointer;
+        background: var(--todo-surface);
+        border: 1px solid var(--todo-divider);
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+        user-select: none;
+      }
+      .task-tile:hover { transform: scale(1.04); box-shadow: 0 6px 18px rgba(0,0,0,0.15); }
+      .task-tile.selected { outline: 2.5px solid var(--todo-primary); outline-offset: 2px; }
+      .task-tile.completed { opacity: 0.50; }
+      .tile-bg {
+        width: 100%; height: 100%; object-fit: cover; display: block;
+        position: absolute; inset: 0;
+      }
+      .tile-placeholder {
+        width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+        font-size: 2.8rem; font-weight: 700; color: var(--todo-disabled);
+        background: linear-gradient(135deg, var(--todo-surface) 0%, var(--todo-divider) 100%);
+        position: absolute; inset: 0;
+      }
+      .tile-overlay {
+        position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
+        padding: 24px 9px 9px;
+        background: linear-gradient(transparent, rgba(0,0,0,0.68));
+        display: flex; align-items: flex-end; justify-content: space-between; gap: 4px;
+      }
+      .task-tile:not(.has-image) .tile-overlay {
+        background: linear-gradient(transparent, rgba(0,0,0,0.25));
+      }
+      .tile-title {
+        color: #fff; font-size: 12px; font-weight: 600; line-height: 1.3;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        flex: 1;
+      }
+      .task-tile:not(.has-image) .tile-title { color: var(--todo-text); text-shadow: none; }
+      .tile-done-badge {
+        color: #fff; font-weight: 700; flex-shrink: 0;
+        background: rgba(67,160,71,0.85); border-radius: 50%;
+        width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+        font-size: 11px;
+      }
+      .tiles-mode { padding: 12px; }
+
+      /* Compact tile variant */
+      .compact .tile-grid-inner { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 7px; }
+      .compact .task-tile { border-radius: 10px; }
+      .compact .tile-title { font-size: 11px; }
+
       @keyframes task-exit {
         0%   { opacity: 1; transform: translateY(0); }
         100% { opacity: 0; transform: translateY(-8px); }
@@ -6519,8 +6651,15 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-sort", "ed_show_sort", "show_sort", true),
           makeToggle("compact", "ed_compact", "compact", false),
           makeToggle("show-history", "ed_show_history", "show_history", false),
+          makeToggle("show-tile-title", "ed_show_tile_title", "show_tile_title", true),
         ]),
         sortField,
+        makeSelect(
+          "ed_view_mode",
+          [["list", "ed_view_mode_list"], ["tiles", "ed_view_mode_tiles"]],
+          col.view_mode || "list",
+          (val) => updateCol({ view_mode: val === "list" ? undefined : val })
+        ),
       ]),
       makeSection("filters", "mdi:filter-variant", "ed_sec_filters", [
         filterField,
