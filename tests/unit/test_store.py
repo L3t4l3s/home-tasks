@@ -51,7 +51,7 @@ async def test_add_task_assigned_person_defaults_to_none(hass: HomeAssistant, st
 async def test_add_task_invalid_assigned_person_rejected(hass: HomeAssistant, store) -> None:
     """Non-string assigned_person values raise ValueError."""
     import pytest
-    with pytest.raises((ValueError, TypeError)):
+    with pytest.raises(ValueError):
         await store.async_add_task("Buy milk", assigned_person=123)  # type: ignore[arg-type]
 
 

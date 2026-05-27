@@ -31,7 +31,8 @@
       "mcp__ca29c868-1b25-46c6-935c-2b9f017e3af2__getConfluencePage",
       "mcp__ca29c868-1b25-46c6-935c-2b9f017e3af2__getConfluencePageDescendants",
       "mcp__ca29c868-1b25-46c6-935c-2b9f017e3af2__createConfluencePage",
-      "Bash(awk 'NR>=6175 && NR<=6240' /Users/rliebi/Projects/private/home/home-tasks/custom_components/home_tasks/home-tasks-card.js)"
+      "Bash(awk 'NR>=6175 && NR<=6240' /Users/rliebi/Projects/private/home/home-tasks/custom_components/home_tasks/home-tasks-card.js)",
+      "Bash(git rebase *)"
     ]
   }
 }

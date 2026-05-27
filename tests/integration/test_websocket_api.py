@@ -57,6 +57,21 @@ async def test_ws_add_task(hass: HomeAssistant, hass_ws_client, mock_config_entr
     assert msg["result"]["id"] is not None
 
 
+async def test_ws_add_task_with_assigned_person(hass: HomeAssistant, hass_ws_client, mock_config_entry) -> None:
+    """add_task passes assigned_person through the voluptuous schema and stores it."""
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 99,
+        "type": "home_tasks/add_task",
+        "list_id": mock_config_entry.entry_id,
+        "title": "Assigned task",
+        "assigned_person": "person.alice",
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    assert msg["result"]["assigned_person"] == "person.alice"
+
+
 async def test_ws_get_tasks(hass: HomeAssistant, hass_ws_client, mock_config_entry, store) -> None:
     """get_tasks returns all tasks for the list."""
     await store.async_add_task("Alpha")
