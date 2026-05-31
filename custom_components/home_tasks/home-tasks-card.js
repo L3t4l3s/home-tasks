@@ -6508,8 +6508,17 @@ class HomeTasksCardEditor extends HTMLElement {
       :host { display: block; }
       .editor { display: flex; flex-direction: column; gap: 0; padding: 16px 0; }
       .editor-card-title-row { margin-bottom: 12px; }
-      .editor-imggen-row { display: flex; gap: 8px; }
-      .editor-imggen-row > * { flex: 1; min-width: 0; }
+      .editor-imggen-row { display: flex; gap: 12px; }
+      .editor-imggen-field { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+      .editor-field-label { font-size: 12px; color: var(--secondary-text-color); }
+      .editor-native-select, .editor-native-input {
+        width: 100%; box-sizing: border-box; padding: 8px;
+        background: var(--card-background-color); color: var(--primary-text-color);
+        border: 1px solid var(--divider-color); border-radius: 4px; font-size: 14px;
+      }
+      .editor-native-select:focus, .editor-native-input:focus {
+        outline: none; border-color: var(--primary-color);
+      }
       .editor-tabs-row {
         display: flex; align-items: center;
         border-bottom: 1px solid var(--divider-color, #e0e0e0);
@@ -6629,39 +6638,31 @@ class HomeTasksCardEditor extends HTMLElement {
       this._fireChanged();
     };
 
-    // Entity dropdown — populated from hass.states (domain: ai_task)
+    // Entity dropdown — native <select> + prompt prefix input
     const aiEntities = Object.keys(this._hass?.states || {}).filter(e => e.startsWith("ai_task.")).sort();
-    const aiEntitySelect = document.createElement("ha-select");
-    aiEntitySelect.label = this._t("ed_ai_image_entity");
-    aiEntitySelect.style.width = "100%";
-    aiEntitySelect.fixedMenuPosition = true;
-    const autoOpt = document.createElement("mwc-list-item");
-    autoOpt.value = "";
-    autoOpt.textContent = "— Auto-detect —";
-    aiEntitySelect.appendChild(autoOpt);
-    for (const eid of aiEntities) {
-      const opt = document.createElement("mwc-list-item");
-      opt.value = eid;
-      opt.textContent = eid;
-      aiEntitySelect.appendChild(opt);
-    }
+    const aiEntitySelect = this._el("select", { className: "editor-native-select" });
+    aiEntitySelect.appendChild(this._el("option", { value: "", textContent: "— Auto-detect —" }));
+    for (const eid of aiEntities) aiEntitySelect.appendChild(this._el("option", { value: eid, textContent: eid }));
     aiEntitySelect.value = imgGen.entity_id || "";
-    aiEntitySelect.addEventListener("selected", (e) => {
-      const val = e.target.value || undefined;
-      updateImgGen({ entity_id: val });
-    });
+    aiEntitySelect.addEventListener("change", (e) => updateImgGen({ entity_id: e.target.value || undefined }));
 
-    // Prompt prefix text field
-    const promptInput = document.createElement("ha-textfield");
-    promptInput.label = this._t("ed_ai_prompt_prefix");
-    promptInput.placeholder = this._t("ed_ai_prompt_prefix_placeholder");
-    promptInput.value = imgGen.prompt_prefix || "";
-    promptInput.style.width = "100%";
-    promptInput.addEventListener("change", (e) => {
-      updateImgGen({ prompt_prefix: e.target.value.trim() || undefined });
+    const promptInput = this._el("input", {
+      type: "text", className: "editor-native-input",
+      placeholder: this._t("ed_ai_prompt_prefix_placeholder"),
+      value: imgGen.prompt_prefix || "",
     });
+    promptInput.addEventListener("change", (e) => updateImgGen({ prompt_prefix: e.target.value.trim() || undefined }));
 
-    const aiEntityRow = this._el("div", { className: "editor-card-title-row editor-imggen-row" }, [aiEntitySelect, promptInput]);
+    const aiEntityRow = this._el("div", { className: "editor-card-title-row editor-imggen-row" }, [
+      this._el("div", { className: "editor-imggen-field" }, [
+        this._el("span", { className: "editor-field-label", textContent: this._t("ed_ai_image_entity") }),
+        aiEntitySelect,
+      ]),
+      this._el("div", { className: "editor-imggen-field" }, [
+        this._el("span", { className: "editor-field-label", textContent: this._t("ed_ai_prompt_prefix") }),
+        promptInput,
+      ]),
+    ]);
 
     // Tab bar (tabs on left, + on right)
     const tabsEl = this._el("div", { className: "editor-tabs" });
