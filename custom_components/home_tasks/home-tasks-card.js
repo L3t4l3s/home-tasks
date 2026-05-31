@@ -5000,10 +5000,7 @@ class HomeTasksCard extends HTMLElement {
       composed: true,
       detail: {
         dialogTag: "ha-media-player-browse-dialog",
-        dialogImport: () =>
-          customElements.get("ha-media-player-browse-dialog")
-            ? Promise.resolve()
-            : import("/frontend_latest/chunk.js").catch(() => Promise.resolve()),
+        dialogImport: () => customElements.whenDefined("ha-media-player-browse-dialog"),
         dialogParams: {
           action: "pick",
           navigateIds: [{ params: {}, id: "media-source://media_source" }],
