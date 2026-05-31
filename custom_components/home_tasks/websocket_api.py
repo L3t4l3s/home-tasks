@@ -1437,7 +1437,7 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
                 "generate_image",
                 {
                     "task_name": f"home_tasks_{title_hash}",
-                    "prompt": prompt,
+                    "instructions": prompt,
                 },
                 blocking=True,
                 return_response=True,
