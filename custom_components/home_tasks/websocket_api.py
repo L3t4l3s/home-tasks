@@ -1432,6 +1432,18 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
         prompt_prefix = msg.get("prompt_prefix", "")
         prompt = f"{prompt_prefix}{title}" if prompt_prefix else title
 
+        entity_id = msg.get("entity_id")
+        if not entity_id:
+            from homeassistant.helpers import entity_registry as er
+            ent_reg = er.async_get(hass)
+            ai_entities = [
+                e.entity_id for e in ent_reg.entities.values()
+                if e.domain == "ai_task" and not e.disabled_by
+            ]
+            if not ai_entities:
+                raise ValueError("No ai_task entity found — configure one in the card editor")
+            entity_id = ai_entities[0]
+
         try:
             service_result = await hass.services.async_call(
                 "ai_task",
@@ -1439,7 +1451,7 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
                 {
                     "task_name": f"home_tasks_{title_hash}",
                     "instructions": prompt,
-                    **({"entity_id": msg["entity_id"]} if msg.get("entity_id") else {}),
+                    "entity_id": entity_id,
                 },
                 blocking=True,
                 return_response=True,
