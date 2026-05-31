@@ -141,6 +141,7 @@ const _TRANSLATIONS = {
     ed_preset_assignees: "Limit to assignees",
     ed_preset_labels: "Limit to tags",
     ed_ms_add: "Add…",
+    ed_ai_image_section: "AI Image Generation",
     ed_ai_image_entity: "AI entity for image generation",
     ed_ai_image_entity_placeholder: "e.g. ai_task.openai",
     ed_ai_prompt_prefix: "Prompt prefix (optional)",
@@ -1149,6 +1150,7 @@ const _TRANSLATIONS = {
     ed_preset_assignees: "Auf Personen begrenzen",
     ed_preset_labels: "Auf Tags begrenzen",
     ed_ms_add: "Hinzufügen…",
+    ed_ai_image_section: "KI-Bildgenerierung",
     ed_ai_image_entity: "KI-Entität für Bildgenerierung",
     ed_ai_image_entity_placeholder: "z.B. ai_task.openai",
     ed_ai_prompt_prefix: "Prompt-Präfix (optional)",
@@ -6508,15 +6510,12 @@ class HomeTasksCardEditor extends HTMLElement {
       :host { display: block; }
       .editor { display: flex; flex-direction: column; gap: 0; padding: 16px 0; }
       .editor-card-title-row { margin-bottom: 12px; }
-      .editor-imggen-row { display: flex; gap: 12px; }
-      .editor-imggen-field { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-      .editor-field-label { font-size: 12px; color: var(--secondary-text-color); }
-      .editor-native-select, .editor-native-input {
+      .editor-native-select {
         width: 100%; box-sizing: border-box; padding: 8px;
         background: var(--card-background-color); color: var(--primary-text-color);
         border: 1px solid var(--divider-color); border-radius: 4px; font-size: 14px;
       }
-      .editor-native-select:focus, .editor-native-input:focus {
+      .editor-native-select:focus {
         outline: none; border-color: var(--primary-color);
       }
       .editor-tabs-row {
@@ -6630,39 +6629,6 @@ class HomeTasksCardEditor extends HTMLElement {
     });
     const cardTitleRow = this._el("div", { className: "editor-card-title-row" }, [cardTitleInput]);
 
-    const imgGen = this._config.image_generation || {};
-    const updateImgGen = (patch) => {
-      const merged = { ...imgGen, ...patch };
-      Object.keys(merged).forEach(k => merged[k] === undefined && delete merged[k]);
-      this._config = { ...this._config, image_generation: Object.keys(merged).length ? merged : undefined };
-      this._fireChanged();
-    };
-
-    // Entity dropdown — native <select> + prompt prefix input
-    const aiEntities = Object.keys(this._hass?.states || {}).filter(e => e.startsWith("ai_task.")).sort();
-    const aiEntitySelect = this._el("select", { className: "editor-native-select" });
-    aiEntitySelect.appendChild(this._el("option", { value: "", textContent: "— Auto-detect —" }));
-    for (const eid of aiEntities) aiEntitySelect.appendChild(this._el("option", { value: eid, textContent: eid }));
-    aiEntitySelect.value = imgGen.entity_id || "";
-    aiEntitySelect.addEventListener("change", (e) => updateImgGen({ entity_id: e.target.value || undefined }));
-
-    const promptInput = this._el("input", {
-      type: "text", className: "editor-native-input",
-      placeholder: this._t("ed_ai_prompt_prefix_placeholder"),
-      value: imgGen.prompt_prefix || "",
-    });
-    promptInput.addEventListener("change", (e) => updateImgGen({ prompt_prefix: e.target.value.trim() || undefined }));
-
-    const aiEntityRow = this._el("div", { className: "editor-card-title-row editor-imggen-row" }, [
-      this._el("div", { className: "editor-imggen-field" }, [
-        this._el("span", { className: "editor-field-label", textContent: this._t("ed_ai_image_entity") }),
-        aiEntitySelect,
-      ]),
-      this._el("div", { className: "editor-imggen-field" }, [
-        this._el("span", { className: "editor-field-label", textContent: this._t("ed_ai_prompt_prefix") }),
-        promptInput,
-      ]),
-    ]);
 
     // Tab bar (tabs on left, + on right)
     const tabsEl = this._el("div", { className: "editor-tabs" });
@@ -6774,8 +6740,59 @@ class HomeTasksCardEditor extends HTMLElement {
       ? this._buildCodeEditor(activeTab)
       : this._buildVisualEditor(activeTab);
 
-    const editor = this._el("div", { className: "editor" }, [cardTitleRow, aiEntityRow, tabsRow, controls, tabContent]);
+    const imgGenSection = this._buildImgGenSection();
+    const editor = this._el("div", { className: "editor" }, [cardTitleRow, tabsRow, controls, tabContent, imgGenSection]);
     root.appendChild(editor);
+  }
+
+  _buildImgGenSection() {
+    const imgGen = this._config.image_generation || {};
+    const updateImgGen = (patch) => {
+      const merged = { ...imgGen, ...patch };
+      Object.keys(merged).forEach(k => merged[k] === undefined && delete merged[k]);
+      this._config = { ...this._config, image_generation: Object.keys(merged).length ? merged : undefined };
+      this._fireChanged();
+    };
+
+    const entityPicker = document.createElement("ha-entity-picker");
+    entityPicker.hass = this._hass;
+    entityPicker.label = this._t("ed_ai_image_entity");
+    entityPicker.value = imgGen.entity_id || "";
+    entityPicker.includeDomains = ["ai_task"];
+    entityPicker.allowCustomEntity = true;
+    entityPicker.style.width = "100%";
+    entityPicker.addEventListener("value-changed", (e) => {
+      updateImgGen({ entity_id: e.detail.value || undefined });
+    });
+
+    const promptField = document.createElement("ha-textfield");
+    promptField.label = this._t("ed_ai_prompt_prefix");
+    promptField.placeholder = this._t("ed_ai_prompt_prefix_placeholder");
+    promptField.value = imgGen.prompt_prefix || "";
+    promptField.style.width = "100%";
+    promptField.addEventListener("change", (e) => {
+      updateImgGen({ prompt_prefix: e.target.value.trim() || undefined });
+    });
+
+    const det = document.createElement("details");
+    if (this._sectionOpen?.imggen) det.open = true;
+    det.addEventListener("toggle", () => {
+      this._sectionOpen = { ...(this._sectionOpen || {}), imggen: det.open };
+    });
+    const sum = document.createElement("summary");
+    sum.className = "editor-section-summary";
+    const ico = document.createElement("ha-icon");
+    ico.setAttribute("icon", "mdi:image-spark");
+    ico.style.cssText = "--mdc-icon-size:20px;width:20px;height:20px;flex-shrink:0;";
+    const lbl = this._el("span", { textContent: this._t("ed_ai_image_section"), style: "flex:1" });
+    const chev = document.createElement("ha-icon");
+    chev.setAttribute("icon", "mdi:chevron-down");
+    chev.className = "sum-chevron";
+    chev.style.cssText = "--mdc-icon-size:20px;width:20px;height:20px;";
+    sum.append(ico, lbl, chev);
+    det.appendChild(sum);
+    det.appendChild(this._el("div", { className: "section-content" }, [entityPicker, promptField]));
+    return det;
   }
 
   _buildCodeEditor(tabIdx) {
