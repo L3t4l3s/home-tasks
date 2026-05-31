@@ -6747,31 +6747,31 @@ class HomeTasksCardEditor extends HTMLElement {
 
   _buildImgGenSection() {
     const imgGen = this._config.image_generation || {};
-    const updateImgGen = (patch) => {
-      const merged = { ...imgGen, ...patch };
-      Object.keys(merged).forEach(k => merged[k] === undefined && delete merged[k]);
+
+    const form = document.createElement("ha-form");
+    form.hass = this._hass;
+    form.data = { entity_id: imgGen.entity_id || "", prompt_prefix: imgGen.prompt_prefix || "" };
+    form.schema = [
+      {
+        name: "entity_id",
+        selector: { entity: { domain: ["ai_task"] } },
+      },
+      {
+        name: "prompt_prefix",
+        selector: { text: {} },
+      },
+    ];
+    form.computeLabel = (schema) =>
+      schema.name === "entity_id" ? this._t("ed_ai_image_entity")
+      : schema.name === "prompt_prefix" ? this._t("ed_ai_prompt_prefix")
+      : schema.name;
+    form.addEventListener("value-changed", (e) => {
+      const val = e.detail.value || {};
+      const merged = {};
+      if (val.entity_id) merged.entity_id = val.entity_id;
+      if (val.prompt_prefix) merged.prompt_prefix = val.prompt_prefix;
       this._config = { ...this._config, image_generation: Object.keys(merged).length ? merged : undefined };
       this._fireChanged();
-    };
-
-    const entityPicker = document.createElement("ha-entity-picker");
-    entityPicker.hass = this._hass;
-    entityPicker.label = this._t("ed_ai_image_entity");
-    entityPicker.value = imgGen.entity_id || "";
-    entityPicker.includeDomains = ["ai_task"];
-    entityPicker.allowCustomEntity = true;
-    entityPicker.style.width = "100%";
-    entityPicker.addEventListener("value-changed", (e) => {
-      updateImgGen({ entity_id: e.detail.value || undefined });
-    });
-
-    const promptField = document.createElement("ha-textfield");
-    promptField.label = this._t("ed_ai_prompt_prefix");
-    promptField.placeholder = this._t("ed_ai_prompt_prefix_placeholder");
-    promptField.value = imgGen.prompt_prefix || "";
-    promptField.style.width = "100%";
-    promptField.addEventListener("change", (e) => {
-      updateImgGen({ prompt_prefix: e.target.value.trim() || undefined });
     });
 
     const det = document.createElement("details");
@@ -6780,7 +6780,6 @@ class HomeTasksCardEditor extends HTMLElement {
       this._sectionOpen = { ...(this._sectionOpen || {}), imggen: det.open };
     });
     const sum = document.createElement("summary");
-    sum.className = "editor-section-summary";
     const ico = document.createElement("ha-icon");
     ico.setAttribute("icon", "mdi:image-spark");
     ico.style.cssText = "--mdc-icon-size:20px;width:20px;height:20px;flex-shrink:0;";
@@ -6791,7 +6790,7 @@ class HomeTasksCardEditor extends HTMLElement {
     chev.style.cssText = "--mdc-icon-size:20px;width:20px;height:20px;";
     sum.append(ico, lbl, chev);
     det.appendChild(sum);
-    det.appendChild(this._el("div", { className: "section-content" }, [entityPicker, promptField]));
+    det.appendChild(this._el("div", { className: "section-content" }, [form]));
     return det;
   }
 
