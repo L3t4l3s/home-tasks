@@ -1215,7 +1215,6 @@ class HomeTasksCard extends HTMLElement {
     this._weekPatternOverride = new Map();   // task.id → "on"
     this._yearPatternOverride = new Map();   // task.id → "on"
     this._generatingImage = new Set();       // task IDs currently generating
-    this._mediaSelectorOpen = new Set();     // task IDs with media selector visible
   }
 
   _defaultColState() {
@@ -1284,13 +1283,10 @@ class HomeTasksCard extends HTMLElement {
       const taskStillExists = this._columns.some(cs => cs.tasks?.some(t => t.id === this._editingTaskId));
       if (!taskStillExists) this._editingTaskId = null;
     }
-    // _expandedTasks / _mediaSelectorOpen: clean up IDs no longer in any column
+    // Clean up expanded task IDs no longer in any column
     const allTaskIds = new Set(this._columns.flatMap(cs => (cs.tasks || []).map(t => t.id)));
     for (const id of this._expandedTasks) {
       if (!allTaskIds.has(id)) this._expandedTasks.delete(id);
-    }
-    for (const id of this._mediaSelectorOpen) {
-      if (!allTaskIds.has(id)) this._mediaSelectorOpen.delete(id);
     }
 
     // Reset per-column filter/sort when list or defaults change
@@ -5002,65 +4998,21 @@ class HomeTasksCard extends HTMLElement {
   }
 
   _openMediaPicker(task, colIdx) {
-    const dialogTag = "dialog-media-player-browse";
-    if (customElements.get(dialogTag)) {
-      // Element already registered — open HA's native media browser dialog.
-      this.dispatchEvent(new CustomEvent("show-dialog", {
-        bubbles: true,
-        composed: true,
-        detail: {
-          dialogTag,
-          dialogImport: () => Promise.resolve(),
-          dialogParams: {
-            action: "pick",
-            navigateIds: [{ params: {}, id: "media-source://media_source" }],
-            mediaPickedCallback: (item) => {
-              const url = item?.media_content_id;
-              if (url) this._saveImageUrl(task, colIdx, url);
-            },
+    this.dispatchEvent(new CustomEvent("show-dialog", {
+      bubbles: true,
+      composed: true,
+      detail: {
+        dialogTag: "dialog-media-player-browse",
+        dialogParams: {
+          action: "pick",
+          navigateIds: [{ params: {}, id: "media-source://media_source" }],
+          mediaPickedCallback: (item) => {
+            const url = item?.media_content_id;
+            if (url) this._saveImageUrl(task, colIdx, url);
           },
         },
-      }));
-    } else {
-      // Element not yet lazy-loaded — show a URL-input fallback overlay.
-      this._openMediaUrlFallback(task, colIdx);
-    }
-  }
-
-  _openMediaUrlFallback(task, colIdx) {
-    this.shadowRoot.querySelector(".media-url-overlay")?.remove();
-    const input = this._el("input", {
-      type: "url", className: "tile-dialog-input",
-      placeholder: "media-source:// oder https://…",
-    });
-    const cancelBtn = this._el("button", {
-      className: "tile-dialog-btn tile-dialog-cancel",
-      textContent: this._t("dialog_cancel"), type: "button",
-    });
-    const confirmBtn = this._el("button", {
-      className: "tile-dialog-btn tile-dialog-confirm",
-      textContent: "OK", type: "button",
-    });
-    const close = () => overlay.remove();
-    cancelBtn.addEventListener("click", close);
-    confirmBtn.addEventListener("click", () => {
-      const url = input.value.trim();
-      if (url) this._saveImageUrl(task, colIdx, url);
-      close();
-    });
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") confirmBtn.click();
-      if (e.key === "Escape") close();
-    });
-    const dialog = this._el("div", { className: "tile-dialog" }, [
-      input,
-      this._el("div", { className: "tile-dialog-actions" }, [cancelBtn, confirmBtn]),
-    ]);
-    dialog.addEventListener("click", (e) => e.stopPropagation());
-    const overlay = this._el("div", { className: "media-url-overlay tile-add-overlay" }, [dialog]);
-    overlay.addEventListener("click", close);
-    this.shadowRoot.appendChild(overlay);
-    requestAnimationFrame(() => input.focus());
+      },
+    }));
   }
 
   async _generateTaskImage(task, colIdx, force = false) {
