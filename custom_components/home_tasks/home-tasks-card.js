@@ -143,6 +143,8 @@ const _TRANSLATIONS = {
     ed_ms_add: "Add…",
     ed_ai_image_entity: "AI entity for image generation",
     ed_ai_image_entity_placeholder: "e.g. ai_task.openai",
+    ed_ai_prompt_prefix: "Prompt prefix (optional)",
+    ed_ai_prompt_prefix_placeholder: "e.g. Minimalist icon of",
   },
   nl: {
     my_tasks: "Mijn taken",
@@ -1149,6 +1151,8 @@ const _TRANSLATIONS = {
     ed_ms_add: "Hinzufügen…",
     ed_ai_image_entity: "KI-Entität für Bildgenerierung",
     ed_ai_image_entity_placeholder: "z.B. ai_task.openai",
+    ed_ai_prompt_prefix: "Prompt-Präfix (optional)",
+    ed_ai_prompt_prefix_placeholder: "z.B. Minimalistisches Icon von",
   },
 };
 
@@ -6504,6 +6508,8 @@ class HomeTasksCardEditor extends HTMLElement {
       :host { display: block; }
       .editor { display: flex; flex-direction: column; gap: 0; padding: 16px 0; }
       .editor-card-title-row { margin-bottom: 12px; }
+      .editor-imggen-row { display: flex; gap: 8px; }
+      .editor-imggen-row > * { flex: 1; min-width: 0; }
       .editor-tabs-row {
         display: flex; align-items: center;
         border-bottom: 1px solid var(--divider-color, #e0e0e0);
@@ -6615,17 +6621,47 @@ class HomeTasksCardEditor extends HTMLElement {
     });
     const cardTitleRow = this._el("div", { className: "editor-card-title-row" }, [cardTitleInput]);
 
-    const aiEntityInput = document.createElement("ha-textfield");
-    aiEntityInput.label = this._t("ed_ai_image_entity");
-    aiEntityInput.placeholder = this._t("ed_ai_image_entity_placeholder");
-    aiEntityInput.value = (this._config.image_generation || {}).entity_id || "";
-    aiEntityInput.style.width = "100%";
-    aiEntityInput.addEventListener("change", (e) => {
-      const val = e.target.value.trim() || undefined;
-      this._config = { ...this._config, image_generation: { ...(this._config.image_generation || {}), entity_id: val } };
+    const imgGen = this._config.image_generation || {};
+    const updateImgGen = (patch) => {
+      const merged = { ...imgGen, ...patch };
+      Object.keys(merged).forEach(k => merged[k] === undefined && delete merged[k]);
+      this._config = { ...this._config, image_generation: Object.keys(merged).length ? merged : undefined };
       this._fireChanged();
+    };
+
+    // Entity dropdown — populated from hass.states (domain: ai_task)
+    const aiEntities = Object.keys(this._hass?.states || {}).filter(e => e.startsWith("ai_task.")).sort();
+    const aiEntitySelect = document.createElement("ha-select");
+    aiEntitySelect.label = this._t("ed_ai_image_entity");
+    aiEntitySelect.style.width = "100%";
+    aiEntitySelect.fixedMenuPosition = true;
+    const autoOpt = document.createElement("mwc-list-item");
+    autoOpt.value = "";
+    autoOpt.textContent = "— Auto-detect —";
+    aiEntitySelect.appendChild(autoOpt);
+    for (const eid of aiEntities) {
+      const opt = document.createElement("mwc-list-item");
+      opt.value = eid;
+      opt.textContent = eid;
+      aiEntitySelect.appendChild(opt);
+    }
+    aiEntitySelect.value = imgGen.entity_id || "";
+    aiEntitySelect.addEventListener("selected", (e) => {
+      const val = e.target.value || undefined;
+      updateImgGen({ entity_id: val });
     });
-    const aiEntityRow = this._el("div", { className: "editor-card-title-row" }, [aiEntityInput]);
+
+    // Prompt prefix text field
+    const promptInput = document.createElement("ha-textfield");
+    promptInput.label = this._t("ed_ai_prompt_prefix");
+    promptInput.placeholder = this._t("ed_ai_prompt_prefix_placeholder");
+    promptInput.value = imgGen.prompt_prefix || "";
+    promptInput.style.width = "100%";
+    promptInput.addEventListener("change", (e) => {
+      updateImgGen({ prompt_prefix: e.target.value.trim() || undefined });
+    });
+
+    const aiEntityRow = this._el("div", { className: "editor-card-title-row editor-imggen-row" }, [aiEntitySelect, promptInput]);
 
     // Tab bar (tabs on left, + on right)
     const tabsEl = this._el("div", { className: "editor-tabs" });
