@@ -141,6 +141,8 @@ const _TRANSLATIONS = {
     ed_preset_assignees: "Limit to assignees",
     ed_preset_labels: "Limit to tags",
     ed_ms_add: "Add…",
+    ed_ai_image_entity: "AI entity for image generation",
+    ed_ai_image_entity_placeholder: "e.g. ai_task.openai",
   },
   nl: {
     my_tasks: "Mijn taken",
@@ -1145,6 +1147,8 @@ const _TRANSLATIONS = {
     ed_preset_assignees: "Auf Personen begrenzen",
     ed_preset_labels: "Auf Tags begrenzen",
     ed_ms_add: "Hinzufügen…",
+    ed_ai_image_entity: "KI-Entität für Bildgenerierung",
+    ed_ai_image_entity_placeholder: "z.B. ai_task.openai",
   },
 };
 
@@ -5026,9 +5030,8 @@ class HomeTasksCard extends HTMLElement {
       task_id: task.id,
       force: force,
     };
-    // prompt_prefix is the only card-level config; model/key/quality are
-    // handled by the ai_task integration on the server side.
     if (imgCfg.prompt_prefix) payload.prompt_prefix = imgCfg.prompt_prefix;
+    if (imgCfg.entity_id) payload.entity_id = imgCfg.entity_id;
 
     try {
       const result = await this._hass.callWS(payload);
@@ -6572,6 +6575,18 @@ class HomeTasksCardEditor extends HTMLElement {
     });
     const cardTitleRow = this._el("div", { className: "editor-card-title-row" }, [cardTitleInput]);
 
+    const aiEntityInput = document.createElement("ha-textfield");
+    aiEntityInput.label = this._t("ed_ai_image_entity");
+    aiEntityInput.placeholder = this._t("ed_ai_image_entity_placeholder");
+    aiEntityInput.value = (this._config.image_generation || {}).entity_id || "";
+    aiEntityInput.style.width = "100%";
+    aiEntityInput.addEventListener("change", (e) => {
+      const val = e.target.value.trim() || undefined;
+      this._config = { ...this._config, image_generation: { ...(this._config.image_generation || {}), entity_id: val } };
+      this._fireChanged();
+    });
+    const aiEntityRow = this._el("div", { className: "editor-card-title-row" }, [aiEntityInput]);
+
     // Tab bar (tabs on left, + on right)
     const tabsEl = this._el("div", { className: "editor-tabs" });
     for (let i = 0; i < cols.length; i++) {
@@ -6682,7 +6697,7 @@ class HomeTasksCardEditor extends HTMLElement {
       ? this._buildCodeEditor(activeTab)
       : this._buildVisualEditor(activeTab);
 
-    const editor = this._el("div", { className: "editor" }, [cardTitleRow, tabsRow, controls, tabContent]);
+    const editor = this._el("div", { className: "editor" }, [cardTitleRow, aiEntityRow, tabsRow, controls, tabContent]);
     root.appendChild(editor);
   }
 

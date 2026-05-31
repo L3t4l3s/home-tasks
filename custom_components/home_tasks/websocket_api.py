@@ -1377,6 +1377,7 @@ async def ws_reorder_sections(hass, connection, msg):
         vol.Required("entry_id"): _val_id,
         vol.Required("task_id"): _val_id,
         vol.Optional("prompt_prefix"): vol.All(str, vol.Length(max=200)),
+        vol.Optional("entity_id"): _val_entity_id,
         vol.Optional("force"): bool,
     }
 )
@@ -1438,6 +1439,7 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
                 {
                     "task_name": f"home_tasks_{title_hash}",
                     "instructions": prompt,
+                    **({"entity_id": msg["entity_id"]} if msg.get("entity_id") else {}),
                 },
                 blocking=True,
                 return_response=True,
