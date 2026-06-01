@@ -5100,50 +5100,59 @@ class HomeTasksCard extends HTMLElement {
         const crumb = this._el("div", { className: "mb-crumb", textContent: data.title || "Medien" });
         list.appendChild(crumb);
 
-        for (const item of (data.children || [])) {
+        const children = data.children || [];
+        const folders = children.filter(i => i.can_expand);
+        const files = children.filter(i => !i.can_expand);
+
+        const pickFile = async (item) => {
+          try {
+            const resolved = await this._hass.callWS({
+              type: "media_source/resolve_media",
+              media_content_id: item.media_content_id,
+            });
+            await this._saveImageUrl(task, colIdx, resolved.url || item.thumbnail);
+          } catch {
+            if (item.thumbnail) await this._saveImageUrl(task, colIdx, item.thumbnail);
+          }
+          dialog.close();
+          dialog.remove();
+        };
+
+        for (const item of folders) {
           const row = document.createElement("button");
-          row.className = "mb-item" + (item.can_expand ? " mb-folder" : "");
-
-          if (item.thumbnail) {
-            const img = this._el("img", { className: "mb-thumb", src: item.thumbnail, alt: "" });
-            row.appendChild(img);
-          } else {
-            const ico = document.createElement("ha-icon");
-            const iconMap = { directory: "mdi:folder", image: "mdi:image", music: "mdi:music-note", video: "mdi:video" };
-            ico.setAttribute("icon", iconMap[item.media_class] || "mdi:file");
-            ico.style.cssText = "--mdc-icon-size:24px;flex-shrink:0;color:var(--secondary-text-color);";
-            row.appendChild(ico);
-          }
-
+          row.className = "mb-item mb-folder";
+          const ico = document.createElement("ha-icon");
+          const iconMap = { directory: "mdi:folder", image: "mdi:folder-image", music: "mdi:folder-music", video: "mdi:folder-play" };
+          ico.setAttribute("icon", iconMap[item.media_class] || "mdi:folder");
+          ico.style.cssText = "--mdc-icon-size:24px;flex-shrink:0;color:var(--secondary-text-color);";
+          row.appendChild(ico);
           row.appendChild(this._el("span", { className: "mb-item-title", textContent: item.title }));
-
-          if (item.can_expand) {
-            const chev = document.createElement("ha-icon");
-            chev.setAttribute("icon", "mdi:chevron-right");
-            chev.style.cssText = "--mdc-icon-size:18px;flex-shrink:0;color:var(--secondary-text-color);";
-            row.appendChild(chev);
-          }
-
-          row.addEventListener("click", async () => {
-            if (item.can_expand) {
-              navStack.push({ id, title: data.title || "Zurück" });
-              await load(item.media_content_id);
-            } else {
-              try {
-                const resolved = await this._hass.callWS({
-                  type: "media_source/resolve_media",
-                  media_content_id: item.media_content_id,
-                });
-                await this._saveImageUrl(task, colIdx, resolved.url || item.thumbnail);
-              } catch {
-                if (item.thumbnail) await this._saveImageUrl(task, colIdx, item.thumbnail);
-              }
-              dialog.close();
-              dialog.remove();
-            }
-          });
-
+          const chev = document.createElement("ha-icon");
+          chev.setAttribute("icon", "mdi:chevron-right");
+          chev.style.cssText = "--mdc-icon-size:18px;flex-shrink:0;color:var(--secondary-text-color);";
+          row.appendChild(chev);
+          row.addEventListener("click", () => { navStack.push({ id, title: data.title || "Zurück" }); load(item.media_content_id); });
           list.appendChild(row);
+        }
+
+        if (files.length > 0) {
+          const grid = this._el("div", { className: "mb-grid" });
+          for (const item of files) {
+            const cell = document.createElement("button");
+            cell.className = "mb-grid-item";
+            if (item.thumbnail) {
+              cell.appendChild(this._el("img", { className: "mb-grid-thumb", src: item.thumbnail, alt: item.title }));
+            } else {
+              const ico = document.createElement("ha-icon");
+              ico.setAttribute("icon", "mdi:image");
+              ico.style.cssText = "--mdc-icon-size:40px;color:var(--secondary-text-color);";
+              cell.appendChild(ico);
+            }
+            cell.appendChild(this._el("span", { className: "mb-grid-title", textContent: item.title }));
+            cell.addEventListener("click", () => pickFile(item));
+            grid.appendChild(cell);
+          }
+          list.appendChild(grid);
         }
 
         if (!data.children?.length) {
@@ -6453,6 +6462,24 @@ class HomeTasksCard extends HTMLElement {
       }
       .mb-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
       .mb-item-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .mb-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+        gap: 8px; padding: 8px;
+      }
+      .mb-grid-item {
+        display: flex; flex-direction: column; align-items: center; gap: 5px;
+        background: none; border: none; cursor: pointer; padding: 6px; border-radius: 8px;
+        font-family: inherit;
+      }
+      .mb-grid-item:hover { background: var(--secondary-background-color, rgba(0,0,0,0.06)); }
+      .mb-grid-thumb {
+        width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 6px;
+        display: block;
+      }
+      .mb-grid-title {
+        font-size: 11px; color: var(--secondary-text-color); width: 100%;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center;
+      }
 
       /* Compact tile variant */
       .compact .tile-grid-inner { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 7px; }
