@@ -1371,6 +1371,70 @@ async def ws_reorder_sections(hass, connection, msg):
 # Image generation
 # ---------------------------------------------------------------------------
 
+async def _save_image_to_public_media(hass, connection, image_url: str, filename: str) -> str:
+    """Download an auth-required HA image URL and save it to the public media dir.
+
+    Returns a /media/local/home_tasks/<filename> URL that is accessible
+    without authentication, so the Lovelace card can display it in <img src>.
+    Falls back to the original URL on any error.
+    """
+    import os
+    from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+    if not image_url:
+        return image_url
+
+    # Already public — nothing to do
+    if image_url.startswith(("/media/", "/local/", "http://", "https://")):
+        return image_url
+
+    try:
+        media_dir = hass.config.path("media", "home_tasks")
+        await hass.async_add_executor_job(os.makedirs, media_dir, 0o755, True)
+        dest = os.path.join(media_dir, filename)
+
+        # Build an access token for the current user so we can hit HA's own API
+        refresh_token = await hass.auth.async_get_refresh_token(connection.refresh_token_id)
+        if refresh_token is None:
+            _LOGGER.warning("No refresh token available; skipping image re-save")
+            return image_url
+        access_token = hass.auth.async_create_access_token(refresh_token)
+
+        # Determine HA's local HTTP URL (prefer http loopback; handle SSL too)
+        try:
+            port = hass.http.server_port
+            use_ssl = bool(getattr(hass.http, "ssl_certificate", None))
+        except AttributeError:
+            port = 8123
+            use_ssl = False
+
+        scheme = "https" if use_ssl else "http"
+        internal_url = f"{scheme}://127.0.0.1:{port}{image_url}"
+
+        session = async_get_clientsession(hass, verify_ssl=False)
+        async with session.get(
+            internal_url,
+            headers={"Authorization": f"Bearer {access_token.token}"},
+        ) as resp:
+            if resp.status != 200:
+                _LOGGER.warning(
+                    "Image download returned HTTP %s for %s — keeping original URL",
+                    resp.status, image_url,
+                )
+                return image_url
+            image_data = await resp.read()
+
+        def _write() -> None:
+            with open(dest, "wb") as fh:
+                fh.write(image_data)
+
+        await hass.async_add_executor_job(_write)
+        return f"/media/local/home_tasks/{filename}"
+
+    except Exception as exc:  # noqa: BLE001
+        _LOGGER.warning("Failed to save image to public media dir: %s", exc)
+        return image_url
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "home_tasks/generate_task_image",
@@ -1459,9 +1523,22 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
         except Exception as service_err:
             raise ValueError(f"Image generation failed: {service_err}") from service_err
 
-        image_url = (service_result or {}).get("url") or (service_result or {}).get("media_source_id")
+        _LOGGER.debug("ai_task.generate_image result: %s", service_result)
+        result_dict = service_result or {}
+        image_url = (
+            result_dict.get("url")
+            or result_dict.get("media_source_id")
+            or (result_dict.get("image") or {}).get("url")
+        )
         if not image_url:
-            raise ValueError("ai_task.generate_image returned no image URL")
+            raise ValueError(
+                f"ai_task.generate_image returned no image URL. Full result: {result_dict}"
+            )
+
+        # Convert auth-required internal URLs to public /media/local/ URLs so
+        # the Lovelace card can display them without auth headers.
+        image_filename = f"{title_hash}.png"
+        image_url = await _save_image_to_public_media(hass, connection, image_url, image_filename)
 
         # ------------------------------------------------------------------
         # 3. Propagate URL to every task with the same title across all lists.
