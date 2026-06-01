@@ -684,6 +684,42 @@ class HomeTasksStore:
             self.on_task_created(task)
         return task
 
+    async def async_duplicate_task(
+        self,
+        task_id: str,
+        assigned_person: str | None = None,
+        actor: str | None = None,
+    ) -> dict:
+        """Create an independent copy of a task, optionally with a different assignee."""
+        if len(self._data["tasks"]) >= MAX_TASKS_PER_LIST:
+            raise ValueError(f"Maximum number of tasks ({MAX_TASKS_PER_LIST}) reached")
+        source = self.get_task(task_id)
+        max_order = max((t["sort_order"] for t in self._data["tasks"]), default=-1)
+        history_entry: dict = {"ts": datetime.now(timezone.utc).isoformat(), "action": "duplicated_from", "source_id": task_id}
+        if actor:
+            history_entry["by"] = actor
+        new_task = {
+            **source,
+            "id": str(uuid.uuid4()),
+            "sub_items": [{"id": str(uuid.uuid4()), "title": s["title"], "completed": False} for s in source.get("sub_items", [])],
+            "tags": list(source.get("tags", [])),
+            "reminders": list(source.get("reminders", [])),
+            "recurrence_weekdays": list(source.get("recurrence_weekdays", [])),
+            "assigned_person": validate_assigned_person(assigned_person),
+            "completed": False,
+            "completed_at": None,
+            "sort_order": max_order + 1,
+            "history": [history_entry],
+            "external_id": None,
+            "sync_source": None,
+            "recurrence_remaining_count": source.get("recurrence_max_count"),
+        }
+        self._data["tasks"].append(new_task)
+        await self._async_save()
+        if self.on_task_created:
+            self.on_task_created(new_task)
+        return new_task
+
     # --- Sub-task methods ---
 
     async def async_add_sub_task(self, task_id: str, title: str) -> dict:
