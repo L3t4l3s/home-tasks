@@ -2934,12 +2934,71 @@ class HomeTasksCard extends HTMLElement {
       tile.appendChild(overlay);
     }
 
-    // Tap anywhere on the tile = toggle complete (no detail opening)
-    tile.addEventListener("click", (e) => {
+    // Short tap = toggle complete; long press (500 ms) = open detail sheet
+    let _lpTimer = null;
+    let _lpFired = false;
+    let _lpStartX = 0;
+    let _lpStartY = 0;
+
+    tile.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return;
+      _lpFired = false;
+      _lpStartX = e.clientX;
+      _lpStartY = e.clientY;
+      _lpTimer = setTimeout(() => {
+        _lpFired = true;
+        tile.releasePointerCapture(e.pointerId);
+        this._openTaskDetailSheet(task, colIdx);
+      }, 500);
+    });
+
+    const _lpCancel = () => { clearTimeout(_lpTimer); _lpTimer = null; };
+    tile.addEventListener("pointermove", (e) => {
+      if (_lpTimer && (Math.abs(e.clientX - _lpStartX) > 8 || Math.abs(e.clientY - _lpStartY) > 8)) _lpCancel();
+    });
+    tile.addEventListener("pointerup", _lpCancel);
+    tile.addEventListener("pointercancel", _lpCancel);
+
+    tile.addEventListener("click", () => {
+      if (_lpFired) { _lpFired = false; return; }
       this._toggleTask(task.id, task.completed, colIdx);
     });
 
     return tile;
+  }
+
+  _openTaskDetailSheet(task, colIdx) {
+    this.shadowRoot.querySelector(".task-detail-sheet")?.remove();
+    this.shadowRoot.querySelector(".task-detail-backdrop")?.remove();
+
+    const backdrop = this._el("div", { className: "task-detail-backdrop" });
+    const sheet = this._el("div", { className: "task-detail-sheet" });
+
+    const close = () => {
+      sheet.classList.remove("open");
+      sheet.addEventListener("transitionend", () => { sheet.remove(); backdrop.remove(); }, { once: true });
+      setTimeout(() => { sheet.remove(); backdrop.remove(); }, 350);
+    };
+
+    backdrop.addEventListener("click", close);
+
+    const handle = this._el("div", { className: "sheet-handle" });
+    const titleEl = this._el("span", { className: "sheet-title", textContent: task.title });
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "sheet-close";
+    const closeIco = document.createElement("ha-icon");
+    closeIco.setAttribute("icon", "mdi:close");
+    closeIco.style.cssText = "--mdc-icon-size:20px;";
+    closeBtn.appendChild(closeIco);
+    closeBtn.addEventListener("click", close);
+    const header = this._el("div", { className: "sheet-header" }, [titleEl, closeBtn]);
+
+    const body = this._el("div", { className: "sheet-body" });
+    body.appendChild(this._buildTaskDetails(task, colIdx));
+
+    sheet.append(handle, header, body);
+    this.shadowRoot.append(backdrop, sheet);
+    requestAnimationFrame(() => requestAnimationFrame(() => sheet.classList.add("open")));
   }
 
   _buildFilterBtn(label, value, colIdx) {
@@ -5619,6 +5678,13 @@ class HomeTasksCard extends HTMLElement {
       // they want to focus / select / scroll the field, not drag the task.
       if (this._isInteractiveTarget(e.target)) return;
       const touch = e.touches[0];
+      let lpStartX = touch.clientX, lpStartY = touch.clientY;
+      this._touchLpTimer = setTimeout(() => {
+        this._touchLpTimer = null;
+        if (this._touchStartTimer) { clearTimeout(this._touchStartTimer); this._touchStartTimer = null; }
+        if (this._draggedTaskId) { this._finishDrag(); }
+        this._openTaskDetailSheet(task, colIdx);
+      }, 500);
       this._touchStartTimer = setTimeout(() => {
         this._draggedTaskId = taskId;
         this._draggedColIdx = colIdx;
@@ -5646,6 +5712,15 @@ class HomeTasksCard extends HTMLElement {
         this._touchClone = clone;
         this._touchOffsetY = touch.clientY - rect.top;
       }, 150);
+      // Cancel long-press on significant movement
+      const _cancelLp = (ev) => {
+        const t = ev.touches[0];
+        if (Math.abs(t.clientX - lpStartX) > 8 || Math.abs(t.clientY - lpStartY) > 8) {
+          if (this._touchLpTimer) { clearTimeout(this._touchLpTimer); this._touchLpTimer = null; }
+          taskEl.removeEventListener("touchmove", _cancelLp);
+        }
+      };
+      taskEl.addEventListener("touchmove", _cancelLp, { passive: true });
     }, { passive: true });
 
     const onTouchMove = (e) => {
@@ -5682,6 +5757,7 @@ class HomeTasksCard extends HTMLElement {
     };
 
     const onTouchEnd = () => {
+      if (this._touchLpTimer) { clearTimeout(this._touchLpTimer); this._touchLpTimer = null; }
       if (this._touchStartTimer) {
         clearTimeout(this._touchStartTimer);
         this._touchStartTimer = null;
@@ -6235,6 +6311,41 @@ class HomeTasksCard extends HTMLElement {
       .task-tile:not(.has-image) .tile-overlay {
         background: linear-gradient(transparent, rgba(0,0,0,0.25));
       }
+
+      /* Task detail bottom sheet (tile long-press) */
+      .task-detail-backdrop {
+        position: fixed; inset: 0; z-index: 998;
+        background: rgba(0,0,0,0.32);
+      }
+      .task-detail-sheet {
+        position: fixed; bottom: 0; left: 0; right: 0; z-index: 999;
+        background: var(--ha-card-background, var(--card-background-color, #1c1c1c));
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 -4px 24px rgba(0,0,0,0.28);
+        transform: translateY(100%);
+        transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+        max-height: 85vh;
+        display: flex; flex-direction: column;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+      }
+      .task-detail-sheet.open { transform: translateY(0); }
+      .sheet-handle {
+        width: 40px; height: 4px; border-radius: 2px;
+        background: var(--divider-color, rgba(255,255,255,0.2));
+        margin: 10px auto 4px; flex-shrink: 0;
+      }
+      .sheet-header {
+        display: flex; align-items: center; gap: 8px;
+        padding: 8px 8px 12px 20px; flex-shrink: 0;
+        border-bottom: 1px solid var(--divider-color, rgba(255,255,255,0.08));
+      }
+      .sheet-title { flex: 1; font-size: 16px; font-weight: 500; color: var(--primary-text-color); }
+      .sheet-close {
+        background: none; border: none; cursor: pointer; border-radius: 50%;
+        color: var(--secondary-text-color); padding: 8px; display: flex; align-items: center;
+      }
+      .sheet-close:hover { background: var(--secondary-background-color); }
+      .sheet-body { overflow-y: auto; flex: 1; padding: 12px 0 8px; }
       .tile-title {
         color: #fff; font-size: 12px; font-weight: 600; line-height: 1.3;
         text-shadow: 0 1px 4px rgba(0,0,0,0.5);
