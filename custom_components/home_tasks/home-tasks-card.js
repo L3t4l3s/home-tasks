@@ -6346,6 +6346,8 @@ class HomeTasksCard extends HTMLElement {
       }
       .sheet-close:hover { background: var(--secondary-background-color); }
       .sheet-body { overflow-y: auto; flex: 1; padding: 12px 0 8px; }
+      .sheet-body .task-details { height: auto; border-top: none; }
+      .sheet-body .task-details-inner { padding: 0 16px 16px; }
       .tile-title {
         color: #fff; font-size: 12px; font-weight: 600; line-height: 1.3;
         text-shadow: 0 1px 4px rgba(0,0,0,0.5);
