@@ -6414,7 +6414,6 @@ class HomeTasksCard extends HTMLElement {
       dialog.mb-dialog {
         padding: 0; border: none; border-radius: 12px;
         width: min(480px, 95vw); max-height: 70vh;
-        display: flex; flex-direction: column;
         background: var(--ha-card-background, var(--card-background-color, #fff));
         color: var(--primary-text-color);
         box-shadow: 0 8px 32px rgba(0,0,0,0.32);
@@ -6433,7 +6432,7 @@ class HomeTasksCard extends HTMLElement {
         display: flex; align-items: center;
       }
       .mb-close:hover { background: var(--secondary-background-color); }
-      .mb-list { overflow-y: auto; flex: 1; }
+      .mb-list { overflow-y: auto; max-height: calc(70vh - 64px); }
       .mb-status { padding: 32px; text-align: center; color: var(--secondary-text-color); font-size: 14px; }
       .mb-error { color: var(--error-color, #db4437); }
       .mb-crumb {
