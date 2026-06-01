@@ -4997,22 +4997,109 @@ class HomeTasksCard extends HTMLElement {
     ]);
   }
 
-  _openMediaPicker(task, colIdx) {
-    this.dispatchEvent(new CustomEvent("show-dialog", {
-      bubbles: true,
-      composed: true,
-      detail: {
-        dialogTag: "dialog-media-player-browse",
-        dialogParams: {
-          action: "pick",
-          navigateIds: [{ params: {}, id: "media-source://media_source" }],
-          mediaPickedCallback: (item) => {
-            const url = item?.media_content_id;
-            if (url) this._saveImageUrl(task, colIdx, url);
-          },
-        },
-      },
-    }));
+  async _openMediaPicker(task, colIdx) {
+    const navStack = []; // { id, title }
+
+    const dialog = document.createElement("dialog");
+    dialog.className = "mb-dialog";
+
+    const header = this._el("div", { className: "mb-header" }, [
+      this._el("span", { className: "mb-title", textContent: "Mediathek" }),
+    ]);
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "mb-close";
+    const closeIco = document.createElement("ha-icon");
+    closeIco.setAttribute("icon", "mdi:close");
+    closeIco.style.cssText = "--mdc-icon-size:20px;";
+    closeBtn.appendChild(closeIco);
+    closeBtn.addEventListener("click", () => { dialog.close(); dialog.remove(); });
+    header.appendChild(closeBtn);
+
+    const list = this._el("div", { className: "mb-list" });
+
+    const load = async (id) => {
+      list.innerHTML = `<div class="mb-status">Lädt…</div>`;
+      try {
+        const data = await this._hass.callWS({
+          type: "media_source/browse_media",
+          media_content_id: id,
+        });
+        list.innerHTML = "";
+
+        if (navStack.length > 0) {
+          const prev = navStack[navStack.length - 1];
+          const backBtn = document.createElement("button");
+          backBtn.className = "mb-item mb-back";
+          const backIco = document.createElement("ha-icon");
+          backIco.setAttribute("icon", "mdi:arrow-left");
+          backIco.style.cssText = "--mdc-icon-size:20px;flex-shrink:0;";
+          backBtn.append(backIco, prev.title);
+          backBtn.addEventListener("click", () => { navStack.pop(); load(prev.id); });
+          list.appendChild(backBtn);
+        }
+
+        const crumb = this._el("div", { className: "mb-crumb", textContent: data.title || "Medien" });
+        list.appendChild(crumb);
+
+        for (const item of (data.children || [])) {
+          const row = document.createElement("button");
+          row.className = "mb-item" + (item.can_expand ? " mb-folder" : "");
+
+          if (item.thumbnail) {
+            const img = this._el("img", { className: "mb-thumb", src: item.thumbnail, alt: "" });
+            row.appendChild(img);
+          } else {
+            const ico = document.createElement("ha-icon");
+            const iconMap = { directory: "mdi:folder", image: "mdi:image", music: "mdi:music-note", video: "mdi:video" };
+            ico.setAttribute("icon", iconMap[item.media_class] || "mdi:file");
+            ico.style.cssText = "--mdc-icon-size:24px;flex-shrink:0;color:var(--secondary-text-color);";
+            row.appendChild(ico);
+          }
+
+          row.appendChild(this._el("span", { className: "mb-item-title", textContent: item.title }));
+
+          if (item.can_expand) {
+            const chev = document.createElement("ha-icon");
+            chev.setAttribute("icon", "mdi:chevron-right");
+            chev.style.cssText = "--mdc-icon-size:18px;flex-shrink:0;color:var(--secondary-text-color);";
+            row.appendChild(chev);
+          }
+
+          row.addEventListener("click", async () => {
+            if (item.can_expand) {
+              navStack.push({ id, title: data.title || "Zurück" });
+              await load(item.media_content_id);
+            } else {
+              try {
+                const resolved = await this._hass.callWS({
+                  type: "media_source/resolve_media",
+                  media_content_id: item.media_content_id,
+                });
+                await this._saveImageUrl(task, colIdx, resolved.url || item.thumbnail);
+              } catch {
+                if (item.thumbnail) await this._saveImageUrl(task, colIdx, item.thumbnail);
+              }
+              dialog.close();
+              dialog.remove();
+            }
+          });
+
+          list.appendChild(row);
+        }
+
+        if (!data.children?.length) {
+          list.appendChild(this._el("div", { className: "mb-status", textContent: "Keine Dateien" }));
+        }
+      } catch (e) {
+        list.innerHTML = `<div class="mb-status mb-error">Fehler: ${e.message || e}</div>`;
+      }
+    };
+
+    dialog.append(header, list);
+    dialog.addEventListener("close", () => dialog.remove());
+    this.shadowRoot.appendChild(dialog);
+    dialog.showModal();
+    await load("media-source://media_source");
   }
 
   async _generateTaskImage(task, colIdx, force = false) {
@@ -6209,6 +6296,51 @@ class HomeTasksCard extends HTMLElement {
       .tile-dialog-cancel:hover { background: color-mix(in srgb, var(--primary-color) 10%, transparent); }
       .tile-dialog-confirm { background: var(--primary-color); color: var(--text-primary-color, #fff); }
       .tile-dialog-confirm:hover { filter: brightness(1.08); }
+
+      /* Media browser dialog */
+      dialog.mb-dialog {
+        padding: 0; border: none; border-radius: 12px;
+        width: min(480px, 95vw); max-height: 70vh;
+        display: flex; flex-direction: column;
+        background: var(--ha-card-background, var(--card-background-color, #fff));
+        color: var(--primary-text-color);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.32);
+        overflow: hidden;
+      }
+      dialog.mb-dialog::backdrop { background: rgba(0,0,0,0.5); }
+      .mb-header {
+        display: flex; align-items: center; gap: 8px;
+        padding: 16px 8px 16px 20px; flex-shrink: 0;
+        border-bottom: 1px solid var(--divider-color, rgba(0,0,0,0.12));
+      }
+      .mb-title { flex: 1; font-size: 18px; font-weight: 500; }
+      .mb-close {
+        background: none; border: none; cursor: pointer;
+        color: var(--secondary-text-color); padding: 8px; border-radius: 50%;
+        display: flex; align-items: center;
+      }
+      .mb-close:hover { background: var(--secondary-background-color); }
+      .mb-list { overflow-y: auto; flex: 1; }
+      .mb-status { padding: 32px; text-align: center; color: var(--secondary-text-color); font-size: 14px; }
+      .mb-error { color: var(--error-color, #db4437); }
+      .mb-crumb {
+        padding: 8px 16px 4px; font-size: 11px; font-weight: 600;
+        color: var(--secondary-text-color); text-transform: uppercase; letter-spacing: 0.6px;
+      }
+      .mb-item {
+        display: flex; align-items: center; gap: 12px;
+        width: 100%; padding: 10px 16px;
+        background: none; border: none; border-bottom: 1px solid var(--divider-color, rgba(0,0,0,0.06));
+        cursor: pointer; color: var(--primary-text-color);
+        font-family: inherit; font-size: 14px; text-align: left;
+      }
+      .mb-item:hover { background: var(--secondary-background-color, rgba(0,0,0,0.04)); }
+      .mb-back {
+        color: var(--primary-color); font-weight: 500;
+        border-bottom: 2px solid var(--divider-color, rgba(0,0,0,0.12));
+      }
+      .mb-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+      .mb-item-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
       /* Compact tile variant */
       .compact .tile-grid-inner { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 7px; }
