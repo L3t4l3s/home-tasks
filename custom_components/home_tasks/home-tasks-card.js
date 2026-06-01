@@ -5141,7 +5141,9 @@ class HomeTasksCard extends HTMLElement {
             const cell = document.createElement("button");
             cell.className = "mb-grid-item";
             if (item.thumbnail) {
-              cell.appendChild(this._el("img", { className: "mb-grid-thumb", src: item.thumbnail, alt: item.title }));
+              const img = this._el("img", { className: "mb-grid-thumb", alt: item.title });
+              this._fetchAuthThumb(item.thumbnail).then(src => { img.src = src; });
+              cell.appendChild(img);
             } else {
               const ico = document.createElement("ha-icon");
               ico.setAttribute("icon", "mdi:image");
@@ -5201,6 +5203,21 @@ class HomeTasksCard extends HTMLElement {
       this._generatingImage.delete(task.id);
       this._render();
     }
+  }
+
+  async _fetchAuthThumb(url) {
+    if (!url || !url.startsWith("/")) return url;
+    this._thumbCache = this._thumbCache || new Map();
+    if (this._thumbCache.has(url)) return this._thumbCache.get(url);
+    try {
+      const token = this._hass.auth?.data?.access_token;
+      if (!token) return url;
+      const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (!resp.ok) return url;
+      const blobUrl = URL.createObjectURL(await resp.blob());
+      this._thumbCache.set(url, blobUrl);
+      return blobUrl;
+    } catch { return url; }
   }
 
   async _saveImageUrl(task, colIdx, url) {
