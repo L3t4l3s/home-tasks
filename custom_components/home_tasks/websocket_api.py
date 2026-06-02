@@ -1397,10 +1397,11 @@ async def ws_reorder_sections(hass, connection, msg):
 # ---------------------------------------------------------------------------
 
 async def _save_image_to_public_media(hass, connection, image_url: str, filename: str) -> str:
-    """Download an auth-required HA image URL and save it to the public media dir.
+    """Download an image URL and save it to the public media dir.
 
-    Returns a /media/local/home_tasks/<filename> URL that is accessible
-    without authentication, so the Lovelace card can display it in <img src>.
+    Handles HA-internal paths (auth-required), external https:// URLs (may expire),
+    and media-source:// URIs (only renderable by native HA apps).
+    Returns a /media/local/home_tasks/<filename> URL accessible on all devices.
     Falls back to the original URL on any error.
     """
     import os
@@ -1409,8 +1410,8 @@ async def _save_image_to_public_media(hass, connection, image_url: str, filename
     if not image_url:
         return image_url
 
-    # Already public — nothing to do
-    if image_url.startswith(("/media/", "/local/", "http://", "https://")):
+    # Already saved to our local directory — nothing to do
+    if image_url.startswith("/media/local/home_tasks/"):
         return image_url
 
     try:
@@ -1418,29 +1419,45 @@ async def _save_image_to_public_media(hass, connection, image_url: str, filename
         await hass.async_add_executor_job(os.makedirs, media_dir, 0o755, True)
         dest = os.path.join(media_dir, filename)
 
-        # Build an access token for the current user so we can hit HA's own API
-        refresh_token = await hass.auth.async_get_refresh_token(connection.refresh_token_id)
-        if refresh_token is None:
-            _LOGGER.warning("No refresh token available; skipping image re-save")
-            return image_url
-        access_token = hass.auth.async_create_access_token(refresh_token)
-
-        # Determine HA's local HTTP URL (prefer http loopback; handle SSL too)
-        try:
-            port = hass.http.server_port
-            use_ssl = bool(getattr(hass.http, "ssl_certificate", None))
-        except AttributeError:
-            port = 8123
-            use_ssl = False
-
-        scheme = "https" if use_ssl else "http"
-        internal_url = f"{scheme}://127.0.0.1:{port}{image_url}"
-
         session = async_get_clientsession(hass, verify_ssl=False)
-        async with session.get(
-            internal_url,
-            headers={"Authorization": f"Bearer {access_token.token}"},
-        ) as resp:
+
+        # Resolve media-source:// URIs (returned by HA's ai_task integration)
+        # to an actual HTTP URL before downloading.
+        if image_url.startswith("media-source://"):
+            try:
+                from homeassistant.components.media_source import async_resolve_media
+                resolved = await async_resolve_media(hass, image_url, None)
+                image_url = resolved.url
+            except Exception as resolve_err:  # noqa: BLE001
+                _LOGGER.warning("Failed to resolve media source %s: %s", image_url, resolve_err)
+                return image_url
+
+        # Determine the download URL and headers
+        if image_url.startswith(("http://", "https://")):
+            # External or fully-qualified URL — download directly (no auth needed,
+            # also handles expiring URLs from providers like OpenAI DALL-E)
+            download_url = image_url
+            headers: dict = {}
+        else:
+            # HA-internal path — needs Bearer token + loopback URL
+            refresh_token = await hass.auth.async_get_refresh_token(connection.refresh_token_id)
+            if refresh_token is None:
+                _LOGGER.warning("No refresh token available; skipping image re-save")
+                return image_url
+            access_token = hass.auth.async_create_access_token(refresh_token)
+
+            try:
+                port = hass.http.server_port
+                use_ssl = bool(getattr(hass.http, "ssl_certificate", None))
+            except AttributeError:
+                port = 8123
+                use_ssl = False
+
+            scheme = "https" if use_ssl else "http"
+            download_url = f"{scheme}://127.0.0.1:{port}{image_url}"
+            headers = {"Authorization": f"Bearer {access_token.token}"}
+
+        async with session.get(download_url, headers=headers) as resp:
             if resp.status != 200:
                 _LOGGER.warning(
                     "Image download returned HTTP %s for %s — keeping original URL",
