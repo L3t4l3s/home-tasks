@@ -3385,7 +3385,7 @@ class HomeTasksCard extends HTMLElement {
   // Falls back to the full image URL if no thumbnail exists yet.
   _thumbUrl(imageUrl) {
     if (!imageUrl) return null;
-    return imageUrl.replace(/\/task_([a-f0-9]+)\.png(\?.*)?$/, '/task_$1_thumb.jpg');
+    return imageUrl.replace(/\/task_([a-f0-9]+)\.png(\?.*)?$/, '/task_$1_thumb.jpg$2');
   }
 
   _buildTaskExpandButton(isExpanded) {
@@ -5252,9 +5252,12 @@ class HomeTasksCard extends HTMLElement {
 
     try {
       const result = await this._hass.callWS(payload);
-      // Update local task state immediately so image shows without full reload
-      const cs = this._columns[colIdx];
-      if (cs && cs.tasks) {
+      // Update the task in every column immediately — the same task may appear
+      // in multiple columns (same title across lists) and all should reflect the
+      // new image without waiting for the HA state-change reload cycle.
+      for (let ci = 0; ci < this._columns.length; ci++) {
+        const cs = this._columns[ci];
+        if (!cs || !cs.tasks) continue;
         const idx = cs.tasks.findIndex(t => t.id === task.id);
         if (idx >= 0) cs.tasks[idx] = result.task;
       }
@@ -5291,8 +5294,10 @@ class HomeTasksCard extends HTMLElement {
         task_id: task.id,
         image_url: url,
       });
-      const cs = this._columns[colIdx];
-      if (cs && cs.tasks) {
+      // Update every column so the change is visible immediately everywhere.
+      for (let ci = 0; ci < this._columns.length; ci++) {
+        const cs = this._columns[ci];
+        if (!cs || !cs.tasks) continue;
         const idx = cs.tasks.findIndex(t => t.id === task.id);
         if (idx >= 0) cs.tasks[idx] = result;
       }

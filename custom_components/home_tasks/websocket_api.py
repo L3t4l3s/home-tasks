@@ -1,6 +1,7 @@
 """WebSocket API for Home Tasks - extended features (sub-tasks, reorder, external)."""
 
 import logging
+import time
 
 import voluptuous as vol
 
@@ -1410,8 +1411,9 @@ async def _save_image_to_public_media(hass, connection, image_url: str, filename
     if not image_url:
         return image_url
 
-    # Already saved to our local directory — nothing to do
-    if image_url.startswith("/media/local/home_tasks/"):
+    # Already saved to our local directory — nothing to do.
+    # Strip any ?v= query param before checking so versioned URLs don't slip through.
+    if image_url.split("?")[0].startswith("/media/local/home_tasks/"):
         return image_url
 
     try:
@@ -1581,6 +1583,12 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
         # the Lovelace card can display them without auth headers.
         image_filename = f"{title_hash}.png"
         image_url = await _save_image_to_public_media(hass, connection, image_url, image_filename)
+
+        # Append a cache-busting timestamp so browsers/apps that cache by URL
+        # (including the Android HA app which cannot be hard-refreshed) always
+        # fetch the new image after regeneration.
+        if image_url.startswith("/media/local/home_tasks/"):
+            image_url = f"{image_url}?v={int(time.time())}"
 
         # ------------------------------------------------------------------
         # 3. Propagate URL to every task with the same title across all lists.
