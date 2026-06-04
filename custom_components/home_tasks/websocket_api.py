@@ -1436,10 +1436,36 @@ async def _save_image_to_public_media(hass, connection, image_url: str, filename
 
         # Determine the download URL and headers
         if image_url.startswith(("http://", "https://")):
-            # External or fully-qualified URL — download directly (no auth needed,
-            # also handles expiring URLs from providers like OpenAI DALL-E)
-            download_url = image_url
-            headers: dict = {}
+            # Fully-qualified URL.  Could be external (OpenAI CDN) or an internal
+            # HA URL served via the machine's LAN IP (e.g. ai_task generates
+            # http://192.168.x.x:8123/ai_task/image/...?authSig=...).
+            # In a HAOS/Docker setup the server cannot reach its own external IP
+            # from inside the container, so we detect that case and rewrite to
+            # the 127.0.0.1 loopback with a Bearer-token — exactly like we do
+            # for plain /path URLs.
+            from urllib.parse import urlparse, urlunparse
+            parsed = urlparse(image_url)
+            try:
+                ha_port = hass.http.server_port
+            except AttributeError:
+                ha_port = 8123
+            if parsed.port == ha_port and parsed.hostname not in ("127.0.0.1", "localhost"):
+                # Rewrite to loopback
+                refresh_token = await hass.auth.async_get_refresh_token(connection.refresh_token_id)
+                if refresh_token is None:
+                    _LOGGER.warning("No refresh token available for internal URL download")
+                    return image_url
+                access_token = hass.auth.async_create_access_token(refresh_token)
+                use_ssl = bool(getattr(hass.http, "ssl_certificate", None))
+                scheme = "https" if use_ssl else "http"
+                download_url = urlunparse((
+                    scheme, f"127.0.0.1:{ha_port}",
+                    parsed.path, parsed.params, parsed.query, "",
+                ))
+                headers: dict = {"Authorization": f"Bearer {access_token.token}"}
+            else:
+                download_url = image_url
+                headers = {}
         else:
             # HA-internal path — needs Bearer token + loopback URL
             refresh_token = await hass.auth.async_get_refresh_token(connection.refresh_token_id)

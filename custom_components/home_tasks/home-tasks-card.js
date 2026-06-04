@@ -5252,14 +5252,24 @@ class HomeTasksCard extends HTMLElement {
 
     try {
       const result = await this._hass.callWS(payload);
-      // Update the task in every column immediately — the same task may appear
-      // in multiple columns (same title across lists) and all should reflect the
-      // new image without waiting for the HA state-change reload cycle.
+      // Update every column immediately.
+      // • Exact ID match  → full task replacement (the generating task itself).
+      // • Same title, different ID → image_url-only patch (same-title tasks in
+      //   other lists that the backend also updated — they share the image but
+      //   have their own task objects).
+      const newImageUrl = result.task?.image_url;
+      const titleKey = (task.title || "").trim().toLowerCase();
       for (let ci = 0; ci < this._columns.length; ci++) {
         const cs = this._columns[ci];
         if (!cs || !cs.tasks) continue;
-        const idx = cs.tasks.findIndex(t => t.id === task.id);
-        if (idx >= 0) cs.tasks[idx] = result.task;
+        for (let i = 0; i < cs.tasks.length; i++) {
+          const t = cs.tasks[i];
+          if (t.id === task.id) {
+            cs.tasks[i] = result.task;
+          } else if (newImageUrl && (t.title || "").trim().toLowerCase() === titleKey) {
+            cs.tasks[i] = { ...t, image_url: newImageUrl };
+          }
+        }
       }
     } catch (err) {
       console.error("Image generation failed:", err);
