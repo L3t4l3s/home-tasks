@@ -3393,7 +3393,7 @@ class HomeTasksCard extends HTMLElement {
   // Falls back to the full image URL if no thumbnail exists yet.
   _thumbUrl(imageUrl) {
     if (!imageUrl) return null;
-    return imageUrl.replace(/\/task_([a-f0-9]+)\.png(\?.*)?$/, '/task_$1_thumb.jpg');
+    return imageUrl.replace(/\/task_([a-f0-9]+)\.png(\?.*)?$/, '/task_$1_thumb.jpg$2');
   }
 
   _buildTaskExpandButton(isExpanded) {
@@ -5260,11 +5260,24 @@ class HomeTasksCard extends HTMLElement {
 
     try {
       const result = await this._hass.callWS(payload);
-      // Update local task state immediately so image shows without full reload
-      const cs = this._columns[colIdx];
-      if (cs && cs.tasks) {
-        const idx = cs.tasks.findIndex(t => t.id === task.id);
-        if (idx >= 0) cs.tasks[idx] = result.task;
+      // Update every column immediately.
+      // • Exact ID match  → full task replacement (the generating task itself).
+      // • Same title, different ID → image_url-only patch (same-title tasks in
+      //   other lists that the backend also updated — they share the image but
+      //   have their own task objects).
+      const newImageUrl = result.task?.image_url;
+      const titleKey = (task.title || "").trim().toLowerCase();
+      for (let ci = 0; ci < this._columns.length; ci++) {
+        const cs = this._columns[ci];
+        if (!cs || !cs.tasks) continue;
+        for (let i = 0; i < cs.tasks.length; i++) {
+          const t = cs.tasks[i];
+          if (t.id === task.id) {
+            cs.tasks[i] = result.task;
+          } else if (newImageUrl && (t.title || "").trim().toLowerCase() === titleKey) {
+            cs.tasks[i] = { ...t, image_url: newImageUrl };
+          }
+        }
       }
     } catch (err) {
       console.error("Image generation failed:", err);
@@ -5299,8 +5312,10 @@ class HomeTasksCard extends HTMLElement {
         task_id: task.id,
         image_url: url,
       });
-      const cs = this._columns[colIdx];
-      if (cs && cs.tasks) {
+      // Update every column so the change is visible immediately everywhere.
+      for (let ci = 0; ci < this._columns.length; ci++) {
+        const cs = this._columns[ci];
+        if (!cs || !cs.tasks) continue;
         const idx = cs.tasks.findIndex(t => t.id === task.id);
         if (idx >= 0) cs.tasks[idx] = result;
       }

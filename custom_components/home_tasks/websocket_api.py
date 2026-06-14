@@ -1,6 +1,7 @@
 """WebSocket API for Home Tasks - extended features (sub-tasks, reorder, external)."""
 
 import logging
+import time
 
 import voluptuous as vol
 
@@ -1402,10 +1403,11 @@ async def ws_reorder_sections(hass, connection, msg):
 # ---------------------------------------------------------------------------
 
 async def _save_image_to_public_media(hass, connection, image_url: str, filename: str) -> str:
-    """Download an auth-required HA image URL and save it to the public media dir.
+    """Download an image URL and save it to the public media dir.
 
-    Returns a /media/local/home_tasks/<filename> URL that is accessible
-    without authentication, so the Lovelace card can display it in <img src>.
+    Handles HA-internal paths (auth-required), external https:// URLs (may expire),
+    and media-source:// URIs (only renderable by native HA apps).
+    Returns a /media/local/home_tasks/<filename> URL accessible on all devices.
     Falls back to the original URL on any error.
     """
     import os
@@ -1414,8 +1416,9 @@ async def _save_image_to_public_media(hass, connection, image_url: str, filename
     if not image_url:
         return image_url
 
-    # Already public — nothing to do
-    if image_url.startswith(("/media/", "/local/", "http://", "https://")):
+    # Already saved to our local directory — nothing to do.
+    # Strip any ?v= query param before checking so versioned URLs don't slip through.
+    if image_url.split("?")[0].startswith("/media/local/home_tasks/"):
         return image_url
 
     try:
@@ -1423,29 +1426,71 @@ async def _save_image_to_public_media(hass, connection, image_url: str, filename
         await hass.async_add_executor_job(os.makedirs, media_dir, 0o755, True)
         dest = os.path.join(media_dir, filename)
 
-        # Build an access token for the current user so we can hit HA's own API
-        refresh_token = await hass.auth.async_get_refresh_token(connection.refresh_token_id)
-        if refresh_token is None:
-            _LOGGER.warning("No refresh token available; skipping image re-save")
-            return image_url
-        access_token = hass.auth.async_create_access_token(refresh_token)
-
-        # Determine HA's local HTTP URL (prefer http loopback; handle SSL too)
-        try:
-            port = hass.http.server_port
-            use_ssl = bool(getattr(hass.http, "ssl_certificate", None))
-        except AttributeError:
-            port = 8123
-            use_ssl = False
-
-        scheme = "https" if use_ssl else "http"
-        internal_url = f"{scheme}://127.0.0.1:{port}{image_url}"
-
         session = async_get_clientsession(hass, verify_ssl=False)
-        async with session.get(
-            internal_url,
-            headers={"Authorization": f"Bearer {access_token.token}"},
-        ) as resp:
+
+        # Resolve media-source:// URIs (returned by HA's ai_task integration)
+        # to an actual HTTP URL before downloading.
+        if image_url.startswith("media-source://"):
+            try:
+                from homeassistant.components.media_source import async_resolve_media
+                resolved = await async_resolve_media(hass, image_url, None)
+                image_url = resolved.url
+            except Exception as resolve_err:  # noqa: BLE001
+                _LOGGER.warning("Failed to resolve media source %s: %s", image_url, resolve_err)
+                return image_url
+
+        # Determine the download URL and headers
+        if image_url.startswith(("http://", "https://")):
+            # Fully-qualified URL.  Could be external (OpenAI CDN) or an internal
+            # HA URL served via the machine's LAN IP (e.g. ai_task generates
+            # http://192.168.x.x:8123/ai_task/image/...?authSig=...).
+            # In a HAOS/Docker setup the server cannot reach its own external IP
+            # from inside the container, so we detect that case and rewrite to
+            # the 127.0.0.1 loopback with a Bearer-token — exactly like we do
+            # for plain /path URLs.
+            from urllib.parse import urlparse, urlunparse
+            parsed = urlparse(image_url)
+            try:
+                ha_port = hass.http.server_port
+            except AttributeError:
+                ha_port = 8123
+            if parsed.port == ha_port and parsed.hostname not in ("127.0.0.1", "localhost"):
+                # Rewrite to loopback
+                refresh_token = await hass.auth.async_get_refresh_token(connection.refresh_token_id)
+                if refresh_token is None:
+                    _LOGGER.warning("No refresh token available for internal URL download")
+                    return image_url
+                access_token = hass.auth.async_create_access_token(refresh_token)
+                use_ssl = bool(getattr(hass.http, "ssl_certificate", None))
+                scheme = "https" if use_ssl else "http"
+                download_url = urlunparse((
+                    scheme, f"127.0.0.1:{ha_port}",
+                    parsed.path, parsed.params, parsed.query, "",
+                ))
+                headers: dict = {"Authorization": f"Bearer {access_token.token}"}
+            else:
+                download_url = image_url
+                headers = {}
+        else:
+            # HA-internal path — needs Bearer token + loopback URL
+            refresh_token = await hass.auth.async_get_refresh_token(connection.refresh_token_id)
+            if refresh_token is None:
+                _LOGGER.warning("No refresh token available; skipping image re-save")
+                return image_url
+            access_token = hass.auth.async_create_access_token(refresh_token)
+
+            try:
+                port = hass.http.server_port
+                use_ssl = bool(getattr(hass.http, "ssl_certificate", None))
+            except AttributeError:
+                port = 8123
+                use_ssl = False
+
+            scheme = "https" if use_ssl else "http"
+            download_url = f"{scheme}://127.0.0.1:{port}{image_url}"
+            headers = {"Authorization": f"Bearer {access_token.token}"}
+
+        async with session.get(download_url, headers=headers) as resp:
             if resp.status != 200:
                 _LOGGER.warning(
                     "Image download returned HTTP %s for %s — keeping original URL",
@@ -1569,6 +1614,12 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
         # the Lovelace card can display them without auth headers.
         image_filename = f"{title_hash}.png"
         image_url = await _save_image_to_public_media(hass, connection, image_url, image_filename)
+
+        # Append a cache-busting timestamp so browsers/apps that cache by URL
+        # (including the Android HA app which cannot be hard-refreshed) always
+        # fetch the new image after regeneration.
+        if image_url.startswith("/media/local/home_tasks/"):
+            image_url = f"{image_url}?v={int(time.time())}"
 
         # ------------------------------------------------------------------
         # 3. Propagate URL to every task with the same title across all lists.

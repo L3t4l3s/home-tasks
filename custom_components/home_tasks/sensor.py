@@ -1,6 +1,6 @@
 """Sensor platform for Home Tasks integration."""
 
-from datetime import date
+from datetime import date, datetime, timezone
 import logging
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
@@ -39,6 +39,7 @@ class HomeTasksOpenTasksSensor(SensorEntity):
         list_name = entry.data.get("name", entry.title)
         self._attr_name = f"{list_name} Open Tasks"
         self._attr_unique_id = f"{entry.entry_id}_open_tasks"
+        self._last_modified = datetime.now(timezone.utc).isoformat()
 
     @property
     def native_value(self) -> int:
@@ -55,6 +56,7 @@ class HomeTasksOpenTasksSensor(SensorEntity):
             "open_task_titles": [t["title"] for t in open_tasks],
             "overdue_count": len(overdue),
             "total_tasks": len(self._store.tasks),
+            "last_modified": self._last_modified,
         }
 
     async def async_added_to_hass(self) -> None:
@@ -66,4 +68,5 @@ class HomeTasksOpenTasksSensor(SensorEntity):
     @callback
     def _handle_store_update(self) -> None:
         """React to store data changes."""
+        self._last_modified = datetime.now(timezone.utc).isoformat()
         self.async_write_ha_state()
