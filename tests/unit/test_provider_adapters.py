@@ -589,6 +589,7 @@ def _make_todoist_adapter_with_mock_api():
     api.complete_task = AsyncMock()
     api.uncomplete_task = AsyncMock()
     api.get_reminders = AsyncMock(return_value=[])
+    api.get_all_reminders = AsyncMock(return_value=[])
     api.add_reminder = AsyncMock()
     api.delete_reminder = AsyncMock()
     api.get_task = AsyncMock()
