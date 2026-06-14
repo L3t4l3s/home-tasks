@@ -11,6 +11,7 @@ const _TRANSLATIONS = {
   en: {
     my_tasks: "My Tasks",
     add_placeholder: "Add new task...",
+    dialog_cancel: "Cancel", dialog_add: "Add",
     filter_all: "All",
     filter_open: "Open",
     filter_done: "Done",
@@ -115,6 +116,8 @@ const _TRANSLATIONS = {
     history: "History", history_created: "Created", history_completed: "Completed", history_reopened: "Reopened",
     history_reset: "Auto-reset (recurrence)", history_changed: "changed", history_empty: "No history yet", hist_title: "Title", history_disabled: "Disabled",
     ed_show_history: "Histories", hist_by_user: "User",
+    ed_view_mode: "View mode", ed_view_mode_list: "List", ed_view_mode_tiles: "Tiles",
+    ed_show_tile_title: "Title in tiles",
     assigned_unknown: "Unknown (%s)", recurrence_readonly: "Managed by %s", synced_with: "Synced with %s",
     due_today: "Today", due_tomorrow: "Tomorrow", due_yesterday: "Yesterday",
     due_day_after_tomorrow: "In 2 days", due_day_before_yesterday: "2 days ago",
@@ -141,6 +144,7 @@ const _TRANSLATIONS = {
   nl: {
     my_tasks: "Mijn taken",
     add_placeholder: "Nieuwe taak toevoegen...",
+    dialog_cancel: "Annuleren", dialog_add: "Toevoegen",
     filter_all: "Alle", filter_open: "Open", filter_done: "Klaar", filter_due_soon: "Binnenkort",
     ed_show_due_soon_filter: "Binnenkort-filter", ed_due_soon_days: "Dagen vooruit", ed_hide_overdue: "Verlopen verbergen",
     progress: "{0} van {1} klaar",
@@ -207,6 +211,7 @@ const _TRANSLATIONS = {
   it: {
     my_tasks: "Le mie attivit\u00e0",
     add_placeholder: "Aggiungi nuova attivit\u00e0...",
+    dialog_cancel: "Annulla", dialog_add: "Aggiungi",
     filter_all: "Tutte", filter_open: "Aperte", filter_done: "Completate", filter_due_soon: "In scadenza",
     ed_show_due_soon_filter: "Filtro in scadenza", ed_due_soon_days: "Giorni avanti", ed_hide_overdue: "Nascondi scadute",
     progress: "{0} di {1} completate",
@@ -273,6 +278,7 @@ const _TRANSLATIONS = {
   pl: {
     my_tasks: "Moje zadania",
     add_placeholder: "Dodaj nowe zadanie...",
+    dialog_cancel: "Anuluj", dialog_add: "Dodaj",
     filter_all: "Wszystkie", filter_open: "Otwarte", filter_done: "Uko\u0144czone", filter_due_soon: "Wkr\u00f3tce",
     ed_show_due_soon_filter: "Filtr wkr\u00f3tce", ed_due_soon_days: "Dni naprz\u00f3d", ed_hide_overdue: "Ukryj zaleg\u0142e",
     progress: "{0} z {1} uko\u0144czono",
@@ -339,6 +345,7 @@ const _TRANSLATIONS = {
   sv: {
     my_tasks: "Mina uppgifter",
     add_placeholder: "L\u00e4gg till ny uppgift...",
+    dialog_cancel: "Avbryt", dialog_add: "L\u00e4gg till",
     filter_all: "Alla", filter_open: "\u00d6ppna", filter_done: "Klara", filter_due_soon: "Snart",
     ed_show_due_soon_filter: "Snart-filter", ed_due_soon_days: "Dagar fram\u00e5t", ed_hide_overdue: "D\u00f6lj f\u00f6rsenade",
     progress: "{0} av {1} klara",
@@ -405,6 +412,7 @@ const _TRANSLATIONS = {
   fr: {
     my_tasks: "Mes t\u00e2ches",
     add_placeholder: "Ajouter une nouvelle t\u00e2che...",
+    dialog_cancel: "Annuler", dialog_add: "Ajouter",
     filter_all: "Toutes", filter_open: "Ouvertes", filter_done: "Termin\u00e9es", filter_due_soon: "Bient\u00f4t",
     ed_show_due_soon_filter: "Filtre bient\u00f4t", ed_due_soon_days: "Jours \u00e0 venir", ed_hide_overdue: "Masquer en retard",
     progress: "{0} sur {1} termin\u00e9es",
@@ -471,6 +479,7 @@ const _TRANSLATIONS = {
   pt: {
     my_tasks: "Minhas tarefas",
     add_placeholder: "Adicionar nova tarefa...",
+    dialog_cancel: "Cancelar", dialog_add: "Adicionar",
     filter_all: "Todas", filter_open: "Abertas", filter_done: "Conclu\u00eddas", filter_due_soon: "Em breve",
     ed_show_due_soon_filter: "Filtro em breve", ed_due_soon_days: "Dias \u00e0 frente", ed_hide_overdue: "Ocultar atrasadas",
     progress: "{0} de {1} conclu\u00eddas",
@@ -537,6 +546,7 @@ const _TRANSLATIONS = {
   es: {
     my_tasks: "Mis tareas",
     add_placeholder: "A\u00f1adir nueva tarea...",
+    dialog_cancel: "Cancelar", dialog_add: "Agregar",
     filter_all: "Todas", filter_open: "Abiertas", filter_done: "Completadas", filter_due_soon: "Pr\u00f3ximamente",
     ed_show_due_soon_filter: "Filtro pr\u00f3ximo", ed_due_soon_days: "D\u00edas adelante", ed_hide_overdue: "Ocultar vencidas",
     progress: "{0} de {1} completadas",
@@ -603,6 +613,7 @@ const _TRANSLATIONS = {
   ru: {
     my_tasks: "\u041c\u043e\u0438 \u0437\u0430\u0434\u0430\u0447\u0438",
     add_placeholder: "\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043d\u043e\u0432\u0443\u044e \u0437\u0430\u0434\u0430\u0447\u0443...",
+    dialog_cancel: "\u041e\u0442\u043c\u0435\u043d\u0430", dialog_add: "\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c",
     filter_all: "\u0412\u0441\u0435", filter_open: "\u041e\u0442\u043a\u0440\u044b\u0442\u044b\u0435", filter_done: "\u0412\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043d\u044b\u0435", filter_due_soon: "\u0421\u043a\u043e\u0440\u043e",
     ed_show_due_soon_filter: "\u0424\u0438\u043b\u044c\u0442\u0440 \u0441\u043a\u043e\u0440\u043e", ed_due_soon_days: "\u0414\u043d\u0435\u0439 \u0432\u043f\u0435\u0440\u0451\u0434", ed_hide_overdue: "\u0421\u043a\u0440\u044b\u0442\u044c \u043f\u0440\u043e\u0441\u0440\u043e\u0447\u0435\u043d\u043d\u044b\u0435",
     progress: "{0} \u0438\u0437 {1} \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043e",
@@ -669,6 +680,7 @@ const _TRANSLATIONS = {
   cs: {
     my_tasks: "Moje \u00fakoly",
     add_placeholder: "P\u0159idat nov\u00fd \u00fakol...",
+    dialog_cancel: "Zru\u0161it", dialog_add: "P\u0159idat",
     filter_all: "V\u0161e", filter_open: "Otev\u0159en\u00e9", filter_done: "Dokon\u010den\u00e9", filter_due_soon: "Brzy",
     ed_show_due_soon_filter: "Filtr brzy", ed_due_soon_days: "Dn\u016f dop\u0159edu", ed_hide_overdue: "Skr\u00fdt po term\u00ednu",
     progress: "{0} z {1} dokon\u010deno",
@@ -735,6 +747,7 @@ const _TRANSLATIONS = {
   da: {
     my_tasks: "Mine opgaver",
     add_placeholder: "Tilf\u00f8j ny opgave...",
+    dialog_cancel: "Annull\u00e9r", dialog_add: "Tilf\u00f8j",
     filter_all: "Alle", filter_open: "\u00c5bne", filter_done: "F\u00e6rdige", filter_due_soon: "Snart",
     ed_show_due_soon_filter: "Snart-filter", ed_due_soon_days: "Dage frem", ed_hide_overdue: "Skjul forfaldne",
     progress: "{0} af {1} f\u00e6rdige",
@@ -801,6 +814,7 @@ const _TRANSLATIONS = {
   no: {
     my_tasks: "Mine oppgaver",
     add_placeholder: "Legg til ny oppgave...",
+    dialog_cancel: "Avbryt", dialog_add: "Legg til",
     filter_all: "Alle", filter_open: "\u00c5pne", filter_done: "Ferdige", filter_due_soon: "Snart",
     ed_show_due_soon_filter: "Snart-filter", ed_due_soon_days: "Dager fremover", ed_hide_overdue: "Skjul forfalte",
     progress: "{0} av {1} ferdige",
@@ -867,6 +881,7 @@ const _TRANSLATIONS = {
   fi: {
     my_tasks: "Omat teht\u00e4v\u00e4t",
     add_placeholder: "Lis\u00e4\u00e4 uusi teht\u00e4v\u00e4...",
+    dialog_cancel: "Peruuta", dialog_add: "Lis\u00e4\u00e4",
     filter_all: "Kaikki", filter_open: "Avoimet", filter_done: "Valmiit", filter_due_soon: "Pian",
     ed_show_due_soon_filter: "Pian-suodatin", ed_due_soon_days: "P\u00e4ivi\u00e4 eteenp\u00e4in", ed_hide_overdue: "Piilota my\u00f6h\u00e4ss\u00e4 olevat",
     progress: "{0} / {1} valmis",
@@ -933,6 +948,7 @@ const _TRANSLATIONS = {
   hu: {
     my_tasks: "Feladataim",
     add_placeholder: "\u00daj feladat hozz\u00e1ad\u00e1sa...",
+    dialog_cancel: "M\u00e9gse", dialog_add: "Hozz\u00e1ad",
     filter_all: "\u00d6sszes", filter_open: "Nyitott", filter_done: "K\u00e9sz", filter_due_soon: "Hamarosan",
     ed_show_due_soon_filter: "Hamarosan sz\u0171r\u0151", ed_due_soon_days: "Napok el\u0151re", ed_hide_overdue: "Lej\u00e1rtak elrejt\u00e9se",
     progress: "{0} / {1} k\u00e9sz",
@@ -999,6 +1015,7 @@ const _TRANSLATIONS = {
   de: {
     my_tasks: "Meine Aufgaben",
     add_placeholder: "Neue Aufgabe hinzuf\u00fcgen...",
+    dialog_cancel: "Abbrechen", dialog_add: "Hinzuf\u00fcgen",
     filter_all: "Alle",
     filter_open: "Offen",
     filter_done: "Erledigt",
@@ -1102,6 +1119,8 @@ const _TRANSLATIONS = {
     history: "Verlauf", history_created: "Erstellt", history_completed: "Erledigt", history_reopened: "Wieder ge\u00f6ffnet",
     history_reset: "Automatisch zur\u00fcckgesetzt", history_changed: "ge\u00e4ndert", history_empty: "Noch kein Verlauf", hist_title: "Titel", history_disabled: "Deaktiviert",
     ed_show_history: "Verläufe", hist_by_user: "Benutzer",
+    ed_view_mode: "Ansichtsmodus", ed_view_mode_list: "Liste", ed_view_mode_tiles: "Kacheln",
+    ed_show_tile_title: "Titel in Kacheln",
     assigned_unknown: "Unbekannt (%s)", recurrence_readonly: "Verwaltet von %s", synced_with: "Synchronisiert mit %s",
     due_today: "Heute", due_tomorrow: "Morgen", due_yesterday: "Gestern",
     due_day_after_tomorrow: "\u00dcbermorgen", due_day_before_yesterday: "Vorgestern",
@@ -2462,17 +2481,20 @@ class HomeTasksCard extends HTMLElement {
       ? this._el("div", { className: "person-chips-row" }, [personChips, sortBtnWrapper])
       : personChips;
 
-    const taskList = this._buildColumnTaskList(filteredTasks, colIdx);
+    const isTiles = col.view_mode === "tiles";
+    const taskList = isTiles
+      ? this._buildColumnTileGrid(filteredTasks, colIdx)
+      : this._buildColumnTaskList(filteredTasks, colIdx);
 
     const children = [];
     if (header) children.push(header);
-    children.push(addTask);
-    if (filters) children.push(filters);
-    if (tagChipsEl) children.push(tagChipsEl);
-    if (personChipsEl) children.push(personChipsEl);
+    if (!isTiles) children.push(addTask);
+    if (!isTiles && filters) children.push(filters);
+    if (!isTiles && tagChipsEl) children.push(tagChipsEl);
+    if (!isTiles && personChipsEl) children.push(personChipsEl);
     children.push(taskList);
 
-    const className = "card-column" + (col.compact === true ? " compact" : "");
+    const className = "card-column" + (col.compact === true ? " compact" : "") + (isTiles ? " tiles-mode" : "");
     return this._el("div", { className }, children);
   }
 
@@ -2779,6 +2801,131 @@ class HomeTasksCard extends HTMLElement {
       this._finishDrag();
     });
     return taskList;
+  }
+
+  // ── Tile / Kachel view ─────────────────────────────────────────────────────
+
+  _buildColumnTileGrid(filteredTasks, colIdx) {
+    const col = this._config.columns[colIdx];
+    const showAdd = col.show_add_task !== false && !this._isExternalCol(colIdx);
+
+    // Open tasks first, completed after
+    const openTasks = filteredTasks.filter(t => !t.completed);
+    const doneTasks = filteredTasks.filter(t => t.completed);
+    const ordered = [...openTasks, ...doneTasks];
+
+    const tileEls = ordered.map(task => this._buildTaskTile(task, colIdx));
+    if (showAdd) tileEls.push(this._buildAddTaskTile(colIdx));
+
+    if (tileEls.length === 0) {
+      const empty = this._el("div", { className: "empty-state", textContent: this._t("empty") });
+      return this._el("div", { className: "tile-grid-wrap", "data-col-idx": String(colIdx) }, [empty]);
+    }
+
+    const grid = this._el("div", { className: "tile-grid-inner" }, tileEls);
+    return this._el("div", { className: "tile-grid-wrap", "data-col-idx": String(colIdx) }, [grid]);
+  }
+
+  _buildAddTaskTile(colIdx) {
+    const tile = this._el("div", { className: "task-tile add-tile", title: this._t("add_placeholder") });
+    tile.appendChild(this._el("div", { className: "add-tile-icon", textContent: "+" }));
+    tile.addEventListener("click", () => this._showTileAddDialog(colIdx));
+    return tile;
+  }
+
+  _showTileAddDialog(colIdx) {
+    const cs = this._columns[colIdx];
+    this.shadowRoot.querySelector(".tile-add-overlay")?.remove();
+
+    const close = () => overlay.remove();
+    const doAdd = async () => {
+      const title = input.value.trim();
+      if (!title) return;
+      close();
+      cs.newTaskTitle = title;
+      await this._addTask(colIdx);
+    };
+
+    const input = this._el("input", {
+      type: "text", className: "tile-dialog-input",
+      placeholder: this._t("add_placeholder"),
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") doAdd();
+      if (e.key === "Escape") close();
+    });
+
+    const cancelBtn = this._el("button", {
+      className: "tile-dialog-btn tile-dialog-cancel",
+      textContent: this._t("dialog_cancel"),
+    });
+    cancelBtn.addEventListener("click", close);
+
+    const confirmBtn = this._el("button", {
+      className: "tile-dialog-btn tile-dialog-confirm",
+      textContent: this._t("dialog_add"),
+    });
+    confirmBtn.addEventListener("click", doAdd);
+
+    const dialog = this._el("div", { className: "tile-dialog" }, [
+      input,
+      this._el("div", { className: "tile-dialog-actions" }, [cancelBtn, confirmBtn]),
+    ]);
+    dialog.addEventListener("click", (e) => e.stopPropagation());
+
+    const overlay = this._el("div", { className: "tile-add-overlay" }, [dialog]);
+    overlay.addEventListener("click", close);
+
+    this.shadowRoot.appendChild(overlay);
+    requestAnimationFrame(() => input.focus());
+  }
+
+  _buildTaskTile(task, colIdx) {
+    const col = this._config.columns[colIdx];
+    // Use image_url if available (populated once the image feature is enabled)
+    const thumbUrl = task.image_url || null;
+
+    const cls = [
+      "task-tile",
+      task.completed ? "completed" : "",
+      thumbUrl ? "has-image" : "",
+    ].filter(Boolean).join(" ");
+
+    const tile = this._el("div", { className: cls });
+
+    if (thumbUrl) {
+      const img = this._el("img", { className: "tile-bg", src: thumbUrl, alt: "" });
+      tile.appendChild(img);
+    } else {
+      // Placeholder: first letter on gradient background
+      const placeholder = this._el("div", {
+        className: "tile-placeholder",
+        textContent: (task.title || "?").charAt(0).toUpperCase(),
+      });
+      tile.appendChild(placeholder);
+    }
+
+    // Bottom overlay: title (optional) + done badge
+    const showTitle = col.show_tile_title !== false;
+    if (showTitle || task.completed) {
+      const overlay = this._el("div", { className: "tile-overlay" });
+      if (showTitle) {
+        const titleEl = this._el("div", { className: "tile-title", textContent: task.title || "" });
+        overlay.appendChild(titleEl);
+      }
+      if (task.completed) {
+        const badge = this._el("div", { className: "tile-done-badge", textContent: "✓" });
+        overlay.appendChild(badge);
+      }
+      tile.appendChild(overlay);
+    }
+
+    // Tap anywhere on the tile = toggle complete (no detail opening)
+    tile.addEventListener("click", () => {
+      this._toggleTask(task.id, task.completed, colIdx);
+    });
+
+    return tile;
   }
 
   _buildFilterBtn(label, value, colIdx) {
@@ -5730,6 +5877,111 @@ class HomeTasksCard extends HTMLElement {
       .compact .empty-state { padding: 16px; font-size: 13px; }
       .compact .task-details-inner { padding: 8px 10px; }
 
+      /* ── Tile / Kachel view ──────────────────────────────────── */
+      .tile-grid-wrap { display: flex; flex-direction: column; gap: 12px; padding: 4px 0; }
+      .tile-grid-inner {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+      }
+      .task-tile {
+        position: relative; border-radius: 14px; overflow: hidden;
+        aspect-ratio: 1 / 1; cursor: pointer;
+        background: var(--todo-surface);
+        border: 1px solid var(--todo-divider);
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+        user-select: none;
+      }
+      .task-tile:hover { transform: scale(1.04); box-shadow: 0 6px 18px rgba(0,0,0,0.15); }
+      .task-tile.selected { outline: 2.5px solid var(--todo-primary); outline-offset: 2px; }
+      .task-tile.completed { opacity: 0.50; }
+      .tile-bg {
+        width: 100%; height: 100%; object-fit: cover; display: block;
+        position: absolute; inset: 0;
+      }
+      .tile-placeholder {
+        width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+        font-size: 2.8rem; font-weight: 700; color: var(--todo-disabled);
+        background: linear-gradient(135deg, var(--todo-surface) 0%, var(--todo-divider) 100%);
+        position: absolute; inset: 0;
+      }
+      .tile-overlay {
+        position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
+        padding: 24px 9px 9px;
+        background: linear-gradient(transparent, rgba(0,0,0,0.68));
+        display: flex; align-items: flex-end; justify-content: space-between; gap: 4px;
+      }
+      .task-tile:not(.has-image) .tile-overlay {
+        background: linear-gradient(transparent, rgba(0,0,0,0.25));
+      }
+      .tile-title {
+        color: #fff; font-size: 12px; font-weight: 600; line-height: 1.3;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        flex: 1;
+      }
+      .task-tile:not(.has-image) .tile-title { color: var(--todo-text); text-shadow: none; }
+      .tile-done-badge {
+        color: #fff; font-weight: 700; flex-shrink: 0;
+        background: rgba(67,160,71,0.85); border-radius: 50%;
+        width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+        font-size: 11px;
+      }
+      .tiles-mode { padding: 12px; }
+
+      /* Add-task tile */
+      .add-tile {
+        border: 2px dashed var(--todo-divider);
+        background: transparent;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--secondary-text-color);
+        transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+      }
+      .add-tile:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        background: color-mix(in srgb, var(--primary-color) 8%, transparent);
+      }
+      .add-tile-icon { font-size: 2.2rem; font-weight: 300; line-height: 1; pointer-events: none; }
+
+      /* Add-task dialog overlay */
+      .tile-add-overlay {
+        position: fixed; inset: 0; z-index: 9999;
+        background: rgba(0,0,0,0.42);
+        display: flex; align-items: center; justify-content: center;
+      }
+      .tile-dialog {
+        background: var(--ha-card-background, var(--card-background-color, #1c1c1c));
+        border-radius: 28px; padding: 24px 24px 16px;
+        min-width: 280px; max-width: min(420px, 90vw);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+        display: flex; flex-direction: column; gap: 16px;
+      }
+      .tile-dialog-input {
+        width: 100%; box-sizing: border-box;
+        padding: 14px 0 10px;
+        border: none; border-bottom: 2px solid var(--divider-color, rgba(255,255,255,0.12));
+        background: transparent; color: var(--primary-text-color);
+        font-size: 16px; font-family: inherit; outline: none;
+      }
+      .tile-dialog-input:focus { border-bottom-color: var(--primary-color); }
+      .tile-dialog-input::placeholder { color: var(--secondary-text-color); }
+      .tile-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
+      .tile-dialog-btn {
+        padding: 10px 20px; border: none; border-radius: 20px;
+        font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer;
+      }
+      .tile-dialog-cancel { background: transparent; color: var(--primary-color); }
+      .tile-dialog-cancel:hover { background: color-mix(in srgb, var(--primary-color) 10%, transparent); }
+      .tile-dialog-confirm { background: var(--primary-color); color: var(--text-primary-color, #fff); }
+      .tile-dialog-confirm:hover { filter: brightness(1.08); }
+
+      /* Compact tile variant */
+      .compact .tile-grid-inner { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 7px; }
+      .compact .task-tile { border-radius: 10px; }
+      .compact .tile-title { font-size: 11px; }
+      .compact .add-tile-icon { font-size: 1.8rem; }
+
       @keyframes task-exit {
         0%   { opacity: 1; transform: translateY(0); }
         100% { opacity: 0; transform: translateY(-8px); }
@@ -6519,8 +6771,15 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-sort", "ed_show_sort", "show_sort", true),
           makeToggle("compact", "ed_compact", "compact", false),
           makeToggle("show-history", "ed_show_history", "show_history", false),
+          makeToggle("show-tile-title", "ed_show_tile_title", "show_tile_title", true),
         ]),
         sortField,
+        makeSelect(
+          "ed_view_mode",
+          [["list", "ed_view_mode_list"], ["tiles", "ed_view_mode_tiles"]],
+          col.view_mode || "list",
+          (val) => updateCol({ view_mode: val === "list" ? undefined : val })
+        ),
       ]),
       makeSection("filters", "mdi:filter-variant", "ed_sec_filters", [
         filterField,
