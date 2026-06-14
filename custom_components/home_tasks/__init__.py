@@ -1,6 +1,6 @@
 """The Home Tasks integration."""
 
-import calendar
+from calendar import monthrange
 import logging
 from datetime import date, datetime, timedelta, timezone
 
@@ -414,7 +414,7 @@ def _resolve_dom(year: int, month: int, dom) -> int:
 
     Accepts an int 1–31 (clamped to the month's last day) or the literal "last".
     """
-    last = calendar.monthrange(year, month)[1]
+    last = monthrange(year, month)[1]
     if dom == "last":
         return last
     return min(int(dom), last)
@@ -423,7 +423,7 @@ def _resolve_dom(year: int, month: int, dom) -> int:
 def _resolve_nth_weekday(year: int, month: int, nth, weekday: int) -> date | None:
     """Return the date of the nth (1–4) or last *weekday* in (year, month)."""
     matching_days = [
-        day for day in range(1, calendar.monthrange(year, month)[1] + 1)
+        day for day in range(1, monthrange(year, month)[1] + 1)
         if date(year, month, day).weekday() == weekday
     ]
     if not matching_days:
@@ -550,7 +550,7 @@ def _next_monthly_target(task: dict, local_completed: datetime, value: int) -> d
             year, month = _add_months(local_completed.year, local_completed.month, value)
             return local_completed.replace(
                 year=year, month=month,
-                day=min(local_completed.day, calendar.monthrange(year, month)[1]),
+                day=min(local_completed.day, monthrange(year, month)[1]),
             )
         # First candidate: same month if the resolved day is still ahead.
         candidate_year, candidate_month = local_completed.year, local_completed.month
@@ -569,7 +569,7 @@ def _next_monthly_target(task: dict, local_completed: datetime, value: int) -> d
             year, month = _add_months(local_completed.year, local_completed.month, value)
             return local_completed.replace(
                 year=year, month=month,
-                day=min(local_completed.day, calendar.monthrange(year, month)[1]),
+                day=min(local_completed.day, monthrange(year, month)[1]),
             )
         weekday = weekdays[0]
         # Try the same month first; if that hit is not strictly after completion,
@@ -584,7 +584,7 @@ def _next_monthly_target(task: dict, local_completed: datetime, value: int) -> d
 
     # No pattern → simple "every N months from completion" behaviour.
     year, month = _add_months(local_completed.year, local_completed.month, value)
-    day = min(local_completed.day, calendar.monthrange(year, month)[1])
+    day = min(local_completed.day, monthrange(year, month)[1])
     return local_completed.replace(year=year, month=month, day=day)
 
 
@@ -600,17 +600,17 @@ def _next_yearly_target(task: dict, local_completed: datetime, value: int) -> da
             month = local_completed.month
         # Try the current year's anniversary; if it's already past, jump *value* years.
         candidate_year = local_completed.year
-        day = min(anchor_day, calendar.monthrange(candidate_year, month)[1])
+        day = min(anchor_day, monthrange(candidate_year, month)[1])
         candidate = local_completed.replace(year=candidate_year, month=month, day=day)
         if candidate.date() <= local_completed.date():
             candidate_year += value
-            day = min(anchor_day, calendar.monthrange(candidate_year, month)[1])
+            day = min(anchor_day, monthrange(candidate_year, month)[1])
             candidate = local_completed.replace(year=candidate_year, month=month, day=day)
         return candidate
 
     # No anchor → "every N years from completion" with leap-year clamping.
     year = local_completed.year + value
-    day = min(local_completed.day, calendar.monthrange(year, local_completed.month)[1])
+    day = min(local_completed.day, monthrange(year, local_completed.month)[1])
     return local_completed.replace(year=year, day=day)
 
 
