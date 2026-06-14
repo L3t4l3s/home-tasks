@@ -1595,6 +1595,16 @@ class HomeTasksCard extends HTMLElement {
     // Snapshot existing task positions (they may shift when new task is inserted)
     const before = this._captureListFlip(colIdx);
 
+    // Auto-assign: if exactly one person is active in the person filter, assign
+    // the new task to that person automatically.
+    const col = this._config.columns[colIdx];
+    let autoAssignPerson = null;
+    if (cs.personFilters.size === 1) {
+      autoAssignPerson = [...cs.personFilters][0];
+    } else if (cs.personFilters.size === 0 && col.filters?.assignees?.length === 1) {
+      autoAssignPerson = col.filters.assignees[0];
+    }
+
     let result;
     if (this._isExternalCol(colIdx)) {
       // Optimistic: insert a placeholder task immediately so the user
@@ -1603,7 +1613,7 @@ class HomeTasksCard extends HTMLElement {
       cs.tasks.push({
         id: tempId, title, completed: false, notes: "", due_date: null,
         due_time: null, sort_order: cs.tasks.length, sub_items: [],
-        priority: null, tags: [], reminders: [], assigned_person: null,
+        priority: null, tags: [], reminders: [], assigned_person: autoAssignPerson,
         recurrence_enabled: false, _external: true,
       });
       cs.newTaskTitle = "";
@@ -1616,19 +1626,17 @@ class HomeTasksCard extends HTMLElement {
 
       // Send to API in background, then reload to get the real ID
       try {
-        result = await this._callWs("home_tasks/create_external_task", {
-          entity_id: this._colEntityId(colIdx),
-          title,
-        });
+        const payload = { entity_id: this._colEntityId(colIdx), title };
+        if (autoAssignPerson) payload.assigned_person = autoAssignPerson;
+        result = await this._callWs("home_tasks/create_external_task", payload);
       } catch (err) {
         console.warn("Failed to create external task:", err);
       }
       this._reloadExternal(colIdx);
     } else {
-      result = await this._callWs("home_tasks/add_task", {
-        list_id: this._colListId(colIdx),
-        title,
-      });
+      const payload = { list_id: this._colListId(colIdx), title };
+      if (autoAssignPerson) payload.assigned_person = autoAssignPerson;
+      result = await this._callWs("home_tasks/add_task", payload);
       if (result) {
         cs.newTaskTitle = "";
         this._justAddedTaskId = result.id ? String(result.id) : null;

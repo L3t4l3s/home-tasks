@@ -36,6 +36,25 @@ async def test_add_task_records_history(hass: HomeAssistant, store) -> None:
     assert any(h["action"] == "created" for h in task["history"])
 
 
+async def test_add_task_with_assigned_person(hass: HomeAssistant, store) -> None:
+    """assigned_person passed to async_add_task is stored on the task."""
+    task = await store.async_add_task("Buy milk", assigned_person="person.alice")
+    assert task["assigned_person"] == "person.alice"
+
+
+async def test_add_task_assigned_person_defaults_to_none(hass: HomeAssistant, store) -> None:
+    """Without assigned_person the field defaults to None."""
+    task = await store.async_add_task("Buy milk")
+    assert task["assigned_person"] is None
+
+
+async def test_add_task_invalid_assigned_person_rejected(hass: HomeAssistant, store) -> None:
+    """Non-string assigned_person values raise ValueError."""
+    import pytest
+    with pytest.raises(ValueError):
+        await store.async_add_task("Buy milk", assigned_person=123)  # type: ignore[arg-type]
+
+
 async def test_title_empty_rejected(hass: HomeAssistant, store) -> None:
     """Empty (or whitespace-only) titles raise ValueError."""
     with pytest.raises(ValueError, match="must not be empty"):

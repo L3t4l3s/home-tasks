@@ -147,6 +147,7 @@ async def ws_get_tasks(hass, connection, msg):
         vol.Required("type"): "home_tasks/add_task",
         vol.Required("list_id"): _val_id,
         vol.Required("title"): _val_title,
+        vol.Optional("assigned_person"): vol.Any(str, None),
     }
 )
 @websocket_api.async_response
@@ -155,7 +156,11 @@ async def ws_add_task(hass, connection, msg):
     try:
         store = _get_store(hass, msg["list_id"])
         actor = connection.user.name if connection.user else None
-        task = await store.async_add_task(msg["title"], actor=actor)
+        task = await store.async_add_task(
+            msg["title"],
+            actor=actor,
+            assigned_person=msg.get("assigned_person"),
+        )
         connection.send_result(msg["id"], task)
     except Exception as err:
         _handle_error(connection, msg["id"], err)
