@@ -3,7 +3,7 @@
   "name": "Home Tasks",
   "codeowners": ["@L3t4l3s"],
   "config_flow": true,
-  "dependencies": ["frontend", "http", "todo"],
+  "dependencies": ["ai_task", "frontend", "http", "todo"],
   "documentation": "https://github.com/L3t4l3s/home-tasks",
   "integration_type": "service",
   "iot_class": "local_push",

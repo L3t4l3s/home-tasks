@@ -33,3 +33,6 @@ VALID_NTH_WEEK = (1, 2, 3, 4, "last")
 # --- Reminders ---
 MAX_REMINDERS_PER_TASK = 5
 MAX_REMINDER_OFFSET_MINUTES = 43200  # 30 days
+
+# --- Images ---
+MAX_IMAGE_URL_LENGTH = 2048

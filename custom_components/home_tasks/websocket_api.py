@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DOMAIN, MAX_REORDER_IDS, MAX_RECURRENCE_VALUE, MAX_REMINDER_OFFSET_MINUTES, MAX_REMINDERS_PER_TASK, MAX_SUB_TASKS_PER_TASK, MAX_TAGS_PER_TASK, MAX_TITLE_LENGTH, VALID_RECURRENCE_UNITS
+from .const import DOMAIN, MAX_IMAGE_URL_LENGTH, MAX_REORDER_IDS, MAX_RECURRENCE_VALUE, MAX_REMINDER_OFFSET_MINUTES, MAX_REMINDERS_PER_TASK, MAX_SUB_TASKS_PER_TASK, MAX_TAGS_PER_TASK, MAX_TITLE_LENGTH, VALID_RECURRENCE_UNITS
 from .overlay_store import ExternalTaskOverlayStore, OVERLAY_FIELDS
 from .provider_adapters import ProviderAdapter, GenericAdapter, _get_external_todo_items
 
@@ -63,6 +63,8 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_update_section)
     websocket_api.async_register_command(hass, ws_delete_section)
     websocket_api.async_register_command(hass, ws_reorder_sections)
+    # Image generation
+    websocket_api.async_register_command(hass, ws_generate_task_image)
 
 
 def _get_store(hass, entry_id):
@@ -193,6 +195,7 @@ async def ws_add_task(hass, connection, msg):
         vol.Optional("assigned_person"): vol.Any(str, None),
         vol.Optional("tags"): vol.All(list, vol.Length(max=MAX_TAGS_PER_TASK)),
         vol.Optional("section_id"): vol.Any(_val_id, None),
+        vol.Optional("image_url"): vol.Any(str, None),
     }
 )
 @websocket_api.async_response
@@ -209,7 +212,7 @@ async def ws_update_task(hass, connection, msg):
             "recurrence_end_type", "recurrence_end_date", "recurrence_max_count",
             "recurrence_remaining_count", "recurrence_month_pattern",
             "recurrence_day_of_month", "recurrence_nth_week", "recurrence_anniversary",
-            "assigned_person", "tags", "section_id",
+            "assigned_person", "tags", "section_id", "image_url",
         ):
             if key in msg:
                 kwargs[key] = msg[key]
@@ -1360,5 +1363,200 @@ async def ws_reorder_sections(hass, connection, msg):
         store = _get_sections_store(hass, msg)
         await store.async_reorder_sections(msg["section_ids"])
         connection.send_result(msg["id"])
+    except Exception as err:
+        _handle_error(connection, msg["id"], err)
+
+
+# ---------------------------------------------------------------------------
+# Image generation
+# ---------------------------------------------------------------------------
+
+async def _save_image_to_public_media(hass, connection, image_url: str, filename: str) -> str:
+    """Download an auth-required HA image URL and save it to the public media dir.
+
+    Returns a /media/local/home_tasks/<filename> URL that is accessible
+    without authentication, so the Lovelace card can display it in <img src>.
+    Falls back to the original URL on any error.
+    """
+    import os
+    from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+    if not image_url:
+        return image_url
+
+    # Already public — nothing to do
+    if image_url.startswith(("/media/", "/local/", "http://", "https://")):
+        return image_url
+
+    try:
+        media_dir = hass.config.path("media", "home_tasks")
+        await hass.async_add_executor_job(os.makedirs, media_dir, 0o755, True)
+        dest = os.path.join(media_dir, filename)
+
+        # Build an access token for the current user so we can hit HA's own API
+        refresh_token = await hass.auth.async_get_refresh_token(connection.refresh_token_id)
+        if refresh_token is None:
+            _LOGGER.warning("No refresh token available; skipping image re-save")
+            return image_url
+        access_token = hass.auth.async_create_access_token(refresh_token)
+
+        # Determine HA's local HTTP URL (prefer http loopback; handle SSL too)
+        try:
+            port = hass.http.server_port
+            use_ssl = bool(getattr(hass.http, "ssl_certificate", None))
+        except AttributeError:
+            port = 8123
+            use_ssl = False
+
+        scheme = "https" if use_ssl else "http"
+        internal_url = f"{scheme}://127.0.0.1:{port}{image_url}"
+
+        session = async_get_clientsession(hass, verify_ssl=False)
+        async with session.get(
+            internal_url,
+            headers={"Authorization": f"Bearer {access_token.token}"},
+        ) as resp:
+            if resp.status != 200:
+                _LOGGER.warning(
+                    "Image download returned HTTP %s for %s — keeping original URL",
+                    resp.status, image_url,
+                )
+                return image_url
+            image_data = await resp.read()
+
+        def _write() -> None:
+            with open(dest, "wb") as fh:
+                fh.write(image_data)
+
+        await hass.async_add_executor_job(_write)
+        return f"/media/local/home_tasks/{filename}"
+
+    except Exception as exc:  # noqa: BLE001
+        _LOGGER.warning("Failed to save image to public media dir: %s", exc)
+        return image_url
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "home_tasks/generate_task_image",
+        vol.Required("entry_id"): _val_id,
+        vol.Required("task_id"): _val_id,
+        vol.Optional("prompt_prefix"): vol.All(str, vol.Length(max=200)),
+        vol.Optional("entity_id"): _val_entity_id,
+        vol.Optional("force"): bool,
+    }
+)
+@websocket_api.async_response
+async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
+    """Generate an AI image for a task via HA's ai_task integration.
+
+    Delegates to ai_task.generate_image — works with any configured AI
+    provider (OpenAI, Gemini, Anthropic, local models).  The generated image
+    lands in HA's Media Source; no API key handling or file I/O needed here.
+
+    Tasks with the same normalised title share a single image: before calling
+    the service the stores are checked for an existing URL.  After generation
+    the URL is propagated to every task with the same title across all lists.
+    """
+    import hashlib
+
+    try:
+        store = _get_store(hass, msg["entry_id"])
+        task = store.get_task(msg["task_id"])
+
+        title = task.get("title", "")
+        title_key = title.strip().lower()
+        title_hash = hashlib.md5(title_key.encode(), usedforsecurity=False).hexdigest()[:16]
+
+        all_stores = hass.data.get(DOMAIN, {})
+
+        # ------------------------------------------------------------------
+        # 1. Reuse: if any task with the same title already has an image URL,
+        #    skip the service call (bypass with force=True).
+        # ------------------------------------------------------------------
+        if not msg.get("force", False):
+            existing_url: str | None = None
+            for s in all_stores.values():
+                if not hasattr(s, "tasks"):
+                    continue
+                for t in s.tasks:
+                    if t.get("title", "").strip().lower() == title_key and t.get("image_url"):
+                        existing_url = t["image_url"]
+                        break
+                if existing_url:
+                    break
+
+            if existing_url:
+                updated_task = await store.async_update_task(msg["task_id"], image_url=existing_url)
+                connection.send_result(msg["id"], {"task": updated_task})
+                return
+
+        # ------------------------------------------------------------------
+        # 2. Generate via ai_task.generate_image (provider-agnostic).
+        # ------------------------------------------------------------------
+        prompt_prefix = msg.get("prompt_prefix", "")
+        prompt = f"{prompt_prefix}{title}" if prompt_prefix else title
+
+        entity_id = msg.get("entity_id")
+        if not entity_id:
+            from homeassistant.helpers import entity_registry as er
+            ent_reg = er.async_get(hass)
+            ai_entities = [
+                e.entity_id for e in ent_reg.entities.values()
+                if e.domain == "ai_task" and not e.disabled_by
+            ]
+            if not ai_entities:
+                raise ValueError("No ai_task entity found — configure one in the card editor")
+            entity_id = ai_entities[0]
+
+        try:
+            service_result = await hass.services.async_call(
+                "ai_task",
+                "generate_image",
+                {
+                    "task_name": f"home_tasks_{title_hash}",
+                    "instructions": prompt,
+                    "entity_id": entity_id,
+                },
+                blocking=True,
+                return_response=True,
+            )
+        except Exception as service_err:
+            raise ValueError(f"Image generation failed: {service_err}") from service_err
+
+        _LOGGER.debug("ai_task.generate_image result: %s", service_result)
+        result_dict = service_result or {}
+        image_url = (
+            result_dict.get("url")
+            or result_dict.get("media_source_id")
+            or (result_dict.get("image") or {}).get("url")
+        )
+        if not image_url:
+            raise ValueError(
+                f"ai_task.generate_image returned no image URL. Full result: {result_dict}"
+            )
+
+        # Convert auth-required internal URLs to public /media/local/ URLs so
+        # the Lovelace card can display them without auth headers.
+        image_filename = f"{title_hash}.png"
+        image_url = await _save_image_to_public_media(hass, connection, image_url, image_filename)
+
+        # ------------------------------------------------------------------
+        # 3. Propagate URL to every task with the same title across all lists.
+        # ------------------------------------------------------------------
+        updated_task = None
+        for s in all_stores.values():
+            if not hasattr(s, "tasks"):
+                continue
+            for t in s.tasks:
+                if t.get("title", "").strip().lower() == title_key and t.get("image_url") != image_url:
+                    stamped = await s.async_update_task(t["id"], image_url=image_url)
+                    if t["id"] == msg["task_id"]:
+                        updated_task = stamped
+
+        if updated_task is None:
+            updated_task = await store.async_update_task(msg["task_id"], image_url=image_url)
+
+        connection.send_result(msg["id"], {"task": updated_task})
+
     except Exception as err:
         _handle_error(connection, msg["id"], err)

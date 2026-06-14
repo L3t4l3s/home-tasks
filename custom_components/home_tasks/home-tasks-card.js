@@ -116,6 +116,7 @@ const _TRANSLATIONS = {
     history: "History", history_created: "Created", history_completed: "Completed", history_reopened: "Reopened",
     history_reset: "Auto-reset (recurrence)", history_changed: "changed", history_empty: "No history yet", hist_title: "Title", history_disabled: "Disabled",
     ed_show_history: "Histories", hist_by_user: "User",
+    ed_show_images: "Images",
     ed_view_mode: "View mode", ed_view_mode_list: "List", ed_view_mode_tiles: "Tiles",
     ed_show_tile_title: "Title in tiles",
     assigned_unknown: "Unknown (%s)", recurrence_readonly: "Managed by %s", synced_with: "Synced with %s",
@@ -140,6 +141,11 @@ const _TRANSLATIONS = {
     ed_preset_assignees: "Limit to assignees",
     ed_preset_labels: "Limit to tags",
     ed_ms_add: "Add…",
+    ed_ai_image_section: "AI Image Generation",
+    ed_ai_image_entity: "AI entity for image generation",
+    ed_ai_image_entity_placeholder: "e.g. ai_task.openai",
+    ed_ai_prompt_prefix: "Prompt prefix (optional)",
+    ed_ai_prompt_prefix_placeholder: "e.g. Minimalist icon of",
   },
   nl: {
     my_tasks: "Mijn taken",
@@ -1119,6 +1125,7 @@ const _TRANSLATIONS = {
     history: "Verlauf", history_created: "Erstellt", history_completed: "Erledigt", history_reopened: "Wieder ge\u00f6ffnet",
     history_reset: "Automatisch zur\u00fcckgesetzt", history_changed: "ge\u00e4ndert", history_empty: "Noch kein Verlauf", hist_title: "Titel", history_disabled: "Deaktiviert",
     ed_show_history: "Verläufe", hist_by_user: "Benutzer",
+    ed_show_images: "Bilder",
     ed_view_mode: "Ansichtsmodus", ed_view_mode_list: "Liste", ed_view_mode_tiles: "Kacheln",
     ed_show_tile_title: "Titel in Kacheln",
     assigned_unknown: "Unbekannt (%s)", recurrence_readonly: "Verwaltet von %s", synced_with: "Synchronisiert mit %s",
@@ -1143,6 +1150,11 @@ const _TRANSLATIONS = {
     ed_preset_assignees: "Auf Personen begrenzen",
     ed_preset_labels: "Auf Tags begrenzen",
     ed_ms_add: "Hinzufügen…",
+    ed_ai_image_section: "KI-Bildgenerierung",
+    ed_ai_image_entity: "KI-Entität für Bildgenerierung",
+    ed_ai_image_entity_placeholder: "z.B. ai_task.openai",
+    ed_ai_prompt_prefix: "Prompt-Präfix (optional)",
+    ed_ai_prompt_prefix_placeholder: "z.B. Minimalistisches Icon von",
   },
 };
 
@@ -1202,6 +1214,7 @@ class HomeTasksCard extends HTMLElement {
     // takes over) or they pick "Ab Erledigung" (which clears the override).
     this._weekPatternOverride = new Map();   // task.id → "on"
     this._yearPatternOverride = new Map();   // task.id → "on"
+    this._generatingImage = new Set();       // task IDs currently generating
   }
 
   _defaultColState() {
@@ -1270,7 +1283,7 @@ class HomeTasksCard extends HTMLElement {
       const taskStillExists = this._columns.some(cs => cs.tasks?.some(t => t.id === this._editingTaskId));
       if (!taskStillExists) this._editingTaskId = null;
     }
-    // _expandedTasks is a Set of task IDs — clean up IDs no longer in any column
+    // Clean up expanded task IDs no longer in any column
     const allTaskIds = new Set(this._columns.flatMap(cs => (cs.tasks || []).map(t => t.id)));
     for (const id of this._expandedTasks) {
       if (!allTaskIds.has(id)) this._expandedTasks.delete(id);
@@ -2882,8 +2895,8 @@ class HomeTasksCard extends HTMLElement {
 
   _buildTaskTile(task, colIdx) {
     const col = this._config.columns[colIdx];
-    // Use image_url if available (populated once the image feature is enabled)
-    const thumbUrl = task.image_url || null;
+    const showImages = col.show_images === true;
+    const thumbUrl = showImages ? (this._thumbUrl(task.image_url) || task.image_url) : null;
 
     const cls = [
       "task-tile",
@@ -2893,6 +2906,7 @@ class HomeTasksCard extends HTMLElement {
 
     const tile = this._el("div", { className: cls });
 
+    // Background image (only when show_images is enabled)
     if (thumbUrl) {
       const img = this._el("img", { className: "tile-bg", src: thumbUrl, alt: "" });
       tile.appendChild(img);
@@ -2920,12 +2934,71 @@ class HomeTasksCard extends HTMLElement {
       tile.appendChild(overlay);
     }
 
-    // Tap anywhere on the tile = toggle complete (no detail opening)
+    // Short tap = toggle complete; long press (500 ms) = open detail sheet
+    let _lpTimer = null;
+    let _lpFired = false;
+    let _lpStartX = 0;
+    let _lpStartY = 0;
+
+    tile.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return;
+      _lpFired = false;
+      _lpStartX = e.clientX;
+      _lpStartY = e.clientY;
+      _lpTimer = setTimeout(() => {
+        _lpFired = true;
+        tile.releasePointerCapture(e.pointerId);
+        this._openTaskDetailSheet(task, colIdx);
+      }, 500);
+    });
+
+    const _lpCancel = () => { clearTimeout(_lpTimer); _lpTimer = null; };
+    tile.addEventListener("pointermove", (e) => {
+      if (_lpTimer && (Math.abs(e.clientX - _lpStartX) > 8 || Math.abs(e.clientY - _lpStartY) > 8)) _lpCancel();
+    });
+    tile.addEventListener("pointerup", _lpCancel);
+    tile.addEventListener("pointercancel", _lpCancel);
+
     tile.addEventListener("click", () => {
+      if (_lpFired) { _lpFired = false; return; }
       this._toggleTask(task.id, task.completed, colIdx);
     });
 
     return tile;
+  }
+
+  _openTaskDetailSheet(task, colIdx) {
+    this.shadowRoot.querySelector(".task-detail-sheet")?.remove();
+    this.shadowRoot.querySelector(".task-detail-backdrop")?.remove();
+
+    const backdrop = this._el("div", { className: "task-detail-backdrop" });
+    const sheet = this._el("div", { className: "task-detail-sheet" });
+
+    const close = () => {
+      sheet.classList.remove("open");
+      sheet.addEventListener("transitionend", () => { sheet.remove(); backdrop.remove(); }, { once: true });
+      setTimeout(() => { sheet.remove(); backdrop.remove(); }, 350);
+    };
+
+    backdrop.addEventListener("click", close);
+
+    const handle = this._el("div", { className: "sheet-handle" });
+    const titleEl = this._el("span", { className: "sheet-title", textContent: task.title });
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "sheet-close";
+    const closeIco = document.createElement("ha-icon");
+    closeIco.setAttribute("icon", "mdi:close");
+    closeIco.style.cssText = "--mdc-icon-size:20px;";
+    closeBtn.appendChild(closeIco);
+    closeBtn.addEventListener("click", close);
+    const header = this._el("div", { className: "sheet-header" }, [titleEl, closeBtn]);
+
+    const body = this._el("div", { className: "sheet-body" });
+    body.appendChild(this._buildTaskDetails(task, colIdx));
+
+    sheet.append(handle, header, body);
+    this.shadowRoot.append(backdrop, sheet);
+    requestAnimationFrame(() => requestAnimationFrame(() => sheet.classList.add("open")));
   }
 
   _buildFilterBtn(label, value, colIdx) {
@@ -3203,7 +3276,7 @@ class HomeTasksCard extends HTMLElement {
     const taskEl = this._el("div", { className, draggable: !isEditing && !isExpanded });
     taskEl.dataset.taskId = task.id;
 
-    // --- main row: checkbox + content + expand button ---
+    // --- main row: checkbox + content + [thumb] + expand button ---
     const checkboxEl = this._buildTaskCheckbox(task, colIdx);
     const contentChildren = this._buildTaskContentChildren(task, colIdx, isEditing);
     const metaBadges = this._buildTaskMetaBadges(task, col, cs, colIdx);
@@ -3213,7 +3286,26 @@ class HomeTasksCard extends HTMLElement {
     const contentEl = this._el("div", { className: "task-content" }, contentChildren);
     const expandBtn = this._buildTaskExpandButton(isExpanded);
 
-    const mainRow = this._el("div", { className: "task-main" }, [checkboxEl, contentEl, expandBtn]);
+    const mainRowChildren = [checkboxEl, contentEl];
+    if (task.image_url && !isEditing && col.show_images === true) {
+      const thumb = this._el("img", {
+        className: "task-thumb",
+        src: this._thumbUrl(task.image_url) || task.image_url,
+        alt: "",
+        title: task.title,
+      });
+      // Click on thumbnail expands the task to show full image
+      thumb.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (isExpanded) this._expandedTasks.delete(task.id);
+        else this._expandedTasks.add(task.id);
+        this._render();
+      });
+      mainRowChildren.push(thumb);
+    }
+    mainRowChildren.push(expandBtn);
+
+    const mainRow = this._el("div", { className: "task-main" }, mainRowChildren);
     this._attachTaskExpandClickHandler(mainRow, task, taskEl);
     taskEl.appendChild(mainRow);
 
@@ -3272,6 +3364,13 @@ class HomeTasksCard extends HTMLElement {
       children.push(titleSpan);
     }
     return children;
+  }
+
+  // Returns the thumbnail URL for a task image (300×300 JPEG).
+  // Falls back to the full image URL if no thumbnail exists yet.
+  _thumbUrl(imageUrl) {
+    if (!imageUrl) return null;
+    return imageUrl.replace(/\/task_([a-f0-9]+)\.png(\?.*)?$/, '/task_$1_thumb.jpg');
   }
 
   _buildTaskExpandButton(isExpanded) {
@@ -3577,6 +3676,7 @@ class HomeTasksCard extends HTMLElement {
     if (col.show_reminders !== false) details.push(this._buildRemindersSection(task, colIdx));
     if (col.show_recurrence !== false) details.push(this._buildRecurrenceSection(task, colIdx));
     if (col.show_history) details.push(this._buildHistorySection(task));
+    if (!this._isExternalCol(colIdx) && col.show_images === true) details.push(this._buildImageSection(task, colIdx));
     details.push(this._buildActionsSection(task, colIdx));
 
     const inner = this._el("div", { className: "task-details-inner" }, details);
@@ -4883,6 +4983,264 @@ class HomeTasksCard extends HTMLElement {
     return this._el("div", { className: "detail-actions" }, [deleteBtn]);
   }
 
+  _buildImageSection(task, colIdx) {
+    const col = this._config.columns[colIdx];
+    const isGenerating = this._generatingImage.has(task.id);
+
+    const children = [];
+
+    // --- Show existing image ---
+    if (task.image_url) {
+      const imgWrap = this._el("div", { className: "task-image-wrap" });
+
+      const img = this._el("img", { className: "task-image", src: task.image_url, alt: task.title });
+      imgWrap.appendChild(img);
+
+      // Remove image button (×)
+      const removeBtn = this._el("button", { className: "task-image-remove", title: "Bild entfernen" });
+      removeBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>`;
+      removeBtn.addEventListener("click", async () => {
+        try {
+          await this._hass.callWS({
+            type: "home_tasks/update_task",
+            list_id: col.list_id,
+            task_id: task.id,
+            image_url: null,
+          });
+          const cs = this._columns[colIdx];
+          if (cs && cs.tasks) {
+            const idx = cs.tasks.findIndex(t => t.id === task.id);
+            if (idx >= 0) cs.tasks[idx] = { ...cs.tasks[idx], image_url: null };
+          }
+        } catch (err) {
+          console.error("Failed to remove image:", err);
+          alert("Bild entfernen fehlgeschlagen: " + (err.message || err));
+        }
+        this._render();
+      });
+      imgWrap.appendChild(removeBtn);
+      children.push(imgWrap);
+    }
+
+    // --- Action buttons row ---
+    const busy = isGenerating;
+
+    // Generate button
+    const genBtn = this._el("button", {
+      className: "generate-image-btn" + (busy ? " generating" : ""),
+      disabled: busy,
+    });
+    if (isGenerating) {
+      genBtn.innerHTML = `<span class="spinner"></span> Generiere…`;
+    } else {
+      genBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right:6px;vertical-align:-3px"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-1 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>${task.image_url ? "Neu generieren" : "✨ Generieren"}`;
+    }
+    genBtn.addEventListener("click", () => this._generateTaskImage(task, colIdx, !!task.image_url));
+    children.push(genBtn);
+
+    // "Aus Mediathek" button — opens HA's native media browser dialog
+    const selectBtn = this._el("button", {
+      className: "generate-image-btn",
+      disabled: busy,
+    });
+    selectBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right:6px;vertical-align:-3px"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg>Aus Mediathek`;
+    selectBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this._openMediaPicker(task, colIdx);
+    });
+    children.push(selectBtn);
+
+    return this._el("div", { className: "detail-section detail-section--image" }, [
+      this._el("label", { className: "detail-label", textContent: "Bild" }),
+      this._el("div", { className: "image-section-body" }, children),
+    ]);
+  }
+
+  async _openMediaPicker(task, colIdx) {
+    const navStack = []; // { id, title }
+
+    const dialog = document.createElement("dialog");
+    dialog.className = "mb-dialog";
+
+    const header = this._el("div", { className: "mb-header" }, [
+      this._el("span", { className: "mb-title", textContent: "Mediathek" }),
+    ]);
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "mb-close";
+    const closeIco = document.createElement("ha-icon");
+    closeIco.setAttribute("icon", "mdi:close");
+    closeIco.style.cssText = "--mdc-icon-size:20px;";
+    closeBtn.appendChild(closeIco);
+    closeBtn.addEventListener("click", () => { dialog.close(); dialog.remove(); });
+    header.appendChild(closeBtn);
+
+    const list = this._el("div", { className: "mb-list" });
+
+    const load = async (id) => {
+      list.innerHTML = `<div class="mb-status">Lädt…</div>`;
+      try {
+        const data = await this._hass.callWS({
+          type: "media_source/browse_media",
+          media_content_id: id,
+        });
+        list.innerHTML = "";
+
+        if (navStack.length > 0) {
+          const prev = navStack[navStack.length - 1];
+          const backBtn = document.createElement("button");
+          backBtn.className = "mb-item mb-back";
+          const backIco = document.createElement("ha-icon");
+          backIco.setAttribute("icon", "mdi:arrow-left");
+          backIco.style.cssText = "--mdc-icon-size:20px;flex-shrink:0;";
+          backBtn.append(backIco, prev.title);
+          backBtn.addEventListener("click", () => { navStack.pop(); load(prev.id); });
+          list.appendChild(backBtn);
+        }
+
+        const crumb = this._el("div", { className: "mb-crumb", textContent: data.title || "Medien" });
+        list.appendChild(crumb);
+
+        const children = data.children || [];
+        const folders = children.filter(i => i.can_expand);
+        const files = children.filter(i => !i.can_expand);
+
+        const pickFile = async (item) => {
+          try {
+            const resolved = await this._hass.callWS({
+              type: "media_source/resolve_media",
+              media_content_id: item.media_content_id,
+            });
+            await this._saveImageUrl(task, colIdx, resolved.url || item.thumbnail);
+          } catch {
+            if (item.thumbnail) await this._saveImageUrl(task, colIdx, item.thumbnail);
+          }
+          dialog.close();
+          dialog.remove();
+        };
+
+        for (const item of folders) {
+          const row = document.createElement("button");
+          row.className = "mb-item mb-folder";
+          const ico = document.createElement("ha-icon");
+          const iconMap = { directory: "mdi:folder", image: "mdi:folder-image", music: "mdi:folder-music", video: "mdi:folder-play" };
+          ico.setAttribute("icon", iconMap[item.media_class] || "mdi:folder");
+          ico.style.cssText = "--mdc-icon-size:24px;flex-shrink:0;color:var(--secondary-text-color);";
+          row.appendChild(ico);
+          row.appendChild(this._el("span", { className: "mb-item-title", textContent: item.title }));
+          const chev = document.createElement("ha-icon");
+          chev.setAttribute("icon", "mdi:chevron-right");
+          chev.style.cssText = "--mdc-icon-size:18px;flex-shrink:0;color:var(--secondary-text-color);";
+          row.appendChild(chev);
+          row.addEventListener("click", () => { navStack.push({ id, title: data.title || "Zurück" }); load(item.media_content_id); });
+          list.appendChild(row);
+        }
+
+        if (files.length > 0) {
+          const grid = this._el("div", { className: "mb-grid" });
+          for (const item of files) {
+            const cell = document.createElement("button");
+            cell.className = "mb-grid-item";
+            if (item.thumbnail) {
+              const img = this._el("img", { className: "mb-grid-thumb", alt: item.title });
+              this._fetchAuthThumb(item.thumbnail).then(src => { img.src = src; });
+              cell.appendChild(img);
+            } else {
+              const ico = document.createElement("ha-icon");
+              ico.setAttribute("icon", "mdi:image");
+              ico.style.cssText = "--mdc-icon-size:40px;color:var(--secondary-text-color);";
+              cell.appendChild(ico);
+            }
+            cell.appendChild(this._el("span", { className: "mb-grid-title", textContent: item.title }));
+            cell.addEventListener("click", () => pickFile(item));
+            grid.appendChild(cell);
+          }
+          list.appendChild(grid);
+        }
+
+        if (!data.children?.length) {
+          list.appendChild(this._el("div", { className: "mb-status", textContent: "Keine Dateien" }));
+        }
+      } catch (e) {
+        list.innerHTML = `<div class="mb-status mb-error">Fehler: ${e.message || e}</div>`;
+      }
+    };
+
+    dialog.append(header, list);
+    dialog.addEventListener("close", () => dialog.remove());
+    this.shadowRoot.appendChild(dialog);
+    dialog.showModal();
+    await load("media-source://media_source");
+  }
+
+  async _generateTaskImage(task, colIdx, force = false) {
+    const col = this._config.columns[colIdx];
+    const imgCfg = this._config.image_generation || {};
+
+    this._generatingImage.add(task.id);
+    this._render();
+
+    const payload = {
+      type: "home_tasks/generate_task_image",
+      entry_id: col.list_id,
+      task_id: task.id,
+      force: force,
+    };
+    if (imgCfg.prompt_prefix) payload.prompt_prefix = imgCfg.prompt_prefix;
+    if (imgCfg.entity_id) payload.entity_id = imgCfg.entity_id;
+
+    try {
+      const result = await this._hass.callWS(payload);
+      // Update local task state immediately so image shows without full reload
+      const cs = this._columns[colIdx];
+      if (cs && cs.tasks) {
+        const idx = cs.tasks.findIndex(t => t.id === task.id);
+        if (idx >= 0) cs.tasks[idx] = result.task;
+      }
+    } catch (err) {
+      console.error("Image generation failed:", err);
+      alert("Bildgenerierung fehlgeschlagen: " + (err.message || err));
+    } finally {
+      this._generatingImage.delete(task.id);
+      this._render();
+    }
+  }
+
+  async _fetchAuthThumb(url) {
+    if (!url || !url.startsWith("/")) return url;
+    this._thumbCache = this._thumbCache || new Map();
+    if (this._thumbCache.has(url)) return this._thumbCache.get(url);
+    try {
+      const token = this._hass.auth?.data?.access_token;
+      if (!token) return url;
+      const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (!resp.ok) return url;
+      const blobUrl = URL.createObjectURL(await resp.blob());
+      this._thumbCache.set(url, blobUrl);
+      return blobUrl;
+    } catch { return url; }
+  }
+
+  async _saveImageUrl(task, colIdx, url) {
+    const col = this._config.columns[colIdx];
+    try {
+      const result = await this._hass.callWS({
+        type: "home_tasks/update_task",
+        list_id: col.list_id,
+        task_id: task.id,
+        image_url: url,
+      });
+      const cs = this._columns[colIdx];
+      if (cs && cs.tasks) {
+        const idx = cs.tasks.findIndex(t => t.id === task.id);
+        if (idx >= 0) cs.tasks[idx] = result;
+      }
+      this._render();
+    } catch (err) {
+      console.error("Failed to save image URL:", err);
+      alert("Bild speichern fehlgeschlagen: " + (err.message || err));
+    }
+  }
+
   _buildHistorySection(task) {
     const taskHistory = (task.history || []).slice().reverse();
     const histContent = this._el("div", { className: "history-list" });
@@ -5346,6 +5704,13 @@ class HomeTasksCard extends HTMLElement {
       // they want to focus / select / scroll the field, not drag the task.
       if (this._isInteractiveTarget(e.target)) return;
       const touch = e.touches[0];
+      let lpStartX = touch.clientX, lpStartY = touch.clientY;
+      this._touchLpTimer = setTimeout(() => {
+        this._touchLpTimer = null;
+        if (this._touchStartTimer) { clearTimeout(this._touchStartTimer); this._touchStartTimer = null; }
+        if (this._draggedTaskId) { this._finishDrag(); }
+        this._openTaskDetailSheet(task, colIdx);
+      }, 500);
       this._touchStartTimer = setTimeout(() => {
         this._draggedTaskId = taskId;
         this._draggedColIdx = colIdx;
@@ -5373,6 +5738,15 @@ class HomeTasksCard extends HTMLElement {
         this._touchClone = clone;
         this._touchOffsetY = touch.clientY - rect.top;
       }, 150);
+      // Cancel long-press on significant movement
+      const _cancelLp = (ev) => {
+        const t = ev.touches[0];
+        if (Math.abs(t.clientX - lpStartX) > 8 || Math.abs(t.clientY - lpStartY) > 8) {
+          if (this._touchLpTimer) { clearTimeout(this._touchLpTimer); this._touchLpTimer = null; }
+          taskEl.removeEventListener("touchmove", _cancelLp);
+        }
+      };
+      taskEl.addEventListener("touchmove", _cancelLp, { passive: true });
     }, { passive: true });
 
     const onTouchMove = (e) => {
@@ -5409,6 +5783,7 @@ class HomeTasksCard extends HTMLElement {
     };
 
     const onTouchEnd = () => {
+      if (this._touchLpTimer) { clearTimeout(this._touchLpTimer); this._touchLpTimer = null; }
       if (this._touchStartTimer) {
         clearTimeout(this._touchStartTimer);
         this._touchStartTimer = null;
@@ -5838,6 +6213,53 @@ class HomeTasksCard extends HTMLElement {
         padding: 6px 14px; border-radius: 4px; font-size: 12px; cursor: pointer; font-family: inherit;
       }
       .delete-task-btn:hover { background: rgba(244, 67, 54, 0.15); }
+
+      /* --- Task image --- */
+      .task-thumb {
+        width: 40px; height: 40px; border-radius: 6px; object-fit: cover;
+        flex-shrink: 0; opacity: 0.88; transition: opacity 0.2s, transform 0.15s;
+        cursor: pointer; border: 1px solid var(--todo-divider);
+      }
+      .task-thumb:hover { opacity: 1; transform: scale(1.05); }
+      .task.completed .task-thumb { opacity: 0.45; }
+      .detail-section--image .image-section-body { display: flex; flex-direction: column; gap: 10px; }
+      .image-section-body { gap: 6px; }
+      .image-section-body .generate-image-btn { flex: 1; }
+      .task-image-wrap {
+        position: relative; display: inline-block; width: 100%;
+        border-radius: 8px; overflow: hidden;
+        max-height: 300px;
+      }
+      .task-image {
+        width: 100%; max-height: 300px; object-fit: cover;
+        border-radius: 8px; display: block;
+      }
+      .task-image-remove {
+        position: absolute; top: 6px; right: 6px; width: 24px; height: 24px;
+        border-radius: 50%; background: rgba(0,0,0,0.55); color: #fff;
+        border: none; font-size: 16px; line-height: 1; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: background 0.15s;
+      }
+      .task-image-remove:hover { background: rgba(0,0,0,0.8); }
+      .generate-image-btn {
+        display: inline-flex; align-items: center; padding: 7px 14px;
+        border: 1px solid var(--todo-primary); background: transparent;
+        color: var(--todo-primary); border-radius: var(--todo-radius);
+        font-size: 13px; cursor: pointer; font-family: inherit;
+        transition: background 0.15s, opacity 0.15s;
+      }
+      .generate-image-btn:hover:not(:disabled) { background: rgba(var(--rgb-primary-color, 33,150,243), 0.1); }
+      .generate-image-btn:disabled { opacity: 0.6; cursor: default; }
+      .generate-image-btn.generating { border-style: dashed; }
+      .spinner {
+        display: inline-block; width: 14px; height: 14px;
+        border: 2px solid currentColor; border-top-color: transparent;
+        border-radius: 50%; animation: spin 0.7s linear infinite;
+        margin-right: 6px; flex-shrink: 0;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
       .toast-error {
         position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
         background: var(--todo-error, #db4437); color: #fff; padding: 10px 20px;
@@ -5868,6 +6290,7 @@ class HomeTasksCard extends HTMLElement {
       .compact .task-main { padding: 6px 8px; gap: 6px; min-height: 32px; }
       .compact .task-title { font-size: 13px; }
       .compact .task-meta { gap: 4px; }
+      .compact .task-thumb { width: 30px; height: 30px; border-radius: 4px; }
       .compact .sub-badge, .compact .due-date, .compact .priority-badge, .compact .recurrence-badge,
       .compact .assigned-badge, .compact .tag-badge, .compact .reminder-badge { font-size: 10px; padding: 1px 6px; }
       .compact .checkmark { height: 16px; width: 16px; }
@@ -5914,6 +6337,43 @@ class HomeTasksCard extends HTMLElement {
       .task-tile:not(.has-image) .tile-overlay {
         background: linear-gradient(transparent, rgba(0,0,0,0.25));
       }
+
+      /* Task detail bottom sheet (tile long-press) */
+      .task-detail-backdrop {
+        position: fixed; inset: 0; z-index: 998;
+        background: rgba(0,0,0,0.32);
+      }
+      .task-detail-sheet {
+        position: fixed; bottom: 0; left: 0; right: 0; z-index: 999;
+        background: var(--ha-card-background, var(--card-background-color, #1c1c1c));
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 -4px 24px rgba(0,0,0,0.28);
+        transform: translateY(100%);
+        transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+        max-height: 85vh;
+        display: flex; flex-direction: column;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+      }
+      .task-detail-sheet.open { transform: translateY(0); }
+      .sheet-handle {
+        width: 40px; height: 4px; border-radius: 2px;
+        background: var(--divider-color, rgba(255,255,255,0.2));
+        margin: 10px auto 4px; flex-shrink: 0;
+      }
+      .sheet-header {
+        display: flex; align-items: center; gap: 8px;
+        padding: 8px 8px 12px 20px; flex-shrink: 0;
+        border-bottom: 1px solid var(--divider-color, rgba(255,255,255,0.08));
+      }
+      .sheet-title { flex: 1; font-size: 16px; font-weight: 500; color: var(--primary-text-color); }
+      .sheet-close {
+        background: none; border: none; cursor: pointer; border-radius: 50%;
+        color: var(--secondary-text-color); padding: 8px; display: flex; align-items: center;
+      }
+      .sheet-close:hover { background: var(--secondary-background-color); }
+      .sheet-body { overflow-y: auto; flex: 1; padding: 12px 0 8px; }
+      .sheet-body .task-details { height: auto; border-top: none; }
+      .sheet-body .task-details-inner { padding: 0 16px 16px; }
       .tile-title {
         color: #fff; font-size: 12px; font-weight: 600; line-height: 1.3;
         text-shadow: 0 1px 4px rgba(0,0,0,0.5);
@@ -5975,6 +6435,68 @@ class HomeTasksCard extends HTMLElement {
       .tile-dialog-cancel:hover { background: color-mix(in srgb, var(--primary-color) 10%, transparent); }
       .tile-dialog-confirm { background: var(--primary-color); color: var(--text-primary-color, #fff); }
       .tile-dialog-confirm:hover { filter: brightness(1.08); }
+
+      /* Media browser dialog */
+      dialog.mb-dialog {
+        padding: 0; border: none; border-radius: 12px;
+        width: min(480px, 95vw); max-height: 70vh;
+        background: var(--ha-card-background, var(--card-background-color, #fff));
+        color: var(--primary-text-color);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.32);
+        overflow: hidden;
+      }
+      dialog.mb-dialog::backdrop { background: rgba(0,0,0,0.5); }
+      .mb-header {
+        display: flex; align-items: center; gap: 8px;
+        padding: 16px 8px 16px 20px; flex-shrink: 0;
+        border-bottom: 1px solid var(--divider-color, rgba(0,0,0,0.12));
+      }
+      .mb-title { flex: 1; font-size: 18px; font-weight: 500; }
+      .mb-close {
+        background: none; border: none; cursor: pointer;
+        color: var(--secondary-text-color); padding: 8px; border-radius: 50%;
+        display: flex; align-items: center;
+      }
+      .mb-close:hover { background: var(--secondary-background-color); }
+      .mb-list { overflow-y: auto; max-height: calc(70vh - 64px); }
+      .mb-status { padding: 32px; text-align: center; color: var(--secondary-text-color); font-size: 14px; }
+      .mb-error { color: var(--error-color, #db4437); }
+      .mb-crumb {
+        padding: 8px 16px 4px; font-size: 11px; font-weight: 600;
+        color: var(--secondary-text-color); text-transform: uppercase; letter-spacing: 0.6px;
+      }
+      .mb-item {
+        display: flex; align-items: center; gap: 12px;
+        width: 100%; padding: 10px 16px;
+        background: none; border: none; border-bottom: 1px solid var(--divider-color, rgba(0,0,0,0.06));
+        cursor: pointer; color: var(--primary-text-color);
+        font-family: inherit; font-size: 14px; text-align: left;
+      }
+      .mb-item:hover { background: var(--secondary-background-color, rgba(0,0,0,0.04)); }
+      .mb-back {
+        color: var(--primary-color); font-weight: 500;
+        border-bottom: 2px solid var(--divider-color, rgba(0,0,0,0.12));
+      }
+      .mb-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+      .mb-item-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .mb-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+        gap: 8px; padding: 8px;
+      }
+      .mb-grid-item {
+        display: flex; flex-direction: column; align-items: center; gap: 5px;
+        background: none; border: none; cursor: pointer; padding: 6px; border-radius: 8px;
+        font-family: inherit;
+      }
+      .mb-grid-item:hover { background: var(--secondary-background-color, rgba(0,0,0,0.06)); }
+      .mb-grid-thumb {
+        width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 6px;
+        display: block;
+      }
+      .mb-grid-title {
+        font-size: 11px; color: var(--secondary-text-color); width: 100%;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center;
+      }
 
       /* Compact tile variant */
       .compact .tile-grid-inner { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 7px; }
@@ -6228,6 +6750,14 @@ class HomeTasksCardEditor extends HTMLElement {
       :host { display: block; }
       .editor { display: flex; flex-direction: column; gap: 0; padding: 16px 0; }
       .editor-card-title-row { margin-bottom: 12px; }
+      .editor-native-select {
+        width: 100%; box-sizing: border-box; padding: 8px;
+        background: var(--card-background-color); color: var(--primary-text-color);
+        border: 1px solid var(--divider-color); border-radius: 4px; font-size: 14px;
+      }
+      .editor-native-select:focus {
+        outline: none; border-color: var(--primary-color);
+      }
       .editor-tabs-row {
         display: flex; align-items: center;
         border-bottom: 1px solid var(--divider-color, #e0e0e0);
@@ -6339,6 +6869,7 @@ class HomeTasksCardEditor extends HTMLElement {
     });
     const cardTitleRow = this._el("div", { className: "editor-card-title-row" }, [cardTitleInput]);
 
+
     // Tab bar (tabs on left, + on right)
     const tabsEl = this._el("div", { className: "editor-tabs" });
     for (let i = 0; i < cols.length; i++) {
@@ -6449,8 +6980,58 @@ class HomeTasksCardEditor extends HTMLElement {
       ? this._buildCodeEditor(activeTab)
       : this._buildVisualEditor(activeTab);
 
-    const editor = this._el("div", { className: "editor" }, [cardTitleRow, tabsRow, controls, tabContent]);
+    const imgGenSection = this._buildImgGenSection();
+    const editor = this._el("div", { className: "editor" }, [cardTitleRow, tabsRow, controls, tabContent, imgGenSection]);
     root.appendChild(editor);
+  }
+
+  _buildImgGenSection() {
+    const imgGen = this._config.image_generation || {};
+
+    const form = document.createElement("ha-form");
+    form.hass = this._hass;
+    form.data = { entity_id: imgGen.entity_id || "", prompt_prefix: imgGen.prompt_prefix || "" };
+    form.schema = [
+      {
+        name: "entity_id",
+        selector: { entity: { domain: ["ai_task"] } },
+      },
+      {
+        name: "prompt_prefix",
+        selector: { text: {} },
+      },
+    ];
+    form.computeLabel = (schema) =>
+      schema.name === "entity_id" ? this._t("ed_ai_image_entity")
+      : schema.name === "prompt_prefix" ? this._t("ed_ai_prompt_prefix")
+      : schema.name;
+    form.addEventListener("value-changed", (e) => {
+      const val = e.detail.value || {};
+      const merged = {};
+      if (val.entity_id) merged.entity_id = val.entity_id;
+      if (val.prompt_prefix) merged.prompt_prefix = val.prompt_prefix;
+      this._config = { ...this._config, image_generation: Object.keys(merged).length ? merged : undefined };
+      this._fireChanged();
+    });
+
+    const det = document.createElement("details");
+    if (this._sectionOpen?.imggen) det.open = true;
+    det.addEventListener("toggle", () => {
+      this._sectionOpen = { ...(this._sectionOpen || {}), imggen: det.open };
+    });
+    const sum = document.createElement("summary");
+    const ico = document.createElement("ha-icon");
+    ico.setAttribute("icon", "mdi:image-spark");
+    ico.style.cssText = "--mdc-icon-size:20px;width:20px;height:20px;flex-shrink:0;";
+    const lbl = this._el("span", { textContent: this._t("ed_ai_image_section"), style: "flex:1" });
+    const chev = document.createElement("ha-icon");
+    chev.setAttribute("icon", "mdi:chevron-down");
+    chev.className = "sum-chevron";
+    chev.style.cssText = "--mdc-icon-size:20px;width:20px;height:20px;";
+    sum.append(ico, lbl, chev);
+    det.appendChild(sum);
+    det.appendChild(this._el("div", { className: "section-content" }, [form]));
+    return det;
   }
 
   _buildCodeEditor(tabIdx) {
@@ -6771,6 +7352,7 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-sort", "ed_show_sort", "show_sort", true),
           makeToggle("compact", "ed_compact", "compact", false),
           makeToggle("show-history", "ed_show_history", "show_history", false),
+          makeToggle("show-images", "ed_show_images", "show_images", false),
           makeToggle("show-tile-title", "ed_show_tile_title", "show_tile_title", true),
         ]),
         sortField,
