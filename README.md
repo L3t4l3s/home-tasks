@@ -134,6 +134,11 @@ Home Tasks is available in the HACS default repository.
 2. Click **Download**
 3. Restart Home Assistant
 
+> **Install as an integration, not a frontend/plugin.** Home Tasks bundles its
+> dashboard card and registers it for you — there is **no** Lovelace resource to
+> add manually. If you add the repository as a *Plugin* in HACS, it lands under
+> `config/www/community/…` and the card will not be served by the integration.
+
 ### Manual
 
 1. Copy the `custom_components/home_tasks` folder into your `config/custom_components/` directory

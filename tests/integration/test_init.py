@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from unittest.mock import patch
 
 import pytest
 from homeassistant.core import HomeAssistant
@@ -419,6 +420,39 @@ async def test_external_entry_setup_and_unload(
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.entry_id not in hass.data.get(DOMAIN, {})
+
+
+async def test_card_registered_with_versioned_url(hass: HomeAssistant) -> None:
+    """The dashboard card is auto-registered with a cache-busting version query.
+
+    Regression for #24: relying on a stale cached card. The integration serves
+    and registers the card itself (no manual Lovelace resource needed), and the
+    URL carries the card file's mtime so updates are not served from cache.
+
+    Asserting the exact mtime value (not just that some "?v=" is present) is
+    deliberate: a hardcoded/frozen cache key would still contain "?v=" while
+    re-introducing the very stale-cache bug this guards against.
+    """
+    import os
+
+    import custom_components.home_tasks as ht_mod
+    from custom_components.home_tasks import CARD_URL
+
+    # Production resolves the card via os.path.dirname(__file__); compute the
+    # same expected mtime here. This also makes the missing-file case fail at
+    # this line with a clear error instead of a confusing URL assertion later.
+    card_file = os.path.join(os.path.dirname(ht_mod.__file__), "home-tasks-card.js")
+    expected_v = int(os.path.getmtime(card_file))
+
+    with patch.object(ht_mod, "add_extra_js_url") as mock_js:
+        entry = MockConfigEntry(domain=DOMAIN, data={"name": "Card List"}, title="Card List")
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_js.called
+    url = mock_js.call_args.args[1]
+    assert url == f"{CARD_URL}?v={expected_v}"
 
 
 # ---------------------------------------------------------------------------

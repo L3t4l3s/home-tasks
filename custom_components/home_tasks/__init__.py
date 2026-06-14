@@ -2,6 +2,7 @@
 
 from calendar import monthrange
 import logging
+import os
 from datetime import date, datetime, timedelta, timezone
 
 import voluptuous as vol
@@ -81,12 +82,36 @@ async def _async_register_card(hass: HomeAssistant) -> None:
     ]
     try:
         await hass.http.async_register_static_paths(static_paths)
-    except RuntimeError:
-        pass
+    except RuntimeError as err:
+        # A failure here means the card cannot be served and will not load
+        # automatically — surface it instead of silently swallowing it.
+        _LOGGER.warning(
+            "Home Tasks could not register static paths; the dashboard card "
+            "may not load automatically: %s",
+            err,
+        )
+
+    # Cache-bust the card URL with the file's modification time so browsers and
+    # the Lovelace resource cache pick up updates instead of serving a stale
+    # copy. Using mtime (not the integration version) means every change to the
+    # file busts the cache — including dev deploys that don't bump the version.
+    # Resolve the card relative to this package (os.path.dirname(__file__)).
+    # In a real install this equals comp_path, but the divergence is
+    # intentional and load-bearing: under the test harness the config dir
+    # differs from the package dir, so deriving this from comp_path would make
+    # the mtime lookup miss the file (no ?v=) and break the regression test.
+    # Do not "DRY" this against comp_path.
+    card_path = os.path.join(os.path.dirname(__file__), "home-tasks-card.js")
+    card_url = CARD_URL
+    try:
+        mtime = await hass.async_add_executor_job(os.path.getmtime, card_path)
+        card_url = f"{CARD_URL}?v={int(mtime)}"
+    except OSError as err:
+        _LOGGER.warning("Could not stat card file for cache-busting: %s", err)
 
     # Auto-register card JS so users don't need to add a Lovelace resource manually
-    add_extra_js_url(hass, CARD_URL)
-    _LOGGER.info("Home Tasks card served at %s", CARD_URL)
+    add_extra_js_url(hass, card_url)
+    _LOGGER.info("Home Tasks card served at %s", card_url)
 
 
 # ---------------------------------------------------------------------------
