@@ -146,6 +146,7 @@ const _TRANSLATIONS = {
     ed_ai_image_entity_placeholder: "e.g. ai_task.openai",
     ed_ai_prompt_prefix: "Prompt prefix (optional)",
     ed_ai_prompt_prefix_placeholder: "e.g. Minimalist icon of",
+    assign_to_another: "Assign to another person",
   },
   nl: {
     my_tasks: "Mijn taken",
@@ -213,6 +214,7 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "Overmorgen", due_day_before_yesterday: "Eergisteren",
     due_in_hours: "Over {0} u {1} min", due_in_minutes: "Over {0} min", due_in_seconds: "Nu",
     due_ago_hours: "{0} u {1} min geleden", due_ago_minutes: "{0} min geleden", due_ago_seconds: "Zojuist",
+    assign_to_another: "Ook toewijzen aan",
   },
   it: {
     my_tasks: "Le mie attivit\u00e0",
@@ -280,6 +282,7 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "Dopodomani", due_day_before_yesterday: "L'altroieri",
     due_in_hours: "Tra {0} h {1} min", due_in_minutes: "Tra {0} min", due_in_seconds: "Adesso",
     due_ago_hours: "{0} h {1} min fa", due_ago_minutes: "{0} min fa", due_ago_seconds: "Proprio ora",
+    assign_to_another: "Assegna anche a",
   },
   pl: {
     my_tasks: "Moje zadania",
@@ -347,6 +350,7 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "Pojutrze", due_day_before_yesterday: "Przedwczoraj",
     due_in_hours: "Za {0} godz. {1} min", due_in_minutes: "Za {0} min", due_in_seconds: "Teraz",
     due_ago_hours: "{0} godz. {1} min temu", due_ago_minutes: "{0} min temu", due_ago_seconds: "W\u0142a\u015bnie",
+    assign_to_another: "Przypisz r\u00f3wnie\u017c do",
   },
   sv: {
     my_tasks: "Mina uppgifter",
@@ -414,6 +418,7 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "\u00d6vermorgon", due_day_before_yesterday: "F\u00f6rrg\u00e5r",
     due_in_hours: "Om {0} tim {1} min", due_in_minutes: "Om {0} min", due_in_seconds: "Nu",
     due_ago_hours: "{0} tim {1} min sedan", due_ago_minutes: "{0} min sedan", due_ago_seconds: "Just nu",
+    assign_to_another: "Tilldela även till",
   },
   fr: {
     my_tasks: "Mes t\u00e2ches",
@@ -481,6 +486,7 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "Apr\u00e8s-demain", due_day_before_yesterday: "Avant-hier",
     due_in_hours: "Dans {0} h {1} min", due_in_minutes: "Dans {0} min", due_in_seconds: "Maintenant",
     due_ago_hours: "Il y a {0} h {1} min", due_ago_minutes: "Il y a {0} min", due_ago_seconds: "\u00c0 l'instant",
+    assign_to_another: "Assigner \u00e9galement \u00e0",
   },
   pt: {
     my_tasks: "Minhas tarefas",
@@ -548,6 +554,7 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "Depois de amanh\u00e3", due_day_before_yesterday: "Anteontem",
     due_in_hours: "Em {0} h {1} min", due_in_minutes: "Em {0} min", due_in_seconds: "Agora",
     due_ago_hours: "H\u00e1 {0} h {1} min", due_ago_minutes: "H\u00e1 {0} min", due_ago_seconds: "Agora mesmo",
+    assign_to_another: "Atribuir tamb\u00e9m a",
   },
   es: {
     my_tasks: "Mis tareas",
@@ -615,6 +622,7 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "Pasado ma\u00f1ana", due_day_before_yesterday: "Anteayer",
     due_in_hours: "En {0} h {1} min", due_in_minutes: "En {0} min", due_in_seconds: "Ahora",
     due_ago_hours: "Hace {0} h {1} min", due_ago_minutes: "Hace {0} min", due_ago_seconds: "Ahora mismo",
+    assign_to_another: "Asignar también a",
   },
   ru: {
     my_tasks: "\u041c\u043e\u0438 \u0437\u0430\u0434\u0430\u0447\u0438",
@@ -682,6 +690,7 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "\u041f\u043e\u0441\u043b\u0435\u0437\u0430\u0432\u0442\u0440\u0430", due_day_before_yesterday: "\u041f\u043e\u0437\u0430\u0432\u0447\u0435\u0440\u0430",
     due_in_hours: "\u0427\u0435\u0440\u0435\u0437 {0} \u0447 {1} \u043c\u0438\u043d", due_in_minutes: "\u0427\u0435\u0440\u0435\u0437 {0} \u043c\u0438\u043d", due_in_seconds: "\u0421\u0435\u0439\u0447\u0430\u0441",
     due_ago_hours: "{0} \u0447 {1} \u043c\u0438\u043d \u043d\u0430\u0437\u0430\u0434", due_ago_minutes: "{0} \u043c\u0438\u043d \u043d\u0430\u0437\u0430\u0434", due_ago_seconds: "\u0422\u043e\u043b\u044c\u043a\u043e \u0447\u0442\u043e",
+    assign_to_another: "\u041d\u0430\u0437\u043d\u0430\u0447\u0438\u0442\u044c \u0442\u0430\u043a\u0436\u0435",
   },
   cs: {
     my_tasks: "Moje \u00fakoly",
@@ -749,6 +758,7 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "Poz\u00edt\u0159\u00ed", due_day_before_yesterday: "P\u0159edev\u010d\u00edrem",
     due_in_hours: "Za {0} hod {1} min", due_in_minutes: "Za {0} min", due_in_seconds: "Nyn\u00ed",
     due_ago_hours: "P\u0159ed {0} hod {1} min", due_ago_minutes: "P\u0159ed {0} min", due_ago_seconds: "Pr\u00e1v\u011b te\u010f",
+    assign_to_another: "P\u0159i\u0159adit tak\u00e9",
   },
   da: {
     my_tasks: "Mine opgaver",
@@ -816,6 +826,7 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "I overmorgen", due_day_before_yesterday: "I forg\u00e5rs",
     due_in_hours: "Om {0} t {1} min", due_in_minutes: "Om {0} min", due_in_seconds: "Nu",
     due_ago_hours: "{0} t {1} min siden", due_ago_minutes: "{0} min siden", due_ago_seconds: "Lige nu",
+    assign_to_another: "Tildel også til",
   },
   no: {
     my_tasks: "Mine oppgaver",
@@ -883,6 +894,7 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "I overmorgen", due_day_before_yesterday: "I forg\u00e5rs",
     due_in_hours: "Om {0} t {1} min", due_in_minutes: "Om {0} min", due_in_seconds: "N\u00e5",
     due_ago_hours: "{0} t {1} min siden", due_ago_minutes: "{0} min siden", due_ago_seconds: "Akkurat n\u00e5",
+    assign_to_another: "Tildel ogs\u00e5 til",
   },
   fi: {
     my_tasks: "Omat teht\u00e4v\u00e4t",
@@ -950,6 +962,7 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "Ylihuomenna", due_day_before_yesterday: "Toissap\u00e4iv\u00e4n\u00e4",
     due_in_hours: "{0} t {1} min p\u00e4\u00e4st\u00e4", due_in_minutes: "{0} min p\u00e4\u00e4st\u00e4", due_in_seconds: "Nyt",
     due_ago_hours: "{0} t {1} min sitten", due_ago_minutes: "{0} min sitten", due_ago_seconds: "Juuri nyt",
+    assign_to_another: "Määritä myös",
   },
   hu: {
     my_tasks: "Feladataim",
@@ -1017,6 +1030,7 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "Holnaput\u00e1n", due_day_before_yesterday: "Tegnapel\u0151tt",
     due_in_hours: "{0} \u00f3 {1} perc m\u00falva", due_in_minutes: "{0} perc m\u00falva", due_in_seconds: "Most",
     due_ago_hours: "{0} \u00f3 {1} perccel ezel\u0151tt", due_ago_minutes: "{0} perccel ezel\u0151tt", due_ago_seconds: "\u00c9pp most",
+    assign_to_another: "Hozz\u00e1rendel\u00e9s m\u00e1snak is",
   },
   de: {
     my_tasks: "Meine Aufgaben",
@@ -1155,6 +1169,7 @@ const _TRANSLATIONS = {
     ed_ai_image_entity_placeholder: "z.B. ai_task.openai",
     ed_ai_prompt_prefix: "Prompt-Präfix (optional)",
     ed_ai_prompt_prefix_placeholder: "z.B. Minimalistisches Icon von",
+    assign_to_another: "Auch zuweisen an…",
   },
 };
 
@@ -4983,12 +4998,59 @@ class HomeTasksCard extends HTMLElement {
   }
 
   _buildActionsSection(task, colIdx) {
+    const children = [];
+
+    if (!this._isExternalCol(colIdx)) {
+      const assignBtn = this._el("button", {
+        className: "assign-copy-btn",
+        textContent: this._t("assign_to_another"),
+      });
+      assignBtn.addEventListener("click", () => {
+        const sel = document.createElement("select");
+        sel.className = "assign-copy-sel";
+        const cancelOpt = this._el("option", { value: "", textContent: "—" });
+        sel.appendChild(cancelOpt);
+        if (this._hass && this._hass.states) {
+          const persons = Object.keys(this._hass.states).filter(e => e.startsWith("person.")).sort();
+          for (const eid of persons) {
+            const state = this._hass.states[eid];
+            const name = (state && state.attributes && state.attributes.friendly_name) || eid;
+            sel.appendChild(this._el("option", { value: eid, textContent: name }));
+          }
+        }
+        sel.addEventListener("change", () => {
+          if (sel.value) this._duplicateAndAssign(task, colIdx, sel.value);
+          sel.replaceWith(assignBtn);
+        });
+        sel.addEventListener("blur", () => { if (sel.parentNode) sel.replaceWith(assignBtn); });
+        assignBtn.replaceWith(sel);
+        sel.focus();
+      });
+      children.push(assignBtn);
+    }
+
     const deleteBtn = this._el("button", {
       className: "delete-task-btn",
       textContent: this._t("delete_task"),
     });
     deleteBtn.addEventListener("click", () => this._deleteTask(task.id, colIdx));
-    return this._el("div", { className: "detail-actions" }, [deleteBtn]);
+    children.push(deleteBtn);
+
+    return this._el("div", { className: "detail-actions" }, children);
+  }
+
+  async _duplicateAndAssign(task, colIdx, assignedPerson) {
+    const listId = this._colListId(colIdx);
+    const newTask = await this._callWs("home_tasks/duplicate_task", {
+      list_id: listId,
+      task_id: task.id,
+      assigned_person: assignedPerson,
+    });
+    if (!newTask) return;
+    const cs = this._columns[colIdx];
+    if (cs && cs.tasks) cs.tasks.push(newTask);
+    this._render();
+    this._loadAllTasks();
   }
 
   _buildImageSection(task, colIdx) {
@@ -6215,12 +6277,23 @@ class HomeTasksCard extends HTMLElement {
       .history-text { color: var(--primary-text-color); }
       .history-ts { color: var(--secondary-text-color); white-space: nowrap; font-size: 11px; }
       .history-empty { margin: 0; font-size: 12px; color: var(--secondary-text-color); }
-      .detail-actions { display: flex; justify-content: flex-end; padding-top: 4px; }
+      .detail-actions { display: flex; justify-content: flex-end; padding-top: 4px; gap: 8px; }
       .delete-task-btn {
         background: none; border: 1px solid var(--todo-error); color: var(--todo-error);
         padding: 6px 14px; border-radius: 4px; font-size: 12px; cursor: pointer; font-family: inherit;
       }
       .delete-task-btn:hover { background: rgba(244, 67, 54, 0.15); }
+      .assign-copy-btn {
+        background: none; border: 1px solid var(--todo-primary); color: var(--todo-primary);
+        padding: 6px 14px; border-radius: 4px; font-size: 12px; cursor: pointer; font-family: inherit;
+        margin-right: auto;
+      }
+      .assign-copy-btn:hover { background: rgba(var(--rgb-primary-color, 3,169,244), 0.1); }
+      .assign-copy-sel {
+        border: 1px solid var(--todo-primary); color: var(--todo-primary);
+        background: var(--todo-bg); padding: 6px 8px; border-radius: 4px; font-size: 12px;
+        cursor: pointer; font-family: inherit; margin-right: auto;
+      }
 
       /* --- Task image --- */
       .task-thumb {

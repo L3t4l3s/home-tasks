@@ -37,6 +37,7 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_add_task)
     websocket_api.async_register_command(hass, ws_update_task)
     websocket_api.async_register_command(hass, ws_delete_task)
+    websocket_api.async_register_command(hass, ws_duplicate_task)
     websocket_api.async_register_command(hass, ws_reorder_tasks)
     websocket_api.async_register_command(hass, ws_add_sub_task)
     websocket_api.async_register_command(hass, ws_update_sub_task)
@@ -241,6 +242,30 @@ async def ws_delete_task(hass, connection, msg):
         store = _get_store(hass, msg["list_id"])
         await store.async_delete_task(msg["task_id"])
         connection.send_result(msg["id"])
+    except Exception as err:
+        _handle_error(connection, msg["id"], err)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "home_tasks/duplicate_task",
+        vol.Required("list_id"): _val_id,
+        vol.Required("task_id"): _val_id,
+        vol.Optional("assigned_person"): vol.Any(str, None),
+    }
+)
+@websocket_api.async_response
+async def ws_duplicate_task(hass, connection, msg):
+    """Duplicate a task, optionally reassigning it to another person."""
+    try:
+        store = _get_store(hass, msg["list_id"])
+        actor = connection.user.name if connection.user else None
+        task = await store.async_duplicate_task(
+            msg["task_id"],
+            assigned_person=msg.get("assigned_person"),
+            actor=actor,
+        )
+        connection.send_result(msg["id"], task)
     except Exception as err:
         _handle_error(connection, msg["id"], err)
 
