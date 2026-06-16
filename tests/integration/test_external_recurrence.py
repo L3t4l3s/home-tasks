@@ -11,6 +11,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.home_tasks import (
     DOMAIN,
     DATA_RECURRENCE_TIMERS,
+    DATA_REMINDER_TIMERS,
     _async_reopen_external_task,
     _async_reopen_task,
     _external_owns_recurrence,
@@ -292,6 +293,32 @@ async def test_manual_reopen_via_ws_clears_completed_at(
     await hass.async_block_till_done()
 
     assert _overlay(hass, ext_entry).get_all_overlays()["t1"].get("completed_at") is None
+
+
+async def test_delete_external_overlay_cancels_timers(
+    hass: HomeAssistant, hass_ws_client, ext_entry
+) -> None:
+    """Deleting an external task cancels its pending reminder + recurrence timers."""
+    cancelled = []
+    hass.data.setdefault(DATA_REMINDER_TIMERS, {})["t1_r0"] = lambda: cancelled.append("rem")
+    hass.data.setdefault(DATA_RECURRENCE_TIMERS, {})["t1"] = lambda: cancelled.append("rec")
+    # an unrelated task's timer must survive
+    hass.data[DATA_RECURRENCE_TIMERS]["other"] = lambda: cancelled.append("other")
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 71,
+        "type": "home_tasks/delete_external_overlay",
+        "entity_id": ENTITY,
+        "task_uid": "t1",
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+
+    assert "t1_r0" not in hass.data[DATA_REMINDER_TIMERS]
+    assert "t1" not in hass.data[DATA_RECURRENCE_TIMERS]
+    assert "other" in hass.data[DATA_RECURRENCE_TIMERS]
+    assert set(cancelled) == {"rem", "rec"}
 
 
 async def test_recover_immediate_reopen_for_past_target(hass: HomeAssistant, ext_entry) -> None:

@@ -1376,6 +1376,11 @@ async def ws_delete_external_overlay(hass, connection, msg):
     try:
         overlay_store = _get_overlay_store(hass, msg["entity_id"])
         await overlay_store.async_delete_overlay(msg["task_uid"])
+        # Cancel any pending reminder/recurrence timers so they don't fire (and
+        # leak) for a task that no longer exists.
+        from . import _cancel_recurrence, _cancel_reminders
+        _cancel_reminders(hass, msg["task_uid"])
+        _cancel_recurrence(hass, msg["task_uid"])
         connection.send_result(msg["id"])
     except Exception as err:
         _handle_error(connection, msg["id"], err)
