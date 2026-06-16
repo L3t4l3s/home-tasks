@@ -1,9 +1,9 @@
 {
   "domain": "home_tasks",
   "name": "Home Tasks",
+  "after_dependencies": ["ai_task"],
   "codeowners": ["@L3t4l3s"],
   "config_flow": true,
-  "after_dependencies": ["ai_task"],
   "dependencies": ["frontend", "http", "todo"],
   "documentation": "https://github.com/L3t4l3s/home-tasks",
   "integration_type": "service",
