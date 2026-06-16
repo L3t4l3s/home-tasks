@@ -3,7 +3,7 @@
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://hacs.xyz/)
 [![Validate](https://github.com/L3t4l3s/home-tasks/actions/workflows/validate.yaml/badge.svg)](https://github.com/L3t4l3s/home-tasks/actions/workflows/validate.yaml)
 
-A feature-rich, highly customizable task management solution for Home Assistant — combining a native **integration** (sensors, calendar, events, services) with a versatile Lovelace **dashboard card**. Supports linking **external todo lists** from CalDAV, Google Tasks, Todoist, Bring, Local Todo, and other providers.
+A feature-rich, highly customizable task management solution for Home Assistant — combining a native **integration** (sensors, calendar, events, services) with a versatile Lovelace **dashboard card** offering list and image-tile views, recurring tasks, reminders, sub-tasks, voice input, and optional AI-generated task images. Supports linking **external todo lists** from CalDAV, Google Tasks, Todoist, Bring, Local Todo, and other providers — with full feature parity (recurrence, events, and calendar included).
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/header-light.png" width="400" alt="Home Tasks in light mode">
@@ -14,9 +14,10 @@ A feature-rich, highly customizable task management solution for Home Assistant 
 
 ### Per-Task Fields
 
-Every task can carry up to 20 individual attributes:
+Every task can carry over 20 individual attributes:
 
-- **Title** — inline rename with double-click
+- **Title** — edit inline (expand a task in list view, or open its detail sheet in tiles view)
+- **Image** — an optional picture per task, set manually or auto-generated with AI (see [Task Images & AI Generation](#task-images--ai-generation))
 - **Notes** — free-text field per task
 - **Due date** with overdue highlighting
 - **Due time**
@@ -45,19 +46,28 @@ Display tasks from **any HA todo integration** alongside native Home Tasks lists
 - For **Todoist**: full bidirectional sync via direct API access — see [Todoist Deep Integration](#todoist-deep-integration) below
 - The card editor **auto-configures visibility** based on the provider's capabilities when you select an external list
 - You can manually enable overlay fields for external lists if you want them locally
+- **Full feature parity**: all [automation events](#events) fire for external lists too (created, completed, reopened, due, overdue, assigned, reminder), they get a [calendar entity](#entities), and **recurrence runs locally** for providers that don't manage it themselves — completing a recurring task reopens it on schedule (for providers that *do* own recurrence, like Todoist, theirs is used instead)
 
 #### Verified Providers
 
-| Provider | HA Integration | Title & Status | Due Date | Due Time | Description | Reorder | Priority | Labels | Sub-tasks | Assignee | Recurrence | Reminders | Notes |
-|----------|---------------|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|-------|
-| **CalDAV** (Nextcloud, etc.) | [CalDAV](https://www.home-assistant.io/integrations/caldav/) (Core) | yes | yes | yes | yes | no | no | no | no | no | no | no | |
-| **Google Tasks** | [Google Tasks](https://www.home-assistant.io/integrations/google_tasks/) (Core) | yes | yes | no | yes | yes | no | no | no | no | no | no | Google's REST API does not expose due times or recurrence ([open issue](https://issuetracker.google.com/issues/36759725)). The Google Tasks web UI shows recurrence dropdowns, but those are written client-side only and never appear in the API — Home Assistant therefore can't read or write them. Use Home Tasks' local recurrence (executed by the integration, not the provider). |
-| **Todoist** | [Todoist](https://www.home-assistant.io/integrations/todoist/) (Core) | yes | yes | yes | yes | yes | yes | yes | yes | no | yes | yes | Full bidirectional sync via direct Todoist API |
-| **Local Todo** | [Local Todo](https://www.home-assistant.io/integrations/local_todo/) (Core) | yes | yes | no | yes | no | no | no | no | no | no | no | Simple file-based lists built into HA |
-| **Bring** | [Bring](https://www.home-assistant.io/integrations/bring/) (Core) | yes | no | no | yes | no | no | no | no | no | no | no | Shopping list — all extra fields available locally via overlay |
-| **Shopping List** | [Shopping List](https://www.home-assistant.io/integrations/shopping_list/) (Core) | yes | no | no | no | no | no | no | no | no | no | no | Minimal core shopping list — title+status only; all extra fields via overlay |
+| Provider | HA Integration | Title & Status | Due Date | Due Time | Description | Reorder | Priority | Labels | Sub-tasks | Assignee | Recurrence | Reminders |
+|----------|---------------|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| **CalDAV** (Nextcloud, etc.) | [CalDAV](https://www.home-assistant.io/integrations/caldav/) (Core) | yes | yes | yes | yes | no | no | no | no | no | no | no |
+| **Google Tasks** | [Google Tasks](https://www.home-assistant.io/integrations/google_tasks/) (Core) | yes | yes | no | yes | yes | no | no | no | no | no | no |
+| **Todoist** | [Todoist](https://www.home-assistant.io/integrations/todoist/) (Core) | yes | yes | yes | yes | yes | yes | yes | yes | no | yes | yes |
+| **Local Todo** | [Local Todo](https://www.home-assistant.io/integrations/local_todo/) (Core) | yes | yes | no | yes | no | no | no | no | no | no | no |
+| **Bring** | [Bring](https://www.home-assistant.io/integrations/bring/) (Core) | yes | no | no | yes | no | no | no | no | no | no | no |
+| **Shopping List** | [Shopping List](https://www.home-assistant.io/integrations/shopping_list/) (Core) | yes | no | no | no | no | no | no | no | no | no | no |
 
 **yes** = bidirectionally synced with the provider. **no** = not synced, but still available locally in Home Tasks via overlay.
+
+**Provider notes:**
+
+- **Google Tasks** — Google's REST API does not expose due times or recurrence ([open issue](https://issuetracker.google.com/issues/36759725)). The Google Tasks web UI shows recurrence dropdowns, but those are written client-side only and never appear in the API — Home Assistant therefore can't read or write them. Use Home Tasks' local recurrence (executed by the integration, not the provider).
+- **Todoist** — full bidirectional sync via direct Todoist API.
+- **Local Todo** — simple file-based lists built into HA.
+- **Bring** — shopping list; all extra fields available locally via overlay.
+- **Shopping List** — minimal core shopping list (title + status only); all extra fields via overlay.
 
 Any other integration that creates `todo.*` entities following HA's standard `TodoListEntity` should also work.
 
@@ -92,25 +102,72 @@ Typical use: a shopping list whose sections are store aisles ("Produce", "Frozen
 
 - **Multi-column layout** — display multiple lists side-by-side on a single card
 - **Per-column configuration** — title, icon, default filter, default sort, show/hide every field individually
+- **List or Tiles view** — choose per column between detailed task rows and a compact image grid (see [Tile View](#tile-view))
+- **Task images** — show a picture per task; optionally auto-generate them with AI (see [Task Images & AI Generation](#task-images--ai-generation))
 - **Sections** — group tasks under named headers with optional icons (see above)
 - **Drag & drop** reordering on desktop and mobile, including across sections
 - **Cross-list drag & drop** — move tasks between columns (multi-column cards only)
-- **Click anywhere** to expand / collapse task details
-- **Double-click title** to rename inline
+- **Click a task** to expand its details and edit every field inline
+- **Duplicate** a task with one click — the copy appears right after the original
 - **Filter** per column — All / Open / Done, plus optional **Due Soon** filter (shows tasks due within a configurable number of days)
 - **Sort** per column — manual, due date, priority, title, assigned person
-- **Tag & person filter chips** in the column header
+- **Tag & person filter chips** in the column header — tap to filter; assigning the active person to new tasks automatically
+- **Voice input** — dictate a new task title via the mic button (HA Assist speech-to-text, with browser speech as fallback)
 - **Compact mode** for denser task rows
 - **Auto-delete** completed tasks (optional, per column)
 - **Smooth animations** — FLIP transitions for sort, filter, create, delete, complete, and reopen
 - **Visual card editor** — fully configurable without writing YAML
+
+#### Tile View
+
+Set a column's **view mode** to **Tiles** for a compact, visual grid instead of detailed rows — ideal for lists where the image matters (recipes, products, chores for kids). Each tile shows the task image as background (or a colored letter placeholder when there's none), the title overlaid (toggle with `show_tile_title`), and a checkmark when done.
+
+- **Tap** a tile to toggle completion
+- **Long-press** (or click & hold) a tile to open its **detail sheet** — the full editor with every field, including an editable title
+- **Drag** a tile to reorder, with the same live animations as the list view
+
+#### Voice Input
+
+A mic button on the add-task row lets you dictate a task title instead of typing it. It uses Home Assistant's **Assist speech-to-text** when available and falls back to the browser's built-in speech recognition. Hide the button per column with `show_voice: false`.
+
+### Task Images & AI Generation
+
+Give tasks a picture — handy for recipes, products on a shopping list, or visual chores for kids. Images appear as the tile background in [Tiles view](#tile-view) and as a thumbnail in list view.
+
+- **Enable display** per column with `show_images: true`
+- **Pick an image** from the task's detail view via the media-browser button — any file under your Home Assistant `media/` sources
+- **Generate with AI** — the generate button creates an image from the task title via an [`ai_task`](https://www.home-assistant.io/integrations/ai_task/) entity (configured card-wide, see below)
+- **Remove** an image anytime with the × on its thumbnail
+
+Images are managed on **native** Home Tasks lists.
+
+**AI image generation setup** (card-level, in the visual editor under *AI Image Generation*):
+
+```yaml
+type: custom:home-tasks-card
+image_generation:
+  entity_id: ai_task.openai          # any ai_task.* entity (OpenAI, Gemini, …)
+  prompt_prefix: "Minimalist icon of" # optional, prepended to every prompt
+columns:
+  - list_id: "your-list-id"
+    show_images: true
+    auto_generate_image: true        # generate automatically on task creation
+```
+
+> The main **Model** of your AI entity must be a text/vision model; the actual image model is configured in the AI integration's *image generation* option. `auto_generate_image` only runs when `show_images` is on **and** an `image_generation` entity is set.
+
+**Good to know:**
+
+- **No duplicate work** — if another task with the same title already has an image, it's reused instead of generating again; regenerating an image updates every task with that title across the card.
+- **Persistent** — generated and picked images are copied into `config/www/home_tasks/` and served from `/local/…`, so they keep working regardless of how you access Home Assistant (local IP, custom port, or a domain) and don't expire. Unused image files are cleaned up automatically.
+- **Duplicating** a task copies its image too.
 
 ### Home Assistant Integration
 
 - **7 automation events**: created, completed, reopened, due, overdue, assigned, reminder
 - **Services**: add, complete, reopen, and assign tasks from automations
 - **Sensors**: open task count + overdue binary sensor per list
-- **Calendar**: each native list gets a `calendar.*` entity — tasks with due dates appear as all-day or timed events, usable in any HA calendar card or automation
+- **Calendar**: every list — native **and external** — gets a `calendar.*` entity. Tasks with due dates appear as all-day or timed events, and **recurring tasks are projected onto every occurrence** (each week, month, etc.) via standard RRULE, usable in any HA calendar card or automation
 - **Todo entity**: each native list is exposed as a standard `todo.*` entity with full HA todo platform support (Companion App, Apple Watch, etc.)
 - **Multiple lists** via separate integration config entries
 
@@ -170,17 +227,35 @@ All options are available in the visual card editor. The examples below cover th
 
 ### Column option reference
 
+Each entry in `columns` accepts the following options.
+
 | Option | Default | Description |
 |--------|---------|-------------|
 | `list_id` | — | The native list to display (use this **or** `entity_id`) |
 | `entity_id` | — | An external todo entity to display (use this **or** `list_id`) |
 | `title` | List name | Custom column title |
 | `icon` | — | MDI icon shown next to the column title (e.g. `mdi:home`) |
+| `view_mode` | `list` | Layout: `list` (detailed rows) or `tiles` (image grid) |
 | `default_filter` | `all` | Initial filter: `all`, `open`, `done`, or `due_soon` |
 | `default_sort` | `manual` | Initial sort: `manual`, `due`, `priority`, `title`, or `person` |
+| `compact` | `false` | Compact mode for denser task rows |
+| `auto_delete_completed` | `false` | Automatically delete completed tasks |
+| **Header / chrome** | | |
 | `show_title` | `true` | Show/hide the column title |
 | `show_progress` | `true` | Show/hide the task progress counter |
+| `show_add_task` | `true` | Show/hide the "add task" input row (set `false` for a read-only display) |
+| `show_voice` | `true` | Show/hide the voice-input mic button on the add-task row |
 | `show_sort` | `true` | Show/hide the sort button |
+| `show_filters` | `true` | Show/hide the All / Open / Done filter buttons |
+| `show_tag_chips` | `true` | Show/hide the tag filter chips in the header |
+| `show_person_chips` | `true` | Show/hide the person filter chips in the header |
+| `show_due_soon_filter` | `false` | Enable the "Due Soon" filter button |
+| `due_soon_days` | `7` | Days ahead for the "Due Soon" filter (0–90, 0 = due today only) |
+| `hide_overdue` | `false` | Hide overdue tasks in the "Due Soon" filter (overdue shown by default) |
+| **Per-task fields** | | |
+| `show_images` | `false` | Show task images (tile background / list thumbnail) |
+| `auto_generate_image` | `false` | Auto-generate an image with AI when a task is created (needs `show_images` + a card-level `image_generation` entity) |
+| `show_tile_title` | `true` | (Tiles view) Show the title overlay on each tile |
 | `show_notes` | `true` | Show/hide the notes field |
 | `show_sub_tasks` | `true` | Show/hide sub-tasks |
 | `show_assigned_person` | `true` | Show/hide person assignment |
@@ -189,12 +264,19 @@ All options are available in the visual card editor. The examples below cover th
 | `show_due_date` | `true` | Show/hide due date and time |
 | `show_reminders` | `true` | Show/hide reminders |
 | `show_recurrence` | `true` | Show/hide recurrence settings |
-| `compact` | `false` | Compact mode for denser task rows |
-| `auto_delete_completed` | `false` | Automatically delete completed tasks |
 | `show_history` | `false` | Show/hide the task change history |
-| `show_due_soon_filter` | `false` | Enable the "Due Soon" filter button |
-| `due_soon_days` | `7` | Number of days ahead for the "Due Soon" filter (0–90, 0 = due today only) |
-| `hide_overdue` | `false` | Hide overdue tasks in the "Due Soon" filter (overdue shown by default) |
+
+### Card-level option reference
+
+These options live at the **root** of the card config, not inside a column.
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `columns` | — | List of column configs (required) |
+| `title` | — | Optional card title shown above the columns |
+| `image_generation.entity_id` | — | An `ai_task.*` entity used to generate task images |
+| `image_generation.prompt_prefix` | — | Text prepended to every AI image prompt (e.g. `Minimalist icon of`) |
+| `grid_options` | — | Standard HA grid sizing (e.g. `columns: 36`, `rows: auto`) |
 
 The old flat format (`list_id` at root level) is still supported and migrated automatically.
 
@@ -434,7 +516,7 @@ Target by single task, person, tag, or a combination.
 For each native list, the integration creates:
 
 - **Todo** (`todo.{list_name}`): Standard HA todo entity — works with the Companion App, Apple Watch, Google Home, and any HA automation that targets `todo.*` entities.
-- **Calendar** (`calendar.{list_name}_calendar`): Tasks with a due date appear as calendar events. Tasks with only a due date show as all-day events; tasks with both due date and due time show as 1-hour timed events with a rich description (notes, priority, assignee, tags, sub-task progress, reminders).
+- **Calendar** (`calendar.{list_name}_calendar`): Tasks with a due date appear as calendar events. Tasks with only a due date show as all-day events; tasks with both due date and due time show as 1-hour timed events with a rich description (notes, priority, assignee, tags, sub-task progress, reminders). **Recurring tasks expand onto every occurrence** in the viewed range (mapped to an RFC-5545 RRULE — daily, weekly on selected weekdays, monthly by day-of-month/Nth-weekday, yearly anniversary). External lists get a calendar entity too. A calendar needs a date to anchor on, so tasks without a due date aren't shown (hourly recurrence has no calendar equivalent and shows as a single event).
 - **Sensor** (`sensor.{list_name}_open_tasks`): Number of open tasks. Attributes: `open_task_titles`, `overdue_count`.
 - **Binary Sensor** (`binary_sensor.{list_name}_overdue`): `on` if any task is past its due date.
 
