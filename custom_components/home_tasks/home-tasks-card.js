@@ -3356,7 +3356,7 @@ class HomeTasksCard extends HTMLElement {
     const my = clientY - (this._dragPrevY == null ? clientY : this._dragPrevY);
     this._dragPrevX = clientX;
     this._dragPrevY = clientY;
-    if (mx === 0 && my === 0) return;
+    if (Math.abs(mx) <= 1 && Math.abs(my) <= 1) return; // sub-pixel/idle: treat as no movement
     // Whole-tile catch + direction gate: hovering anywhere on a tile takes over
     // its slot, but only reorder in the direction the pointer is actually
     // travelling (vertical weighted higher since it changes the whole row). This
@@ -3444,9 +3444,16 @@ class HomeTasksCard extends HTMLElement {
     if (this._tileLpTimer) { clearTimeout(this._tileLpTimer); this._tileLpTimer = null; }
   }
 
-  _openTaskDetailSheet(task, colIdx) {
+  // Remove the detail sheet + backdrop immediately (no slide-out). Used by the
+  // action buttons and before opening a new sheet; the animated dismissal is the
+  // close() closure inside _openTaskDetailSheet.
+  _closeTaskDetailSheet() {
     this.shadowRoot.querySelector(".task-detail-sheet")?.remove();
     this.shadowRoot.querySelector(".task-detail-backdrop")?.remove();
+  }
+
+  _openTaskDetailSheet(task, colIdx) {
+    this._closeTaskDetailSheet();
 
     const backdrop = this._el("div", { className: "task-detail-backdrop" });
     const sheet = this._el("div", { className: "task-detail-sheet" });
@@ -3834,6 +3841,9 @@ class HomeTasksCard extends HTMLElement {
       // Stop mousedown from reaching the draggable taskEl — otherwise the browser's
       // drag-detection system intercepts mousedown and prevents cursor positioning.
       editInput.addEventListener("mousedown", (e) => { e.stopPropagation(); });
+      // Mark as actively editing on focus so a background re-render defers — else
+      // a poll mid-typing would rebuild this text input and revert the title.
+      editInput.addEventListener("focus", () => { this._editingTaskId = task.id; });
       const saveTitle = () => {
         this._editingTaskId = null;
         const v = editInput.value.trim();
@@ -5455,8 +5465,7 @@ class HomeTasksCard extends HTMLElement {
       dupBtn.addEventListener("click", () => {
         // Close the tile detail sheet (no-op in the inline list view) so repeated
         // clicks don't silently pile up copies behind the popup.
-        this.shadowRoot.querySelector(".task-detail-sheet")?.remove();
-        this.shadowRoot.querySelector(".task-detail-backdrop")?.remove();
+        this._closeTaskDetailSheet();
         this._duplicateTask(task, colIdx);
       });
       children.push(dupBtn);
@@ -5467,11 +5476,10 @@ class HomeTasksCard extends HTMLElement {
       textContent: this._t("delete_task"),
     });
     deleteBtn.addEventListener("click", () => {
-      // Close the tile detail sheet first (no-op for the inline list view) so
-      // the popup doesn't linger showing a task that's being deleted. Remove it
-      // synchronously to avoid the delete's re-render re-attaching it.
-      this.shadowRoot.querySelector(".task-detail-sheet")?.remove();
-      this.shadowRoot.querySelector(".task-detail-backdrop")?.remove();
+      // Close the sheet first (no-op for the inline list view) so the popup
+      // doesn't linger showing a task being deleted; synchronous so the delete's
+      // re-render can't re-attach it.
+      this._closeTaskDetailSheet();
       this._deleteTask(task.id, colIdx);
     });
     children.push(deleteBtn);
@@ -5487,15 +5495,10 @@ class HomeTasksCard extends HTMLElement {
       assigned_person: task.assigned_person ?? null,
     });
     if (!newTask) return;
-    const cs = this._columns[colIdx];
-    if (cs && cs.tasks) {
-      // Insert the copy right after the source so it's easy to find.
-      const idx = cs.tasks.findIndex(t => t.id === task.id);
-      if (idx >= 0) cs.tasks.splice(idx + 1, 0, newTask);
-      else cs.tasks.push(newTask);
-    }
-    this._render();
-    this._loadAllTasks();
+    // Reload once — the backend placed the copy right after the source and
+    // renumbered, so we fetch the authoritative order with a single render
+    // instead of an optimistic insert + render followed by a second reload render.
+    await this._loadAllTasks();
   }
 
   _buildImageSection(task, colIdx) {
@@ -6272,7 +6275,6 @@ class HomeTasksCard extends HTMLElement {
       // they want to focus / select / scroll the field, not drag the task.
       if (this._isInteractiveTarget(e.target)) return;
       const touch = e.touches[0];
-      let lpStartX = touch.clientX, lpStartY = touch.clientY;
       // List rows show their details inline on tap; the detail sheet is a
       // tiles-only gesture. A long-press here only arms the drag below — opening
       // the sheet here too fought the drag (stationary hold flashed a drag +
@@ -6304,15 +6306,8 @@ class HomeTasksCard extends HTMLElement {
         this._touchClone = clone;
         this._touchOffsetY = touch.clientY - rect.top;
       }, 150);
-      // Cancel long-press on significant movement
-      const _cancelLp = (ev) => {
-        const t = ev.touches[0];
-        if (Math.abs(t.clientX - lpStartX) > 8 || Math.abs(t.clientY - lpStartY) > 8) {
-          if (this._touchLpTimer) { clearTimeout(this._touchLpTimer); this._touchLpTimer = null; }
-          taskEl.removeEventListener("touchmove", _cancelLp);
-        }
-      };
-      taskEl.addEventListener("touchmove", _cancelLp, { passive: true });
+      // (A scroll cancels the pending drag via onTouchMove below, which clears
+      // _touchStartTimer on the first move while no drag is active.)
     }, { passive: true });
 
     const onTouchMove = (e) => {
@@ -6349,7 +6344,6 @@ class HomeTasksCard extends HTMLElement {
     };
 
     const onTouchEnd = () => {
-      if (this._touchLpTimer) { clearTimeout(this._touchLpTimer); this._touchLpTimer = null; }
       if (this._touchStartTimer) {
         clearTimeout(this._touchStartTimer);
         this._touchStartTimer = null;

@@ -1440,6 +1440,18 @@ def _local_image_name(url: str | None) -> str | None:
     return path[len(prefix):] if path.startswith(prefix) else None
 
 
+def _is_private_host(host: str | None) -> bool:
+    """True if host is a private/loopback IP (LAN address). Named hosts → False."""
+    if not host:
+        return False
+    try:
+        import ipaddress
+        ip = ipaddress.ip_address(host)
+        return ip.is_private or ip.is_loopback
+    except ValueError:
+        return False
+
+
 async def _cleanup_orphan_image(hass, old_url: str | None, new_url: str | None) -> None:
     """Delete an old public www image once no task references it any more.
 
@@ -1450,10 +1462,19 @@ async def _cleanup_orphan_image(hass, old_url: str | None, new_url: str | None) 
     old_name = _local_image_name(old_url)
     if not old_name or old_name == _local_image_name(new_url):
         return
+    # A truthy new value that isn't one of our public files means the re-save
+    # failed (it returned the raw media-source:// / http URL) — keep the old file
+    # as a fallback. (new_url is None for an explicit removal, which still reclaims it.)
+    if new_url and _local_image_name(new_url) is None:
+        return
     for s in hass.data.get(DOMAIN, {}).values():
         if not hasattr(s, "tasks"):
             continue
-        for t in s.tasks:
+        # Membership only — read the raw list instead of the .tasks property,
+        # which builds a freshly-sorted copy on every access.
+        raw = getattr(s, "_data", None)
+        tasks = raw["tasks"] if isinstance(raw, dict) and "tasks" in raw else s.tasks
+        for t in tasks:
             if _local_image_name(t.get("image_url")) == old_name:
                 return  # still referenced — keep the file
     import os
@@ -1533,21 +1554,29 @@ async def _save_image_to_public_media(hass, connection, image_url: str, filename
                 ha_port = hass.http.server_port
             except AttributeError:
                 ha_port = 8123
-            # Internal = points at THIS HA instance (loopback, our server port, or
-            # one of HA's own hostnames). Matching on path prefix alone is unsafe:
-            # an external CDN URL like https://cdn.x/media/y.png would be wrongly
-            # rewritten to the loopback, 404, and silently drop the re-save.
-            ha_hosts = {"127.0.0.1", "localhost"}
-            try:
-                from homeassistant.helpers.network import get_url
-                for _pref in (False, True):
-                    try:
-                        ha_hosts.add(urlparse(get_url(hass, prefer_external=_pref)).hostname)
-                    except Exception:  # noqa: BLE001
-                        pass
-            except Exception:  # noqa: BLE001
-                pass
-            is_internal = parsed.port == ha_port or parsed.hostname in ha_hosts
+            # Internal = points at THIS HA instance. Cheap checks first (loopback,
+            # our server port, or a private/LAN IP); only consult get_url() — which
+            # can trigger cloud remote-UI resolution — as a fallback for named
+            # hosts. Matching on path prefix alone is unsafe (an external CDN URL
+            # like https://cdn.x/media/y.png would be wrongly rewritten to loopback).
+            host = parsed.hostname
+            is_internal = (
+                host in ("127.0.0.1", "localhost")
+                or parsed.port == ha_port
+                or _is_private_host(host)
+            )
+            if not is_internal and host:
+                ha_hosts: set = set()
+                try:
+                    from homeassistant.helpers.network import get_url
+                    for _pref in (False, True):
+                        try:
+                            ha_hosts.add(urlparse(get_url(hass, prefer_external=_pref)).hostname)
+                        except Exception:  # noqa: BLE001
+                            pass
+                except Exception:  # noqa: BLE001
+                    pass
+                is_internal = host in ha_hosts
             if is_internal:
                 refresh_token = hass.auth.async_get_refresh_token(connection.refresh_token_id)
                 if refresh_token is None:

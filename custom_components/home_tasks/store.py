@@ -711,12 +711,6 @@ class HomeTasksStore:
         if len(self._data["tasks"]) >= MAX_TASKS_PER_LIST:
             raise ValueError(f"Maximum number of tasks ({MAX_TASKS_PER_LIST}) reached")
         source = self.get_task(task_id)
-        # Place the copy directly after the source: bump everything below it down
-        # by one so the new sort_order = source + 1 slots in right behind it.
-        src_order = source.get("sort_order", 0)
-        for t in self._data["tasks"]:
-            if t.get("sort_order", 0) > src_order:
-                t["sort_order"] = t["sort_order"] + 1
         history_entry: dict = {"ts": datetime.now(timezone.utc).isoformat(), "action": "duplicated_from", "source_id": task_id}
         if actor:
             history_entry["by"] = actor
@@ -731,12 +725,20 @@ class HomeTasksStore:
             "assigned_person": validate_assigned_person(assigned_person),
             "completed": False,
             "completed_at": None,
-            "sort_order": src_order + 1,
+            "sort_order": 0,  # set by the renumber below
             "history": [history_entry],
             "external_id": None,
             "sync_source": None,
             "recurrence_remaining_count": source.get("recurrence_max_count"),
         }
+        # Place the copy directly after its source and renumber contiguously, so
+        # it always lands right behind the source regardless of any pre-existing
+        # sort_order gaps or ties (which get healed in the process).
+        ordered = sorted(self._data["tasks"], key=lambda t: t.get("sort_order", 0))
+        src_pos = next((i for i, t in enumerate(ordered) if t["id"] == task_id), len(ordered) - 1)
+        ordered.insert(src_pos + 1, new_task)
+        for i, t in enumerate(ordered):
+            t["sort_order"] = i
         self._data["tasks"].append(new_task)
         await self._async_save()
         if self.on_task_created:
