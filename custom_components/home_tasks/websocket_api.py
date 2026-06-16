@@ -1556,14 +1556,71 @@ async def _cleanup_orphan_image(hass, old_url: str | None, new_url: str | None) 
                 return  # still referenced — keep the file
     import os
     path = hass.config.path("www", "home_tasks", old_name)
+    thumb = os.path.splitext(path)[0] + "_thumb.webp"
 
     def _rm() -> None:
-        try:
-            os.remove(path)
-        except OSError:
-            pass
+        for p in (path, thumb):
+            try:
+                os.remove(p)
+            except OSError:
+                pass
 
     await hass.async_add_executor_job(_rm)
+
+
+# ---------------------------------------------------------------------------
+#  Thumbnails — small WebP copies so tile grids load fast (the full PNGs the
+#  AI / media picker produce are ~1-2 MB each).  Thumb path is derived by
+#  convention: <base>.<ext> -> <base>_thumb.webp (no task-schema change).
+# ---------------------------------------------------------------------------
+
+_MAX_THUMB_PX = 512
+
+
+def _make_thumbnail(src_path: str) -> None:
+    """Write a downscaled WebP thumbnail next to src_path as <base>_thumb.webp."""
+    import os
+    from PIL import Image
+
+    thumb_path = os.path.splitext(src_path)[0] + "_thumb.webp"
+    with Image.open(src_path) as im:
+        if im.mode not in ("RGB", "RGBA"):
+            im = im.convert("RGBA")
+        im.thumbnail((_MAX_THUMB_PX, _MAX_THUMB_PX))
+        im.save(thumb_path, "WEBP", quality=80, method=4)
+
+
+async def _save_thumbnail(hass, dest: str) -> None:
+    """Generate a thumbnail for a freshly-saved image; best-effort (never raises)."""
+    try:
+        await hass.async_add_executor_job(_make_thumbnail, dest)
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.debug("Thumbnail generation failed for %s: %s", dest, err)
+
+
+async def _backfill_thumbnails(hass) -> None:
+    """One-time: create thumbnails for existing public images that lack one."""
+    import os
+    www_dir = hass.config.path("www", "home_tasks")
+
+    def _scan() -> None:
+        if not os.path.isdir(www_dir):
+            return
+        for fn in os.listdir(www_dir):
+            base, _ext = os.path.splitext(fn)
+            if base.endswith("_thumb"):
+                continue  # already a thumbnail
+            if os.path.exists(os.path.join(www_dir, base + "_thumb.webp")):
+                continue
+            try:
+                _make_thumbnail(os.path.join(www_dir, fn))
+            except Exception:  # noqa: BLE001
+                pass  # skip non-images / unreadable files
+
+    try:
+        await hass.async_add_executor_job(_scan)
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.debug("Thumbnail backfill failed: %s", err)
 
 
 async def _save_image_to_public_media(hass, connection, image_url: str, filename: str) -> str:
@@ -1610,6 +1667,7 @@ async def _save_image_to_public_media(hass, connection, image_url: str, filename
                 import shutil
                 try:
                     await hass.async_add_executor_job(shutil.copyfile, str(src_path), dest)
+                    await _save_thumbnail(hass, dest)
                     return f"/local/home_tasks/{filename}"
                 except Exception as copy_err:  # noqa: BLE001
                     _LOGGER.warning("Failed to copy media file %s: %s", src_path, copy_err)
@@ -1704,6 +1762,7 @@ async def _save_image_to_public_media(hass, connection, image_url: str, filename
                 fh.write(image_data)
 
         await hass.async_add_executor_job(_write)
+        await _save_thumbnail(hass, dest)
         return f"/local/home_tasks/{filename}"
 
     except Exception as exc:  # noqa: BLE001

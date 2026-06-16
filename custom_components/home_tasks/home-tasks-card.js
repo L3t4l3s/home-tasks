@@ -3280,6 +3280,17 @@ class HomeTasksCard extends HTMLElement {
     return this._el("div", { className: "tile-grid-wrap", "data-col-idx": String(colIdx) }, [grid]);
   }
 
+  // Derive the small WebP thumbnail URL for one of our public images
+  // (/local/home_tasks/<base>.<ext> -> <base>_thumb.webp). Other URLs unchanged.
+  _thumbUrl(url) {
+    if (!url) return url;
+    const i = url.indexOf("?");
+    const path = i === -1 ? url : url.slice(0, i);
+    const q = i === -1 ? "" : url.slice(i);
+    if (!path.startsWith("/local/home_tasks/")) return url;
+    return path.replace(/\.[^/.]+$/, "") + "_thumb.webp" + q;
+  }
+
   _buildTaskTile(task, colIdx) {
     const col = this._config.columns[colIdx];
     const showImages = col.show_images === true;
@@ -3295,7 +3306,10 @@ class HomeTasksCard extends HTMLElement {
 
     // Background image (only when show_images is enabled)
     if (thumbUrl) {
-      const img = this._el("img", { className: "tile-bg", src: thumbUrl, alt: "", draggable: false });
+      const small = this._thumbUrl(thumbUrl);
+      const img = this._el("img", { className: "tile-bg", src: small, alt: "", draggable: false });
+      // Fall back to the full image if the thumbnail isn't available yet.
+      if (small !== thumbUrl) img.addEventListener("error", () => { img.src = thumbUrl; }, { once: true });
       tile.appendChild(img);
     } else {
       // Placeholder: first letter on gradient background
@@ -3846,12 +3860,15 @@ class HomeTasksCard extends HTMLElement {
 
     const mainRowChildren = [checkboxEl, contentEl];
     if (task.image_url && !isEditing && col.show_images === true) {
+      const _full = task.image_url;
+      const _small = this._thumbUrl(_full);
       const thumb = this._el("img", {
         className: "task-thumb",
-        src: task.image_url,
+        src: _small,
         alt: "",
         title: task.title,
       });
+      if (_small !== _full) thumb.addEventListener("error", () => { thumb.src = _full; }, { once: true });
       // Click on thumbnail expands the task to show full image
       thumb.addEventListener("click", (e) => {
         e.stopPropagation();

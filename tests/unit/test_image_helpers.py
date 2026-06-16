@@ -6,6 +6,8 @@ import pytest
 from custom_components.home_tasks.websocket_api import (
     _is_private_host,
     _local_image_name,
+    _make_thumbnail,
+    _MAX_THUMB_PX,
 )
 
 pytestmark = pytest.mark.unit
@@ -49,3 +51,31 @@ def test_local_image_name(url, expected) -> None:
 def test_is_private_host(host, expected) -> None:
     """Private/loopback IPs are internal; public IPs and named hosts are not."""
     assert _is_private_host(host) is expected
+
+
+def test_make_thumbnail_downscales_to_webp(tmp_path) -> None:
+    """A large image yields a smaller WebP thumbnail with aspect ratio kept."""
+    from PIL import Image
+
+    src = tmp_path / "pic.png"
+    Image.new("RGB", (1024, 768), (200, 100, 50)).save(src)
+
+    _make_thumbnail(str(src))
+
+    thumb = tmp_path / "pic_thumb.webp"
+    assert thumb.exists()
+    with Image.open(thumb) as im:
+        assert im.format == "WEBP"
+        assert max(im.size) <= _MAX_THUMB_PX
+        assert im.size == (512, 384)  # aspect ratio preserved
+    assert thumb.stat().st_size < src.stat().st_size
+
+
+def test_make_thumbnail_handles_palette_mode(tmp_path) -> None:
+    """Palette/other modes are converted (no crash) and produce a thumbnail."""
+    from PIL import Image
+
+    src = tmp_path / "p.png"
+    Image.new("P", (640, 640)).save(src)
+    _make_thumbnail(str(src))
+    assert (tmp_path / "p_thumb.webp").exists()

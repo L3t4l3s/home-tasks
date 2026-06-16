@@ -49,6 +49,10 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     await _async_register_card(hass)
     _async_register_services(hass)
     _async_register_due_checker(hass)
+    # One-time: generate thumbnails for any pre-existing task images so tile
+    # grids load fast without re-saving each image. Runs in the background.
+    from .websocket_api import _backfill_thumbnails
+    hass.async_create_task(_backfill_thumbnails(hass))
     return True
 
 

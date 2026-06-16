@@ -295,3 +295,30 @@ describe('_formatDueDate', () => {
 // V8 caches TZ data per isolate, so changing process.env.TZ between tests
 // in the same file doesn't take effect. Each test_tz_*.mjs sets its TZ
 // once at module top level before any Date instance is created.
+
+
+describe('_thumbUrl', () => {
+  test('maps a local image to its _thumb.webp', async () => {
+    const card = await makeCard();
+    assert.equal(
+      card._thumbUrl('/local/home_tasks/abc123.png'),
+      '/local/home_tasks/abc123_thumb.webp'
+    );
+  });
+
+  test('preserves the ?v= cache-bust query', async () => {
+    const card = await makeCard();
+    assert.equal(
+      card._thumbUrl('/local/home_tasks/abc123.png?v=42'),
+      '/local/home_tasks/abc123_thumb.webp?v=42'
+    );
+  });
+
+  test('leaves non-local URLs untouched', async () => {
+    const card = await makeCard();
+    assert.equal(card._thumbUrl('https://cdn.x/y.png'), 'https://cdn.x/y.png');
+    assert.equal(card._thumbUrl('/media/local/home_tasks/x.png'), '/media/local/home_tasks/x.png');
+    assert.equal(card._thumbUrl(''), '');
+    assert.equal(card._thumbUrl(null), null);
+  });
+});
