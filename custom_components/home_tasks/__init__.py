@@ -25,6 +25,9 @@ from .websocket_api import async_register_websocket_commands
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["todo", "sensor", "binary_sensor", "calendar"]
+# External entries only get a calendar entity; their todo/sensor data is owned
+# by the source integration.
+EXTERNAL_PLATFORMS = ["calendar"]
 CARD_URL = "/home_tasks/home-tasks-card.js"
 DATA_SETUP_DONE = f"{DOMAIN}_setup_done"
 DATA_RECURRENCE_TIMERS = f"{DOMAIN}_recurrence_timers"
@@ -1304,8 +1307,10 @@ async def _async_setup_external_entry(hass: HomeAssistant, entry: ConfigEntry) -
         entity_id,
         adapter.provider_type,
     )
-    # External entries do NOT forward to platforms (todo/sensor/binary_sensor)
-    # because those entities are already managed by the external integration.
+    # External entries don't forward todo/sensor/binary_sensor (those are owned
+    # by the source integration) — but they DO get a calendar entity that
+    # projects their due/recurring tasks (#27).
+    await hass.config_entries.async_forward_entry_setups(entry, EXTERNAL_PLATFORMS)
 
     _schedule_startup_due_check(hass)
 
@@ -1323,12 +1328,15 @@ async def _async_setup_external_entry(hass: HomeAssistant, entry: ConfigEntry) -
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if entry.data.get("type") == "external":
-        # External entries don't have platforms to unload
-        hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
-        eid = entry.data.get("entity_id")
-        if eid:
-            hass.data.get(f"{DOMAIN}_adapters", {}).pop(eid, None)
-        return True
+        unload_ok = await hass.config_entries.async_unload_platforms(
+            entry, EXTERNAL_PLATFORMS
+        )
+        if unload_ok:
+            hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
+            eid = entry.data.get("entity_id")
+            if eid:
+                hass.data.get(f"{DOMAIN}_adapters", {}).pop(eid, None)
+        return unload_ok
 
     store = hass.data.get(DOMAIN, {}).get(entry.entry_id)
     if store and isinstance(store, HomeTasksStore):

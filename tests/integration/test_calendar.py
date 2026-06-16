@@ -26,10 +26,10 @@ async def test_calendar_entity_registered(
     assert entity_id is not None
 
 
-async def test_calendar_not_created_for_external_entry(
+async def test_calendar_created_for_external_entry(
     hass: HomeAssistant, patch_add_extra_js_url
 ) -> None:
-    """External entries do not get a calendar entity."""
+    """External entries get a calendar entity that projects their due tasks (#27)."""
     from pytest_homeassistant_custom_component.common import MockConfigEntry
 
     ext_entry = MockConfigEntry(
@@ -42,7 +42,7 @@ async def test_calendar_not_created_for_external_entry(
     await hass.async_block_till_done()
 
     entity_id = _get_calendar_entity_id(hass, ext_entry.entry_id)
-    assert entity_id is None
+    assert entity_id is not None
 
 
 async def test_calendar_state_off_when_no_current_event(
