@@ -331,21 +331,20 @@ columns:
 <tr>
 <td width="50%" valign="top">
 
-#### 💼 Work / Projects
+#### 🍽️ Meals (Tile View)
 
-<img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/usecase-work.png" alt="Work and projects list">
+<img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/meals.png" alt="Meals list in tile view with images">
 
-Focused on deadlines — priorities, due dates, reminders, and sub-tasks. Person assignment and recurrence hidden to reduce noise.
+A visual board in [tile view](#tile-view) — each task is a card with its (optionally AI-generated) image. Great for meal plans, recipes, or anything where the picture matters. Tap to complete, long-press for details.
 
 ```yaml
 type: custom:home-tasks-card
 columns:
   - list_id: "your-list-id"
-    default_filter: open
-    default_sort: due
-    show_assigned_person: false
-    show_tags: false
-    show_recurrence: false
+    title: Meals
+    icon: mdi:silverware-fork-knife
+    view_mode: tiles
+    show_images: true
 ```
 
 </td>
