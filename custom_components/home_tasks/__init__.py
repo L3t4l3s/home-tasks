@@ -769,6 +769,9 @@ async def _async_reopen_task(hass: HomeAssistant, entry_id: str, task_id: str) -
     store = stores.get(entry_id)
     if store is None:
         return
+    if isinstance(store, ExternalTaskOverlayStore):
+        await _async_reopen_external_task(hass, entry_id, store.entity_id, task_id)
+        return
     try:
         task = store.get_task(task_id)
     except ValueError:
@@ -923,6 +926,108 @@ def _recover_recurrence_timers(hass: HomeAssistant, entry_id: str, store: HomeTa
         if delay is None:
             continue
 
+        if delay <= 0:
+            hass.async_create_task(_async_reopen_task(hass, entry_id, task["id"]))
+        else:
+            _schedule_recurrence(hass, entry_id, task, completed_at=completed_at)
+
+
+# ---------------------------------------------------------------------------
+#  External-list recurrence (overlay-driven; provider must not own recurrence)
+# ---------------------------------------------------------------------------
+
+def _external_owns_recurrence(hass: HomeAssistant, entity_id: str) -> bool:
+    """True if the provider handles recurrence itself (e.g. Todoist) — then we
+    must NOT apply our overlay recurrence on top (it would double up)."""
+    try:
+        from .websocket_api import _get_adapter
+        adapter = _get_adapter(hass, entity_id)
+        return bool(adapter and adapter.capabilities.can_sync_recurrence)
+    except Exception:  # noqa: BLE001
+        return False
+
+
+async def _handle_external_recurrence_completion(
+    hass: HomeAssistant, entry_id: str, entity_id: str, task_uid: str
+) -> None:
+    """On external completion of a recurring task: stamp completed_at, apply the
+    count limit, and schedule the reopen — unless the provider owns recurrence."""
+    if _external_owns_recurrence(hass, entity_id):
+        return  # provider auto-recurs on close (e.g. Todoist)
+    task = _build_external_task(hass, entry_id, entity_id, task_uid)
+    if task is None or not task.get("recurrence_enabled"):
+        return
+    completed_at = datetime.now(timezone.utc)
+    overlay_kwargs: dict = {"completed_at": completed_at.isoformat()}
+    if task.get("recurrence_end_type") == "count" and task.get("recurrence_remaining_count") is not None:
+        remaining = task["recurrence_remaining_count"] - 1
+        overlay_kwargs["recurrence_remaining_count"] = max(0, remaining)
+        if remaining <= 0:
+            overlay_kwargs["recurrence_enabled"] = False
+    from .websocket_api import _get_overlay_store
+    await _get_overlay_store(hass, entity_id).async_set_overlay(task_uid, **overlay_kwargs)
+    if overlay_kwargs.get("recurrence_enabled") is False:
+        return  # count exhausted — no further reopen
+    task["completed_at"] = overlay_kwargs["completed_at"]
+    _schedule_recurrence(hass, entry_id, task, completed_at=completed_at)
+
+
+async def _async_reopen_external_task(
+    hass: HomeAssistant, entry_id: str, entity_id: str, task_uid: str
+) -> None:
+    """Reopen a recurring external task: flip the provider item back to open,
+    reset sub-items, clear completed_at, fire task_reopened, reschedule reminders."""
+    task = _build_external_task(hass, entry_id, entity_id, task_uid)
+    if task is None or not task.get("recurrence_enabled"):
+        return
+    from .provider_adapters import GenericAdapter
+    from .websocket_api import _get_adapter, _get_overlay_store
+    adapter = _get_adapter(hass, entity_id) or GenericAdapter(hass, entity_id, {})
+    try:
+        await adapter.async_update_task(task_uid, {"completed": False})
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.warning("Could not reopen external recurring task %s: %s", task_uid, err)
+        return
+    overlay_kwargs: dict = {"completed_at": None}
+    subs = task.get("sub_items") or []
+    if subs:
+        overlay_kwargs["sub_items"] = [{**s, "completed": False} for s in subs]
+    await _get_overlay_store(hass, entity_id).async_set_overlay(task_uid, **overlay_kwargs)
+    task["completed"] = False
+    task["completed_at"] = None
+    hass.bus.async_fire(f"{DOMAIN}_task_reopened", _build_event_data(entry_id, task))
+    _schedule_reminders(hass, entry_id, task)
+    _LOGGER.info("Recurring external task '%s' reopened", task.get("title", task_uid))
+
+
+def _recover_external_recurrence_timers(hass: HomeAssistant, entry_id: str, entity_id: str) -> None:
+    """On startup, reschedule reopen timers for completed recurring external tasks."""
+    if _external_owns_recurrence(hass, entity_id):
+        return
+    store = hass.data.get(DOMAIN, {}).get(entry_id)
+    if not isinstance(store, ExternalTaskOverlayStore):
+        return
+    try:
+        from .provider_adapters import _get_external_todo_items
+        from .websocket_api import _merge_tasks_with_overlays
+        merged = _merge_tasks_with_overlays(_get_external_todo_items(hass, entity_id), store)
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.debug("Could not recover external recurrence for %s: %s", entity_id, err)
+        return
+    for task in merged:
+        if not task.get("completed") or not task.get("recurrence_enabled"):
+            continue
+        if not task.get("completed_at"):
+            continue
+        try:
+            datetime.fromisoformat(task["completed_at"])
+        except (ValueError, TypeError):
+            continue
+        completed_at = _parse_completed_at(task)
+        delay = _compute_reopen_delay(task, completed_at)
+        if delay is None:
+            continue
+        task["_entity_id"] = entity_id
         if delay <= 0:
             hass.async_create_task(_async_reopen_task(hass, entry_id, task["id"]))
         else:
@@ -1203,12 +1308,15 @@ async def _async_setup_external_entry(hass: HomeAssistant, entry: ConfigEntry) -
     # because those entities are already managed by the external integration.
 
     _schedule_startup_due_check(hass)
-    # Reschedule external reminder timers once HA has settled (the external
-    # entity may not be loaded yet at setup time).
-    async_call_later(
-        hass, 120,
-        lambda _now: _recover_external_reminder_timers(hass, entry.entry_id, entity_id),
-    )
+
+    # Reschedule external reminder + recurrence timers once HA has settled (the
+    # external entity may not be loaded yet at setup time).
+    @callback
+    def _recover_external_timers(_now) -> None:
+        _recover_external_reminder_timers(hass, entry.entry_id, entity_id)
+        _recover_external_recurrence_timers(hass, entry.entry_id, entity_id)
+
+    async_call_later(hass, 120, _recover_external_timers)
     return True
 
 

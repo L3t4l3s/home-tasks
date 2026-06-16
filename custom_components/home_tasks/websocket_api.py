@@ -1307,6 +1307,22 @@ async def ws_update_external_task(hass, connection, msg):
                 merged = None
             event_type = "task_completed" if fields["completed"] else "task_reopened"
             _fire_external_task_event(hass, event_type, entity_id, task_uid, fields, task=merged)
+            # Overlay-driven recurrence (issue #27): on completion schedule the
+            # reopen (skipped for providers that own recurrence); on a manual
+            # reopen, cancel any pending reopen timer.
+            from . import _cancel_recurrence, _handle_external_recurrence_completion
+            if fields["completed"]:
+                entry_id = _external_entry_id(hass, entity_id)
+                if entry_id:
+                    await _handle_external_recurrence_completion(hass, entry_id, entity_id, task_uid)
+            else:
+                _cancel_recurrence(hass, task_uid)
+                # Clear the recurrence completion stamp so a manually reopened
+                # task isn't seen as still-completed by startup recovery / UI.
+                if merged and merged.get("completed_at"):
+                    await _get_overlay_store(hass, entity_id).async_set_overlay(
+                        task_uid, completed_at=None
+                    )
         connection.send_result(msg["id"], {"unsynced": list(unsynced.keys()) if unsynced else []})
     except Exception as err:
         _handle_error(connection, msg["id"], err)
