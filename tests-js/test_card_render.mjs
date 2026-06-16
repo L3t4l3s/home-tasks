@@ -815,3 +815,93 @@ describe('preset filters', () => {
     assert.equal(card._preFilteredTasks(0).length, 5);
   });
 });
+
+
+// ---------------------------------------------------------------------------
+// Discoverable title editing: the title is a plain span when collapsed and a
+// bordered text input when expanded (so users find how to rename a task).
+// ---------------------------------------------------------------------------
+
+
+describe('discoverable title editing', () => {
+  async function cardWithTask() {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'Test' }] },
+      'home_tasks/get_tasks': {
+        tasks: [{ id: 'T1', title: 'Rename me', sort_order: 0, sub_items: [], notes: '' }],
+      },
+    });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{ list_id: 'L1' }] });
+    card.hass = hass;
+    await flush(card);
+    return card;
+  }
+
+  test('collapsed task shows the title as a plain span (not an input)', async () => {
+    const card = await cardWithTask();
+    const row = card.shadowRoot.querySelector('.task[data-task-id="T1"]');
+    assert.ok(row.querySelector('.task-title'), 'collapsed shows a .task-title span');
+    assert.equal(row.querySelector('.edit-title-input'), null);
+  });
+
+  test('expanding a task renders the title as an editable text input', async () => {
+    const card = await cardWithTask();
+    card._expandedTasks.add('T1');
+    card._render();
+    const input = card.shadowRoot.querySelector('.task[data-task-id="T1"] .edit-title-input');
+    assert.ok(input, 'expanded task renders an editable title input');
+    assert.equal(input.value, 'Rename me');
+  });
+
+  test('focusing the expanded title input marks the task as editing (defers bg renders)', async () => {
+    const card = await cardWithTask();
+    card._expandedTasks.add('T1');
+    card._render();
+    const input = card.shadowRoot.querySelector('.task[data-task-id="T1"] .edit-title-input');
+    const win = card.shadowRoot.ownerDocument.defaultView;
+    input.dispatchEvent(new win.Event('focus'));
+    assert.equal(card._editingTaskId, 'T1',
+      'focusing the title must set _editingTaskId so a poll mid-typing cannot revert it');
+  });
+});
+
+
+// ---------------------------------------------------------------------------
+// Person-chips toggle: show_person_chips:false hides the per-column person
+// filter chips even when tasks have assignees.
+// ---------------------------------------------------------------------------
+
+
+describe('person chips toggle', () => {
+  async function cardWith(extra = {}) {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'Test' }] },
+      'home_tasks/get_tasks': {
+        tasks: [
+          { id: 'T1', title: 'a', assigned_person: 'Ben', sort_order: 0, sub_items: [] },
+          { id: 'T2', title: 'b', assigned_person: 'Anna', sort_order: 1, sub_items: [] },
+        ],
+      },
+    });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{ list_id: 'L1', ...extra }] });
+    card.hass = hass;
+    await flush(card);
+    return card;
+  }
+
+  test('person chips render by default when tasks have assignees', async () => {
+    const card = await cardWith();
+    assert.ok(card.shadowRoot.querySelector('.person-chips'), 'chips shown by default');
+    assert.equal(card.shadowRoot.querySelectorAll('.person-chip').length, 2);
+  });
+
+  test('show_person_chips:false hides the person chips', async () => {
+    const card = await cardWith({ show_person_chips: false });
+    assert.equal(card.shadowRoot.querySelector('.person-chips'), null);
+    assert.equal(card.shadowRoot.querySelectorAll('.person-chip').length, 0);
+  });
+});
