@@ -223,7 +223,36 @@ async def ws_update_task(hass, connection, msg):
         ):
             if key in msg:
                 kwargs[key] = msg[key]
+        # Re-publish a newly set image into our public www dir so the card can
+        # load it without auth and it doesn't expire when the issuing token is
+        # removed. media-source:// URIs are copied off disk; internal signed
+        # paths are downloaded. /local/home_tasks/ URLs are already public.
+        iu = kwargs.get("image_url")
+        if iu and len(iu) > MAX_IMAGE_URL_LENGTH:
+            # Reject over-length URLs before doing any download/copy I/O (the
+            # store validates the final /local URL, which is always short, so the
+            # cap would otherwise be bypassed for the original input).
+            raise ValueError(f"image_url must be at most {MAX_IMAGE_URL_LENGTH} characters")
+        # Remember the previous image so we can reclaim it if it changes/clears.
+        old_image_url = None
+        if "image_url" in kwargs:
+            try:
+                old_image_url = store.get_task(msg["task_id"]).get("image_url")
+            except Exception:  # noqa: BLE001
+                old_image_url = None
+        if iu and (
+            iu.startswith("media-source://")
+            or (iu.startswith("/") and not iu.split("?")[0].startswith("/local/home_tasks/"))
+        ):
+            import hashlib
+            import os
+            clean = iu.split("?")[0]
+            ext = os.path.splitext(clean)[1] or ".png"
+            fn = f"{hashlib.sha1(clean.encode()).hexdigest()[:16]}{ext}"
+            kwargs["image_url"] = await _save_image_to_public_media(hass, connection, iu, fn)
         task = await store.async_update_task(msg["task_id"], actor=actor, **kwargs)
+        if "image_url" in kwargs:
+            await _cleanup_orphan_image(hass, old_image_url, kwargs.get("image_url"))
         connection.send_result(msg["id"], task)
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -1402,12 +1431,50 @@ async def ws_reorder_sections(hass, connection, msg):
 # Image generation
 # ---------------------------------------------------------------------------
 
+def _local_image_name(url: str | None) -> str | None:
+    """Bare filename if url is one of our public /local/home_tasks/ images, else None."""
+    if not url:
+        return None
+    path = url.split("?")[0]
+    prefix = "/local/home_tasks/"
+    return path[len(prefix):] if path.startswith(prefix) else None
+
+
+async def _cleanup_orphan_image(hass, old_url: str | None, new_url: str | None) -> None:
+    """Delete an old public www image once no task references it any more.
+
+    Bounds growth of config/www/home_tasks: when a task's image changes or is
+    removed, the previous /local/home_tasks/<file> is deleted — unless another
+    task in any list still points at it (same-title tasks share one file).
+    """
+    old_name = _local_image_name(old_url)
+    if not old_name or old_name == _local_image_name(new_url):
+        return
+    for s in hass.data.get(DOMAIN, {}).values():
+        if not hasattr(s, "tasks"):
+            continue
+        for t in s.tasks:
+            if _local_image_name(t.get("image_url")) == old_name:
+                return  # still referenced — keep the file
+    import os
+    path = hass.config.path("www", "home_tasks", old_name)
+
+    def _rm() -> None:
+        try:
+            os.remove(path)
+        except OSError:
+            pass
+
+    await hass.async_add_executor_job(_rm)
+
+
 async def _save_image_to_public_media(hass, connection, image_url: str, filename: str) -> str:
     """Download an image URL and save it to the public media dir.
 
     Handles HA-internal paths (auth-required), external https:// URLs (may expire),
     and media-source:// URIs (only renderable by native HA apps).
-    Returns a /media/local/home_tasks/<filename> URL accessible on all devices.
+    Returns a /local/home_tasks/<filename> URL (public www, no auth, no expiry)
+    accessible on all devices.
     Falls back to the original URL on any error.
     """
     import os
@@ -1418,13 +1485,13 @@ async def _save_image_to_public_media(hass, connection, image_url: str, filename
 
     # Already saved to our local directory — nothing to do.
     # Strip any ?v= query param before checking so versioned URLs don't slip through.
-    if image_url.split("?")[0].startswith("/media/local/home_tasks/"):
+    if image_url.split("?")[0].startswith("/local/home_tasks/"):
         return image_url
 
     try:
-        media_dir = hass.config.path("media", "home_tasks")
-        await hass.async_add_executor_job(os.makedirs, media_dir, 0o755, True)
-        dest = os.path.join(media_dir, filename)
+        www_dir = hass.config.path("www", "home_tasks")
+        await hass.async_add_executor_job(os.makedirs, www_dir, 0o755, True)
+        dest = os.path.join(www_dir, filename)
 
         session = async_get_clientsession(hass, verify_ssl=False)
 
@@ -1434,29 +1501,55 @@ async def _save_image_to_public_media(hass, connection, image_url: str, filename
             try:
                 from homeassistant.components.media_source import async_resolve_media
                 resolved = await async_resolve_media(hass, image_url, None)
-                image_url = resolved.url
             except Exception as resolve_err:  # noqa: BLE001
                 _LOGGER.warning("Failed to resolve media source %s: %s", image_url, resolve_err)
                 return image_url
+            # Prefer copying the file straight off disk — no HTTP request, so no
+            # dependency on a signed URL (those die the moment their issuing
+            # refresh token is removed). Fall back to the resolved URL otherwise.
+            src_path = getattr(resolved, "path", None)
+            if src_path:
+                import shutil
+                try:
+                    await hass.async_add_executor_job(shutil.copyfile, str(src_path), dest)
+                    return f"/local/home_tasks/{filename}"
+                except Exception as copy_err:  # noqa: BLE001
+                    _LOGGER.warning("Failed to copy media file %s: %s", src_path, copy_err)
+                    return image_url
+            image_url = resolved.url
 
         # Determine the download URL and headers
         if image_url.startswith(("http://", "https://")):
             # Fully-qualified URL.  Could be external (OpenAI CDN) or an internal
-            # HA URL served via the machine's LAN IP (e.g. ai_task generates
-            # http://192.168.x.x:8123/ai_task/image/...?authSig=...).
-            # In a HAOS/Docker setup the server cannot reach its own external IP
-            # from inside the container, so we detect that case and rewrite to
-            # the 127.0.0.1 loopback with a Bearer-token — exactly like we do
-            # for plain /path URLs.
+            # HA URL (e.g. ai_task may return http://<host>[:port]/ai_task/image/
+            # ...?authSig=...).  We recognise the internal case by the path HA
+            # serves (or our own host/port) and always fetch it via the 127.0.0.1
+            # loopback on the real internal server port + a Bearer token.  That
+            # works no matter how HA is exposed — LAN IP, a custom port, or a
+            # reverse-proxied domain (where there is no port to compare).
             from urllib.parse import urlparse, urlunparse
             parsed = urlparse(image_url)
             try:
                 ha_port = hass.http.server_port
             except AttributeError:
                 ha_port = 8123
-            if parsed.port == ha_port and parsed.hostname not in ("127.0.0.1", "localhost"):
-                # Rewrite to loopback
-                refresh_token = await hass.auth.async_get_refresh_token(connection.refresh_token_id)
+            # Internal = points at THIS HA instance (loopback, our server port, or
+            # one of HA's own hostnames). Matching on path prefix alone is unsafe:
+            # an external CDN URL like https://cdn.x/media/y.png would be wrongly
+            # rewritten to the loopback, 404, and silently drop the re-save.
+            ha_hosts = {"127.0.0.1", "localhost"}
+            try:
+                from homeassistant.helpers.network import get_url
+                for _pref in (False, True):
+                    try:
+                        ha_hosts.add(urlparse(get_url(hass, prefer_external=_pref)).hostname)
+                    except Exception:  # noqa: BLE001
+                        pass
+            except Exception:  # noqa: BLE001
+                pass
+            is_internal = parsed.port == ha_port or parsed.hostname in ha_hosts
+            if is_internal:
+                refresh_token = hass.auth.async_get_refresh_token(connection.refresh_token_id)
                 if refresh_token is None:
                     _LOGGER.warning("No refresh token available for internal URL download")
                     return image_url
@@ -1467,13 +1560,14 @@ async def _save_image_to_public_media(hass, connection, image_url: str, filename
                     scheme, f"127.0.0.1:{ha_port}",
                     parsed.path, parsed.params, parsed.query, "",
                 ))
-                headers: dict = {"Authorization": f"Bearer {access_token.token}"}
+                headers: dict = {"Authorization": f"Bearer {access_token}"}
             else:
+                # Genuinely external (e.g. the OpenAI image CDN) — fetch as-is.
                 download_url = image_url
                 headers = {}
         else:
             # HA-internal path — needs Bearer token + loopback URL
-            refresh_token = await hass.auth.async_get_refresh_token(connection.refresh_token_id)
+            refresh_token = hass.auth.async_get_refresh_token(connection.refresh_token_id)
             if refresh_token is None:
                 _LOGGER.warning("No refresh token available; skipping image re-save")
                 return image_url
@@ -1488,7 +1582,7 @@ async def _save_image_to_public_media(hass, connection, image_url: str, filename
 
             scheme = "https" if use_ssl else "http"
             download_url = f"{scheme}://127.0.0.1:{port}{image_url}"
-            headers = {"Authorization": f"Bearer {access_token.token}"}
+            headers = {"Authorization": f"Bearer {access_token}"}
 
         async with session.get(download_url, headers=headers) as resp:
             if resp.status != 200:
@@ -1504,7 +1598,7 @@ async def _save_image_to_public_media(hass, connection, image_url: str, filename
                 fh.write(image_data)
 
         await hass.async_add_executor_job(_write)
-        return f"/media/local/home_tasks/{filename}"
+        return f"/local/home_tasks/{filename}"
 
     except Exception as exc:  # noqa: BLE001
         _LOGGER.warning("Failed to save image to public media dir: %s", exc)
@@ -1548,7 +1642,7 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
         # 1. Reuse: if any task with the same title already has an image URL,
         #    skip the service call (bypass with force=True).
         # ------------------------------------------------------------------
-        if not msg.get("force", False):
+        if not msg.get("force", False) and title_key:
             existing_url: str | None = None
             for s in all_stores.values():
                 if not hasattr(s, "tasks"):
@@ -1570,6 +1664,11 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
         # ------------------------------------------------------------------
         prompt_prefix = msg.get("prompt_prefix", "")
         prompt = f"{prompt_prefix}{title}" if prompt_prefix else title
+        # The card renders images in square tiles. ai_task exposes no size
+        # parameter, but gpt-image (and most models) honour an explicit aspect
+        # instruction — so ask for 1:1 to avoid the tiles cropping the result.
+        # For providers that ignore it this is just harmless extra prompt text.
+        instructions = f"{prompt}\n\nThe image must have a square 1:1 aspect ratio."
 
         entity_id = msg.get("entity_id")
         if not entity_id:
@@ -1589,7 +1688,7 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
                 "generate_image",
                 {
                     "task_name": f"home_tasks_{title_hash}",
-                    "instructions": prompt,
+                    "instructions": instructions,
                     "entity_id": entity_id,
                 },
                 blocking=True,
@@ -1600,9 +1699,12 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
 
         _LOGGER.debug("ai_task.generate_image result: %s", service_result)
         result_dict = service_result or {}
+        # Prefer the media-source id: it lets _save_image_to_public_media copy
+        # the file straight off disk (no auth-dependent HTTP download). The
+        # signed "url" is only a fallback.
         image_url = (
-            result_dict.get("url")
-            or result_dict.get("media_source_id")
+            result_dict.get("media_source_id")
+            or result_dict.get("url")
             or (result_dict.get("image") or {}).get("url")
         )
         if not image_url:
@@ -1615,24 +1717,36 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
         image_filename = f"{title_hash}.png"
         image_url = await _save_image_to_public_media(hass, connection, image_url, image_filename)
 
+        # Never persist an unresolved media-source:// URI — the browser can't
+        # render it, so it would show as a permanently broken image. Surface a
+        # clear error instead (e.g. media-source resolution failed above).
+        if image_url and image_url.startswith("media-source://"):
+            raise ValueError(
+                "Generated image could not be resolved to a displayable URL"
+            )
+
         # Append a cache-busting timestamp so browsers/apps that cache by URL
         # (including the Android HA app which cannot be hard-refreshed) always
         # fetch the new image after regeneration.
-        if image_url.startswith("/media/local/home_tasks/"):
+        if image_url.startswith("/local/home_tasks/"):
             image_url = f"{image_url}?v={int(time.time())}"
 
         # ------------------------------------------------------------------
         # 3. Propagate URL to every task with the same title across all lists.
         # ------------------------------------------------------------------
         updated_task = None
-        for s in all_stores.values():
-            if not hasattr(s, "tasks"):
-                continue
-            for t in s.tasks:
-                if t.get("title", "").strip().lower() == title_key and t.get("image_url") != image_url:
-                    stamped = await s.async_update_task(t["id"], image_url=image_url)
-                    if t["id"] == msg["task_id"]:
-                        updated_task = stamped
+        # Only fan out to same-title tasks when the title is non-empty — an empty
+        # title would match every blank-title task across all lists and overwrite
+        # their images.
+        if title_key:
+            for s in all_stores.values():
+                if not hasattr(s, "tasks"):
+                    continue
+                for t in s.tasks:
+                    if t.get("title", "").strip().lower() == title_key and t.get("image_url") != image_url:
+                        stamped = await s.async_update_task(t["id"], image_url=image_url)
+                        if t["id"] == msg["task_id"]:
+                            updated_task = stamped
 
         if updated_task is None:
             updated_task = await store.async_update_task(msg["task_id"], image_url=image_url)
