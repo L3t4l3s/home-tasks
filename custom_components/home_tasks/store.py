@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import (
+    MAX_IMAGE_URL_LENGTH,
     MAX_NOTES_LENGTH,
     MAX_RECURRENCE_VALUE,
     MAX_REMINDER_OFFSET_MINUTES,
@@ -264,8 +265,22 @@ def validate_reminders(value):
     return sorted(set(value))
 
 
+def validate_image_url(value):
+    """Validate image_url: None or a string within the length cap."""
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ValueError("image_url must be a string or null")
+    if len(value) > MAX_IMAGE_URL_LENGTH:
+        raise ValueError(
+            f"image_url must be at most {MAX_IMAGE_URL_LENGTH} characters"
+        )
+    return value
+
+
 # Mapping field name → validator function. Used by both stores' update paths.
 _FIELD_VALIDATORS = {
+    "image_url": validate_image_url,
     "notes": validate_notes,
     "priority": validate_priority,
     "completed": validate_completed,
@@ -696,7 +711,12 @@ class HomeTasksStore:
         if len(self._data["tasks"]) >= MAX_TASKS_PER_LIST:
             raise ValueError(f"Maximum number of tasks ({MAX_TASKS_PER_LIST}) reached")
         source = self.get_task(task_id)
-        max_order = max((t["sort_order"] for t in self._data["tasks"]), default=-1)
+        # Place the copy directly after the source: bump everything below it down
+        # by one so the new sort_order = source + 1 slots in right behind it.
+        src_order = source.get("sort_order", 0)
+        for t in self._data["tasks"]:
+            if t.get("sort_order", 0) > src_order:
+                t["sort_order"] = t["sort_order"] + 1
         history_entry: dict = {"ts": datetime.now(timezone.utc).isoformat(), "action": "duplicated_from", "source_id": task_id}
         if actor:
             history_entry["by"] = actor
@@ -707,10 +727,11 @@ class HomeTasksStore:
             "tags": list(source.get("tags", [])),
             "reminders": list(source.get("reminders", [])),
             "recurrence_weekdays": list(source.get("recurrence_weekdays", [])),
+            "image_url": validate_image_url(source.get("image_url")),
             "assigned_person": validate_assigned_person(assigned_person),
             "completed": False,
             "completed_at": None,
-            "sort_order": max_order + 1,
+            "sort_order": src_order + 1,
             "history": [history_entry],
             "external_id": None,
             "sync_source": None,

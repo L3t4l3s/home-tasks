@@ -243,6 +243,30 @@ def test_validate_text_too_long() -> None:
         validate_text("x" * 300, 255, "field")
 
 
+def test_validate_image_url_none_ok() -> None:
+    from custom_components.home_tasks.store import validate_image_url
+    assert validate_image_url(None) is None
+
+
+def test_validate_image_url_accepts_normal_url() -> None:
+    from custom_components.home_tasks.store import validate_image_url
+    url = "/media/local/home_tasks/abc123.png?v=1"
+    assert validate_image_url(url) == url
+
+
+def test_validate_image_url_not_string() -> None:
+    from custom_components.home_tasks.store import validate_image_url
+    with pytest.raises(ValueError, match="must be a string"):
+        validate_image_url(123)  # type: ignore[arg-type]
+
+
+def test_validate_image_url_too_long() -> None:
+    from custom_components.home_tasks.const import MAX_IMAGE_URL_LENGTH
+    from custom_components.home_tasks.store import validate_image_url
+    with pytest.raises(ValueError, match="at most"):
+        validate_image_url("x" * (MAX_IMAGE_URL_LENGTH + 1))
+
+
 def test_validate_date_not_string() -> None:
     from custom_components.home_tasks.store import validate_date
     with pytest.raises(ValueError, match="must be a string"):
