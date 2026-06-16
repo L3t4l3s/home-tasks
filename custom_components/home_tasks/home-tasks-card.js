@@ -40,6 +40,7 @@ const _TRANSLATIONS = {
     assigned_to: "Assigned to",
     nobody: "\u2013 Nobody \u2013",
     delete_task: "Delete task",
+    duplicate_task: "Duplicate",
     delete_sub: "Delete",
     ed_default_filter: "Default filter",
     ed_list: "List",
@@ -73,6 +74,11 @@ const _TRANSLATIONS = {
     sort_title: "Title (A\u2013Z)",
     sort_person: "Assigned",
     ed_show_sort: "Sort",
+    ed_show_filters: "Filters",
+    ed_show_tag_chips: "Tag chips",
+    ed_show_person_chips: "Person chips",
+    ed_show_voice: "Voice input",
+    ed_auto_image: "Auto-generate image",
     ed_show_priority: "Priorities",
     ed_default_sort: "Default sort",
     reminder: "Reminders",
@@ -98,7 +104,8 @@ const _TRANSLATIONS = {
     ed_card_title: "Card title (optional)",
     ed_card_title_placeholder: "Title shown above columns",
     ed_sec_view: "Display",
-    ed_sec_display: "Configuration",
+    ed_sec_display: "Task features",
+    ed_tile_help: "Tile view:\n• Click = complete\n• Hold = edit\n• Drag = reorder",
     due_time_lbl: "Time",
     due_date_lbl: "Date",
     rec_mode_lbl: "Mode",
@@ -147,7 +154,6 @@ const _TRANSLATIONS = {
     ed_ai_image_entity_placeholder: "e.g. ai_task.openai",
     ed_ai_prompt_prefix: "Prompt prefix (optional)",
     ed_ai_prompt_prefix_placeholder: "e.g. Minimalist icon of",
-    assign_to_another: "Assign to another person",
   },
   nl: {
     my_tasks: "Mijn taken",
@@ -216,7 +222,6 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "Overmorgen", due_day_before_yesterday: "Eergisteren",
     due_in_hours: "Over {0} u {1} min", due_in_minutes: "Over {0} min", due_in_seconds: "Nu",
     due_ago_hours: "{0} u {1} min geleden", due_ago_minutes: "{0} min geleden", due_ago_seconds: "Zojuist",
-    assign_to_another: "Ook toewijzen aan",
   },
   it: {
     my_tasks: "Le mie attivit\u00e0",
@@ -285,7 +290,6 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "Dopodomani", due_day_before_yesterday: "L'altroieri",
     due_in_hours: "Tra {0} h {1} min", due_in_minutes: "Tra {0} min", due_in_seconds: "Adesso",
     due_ago_hours: "{0} h {1} min fa", due_ago_minutes: "{0} min fa", due_ago_seconds: "Proprio ora",
-    assign_to_another: "Assegna anche a",
   },
   pl: {
     my_tasks: "Moje zadania",
@@ -354,7 +358,6 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "Pojutrze", due_day_before_yesterday: "Przedwczoraj",
     due_in_hours: "Za {0} godz. {1} min", due_in_minutes: "Za {0} min", due_in_seconds: "Teraz",
     due_ago_hours: "{0} godz. {1} min temu", due_ago_minutes: "{0} min temu", due_ago_seconds: "W\u0142a\u015bnie",
-    assign_to_another: "Przypisz r\u00f3wnie\u017c do",
   },
   sv: {
     my_tasks: "Mina uppgifter",
@@ -423,7 +426,6 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "\u00d6vermorgon", due_day_before_yesterday: "F\u00f6rrg\u00e5r",
     due_in_hours: "Om {0} tim {1} min", due_in_minutes: "Om {0} min", due_in_seconds: "Nu",
     due_ago_hours: "{0} tim {1} min sedan", due_ago_minutes: "{0} min sedan", due_ago_seconds: "Just nu",
-    assign_to_another: "Tilldela även till",
   },
   fr: {
     my_tasks: "Mes t\u00e2ches",
@@ -492,7 +494,6 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "Apr\u00e8s-demain", due_day_before_yesterday: "Avant-hier",
     due_in_hours: "Dans {0} h {1} min", due_in_minutes: "Dans {0} min", due_in_seconds: "Maintenant",
     due_ago_hours: "Il y a {0} h {1} min", due_ago_minutes: "Il y a {0} min", due_ago_seconds: "\u00c0 l'instant",
-    assign_to_another: "Assigner \u00e9galement \u00e0",
   },
   pt: {
     my_tasks: "Minhas tarefas",
@@ -561,7 +562,6 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "Depois de amanh\u00e3", due_day_before_yesterday: "Anteontem",
     due_in_hours: "Em {0} h {1} min", due_in_minutes: "Em {0} min", due_in_seconds: "Agora",
     due_ago_hours: "H\u00e1 {0} h {1} min", due_ago_minutes: "H\u00e1 {0} min", due_ago_seconds: "Agora mesmo",
-    assign_to_another: "Atribuir tamb\u00e9m a",
   },
   es: {
     my_tasks: "Mis tareas",
@@ -630,7 +630,6 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "Pasado ma\u00f1ana", due_day_before_yesterday: "Anteayer",
     due_in_hours: "En {0} h {1} min", due_in_minutes: "En {0} min", due_in_seconds: "Ahora",
     due_ago_hours: "Hace {0} h {1} min", due_ago_minutes: "Hace {0} min", due_ago_seconds: "Ahora mismo",
-    assign_to_another: "Asignar también a",
   },
   ru: {
     my_tasks: "\u041c\u043e\u0438 \u0437\u0430\u0434\u0430\u0447\u0438",
@@ -699,7 +698,6 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "\u041f\u043e\u0441\u043b\u0435\u0437\u0430\u0432\u0442\u0440\u0430", due_day_before_yesterday: "\u041f\u043e\u0437\u0430\u0432\u0447\u0435\u0440\u0430",
     due_in_hours: "\u0427\u0435\u0440\u0435\u0437 {0} \u0447 {1} \u043c\u0438\u043d", due_in_minutes: "\u0427\u0435\u0440\u0435\u0437 {0} \u043c\u0438\u043d", due_in_seconds: "\u0421\u0435\u0439\u0447\u0430\u0441",
     due_ago_hours: "{0} \u0447 {1} \u043c\u0438\u043d \u043d\u0430\u0437\u0430\u0434", due_ago_minutes: "{0} \u043c\u0438\u043d \u043d\u0430\u0437\u0430\u0434", due_ago_seconds: "\u0422\u043e\u043b\u044c\u043a\u043e \u0447\u0442\u043e",
-    assign_to_another: "\u041d\u0430\u0437\u043d\u0430\u0447\u0438\u0442\u044c \u0442\u0430\u043a\u0436\u0435",
   },
   cs: {
     my_tasks: "Moje \u00fakoly",
@@ -768,7 +766,6 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "Poz\u00edt\u0159\u00ed", due_day_before_yesterday: "P\u0159edev\u010d\u00edrem",
     due_in_hours: "Za {0} hod {1} min", due_in_minutes: "Za {0} min", due_in_seconds: "Nyn\u00ed",
     due_ago_hours: "P\u0159ed {0} hod {1} min", due_ago_minutes: "P\u0159ed {0} min", due_ago_seconds: "Pr\u00e1v\u011b te\u010f",
-    assign_to_another: "P\u0159i\u0159adit tak\u00e9",
   },
   da: {
     my_tasks: "Mine opgaver",
@@ -837,7 +834,6 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "I overmorgen", due_day_before_yesterday: "I forg\u00e5rs",
     due_in_hours: "Om {0} t {1} min", due_in_minutes: "Om {0} min", due_in_seconds: "Nu",
     due_ago_hours: "{0} t {1} min siden", due_ago_minutes: "{0} min siden", due_ago_seconds: "Lige nu",
-    assign_to_another: "Tildel også til",
   },
   no: {
     my_tasks: "Mine oppgaver",
@@ -906,7 +902,6 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "I overmorgen", due_day_before_yesterday: "I forg\u00e5rs",
     due_in_hours: "Om {0} t {1} min", due_in_minutes: "Om {0} min", due_in_seconds: "N\u00e5",
     due_ago_hours: "{0} t {1} min siden", due_ago_minutes: "{0} min siden", due_ago_seconds: "Akkurat n\u00e5",
-    assign_to_another: "Tildel ogs\u00e5 til",
   },
   fi: {
     my_tasks: "Omat teht\u00e4v\u00e4t",
@@ -975,7 +970,6 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "Ylihuomenna", due_day_before_yesterday: "Toissap\u00e4iv\u00e4n\u00e4",
     due_in_hours: "{0} t {1} min p\u00e4\u00e4st\u00e4", due_in_minutes: "{0} min p\u00e4\u00e4st\u00e4", due_in_seconds: "Nyt",
     due_ago_hours: "{0} t {1} min sitten", due_ago_minutes: "{0} min sitten", due_ago_seconds: "Juuri nyt",
-    assign_to_another: "Määritä myös",
   },
   hu: {
     my_tasks: "Feladataim",
@@ -1044,7 +1038,6 @@ const _TRANSLATIONS = {
     due_day_after_tomorrow: "Holnaput\u00e1n", due_day_before_yesterday: "Tegnapel\u0151tt",
     due_in_hours: "{0} \u00f3 {1} perc m\u00falva", due_in_minutes: "{0} perc m\u00falva", due_in_seconds: "Most",
     due_ago_hours: "{0} \u00f3 {1} perccel ezel\u0151tt", due_ago_minutes: "{0} perccel ezel\u0151tt", due_ago_seconds: "\u00c9pp most",
-    assign_to_another: "Hozz\u00e1rendel\u00e9s m\u00e1snak is",
   },
   de: {
     my_tasks: "Meine Aufgaben",
@@ -1079,6 +1072,7 @@ const _TRANSLATIONS = {
     assigned_to: "Zugewiesen an",
     nobody: "\u2013 Niemand \u2013",
     delete_task: "Aufgabe l\u00f6schen",
+    duplicate_task: "Duplizieren",
     delete_sub: "L\u00f6schen",
     ed_default_filter: "Standardfilter",
     ed_list: "Liste",
@@ -1111,6 +1105,11 @@ const _TRANSLATIONS = {
     sort_title: "Titel (A\u2013Z)",
     sort_person: "Zugewiesen",
     ed_show_sort: "Sortierung",
+    ed_show_filters: "Filter",
+    ed_show_tag_chips: "Tag-Chips",
+    ed_show_person_chips: "Personen-Chips",
+    ed_show_voice: "Spracheingabe",
+    ed_auto_image: "Bild automatisch generieren",
     ed_default_sort: "Standard-Sortierung",
     reminder: "Erinnerungen",
     rem_add: "+ Erinnerung hinzuf\u00fcgen",
@@ -1135,7 +1134,8 @@ const _TRANSLATIONS = {
     ed_card_title: "Kartentitel (optional)",
     ed_card_title_placeholder: "Titel \u00fcber den Spalten",
     ed_sec_view: "Darstellung",
-    ed_sec_display: "Konfiguration",
+    ed_sec_display: "Aufgaben-Funktionen",
+    ed_tile_help: "Kachelansicht:\n• Klicken = erledigen\n• Gedrückt halten = editieren\n• Ziehen = Position ändern",
     due_time_lbl: "Uhrzeit",
     due_date_lbl: "Datum",
     rec_mode_lbl: "Modus",
@@ -1184,7 +1184,6 @@ const _TRANSLATIONS = {
     ed_ai_image_entity_placeholder: "z.B. ai_task.openai",
     ed_ai_prompt_prefix: "Prompt-Präfix (optional)",
     ed_ai_prompt_prefix_placeholder: "z.B. Minimalistisches Icon von",
-    assign_to_another: "Auch zuweisen an…",
   },
 };
 
@@ -1620,9 +1619,7 @@ class HomeTasksCard extends HTMLElement {
     if (!this._colListId(colIdx) && !this._colEntityId(colIdx)) return;
 
     // Capture add-input position for the entry animation
-    const colEl = this.shadowRoot.querySelector(`.task-list[data-col-idx="${colIdx}"]`)
-      ?.closest(".card-column");
-    const addInput = colEl?.querySelector(".add-input");
+    const addInput = this.shadowRoot.querySelector(`.add-input[data-focus-key="add_task_col_${colIdx}"]`);
     const addInputRect = addInput ? addInput.getBoundingClientRect() : null;
 
     // Snapshot existing task positions (they may shift when new task is inserted)
@@ -1678,6 +1675,11 @@ class HomeTasksCard extends HTMLElement {
         this._justAddedTaskId = null;
         this._addInputRect = null;
         this._applyFlip(before, colIdx, 0.25);
+        // C12: optionally auto-generate an AI image for the new task.
+        if (result && col.auto_generate_image && col.show_images === true
+            && this._config.image_generation?.entity_id) {
+          this._generateTaskImage(result, colIdx);
+        }
       }
     }
   }
@@ -2152,37 +2154,49 @@ class HomeTasksCard extends HTMLElement {
 
   _applyFlip(before, colIdx, duration = 0.3) {
     if (!before || before.size === 0) return;
+    // Guard the FLIP window: a background re-render mid-animation would wipe the
+    // transforms (intermittent missing animation). _render() defers while this
+    // is set; endFlip() clears it and flushes any deferred render afterwards.
+    this._flipActive = true;
+    const endFlip = () => {
+      this._flipActive = false;
+      if (this._pendingRender) { this._pendingRender = false; this._render(); }
+    };
     // _render() rebuilds the shadow DOM via root.innerHTML="", but ha-card (a LitElement)
     // commits its layout asynchronously. Reading getBoundingClientRect() synchronously
     // after _render() returns 0 for all elements. One rAF is enough for the browser to
     // flush the new layout before we measure positions.
     requestAnimationFrame(() => {
       // Pass 1: read ALL new positions first (relative to list top — no style writes yet)
-      const taskListEl = this.shadowRoot.querySelector(`.task-list[data-col-idx="${colIdx}"]`);
-      if (!taskListEl) return;
-      const curListTop = taskListEl.getBoundingClientRect().top;
-      const newPositions = new Map(); // id → relativeTop
+      const taskListEl = this.shadowRoot.querySelector(`.task-list[data-col-idx="${colIdx}"], .tile-grid-wrap[data-col-idx="${colIdx}"]`);
+      if (!taskListEl) { endFlip(); return; }
+      const curRect = taskListEl.getBoundingClientRect();
+      const newPositions = new Map(); // id → { top, left } relative to container
       const elMap = new Map();        // id → element (reused in Pass 2, avoids N re-queries)
-      taskListEl.querySelectorAll(".task[data-task-id]")
+      taskListEl.querySelectorAll(".task[data-task-id], .task-tile[data-task-id]")
         .forEach(el => {
           const id = el.dataset.taskId;
           if (id && before.has(id)) {
-            newPositions.set(id, el.getBoundingClientRect().top - curListTop);
+            const er = el.getBoundingClientRect();
+            newPositions.set(id, { top: er.top - curRect.top, left: er.left - curRect.left });
             elMap.set(id, el);
           }
         });
-      // Pass 2: apply transforms
+      // Pass 2: apply transforms — 2D so grid tiles animate their real
+      // (diagonal/horizontal) reflow, not just vertical movement.
       const flipEls = [];
-      newPositions.forEach((newTop, id) => {
+      newPositions.forEach((np, id) => {
         const el = elMap.get(id);
         if (!el) return;
-        const dy = Math.round(before.get(id) - newTop);
-        if (Math.abs(dy) < 1) return;
+        const old = before.get(id);
+        const dx = Math.round(old.left - np.left);
+        const dy = Math.round(old.top - np.top);
+        if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
         el.style.transition = "none";
-        el.style.transform = `translateY(${dy}px)`;
+        el.style.transform = `translate(${dx}px, ${dy}px)`;
         flipEls.push(el);
       });
-      if (flipEls.length === 0) return;
+      if (flipEls.length === 0) { endFlip(); return; }
       flipEls[0].getBoundingClientRect(); // single reflow commits all start states
       requestAnimationFrame(() => {
         flipEls.forEach(el => {
@@ -2193,28 +2207,56 @@ class HomeTasksCard extends HTMLElement {
             el.style.transform = "";
           }, { once: true });
         });
+        setTimeout(endFlip, duration * 1000 + 50);
       });
     });
   }
 
   _captureListFlip(colIdx) {
-    const listEl = this.shadowRoot.querySelector(`.task-list[data-col-idx="${colIdx}"]`);
+    const listEl = this.shadowRoot.querySelector(`.task-list[data-col-idx="${colIdx}"], .tile-grid-wrap[data-col-idx="${colIdx}"]`);
     const before = new Map();
     if (!listEl) return before;
     // Cancel any in-progress FLIP transforms before reading — getBoundingClientRect()
     // includes CSS transforms in its result, so a partially-animated transform would
     // corrupt the snapshot and cause the next animation to overshoot.
-    const tasks = listEl.querySelectorAll(".task[data-task-id]");
+    const tasks = listEl.querySelectorAll(".task[data-task-id], .task-tile[data-task-id]");
     tasks.forEach(el => {
       if (el.style.transform) { el.style.transition = "none"; el.style.transform = ""; }
     });
     // getBoundingClientRect() here both flushes any cleared transforms (forced layout)
     // and reads the reference top — one reflow serves both purposes.
-    const listTop = listEl.getBoundingClientRect().top;
+    const r = listEl.getBoundingClientRect();
     tasks.forEach(el => {
-      before.set(el.dataset.taskId, el.getBoundingClientRect().top - listTop);
+      const er = el.getBoundingClientRect();
+      before.set(el.dataset.taskId, { top: er.top - r.top, left: er.left - r.left });
     });
     return before;
+  }
+
+  // Slide a newly-added task in from the add-input position. Shared by list
+  // rows (.task) and tiles (.task-tile) so both views animate identically.
+  _animateTaskEntry(taskId, colIdx) {
+    const inputRect = this._addInputRect;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const idEsc = CSS.escape(String(taskId));
+        const el = this.shadowRoot.querySelector(
+          `.task-list[data-col-idx="${colIdx}"] .task[data-task-id="${idEsc}"], ` +
+          `.tile-grid-wrap[data-col-idx="${colIdx}"] .task-tile[data-task-id="${idEsc}"]`
+        );
+        if (!el) return;
+        const taskTop = el.getBoundingClientRect().top;
+        const originDy = inputRect ? (inputRect.bottom - taskTop) : -30;
+        el.style.transition = "none";
+        el.style.opacity = "0";
+        el.style.transform = `translateY(${originDy}px)`;
+        el.getBoundingClientRect(); // commit start state
+        el.style.transition = "opacity 0.25s ease, transform 0.25s ease";
+        el.style.opacity = "";
+        el.style.transform = "";
+        el.addEventListener("transitionend", () => { el.style.transition = ""; }, { once: true });
+      });
+    });
   }
 
   _animateFilterChange(colIdx, applyFilterFn) {
@@ -2367,14 +2409,34 @@ class HomeTasksCard extends HTMLElement {
     // background updates (polling, state changes). User-initiated renders
     // (clicks, edits, saves) must always go through.
     if (this._isBackgroundUpdate) {
+      // A FLIP animation is mid-flight — rebuilding now would wipe the in-flight
+      // transforms (intermittent missing animation). Defer; _applyFlip flushes.
+      if (this._flipActive) { this._pendingRender = true; return; }
       if (this._draggedTaskId !== null || this._draggedSubTaskId !== null
           || this._editingTaskId || this._editingSubTaskId) {
         this._pendingRender = true;
         return;
       }
+      // Only defer for inputs that lose internal state on a DOM rebuild
+      // (date/time pickers, open <select>). Text/textarea rebuild fine —
+      // focus + caret are restored from focusSnap — so a background update
+      // (e.g. the user's own add, which fires a store event) must not be
+      // swallowed here, or the initiating card never reflects the change.
       const active = this.shadowRoot?.activeElement;
-      if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.tagName === "SELECT")) {
+      const activeStateful = active && (
+        (active.tagName === "INPUT" &&
+          ["date", "time", "datetime-local", "month", "week"].includes(active.type)) ||
+        active.tagName === "SELECT"
+      );
+      if (activeStateful) {
         this._pendingRender = true;
+        if (!this._deferredRenderBoundBlur) {
+          this._deferredRenderBoundBlur = active;
+          active.addEventListener("blur", () => {
+            this._deferredRenderBoundBlur = null;
+            if (this._pendingRender) this._render();
+          }, { once: true });
+        }
         return;
       }
     }
@@ -2435,6 +2497,19 @@ class HomeTasksCard extends HTMLElement {
     }
 
     const root = this.shadowRoot;
+    // Preserve any open modal overlay (tile detail sheet, add-task dialog,
+    // media picker) across the rebuild so a background data refresh doesn't
+    // wipe it out from under the user mid-interaction.
+    const _preservedOverlays = [...root.querySelectorAll(
+      ".task-detail-backdrop, .task-detail-sheet, dialog"
+    )].map((el) => {
+      // Detaching a scrollable element resets its scrollTop; capture the open
+      // sheet's scroll so re-attaching it below doesn't "jump" to the top.
+      const sb = el.querySelector ? el.querySelector(".sheet-body") : null;
+      return { el, wasOpenModal: el.tagName === "DIALOG" && el.open, scrollTop: sb ? sb.scrollTop : 0 };
+    });
+    _preservedOverlays.forEach((o) => o.el.remove());
+    this._clearTileLp(); // a rebuild removes the pressed tile → cancel its long-press
     root.innerHTML = "";
     // Stash for use after the rebuild
     this._pendingFocusRestore = focusSnap;
@@ -2449,6 +2524,25 @@ class HomeTasksCard extends HTMLElement {
       this._buildCardContent(),
     ]);
     root.appendChild(card);
+    // Re-attach any preserved open overlay after the rebuild (see above).
+    // A modal <dialog> is implicitly closed when detached from the DOM, so
+    // re-open it — otherwise a background refresh dismisses the media picker.
+    _preservedOverlays.forEach((o) => {
+      // The detail sheet uses a slide-in transition; re-attaching it would
+      // replay that animation (the popup "jumps"). Suppress it for this frame.
+      const isSheet = o.el.classList && o.el.classList.contains("task-detail-sheet");
+      if (isSheet) o.el.style.transition = "none";
+      root.appendChild(o.el);
+      // Restore the scroll position lost by the detach/re-attach above.
+      if (o.scrollTop) {
+        const sb = o.el.querySelector ? o.el.querySelector(".sheet-body") : null;
+        if (sb) sb.scrollTop = o.scrollTop;
+      }
+      if (isSheet) requestAnimationFrame(() => { o.el.style.transition = ""; });
+      if (o.wasOpenModal && typeof o.el.showModal === "function") {
+        try { o.el.showModal(); } catch (_) {}
+      }
+    });
 
     // Restore focus to the element that had it before the DOM rebuild,
     // if it still exists in the new tree.  Fields tagged with
@@ -2515,13 +2609,13 @@ class HomeTasksCard extends HTMLElement {
     // due date). When both are on, keep a slimmed-down row with just All +
     // Due Soon so the user can still toggle between "everything" and
     // "due soon only".
-    const hideFilters = col.auto_delete_completed === true && col.show_due_soon_filter !== true;
+    const hideFilters = (col.auto_delete_completed === true && col.show_due_soon_filter !== true) || col.show_filters === false;
 
     const header = this._buildColumnHeader(col, colIdx, completedCount, totalCount);
     const addTask = this._buildColumnAddTask(cs, colIdx);
     const sortBtnWrapper = (col.show_sort !== false) ? this._buildColumnSortControl(col, cs, colIdx) : null;
-    const tagChips = this._buildColumnTagChips(col, cs, colIdx);
-    const personChips = this._buildColumnPersonChips(col, cs, colIdx);
+    const tagChips = col.show_tag_chips === false ? null : this._buildColumnTagChips(col, cs, colIdx);
+    const personChips = col.show_person_chips === false ? null : this._buildColumnPersonChips(col, cs, colIdx);
 
     // Sort button placement: move into first available chips row when filters are hidden
     const sortInTagRow = hideFilters && tagChips !== null && sortBtnWrapper !== null;
@@ -2542,10 +2636,10 @@ class HomeTasksCard extends HTMLElement {
 
     const children = [];
     if (header) children.push(header);
-    if (!isTiles && col.show_add_task !== false) children.push(addTask);
-    if (!isTiles && filters) children.push(filters);
-    if (!isTiles && tagChipsEl) children.push(tagChipsEl);
-    if (!isTiles && personChipsEl) children.push(personChipsEl);
+    if (col.show_add_task !== false) children.push(addTask);
+    if (filters) children.push(filters);
+    if (tagChipsEl) children.push(tagChipsEl);
+    if (personChipsEl) children.push(personChipsEl);
     children.push(taskList);
 
     const className = "card-column" + (col.compact === true ? " compact" : "") + (isTiles ? " tiles-mode" : "");
@@ -2627,6 +2721,7 @@ class HomeTasksCard extends HTMLElement {
 
     // Mutable refs inside the shared cleanup closure
     let audioRefs = null; // { audioCtx, processor }
+    let sttHandlerId = null; // HA binary handler id for routing audio frames
     let unsub = null;
     let cleaned = false;
 
@@ -2636,8 +2731,12 @@ class HomeTasksCard extends HTMLElement {
       if (audioRefs) {
         try { audioRefs.processor.disconnect(); } catch (_) {}
         try { audioRefs.audioCtx.close(); } catch (_) {}
-        // Send empty buffer to signal end of audio stream to HA
-        try { this.hass.connection.socket.send(new ArrayBuffer(0)); } catch (_) {}
+        // Signal end-of-audio to HA: a lone handler-id byte (empty payload).
+        try {
+          if (sttHandlerId != null) {
+            this.hass.connection.socket.send(new Uint8Array([sttHandlerId]).buffer);
+          }
+        } catch (_) {}
         audioRefs = null;
       }
       if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
@@ -2654,9 +2753,18 @@ class HomeTasksCard extends HTMLElement {
       unsub = await this.hass.connection.subscribeMessage(
         (event) => {
           if (!event || !event.type) return;
-          if (event.type === "stt-start") {
-            // HA is ready – start streaming audio
-            audioRefs = this._streamPcmAudio(stream, cleanup);
+          if (event.type === "run-start") {
+            // Capture the binary handler id needed to route audio frames.
+            sttHandlerId = event.data?.runner_data?.stt_binary_handler_id ?? null;
+          } else if (event.type === "stt-start") {
+            if (sttHandlerId == null) {
+              console.warn("HA STT: missing stt_binary_handler_id, falling back to Web Speech");
+              cleanup();
+              this._startWebSpeech(colIdx, inputEl, setTranscript);
+              return;
+            }
+            // HA is ready – stream audio, each frame prefixed with the handler id
+            audioRefs = this._streamPcmAudio(stream, cleanup, sttHandlerId);
           } else if (event.type === "stt-end") {
             const text = event.data?.stt_output?.text || "";
             if (text) setTranscript(text);
@@ -2686,7 +2794,7 @@ class HomeTasksCard extends HTMLElement {
 
   // Stream PCM audio from the MediaStream to HA via binary WebSocket frames.
   // Returns { audioCtx, processor } for the caller to store and disconnect later.
-  _streamPcmAudio(stream, onError) {
+  _streamPcmAudio(stream, onError, handlerId) {
     const SAMPLE_RATE = 16000;
     const BUFFER_SIZE = 4096;
     try {
@@ -2700,8 +2808,12 @@ class HomeTasksCard extends HTMLElement {
         for (let i = 0; i < float32.length; i++) {
           pcm16[i] = Math.max(-32768, Math.min(32767, float32[i] * 32767));
         }
+        // HA routes binary audio by a 1-byte handler-id prefix on every frame.
+        const frame = new Uint8Array(1 + pcm16.byteLength);
+        frame[0] = handlerId;
+        frame.set(new Uint8Array(pcm16.buffer), 1);
         try {
-          this.hass.connection.socket.send(pcm16.buffer);
+          this.hass.connection.socket.send(frame.buffer);
         } catch (err) {
           if (onError) onError(err);
         }
@@ -2712,8 +2824,6 @@ class HomeTasksCard extends HTMLElement {
       return { audioCtx, processor };
     } catch (err) {
       console.warn("PCM stream setup failed:", err);
-      // Send empty buffer to signal end of audio
-      try { this.hass.connection.socket.send(new ArrayBuffer(0)); } catch (_) {}
       if (onError) onError(err);
       return null;
     }
@@ -2796,6 +2906,7 @@ class HomeTasksCard extends HTMLElement {
   }
 
   _buildColumnAddTask(cs, colIdx) {
+    const col = this._config.columns[colIdx];
     const addInput = this._el("input", {
       type: "text",
       className: "add-input",
@@ -2807,19 +2918,25 @@ class HomeTasksCard extends HTMLElement {
     addInput.addEventListener("keydown", (e) => {
       if (e.key === "Enter") this._addTask(colIdx);
     });
-    const isRecording = this._voiceActive.has(colIdx);
-    const micBtn = this._el("button", {
-      className: "mic-btn" + (isRecording ? " recording" : ""),
-      title: isRecording ? "Aufnahme stoppen" : "Spracheingabe",
-      "data-col-idx": String(colIdx),
-      innerHTML: isRecording
-        ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>`
-        : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 15c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V6zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-2.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>`,
-    });
-    micBtn.addEventListener("click", () => this._startVoiceInput(colIdx));
     const addBtn = this._el("button", { className: "add-btn", textContent: "+" });
     addBtn.addEventListener("click", () => this._addTask(colIdx));
-    return this._el("div", { className: "add-task" }, [addInput, micBtn, addBtn]);
+
+    const children = [addInput];
+    if (col.show_voice !== false) {
+      const isRecording = this._voiceActive.has(colIdx);
+      const micBtn = this._el("button", {
+        className: "mic-btn" + (isRecording ? " recording" : ""),
+        title: isRecording ? "Aufnahme stoppen" : "Spracheingabe",
+        "data-col-idx": String(colIdx),
+        innerHTML: isRecording
+          ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>`
+          : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 15c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V6zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-2.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>`,
+      });
+      micBtn.addEventListener("click", () => this._startVoiceInput(colIdx));
+      children.push(micBtn);
+    }
+    children.push(addBtn);
+    return this._el("div", { className: "add-task" }, children);
   }
 
   _buildColumnSortControl(col, cs, colIdx) {
@@ -3086,16 +3203,12 @@ class HomeTasksCard extends HTMLElement {
   // ── Tile / Kachel view ─────────────────────────────────────────────────────
 
   _buildColumnTileGrid(filteredTasks, colIdx) {
-    const col = this._config.columns[colIdx];
-    const showAdd = col.show_add_task !== false && !this._isExternalCol(colIdx);
-
     // Open tasks first, completed after
     const openTasks = filteredTasks.filter(t => !t.completed);
     const doneTasks = filteredTasks.filter(t => t.completed);
     const ordered = [...openTasks, ...doneTasks];
 
     const tileEls = ordered.map(task => this._buildTaskTile(task, colIdx));
-    if (showAdd) tileEls.push(this._buildAddTaskTile(colIdx));
 
     if (tileEls.length === 0) {
       const empty = this._el("div", { className: "empty-state", textContent: this._t("empty") });
@@ -3106,76 +3219,10 @@ class HomeTasksCard extends HTMLElement {
     return this._el("div", { className: "tile-grid-wrap", "data-col-idx": String(colIdx) }, [grid]);
   }
 
-  _buildAddTaskTile(colIdx) {
-    const tile = this._el("div", { className: "task-tile add-tile", title: this._t("add_placeholder") });
-    tile.appendChild(this._el("div", { className: "add-tile-icon", textContent: "+" }));
-    tile.addEventListener("click", () => this._showTileAddDialog(colIdx));
-    return tile;
-  }
-
-  _showTileAddDialog(colIdx) {
-    const cs = this._columns[colIdx];
-    this.shadowRoot.querySelector(".tile-add-overlay")?.remove();
-
-    const close = () => {
-      // Stop any ongoing voice recording when dialog closes
-      if (this._voiceActive.has(colIdx)) this._voiceActive.get(colIdx)();
-      overlay.remove();
-    };
-    const doAdd = async () => {
-      const title = input.value.trim();
-      if (!title) return;
-      close();
-      cs.newTaskTitle = title;
-      await this._addTask(colIdx);
-    };
-
-    const input = this._el("input", {
-      type: "text", className: "tile-dialog-input",
-      placeholder: this._t("add_placeholder"),
-    });
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") doAdd();
-      if (e.key === "Escape") close();
-    });
-
-    const micBtn = this._el("button", {
-      className: "mic-btn tile-dialog-mic",
-      title: "Spracheingabe",
-      innerHTML: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 15c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V6zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-2.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>`,
-    });
-    micBtn.addEventListener("click", () => this._startVoiceInput(colIdx, input));
-
-    const cancelBtn = this._el("button", {
-      className: "tile-dialog-btn tile-dialog-cancel",
-      textContent: this._t("dialog_cancel"),
-    });
-    cancelBtn.addEventListener("click", close);
-
-    const confirmBtn = this._el("button", {
-      className: "tile-dialog-btn tile-dialog-confirm",
-      textContent: this._t("dialog_add"),
-    });
-    confirmBtn.addEventListener("click", doAdd);
-
-    const inputRow = this._el("div", { className: "tile-dialog-input-row" }, [input, micBtn]);
-    const dialog = this._el("div", { className: "tile-dialog" }, [
-      inputRow,
-      this._el("div", { className: "tile-dialog-actions" }, [cancelBtn, confirmBtn]),
-    ]);
-    dialog.addEventListener("click", (e) => e.stopPropagation());
-
-    const overlay = this._el("div", { className: "tile-add-overlay" }, [dialog]);
-    overlay.addEventListener("click", close);
-
-    this.shadowRoot.appendChild(overlay);
-    requestAnimationFrame(() => input.focus());
-  }
-
   _buildTaskTile(task, colIdx) {
     const col = this._config.columns[colIdx];
     const showImages = col.show_images === true;
-    const thumbUrl = showImages ? (this._thumbUrl(task.image_url) || task.image_url) : null;
+    const thumbUrl = showImages ? (task.image_url || null) : null;
 
     const cls = [
       "task-tile",
@@ -3183,11 +3230,11 @@ class HomeTasksCard extends HTMLElement {
       thumbUrl ? "has-image" : "",
     ].filter(Boolean).join(" ");
 
-    const tile = this._el("div", { className: cls });
+    const tile = this._el("div", { className: cls, "data-task-id": String(task.id), draggable: true });
 
     // Background image (only when show_images is enabled)
     if (thumbUrl) {
-      const img = this._el("img", { className: "tile-bg", src: thumbUrl, alt: "" });
+      const img = this._el("img", { className: "tile-bg", src: thumbUrl, alt: "", draggable: false });
       tile.appendChild(img);
     } else {
       // Placeholder: first letter on gradient background
@@ -3213,37 +3260,188 @@ class HomeTasksCard extends HTMLElement {
       tile.appendChild(overlay);
     }
 
-    // Short tap = toggle complete; long press (500 ms) = open detail sheet
-    let _lpTimer = null;
-    let _lpFired = false;
-    let _lpStartX = 0;
-    let _lpStartY = 0;
+    // Gestures — same mechanism as list rows so both views feel identical.
+    //  • click / tap (no move) → toggle complete
+    //  • hold in place         → open detail sheet (500 ms)
+    //  • drag                  → reorder. Desktop = native HTML5 drag (the
+    //    browser ghost follows the cursor); touch = a clone that follows the
+    //    finger. Displaced tiles animate to their new slot via FLIP
+    //    (_liveMoveTile). Touch arms on a 400 ms hold so a swipe still scrolls.
 
+    // --- Mouse (pointer events for click/hold; HTML5 drag for the move) ---
+    let _mDown = null, _mDetail = false, _mDrag = false;
     tile.addEventListener("pointerdown", (e) => {
-      if (e.button !== 0) return;
-      _lpFired = false;
-      _lpStartX = e.clientX;
-      _lpStartY = e.clientY;
-      _lpTimer = setTimeout(() => {
-        _lpFired = true;
-        tile.releasePointerCapture(e.pointerId);
-        this._openTaskDetailSheet(task, colIdx);
-      }, 500);
+      if (e.pointerType !== "mouse" || e.button !== 0) return;
+      _mDown = { x: e.clientX, y: e.clientY }; _mDetail = false; _mDrag = false;
+      this._clearTileLp();
+      this._tileLpTimer = setTimeout(() => { this._tileLpTimer = null; _mDetail = true; this._openTaskDetailSheet(task, colIdx); }, 500);
     });
-
-    const _lpCancel = () => { clearTimeout(_lpTimer); _lpTimer = null; };
     tile.addEventListener("pointermove", (e) => {
-      if (_lpTimer && (Math.abs(e.clientX - _lpStartX) > 8 || Math.abs(e.clientY - _lpStartY) > 8)) _lpCancel();
+      if (e.pointerType !== "mouse" || !_mDown) return;
+      if (this._tileLpTimer && (Math.abs(e.clientX - _mDown.x) > 6 || Math.abs(e.clientY - _mDown.y) > 6)) this._clearTileLp();
     });
-    tile.addEventListener("pointerup", _lpCancel);
-    tile.addEventListener("pointercancel", _lpCancel);
-
+    tile.addEventListener("pointerup", () => { this._clearTileLp(); _mDown = null; });
     tile.addEventListener("click", () => {
-      if (_lpFired) { _lpFired = false; return; }
+      if (_mDetail || _mDrag) { _mDetail = false; _mDrag = false; return; }
       this._toggleTask(task.id, task.completed, colIdx);
     });
+    tile.addEventListener("dragstart", (e) => {
+      this._clearTileLp();
+      _mDrag = true;
+      this._draggedTileId = task.id;
+      this._draggedTileCol = colIdx;
+      this._dragPrevX = null; this._dragPrevY = null;
+      try { e.dataTransfer.effectAllowed = "move"; } catch (_) {}
+      tile.classList.add("dragging");
+    });
+    tile.addEventListener("dragend", () => this._finishTileDrag(colIdx));
+    tile.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      try { e.dataTransfer.dropEffect = "move"; } catch (_) {}
+      if (this._draggedTileId == null || this._draggedTileCol !== colIdx || String(this._draggedTileId) === String(task.id)) return;
+      const draggedEl = tile.parentNode.querySelector(`.task-tile[data-task-id="${CSS.escape(String(this._draggedTileId))}"]`);
+      this._liveMoveTile(draggedEl, tile, e.clientX, e.clientY);
+    });
+    tile.addEventListener("drop", (e) => { e.preventDefault(); this._finishTileDrag(colIdx); });
+
+    // --- Touch (tap = complete; 400 ms hold arms drag; clone follows finger) ---
+    let _t = null;
+    tile.addEventListener("touchstart", (e) => {
+      if (e.touches.length !== 1) return;
+      _t = { x: e.touches[0].clientX, y: e.touches[0].clientY, armed: false, dragging: false };
+      this._clearTileLp();
+      this._tileLpTimer = setTimeout(() => { this._tileLpTimer = null; if (_t) { _t.armed = true; tile.classList.add("armed"); } }, 400);
+    }, { passive: true });
+    tile.addEventListener("touchmove", (e) => {
+      const tt = e.touches[0];
+      if (!tt || !_t) return;
+      if (!_t.armed) {
+        if (Math.abs(tt.clientX - _t.x) > 8 || Math.abs(tt.clientY - _t.y) > 8) { this._clearTileLp(); _t = null; }
+        return;
+      }
+      e.preventDefault();
+      if (!_t.dragging) { _t.dragging = true; tile.classList.remove("armed"); this._startTileTouchDrag(tile, colIdx, tt.clientX, tt.clientY); }
+      this._moveTileTouchDrag(tt.clientX, tt.clientY);
+    }, { passive: false });
+    const _tEnd = () => {
+      this._clearTileLp();
+      if (_t && _t.dragging) this._finishTileDrag(colIdx);
+      else if (_t && _t.armed) { tile.classList.remove("armed"); this._openTaskDetailSheet(task, colIdx); }
+      else if (_t) this._toggleTask(task.id, task.completed, colIdx);
+      _t = null;
+    };
+    tile.addEventListener("touchend", _tEnd);
+    tile.addEventListener("touchcancel", _tEnd);
+
+    // Same creation animation as list rows.
+    if (this._justAddedTaskId && this._justAddedTaskId === String(task.id)) {
+      this._animateTaskEntry(task.id, colIdx);
+    }
 
     return tile;
+  }
+
+  // Live-reorder during a tile drag. Whole-tile catch + direction gate: hovering
+  // a tile takes over its slot, but only in the pointer's travel direction; the
+  // displaced tiles then FLIP (translate x+y) to their new grid slots.
+  _liveMoveTile(draggedEl, targetEl, clientX, clientY) {
+    if (!draggedEl || !targetEl || draggedEl === targetEl) return;
+    const grid = targetEl.parentNode;
+    if (!grid) return;
+    // Direction of travel since the last event. dragover/touchmove keep firing
+    // even when the pointer is still (and an in-flight FLIP shifts tiles under
+    // it), so "no movement" must mean "no change" — that is what stops the two
+    // tiles from flickering back and forth on their own.
+    const mx = clientX - (this._dragPrevX == null ? clientX : this._dragPrevX);
+    const my = clientY - (this._dragPrevY == null ? clientY : this._dragPrevY);
+    this._dragPrevX = clientX;
+    this._dragPrevY = clientY;
+    if (mx === 0 && my === 0) return;
+    // Whole-tile catch + direction gate: hovering anywhere on a tile takes over
+    // its slot, but only reorder in the direction the pointer is actually
+    // travelling (vertical weighted higher since it changes the whole row). This
+    // gives the full-tile catch, lets you push a tile back the way it came, and
+    // stops diagonal / row-change flicker — a swap and its reverse can't both
+    // fire while the pointer moves one way.
+    const all = [...grid.querySelectorAll(".task-tile")];
+    const draggedBefore = all.indexOf(draggedEl) < all.indexOf(targetEl);
+    if (draggedBefore !== ((my * 2 + mx) > 0)) return;
+    const ref = draggedBefore ? targetEl.nextSibling : targetEl;
+    if (ref === draggedEl || draggedEl.nextSibling === ref) return; // already there
+    const siblings = [...grid.querySelectorAll(".task-tile:not(.dragging)")];
+    const before = new Map(siblings.map(el => [el, el.getBoundingClientRect()]));
+    grid.insertBefore(draggedEl, ref);
+    siblings.forEach(el => {
+      const b = before.get(el);
+      const now = el.getBoundingClientRect();
+      const dx = (b ? b.left : now.left) - now.left;
+      const dy = (b ? b.top : now.top) - now.top;
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+      el.style.transition = "none";
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+      requestAnimationFrame(() => {
+        el.style.transition = "transform 0.18s ease";
+        el.style.transform = "";
+        el.addEventListener("transitionend", () => { el.style.transition = ""; el.style.transform = ""; }, { once: true });
+      });
+    });
+  }
+
+  // Touch drag: a clone follows the finger while the real tile (dimmed) is
+  // reordered in place — same approach as the list's row touch drag.
+  _startTileTouchDrag(tile, colIdx, clientX, clientY) {
+    this._draggedTileId = tile.dataset.taskId;
+    this._draggedTileCol = colIdx;
+    this._dragPrevX = null; this._dragPrevY = null;
+    tile.classList.add("dragging");
+    const rect = tile.getBoundingClientRect();
+    const clone = tile.cloneNode(true);
+    clone.classList.remove("dragging");
+    clone.classList.add("drag-clone");
+    clone.style.cssText = `position:fixed; top:${rect.top}px; left:${rect.left}px; width:${rect.width}px; height:${rect.height}px; z-index:1000; opacity:0.92; pointer-events:none; margin:0; box-shadow:0 10px 26px rgba(0,0,0,0.4);`;
+    this.shadowRoot.appendChild(clone);
+    this._tileClone = clone;
+    this._tileCloneOffX = clientX - rect.left;
+    this._tileCloneOffY = clientY - rect.top;
+  }
+
+  _moveTileTouchDrag(clientX, clientY) {
+    if (this._tileClone) {
+      this._tileClone.style.left = `${clientX - this._tileCloneOffX}px`;
+      this._tileClone.style.top = `${clientY - this._tileCloneOffY}px`;
+      this._tileClone.style.display = "none";
+    }
+    const el = this.shadowRoot.elementFromPoint(clientX, clientY);
+    if (this._tileClone) this._tileClone.style.display = "";
+    const target = el ? el.closest(".task-tile") : null;
+    if (target && target.dataset.taskId && target.dataset.taskId !== String(this._draggedTileId) && !target.classList.contains("drag-clone")) {
+      const draggedEl = this.shadowRoot.querySelector(`.task-tile[data-task-id="${CSS.escape(String(this._draggedTileId))}"]`);
+      this._liveMoveTile(draggedEl, target, clientX, clientY);
+    }
+  }
+
+  _finishTileDrag(colIdx) {
+    const draggedId = this._draggedTileId;
+    this._draggedTileId = null;
+    this._draggedTileCol = null;
+    if (this._tileClone) { this._tileClone.remove(); this._tileClone = null; }
+    this.shadowRoot.querySelectorAll(".task-tile.dragging").forEach(el => el.classList.remove("dragging"));
+    if (draggedId == null) return;
+    const grid = this.shadowRoot.querySelector(`.tile-grid-wrap[data-col-idx="${colIdx}"] .tile-grid-inner`);
+    if (!grid) return;
+    const order = [...grid.querySelectorAll(".task-tile[data-task-id]")].map(el => el.dataset.taskId);
+    // Merge back tasks hidden by a filter (person/tag chips) so they keep their
+    // relative position — otherwise reorder_tasks renumbers only the visible
+    // subset and the hidden tasks' sort_order collides (same as the list path).
+    if (order.length > 1) this._reorderTasks(this._mergeHiddenTasks(colIdx, order), colIdx);
+  }
+
+  // Cancel a pending tile long-press (detail) timer. Centralised so a re-render
+  // (e.g. from a rapid complete/uncomplete) reliably clears it — otherwise the
+  // pressed tile gets replaced, its pointerup never fires, and the timer would
+  // pop the detail sheet open.
+  _clearTileLp() {
+    if (this._tileLpTimer) { clearTimeout(this._tileLpTimer); this._tileLpTimer = null; }
   }
 
   _openTaskDetailSheet(task, colIdx) {
@@ -3252,6 +3450,14 @@ class HomeTasksCard extends HTMLElement {
 
     const backdrop = this._el("div", { className: "task-detail-backdrop" });
     const sheet = this._el("div", { className: "task-detail-sheet" });
+    // Match the sheet width/position to the card itself rather than spanning
+    // the full viewport width.
+    const cardRect = this.getBoundingClientRect();
+    if (cardRect.width) {
+      sheet.style.left = `${Math.round(cardRect.left)}px`;
+      sheet.style.right = "auto";
+      sheet.style.width = `${Math.round(cardRect.width)}px`;
+    }
 
     const close = () => {
       sheet.classList.remove("open");
@@ -3262,7 +3468,12 @@ class HomeTasksCard extends HTMLElement {
     backdrop.addEventListener("click", close);
 
     const handle = this._el("div", { className: "sheet-handle" });
-    const titleEl = this._el("span", { className: "sheet-title", textContent: task.title });
+    const titleEl = this._el("input", { className: "sheet-title", type: "text", value: task.title });
+    titleEl.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); titleEl.blur(); } });
+    titleEl.addEventListener("change", () => {
+      const v = titleEl.value.trim();
+      if (v && v !== task.title) this._updateTaskTitle(task.id, v, colIdx);
+    });
     const closeBtn = document.createElement("button");
     closeBtn.className = "sheet-close";
     const closeIco = document.createElement("ha-icon");
@@ -3569,7 +3780,7 @@ class HomeTasksCard extends HTMLElement {
     if (task.image_url && !isEditing && col.show_images === true) {
       const thumb = this._el("img", {
         className: "task-thumb",
-        src: this._thumbUrl(task.image_url) || task.image_url,
+        src: task.image_url,
         alt: "",
         title: task.title,
       });
@@ -3610,7 +3821,10 @@ class HomeTasksCard extends HTMLElement {
 
   _buildTaskContentChildren(task, colIdx, isEditing) {
     const children = [];
-    if (isEditing) {
+    // Show the title as a bordered text field whenever the task is expanded (not
+    // only on the hidden double-click) so users can see the title is editable —
+    // matching the other detail input fields.
+    if (isEditing || this._expandedTasks.has(task.id)) {
       const editInput = this._el("input", {
         type: "text",
         className: "edit-title-input",
@@ -3620,18 +3834,20 @@ class HomeTasksCard extends HTMLElement {
       // Stop mousedown from reaching the draggable taskEl — otherwise the browser's
       // drag-detection system intercepts mousedown and prevents cursor positioning.
       editInput.addEventListener("mousedown", (e) => { e.stopPropagation(); });
+      const saveTitle = () => {
+        this._editingTaskId = null;
+        const v = editInput.value.trim();
+        if (v && v !== task.title) this._updateTaskTitle(task.id, v, colIdx);
+        else if (!v) editInput.value = task.title;  // never store a blank title
+      };
       editInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          this._editingTaskId = null;  // clear BEFORE calling so blur skips
-          this._updateTaskTitle(task.id, editInput.value, colIdx);
-        } else if (e.key === "Escape") { this._editingTaskId = null; this._render(); }
+        if (e.key === "Enter") { e.preventDefault(); saveTitle(); editInput.blur(); }
+        else if (e.key === "Escape") { this._editingTaskId = null; editInput.value = task.title; editInput.blur(); }
       });
-      editInput.addEventListener("blur", () => {
-        if (this._editingTaskId === task.id) this._updateTaskTitle(task.id, editInput.value, colIdx);
-      });
+      editInput.addEventListener("blur", saveTitle);
       children.push(editInput);
-      setTimeout(() => { editInput.focus(); editInput.select(); }, 0);
+      // Only grab focus for the explicit double-click edit, not on plain expand.
+      if (isEditing) setTimeout(() => { editInput.focus(); editInput.select(); }, 0);
     } else {
       const titleSpan = this._el("span", { className: "task-title", textContent: task.title });
       titleSpan.addEventListener("dblclick", (e) => {
@@ -3643,13 +3859,6 @@ class HomeTasksCard extends HTMLElement {
       children.push(titleSpan);
     }
     return children;
-  }
-
-  // Returns the thumbnail URL for a task image (300×300 JPEG).
-  // Falls back to the full image URL if no thumbnail exists yet.
-  _thumbUrl(imageUrl) {
-    if (!imageUrl) return null;
-    return imageUrl.replace(/\/task_([a-f0-9]+)\.png(\?.*)?$/, '/task_$1_thumb.jpg$2');
   }
 
   _buildTaskExpandButton(isExpanded) {
@@ -3918,27 +4127,7 @@ class HomeTasksCard extends HTMLElement {
 
     // Creation animation: task slides in from the add-input field position
     if (this._justAddedTaskId && this._justAddedTaskId === String(task.id)) {
-      const inputRect = this._addInputRect;
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          const el = this.shadowRoot.querySelector(
-            `.task-list[data-col-idx="${colIdx}"] .task[data-task-id="${CSS.escape(String(task.id))}"]`
-          );
-          if (!el) return;
-          const taskTop = el.getBoundingClientRect().top;
-          const originDy = inputRect ? (inputRect.bottom - taskTop) : -30;
-          el.style.transition = "none";
-          el.style.opacity = "0";
-          el.style.transform = `translateY(${originDy}px)`;
-          el.getBoundingClientRect(); // commit start state
-          el.style.transition = "opacity 0.25s ease, transform 0.25s ease";
-          el.style.opacity = "";
-          el.style.transform = "";
-          el.addEventListener("transitionend", () => {
-            el.style.transition = "";
-          }, { once: true });
-        });
-      });
+      this._animateTaskEntry(task.id, colIdx);
     }
   }
 
@@ -5256,55 +5445,55 @@ class HomeTasksCard extends HTMLElement {
   _buildActionsSection(task, colIdx) {
     const children = [];
 
+    // Duplicate: create an identical copy (same assignee, recurrence, tags,
+    // notes, due date — everything). Native lists only.
     if (!this._isExternalCol(colIdx)) {
-      const assignBtn = this._el("button", {
-        className: "assign-copy-btn",
-        textContent: this._t("assign_to_another"),
+      const dupBtn = this._el("button", {
+        className: "duplicate-task-btn",
+        textContent: this._t("duplicate_task"),
       });
-      assignBtn.addEventListener("click", () => {
-        const sel = document.createElement("select");
-        sel.className = "assign-copy-sel";
-        const cancelOpt = this._el("option", { value: "", textContent: "—" });
-        sel.appendChild(cancelOpt);
-        if (this._hass && this._hass.states) {
-          const persons = Object.keys(this._hass.states).filter(e => e.startsWith("person.")).sort();
-          for (const eid of persons) {
-            const state = this._hass.states[eid];
-            const name = (state && state.attributes && state.attributes.friendly_name) || eid;
-            sel.appendChild(this._el("option", { value: eid, textContent: name }));
-          }
-        }
-        sel.addEventListener("change", () => {
-          if (sel.value) this._duplicateAndAssign(task, colIdx, sel.value);
-          sel.replaceWith(assignBtn);
-        });
-        sel.addEventListener("blur", () => { if (sel.parentNode) sel.replaceWith(assignBtn); });
-        assignBtn.replaceWith(sel);
-        sel.focus();
+      dupBtn.addEventListener("click", () => {
+        // Close the tile detail sheet (no-op in the inline list view) so repeated
+        // clicks don't silently pile up copies behind the popup.
+        this.shadowRoot.querySelector(".task-detail-sheet")?.remove();
+        this.shadowRoot.querySelector(".task-detail-backdrop")?.remove();
+        this._duplicateTask(task, colIdx);
       });
-      children.push(assignBtn);
+      children.push(dupBtn);
     }
 
     const deleteBtn = this._el("button", {
       className: "delete-task-btn",
       textContent: this._t("delete_task"),
     });
-    deleteBtn.addEventListener("click", () => this._deleteTask(task.id, colIdx));
+    deleteBtn.addEventListener("click", () => {
+      // Close the tile detail sheet first (no-op for the inline list view) so
+      // the popup doesn't linger showing a task that's being deleted. Remove it
+      // synchronously to avoid the delete's re-render re-attaching it.
+      this.shadowRoot.querySelector(".task-detail-sheet")?.remove();
+      this.shadowRoot.querySelector(".task-detail-backdrop")?.remove();
+      this._deleteTask(task.id, colIdx);
+    });
     children.push(deleteBtn);
 
     return this._el("div", { className: "detail-actions" }, children);
   }
 
-  async _duplicateAndAssign(task, colIdx, assignedPerson) {
+  async _duplicateTask(task, colIdx) {
     const listId = this._colListId(colIdx);
     const newTask = await this._callWs("home_tasks/duplicate_task", {
       list_id: listId,
       task_id: task.id,
-      assigned_person: assignedPerson,
+      assigned_person: task.assigned_person ?? null,
     });
     if (!newTask) return;
     const cs = this._columns[colIdx];
-    if (cs && cs.tasks) cs.tasks.push(newTask);
+    if (cs && cs.tasks) {
+      // Insert the copy right after the source so it's easy to find.
+      const idx = cs.tasks.findIndex(t => t.id === task.id);
+      if (idx >= 0) cs.tasks.splice(idx + 1, 0, newTask);
+      else cs.tasks.push(newTask);
+    }
     this._render();
     this._loadAllTasks();
   }
@@ -5325,25 +5514,11 @@ class HomeTasksCard extends HTMLElement {
       // Remove image button (×)
       const removeBtn = this._el("button", { className: "task-image-remove", title: "Bild entfernen" });
       removeBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>`;
-      removeBtn.addEventListener("click", async () => {
-        try {
-          await this._hass.callWS({
-            type: "home_tasks/update_task",
-            list_id: col.list_id,
-            task_id: task.id,
-            image_url: null,
-          });
-          const cs = this._columns[colIdx];
-          if (cs && cs.tasks) {
-            const idx = cs.tasks.findIndex(t => t.id === task.id);
-            if (idx >= 0) cs.tasks[idx] = { ...cs.tasks[idx], image_url: null };
-          }
-        } catch (err) {
-          console.error("Failed to remove image:", err);
-          alert("Bild entfernen fehlgeschlagen: " + (err.message || err));
-        }
-        this._render();
-      });
+      // Reuse _saveImageUrl(null): it clears the image, syncs cs.tasks in EVERY
+      // column from the server result, and refreshes the open sheet + all tiles
+      // (the old inline copy only patched the current column, so the same task in
+      // other columns kept showing the deleted image).
+      removeBtn.addEventListener("click", () => this._saveImageUrl(task, colIdx, null));
       imgWrap.appendChild(removeBtn);
       children.push(imgWrap);
     }
@@ -5431,15 +5606,10 @@ class HomeTasksCard extends HTMLElement {
         const files = children.filter(i => !i.can_expand);
 
         const pickFile = async (item) => {
-          try {
-            const resolved = await this._hass.callWS({
-              type: "media_source/resolve_media",
-              media_content_id: item.media_content_id,
-            });
-            await this._saveImageUrl(task, colIdx, resolved.url || item.thumbnail);
-          } catch {
-            if (item.thumbnail) await this._saveImageUrl(task, colIdx, item.thumbnail);
-          }
+          // Save the media-source:// id, not a resolved (signed, expiring) URL —
+          // the backend re-publishes it into the public www dir by copying the
+          // file off disk, so it loads without auth and never expires.
+          await this._saveImageUrl(task, colIdx, item.media_content_id || item.thumbnail);
           dialog.close();
           dialog.remove();
         };
@@ -5466,10 +5636,25 @@ class HomeTasksCard extends HTMLElement {
           for (const item of files) {
             const cell = document.createElement("button");
             cell.className = "mb-grid-item";
+            const isImage = item.media_class === "image" || /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(item.title || "");
             if (item.thumbnail) {
               const img = this._el("img", { className: "mb-grid-thumb", alt: item.title });
               this._fetchAuthThumb(item.thumbnail).then(src => { img.src = src; });
               cell.appendChild(img);
+            } else if (isImage) {
+              // No thumbnail provided — resolve the media to a URL and preview it.
+              const img = this._el("img", { className: "mb-grid-thumb", alt: item.title });
+              cell.appendChild(img);
+              this._hass.callWS({ type: "media_source/resolve_media", media_content_id: item.media_content_id })
+                .then((r) => this._fetchAuthThumb(r.url))
+                .then((src) => { img.src = src; })
+                .catch(() => {
+                  img.remove();
+                  const ico = document.createElement("ha-icon");
+                  ico.setAttribute("icon", "mdi:image");
+                  ico.style.cssText = "--mdc-icon-size:40px;color:var(--secondary-text-color);";
+                  cell.insertBefore(ico, cell.firstChild);
+                });
             } else {
               const ico = document.createElement("ha-icon");
               ico.setAttribute("icon", "mdi:image");
@@ -5492,10 +5677,38 @@ class HomeTasksCard extends HTMLElement {
     };
 
     dialog.append(header, list);
-    dialog.addEventListener("close", () => dialog.remove());
+    dialog.addEventListener("close", () => { dialog.remove(); this._revokeThumbCache(); });
     this.shadowRoot.appendChild(dialog);
     dialog.showModal();
     await load("media-source://media_source");
+  }
+
+  // Replace a task's tile(s) in place (any column) so an image change shows
+  // without a full _render() — which would reset the page scroll ("jump").
+  _refreshTaskTileEverywhere(taskId) {
+    this.shadowRoot.querySelectorAll(`.task-tile[data-task-id="${CSS.escape(String(taskId))}"]`).forEach(el => {
+      const wrap = el.closest(".tile-grid-wrap");
+      const ci = wrap ? parseInt(wrap.dataset.colIdx, 10) : NaN;
+      if (Number.isNaN(ci)) return;
+      const cs = this._columns[ci];
+      const t = cs && cs.tasks ? cs.tasks.find(x => x.id === taskId) : null;
+      if (t) el.replaceWith(this._buildTaskTile(t, ci));
+    });
+  }
+
+  // Refresh only the image section inside an open detail sheet (so the spinner
+  // and the finished image appear without rebuilding the body or scrolling it).
+  _refreshOpenSheetImage(taskId, colIdx) {
+    const oldSec = this.shadowRoot.querySelector(".task-detail-sheet .detail-section--image");
+    if (!oldSec) return;
+    const cs = this._columns[colIdx];
+    const task = cs && cs.tasks ? cs.tasks.find(t => t.id === taskId) : null;
+    if (!task) return;
+    // Keep the sheet's scroll position steady across the swap.
+    const body = this.shadowRoot.querySelector(".task-detail-sheet .sheet-body");
+    const st = body ? body.scrollTop : 0;
+    oldSec.replaceWith(this._buildImageSection(task, colIdx));
+    if (body) body.scrollTop = st;
   }
 
   async _generateTaskImage(task, colIdx, force = false) {
@@ -5503,7 +5716,7 @@ class HomeTasksCard extends HTMLElement {
     const imgCfg = this._config.image_generation || {};
 
     this._generatingImage.add(task.id);
-    this._render();
+    this._refreshOpenSheetImage(task.id, colIdx);
 
     const payload = {
       type: "home_tasks/generate_task_image",
@@ -5530,7 +5743,7 @@ class HomeTasksCard extends HTMLElement {
           const t = cs.tasks[i];
           if (t.id === task.id) {
             cs.tasks[i] = result.task;
-          } else if (newImageUrl && (t.title || "").trim().toLowerCase() === titleKey) {
+          } else if (newImageUrl && titleKey && (t.title || "").trim().toLowerCase() === titleKey) {
             cs.tasks[i] = { ...t, image_url: newImageUrl };
           }
         }
@@ -5540,7 +5753,8 @@ class HomeTasksCard extends HTMLElement {
       alert("Bildgenerierung fehlgeschlagen: " + (err.message || err));
     } finally {
       this._generatingImage.delete(task.id);
-      this._render();
+      this._refreshOpenSheetImage(task.id, colIdx);
+      this._refreshTaskTileEverywhere(task.id);
     }
   }
 
@@ -5559,6 +5773,16 @@ class HomeTasksCard extends HTMLElement {
     } catch { return url; }
   }
 
+  // Revoke + drop cached blob: thumbnail URLs (called when the media picker
+  // closes) so browsing large libraries repeatedly doesn't leak blob memory.
+  _revokeThumbCache() {
+    if (!this._thumbCache) return;
+    for (const v of this._thumbCache.values()) {
+      if (typeof v === "string" && v.startsWith("blob:")) URL.revokeObjectURL(v);
+    }
+    this._thumbCache.clear();
+  }
+
   async _saveImageUrl(task, colIdx, url) {
     const col = this._config.columns[colIdx];
     try {
@@ -5575,7 +5799,10 @@ class HomeTasksCard extends HTMLElement {
         const idx = cs.tasks.findIndex(t => t.id === task.id);
         if (idx >= 0) cs.tasks[idx] = result;
       }
-      this._render();
+      // Update the open sheet + tiles in place (a full _render() would keep the
+      // old sheet DOM — showing the old image — and reset the scroll position).
+      this._refreshOpenSheetImage(task.id, colIdx);
+      this._refreshTaskTileEverywhere(task.id);
     } catch (err) {
       console.error("Failed to save image URL:", err);
       alert("Bild speichern fehlgeschlagen: " + (err.message || err));
@@ -6046,12 +6273,10 @@ class HomeTasksCard extends HTMLElement {
       if (this._isInteractiveTarget(e.target)) return;
       const touch = e.touches[0];
       let lpStartX = touch.clientX, lpStartY = touch.clientY;
-      this._touchLpTimer = setTimeout(() => {
-        this._touchLpTimer = null;
-        if (this._touchStartTimer) { clearTimeout(this._touchStartTimer); this._touchStartTimer = null; }
-        if (this._draggedTaskId) { this._finishDrag(); }
-        this._openTaskDetailSheet(task, colIdx);
-      }, 500);
+      // List rows show their details inline on tap; the detail sheet is a
+      // tiles-only gesture. A long-press here only arms the drag below — opening
+      // the sheet here too fought the drag (stationary hold flashed a drag +
+      // sheet, and the trailing tap toggled expand under the sheet).
       this._touchStartTimer = setTimeout(() => {
         this._draggedTaskId = taskId;
         this._draggedColIdx = colIdx;
@@ -6182,15 +6407,15 @@ class HomeTasksCard extends HTMLElement {
       .add-btn:hover { opacity: 0.9; }
       .mic-btn {
         flex-shrink: 0; width: 38px; height: 38px; padding: 0;
-        border: 1px solid var(--todo-divider); border-radius: var(--todo-radius);
-        background: var(--todo-bg); color: var(--todo-secondary-text);
+        border: none; border-radius: var(--todo-radius);
+        background: var(--todo-primary); color: #fff;
         cursor: pointer; display: flex; align-items: center; justify-content: center;
-        transition: border-color 0.2s, color 0.2s;
+        transition: opacity 0.2s, background 0.2s;
       }
-      .mic-btn:hover { border-color: var(--todo-primary); color: var(--todo-primary); }
+      .mic-btn:hover { opacity: 0.9; }
       .mic-btn svg { width: 18px; height: 18px; fill: currentColor; }
       .mic-btn.recording {
-        border-color: #e53935; color: #e53935;
+        background: #e53935; color: #fff;
         animation: mic-pulse 1s ease-in-out infinite;
       }
       @keyframes mic-pulse {
@@ -6283,10 +6508,13 @@ class HomeTasksCard extends HTMLElement {
       }
       .task.completed .task-title { text-decoration: line-through; color: var(--todo-disabled); }
       .edit-title-input, .edit-sub-input {
-        flex: 1; padding: 4px 8px; border: 1px solid var(--todo-primary);
-        border-radius: 4px; font-size: 14px; background: var(--todo-bg);
+        flex: 1; padding: 7px 10px;
+        border: 1px solid var(--outline-color, var(--divider-color, rgba(127,127,127,0.4)));
+        border-radius: 4px; font-size: 14px;
+        background: var(--mdc-text-field-fill-color, var(--input-fill-color, var(--todo-bg)));
         color: var(--todo-text); outline: none; font-family: inherit; min-width: 0;
       }
+      .edit-title-input:focus, .edit-sub-input:focus { border-color: var(--todo-primary); border-width: 2px; padding: 6px 9px; }
       .task-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
       .sub-badge {
         font-size: 11px; padding: 2px 8px; border-radius: 10px;
@@ -6571,18 +6799,11 @@ class HomeTasksCard extends HTMLElement {
         padding: 6px 14px; border-radius: 4px; font-size: 12px; cursor: pointer; font-family: inherit;
       }
       .delete-task-btn:hover { background: rgba(244, 67, 54, 0.15); }
-      .assign-copy-btn {
+      .duplicate-task-btn {
         background: none; border: 1px solid var(--todo-primary); color: var(--todo-primary);
         padding: 6px 14px; border-radius: 4px; font-size: 12px; cursor: pointer; font-family: inherit;
-        margin-right: auto;
       }
-      .assign-copy-btn:hover { background: rgba(var(--rgb-primary-color, 3,169,244), 0.1); }
-      .assign-copy-sel {
-        border: 1px solid var(--todo-primary); color: var(--todo-primary);
-        background: var(--todo-bg); padding: 6px 8px; border-radius: 4px; font-size: 12px;
-        cursor: pointer; font-family: inherit; margin-right: auto;
-      }
-
+      .duplicate-task-btn:hover { background: color-mix(in srgb, var(--todo-primary) 15%, transparent); }
       /* --- Task image --- */
       .task-thumb {
         width: 40px; height: 40px; border-radius: 6px; object-fit: cover;
@@ -6600,7 +6821,7 @@ class HomeTasksCard extends HTMLElement {
         max-height: 300px;
       }
       .task-image {
-        width: 100%; max-height: 300px; object-fit: cover;
+        width: 100%; max-height: 300px; object-fit: contain;
         border-radius: 8px; display: block;
       }
       .task-image-remove {
@@ -6684,14 +6905,23 @@ class HomeTasksCard extends HTMLElement {
         background: var(--todo-surface);
         border: 1px solid var(--todo-divider);
         transition: transform 0.18s ease, box-shadow 0.18s ease;
-        user-select: none;
+        user-select: none; -webkit-user-select: none;
+        /* Stop iOS Safari from hijacking a long-press on the tile image with
+           its native "save/copy image" callout instead of our detail gesture. */
+        -webkit-touch-callout: none;
       }
       .task-tile:hover { transform: scale(1.04); box-shadow: 0 6px 18px rgba(0,0,0,0.15); }
       .task-tile.selected { outline: 2.5px solid var(--todo-primary); outline-offset: 2px; }
       .task-tile.completed { opacity: 0.50; }
+      .task-tile.dragging { opacity: 0.4; }
+      .task-tile.dragging:hover { transform: none; box-shadow: none; }
+      .task-tile.armed { transform: scale(1.08); box-shadow: 0 8px 22px rgba(0,0,0,0.28); z-index: 2; }
       .tile-bg {
         width: 100%; height: 100%; object-fit: cover; display: block;
         position: absolute; inset: 0;
+        /* Decorative only: never intercept touches, never offer iOS image
+           actions / drag-save — all gestures belong to the parent tile. */
+        pointer-events: none; -webkit-touch-callout: none; -webkit-user-drag: none;
       }
       .tile-placeholder {
         width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
@@ -6716,7 +6946,11 @@ class HomeTasksCard extends HTMLElement {
       }
       .task-detail-sheet {
         position: fixed; bottom: 0; left: 0; right: 0; z-index: 999;
-        background: var(--ha-card-background, var(--card-background-color, #1c1c1c));
+        /* Composite the (possibly translucent) themed card colour over an
+           opaque page-background base so frosted-glass themes don't make the
+           popup see-through and unreadable. */
+        background-color: var(--primary-background-color, #1c1c1c);
+        background-image: linear-gradient(var(--ha-card-background, var(--card-background-color, transparent)), var(--ha-card-background, var(--card-background-color, transparent)));
         border-radius: 16px 16px 0 0;
         box-shadow: 0 -4px 24px rgba(0,0,0,0.28);
         transform: translateY(100%);
@@ -6736,7 +6970,13 @@ class HomeTasksCard extends HTMLElement {
         padding: 8px 8px 12px 20px; flex-shrink: 0;
         border-bottom: 1px solid var(--divider-color, rgba(255,255,255,0.08));
       }
-      .sheet-title { flex: 1; font-size: 16px; font-weight: 500; color: var(--primary-text-color); }
+      .sheet-title {
+        flex: 1; min-width: 0; font-size: 16px; font-weight: 500; color: var(--primary-text-color);
+        background: var(--mdc-text-field-fill-color, var(--input-fill-color, transparent));
+        border: 1px solid var(--outline-color, var(--divider-color, rgba(127,127,127,0.4)));
+        border-radius: 4px; outline: none; font-family: inherit; padding: 8px 12px;
+      }
+      .sheet-title:focus { border-color: var(--todo-primary); border-width: 2px; padding: 7px 11px; }
       .sheet-close {
         background: none; border: none; cursor: pointer; border-radius: 50%;
         color: var(--secondary-text-color); padding: 8px; display: flex; align-items: center;
@@ -6760,74 +7000,12 @@ class HomeTasksCard extends HTMLElement {
       }
       .tiles-mode { padding: 12px; }
 
-      /* Add-task tile */
-      .add-tile {
-        border: 2px dashed var(--todo-divider);
-        background: transparent;
-        display: flex; align-items: center; justify-content: center;
-        color: var(--secondary-text-color);
-        transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
-      }
-      .add-tile:hover {
-        border-color: var(--primary-color);
-        color: var(--primary-color);
-        background: color-mix(in srgb, var(--primary-color) 8%, transparent);
-      }
-      .add-tile-icon { font-size: 2.2rem; font-weight: 300; line-height: 1; pointer-events: none; }
-
-      /* Add-task dialog overlay */
-      .tile-add-overlay {
-        position: fixed; inset: 0; z-index: 9999;
-        background: rgba(0,0,0,0.42);
-        display: flex; align-items: center; justify-content: center;
-      }
-      .tile-dialog {
-        background: var(--ha-card-background, var(--card-background-color, #1c1c1c));
-        border-radius: 28px; padding: 24px 24px 16px;
-        min-width: 280px; max-width: min(420px, 90vw);
-        box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-        display: flex; flex-direction: column; gap: 16px;
-      }
-      .tile-dialog-input-row {
-        display: flex; align-items: flex-end; gap: 4px;
-        border-bottom: 2px solid var(--divider-color, rgba(255,255,255,0.12));
-      }
-      .tile-dialog-input-row:focus-within { border-bottom-color: var(--primary-color); }
-      .tile-dialog-input {
-        flex: 1; box-sizing: border-box;
-        padding: 14px 0 10px;
-        border: none; border-bottom: none;
-        background: transparent; color: var(--primary-text-color);
-        font-size: 16px; font-family: inherit; outline: none;
-      }
-      .tile-dialog-input::placeholder { color: var(--secondary-text-color); }
-      .tile-dialog-mic {
-        flex-shrink: 0; margin-bottom: 8px;
-        background: transparent; border: none;
-        color: var(--secondary-text-color); cursor: pointer;
-        padding: 4px; border-radius: 50%; line-height: 0;
-        transition: color 0.15s ease, background 0.15s ease;
-      }
-      .tile-dialog-mic:hover { color: var(--primary-color); background: color-mix(in srgb, var(--primary-color) 10%, transparent); }
-      .tile-dialog-mic.recording {
-        color: var(--error-color, #f44336);
-        animation: mic-pulse 1s ease-in-out infinite;
-      }
-      .tile-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
-      .tile-dialog-btn {
-        padding: 10px 20px; border: none; border-radius: 20px;
-        font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer;
-      }
-      .tile-dialog-cancel { background: transparent; color: var(--primary-color); }
-      .tile-dialog-cancel:hover { background: color-mix(in srgb, var(--primary-color) 10%, transparent); }
-      .tile-dialog-confirm { background: var(--primary-color); color: var(--text-primary-color, #fff); }
-      .tile-dialog-confirm:hover { filter: brightness(1.08); }
-
       /* Media browser dialog */
       dialog.mb-dialog {
         padding: 0; border: none; border-radius: 12px;
         width: min(480px, 95vw); max-height: 70vh;
-        background: var(--ha-card-background, var(--card-background-color, #fff));
+        background-color: var(--primary-background-color, #1c1c1c);
+        background-image: linear-gradient(var(--ha-card-background, var(--card-background-color, transparent)), var(--ha-card-background, var(--card-background-color, transparent)));
         color: var(--primary-text-color);
         box-shadow: 0 8px 32px rgba(0,0,0,0.32);
         overflow: hidden;
@@ -6864,7 +7042,6 @@ class HomeTasksCard extends HTMLElement {
         color: var(--primary-color); font-weight: 500;
         border-bottom: 2px solid var(--divider-color, rgba(0,0,0,0.12));
       }
-      .mb-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
       .mb-item-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .mb-grid {
         display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
@@ -6889,7 +7066,6 @@ class HomeTasksCard extends HTMLElement {
       .compact .tile-grid-inner { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 7px; }
       .compact .task-tile { border-radius: 10px; }
       .compact .tile-title { font-size: 11px; }
-      .compact .add-tile-icon { font-size: 1.8rem; }
 
       @keyframes task-exit {
         0%   { opacity: 1; transform: translateY(0); }
@@ -6920,6 +7096,14 @@ class HomeTasksCard extends HTMLElement {
     if (this._touchStartTimer) { clearTimeout(this._touchStartTimer); this._touchStartTimer = null; }
     if (this._subTouchStartTimer) { clearTimeout(this._subTouchStartTimer); this._subTouchStartTimer = null; }
     if (this._extPollTimer) { clearInterval(this._extPollTimer); this._extPollTimer = null; }
+    // Stop any active voice recording so the mic stream, AudioContext and
+    // pipeline subscription are released when the card is removed mid-recording.
+    if (this._voiceActive) {
+      for (const cleanup of this._voiceActive.values()) {
+        try { cleanup(); } catch (_) { /* best-effort */ }
+      }
+      this._voiceActive.clear();
+    }
   }
 
   static getConfigElement() {
@@ -7402,13 +7586,14 @@ class HomeTasksCardEditor extends HTMLElement {
     });
 
     const det = document.createElement("details");
+    det.style.marginTop = "8px"; // match the .visual-editor inter-section gap
     if (this._sectionOpen?.imggen) det.open = true;
     det.addEventListener("toggle", () => {
       this._sectionOpen = { ...(this._sectionOpen || {}), imggen: det.open };
     });
     const sum = document.createElement("summary");
     const ico = document.createElement("ha-icon");
-    ico.setAttribute("icon", "mdi:image-spark");
+    ico.setAttribute("icon", "mdi:image-plus");
     ico.style.cssText = "--mdc-icon-size:20px;width:20px;height:20px;flex-shrink:0;";
     const lbl = this._el("span", { textContent: this._t("ed_ai_image_section"), style: "flex:1" });
     const chev = document.createElement("ha-icon");
@@ -7738,18 +7923,27 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-add-task", "ed_show_add_task", "show_add_task", true),
           makeToggle("auto-delete", "ed_auto_delete", "auto_delete_completed", false),
           makeToggle("show-sort", "ed_show_sort", "show_sort", true),
+          makeToggle("show-filters", "ed_show_filters", "show_filters", true),
+          makeToggle("show-tag-chips", "ed_show_tag_chips", "show_tag_chips", true),
+          makeToggle("show-person-chips", "ed_show_person_chips", "show_person_chips", true),
+          makeToggle("show-voice", "ed_show_voice", "show_voice", true),
           makeToggle("compact", "ed_compact", "compact", false),
-          makeToggle("show-history", "ed_show_history", "show_history", false),
           makeToggle("show-images", "ed_show_images", "show_images", false),
-          makeToggle("show-tile-title", "ed_show_tile_title", "show_tile_title", true),
+          makeToggle("auto-image", "ed_auto_image", "auto_generate_image", false),
+          ...(col.view_mode === "tiles"
+            ? [makeToggle("show-tile-title", "ed_show_tile_title", "show_tile_title", true)]
+            : []),
         ]),
         sortField,
         makeSelect(
           "ed_view_mode",
           [["list", "ed_view_mode_list"], ["tiles", "ed_view_mode_tiles"]],
           col.view_mode || "list",
-          (val) => updateCol({ view_mode: val === "list" ? undefined : val })
+          (val) => { updateCol({ view_mode: val === "list" ? undefined : val }); this._render(); }
         ),
+        ...(col.view_mode === "tiles"
+          ? [this._el("div", { className: "hint", textContent: this._t("ed_tile_help"), style: "white-space:pre-line" })]
+          : []),
       ]),
       makeSection("filters", "mdi:filter-variant", "ed_sec_filters", [
         filterField,
@@ -7778,6 +7972,7 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-due-date", "ed_show_due_date", "show_due_date", true),
           makeToggle("show-reminders", "ed_show_reminders", "show_reminders", true),
           makeToggle("show-recurrence", "ed_show_recurrence", "show_recurrence", true),
+          makeToggle("show-history", "ed_show_history", "show_history", false),
         ]),
       ], false),
       this._buildSectionsEditor(col),
