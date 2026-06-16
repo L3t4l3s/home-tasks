@@ -352,9 +352,9 @@ columns:
 
 #### 🎒 Kids Chores
 
-<img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/usecase-chores.png" alt="Kids chores list">
+<img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/usecase-chores.png" alt="Kids chores in tile view with comic-style images">
 
-Who does what and when — person assignment, weekday recurrence, and tags for time-of-day filtering. No deadlines, notes, or sub-tasks needed.
+Kid-friendly [tile view](#tile-view) — each chore is a picture card with a playful, AI-generated comic image (prompt prefix `Comic style illustration for kids:`). Tap to complete. Person assignment and weekday recurrence still run underneath.
 
 ```yaml
 type: custom:home-tasks-card
@@ -362,11 +362,8 @@ columns:
   - list_id: "your-list-id"
     title: Kids Chores
     icon: mdi:school
-    show_priority: false
-    show_due_date: false
-    show_reminders: false
-    show_notes: false
-    show_sub_tasks: false
+    view_mode: tiles
+    show_images: true
 ```
 
 </td>
