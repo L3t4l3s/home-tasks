@@ -121,6 +121,12 @@ class ExternalTaskOverlayStore:
         self._data: dict | None = None
         self._listeners: list[Callable[[], None]] = []
         self.entity_id = entity_id
+        # Hooks (parity with HomeTasksStore) so external lists fire the same
+        # events / schedule reminders. async_set_overlay is the choke point for
+        # both assignment changes and reminder edits (whether they arrive via
+        # update_external_task's unsynced fields or update_external_overlay).
+        self.on_task_assigned: Callable[[str, str | None], None] | None = None
+        self.on_reminders_changed: Callable[[str], None] | None = None
 
     # -- listener support (mirrors HomeTasksStore) --
 
@@ -203,12 +209,23 @@ class ExternalTaskOverlayStore:
         if task_uid not in overlays:
             overlays[task_uid] = {}
         overlay = overlays[task_uid]
+        prev_assigned = overlay.get("assigned_person")
 
         for key, value in kwargs.items():
             if key in OVERLAY_FIELDS:
                 overlay[key] = value
 
         await self._async_save()
+        # Parity with the native store: fire assignment on change, and (re)schedule
+        # reminders whenever the reminder set is touched.
+        if (
+            "assigned_person" in kwargs
+            and kwargs.get("assigned_person") != prev_assigned
+            and self.on_task_assigned
+        ):
+            self.on_task_assigned(task_uid, prev_assigned)
+        if "reminders" in kwargs and self.on_reminders_changed:
+            self.on_reminders_changed(task_uid)
         return {**_empty_overlay(), **overlay}
 
     async def async_delete_overlay(self, task_uid: str) -> None:

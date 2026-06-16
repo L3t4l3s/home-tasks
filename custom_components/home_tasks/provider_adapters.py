@@ -407,11 +407,16 @@ class GenericAdapter(ProviderAdapter):
                 unsynced[key] = value
                 need_uid = True
 
-        if need_uid:
-            try:
-                before_uids = {item["uid"] for item in await self.async_read_tasks()}
-            except Exception:  # noqa: BLE001
-                _LOGGER.debug("Could not snapshot pre-create UIDs for %s", self._entity_id)
+        # Always discover the new task's UID (snapshot before, diff after). It's
+        # needed for overlay storage AND so the WS layer can fire task_created
+        # with a real task_id. Most HA todo providers don't echo the new UID for
+        # a bare-title create (only Todoist's dedicated adapter does), so we
+        # resolve it ourselves regardless of whether overlay fields are present.
+        before_uids: set = set()
+        try:
+            before_uids = {item["uid"] for item in await self.async_read_tasks()}
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug("Could not snapshot pre-create UIDs for %s", self._entity_id)
 
         await self._hass.services.async_call(
             "todo", "add_item", service_data,
@@ -420,32 +425,31 @@ class GenericAdapter(ProviderAdapter):
         )
 
         new_uid: str | None = None
-        if need_uid:
-            try:
-                after_items = await self.async_read_tasks()
-            except Exception:  # noqa: BLE001
-                _LOGGER.warning(
-                    "Could not re-read %s after create to discover new UID; "
-                    "overlay fields may be lost", self._entity_id,
-                )
-                return None, unsynced
-            new_candidates = [
-                item["uid"] for item in after_items
-                if item["uid"] not in before_uids
-            ]
-            if len(new_candidates) == 1:
-                new_uid = new_candidates[0]
-            elif new_candidates:
-                # Fall back to title match when multiple new tasks appear
-                # (race with another actor creating in parallel).
-                title_lower = (fields.get("title") or "").lower()
-                for item in reversed(after_items):
-                    if (
-                        item["uid"] in new_candidates
-                        and (item.get("summary") or "").lower() == title_lower
-                    ):
-                        new_uid = item["uid"]
-                        break
+        try:
+            after_items = await self.async_read_tasks()
+        except Exception:  # noqa: BLE001
+            _LOGGER.warning(
+                "Could not re-read %s after create to discover new UID; "
+                "overlay fields may be lost", self._entity_id,
+            )
+            return None, unsynced
+        new_candidates = [
+            item["uid"] for item in after_items
+            if item["uid"] not in before_uids
+        ]
+        if len(new_candidates) == 1:
+            new_uid = new_candidates[0]
+        elif new_candidates:
+            # Fall back to title match when multiple new tasks appear
+            # (race with another actor creating in parallel).
+            title_lower = (fields.get("title") or "").lower()
+            for item in reversed(after_items):
+                if (
+                    item["uid"] in new_candidates
+                    and (item.get("summary") or "").lower() == title_lower
+                ):
+                    new_uid = item["uid"]
+                    break
         return new_uid, unsynced
 
     async def async_update_task(self, task_uid: str, fields: dict) -> dict:

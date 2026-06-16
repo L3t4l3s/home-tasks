@@ -352,6 +352,63 @@ def _check_external_due_dates(hass: HomeAssistant, today: str, fired: dict) -> N
             _LOGGER.debug("Could not check due dates for external entity %s: %s", entity_id, err)
 
 
+def _build_external_task(hass: HomeAssistant, entry_id: str, entity_id: str, task_uid: str) -> dict | None:
+    """Merge an external entity item with its overlay into a Home Tasks task dict."""
+    store = hass.data.get(DOMAIN, {}).get(entry_id)
+    if not isinstance(store, ExternalTaskOverlayStore):
+        return None
+    try:
+        from .provider_adapters import _get_external_todo_items
+        from .websocket_api import _merge_tasks_with_overlays
+        merged = _merge_tasks_with_overlays(_get_external_todo_items(hass, entity_id), store)
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.debug("Could not build external task %s/%s: %s", entity_id, task_uid, err)
+        return None
+    for task in merged:
+        if str(task.get("id")) == str(task_uid):
+            task["_entity_id"] = entity_id  # so events carry the external entity ref
+            return task
+    return None
+
+
+def _fire_external_assignment(hass: HomeAssistant, entry_id: str, entity_id: str, task_uid: str, previous_person) -> None:
+    """Fire home_tasks_task_assigned for an external task whose assignee changed."""
+    task = _build_external_task(hass, entry_id, entity_id, task_uid) or {
+        "id": task_uid, "title": "", "_entity_id": entity_id,
+    }
+    data = _build_event_data(entry_id, task)
+    data["previous_person"] = previous_person
+    hass.bus.async_fire(f"{DOMAIN}_task_assigned", data)
+
+
+def _schedule_external_reminders(hass: HomeAssistant, entry_id: str, entity_id: str, task_uid: str) -> None:
+    """(Re)schedule reminder timers for one external task after its overlay changed."""
+    task = _build_external_task(hass, entry_id, entity_id, task_uid)
+    if task is not None:
+        _schedule_reminders(hass, entry_id, task)
+
+
+def _recover_external_reminder_timers(hass: HomeAssistant, entry_id: str, entity_id: str) -> None:
+    """On startup, reschedule reminder timers for external tasks (parity with native)."""
+    store = hass.data.get(DOMAIN, {}).get(entry_id)
+    if not isinstance(store, ExternalTaskOverlayStore):
+        return
+    try:
+        from .provider_adapters import _get_external_todo_items
+        from .websocket_api import _merge_tasks_with_overlays
+        merged = _merge_tasks_with_overlays(_get_external_todo_items(hass, entity_id), store)
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.debug("Could not recover external reminders for %s: %s", entity_id, err)
+        return
+    for task in merged:
+        if not task.get("reminders") or not task.get("due_date"):
+            continue
+        if task.get("completed") and not task.get("recurrence_enabled"):
+            continue
+        task["_entity_id"] = entity_id
+        _schedule_reminders(hass, entry_id, task)
+
+
 # ---------------------------------------------------------------------------
 #  Recurrence scheduling
 # ---------------------------------------------------------------------------
@@ -1114,6 +1171,15 @@ async def _async_setup_external_entry(hass: HomeAssistant, entry: ConfigEntry) -
     await overlay_store.async_load()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = overlay_store
 
+    # Wire event/reminder hooks so external lists behave like native ones:
+    # assignment fires task_assigned; reminder edits (re)schedule timers.
+    overlay_store.on_task_assigned = lambda uid, prev: _fire_external_assignment(
+        hass, entry.entry_id, entity_id, uid, prev
+    )
+    overlay_store.on_reminders_changed = lambda uid: _schedule_external_reminders(
+        hass, entry.entry_id, entity_id, uid
+    )
+
     # Instantiate the provider adapter.
     # Detect provider_type on the fly if missing (pre-1.7 entries) — do NOT call
     # async_update_entry here because that triggers a config entry reload which
@@ -1137,6 +1203,12 @@ async def _async_setup_external_entry(hass: HomeAssistant, entry: ConfigEntry) -
     # because those entities are already managed by the external integration.
 
     _schedule_startup_due_check(hass)
+    # Reschedule external reminder timers once HA has settled (the external
+    # entity may not be loaded yet at setup time).
+    async_call_later(
+        hass, 120,
+        lambda _now: _recover_external_reminder_timers(hass, entry.entry_id, entity_id),
+    )
     return True
 
 

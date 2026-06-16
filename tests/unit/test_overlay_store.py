@@ -356,3 +356,42 @@ async def test_overlay_tags_empty_after_strip_skipped(hass: HomeAssistant, overl
     await overlay_store.async_set_overlay("uid-strip", tags=["valid", "  "])
     overlay = overlay_store.get_overlay("uid-strip")
     assert overlay["tags"] == ["valid"]
+
+
+# --- event/reminder hooks (parity with native store; drive external events) ---
+
+
+async def test_set_overlay_fires_assigned_only_on_change(hass: HomeAssistant, overlay_store) -> None:
+    """on_task_assigned fires with the previous person, and only when it changes."""
+    calls: list = []
+    overlay_store.on_task_assigned = lambda uid, prev: calls.append((uid, prev))
+
+    await overlay_store.async_set_overlay("u1", assigned_person="person.alice")
+    assert calls == [("u1", None)]
+
+    # Same value again → no event.
+    await overlay_store.async_set_overlay("u1", assigned_person="person.alice")
+    assert calls == [("u1", None)]
+
+    # Changed → fires with the previous assignee.
+    await overlay_store.async_set_overlay("u1", assigned_person="person.bob")
+    assert calls == [("u1", None), ("u1", "person.alice")]
+
+
+async def test_set_overlay_fires_reminders_changed(hass: HomeAssistant, overlay_store) -> None:
+    """on_reminders_changed fires whenever the reminder set is touched."""
+    calls: list = []
+    overlay_store.on_reminders_changed = lambda uid: calls.append(uid)
+
+    await overlay_store.async_set_overlay("u2", reminders=[60])
+    assert calls == ["u2"]
+
+    # A non-reminder change must not trigger reminder rescheduling.
+    await overlay_store.async_set_overlay("u2", priority=1)
+    assert calls == ["u2"]
+
+
+async def test_set_overlay_without_hooks_does_not_raise(hass: HomeAssistant, overlay_store) -> None:
+    """With no hooks wired, setting assignment/reminders still works."""
+    await overlay_store.async_set_overlay("u3", assigned_person="person.x", reminders=[30])
+    assert overlay_store.get_overlay("u3")["assigned_person"] == "person.x"

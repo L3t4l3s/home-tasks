@@ -1116,6 +1116,44 @@ async def ws_reorder_external_sub_tasks(hass, connection, msg):
 # ---------------------------------------------------------------------------
 
 
+def _external_entry_id(hass, entity_id: str) -> str | None:
+    """Config-entry id of the external list linked to entity_id, if any."""
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.data.get("type") == "external" and entry.data.get("entity_id") == entity_id:
+            return entry.entry_id
+    return None
+
+
+def _fire_external_task_event(
+    hass, event_type: str, entity_id: str, task_uid: str, fields: dict, *, task: dict | None = None
+) -> None:
+    """Fire a home_tasks_<event_type> event for an external-list task.
+
+    External tasks live on the linked todo entity and are mutated through the
+    provider adapter, which bypasses the native store's on_task_* callbacks — so
+    we fire the same events here for parity with native lists (issue #27).
+
+    Event data is taken from the merged task snapshot (``task``) when given so
+    completion events carry title/assignee/due/tags like native; the WS payload
+    (``fields``) overrides it for the values the caller just changed.
+    """
+    src = dict(task or {})  # merged snapshot: title, assigned_person, due_date, tags …
+    for key in ("title", "assigned_person", "due_date", "tags"):
+        if key in fields:
+            src[key] = fields[key]
+    data: dict = {"task_id": task_uid, "task_title": src.get("title") or "", "entity_id": entity_id}
+    entry_id = _external_entry_id(hass, entity_id)
+    if entry_id:
+        data["entry_id"] = entry_id
+    if src.get("due_date"):
+        data["due_date"] = src["due_date"]
+    if src.get("tags"):
+        data["tags"] = src["tags"]
+    if src.get("assigned_person"):
+        data["assigned_person"] = src["assigned_person"]
+    hass.bus.async_fire(f"{DOMAIN}_{event_type}", data)
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "home_tasks/create_external_task",
@@ -1184,6 +1222,9 @@ async def ws_create_external_task(hass, connection, msg):
                 "overlay fields lost: %s",
                 entity_id, list(adapter_unsynced.keys()),
             )
+        # Fire created for every provider — even when the generic adapter can't
+        # resolve a UID, the title + entity are still useful to automations.
+        _fire_external_task_event(hass, "task_created", entity_id, new_uid or "", fields)
         connection.send_result(msg["id"], {"uid": new_uid})
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -1251,6 +1292,21 @@ async def ws_update_external_task(hass, connection, msg):
             if overlay_kwargs:
                 await overlay_store.async_set_overlay(task_uid, **overlay_kwargs)
 
+        # Fire native-parity events so automations work for external lists too
+        # (issue #27): the adapter path bypasses the store's on_task_* callbacks.
+        if "completed" in fields:
+            merged = None
+            try:
+                ostore = _get_overlay_store(hass, entity_id)
+                merged = next(
+                    (t for t in _merge_tasks_with_overlays(_get_external_todo_items(hass, entity_id), ostore)
+                     if str(t.get("id")) == str(task_uid)),
+                    None,
+                )
+            except Exception:  # noqa: BLE001
+                merged = None
+            event_type = "task_completed" if fields["completed"] else "task_reopened"
+            _fire_external_task_event(hass, event_type, entity_id, task_uid, fields, task=merged)
         connection.send_result(msg["id"], {"unsynced": list(unsynced.keys()) if unsynced else []})
     except Exception as err:
         _handle_error(connection, msg["id"], err)

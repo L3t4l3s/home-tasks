@@ -1153,12 +1153,12 @@ class TestGenericAdapterCreateBitGuards:
             "assigned_person": "person.alice",
         }
 
-    async def test_bare_title_skips_uid_discovery(self):
-        """No overlay data to persist → no before/after snapshot, uid=None.
+    async def test_bare_title_discovers_uid(self):
+        """A plain title-only create also resolves the new UID.
 
-        The adapter only pays the cost of UID discovery when it actually
-        needs a UID to key overlay data.  A plain title-only create has
-        nothing to persist locally, so we skip the extra read.
+        The UID is needed so the WS layer can fire home_tasks_task_created with
+        a real task_id for every provider (issue #27) — not only when overlay
+        data must be keyed.  So the before/after snapshot runs regardless.
         """
         captured: dict = {"calls": [], "reads": 0}
 
@@ -1174,17 +1174,20 @@ class TestGenericAdapterCreateBitGuards:
 
         adapter = GenericAdapter(hass, "todo.ut_generic", {})
 
+        # before → empty, after → one new task
+        snapshots = [[], [{"uid": "new-1", "summary": "plain"}]]
+
         async def _read_tasks():
             captured["reads"] += 1
-            return []
+            return snapshots[min(captured["reads"] - 1, len(snapshots) - 1)]
 
         adapter.async_read_tasks = _read_tasks  # type: ignore[method-assign]
 
         uid, unsynced = await adapter.async_create_task({"title": "plain"})
 
-        assert uid is None
+        assert uid == "new-1"
         assert unsynced == {}
-        assert captured["reads"] == 0  # no snapshot, no re-read
+        assert captured["reads"] == 2  # snapshot before + re-read after
 
     async def test_uid_discovery_uses_before_after_diff(self):
         """When overlay data exists, the new UID is the one absent from ``before``."""
