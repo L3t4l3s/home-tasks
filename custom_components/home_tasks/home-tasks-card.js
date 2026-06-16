@@ -2720,6 +2720,15 @@ class HomeTasksCard extends HTMLElement {
   // Start voice input. colIdx identifies the column; inputEl is the <input>
   // element to fill (list-row input or tile-dialog input). If omitted the
   // column's newTaskTitle state is updated instead (legacy path).
+  // Voice capture needs a secure context: browser mic (getUserMedia) or the
+  // Web Speech API. Neither exists in e.g. the Home Assistant iOS app's webview
+  // or plain-HTTP contexts — hide the mic button there instead of showing a
+  // button that can only fail.
+  _voiceSupported() {
+    return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) ||
+           !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  }
+
   _startVoiceInput(colIdx, inputEl = null) {
     // Toggle off if already recording
     if (this._voiceActive.has(colIdx)) {
@@ -2974,7 +2983,7 @@ class HomeTasksCard extends HTMLElement {
     addBtn.addEventListener("click", () => this._addTask(colIdx));
 
     const children = [addInput];
-    if (col.show_voice !== false) {
+    if (col.show_voice !== false && this._voiceSupported()) {
       const isRecording = this._voiceActive.has(colIdx);
       const micBtn = this._el("button", {
         className: "mic-btn" + (isRecording ? " recording" : ""),
