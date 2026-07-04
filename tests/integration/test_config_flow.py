@@ -247,3 +247,24 @@ async def test_config_flow_external_empty_entity(hass: HomeAssistant) -> None:
         await hass.config_entries.flow.async_configure(
             result2["flow_id"], {"entity_id": ""}
         )
+
+
+async def test_options_flow_advances_toggle(hass: HomeAssistant) -> None:
+    """Options flow exposes the advance-on-complete toggle and persists it."""
+    from custom_components.home_tasks.config_flow import OPTION_RECURRING_ADVANCES
+
+    entry = MockConfigEntry(domain=DOMAIN, data={"name": "Opt List"}, title="Opt List")
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"], {OPTION_RECURRING_ADVANCES: True}
+    )
+    await hass.async_block_till_done()
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert entry.options[OPTION_RECURRING_ADVANCES] is True

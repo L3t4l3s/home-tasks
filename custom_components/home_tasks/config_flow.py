@@ -20,10 +20,6 @@ def recurring_advances_on_complete(entry) -> bool:
 class HomeTasksOptionsFlow(config_entries.OptionsFlow):
     """Per-list options (e.g. recurring-task advance-on-complete behavior)."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Store the entry being configured."""
-        self.config_entry = config_entry
-
     async def async_step_init(self, user_input=None):
         """Manage list-level options."""
         if user_input is not None:
@@ -53,7 +49,7 @@ class HomeTasksConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: config_entries.ConfigEntry,
     ) -> HomeTasksOptionsFlow:
         """Return the options flow handler."""
-        return HomeTasksOptionsFlow(config_entry)
+        return HomeTasksOptionsFlow()
 
     async def async_step_user(self, user_input=None):
         """Let the user choose between creating a native list or linking an external one."""
