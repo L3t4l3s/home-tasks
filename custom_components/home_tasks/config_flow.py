@@ -7,11 +7,53 @@ from homeassistant.helpers import entity_registry as er
 
 from .const import DOMAIN, MAX_LIST_NAME_LENGTH, MAX_LISTS
 
+OPTION_RECURRING_ADVANCES = "recurring_complete_advances"
+
+
+def recurring_advances_on_complete(entry) -> bool:
+    """Read the "advance on complete" option for a config entry (default False)."""
+    if entry is None:
+        return False
+    return bool(entry.options.get(OPTION_RECURRING_ADVANCES, False))
+
+
+class HomeTasksOptionsFlow(config_entries.OptionsFlow):
+    """Per-list options (e.g. recurring-task advance-on-complete behavior)."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Store the entry being configured."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage list-level options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        current = self.config_entry.options.get(OPTION_RECURRING_ADVANCES, False)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        OPTION_RECURRING_ADVANCES,
+                        default=current,
+                    ): bool,
+                }
+            ),
+        )
+
 
 class HomeTasksConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Home Tasks."""
 
     VERSION = 1
+
+    @staticmethod
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> HomeTasksOptionsFlow:
+        """Return the options flow handler."""
+        return HomeTasksOptionsFlow(config_entry)
 
     async def async_step_user(self, user_input=None):
         """Let the user choose between creating a native list or linking an external one."""

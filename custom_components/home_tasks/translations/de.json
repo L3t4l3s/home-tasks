@@ -36,5 +36,15 @@
       "no_external_entities": "Keine externen Todo-Entities gefunden. Bitte richte zuerst eine CalDAV-, Google Tasks- oder Todoist-Integration ein.",
       "max_lists_reached": "Maximale Anzahl an Listen (50) erreicht."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Listenoptionen",
+        "data": {
+          "recurring_complete_advances": "Wiederkehrende Aufgaben bei Fertigstellung in den nächsten Zyklus verschieben"
+        }
+      }
+    }
   }
 }

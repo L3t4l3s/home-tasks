@@ -38,6 +38,7 @@ Every task can carry over 20 individual attributes:
 - **Recurrence end date**
 - **Maximum repetitions**
 - **Completion state** with timestamp
+- **Advance-on-complete** *(optional, per list)* — by default, completing a recurring task moves it to "Done" and reopens it later at the next occurrence; enable **Settings → Devices & Services → Home Tasks → *list* → Configure → "Advance recurring tasks to the next cycle on completion"** to instead reopen it **immediately** and shift its due date to the next cycle right when you tick it off (matching TickTick/Things-style behavior). Applies to native lists and to external lists whose provider doesn't own recurrence (Todoist always uses its own).
 - **Task history / audit log** — every field change recorded with actor and timestamp
 
 ### External Todo Lists
@@ -603,7 +604,7 @@ grid_options:
 | `home_tasks_task_due` | Fired when a task's due date is today (once per day) |
 | `home_tasks_task_overdue` | Fired when a task is past its due date (once per day) |
 | `home_tasks_task_assigned` | Fired when a task's assignees change — including tasks *created* with an assignee (explicitly, via the list default, or by duplicating for another person); `previous_person` is `null` in that case. Also carries `previous_persons` (everyone assigned before) and `added_persons` (the people new to the task — the ones to notify). It also fires when only a co-assignee is added or removed and `assigned_person` stays the same, so an automation that notifies on this event should send to `added_persons`, not to `assigned_person` |
-| `home_tasks_task_reopened` | Fired when a task is reopened (manually or by recurrence) |
+| `home_tasks_task_reopened` | Fired when a task is reopened (manually or by recurrence — right away on completion for lists with "advance on complete" enabled) |
 | `home_tasks_task_reminder` | Fired at the configured offset before a task's due time |
 
 All events include: `entry_id`, `task_id`, `task_title`, `list_name`, and (if set) `assigned_person` (the primary assignee), `assigned_persons` (everyone assigned, primary first), `due_date`, `due_time`, `priority`, `notes` (truncated to 255 chars), `tags`.

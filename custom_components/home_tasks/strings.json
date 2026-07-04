@@ -36,5 +36,15 @@
       "no_external_entities": "No external todo entities found. Please set up a CalDAV, Google Tasks, or Microsoft ToDo integration first.",
       "max_lists_reached": "Maximum number of lists (50) reached."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "List options",
+        "data": {
+          "recurring_complete_advances": "Advance recurring tasks to the next cycle on completion"
+        }
+      }
+    }
   }
 }
