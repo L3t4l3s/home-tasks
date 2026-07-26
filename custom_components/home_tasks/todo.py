@@ -17,6 +17,15 @@ from homeassistant.helpers.entity import CONTEXT_RECENT_TIME_SECONDS
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from .config_flow import (
+    OPTION_FILTER_ASSIGNEES,
+    OPTION_FILTER_TAGS,
+    OPTION_INCLUDE_UNASSIGNED,
+    OPTION_TAG_MODE,
+    TAG_MODE_EXCLUDE,
+    TAG_MODE_INCLUDE,
+    TAG_MODE_OFF,
+)
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,6 +70,18 @@ class HomeTasksEntity(TodoListEntity):
         self.async_on_remove(
             self._store.async_add_listener(self._handle_store_update)
         )
+        # Refresh the filtered todo list when the config entry options change
+        # (e.g. the user adjusts the assignee/tag filter).  Updating the
+        # entry reference here lets todo_items read the fresh options without
+        # a full entry reload.
+        self.async_on_remove(
+            self._entry.add_update_listener(self._on_options_changed)
+        )
+
+    async def _on_options_changed(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Pick up new filter options and push a state refresh."""
+        self._entry = entry
+        self.async_write_ha_state()
 
     @callback
     def _handle_store_update(self) -> None:
@@ -70,8 +91,11 @@ class HomeTasksEntity(TodoListEntity):
     @property
     def todo_items(self) -> list[TodoItem]:
         """Return the todo items."""
+        opts = self._entry.options
         items = []
         for task in self._store.tasks:
+            if not self._task_matches_filter(task, opts):
+                continue
             # due: expose as datetime when due_time is set, date otherwise
             due = None
             if task.get("due_date"):
@@ -141,6 +165,33 @@ class HomeTasksEntity(TodoListEntity):
             return None, None
         user = await self.hass.auth.async_get_user(ctx.user_id)
         return (user.name if user else None), ctx.user_id
+
+    @staticmethod
+    def _task_matches_filter(task: dict, opts) -> bool:
+        """Check whether a task should appear in the filtered todo entity."""
+        # --- Assignee filter ---
+        selected_assignees = opts.get(OPTION_FILTER_ASSIGNEES) or []
+        include_unassigned = opts.get(OPTION_INCLUDE_UNASSIGNED, True)
+        assignee = task.get("assigned_person")
+        if assignee:
+            if selected_assignees and assignee not in selected_assignees:
+                return False
+        elif not include_unassigned:
+            return False
+
+        # --- Tag filter ---
+        tag_mode = opts.get(OPTION_TAG_MODE, TAG_MODE_OFF)
+        selected_tags = set(opts.get(OPTION_FILTER_TAGS) or [])
+        if tag_mode != TAG_MODE_OFF and selected_tags:
+            task_tags = set(task.get("tags", []))
+            if tag_mode == TAG_MODE_INCLUDE:
+                if not (task_tags & selected_tags):
+                    return False
+            elif tag_mode == TAG_MODE_EXCLUDE:
+                if task_tags & selected_tags:
+                    return False
+
+        return True
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Create a new todo item."""

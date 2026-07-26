@@ -4,10 +4,25 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import DOMAIN, MAX_LIST_NAME_LENGTH, MAX_LISTS
 
 OPTION_RECURRING_ADVANCES = "recurring_complete_advances"
+
+# --- Todo-list filter options (native lists only) ---
+OPTION_FILTER_ASSIGNEES = "todo_filter_assignees"
+OPTION_INCLUDE_UNASSIGNED = "todo_filter_include_unassigned"
+OPTION_TAG_MODE = "todo_filter_tag_mode"
+OPTION_FILTER_TAGS = "todo_filter_tags"
+
+TAG_MODE_OFF = "off"
+TAG_MODE_EXCLUDE = "exclude"
+TAG_MODE_INCLUDE = "include"
 
 
 def recurring_advances_on_complete(entry) -> bool:
@@ -25,17 +40,66 @@ class HomeTasksOptionsFlow(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        current = self.config_entry.options.get(OPTION_RECURRING_ADVANCES, False)
+        entry = self.config_entry
+        opts = entry.options
+        is_external = entry.data.get("type") == "external"
+
+        schema = {
+            vol.Optional(
+                OPTION_RECURRING_ADVANCES,
+                default=bool(opts.get(OPTION_RECURRING_ADVANCES, False)),
+            ): bool,
+        }
+
+        if not is_external:
+            # Collect available assignees and tags from the store so the
+            # selectors show only values that actually exist in the list.
+            store = self.hass.data.get(DOMAIN, {}).get(entry.entry_id)
+            tasks = getattr(store, "tasks", []) or []
+            assignees = sorted(
+                {t["assigned_person"] for t in tasks if t.get("assigned_person")}
+            )
+            tags = sorted(
+                {tag for t in tasks for tag in t.get("tags", [])}
+            )
+
+            schema[vol.Optional(
+                OPTION_FILTER_ASSIGNEES,
+                default=opts.get(OPTION_FILTER_ASSIGNEES, []),
+            )] = SelectSelector(
+                SelectSelectorConfig(
+                    options=assignees,
+                    multiple=True,
+                    custom_value=True,
+                )
+            )
+            schema[vol.Optional(
+                OPTION_INCLUDE_UNASSIGNED,
+                default=bool(opts.get(OPTION_INCLUDE_UNASSIGNED, True)),
+            )] = bool
+            schema[vol.Optional(
+                OPTION_TAG_MODE,
+                default=opts.get(OPTION_TAG_MODE, TAG_MODE_OFF),
+            )] = SelectSelector(
+                SelectSelectorConfig(
+                    options=[TAG_MODE_OFF, TAG_MODE_EXCLUDE, TAG_MODE_INCLUDE],
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            )
+            schema[vol.Optional(
+                OPTION_FILTER_TAGS,
+                default=opts.get(OPTION_FILTER_TAGS, []),
+            )] = SelectSelector(
+                SelectSelectorConfig(
+                    options=tags,
+                    multiple=True,
+                    custom_value=True,
+                )
+            )
+
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        OPTION_RECURRING_ADVANCES,
-                        default=current,
-                    ): bool,
-                }
-            ),
+            data_schema=vol.Schema(schema),
         )
 
 
