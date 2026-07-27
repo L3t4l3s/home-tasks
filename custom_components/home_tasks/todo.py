@@ -22,6 +22,12 @@ from .config_flow import (
     OPTION_FILTER_TAGS,
     OPTION_INCLUDE_UNASSIGNED,
     OPTION_TAG_MODE,
+    OPTION_TODO_SORT,
+    SORT_DUE,
+    SORT_MANUAL,
+    SORT_PERSON,
+    SORT_PRIORITY,
+    SORT_TITLE,
     TAG_MODE_EXCLUDE,
     TAG_MODE_INCLUDE,
     TAG_MODE_OFF,
@@ -92,10 +98,14 @@ class HomeTasksEntity(TodoListEntity):
     def todo_items(self) -> list[TodoItem]:
         """Return the todo items."""
         opts = self._entry.options
+        sort_mode = opts.get(OPTION_TODO_SORT, SORT_MANUAL)
+        tasks = [
+            t for t in self._store.tasks
+            if self._task_matches_filter(t, opts)
+        ]
+        tasks = self._sort_tasks(tasks, sort_mode)
         items = []
-        for task in self._store.tasks:
-            if not self._task_matches_filter(task, opts):
-                continue
+        for task in tasks:
             # due: expose as datetime when due_time is set, date otherwise
             due = None
             if task.get("due_date"):
@@ -165,6 +175,27 @@ class HomeTasksEntity(TodoListEntity):
             return None, None
         user = await self.hass.auth.async_get_user(ctx.user_id)
         return (user.name if user else None), ctx.user_id
+
+    @staticmethod
+    def _sort_tasks(tasks: list, sort_mode: str) -> list:
+        """Sort tasks for the todo entity, mirroring the card's sort options."""
+        if sort_mode == SORT_DUE:
+            return sorted(tasks, key=lambda t: (
+                t.get("due_date") is None,
+                t.get("due_date") or "",
+                t.get("due_time") or "",
+            ))
+        if sort_mode == SORT_PRIORITY:
+            return sorted(tasks, key=lambda t: -(t.get("priority") or 0))
+        if sort_mode == SORT_TITLE:
+            return sorted(tasks, key=lambda t: (t.get("title") or "").lower())
+        if sort_mode == SORT_PERSON:
+            return sorted(tasks, key=lambda t: (
+                t.get("assigned_person") is None,
+                t.get("assigned_person") or "",
+            ))
+        # manual — preserve store sort_order
+        return sorted(tasks, key=lambda t: t.get("sort_order", 0))
 
     @staticmethod
     def _task_matches_filter(task: dict, opts) -> bool:

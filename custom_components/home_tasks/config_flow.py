@@ -24,6 +24,14 @@ TAG_MODE_OFF = "off"
 TAG_MODE_EXCLUDE = "exclude"
 TAG_MODE_INCLUDE = "include"
 
+# --- Todo-list sort option (native lists only) ---
+OPTION_TODO_SORT = "todo_sort"
+SORT_MANUAL = "manual"
+SORT_DUE = "due"
+SORT_PRIORITY = "priority"
+SORT_TITLE = "title"
+SORT_PERSON = "person"
+
 
 def recurring_advances_on_complete(entry) -> bool:
     """Read the "advance on complete" option for a config entry (default False)."""
@@ -94,6 +102,18 @@ class HomeTasksOptionsFlow(config_entries.OptionsFlow):
                     options=tags,
                     multiple=True,
                     custom_value=True,
+                )
+            )
+            schema[vol.Optional(
+                OPTION_TODO_SORT,
+                default=opts.get(OPTION_TODO_SORT, SORT_MANUAL),
+            )] = SelectSelector(
+                SelectSelectorConfig(
+                    options=[
+                        SORT_MANUAL, SORT_DUE, SORT_PRIORITY,
+                        SORT_TITLE, SORT_PERSON,
+                    ],
+                    mode=SelectSelectorMode.DROPDOWN,
                 )
             )
 

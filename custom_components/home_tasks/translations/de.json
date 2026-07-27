@@ -46,7 +46,8 @@
           "todo_filter_assignees": "Todo-Liste: nur diese Zuständigen anzeigen",
           "todo_filter_include_unassigned": "Todo-Liste: Aufgaben ohne Zuständigen einschließen",
           "todo_filter_tag_mode": "Todo-Liste: Tag-Filtermodus",
-          "todo_filter_tags": "Todo-Liste: einzuschließende oder ausschließende Tags"
+          "todo_filter_tags": "Todo-Liste: einzuschließende oder ausschließende Tags",
+          "todo_sort": "Todo-Liste: Sortierung"
         }
       }
     }

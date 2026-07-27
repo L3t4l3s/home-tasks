@@ -46,7 +46,8 @@
           "todo_filter_assignees": "Todo list: show only these assignees",
           "todo_filter_include_unassigned": "Todo list: include tasks without an assignee",
           "todo_filter_tag_mode": "Todo list: tag filter mode",
-          "todo_filter_tags": "Todo list: tags to include or exclude"
+          "todo_filter_tags": "Todo list: tags to include or exclude",
+          "todo_sort": "Todo list: sort order"
         }
       }
     }
