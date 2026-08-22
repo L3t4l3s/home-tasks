@@ -1139,3 +1139,57 @@ describe('max_height column option', () => {
     assert.equal(card.shadowRoot.querySelector('.task-list').style.maxHeight, '280px');
   });
 });
+
+
+describe('fixed-rows contract of HA sections view (--row-size)', () => {
+  async function setup(rowSize) {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'Test List' }] },
+      'home_tasks/get_tasks': { tasks: [{ id: 'T1', title: 'One', sort_order: 0, sub_items: [] }] },
+    });
+    const card = new HomeTasksCard();
+    if (rowSize !== undefined) card.style.setProperty('--row-size', rowSize);
+    card.setConfig({ columns: [{ list_id: 'L1' }] });
+    card.hass = hass;
+    card.ownerDocument.body.appendChild(card); // connectedCallback + computed styles
+    await flush(card);
+    return card;
+  }
+
+  test('no --row-size (auto height / masonry): no fit-rows mode', async () => {
+    const card = await setup(undefined);
+    assert.ok(!card.classList.contains('fit-rows'));
+  });
+
+  test('--row-size: auto is treated as unconstrained', async () => {
+    const card = await setup('auto');
+    assert.ok(!card.classList.contains('fit-rows'));
+  });
+
+  test('fixed --row-size switches the host into fit-rows (fill + scroll body) mode', async () => {
+    const card = await setup('6');
+    assert.ok(card.classList.contains('fit-rows'));
+    const css = card._getStyles();
+    assert.ok(css.includes(':host(.fit-rows) { display: block; height: 100%; }'));
+    assert.ok(css.includes(':host(.fit-rows) ha-card { height: 100%; }'));
+    assert.ok(css.includes(':host(.fit-rows) .task-list, :host(.fit-rows) .tile-grid-wrap { flex: 1 1 auto; min-height: 40px; }'));
+  });
+
+  test('re-render re-evaluates the mode (layout edited at runtime)', async () => {
+    const card = await setup(undefined);
+    assert.ok(!card.classList.contains('fit-rows'));
+    card.style.setProperty('--row-size', '4');
+    card._render();
+    assert.ok(card.classList.contains('fit-rows'));
+    card.style.removeProperty('--row-size');
+    card._render();
+    assert.ok(!card.classList.contains('fit-rows'));
+  });
+
+  test('exposes getGridOptions (current HA API) with auto rows by default', async () => {
+    const card = await setup(undefined);
+    // JSON compare: the object comes from the jsdom realm (different Object prototype)
+    assert.equal(JSON.stringify(card.getGridOptions()), JSON.stringify({ columns: 'full', min_columns: 4, rows: 'auto', min_rows: 2 }));
+  });
+});

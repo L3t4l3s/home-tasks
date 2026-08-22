@@ -2741,6 +2741,7 @@ class HomeTasksCard extends HTMLElement {
     root.innerHTML = "";
     // Stash for use after the rebuild
     this._pendingFocusRestore = focusSnap;
+    this._updateFitRows();
 
     if (!this._styleEl) {
       this._styleEl = document.createElement("style");
@@ -6642,13 +6643,25 @@ class HomeTasksCard extends HTMLElement {
         --todo-success: var(--success-color, #43a047);
         --todo-radius: 8px;
       }
-      ha-card { overflow: hidden; }
+      ha-card { overflow: hidden; box-sizing: border-box; display: flex; flex-direction: column; }
+      ha-card > div { display: flex; flex-direction: column; min-height: 0; }
+      /* Fixed-height contract of HA's sections view (issue #33): when the
+         Layout tab sets a fixed number of rows, HA sizes the card's grid
+         cell and exposes --row-size. We then fill the cell (like core cards
+         do via ha-card { height: 100% }) but scroll only the task body, so
+         title, add-task row and filters stay put (issue #34). Detection and
+         the .fit-rows class live in _updateFitRows(). */
+      :host(.fit-rows) { display: block; height: 100%; }
+      :host(.fit-rows) ha-card { height: 100%; }
+      :host(.fit-rows) ha-card > div,
+      :host(.fit-rows) .multi-columns,
+      :host(.fit-rows) .card-column { flex: 1 1 auto; min-height: 0; }
       .multi-columns { display: flex; gap: 0; align-items: stretch; }
       .multi-columns .card-column { flex: 1; min-width: 240px; border-right: 1px solid var(--todo-divider); }
       .multi-columns .card-column:last-child { border-right: none; }
       @media (max-width: 600px) { .multi-columns { flex-direction: column; } .multi-columns .card-column { border-right: none; border-bottom: 1px solid var(--todo-divider); } .multi-columns .card-column:last-child { border-bottom: none; } }
       .card-column.drag-target { outline: 2px dashed var(--todo-primary); outline-offset: -2px; border-radius: var(--todo-radius); }
-      .card-column { padding: 16px; }
+      .card-column { padding: 16px; display: flex; flex-direction: column; min-height: 0; }
       .header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
       .card-global-title { font-size: 1.25rem; font-weight: 500; color: var(--ha-card-header-color, var(--todo-text)); margin: 0; padding: 16px 16px 0; line-height: 1.2; }
       .title { font-size: 1.25rem; font-weight: 500; color: var(--ha-card-header-color, var(--todo-text)); margin: 0; line-height: 1.2; display: flex; align-items: center; gap: 6px; }
@@ -6717,10 +6730,12 @@ class HomeTasksCard extends HTMLElement {
       /* max_height column option: body scrolls, chrome above stays fixed. The
          1px inset padding keeps the focus ring / box-shadow of the first and
          last task from being clipped by the overflow box. */
-      .task-list.scrollable, .tile-grid-wrap.scrollable {
+      .task-list.scrollable, .tile-grid-wrap.scrollable,
+      :host(.fit-rows) .task-list, :host(.fit-rows) .tile-grid-wrap {
         overflow-y: auto; overscroll-behavior: contain;
         padding: 1px 2px 1px 1px; scrollbar-gutter: stable;
       }
+      :host(.fit-rows) .task-list, :host(.fit-rows) .tile-grid-wrap { flex: 1 1 auto; min-height: 40px; }
       .empty-state { text-align: center; padding: 24px; color: var(--todo-disabled); font-size: 14px; }
       .section-header {
         display: flex; align-items: center; gap: 6px;
@@ -7389,6 +7404,17 @@ class HomeTasksCard extends HTMLElement {
 
   connectedCallback() {
     this._ensureCardMod();
+    this._updateFitRows();
+  }
+
+  // HA's sections view sets --row-size on the card's grid cell wrapper when
+  // the Layout tab uses a fixed number of rows (inherited into our shadow
+  // DOM); it is empty/"auto" otherwise and in masonry views. Toggle a host
+  // class so the CSS can switch to fill-and-scroll mode (see ha-card rules).
+  _updateFitRows() {
+    let rows = "";
+    try { rows = (getComputedStyle(this).getPropertyValue("--row-size") || "").trim(); } catch (_) { /* detached */ }
+    this.classList.toggle("fit-rows", rows !== "" && rows !== "auto");
   }
 
   // card-mod compatibility (issues #31 / #34). card-mod normally styles us
@@ -7448,6 +7474,17 @@ class HomeTasksCard extends HTMLElement {
       grid_min_columns: 4,
       grid_rows: "auto",
       grid_min_rows: 2,
+    };
+  }
+
+  // Current HA API (sections view Layout tab). Rows default to "auto";
+  // a fixed number makes the card fill the cell and scroll its body.
+  getGridOptions() {
+    return {
+      columns: "full",
+      min_columns: 4,
+      rows: "auto",
+      min_rows: 2,
     };
   }
 }
@@ -8262,7 +8299,9 @@ class HomeTasksCardEditor extends HTMLElement {
         ]),
         this._el("div", { className: "field" }, [(() => {
           // max_height (px): 0 / empty = unlimited. Caps the task body only.
-          const mhInput = this._el("input", { type: "number", value: this._columnMaxHeight(col) || "" });
+          // (Editor is its own class — don't reach for HomeTasksCard helpers here.)
+          const curMh = Number(col.max_height);
+          const mhInput = this._el("input", { type: "number", value: Number.isFinite(curMh) && curMh > 0 ? Math.round(curMh) : "" });
           mhInput.min = 0;
           mhInput.step = 10;
           mhInput.placeholder = "0";
