@@ -6745,6 +6745,12 @@ class HomeTasksCard extends HTMLElement {
       .sort-option:hover { background: var(--todo-surface); }
       .sort-option.active { color: var(--todo-primary); font-weight: 500; }
       .task-list { display: flex; flex-direction: column; gap: 6px; min-height: 40px; }
+      /* When the list is height-constrained (max_height / fit-rows / card-mod),
+         flex would first *shrink* its children before overflowing into the
+         scrollbar — section headers (min-height: 0) collapsed to 0px and their
+         text/icon overlapped the neighbouring task. Children must keep their
+         natural height and let the container scroll instead. */
+      .task-list > *, .tile-grid-wrap > * { flex-shrink: 0; }
       /* max_height column option: body scrolls, chrome above stays fixed. The
          1px inset padding keeps the focus ring / box-shadow of the first and
          last task from being clipped by the overflow box. */

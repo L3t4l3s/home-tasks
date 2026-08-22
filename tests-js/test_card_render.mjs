@@ -1258,3 +1258,16 @@ describe('section collapse/expand robustness', () => {
     });
   }
 });
+
+
+describe('height-constrained list must scroll, not squeeze its children', () => {
+  test('stylesheet pins flex-shrink: 0 on direct children of the list / tile wrap', async () => {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{}] });
+    const css = card._getStyles();
+    // Regression: with max_height / fit-rows, section headers (min-height: 0)
+    // were shrunk to 0px by the flex algorithm and overlapped the task above.
+    assert.ok(css.includes('.task-list > *, .tile-grid-wrap > * { flex-shrink: 0; }'));
+  });
+});
