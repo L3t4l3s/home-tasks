@@ -390,3 +390,33 @@ describe('_thumbUrl', () => {
     assert.equal(card._thumbUrl(null), null);
   });
 });
+
+
+describe('_autoGrowTextarea (issue #32)', () => {
+  test('sets height from scrollHeight after resetting to auto', async () => {
+    const card = await makeCard();
+    const seen = [];
+    const fake = { style: { set height(v) { seen.push(v); }, get height() { return seen[seen.length - 1]; } }, scrollHeight: 123 };
+    card._autoGrowTextarea(fake);
+    assert.deepEqual(seen, ['auto', '123px']);
+  });
+
+  test('tolerates a missing element', async () => {
+    const card = await makeCard();
+    assert.doesNotThrow(() => card._autoGrowTextarea(null));
+  });
+});
+
+
+describe('theme hooks (issue #31)', () => {
+  test('task title exposes --ht-task-title-* CSS custom properties with fallbacks', async () => {
+    const card = await makeCard();
+    const css = card._getStyles();
+    for (const v of ['--ht-task-title-font-family', '--ht-task-title-font-size', '--ht-task-title-font-weight', '--ht-task-title-color']) {
+      assert.ok(css.includes(`var(${v},`), `${v} must be declared with a fallback`);
+    }
+    // Fallbacks keep today's look: 14px and the todo text color.
+    assert.ok(css.includes('var(--ht-task-title-font-size, 14px)'));
+    assert.ok(css.includes('var(--ht-task-title-color, var(--todo-text))'));
+  });
+});

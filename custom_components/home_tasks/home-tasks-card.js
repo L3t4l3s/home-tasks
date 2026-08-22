@@ -1735,6 +1735,7 @@ class HomeTasksCard extends HTMLElement {
     const task = cs.tasks.find(t => t.id === taskId);
     const hasRecurrence = task && task.recurrence_enabled && task.recurrence_unit;
 
+
     // auto_delete path → route through _deleteTask to reuse exit animation
     if (newCompleted && col.auto_delete_completed && !hasRecurrence) {
       await this._deleteTask(taskId, colIdx);
@@ -2383,6 +2384,15 @@ class HomeTasksCard extends HTMLElement {
       next.setDate(Math.min(day, lastDay));
     }
     return next;
+  }
+
+  // Grow a textarea to fit its content (issue #32): reset to auto so it
+  // can also shrink, then take the scroll height. The CSS min-height still
+  // applies, and the manual resize handle keeps working.
+  _autoGrowTextarea(el) {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
   }
 
   // Format a Date as its *local* YYYY-MM-DD calendar date. Never use
@@ -4374,9 +4384,12 @@ class HomeTasksCard extends HTMLElement {
       this._updateTaskNotes(task.id, notesInput.value, colIdx);
     };
     notesInput.addEventListener("input", () => {
+      this._autoGrowTextarea(notesInput);
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(saveNotes, 500);
     });
+    // Fit to content once attached (scrollHeight is 0 while detached).
+    requestAnimationFrame(() => this._autoGrowTextarea(notesInput));
     notesInput.addEventListener("blur", saveNotes);
     const notesWrap = this._el("div", { className: "field-wrap no-label" }, [notesInput]);
     return this._el("div", { className: "detail-section" }, [
@@ -6616,8 +6629,14 @@ class HomeTasksCard extends HTMLElement {
       }
       .checkbox-container.small .checkmark { height: 16px; width: 16px; }
       .checkbox-container.small input:checked ~ .checkmark::after { width: 4px; height: 7px; }
+      /* Theme hooks (issue #31): card-mod can't reach into this card's
+         shadow root, so the task title exposes CSS custom properties that
+         can be set in an HA theme. Fallbacks equal the previous fixed values. */
       .task-title {
-        font-size: 14px; color: var(--todo-text); cursor: pointer;
+        font-family: var(--ht-task-title-font-family, inherit);
+        font-size: var(--ht-task-title-font-size, 14px);
+        font-weight: var(--ht-task-title-font-weight, inherit);
+        color: var(--ht-task-title-color, var(--todo-text)); cursor: pointer;
         line-height: 1.3; word-break: break-word;
       }
       .task.completed .task-title { text-decoration: line-through; color: var(--todo-disabled); }

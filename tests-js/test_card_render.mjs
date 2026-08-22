@@ -905,3 +905,4 @@ describe('person chips toggle', () => {
     assert.equal(card.shadowRoot.querySelectorAll('.person-chip').length, 0);
   });
 });
+

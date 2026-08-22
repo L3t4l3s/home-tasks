@@ -280,6 +280,24 @@ These options live at the **root** of the card config, not inside a column.
 
 The old flat format (`list_id` at root level) is still supported and migrated automatically.
 
+### Styling
+
+The card renders inside its own shadow DOM, which `card-mod` cannot currently reach. Instead, the task title exposes CSS custom properties that you can set in a [Home Assistant theme](https://www.home-assistant.io/integrations/frontend/#defining-themes) (fallbacks equal the defaults):
+
+| Variable | Default |
+|----------|---------|
+| `--ht-task-title-font-family` | inherited |
+| `--ht-task-title-font-size` | `14px` |
+| `--ht-task-title-font-weight` | inherited |
+| `--ht-task-title-color` | theme text color |
+
+```yaml
+# themes.yaml
+my_theme:
+  ht-task-title-font-family: "'Comic Neue', cursive"
+  ht-task-title-font-size: 16px
+```
+
 ---
 
 ### Use Cases
