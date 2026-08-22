@@ -1422,6 +1422,9 @@ class HomeTasksCard extends HTMLElement {
     } else {
       this._render();
     }
+    // Config may arrive after we're already connected (editor preview);
+    // connectedCallback covers the other order. No-op when not connected.
+    this._ensureCardMod();
   }
 
   set hass(hass) {
@@ -7267,6 +7270,31 @@ class HomeTasksCard extends HTMLElement {
   }
 
   // --- Card config ---
+
+  connectedCallback() {
+    this._ensureCardMod();
+  }
+
+  // card-mod compatibility (issues #31 / #34). card-mod normally styles us
+  // through its hui-card hook, but on a cold page load — while this (large)
+  // module is still being fetched — HA mounts a placeholder first and
+  // card-mod's application can get lost in the swap. card-mod's developer
+  // API exists for exactly this: ask it to apply to this element ourselves.
+  // apply_card_mod reuses an existing <card-mod> node of the same type, so
+  // calling it when the hook already ran is a no-op, and the node survives
+  // our re-renders (see _render's overlay preservation).
+  _ensureCardMod() {
+    const cfg = this._config && this._config.card_mod;
+    if (!cfg) return;
+    if (!("customElements" in window) || !customElements.whenDefined) return;
+    customElements.whenDefined("card-mod").then((cm) => {
+      if (!this.isConnected || !this._config || this._config.card_mod !== cfg) return;
+      if (!cm || typeof cm.applyToElement !== "function") return;
+      try {
+        cm.applyToElement(this, "card", cfg, { config: this._config }, true, "type-custom-home-tasks-card");
+      } catch (_) { /* never let a styling add-on break the card */ }
+    });
+  }
 
   disconnectedCallback() {
     if (this._sortCloseHandler) {

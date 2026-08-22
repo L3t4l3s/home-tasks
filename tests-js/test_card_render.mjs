@@ -1007,3 +1007,44 @@ describe('card-mod node survives re-renders', () => {
     assert.ok(card.shadowRoot.querySelector('.task[data-task-id="T1"]'));
   });
 });
+
+
+describe('card-mod self-application via developer API', () => {
+  async function setupWithFakeCardMod(cardConfig) {
+    const { HomeTasksCard, window: win } = await loadCard({ force: true });
+    const calls = [];
+    // Fake card-mod with the public developer API (static applyToElement).
+    if (!win.customElements.get('card-mod')) {
+      class FakeCardMod extends win.HTMLElement {
+        static applyToElement(...args) { calls.push(args); }
+      }
+      win.customElements.define('card-mod', FakeCardMod);
+    } else {
+      win.customElements.get('card-mod').applyToElement = (...args) => calls.push(args);
+    }
+    const card = new HomeTasksCard();
+    card.setConfig(cardConfig);
+    card.hass = makeRecordingHass({ 'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'L' }] } });
+    win.document.body.appendChild(card);  // → connectedCallback
+    await flush(card);
+    return { card, calls };
+  }
+
+  test('asks card-mod to apply when the config carries card_mod', async () => {
+    const cm = { style: '.task-title { font-size: 16px !important; }' };
+    const { card, calls } = await setupWithFakeCardMod({ columns: [{ list_id: 'L1' }], card_mod: cm });
+    assert.ok(calls.length >= 1, 'applyToElement must be called');
+    const [el, type, cfg, vars, shadow, cls] = calls[0];
+    assert.strictEqual(el, card);
+    assert.equal(type, 'card');
+    assert.strictEqual(cfg, cm);
+    assert.strictEqual(vars.config, card._config);
+    assert.equal(shadow, true);
+    assert.equal(cls, 'type-custom-home-tasks-card');
+  });
+
+  test('does nothing without card_mod in the config', async () => {
+    const { calls } = await setupWithFakeCardMod({ columns: [{ list_id: 'L1' }] });
+    assert.equal(calls.length, 0);
+  });
+});
