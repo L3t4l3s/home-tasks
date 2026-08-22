@@ -3851,6 +3851,10 @@ class HomeTasksCard extends HTMLElement {
   _animateSectionCollapse(colIdx, sectionId, done) {
     const body = this._findSectionBody(colIdx, sectionId);
     if (!body) { done(); return; }
+    // No animation when the document isn't visible: requestAnimationFrame
+    // doesn't fire in hidden tabs / backgrounded apps, and the transition
+    // would never run. Commit the end state directly.
+    if (document.hidden) { done(); return; }
     // Freeze current height as px so we can transition from a concrete value
     const h = body.scrollHeight;
     body.style.maxHeight = h + "px";
@@ -3858,33 +3862,58 @@ class HomeTasksCard extends HTMLElement {
     body.style.overflow = "hidden";
     // Force layout flush before applying the transition target
     void body.offsetHeight;
+    let finished = false;
+    const finish = (e) => {
+      if (e && e.propertyName !== "max-height") return;
+      if (finished) return;
+      finished = true;
+      body.removeEventListener("transitionend", finish);
+      body.style.transition = "";
+      body.style.maxHeight = "";
+      body.style.opacity = "";
+      body.style.overflow = "";
+      done();
+    };
+    body.addEventListener("transitionend", finish);
+    // Safety net registered *outside* the rAF: if the frame callback never
+    // runs (tab hidden mid-click, throttled WebView), the body must not
+    // stay frozen at a fixed max-height with overflow hidden — later content
+    // growth would be clipped and the next section headers would visually
+    // overlap it.
+    setTimeout(() => finish(), 320);
     requestAnimationFrame(() => {
+      if (finished) return;
       body.style.transition = "max-height 0.22s ease, opacity 0.18s ease";
       body.style.maxHeight = "0";
       body.style.opacity = "0";
-      let finished = false;
-      const finish = (e) => {
-        if (e && e.propertyName !== "max-height") return;
-        if (finished) return;
-        finished = true;
-        body.removeEventListener("transitionend", finish);
-        body.style.transition = "";
-        body.style.maxHeight = "";
-        body.style.opacity = "";
-        body.style.overflow = "";
-        done();
-      };
-      body.addEventListener("transitionend", finish);
-      setTimeout(() => finish(), 280);
     });
   }
 
   _animateSectionExpand(colIdx, sectionId) {
+    // The body was rendered with .expanding (max-height:0) so there's no
+    // flash; whatever happens below, it must end up fully visible. The
+    // safety net lives outside the rAF chain for the same reason as in
+    // _animateSectionCollapse (hidden tabs never run frame callbacks).
+    let cleared = false;
+    const clear = (e) => {
+      if (e && e.propertyName !== "max-height") return;
+      if (cleared) return;
+      cleared = true;
+      const body = this._findSectionBody(colIdx, sectionId);
+      if (!body) return;
+      body.removeEventListener("transitionend", clear);
+      body.classList.remove("expanding");
+      body.style.transition = "";
+      body.style.maxHeight = "";
+      body.style.opacity = "";
+      body.style.overflow = "";
+    };
+    setTimeout(() => clear(), 360);
+    if (document.hidden) { clear(); return; }
     // ha-card commits its layout asynchronously after _render(); waiting one
-    // rAF lets scrollHeight return the body's true natural height. The body
-    // is rendered with .expanding (max-height:0) so there's no flash during
-    // this wait.
+    // rAF lets scrollHeight return the body's true natural height.
     requestAnimationFrame(() => {
+      if (cleared) return;
       const body = this._findSectionBody(colIdx, sectionId);
       if (!body) return;
       // scrollHeight ignores max-height and overflow:hidden — it returns
@@ -3896,23 +3925,12 @@ class HomeTasksCard extends HTMLElement {
       body.style.opacity = "0";
       body.style.overflow = "hidden";
       void body.offsetHeight; // commit baseline before transition
+      body.addEventListener("transitionend", clear);
       requestAnimationFrame(() => {
+        if (cleared) return;
         body.style.transition = "max-height 0.22s ease, opacity 0.22s ease";
         body.style.maxHeight = targetH + "px";
         body.style.opacity = "1";
-        let cleared = false;
-        const clear = (e) => {
-          if (e && e.propertyName !== "max-height") return;
-          if (cleared) return;
-          cleared = true;
-          body.removeEventListener("transitionend", clear);
-          body.style.transition = "";
-          body.style.maxHeight = "";
-          body.style.opacity = "";
-          body.style.overflow = "";
-        };
-        body.addEventListener("transitionend", clear);
-        setTimeout(() => clear(), 280);
       });
     });
   }

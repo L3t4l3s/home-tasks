@@ -1193,3 +1193,68 @@ describe('fixed-rows contract of HA sections view (--row-size)', () => {
     assert.equal(JSON.stringify(card.getGridOptions()), JSON.stringify({ columns: 'full', min_columns: 4, rows: 'auto', min_rows: 2 }));
   });
 });
+
+
+// ---------------------------------------------------------------------------
+// Section collapse/expand must never strand a body in a half-animated state
+// (stuck inline max-height + overflow hidden → later content growth is
+// clipped and the next section headers visually overlap it).
+// ---------------------------------------------------------------------------
+
+
+describe('section collapse/expand robustness', () => {
+  async function setup({ hidden, stallRaf, listId }) {
+    const { HomeTasksCard, window: win } = await loadCard({ force: true });
+    if (stallRaf) win.requestAnimationFrame = () => 0;  // frame callbacks never run (hidden tab / throttled WebView)
+    if (!win.CSS || !win.CSS.escape) win.CSS = { escape: (v) => String(v).replace(/[^a-zA-Z0-9_-]/g, (ch) => '\\' + ch) };  // jsdom lacks CSS.escape
+    Object.defineProperty(win.document, 'hidden', { value: hidden, configurable: true });
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': { lists: [{ id: listId, name: 'L' }] },
+      'home_tasks/get_tasks': {
+        tasks: [
+          { id: 'T1', title: 'In section', sort_order: 0, sub_items: [], section_id: 'S1' },
+          { id: 'T2', title: 'Loose', sort_order: 1, sub_items: [] },
+        ],
+        sections: [{ id: 'S1', name: 'Sec', sort_order: 0 }],
+      },
+    });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{ list_id: listId }] });
+    card.hass = hass;
+    win.document.body.appendChild(card);
+    await flush(card);
+    return { card, win };
+  }
+  const body = (card) => card.shadowRoot.querySelector('.section-body[data-section-id="S1"]');
+  const wait = (ms) => new Promise(r => setTimeout(r, ms));
+
+  for (const variant of [{ hidden: true, stallRaf: true, name: 'hidden document' }, { hidden: false, stallRaf: true, name: 'visible but rAF never fires' }]) {
+    test(`${variant.name}: collapse completes and leaves no inline styles`, async () => {
+      const { card } = await setup({ ...variant, listId: 'L-' + variant.name.replace(/\W/g, '') + '-c' });
+      assert.ok(body(card) && !body(card).classList.contains('collapsed'));
+      card._toggleSectionCollapsed(0, 'S1');
+      await wait(450);
+      assert.equal(card._isSectionCollapsed(0, 'S1'), true, 'collapse state must be committed');
+      const b = body(card);
+      assert.ok(b.classList.contains('collapsed'), 'body must carry the collapsed class baseline');
+      assert.equal(b.style.maxHeight, '');
+      assert.equal(b.style.overflow, '');
+    });
+
+    test(`${variant.name}: expand ends fully visible, no stale max-height`, async () => {
+      const { card } = await setup({ ...variant, listId: 'L-' + variant.name.replace(/\W/g, '') + '-e' });
+      card._setSectionCollapsed(0, 'S1', true);
+      card._render();
+      assert.ok(body(card).classList.contains('collapsed'));
+      card._toggleSectionCollapsed(0, 'S1');
+      await wait(500);
+      const b = body(card);
+      assert.equal(card._isSectionCollapsed(0, 'S1'), false);
+      assert.ok(!b.classList.contains('expanding'), 'expanding baseline must be removed');
+      assert.ok(!b.classList.contains('collapsed'));
+      assert.equal(b.style.maxHeight, '', 'no stale inline max-height');
+      assert.equal(b.style.overflow, '');
+      assert.equal(b.style.opacity, '');
+    });
+  }
+});
