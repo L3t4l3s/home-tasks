@@ -58,6 +58,8 @@ const _TRANSLATIONS = {
     ed_show_person: "Assignees",
     ed_auto_delete: "Delete completed immediately",
     ed_confirm_complete: "Confirm before completing",
+    ed_show_add_due: "Due date when adding",
+    add_due_toggle: "Set due date",
     ed_max_height: "Max height (px, 0 = unlimited)",
     confirm_complete_msg: "Mark \"{0}\" as completed?",
     confirm_complete_ok: "Complete",
@@ -192,6 +194,8 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Subtaken", ed_show_person: "Personen",
     ed_auto_delete: "Voltooide meteen verwijderen", ed_compact: "Compact", ed_show_tags: "Tags",
     ed_confirm_complete: "Bevestigen voor afronden",
+    ed_show_add_due: "Vervaldatum bij toevoegen",
+    add_due_toggle: "Vervaldatum instellen",
     ed_max_height: "Max. hoogte (px, 0 = onbeperkt)",
     confirm_complete_msg: "\u201e{0}\u201d als afgerond markeren?",
     confirm_complete_ok: "Afronden",
@@ -267,6 +271,8 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Sotto-attivit\u00e0", ed_show_person: "Persone",
     ed_auto_delete: "Elimina completate immediatamente", ed_compact: "Compatto", ed_show_tags: "Tag",
     ed_confirm_complete: "Conferma prima di completare",
+    ed_show_add_due: "Scadenza alla creazione",
+    add_due_toggle: "Imposta scadenza",
     ed_max_height: "Altezza max (px, 0 = illimitata)",
     confirm_complete_msg: "Segnare \u201c{0}\u201d come completata?",
     confirm_complete_ok: "Completa",
@@ -342,6 +348,8 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Podzadania", ed_show_person: "Osoby",
     ed_auto_delete: "Natychmiast usu\u0144 uko\u0144czone", ed_compact: "Kompaktowy", ed_show_tags: "Tagi",
     ed_confirm_complete: "Potwierd\u017a przed uko\u0144czeniem",
+    ed_show_add_due: "Termin przy dodawaniu",
+    add_due_toggle: "Ustaw termin",
     ed_max_height: "Maks. wysoko\u015b\u0107 (px, 0 = bez limitu)",
     confirm_complete_msg: "Oznaczy\u0107 \u201e{0}\u201d jako uko\u0144czone?",
     confirm_complete_ok: "Uko\u0144cz",
@@ -417,6 +425,8 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Deluppgifter", ed_show_person: "Personer",
     ed_auto_delete: "Ta bort slutf\u00f6rda omedelbart", ed_compact: "Kompakt", ed_show_tags: "Taggar",
     ed_confirm_complete: "Bekr\u00e4fta innan slutf\u00f6rande",
+    ed_show_add_due: "F\u00f6rfallodatum vid till\u00e4gg",
+    add_due_toggle: "Ange f\u00f6rfallodatum",
     ed_max_height: "Maxh\u00f6jd (px, 0 = obegr\u00e4nsad)",
     confirm_complete_msg: "Markera \u201d{0}\u201d som slutf\u00f6rd?",
     confirm_complete_ok: "Slutf\u00f6r",
@@ -492,6 +502,8 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Sous-t\u00e2ches", ed_show_person: "Personnes",
     ed_auto_delete: "Supprimer les termin\u00e9es imm\u00e9diatement", ed_compact: "Compact", ed_show_tags: "\u00c9tiquettes",
     ed_confirm_complete: "Confirmer avant de terminer",
+    ed_show_add_due: "\u00c9ch\u00e9ance \u00e0 la cr\u00e9ation",
+    add_due_toggle: "D\u00e9finir l'\u00e9ch\u00e9ance",
     ed_max_height: "Hauteur max (px, 0 = illimit\u00e9e)",
     confirm_complete_msg: "Marquer \u00ab\u202f{0}\u202f\u00bb comme termin\u00e9e\u202f?",
     confirm_complete_ok: "Terminer",
@@ -567,6 +579,8 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Subtarefas", ed_show_person: "Pessoas",
     ed_auto_delete: "Excluir conclu\u00eddas imediatamente", ed_compact: "Compacto", ed_show_tags: "Etiquetas",
     ed_confirm_complete: "Confirmar antes de concluir",
+    ed_show_add_due: "Prazo ao adicionar",
+    add_due_toggle: "Definir prazo",
     ed_max_height: "Altura m\u00e1x. (px, 0 = ilimitada)",
     confirm_complete_msg: "Marcar \u201c{0}\u201d como conclu\u00edda?",
     confirm_complete_ok: "Concluir",
@@ -642,6 +656,8 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Subtareas", ed_show_person: "Personas",
     ed_auto_delete: "Eliminar completadas inmediatamente", ed_compact: "Compacto", ed_show_tags: "Etiquetas",
     ed_confirm_complete: "Confirmar antes de completar",
+    ed_show_add_due: "Fecha l\u00edmite al a\u00f1adir",
+    add_due_toggle: "Establecer fecha l\u00edmite",
     ed_max_height: "Altura m\u00e1x. (px, 0 = ilimitada)",
     confirm_complete_msg: "\u00bfMarcar \u00ab{0}\u00bb como completada?",
     confirm_complete_ok: "Completar",
@@ -717,6 +733,8 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "\u041f\u043e\u0434\u0437\u0430\u0434\u0430\u0447\u0438", ed_show_person: "\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u0438",
     ed_auto_delete: "\u0421\u0440\u0430\u0437\u0443 \u0443\u0434\u0430\u043b\u044f\u0442\u044c \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043d\u044b\u0435", ed_compact: "\u041a\u043e\u043c\u043f\u0430\u043a\u0442\u043d\u044b\u0439", ed_show_tags: "\u0422\u0435\u0433\u0438",
     ed_confirm_complete: "\u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0430\u0442\u044c \u043f\u0435\u0440\u0435\u0434 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u0438\u0435\u043c",
+    ed_show_add_due: "\u0421\u0440\u043e\u043a \u043f\u0440\u0438 \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u0438\u0438",
+    add_due_toggle: "\u0417\u0430\u0434\u0430\u0442\u044c \u0441\u0440\u043e\u043a",
     ed_max_height: "\u041c\u0430\u043a\u0441. \u0432\u044b\u0441\u043e\u0442\u0430 (px, 0 = \u0431\u0435\u0437 \u043e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d\u0438\u044f)",
     confirm_complete_msg: "\u041e\u0442\u043c\u0435\u0442\u0438\u0442\u044c \u00ab{0}\u00bb \u043a\u0430\u043a \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043d\u0443\u044e?",
     confirm_complete_ok: "\u0412\u044b\u043f\u043e\u043b\u043d\u0438\u0442\u044c",
@@ -792,6 +810,8 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Pod\u00fakoly", ed_show_person: "Osoby",
     ed_auto_delete: "Okam\u017eit\u011b smazat dokon\u010den\u00e9", ed_compact: "Kompaktn\u00ed", ed_show_tags: "\u0160t\u00edtky",
     ed_confirm_complete: "Potvrdit p\u0159ed dokon\u010den\u00edm",
+    ed_show_add_due: "Term\u00edn p\u0159i p\u0159id\u00e1n\u00ed",
+    add_due_toggle: "Nastavit term\u00edn",
     ed_max_height: "Max. v\u00fd\u0161ka (px, 0 = bez limitu)",
     confirm_complete_msg: "Ozna\u010dit \u201e{0}\u201c jako dokon\u010den\u00e9?",
     confirm_complete_ok: "Dokon\u010dit",
@@ -867,6 +887,8 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Delopgaver", ed_show_person: "Personer",
     ed_auto_delete: "Slet f\u00e6rdige \u00f8jeblikkeligt", ed_compact: "Kompakt", ed_show_tags: "Tags",
     ed_confirm_complete: "Bekr\u00e6ft f\u00f8r fuldf\u00f8relse",
+    ed_show_add_due: "Forfaldsdato ved tilf\u00f8jelse",
+    add_due_toggle: "Angiv forfaldsdato",
     ed_max_height: "Maks. h\u00f8jde (px, 0 = ubegr\u00e6nset)",
     confirm_complete_msg: "Mark\u00e9r \u201d{0}\u201d som fuldf\u00f8rt?",
     confirm_complete_ok: "Fuldf\u00f8r",
@@ -942,6 +964,8 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Deloppgaver", ed_show_person: "Personer",
     ed_auto_delete: "Slett ferdige umiddelbart", ed_compact: "Kompakt", ed_show_tags: "Tagger",
     ed_confirm_complete: "Bekreft f\u00f8r fullf\u00f8ring",
+    ed_show_add_due: "Forfallsdato ved tillegg",
+    add_due_toggle: "Angi forfallsdato",
     ed_max_height: "Maks. h\u00f8yde (px, 0 = ubegrenset)",
     confirm_complete_msg: "Merke \u00ab{0}\u00bb som fullf\u00f8rt?",
     confirm_complete_ok: "Fullf\u00f8r",
@@ -1017,6 +1041,8 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Aliteht\u00e4v\u00e4t", ed_show_person: "Henkil\u00f6t",
     ed_auto_delete: "Poista valmiit v\u00e4litt\u00f6m\u00e4sti", ed_compact: "Kompakti", ed_show_tags: "Tunnisteet",
     ed_confirm_complete: "Vahvista ennen valmiiksi merkitsemist\u00e4",
+    ed_show_add_due: "Er\u00e4p\u00e4iv\u00e4 lis\u00e4tt\u00e4ess\u00e4",
+    add_due_toggle: "Aseta er\u00e4p\u00e4iv\u00e4",
     ed_max_height: "Enimm\u00e4iskorkeus (px, 0 = rajaton)",
     confirm_complete_msg: "Merkit\u00e4\u00e4nk\u00f6 \u201d{0}\u201d valmiiksi?",
     confirm_complete_ok: "Merkitse valmiiksi",
@@ -1092,6 +1118,8 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Alfeladatok", ed_show_person: "Szem\u00e9lyek",
     ed_auto_delete: "K\u00e9sz feladatok azonnali t\u00f6rl\u00e9se", ed_compact: "Kompakt", ed_show_tags: "C\u00edmk\u00e9k",
     ed_confirm_complete: "Meger\u0151s\u00edt\u00e9s befejez\u00e9s el\u0151tt",
+    ed_show_add_due: "Hat\u00e1rid\u0151 hozz\u00e1ad\u00e1skor",
+    add_due_toggle: "Hat\u00e1rid\u0151 megad\u00e1sa",
     ed_max_height: "Max. magass\u00e1g (px, 0 = korl\u00e1tlan)",
     confirm_complete_msg: "Megjel\u00f6l\u00f6d \u201e{0}\u201d-t k\u00e9szk\u00e9nt?",
     confirm_complete_ok: "K\u00e9sz",
@@ -1188,6 +1216,8 @@ const _TRANSLATIONS = {
     ed_show_person: "Personen",
     ed_auto_delete: "Erledigte sofort l\u00f6schen",
     ed_confirm_complete: "Vor dem Erledigen nachfragen",
+    ed_show_add_due: "F\u00e4lligkeit beim Anlegen",
+    add_due_toggle: "F\u00e4lligkeit setzen",
     ed_max_height: "Max. H\u00f6he (px, 0 = unbegrenzt)",
     confirm_complete_msg: "„{0}“ als erledigt markieren?",
     confirm_complete_ok: "Erledigen",
@@ -1352,7 +1382,7 @@ class HomeTasksCard extends HTMLElement {
   }
 
   _defaultColState() {
-    return { filter: "all", sortBy: "manual", sortOpen: false, tagFilters: new Set(), personFilters: new Set(), tasks: [], sections: [], newTaskTitle: "" };
+    return { filter: "all", sortBy: "manual", sortOpen: false, tagFilters: new Set(), personFilters: new Set(), tasks: [], sections: [], newTaskTitle: "", newTaskDue: "", newTaskDueTime: "", addDueOpen: false };
   }
 
   _t(key, ...args) {
@@ -1602,6 +1632,17 @@ class HomeTasksCard extends HTMLElement {
     return (this._externalLists || []).find(l => l.entity_id === entityId) || null;
   }
 
+  // Can tasks in this column carry a due date? Native lists always; external
+  // lists only when the provider supports SET_DUE_DATE / SET_DUE_DATETIME
+  // (HA todo features 16 / 32) or the adapter syncs due times itself.
+  _colSupportsDue(colIdx) {
+    if (!this._isExternalCol(colIdx)) return true;
+    const info = this._getExternalListInfo(colIdx);
+    const features = info?.supported_features || 0;
+    const caps = info?.capabilities || {};
+    return !!((features & 16) || (features & 32) || caps.can_sync_due_time);
+  }
+
   _colSupportedFeatures(colIdx) {
     if (!this._isExternalCol(colIdx)) return -1; // native: all features
     return this._getExternalListInfo(colIdx)?.supported_features ?? 0;
@@ -1742,18 +1783,25 @@ class HomeTasksCard extends HTMLElement {
       autoAssignPerson = col.filters.assignees[0];
     }
 
+    // Due date chosen in the add row (issue #38) — only when the option is
+    // on and the column supports due dates; a time without a date is ignored.
+    const addDue = (col.show_add_due === true && this._colSupportsDue(colIdx) && cs.newTaskDue) ? cs.newTaskDue : null;
+    const addDueTime = (addDue && cs.newTaskDueTime) ? cs.newTaskDueTime : null;
+    const resetAddDue = () => { cs.newTaskDue = ""; cs.newTaskDueTime = ""; cs.addDueOpen = false; };
+
     let result;
     if (this._isExternalCol(colIdx)) {
       // Optimistic: insert a placeholder task immediately so the user
       // sees it appear without waiting for the API round-trip.
       const tempId = "_pending_" + Date.now();
       cs.tasks.push({
-        id: tempId, title, completed: false, notes: "", due_date: null,
-        due_time: null, sort_order: cs.tasks.length, sub_items: [],
+        id: tempId, title, completed: false, notes: "", due_date: addDue,
+        due_time: addDueTime, sort_order: cs.tasks.length, sub_items: [],
         priority: null, tags: [], reminders: [], assigned_person: autoAssignPerson,
         recurrence_enabled: false, _external: true,
       });
       cs.newTaskTitle = "";
+      resetAddDue();
       this._justAddedTaskId = tempId;
       this._addInputRect = addInputRect;
       this._render();
@@ -1765,6 +1813,7 @@ class HomeTasksCard extends HTMLElement {
       try {
         const payload = { entity_id: this._colEntityId(colIdx), title };
         if (autoAssignPerson) payload.assigned_person = autoAssignPerson;
+        if (addDue) { payload.due_date = addDue; if (addDueTime) payload.due_time = addDueTime; }
         result = await this._callWs("home_tasks/create_external_task", payload);
       } catch (err) {
         console.warn("Failed to create external task:", err);
@@ -1773,9 +1822,11 @@ class HomeTasksCard extends HTMLElement {
     } else {
       const payload = { list_id: this._colListId(colIdx), title };
       if (autoAssignPerson) payload.assigned_person = autoAssignPerson;
+      if (addDue) { payload.due_date = addDue; if (addDueTime) payload.due_time = addDueTime; }
       result = await this._callWs("home_tasks/add_task", payload);
       if (result) {
         cs.newTaskTitle = "";
+        resetAddDue();
         this._justAddedTaskId = result.id ? String(result.id) : null;
         this._addInputRect = addInputRect;
         await this._loadAllTasks();
@@ -3189,8 +3240,62 @@ class HomeTasksCard extends HTMLElement {
       micBtn.addEventListener("click", () => this._startVoiceInput(colIdx));
       children.push(micBtn);
     }
+    // Due date at creation (issue #38): opt-in per column. A small calendar
+    // toggle next to "+" reveals a second row with date (+ time) inputs, so
+    // narrow columns keep their single-line add row by default.
+    const showAddDue = col.show_add_due === true && this._colSupportsDue(colIdx);
+    let dueRow = null;
+    if (showAddDue) {
+      const hasDue = !!cs.newTaskDue;
+      const dueBtn = this._el("button", {
+        className: "add-due-btn" + ((cs.addDueOpen || hasDue) ? " active" : ""),
+        title: this._t("add_due_toggle"),
+        "aria-label": this._t("add_due_toggle"),
+        "aria-pressed": String(!!cs.addDueOpen),
+        type: "button",
+        innerHTML: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM5 7V6h14v1H5z"/></svg>`,
+      });
+      dueBtn.addEventListener("click", () => {
+        cs.addDueOpen = !cs.addDueOpen;
+        this._render();
+        if (cs.addDueOpen) {
+          const inp = this.shadowRoot.querySelector(`input[data-focus-key="add_due_col_${colIdx}"]`);
+          if (inp) { try { inp.focus(); } catch (_) { /* best-effort */ } }
+        }
+      });
+      children.push(dueBtn);
+
+      if (cs.addDueOpen) {
+        const dateInput = this._el("input", {
+          type: "date", className: "add-due-date", value: cs.newTaskDue || "",
+          "data-focus-key": `add_due_col_${colIdx}`,
+          "aria-label": this._t("due_date_lbl"),
+        });
+        dateInput.addEventListener("change", () => { cs.newTaskDue = dateInput.value || ""; });
+        dateInput.addEventListener("keydown", (e) => { if (e.key === "Enter") this._addTask(colIdx); });
+        const timeInput = this._el("input", {
+          type: "time", className: "add-due-time", value: cs.newTaskDueTime || "",
+          "data-focus-key": `add_due_time_col_${colIdx}`,
+          "aria-label": this._t("due_time_lbl"),
+        });
+        timeInput.addEventListener("change", () => { cs.newTaskDueTime = timeInput.value || ""; });
+        timeInput.addEventListener("keydown", (e) => { if (e.key === "Enter") this._addTask(colIdx); });
+        const clearBtn = this._el("button", {
+          className: "add-due-clear", textContent: "\u00D7", type: "button",
+          title: this._t("dialog_cancel"),
+        });
+        clearBtn.addEventListener("click", () => {
+          cs.newTaskDue = ""; cs.newTaskDueTime = ""; cs.addDueOpen = false;
+          this._render();
+        });
+        dueRow = this._el("div", { className: "add-due-row" }, [dateInput, timeInput, clearBtn]);
+      }
+    }
     children.push(addBtn);
-    return this._el("div", { className: "add-task" }, children);
+    const row = this._el("div", { className: "add-task" }, children);
+    // Without the option the DOM is exactly as before (single .add-task row).
+    if (!dueRow) return row;
+    return this._el("div", { className: "add-task-group" }, [row, dueRow]);
   }
 
   _buildColumnSortControl(col, cs, colIdx) {
@@ -6706,6 +6811,35 @@ class HomeTasksCard extends HTMLElement {
         transition: opacity 0.2s, background 0.2s;
       }
       .mic-btn:hover { opacity: 0.9; }
+      /* Due-at-creation toggle (issue #38) + its second row */
+      .add-due-btn {
+        flex-shrink: 0; width: 38px; height: 38px; padding: 0;
+        border: 1px solid var(--todo-divider); border-radius: var(--todo-radius);
+        background: transparent; color: var(--todo-secondary-text);
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        transition: color 0.2s, background 0.2s, border-color 0.2s;
+      }
+      .add-due-btn:hover { background: var(--todo-surface); color: var(--todo-text); }
+      .add-due-btn.active { background: var(--todo-primary); border-color: var(--todo-primary); color: #fff; }
+      .add-due-btn svg { width: 18px; height: 18px; fill: currentColor; }
+      .add-task-group { margin-bottom: 16px; }
+      .add-task-group .add-task { margin-bottom: 0; }
+      .add-due-row { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+      .add-due-row input {
+        flex: 1 1 0; min-width: 0; padding: 8px 10px; font: inherit; font-size: 13px;
+        border: 1px solid var(--todo-divider); border-radius: var(--todo-radius);
+        background: transparent; color: var(--todo-text); color-scheme: light dark;
+      }
+      .add-due-row input:focus { outline: none; border-color: var(--todo-primary); }
+      .add-due-clear {
+        flex-shrink: 0; width: 32px; height: 32px; padding: 0; border: none; border-radius: 50%;
+        background: transparent; color: var(--todo-secondary-text); font-size: 18px; line-height: 1; cursor: pointer;
+      }
+      .add-due-clear:hover { color: var(--error-color, #f44336); background: rgba(244, 67, 54, 0.15); }
+      .compact .add-task-group { margin-bottom: 10px; }
+      .compact .add-due-btn { width: 32px; height: 32px; }
+      .compact .add-due-btn svg { width: 15px; height: 15px; }
+      .compact .add-due-row input { padding: 5px 8px; font-size: 12px; }
       .mic-btn svg { width: 18px; height: 18px; fill: currentColor; }
       .mic-btn.recording {
         background: #e53935; color: #fff;
@@ -8307,6 +8441,7 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-title", "ed_show_title", "show_title", true),
           makeToggle("show-progress", "ed_show_progress", "show_progress", true),
           makeToggle("show-add-task", "ed_show_add_task", "show_add_task", true),
+          makeToggle("show-add-due", "ed_show_add_due", "show_add_due", false),
           makeToggle("auto-delete", "ed_auto_delete", "auto_delete_completed", false),
           makeToggle("confirm-complete", "ed_confirm_complete", "confirm_complete", false),
           makeToggle("show-sort", "ed_show_sort", "show_sort", true),

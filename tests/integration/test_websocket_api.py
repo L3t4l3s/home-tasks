@@ -1631,3 +1631,54 @@ async def test_ws_move_task_cross_with_recurrence_and_subitems(
     sub_titles = [c[1] for c in adapter._sub_calls["add"]]
     assert "first sub" in sub_titles
     assert "second sub" in sub_titles
+
+
+async def test_ws_add_task_with_due(hass: HomeAssistant, hass_ws_client, mock_config_entry) -> None:
+    """add_task accepts an initial due_date/due_time (issue #38) and stores them atomically."""
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 201,
+        "type": "home_tasks/add_task",
+        "list_id": mock_config_entry.entry_id,
+        "title": "Due on create",
+        "due_date": "2027-03-15",
+        "due_time": "09:30",
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    assert msg["result"]["due_date"] == "2027-03-15"
+    assert msg["result"]["due_time"] == "09:30"
+    # exactly one history entry: created (no separate 'changed' from an add+update)
+    assert [h["action"] for h in msg["result"]["history"]] == ["created"]
+
+
+async def test_ws_add_task_due_time_without_date_is_dropped(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry
+) -> None:
+    """A due_time without a due_date is meaningless and must not be stored."""
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 202,
+        "type": "home_tasks/add_task",
+        "list_id": mock_config_entry.entry_id,
+        "title": "Time only",
+        "due_time": "09:30",
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    assert msg["result"]["due_date"] is None
+    assert msg["result"]["due_time"] is None
+
+
+async def test_ws_add_task_invalid_due_rejected(hass: HomeAssistant, hass_ws_client, mock_config_entry) -> None:
+    """Malformed due_date is rejected by the schema, nothing is created."""
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 203,
+        "type": "home_tasks/add_task",
+        "list_id": mock_config_entry.entry_id,
+        "title": "Bad due",
+        "due_date": "15.03.2027",
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is False

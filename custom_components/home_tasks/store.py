@@ -441,11 +441,25 @@ class HomeTasksStore:
         """Return all tasks sorted by order."""
         return sorted(self._data["tasks"], key=lambda t: t["sort_order"])
 
-    async def async_add_task(self, title: str, actor: str | None = None, assigned_person: str | None = None) -> dict:
-        """Add a task."""
+    async def async_add_task(
+        self,
+        title: str,
+        actor: str | None = None,
+        assigned_person: str | None = None,
+        due_date: str | None = None,
+        due_time: str | None = None,
+    ) -> dict:
+        """Add a task, optionally with an initial due date/time (issue #38).
+
+        Creating with the due set (instead of add + update) keeps a single
+        history entry / task_created event and no intermediate due-less state.
+        A due_time without a due_date is meaningless and dropped.
+        """
         title = validate_text(title, MAX_TITLE_LENGTH, "Task title")
         if assigned_person is not None:
             assigned_person = validate_assigned_person(assigned_person)
+        due_date = validate_date(due_date, "due_date")
+        due_time = validate_time(due_time) if due_date else None
         if len(self._data["tasks"]) >= MAX_TASKS_PER_LIST:
             raise ValueError(f"Maximum number of tasks ({MAX_TASKS_PER_LIST}) reached")
         max_order = max((t["sort_order"] for t in self._data["tasks"]), default=-1)
@@ -457,11 +471,11 @@ class HomeTasksStore:
             "title": title,
             "completed": False,
             "notes": "",
-            "due_date": None,
+            "due_date": due_date,
             "sort_order": max_order + 1,
             "sub_items": [],
             "priority": None,
-            "due_time": None,
+            "due_time": due_time,
             "reminders": [],
             "recurrence_value": 1,
             "recurrence_unit": None,

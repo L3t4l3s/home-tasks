@@ -150,11 +150,13 @@ async def ws_get_tasks(hass, connection, msg):
         vol.Required("list_id"): _val_id,
         vol.Required("title"): _val_title,
         vol.Optional("assigned_person"): vol.Any(str, None),
+        vol.Optional("due_date"): _val_date,
+        vol.Optional("due_time"): _val_time,
     }
 )
 @websocket_api.async_response
 async def ws_add_task(hass, connection, msg):
-    """Add a task."""
+    """Add a task (optionally with an initial due date/time — issue #38)."""
     try:
         store = _get_store(hass, msg["list_id"])
         actor = connection.user.name if connection.user else None
@@ -162,6 +164,8 @@ async def ws_add_task(hass, connection, msg):
             msg["title"],
             actor=actor,
             assigned_person=msg.get("assigned_person"),
+            due_date=msg.get("due_date"),
+            due_time=msg.get("due_time"),
         )
         connection.send_result(msg["id"], task)
     except Exception as err:
