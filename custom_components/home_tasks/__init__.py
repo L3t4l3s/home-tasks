@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
@@ -119,6 +120,62 @@ async def _async_register_card(hass: HomeAssistant) -> None:
     # Auto-register card JS so users don't need to add a Lovelace resource manually
     add_extra_js_url(hass, card_url)
     _LOGGER.info("Home Tasks card served at %s", card_url)
+
+    # add_extra_js_url only lands in frontend pages served *after* this point.
+    # A client that fetched the index while HA was still starting (typical for
+    # the Companion App, which auto-reloads on reconnect during a restart)
+    # never loads the card and shows "Custom element doesn't exist" until a
+    # hard refresh (#37, #41).  Registering the card additionally as a
+    # Lovelace *resource* closes that gap: resources are loaded dynamically on
+    # every dashboard render, independent of when the index was served.  Both
+    # point at the identical module URL, so the browser evaluates it once.
+    if hass.is_running:
+        hass.async_create_task(_async_register_lovelace_resource(hass, card_url))
+    else:
+        async def _on_started(_event) -> None:
+            await _async_register_lovelace_resource(hass, card_url)
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _on_started)
+
+
+async def _async_register_lovelace_resource(hass: HomeAssistant, card_url: str) -> None:
+    """Ensure a Lovelace resource entry for the card exists and is current.
+
+    Storage mode only — in YAML mode the resource collection isn't editable
+    and add_extra_js_url remains the sole mechanism (unchanged behavior).
+    An existing entry (auto-created earlier, or added manually by a user)
+    is updated in place when the cache-busting ?v= changed, never duplicated.
+    Best-effort: any failure is logged and the card still loads via
+    add_extra_js_url for freshly served pages.
+    """
+    try:
+        lovelace = hass.data.get("lovelace")
+        resources = getattr(lovelace, "resources", None)
+        if resources is None and isinstance(lovelace, dict):  # pre-2024 layout
+            resources = lovelace.get("resources")
+        if resources is None or not hasattr(resources, "async_create_item"):
+            return  # lovelace not set up, or YAML mode
+        if not resources.loaded:
+            await resources.async_load()
+            resources.loaded = True
+        for item in resources.async_items():
+            if (item.get("url") or "").split("?")[0] == CARD_URL:
+                if item["url"] != card_url:
+                    await resources.async_update_item(
+                        item["id"], {"url": card_url}
+                    )
+                    _LOGGER.info(
+                        "Updated Lovelace resource for Home Tasks card: %s", card_url
+                    )
+                return
+        await resources.async_create_item({"res_type": "module", "url": card_url})
+        _LOGGER.info("Registered Lovelace resource for Home Tasks card: %s", card_url)
+    except Exception as err:  # noqa: BLE001 — must never break setup
+        _LOGGER.warning(
+            "Could not register the Home Tasks card as a Lovelace resource "
+            "(the card still loads via frontend extra module): %s",
+            err,
+        )
 
 
 # ---------------------------------------------------------------------------

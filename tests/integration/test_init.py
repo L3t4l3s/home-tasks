@@ -456,6 +456,117 @@ async def test_card_registered_with_versioned_url(hass: HomeAssistant) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Lovelace resource registration (#37 / #41)
+#
+# add_extra_js_url only reaches frontend pages served after setup; clients
+# that fetched the index during HA startup (Companion App reconnect) miss the
+# card entirely. The integration therefore also maintains a Lovelace resource
+# entry, which is loaded dynamically on every dashboard render.
+# ---------------------------------------------------------------------------
+
+
+class _FakeResources:
+    """Minimal stand-in for lovelace's ResourceStorageCollection."""
+
+    def __init__(self, items=None, loaded=True):
+        self.loaded = loaded
+        self.load_calls = 0
+        self._items = list(items or [])
+
+    async def async_load(self):
+        self.load_calls += 1
+
+    def async_items(self):
+        return list(self._items)
+
+    async def async_create_item(self, data):
+        item = {"id": f"r{len(self._items)}", **data}
+        self._items.append(item)
+        return item
+
+    async def async_update_item(self, item_id, data):
+        for item in self._items:
+            if item["id"] == item_id:
+                item.update(data)
+                return item
+        raise KeyError(item_id)
+
+
+async def test_lovelace_resource_created(hass: HomeAssistant) -> None:
+    """A missing resource entry for the card is created (storage mode)."""
+    from types import SimpleNamespace
+    from custom_components.home_tasks import (
+        CARD_URL,
+        _async_register_lovelace_resource,
+    )
+
+    resources = _FakeResources()
+    hass.data["lovelace"] = SimpleNamespace(resources=resources)
+
+    await _async_register_lovelace_resource(hass, f"{CARD_URL}?v=123")
+    items = resources.async_items()
+    assert items == [{"id": "r0", "res_type": "module", "url": f"{CARD_URL}?v=123"}]
+
+
+async def test_lovelace_resource_updated_not_duplicated(hass: HomeAssistant) -> None:
+    """An existing entry with a stale cache-bust query is updated in place."""
+    from types import SimpleNamespace
+    from custom_components.home_tasks import (
+        CARD_URL,
+        _async_register_lovelace_resource,
+    )
+
+    resources = _FakeResources(
+        items=[{"id": "old", "res_type": "module", "url": f"{CARD_URL}?v=1"}]
+    )
+    hass.data["lovelace"] = SimpleNamespace(resources=resources)
+
+    await _async_register_lovelace_resource(hass, f"{CARD_URL}?v=2")
+    items = resources.async_items()
+    assert len(items) == 1
+    assert items[0]["url"] == f"{CARD_URL}?v=2"
+
+    # Same URL again → no change, still exactly one entry
+    await _async_register_lovelace_resource(hass, f"{CARD_URL}?v=2")
+    assert len(resources.async_items()) == 1
+
+
+async def test_lovelace_resource_loads_collection_first(hass: HomeAssistant) -> None:
+    """An unloaded resource collection is loaded before use."""
+    from types import SimpleNamespace
+    from custom_components.home_tasks import (
+        CARD_URL,
+        _async_register_lovelace_resource,
+    )
+
+    resources = _FakeResources(loaded=False)
+    hass.data["lovelace"] = SimpleNamespace(resources=resources)
+
+    await _async_register_lovelace_resource(hass, f"{CARD_URL}?v=5")
+    assert resources.load_calls == 1
+    assert resources.loaded is True
+    assert len(resources.async_items()) == 1
+
+
+async def test_lovelace_resource_skips_yaml_mode_and_missing(hass: HomeAssistant) -> None:
+    """YAML mode (no async_create_item) and absent lovelace are silent no-ops."""
+    from types import SimpleNamespace
+    from custom_components.home_tasks import (
+        CARD_URL,
+        _async_register_lovelace_resource,
+    )
+
+    # lovelace not set up at all
+    hass.data.pop("lovelace", None)
+    await _async_register_lovelace_resource(hass, f"{CARD_URL}?v=1")
+
+    # YAML mode: collection without async_create_item
+    yaml_resources = SimpleNamespace(loaded=True, async_items=lambda: [])
+    hass.data["lovelace"] = SimpleNamespace(resources=yaml_resources)
+    await _async_register_lovelace_resource(hass, f"{CARD_URL}?v=1")  # must not raise
+
+
+# ---------------------------------------------------------------------------
 # External entry edge cases
 # ---------------------------------------------------------------------------
 
