@@ -925,10 +925,15 @@ class TodoistAdapter(ProviderAdapter):
             result["recurrence_type"] = "interval"
             # "every 2 weeks on <weekday>" — preserve the weekday filter so
             # the structured fields round-trip back to the card unchanged.
+            # Todoist's NL parser normalizes the phrase and drops the "on"
+            # ("every 2 weeks on wed" comes back as "every 2 weeks wed",
+            # observed 2026-08), so the connector must be optional.  Search
+            # only the remainder after the interval so weekday tokens can't
+            # be picked up from unrelated parts of the string.
             if interval_match.group(2) == "week":
                 wd_after = re.search(
-                    r"on\s+((?:mon|tue|wed|thu|fri|sat|sun)(?:\s*,\s*(?:mon|tue|wed|thu|fri|sat|sun))*)",
-                    lower,
+                    r"(?:\bon\s+)?\b((?:mon|tue|wed|thu|fri|sat|sun)(?:\s*,\s*(?:mon|tue|wed|thu|fri|sat|sun))*)",
+                    lower[interval_match.end():],
                 )
                 if wd_after:
                     days = [d.strip() for d in wd_after.group(1).split(",")]

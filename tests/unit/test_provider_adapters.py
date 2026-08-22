@@ -558,6 +558,30 @@ class TestRecurrenceMapping:
         assert result["recurrence_value"] == 2
         assert result["recurrence_weekdays"] == [2]
 
+    def test_parse_every_2_weeks_wed_without_on_preserves_weekday(self):
+        # Todoist's NL parser normalizes "every 2 weeks on wed" and returns
+        # "every 2 weeks wed" WITHOUT the "on" (API change observed 2026-08).
+        # The weekday filter must survive that form too.
+        due = MagicMock()
+        due.is_recurring = True
+        due.string = "every 2 weeks wed"
+        result = TodoistAdapter._parse_recurrence_from_due(due)
+        assert result["recurrence_unit"] == "weeks"
+        assert result["recurrence_value"] == 2
+        assert result["recurrence_weekdays"] == [2]
+
+    def test_parse_every_2_weeks_with_time_no_phantom_weekday(self):
+        # Guard for the optional-"on" relaxation: a plain interval phrase with
+        # trailing "at HH:MM" / "starting ..." must not grow a weekday filter
+        # from unrelated tokens.
+        due = MagicMock()
+        due.is_recurring = True
+        due.string = "every 2 weeks at 10:00 starting 2026-09-01"
+        result = TodoistAdapter._parse_recurrence_from_due(due)
+        assert result["recurrence_unit"] == "weeks"
+        assert result["recurrence_value"] == 2
+        assert not result.get("recurrence_weekdays")
+
     def test_parse_every_2_days_not_misread_as_dom(self):
         # Regression: "every 2 days" used to match the monthly_simple branch
         # and produce day_of_month=2 — make sure interval still wins.
