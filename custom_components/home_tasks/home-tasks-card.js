@@ -2392,13 +2392,42 @@ class HomeTasksCard extends HTMLElement {
     return due >= today && due <= future;
   }
 
+  // ---- Locale helpers (issue #30) -----------------------------------
+  // HA exposes the user's profile settings on hass.locale:
+  //   language     UI language (falls back to hass.language)
+  //   date_format  "language" | "system" | "DMY" | "MDY" | "YMD"
+  //   time_format  "language" | "system" | "am_pm" | "24"
+  // "system" is the only case where the browser locale is intentionally
+  // used; everything else must follow the HA profile, not the browser.
+  _localeCode() {
+    const loc = this._hass?.locale;
+    return (loc && loc.language) || this._hass?.language || "en";
+  }
+
+  // Format an absolute timestamp (Date) per the HA profile settings.
+  // Mirrors HA frontend's format_date/format_time: the explicit numeric
+  // date formats are produced by borrowing a locale that natively uses
+  // that ordering (DMY -> en-GB, MDY -> en-US, YMD -> en-CA).
+  _fmtTimestamp(ts) {
+    const loc = this._hass?.locale || {};
+    const lang = this._localeCode();
+    const dateLang = { DMY: "en-GB", MDY: "en-US", YMD: "en-CA" }[loc.date_format]
+      || (loc.date_format === "system" ? undefined : lang);
+    const dateStr = ts.toLocaleDateString(dateLang, { day: "numeric", month: "numeric", year: "numeric" });
+    const timeOpts = { hour: "numeric", minute: "2-digit" };
+    if (loc.time_format === "am_pm") timeOpts.hour12 = true;
+    else if (loc.time_format === "24") timeOpts.hour12 = false;
+    const timeStr = ts.toLocaleTimeString(loc.time_format === "system" ? undefined : lang, timeOpts);
+    return `${dateStr}, ${timeStr}`;
+  }
+
   _formatDueDate(dueDate, dueTime) {
     if (!dueDate) return "";
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const target = new Date(dueDate + "T00:00:00");
     const diffDays = Math.round((target - today) / 86400000);
-    const lang = (this._hass && this._hass.language) || "en";
+    const lang = this._localeCode();
 
     // Near dates: relative labels
     if (diffDays >= -2 && diffDays <= 2) {
@@ -2425,14 +2454,12 @@ class HomeTasksCard extends HTMLElement {
       return this._t(relKey);
     }
 
-    // Further dates: "6. Apr" or "6. Apr 27"
-    const day = target.getDate();
-    const month = target.toLocaleDateString(lang, { month: "short" });
-    let formatted = `${day}. ${month}`;
-    if (target.getFullYear() !== now.getFullYear()) {
-      formatted += " " + String(target.getFullYear()).slice(-2);
-    }
-    return formatted;
+    // Further dates: "6. Apr" (de) / "Apr 6" (en-US) — day/month order
+    // follows the HA profile language via Intl instead of a hardcoded
+    // European "D. Mon" (issue #30).
+    const opts = { day: "numeric", month: "short" };
+    if (target.getFullYear() !== now.getFullYear()) opts.year = "2-digit";
+    return target.toLocaleDateString(lang, opts);
   }
 
   _getListName(colIdx) {
@@ -5909,7 +5936,7 @@ class HomeTasksCard extends HTMLElement {
   _buildHistoryEntry(entry) {
     const row = this._el("div", { className: "history-entry" });
     const ts = new Date(entry.ts);
-    const tsStr = ts.toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" });
+    const tsStr = this._fmtTimestamp(ts);
     const { icon, text } = this._formatHistoryEntry(entry);
     const byLabel = entry.by && entry.by !== "recurrence"
       ? ` \u00b7 ${entry.by === "user" ? this._t("hist_by_user") : entry.by}`

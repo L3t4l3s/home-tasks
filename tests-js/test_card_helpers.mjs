@@ -274,19 +274,56 @@ describe('_formatDueDate', () => {
     assert.equal(card._formatDueDate('2027-06-13'), '2 days ago');
   });
 
-  test('returns formatted day+month for further dates same year', async () => {
+  test('returns formatted day+month for further dates same year (en order)', async () => {
     const card = await makeCard();
-    const result = card._formatDueDate('2027-08-20');
-    // Result is like "20. Aug" — must contain the day number
-    assert.match(result, /^20\.\s/);
-    // Same year → no year suffix
-    assert.doesNotMatch(result, /\s\d{2}$/);
+    // en → month-first via Intl (issue #30); same year → no year suffix
+    assert.equal(card._formatDueDate('2027-08-20'), 'Aug 20');
   });
 
-  test('returns formatted day+month+year for different year', async () => {
+  test('returns formatted day+month+year for different year (en order)', async () => {
     const card = await makeCard();
-    const result = card._formatDueDate('2029-03-10');
-    assert.match(result, /^10\.\s.+\s29$/);  // "10. Mar 29"
+    assert.equal(card._formatDueDate('2029-03-10'), 'Mar 10, 29');
+  });
+
+  test('day-first ordering for German HA profile language', async () => {
+    const card = await makeCard();
+    card.hass = makeMockHass({ language: 'de' });
+    assert.equal(card._formatDueDate('2027-08-20'), '20. Aug.');
+  });
+
+  test('hass.locale.language wins over hass.language', async () => {
+    const card = await makeCard();
+    card.hass = makeMockHass({ language: 'en', locale: { language: 'de' } });
+    assert.equal(card._formatDueDate('2027-08-20'), '20. Aug.');
+  });
+});
+
+
+describe('_fmtTimestamp', () => {
+  const TS = new Date(2026, 7, 22, 14, 5); // local 2026-08-22 14:05
+
+  test('follows HA profile language, not the browser', async () => {
+    const card = await makeCard();
+    card.hass = makeMockHass({ language: 'de' });
+    assert.equal(card._fmtTimestamp(TS), '22.8.2026, 14:05');
+  });
+
+  test('date_format DMY/MDY/YMD force the numeric ordering', async () => {
+    const card = await makeCard();
+    card.hass = makeMockHass({ language: 'de', locale: { language: 'de', date_format: 'DMY' } });
+    assert.match(card._fmtTimestamp(TS), /^22\/08\/2026, /);
+    card.hass = makeMockHass({ language: 'de', locale: { language: 'de', date_format: 'MDY' } });
+    assert.match(card._fmtTimestamp(TS), /^8\/22\/2026, /);
+    card.hass = makeMockHass({ language: 'de', locale: { language: 'de', date_format: 'YMD' } });
+    assert.match(card._fmtTimestamp(TS), /^2026-08-22, /);
+  });
+
+  test('time_format am_pm/24 override the language default', async () => {
+    const card = await makeCard();
+    card.hass = makeMockHass({ language: 'de', locale: { language: 'de', time_format: 'am_pm' } });
+    assert.match(card._fmtTimestamp(TS), /2:05 PM$/);
+    card.hass = makeMockHass({ language: 'en', locale: { language: 'en', time_format: '24' } });
+    assert.match(card._fmtTimestamp(TS), /14:05$/);
   });
 });
 
