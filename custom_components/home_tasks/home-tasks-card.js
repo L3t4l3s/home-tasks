@@ -58,6 +58,7 @@ const _TRANSLATIONS = {
     ed_show_person: "Assignees",
     ed_auto_delete: "Delete completed immediately",
     ed_confirm_complete: "Confirm before completing",
+    ed_max_height: "Max height (px, 0 = unlimited)",
     confirm_complete_msg: "Mark \"{0}\" as completed?",
     confirm_complete_ok: "Complete",
     ed_compact: "Compact",
@@ -191,6 +192,7 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Subtaken", ed_show_person: "Personen",
     ed_auto_delete: "Voltooide meteen verwijderen", ed_compact: "Compact", ed_show_tags: "Tags",
     ed_confirm_complete: "Bevestigen voor afronden",
+    ed_max_height: "Max. hoogte (px, 0 = onbeperkt)",
     confirm_complete_msg: "\u201e{0}\u201d als afgerond markeren?",
     confirm_complete_ok: "Afronden",
     ed_hint: "Nieuwe lijsten kunnen worden aangemaakt via Instellingen \u2192 Integraties \u2192 Home Tasks.",
@@ -265,6 +267,7 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Sotto-attivit\u00e0", ed_show_person: "Persone",
     ed_auto_delete: "Elimina completate immediatamente", ed_compact: "Compatto", ed_show_tags: "Tag",
     ed_confirm_complete: "Conferma prima di completare",
+    ed_max_height: "Altezza max (px, 0 = illimitata)",
     confirm_complete_msg: "Segnare \u201c{0}\u201d come completata?",
     confirm_complete_ok: "Completa",
     ed_hint: "Nuove liste possono essere create in Impostazioni \u2192 Integrazioni \u2192 Home Tasks.",
@@ -339,6 +342,7 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Podzadania", ed_show_person: "Osoby",
     ed_auto_delete: "Natychmiast usu\u0144 uko\u0144czone", ed_compact: "Kompaktowy", ed_show_tags: "Tagi",
     ed_confirm_complete: "Potwierd\u017a przed uko\u0144czeniem",
+    ed_max_height: "Maks. wysoko\u015b\u0107 (px, 0 = bez limitu)",
     confirm_complete_msg: "Oznaczy\u0107 \u201e{0}\u201d jako uko\u0144czone?",
     confirm_complete_ok: "Uko\u0144cz",
     ed_hint: "Nowe listy mo\u017cna tworzy\u0107 w Ustawienia \u2192 Integracje \u2192 Home Tasks.",
@@ -413,6 +417,7 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Deluppgifter", ed_show_person: "Personer",
     ed_auto_delete: "Ta bort slutf\u00f6rda omedelbart", ed_compact: "Kompakt", ed_show_tags: "Taggar",
     ed_confirm_complete: "Bekr\u00e4fta innan slutf\u00f6rande",
+    ed_max_height: "Maxh\u00f6jd (px, 0 = obegr\u00e4nsad)",
     confirm_complete_msg: "Markera \u201d{0}\u201d som slutf\u00f6rd?",
     confirm_complete_ok: "Slutf\u00f6r",
     ed_hint: "Nya listor kan skapas under Inst\u00e4llningar \u2192 Integrationer \u2192 Home Tasks.",
@@ -487,6 +492,7 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Sous-t\u00e2ches", ed_show_person: "Personnes",
     ed_auto_delete: "Supprimer les termin\u00e9es imm\u00e9diatement", ed_compact: "Compact", ed_show_tags: "\u00c9tiquettes",
     ed_confirm_complete: "Confirmer avant de terminer",
+    ed_max_height: "Hauteur max (px, 0 = illimit\u00e9e)",
     confirm_complete_msg: "Marquer \u00ab\u202f{0}\u202f\u00bb comme termin\u00e9e\u202f?",
     confirm_complete_ok: "Terminer",
     ed_hint: "De nouvelles listes peuvent \u00eatre cr\u00e9\u00e9es dans Param\u00e8tres \u2192 Int\u00e9grations \u2192 Home Tasks.",
@@ -561,6 +567,7 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Subtarefas", ed_show_person: "Pessoas",
     ed_auto_delete: "Excluir conclu\u00eddas imediatamente", ed_compact: "Compacto", ed_show_tags: "Etiquetas",
     ed_confirm_complete: "Confirmar antes de concluir",
+    ed_max_height: "Altura m\u00e1x. (px, 0 = ilimitada)",
     confirm_complete_msg: "Marcar \u201c{0}\u201d como conclu\u00edda?",
     confirm_complete_ok: "Concluir",
     ed_hint: "Novas listas podem ser criadas em Configura\u00e7\u00f5es \u2192 Integra\u00e7\u00f5es \u2192 Home Tasks.",
@@ -635,6 +642,7 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Subtareas", ed_show_person: "Personas",
     ed_auto_delete: "Eliminar completadas inmediatamente", ed_compact: "Compacto", ed_show_tags: "Etiquetas",
     ed_confirm_complete: "Confirmar antes de completar",
+    ed_max_height: "Altura m\u00e1x. (px, 0 = ilimitada)",
     confirm_complete_msg: "\u00bfMarcar \u00ab{0}\u00bb como completada?",
     confirm_complete_ok: "Completar",
     ed_hint: "Se pueden crear nuevas listas en Configuraci\u00f3n \u2192 Integraciones \u2192 Home Tasks.",
@@ -709,6 +717,7 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "\u041f\u043e\u0434\u0437\u0430\u0434\u0430\u0447\u0438", ed_show_person: "\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u0438",
     ed_auto_delete: "\u0421\u0440\u0430\u0437\u0443 \u0443\u0434\u0430\u043b\u044f\u0442\u044c \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043d\u044b\u0435", ed_compact: "\u041a\u043e\u043c\u043f\u0430\u043a\u0442\u043d\u044b\u0439", ed_show_tags: "\u0422\u0435\u0433\u0438",
     ed_confirm_complete: "\u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0430\u0442\u044c \u043f\u0435\u0440\u0435\u0434 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u0438\u0435\u043c",
+    ed_max_height: "\u041c\u0430\u043a\u0441. \u0432\u044b\u0441\u043e\u0442\u0430 (px, 0 = \u0431\u0435\u0437 \u043e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d\u0438\u044f)",
     confirm_complete_msg: "\u041e\u0442\u043c\u0435\u0442\u0438\u0442\u044c \u00ab{0}\u00bb \u043a\u0430\u043a \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043d\u0443\u044e?",
     confirm_complete_ok: "\u0412\u044b\u043f\u043e\u043b\u043d\u0438\u0442\u044c",
     ed_hint: "\u041d\u043e\u0432\u044b\u0435 \u0441\u043f\u0438\u0441\u043a\u0438 \u043c\u043e\u0436\u043d\u043e \u0441\u043e\u0437\u0434\u0430\u0442\u044c \u0432 \u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 \u2192 \u0418\u043d\u0442\u0435\u0433\u0440\u0430\u0446\u0438\u0438 \u2192 Home Tasks.",
@@ -783,6 +792,7 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Pod\u00fakoly", ed_show_person: "Osoby",
     ed_auto_delete: "Okam\u017eit\u011b smazat dokon\u010den\u00e9", ed_compact: "Kompaktn\u00ed", ed_show_tags: "\u0160t\u00edtky",
     ed_confirm_complete: "Potvrdit p\u0159ed dokon\u010den\u00edm",
+    ed_max_height: "Max. v\u00fd\u0161ka (px, 0 = bez limitu)",
     confirm_complete_msg: "Ozna\u010dit \u201e{0}\u201c jako dokon\u010den\u00e9?",
     confirm_complete_ok: "Dokon\u010dit",
     ed_hint: "Nov\u00e9 seznamy lze vytvo\u0159it v Nastaven\u00ed \u2192 Integrace \u2192 Home Tasks.",
@@ -857,6 +867,7 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Delopgaver", ed_show_person: "Personer",
     ed_auto_delete: "Slet f\u00e6rdige \u00f8jeblikkeligt", ed_compact: "Kompakt", ed_show_tags: "Tags",
     ed_confirm_complete: "Bekr\u00e6ft f\u00f8r fuldf\u00f8relse",
+    ed_max_height: "Maks. h\u00f8jde (px, 0 = ubegr\u00e6nset)",
     confirm_complete_msg: "Mark\u00e9r \u201d{0}\u201d som fuldf\u00f8rt?",
     confirm_complete_ok: "Fuldf\u00f8r",
     ed_hint: "Nye lister kan oprettes under Indstillinger \u2192 Integrationer \u2192 Home Tasks.",
@@ -931,6 +942,7 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Deloppgaver", ed_show_person: "Personer",
     ed_auto_delete: "Slett ferdige umiddelbart", ed_compact: "Kompakt", ed_show_tags: "Tagger",
     ed_confirm_complete: "Bekreft f\u00f8r fullf\u00f8ring",
+    ed_max_height: "Maks. h\u00f8yde (px, 0 = ubegrenset)",
     confirm_complete_msg: "Merke \u00ab{0}\u00bb som fullf\u00f8rt?",
     confirm_complete_ok: "Fullf\u00f8r",
     ed_hint: "Nye lister kan opprettes under Innstillinger \u2192 Integrasjoner \u2192 Home Tasks.",
@@ -1005,6 +1017,7 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Aliteht\u00e4v\u00e4t", ed_show_person: "Henkil\u00f6t",
     ed_auto_delete: "Poista valmiit v\u00e4litt\u00f6m\u00e4sti", ed_compact: "Kompakti", ed_show_tags: "Tunnisteet",
     ed_confirm_complete: "Vahvista ennen valmiiksi merkitsemist\u00e4",
+    ed_max_height: "Enimm\u00e4iskorkeus (px, 0 = rajaton)",
     confirm_complete_msg: "Merkit\u00e4\u00e4nk\u00f6 \u201d{0}\u201d valmiiksi?",
     confirm_complete_ok: "Merkitse valmiiksi",
     ed_hint: "Uusia listoja voi luoda kohdassa Asetukset \u2192 Integraatiot \u2192 Home Tasks.",
@@ -1079,6 +1092,7 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Alfeladatok", ed_show_person: "Szem\u00e9lyek",
     ed_auto_delete: "K\u00e9sz feladatok azonnali t\u00f6rl\u00e9se", ed_compact: "Kompakt", ed_show_tags: "C\u00edmk\u00e9k",
     ed_confirm_complete: "Meger\u0151s\u00edt\u00e9s befejez\u00e9s el\u0151tt",
+    ed_max_height: "Max. magass\u00e1g (px, 0 = korl\u00e1tlan)",
     confirm_complete_msg: "Megjel\u00f6l\u00f6d \u201e{0}\u201d-t k\u00e9szk\u00e9nt?",
     confirm_complete_ok: "K\u00e9sz",
     ed_hint: "\u00daj list\u00e1k a Be\u00e1ll\u00edt\u00e1sok \u2192 Integr\u00e1ci\u00f3k \u2192 Home Tasks alatt hozhat\u00f3k l\u00e9tre.",
@@ -1174,6 +1188,7 @@ const _TRANSLATIONS = {
     ed_show_person: "Personen",
     ed_auto_delete: "Erledigte sofort l\u00f6schen",
     ed_confirm_complete: "Vor dem Erledigen nachfragen",
+    ed_max_height: "Max. H\u00f6he (px, 0 = unbegrenzt)",
     confirm_complete_msg: "„{0}“ als erledigt markieren?",
     confirm_complete_ok: "Erledigen",
     ed_compact: "Kompakt",
@@ -2486,6 +2501,12 @@ class HomeTasksCard extends HTMLElement {
     });
   }
 
+  // Column max_height in px, or 0 when unset/invalid/non-positive.
+  _columnMaxHeight(col) {
+    const n = Number(col && col.max_height);
+    return Number.isFinite(n) && n > 0 ? Math.round(n) : 0;
+  }
+
   // Grow a textarea to fit its content (issue #32): reset to auto so it
   // can also shrink, then take the scroll height. The CSS min-height still
   // applies, and the manual resize handle keeps working.
@@ -2840,6 +2861,14 @@ class HomeTasksCard extends HTMLElement {
     const taskList = isTiles
       ? this._buildColumnTileGrid(filteredTasks, colIdx)
       : this._buildColumnTaskList(filteredTasks, colIdx);
+    // Per-column max_height (issues #33 / #34): cap only the task body and
+    // let it scroll internally. Header, add-task row, filters and chips are
+    // siblings above it and therefore stay put. 0 / unset = unlimited.
+    const maxH = this._columnMaxHeight(col);
+    if (maxH) {
+      taskList.classList.add("scrollable");
+      taskList.style.maxHeight = `${maxH}px`;
+    }
 
     const children = [];
     if (header) children.push(header);
@@ -6685,6 +6714,13 @@ class HomeTasksCard extends HTMLElement {
       .sort-option:hover { background: var(--todo-surface); }
       .sort-option.active { color: var(--todo-primary); font-weight: 500; }
       .task-list { display: flex; flex-direction: column; gap: 6px; min-height: 40px; }
+      /* max_height column option: body scrolls, chrome above stays fixed. The
+         1px inset padding keeps the focus ring / box-shadow of the first and
+         last task from being clipped by the overflow box. */
+      .task-list.scrollable, .tile-grid-wrap.scrollable {
+        overflow-y: auto; overscroll-behavior: contain;
+        padding: 1px 2px 1px 1px; scrollbar-gutter: stable;
+      }
       .empty-state { text-align: center; padding: 24px; color: var(--todo-disabled); font-size: 14px; }
       .section-header {
         display: flex; align-items: center; gap: 6px;
@@ -8224,6 +8260,24 @@ class HomeTasksCardEditor extends HTMLElement {
             ? [makeToggle("show-tile-title", "ed_show_tile_title", "show_tile_title", true)]
             : []),
         ]),
+        this._el("div", { className: "field" }, [(() => {
+          // max_height (px): 0 / empty = unlimited. Caps the task body only.
+          const mhInput = this._el("input", { type: "number", value: this._columnMaxHeight(col) || "" });
+          mhInput.min = 0;
+          mhInput.step = 10;
+          mhInput.placeholder = "0";
+          mhInput.addEventListener("change", () => {
+            const v = parseInt(mhInput.value, 10);
+            const valid = Number.isFinite(v) && v > 0;
+            mhInput.value = valid ? v : "";
+            // undefined drops the key on serialization (same as view_mode).
+            updateCol({ max_height: valid ? v : undefined });
+          });
+          return this._el("div", { className: "field-wrap" }, [
+            mhInput,
+            this._el("span", { textContent: this._t("ed_max_height") }),
+          ]);
+        })()]),
         sortField,
         makeSelect(
           "ed_view_mode",

@@ -1076,3 +1076,66 @@ describe('card-mod self-application via developer API', () => {
     assert.equal(calls.length, 0);
   });
 });
+
+
+// ---------------------------------------------------------------------------
+// max_height column option (issues #33 / #34)
+// ---------------------------------------------------------------------------
+
+
+describe('max_height column option', () => {
+  const TASKS = Array.from({ length: 30 }, (_, i) => ({ id: `T${i}`, title: `Task ${i}`, sort_order: i, sub_items: [] }));
+  async function setup(colExtra) {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'Test List' }] },
+      'home_tasks/get_tasks': { tasks: TASKS },
+    });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{ list_id: 'L1', ...colExtra }] });
+    card.hass = hass;
+    await flush(card);
+    return card;
+  }
+
+  test('unset: task list is not capped (no inline max-height, no scrollable class)', async () => {
+    const card = await setup({});
+    const list = card.shadowRoot.querySelector('.task-list');
+    assert.ok(list);
+    assert.equal(list.style.maxHeight, '');
+    assert.ok(!list.classList.contains('scrollable'));
+  });
+
+  test('max_height caps only the task list and marks it scrollable', async () => {
+    const card = await setup({ max_height: 350 });
+    const list = card.shadowRoot.querySelector('.task-list');
+    assert.equal(list.style.maxHeight, '350px');
+    assert.ok(list.classList.contains('scrollable'));
+    // Header / add-task row are siblings above the list, not inside it
+    const col = list.parentElement;
+    assert.ok(col.querySelector('.header'), 'header must exist in the column');
+    assert.ok(!list.contains(col.querySelector('.header')), 'header must not be inside the scroll container');
+    assert.ok(!list.contains(col.querySelector('.add-task')), 'add-task row must not be inside the scroll container');
+    // the scrollable rule exists in the stylesheet
+    assert.ok(card._getStyles().includes('.task-list.scrollable, .tile-grid-wrap.scrollable'));
+  });
+
+  test('tiles view: the tile grid wrapper gets the cap', async () => {
+    const card = await setup({ max_height: 400, view_mode: 'tiles' });
+    const wrap = card.shadowRoot.querySelector('.tile-grid-wrap');
+    assert.ok(wrap);
+    assert.equal(wrap.style.maxHeight, '400px');
+    assert.ok(wrap.classList.contains('scrollable'));
+  });
+
+  test('invalid values (0, negative, NaN, string junk) are ignored', async () => {
+    for (const v of [0, -5, 'abc', null]) {
+      const card = await setup({ max_height: v });
+      const list = card.shadowRoot.querySelector('.task-list');
+      assert.equal(list.style.maxHeight, '', `max_height=${v} must not cap`);
+    }
+    // numeric strings are accepted (YAML/editor may deliver them)
+    const card = await setup({ max_height: '280' });
+    assert.equal(card.shadowRoot.querySelector('.task-list').style.maxHeight, '280px');
+  });
+});
