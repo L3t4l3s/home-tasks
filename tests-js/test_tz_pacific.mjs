@@ -64,3 +64,19 @@ describe('Pacific Time (UTC-7 PDT) — _isDueDateOverdue / _isDueDateToday', () 
     assert.equal(card._isDueDateOverdue('2026-04-10'), true);
   });
 });
+
+
+describe('Pacific Time — _localDateStr (recurrence date-input min)', () => {
+  // REGRESSION: the recurrence start/end date-input `min` used
+  // new Date().toISOString().slice(0, 10) — the UTC date. From 17:00
+  // PDT onward that is already *tomorrow*, so users could no longer
+  // pick today as a start date, and _updateEndDateMin silently cleared
+  // valid end dates that fell below the off-by-one minimum.
+  test('23:30 local — local date string is still today, not the UTC tomorrow', async () => {
+    // 2026-04-11 23:30 PDT  →  2026-04-12T06:30:00Z
+    const card = await makeCard('2026-04-12T06:30:00Z');
+    // Use the card realm's frozen Date, not the test realm's live one.
+    const RealmDate = card.ownerDocument.defaultView.Date;
+    assert.equal(card._localDateStr(new RealmDate()), '2026-04-11');
+  });
+});

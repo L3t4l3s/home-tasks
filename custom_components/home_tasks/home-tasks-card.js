@@ -2366,17 +2366,18 @@ class HomeTasksCard extends HTMLElement {
     return due < today;
   }
 
+  // Format a Date as its *local* YYYY-MM-DD calendar date. Never use
+  // toISOString() for this: it returns the UTC date, which differs from
+  // the local date for several hours each day in any non-UTC timezone.
+  _localDateStr(d) {
+    return d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }
+
   _isDueDateToday(dueDate) {
     if (!dueDate) return false;
-    // Compare against the local calendar date, not the UTC one. Using
-    // toISOString() returns the UTC date which differs from the local
-    // date for several hours each day in any non-UTC timezone.
-    const now = new Date();
-    const localToday =
-      now.getFullYear() + "-" +
-      String(now.getMonth() + 1).padStart(2, "0") + "-" +
-      String(now.getDate()).padStart(2, "0");
-    return dueDate === localToday;
+    return dueDate === this._localDateStr(new Date());
   }
 
   _isDueDateWithinDays(dueDate, days) {
@@ -4702,7 +4703,7 @@ class HomeTasksCard extends HTMLElement {
 
     // Start date + reactivation time — now on separate rows so the time
     // input is read as "time of each occurrence" rather than "starts at".
-    const _todayStr = new Date().toISOString().slice(0, 10);
+    const _todayStr = this._localDateStr(new Date());
     const recurrenceStartDateInput = this._el("input", {
       type: "date", value: recurrenceStartDate, min: _todayStr,
       "data-focus-key": "recurrence_start_date",
@@ -4789,7 +4790,7 @@ class HomeTasksCard extends HTMLElement {
       else if (unit === "weeks") next.setDate(next.getDate() + val * 7);
       else if (unit === "months") next.setMonth(next.getMonth() + val);
       else if (unit === "years") next.setFullYear(next.getFullYear() + val);
-      return next.toISOString().slice(0, 10);
+      return this._localDateStr(next);
     };
     const _updateEndDateMin = () => {
       const minEnd = _computeMinEndDate();

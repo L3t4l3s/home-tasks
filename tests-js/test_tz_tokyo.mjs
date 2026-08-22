@@ -36,3 +36,14 @@ describe('Tokyo (UTC+9 JST) — _isDueDateOverdue / _isDueDateToday', () => {
     assert.equal(card._isDueDateOverdue('2026-04-11'), false);
   });
 });
+
+
+describe('Tokyo — _localDateStr (recurrence date-input min)', () => {
+  test('05:00 local — local date string is today, not the UTC yesterday', async () => {
+    // 2026-04-11 05:00 JST  →  2026-04-10T20:00:00Z
+    const card = await makeCard('2026-04-10T20:00:00Z');
+    // Use the card realm's frozen Date, not the test realm's live one.
+    const RealmDate = card.ownerDocument.defaultView.Date;
+    assert.equal(card._localDateStr(new RealmDate()), '2026-04-11');
+  });
+});
