@@ -462,6 +462,7 @@ class HomeTasksStore:
             "recurrence_nth_week": None,
             "recurrence_anniversary": None,
             "completed_at": None,
+            "reopen_at": None,
             "assigned_person": assigned_person,
             "tags": [],
             "image_url": None,
@@ -560,6 +561,7 @@ class HomeTasksStore:
                 self.on_task_completed(task)
         elif not is_completed and was_completed:
             task["completed_at"] = None
+            task["reopen_at"] = None  # manual reopen — pending schedule is void
             if self.on_task_reopened:
                 self.on_task_reopened(task)
 
@@ -648,6 +650,7 @@ class HomeTasksStore:
 
         task["completed"] = False
         task["completed_at"] = None
+        task["reopen_at"] = None  # consumed — the completed→reopen window is over
         if new_due_date is not None:
             task["due_date"] = new_due_date
         if new_due_time is not _REOPEN_UNCHANGED:
@@ -725,6 +728,7 @@ class HomeTasksStore:
             "assigned_person": validate_assigned_person(assigned_person),
             "completed": False,
             "completed_at": None,
+            "reopen_at": None,
             "sort_order": 0,  # set by the renumber below
             "history": [history_entry],
             "external_id": None,

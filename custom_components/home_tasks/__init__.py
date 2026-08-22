@@ -205,22 +205,31 @@ def _on_task_completed(hass: HomeAssistant, entry_id: str, task: dict) -> None:
     completed_at = _parse_completed_at(task)
 
     target = None
-    if task.get("recurrence_enabled") and task.get("due_date"):
+    if task.get("recurrence_enabled"):
         target = _compute_next_reopen_target(task, completed_at)
-        if target is not None:
-            local_target = target.astimezone(dt_util.DEFAULT_TIME_ZONE)
-            old_due_date = task.get("due_date")
-            task["due_date"] = local_target.date().isoformat()
-            # due_time belongs to the user.  We advance the DATE to the next
-            # occurrence; the time-of-day — if the user set one — is kept,
-            # and if the user didn't set one we don't invent one.  The
-            # recurrence_time field is only used by the scheduler to place
-            # the reopen timer, not to rewrite the task's due_time.
-            _record_auto_advance_history(
-                task,
-                old_due_date, task["due_date"],
-                task.get("due_time"), task.get("due_time"),
-            )
+        # Persist the reopen moment on the task.  The in-memory timer dies
+        # with HA; after a restart this field is the *authoritative* target
+        # (see _recovery_reopen_target) — recomputing against the advanced
+        # due_date would roll one interval further (#35, #36, #40).
+        # Explicit None (recurrence end reached) is meaningful too: it tells
+        # recovery there is nothing to re-arm.
+        task["reopen_at"] = (
+            target.astimezone(timezone.utc).isoformat() if target is not None else None
+        )
+    if target is not None and task.get("due_date"):
+        local_target = target.astimezone(dt_util.DEFAULT_TIME_ZONE)
+        old_due_date = task.get("due_date")
+        task["due_date"] = local_target.date().isoformat()
+        # due_time belongs to the user.  We advance the DATE to the next
+        # occurrence; the time-of-day — if the user set one — is kept,
+        # and if the user didn't set one we don't invent one.  The
+        # recurrence_time field is only used by the scheduler to place
+        # the reopen timer, not to rewrite the task's due_time.
+        _record_auto_advance_history(
+            task,
+            old_due_date, task["due_date"],
+            task.get("due_time"), task.get("due_time"),
+        )
 
     # Pass the already-computed target into the scheduler so it doesn't
     # recompute against the just-advanced due_date and double-advance.
@@ -306,9 +315,39 @@ async def _async_check_due_dates(hass: HomeAssistant, _now=None) -> None:
             continue
         for task in store.tasks:
             _check_task_due(hass, entry_id, task, today, fired)
+            _watchdog_recurring_reopen(hass, entry_id, task)
 
     # Also check external entities for due dates
     _check_external_due_dates(hass, today, fired)
+
+
+def _watchdog_recurring_reopen(hass: HomeAssistant, entry_id: str, task: dict) -> None:
+    """Self-heal: a completed recurring task must never stay completed past
+    its reopen moment.
+
+    The reopen normally fires from an in-memory timer, which can be lost or
+    mis-aimed (crash before recovery ran, an earlier scheduling bug, clock
+    jumps).  Piggybacking on the hourly due checker, this re-arms a missing
+    timer — or reopens immediately if the moment has passed — so a stuck
+    task recovers within an hour instead of staying completed forever.
+    """
+    if not task.get("completed") or not task.get("recurrence_enabled"):
+        return
+    if not task.get("completed_at"):
+        return
+    try:
+        datetime.fromisoformat(task["completed_at"])
+    except (ValueError, TypeError):
+        return
+    # A live timer owns this task — nothing to heal.
+    if task["id"] in hass.data.get(DATA_RECURRENCE_TIMERS, {}):
+        return
+    action = _rearm_or_reopen(hass, entry_id, task)
+    if action:
+        _LOGGER.warning(
+            "Watchdog: completed recurring task '%s' had no reopen timer — %s",
+            task.get("title", task["id"]), action,
+        )
 
 
 def _check_task_due(hass: HomeAssistant, entry_id: str, task: dict, today: str, fired: dict) -> None:
@@ -913,6 +952,86 @@ def _recover_reminder_timers(hass: HomeAssistant, entry_id: str, store: HomeTask
         _schedule_reminders(hass, entry_id, task)
 
 
+def _recovery_reopen_target(task: dict, completed_at: datetime) -> datetime | None:
+    """Reopen target for re-arming a completed recurring task's timer.
+
+    The authoritative source is task["reopen_at"], persisted by
+    _on_task_completed at the moment the original timer was armed.  Feeding
+    the task back through _compute_next_reopen_target instead would anchor
+    on the already-advanced due_date and roll one interval further, leaving
+    the task completed a full extra interval after every restart
+    (#35, #36, #40).
+
+    A present-but-None reopen_at is meaningful (recurrence end reached —
+    nothing to re-arm) and returns None like any other fallthrough, which
+    makes the caller recompute; the recompute then hits the same end
+    condition and correctly does nothing.
+
+    Legacy tasks completed before reopen_at existed carry no key at all.
+    For those, the stored due_date at recurrence_time IS the original
+    timer's target — provided it lies after completed_at (i.e. the due was
+    actually advanced at completion) and the unit is date-based (for hours
+    the due date carries no time-of-day information).
+    """
+    if "reopen_at" in task:
+        raw = task["reopen_at"]
+        if raw:
+            try:
+                parsed = datetime.fromisoformat(raw)
+                if parsed.tzinfo is None:
+                    parsed = parsed.replace(tzinfo=timezone.utc)
+                return parsed
+            except (ValueError, TypeError):
+                pass
+        return None
+
+    # ---- Legacy inference (pre-reopen_at data) ----
+    if task.get("recurrence_unit") == "hours":
+        return None
+    due_date_str = task.get("due_date")
+    if not due_date_str:
+        return None
+    try:
+        due_d = date.fromisoformat(due_date_str)
+    except (ValueError, TypeError):
+        return None
+    t_h, t_m = _parse_rec_time(task)
+    local_midnight = datetime(due_d.year, due_d.month, due_d.day, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+    target = _set_local_time(local_midnight, t_h, t_m).astimezone(timezone.utc)
+    if target <= completed_at:
+        return None
+    return target
+
+
+def _rearm_or_reopen(hass: HomeAssistant, entry_id: str, task: dict) -> str | None:
+    """Re-arm the reopen timer for a completed recurring task, or reopen it
+    immediately if its reopen moment has already passed.
+
+    Shared by startup recovery and the hourly watchdog.  Prefers the stored
+    due_date as the target (see _recovery_reopen_target); only falls back to
+    recomputing from completed_at when the stored due encodes no target.
+
+    Returns "reopened", "scheduled", or None (nothing to do — e.g. the
+    recurrence hit its end condition).
+    """
+    completed_at = _parse_completed_at(task)
+    target = _recovery_reopen_target(task, completed_at)
+    if target is not None:
+        delay = (target - datetime.now(timezone.utc)).total_seconds()
+    else:
+        delay = _compute_reopen_delay(task, completed_at)
+        if delay is None:
+            return None
+
+    if delay <= 0:
+        hass.async_create_task(_async_reopen_task(hass, entry_id, task["id"]))
+        return "reopened"
+    _schedule_recurrence(
+        hass, entry_id, task, completed_at=completed_at, precomputed_target=target
+    )
+    return "scheduled"
+
+
 def _recover_recurrence_timers(hass: HomeAssistant, entry_id: str, store: HomeTasksStore) -> None:
     """On startup, recover timers for completed recurring tasks."""
     for task in store.tasks:
@@ -927,16 +1046,8 @@ def _recover_recurrence_timers(hass: HomeAssistant, entry_id: str, store: HomeTa
             datetime.fromisoformat(task["completed_at"])
         except (ValueError, TypeError):
             continue
-        completed_at = _parse_completed_at(task)
 
-        delay = _compute_reopen_delay(task, completed_at)
-        if delay is None:
-            continue
-
-        if delay <= 0:
-            hass.async_create_task(_async_reopen_task(hass, entry_id, task["id"]))
-        else:
-            _schedule_recurrence(hass, entry_id, task, completed_at=completed_at)
+        _rearm_or_reopen(hass, entry_id, task)
 
 
 # ---------------------------------------------------------------------------

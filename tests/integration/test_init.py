@@ -1264,10 +1264,13 @@ async def test_recover_recurrence_timer_with_past_delay_reopens(
         recurrence_unit="hours",
         recurrence_value=1,
     )
-    # completed_at far in the past → delay <= 0 → immediate reopen
-    past = (_dt.now(_tz.utc) - timedelta(days=7)).isoformat()
+    # completed_at far in the past → delay <= 0 → immediate reopen.
+    # Backdate reopen_at consistently: on real pre-restart data it was
+    # persisted at completion time (completed_at + 1h here).
+    past = _dt.now(_tz.utc) - timedelta(days=7)
     await store.async_update_task(task["id"], completed=True)
-    store.get_task(task["id"])["completed_at"] = past
+    store.get_task(task["id"])["completed_at"] = past.isoformat()
+    store.get_task(task["id"])["reopen_at"] = (past + timedelta(hours=1)).isoformat()
     await hass.async_block_till_done()
 
     _recover_recurrence_timers(hass, mock_config_entry.entry_id, store)
@@ -1318,6 +1321,358 @@ async def test_recover_recurrence_skips_missing_completed_at(
 
     _recover_recurrence_timers(hass, mock_config_entry.entry_id, store)
     assert task["id"] not in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+
+
+# ---------------------------------------------------------------------------
+# Restart-recovery regression tests (#35 / #36 / #40)
+#
+# At completion, due_date is advanced to the next occurrence and the reopen
+# timer is aimed at exactly that moment (persisted as task["reopen_at"]).
+# The old recovery path recomputed the target from the already-advanced
+# due_date, applying the interval twice - a task completed before a restart
+# reopened one full interval late.
+# ---------------------------------------------------------------------------
+
+
+async def test_completion_persists_reopen_at(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Completing a recurring task stores the reopen moment on the task,
+    and reopening clears it."""
+    from freezegun import freeze_time
+    from datetime import datetime as _dt, timezone as _tz
+
+    with freeze_time("2026-08-05 18:00:00+00:00"):
+        task = await store.async_add_task("Persist target")
+        await store.async_update_task(
+            task["id"],
+            due_date="2026-08-05",
+            recurrence_enabled=True,
+            recurrence_unit="days",
+            recurrence_value=1,
+        )
+        await store.async_update_task(task["id"], completed=True)
+        await hass.async_block_till_done()
+
+        stored = store.get_task(task["id"])
+        assert stored["reopen_at"] is not None
+        reopen_at = _dt.fromisoformat(stored["reopen_at"])
+        # Target = next occurrence (due_date advanced to it) at local midnight
+        expected = _dt(2026, 8, 6, 0, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+        assert reopen_at == expected.astimezone(_tz.utc)
+        assert stored["due_date"] == "2026-08-06"
+
+        await store.async_reopen_task(task["id"])
+        assert store.get_task(task["id"])["reopen_at"] is None
+
+
+async def test_recover_daily_after_restart_no_double_advance(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Regression #35/#36: recovery must aim at the persisted target, not
+    re-apply the interval to the already-advanced due_date."""
+    from unittest.mock import patch
+    from freezegun import freeze_time
+    from custom_components.home_tasks import (
+        _recover_recurrence_timers,
+        _cancel_recurrence,
+    )
+
+    with freeze_time("2026-08-05 18:00:00+00:00"):
+        task = await store.async_add_task("Daily chore")
+        await store.async_update_task(
+            task["id"],
+            due_date="2026-08-05",
+            recurrence_enabled=True,
+            recurrence_unit="days",
+            recurrence_value=1,
+        )
+        await store.async_update_task(task["id"], completed=True)
+        await hass.async_block_till_done()
+
+        # Simulate restart: in-memory timer is gone.
+        _cancel_recurrence(hass, task["id"])
+
+        captured: dict[str, float] = {}
+
+        def fake_async_call_later(_hass, delay, _cb):
+            captured["delay"] = delay
+            return lambda: None
+
+        with patch(
+            "custom_components.home_tasks.async_call_later",
+            side_effect=fake_async_call_later,
+        ):
+            _recover_recurrence_timers(hass, mock_config_entry.entry_id, store)
+
+        # Correct target: 2026-08-06 00:00 local - NOT 2026-08-07.
+        expected_target = datetime(2026, 8, 6, 0, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+        expected_delay = (
+            expected_target.astimezone(dt_util.UTC)
+            - datetime(2026, 8, 5, 18, 0, tzinfo=dt_util.UTC)
+        ).total_seconds()
+        assert captured["delay"] == pytest.approx(expected_delay, abs=5), (
+            f"recovery re-applied the interval: delay={captured.get('delay')}, "
+            f"expected ~{expected_delay}"
+        )
+
+
+async def test_recover_legacy_task_without_reopen_at_uses_stored_due(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Pre-upgrade data has no reopen_at: recovery infers the target from the
+    stored (already-advanced) due_date instead of recomputing the interval."""
+    from unittest.mock import patch
+    from freezegun import freeze_time
+    from custom_components.home_tasks import (
+        _recover_recurrence_timers,
+        _cancel_recurrence,
+    )
+
+    with freeze_time("2026-08-05 18:00:00+00:00"):
+        task = await store.async_add_task("Legacy daily")
+        await store.async_update_task(
+            task["id"],
+            due_date="2026-08-05",
+            recurrence_enabled=True,
+            recurrence_unit="days",
+            recurrence_value=1,
+        )
+        await store.async_update_task(task["id"], completed=True)
+        await hass.async_block_till_done()
+        _cancel_recurrence(hass, task["id"])
+
+        # Simulate pre-upgrade data: the field never existed.
+        del store.get_task(task["id"])["reopen_at"]
+
+        captured: dict[str, float] = {}
+
+        def fake_async_call_later(_hass, delay, _cb):
+            captured["delay"] = delay
+            return lambda: None
+
+        with patch(
+            "custom_components.home_tasks.async_call_later",
+            side_effect=fake_async_call_later,
+        ):
+            _recover_recurrence_timers(hass, mock_config_entry.entry_id, store)
+
+        expected_target = datetime(2026, 8, 6, 0, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+        expected_delay = (
+            expected_target.astimezone(dt_util.UTC)
+            - datetime(2026, 8, 5, 18, 0, tzinfo=dt_util.UTC)
+        ).total_seconds()
+        assert captured["delay"] == pytest.approx(expected_delay, abs=5)
+
+
+async def test_recover_legacy_hours_unit_ignores_due_date(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Hours-based recurrence is elapsed-based: legacy inference must not
+    misread the due_date (which carries no time-of-day) as a target."""
+    from unittest.mock import patch
+    from freezegun import freeze_time
+    from custom_components.home_tasks import (
+        _recover_recurrence_timers,
+        _cancel_recurrence,
+    )
+
+    with freeze_time("2026-08-05 12:00:00+00:00"):
+        task = await store.async_add_task("Every 3 hours")
+        await store.async_update_task(
+            task["id"],
+            due_date="2026-08-05",
+            recurrence_enabled=True,
+            recurrence_unit="hours",
+            recurrence_value=3,
+            recurrence_time="23:59",  # leftover field - must be ignored for hours
+        )
+        await store.async_update_task(task["id"], completed=True)
+        store.get_task(task["id"])["completed_at"] = "2026-08-05T11:00:00+00:00"
+        await hass.async_block_till_done()
+        _cancel_recurrence(hass, task["id"])
+        del store.get_task(task["id"])["reopen_at"]
+
+        captured: dict[str, float] = {}
+
+        def fake_async_call_later(_hass, delay, _cb):
+            captured["delay"] = delay
+            return lambda: None
+
+        with patch(
+            "custom_components.home_tasks.async_call_later",
+            side_effect=fake_async_call_later,
+        ):
+            _recover_recurrence_timers(hass, mock_config_entry.entry_id, store)
+
+        # completed 11:00 + 3h = 14:00; now is 12:00 -> 2h, not the ~12h
+        # implied by due_date@23:59.
+        assert captured["delay"] == pytest.approx(2 * 3600, abs=5)
+
+
+async def test_recover_reopens_when_target_passed_while_off(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """HA was off across the reopen moment -> task reopens immediately on recovery."""
+    from custom_components.home_tasks import (
+        _recover_recurrence_timers,
+        _cancel_recurrence,
+    )
+    from datetime import datetime as _dt, timezone as _tz
+
+    task = await store.async_add_task("Missed while off")
+    await store.async_update_task(
+        task["id"],
+        due_date=(_dt.now(_tz.utc) - timedelta(days=1)).date().isoformat(),
+        recurrence_enabled=True,
+        recurrence_unit="days",
+        recurrence_value=1,
+    )
+    await store.async_update_task(task["id"], completed=True)
+    stored = store.get_task(task["id"])
+    stored["completed_at"] = (_dt.now(_tz.utc) - timedelta(days=2)).isoformat()
+    stored["reopen_at"] = (_dt.now(_tz.utc) - timedelta(days=1)).isoformat()
+    await hass.async_block_till_done()
+    _cancel_recurrence(hass, task["id"])
+
+    _recover_recurrence_timers(hass, mock_config_entry.entry_id, store)
+    await hass.async_block_till_done()
+    assert store.get_task(task["id"])["completed"] is False
+
+
+async def test_recovery_does_not_resurrect_ended_recurrence(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """A recurrence whose end date stopped the advance (reopen_at is an
+    explicit None) must stay completed after recovery."""
+    from custom_components.home_tasks import (
+        _recover_recurrence_timers,
+        _cancel_recurrence,
+        DATA_RECURRENCE_TIMERS,
+    )
+    from freezegun import freeze_time
+
+    with freeze_time("2026-08-05 18:00:00+00:00"):
+        task = await store.async_add_task("Ended recurrence")
+        await store.async_update_task(
+            task["id"],
+            due_date="2026-08-05",
+            recurrence_enabled=True,
+            recurrence_unit="days",
+            recurrence_value=1,
+            recurrence_end_type="date",
+            recurrence_end_date="2026-08-05",  # next occurrence would exceed this
+        )
+        await store.async_update_task(task["id"], completed=True)
+        await hass.async_block_till_done()
+
+        stored = store.get_task(task["id"])
+        assert "reopen_at" in stored and stored["reopen_at"] is None
+        assert stored["due_date"] == "2026-08-05"  # not advanced
+
+        _cancel_recurrence(hass, task["id"])
+        _recover_recurrence_timers(hass, mock_config_entry.entry_id, store)
+        await hass.async_block_till_done()
+
+        assert store.get_task(task["id"])["completed"] is True
+        assert task["id"] not in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+
+
+# ---------------------------------------------------------------------------
+# Watchdog tests (hourly self-heal)
+# ---------------------------------------------------------------------------
+
+
+async def test_watchdog_reopens_stuck_task(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """A completed recurring task with a passed reopen moment and no timer
+    (lost / mis-aimed) is reopened by the hourly due checker."""
+    from custom_components.home_tasks import (
+        _async_check_due_dates,
+        _cancel_recurrence,
+    )
+    from datetime import datetime as _dt, timezone as _tz
+
+    task = await store.async_add_task("Stuck task")
+    await store.async_update_task(
+        task["id"],
+        due_date=(_dt.now(_tz.utc) - timedelta(days=1)).date().isoformat(),
+        recurrence_enabled=True,
+        recurrence_unit="days",
+        recurrence_value=1,
+    )
+    await store.async_update_task(task["id"], completed=True)
+    stored = store.get_task(task["id"])
+    stored["completed_at"] = (_dt.now(_tz.utc) - timedelta(days=2)).isoformat()
+    stored["reopen_at"] = (_dt.now(_tz.utc) - timedelta(days=1)).isoformat()
+    await hass.async_block_till_done()
+    _cancel_recurrence(hass, task["id"])  # timer lost
+
+    await _async_check_due_dates(hass)
+    await hass.async_block_till_done()
+    assert store.get_task(task["id"])["completed"] is False
+
+
+async def test_watchdog_rearms_missing_timer(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """A future reopen moment without a live timer gets its timer re-armed."""
+    from custom_components.home_tasks import (
+        _async_check_due_dates,
+        _cancel_recurrence,
+        DATA_RECURRENCE_TIMERS,
+    )
+    from datetime import datetime as _dt, timezone as _tz
+
+    task = await store.async_add_task("Timer lost, future target")
+    await store.async_update_task(
+        task["id"],
+        due_date=(_dt.now(_tz.utc) + timedelta(days=1)).date().isoformat(),
+        recurrence_enabled=True,
+        recurrence_unit="days",
+        recurrence_value=1,
+    )
+    await store.async_update_task(task["id"], completed=True)
+    stored = store.get_task(task["id"])
+    stored["reopen_at"] = (_dt.now(_tz.utc) + timedelta(hours=6)).isoformat()
+    await hass.async_block_till_done()
+    _cancel_recurrence(hass, task["id"])  # timer lost
+    assert task["id"] not in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+
+    await _async_check_due_dates(hass)
+    assert task["id"] in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+    assert store.get_task(task["id"])["completed"] is True
+
+
+async def test_watchdog_leaves_live_timer_alone(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """A task with a live reopen timer is not touched by the watchdog."""
+    from custom_components.home_tasks import (
+        _async_check_due_dates,
+        DATA_RECURRENCE_TIMERS,
+    )
+    from datetime import date as _date
+
+    task = await store.async_add_task("Healthy recurring")
+    await store.async_update_task(
+        task["id"],
+        due_date=_date.today().isoformat(),
+        recurrence_enabled=True,
+        recurrence_unit="days",
+        recurrence_value=1,
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+
+    timers = hass.data.get(DATA_RECURRENCE_TIMERS, {})
+    original = timers.get(task["id"])
+    assert original is not None
+
+    await _async_check_due_dates(hass)
+    assert timers.get(task["id"]) is original
+    assert store.get_task(task["id"])["completed"] is True
 
 
 # ---------------------------------------------------------------------------
