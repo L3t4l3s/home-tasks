@@ -2642,8 +2642,14 @@ class HomeTasksCard extends HTMLElement {
     // Preserve any open modal overlay (tile detail sheet, add-task dialog,
     // media picker) across the rebuild so a background data refresh doesn't
     // wipe it out from under the user mid-interaction.
+    //
+    // Also preserve card-mod's <card-mod> node (issue #31/#34): card-mod
+    // appends it — together with the user's <style> — directly into this
+    // shadow root once, via its hui-card hook. We are not a Lit element, so
+    // card-mod never re-applies after we wipe the root; re-attaching the
+    // same node lets its connectedCallback re-inject the styles.
     const _preservedOverlays = [...root.querySelectorAll(
-      ".task-detail-backdrop, .task-detail-sheet, dialog"
+      ".task-detail-backdrop, .task-detail-sheet, dialog, card-mod"
     )].map((el) => {
       // Detaching a scrollable element resets its scrollTop; capture the open
       // sheet's scroll so re-attaching it below doesn't "jump" to the top.

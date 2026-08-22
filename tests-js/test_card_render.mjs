@@ -966,3 +966,44 @@ describe('confirm_complete column option', () => {
     assert.equal(confirms.length, 0);
   });
 });
+
+
+// ---------------------------------------------------------------------------
+// card-mod compatibility (issues #31 / #34)
+// ---------------------------------------------------------------------------
+
+
+describe('card-mod node survives re-renders', () => {
+  test('a <card-mod> child of the shadow root is re-attached (same instance) after a rebuild', async () => {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'Test List' }] },
+      'home_tasks/get_tasks': { tasks: [{ id: 'T1', title: 'Styled', sort_order: 0, sub_items: [] }] },
+    });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{ list_id: 'L1' }] });
+    card.hass = hass;
+    await flush(card);
+
+    // Simulate card-mod's hui-card hook: it appends a <card-mod> element
+    // (carrying the user's <style>) directly into the card's shadow root.
+    const doc = card.ownerDocument;
+    const cm = doc.createElement('card-mod');
+    const style = doc.createElement('style');
+    style.textContent = '.task-title { font-size: 16px !important; }';
+    cm.appendChild(style);
+    card.shadowRoot.appendChild(cm);
+
+    // Any data refresh rebuilds the shadow root...
+    card._render();
+    await flush(card);
+
+    // ...but the very same card-mod node must still be there, styles intact.
+    const after = card.shadowRoot.querySelector('card-mod');
+    assert.ok(after, 'card-mod node was dropped by the rebuild');
+    assert.strictEqual(after, cm, 'must be the same instance (card-mod keeps state on it)');
+    assert.ok(after.querySelector('style'), 'its <style> child must be preserved');
+    // and the card content was rebuilt normally
+    assert.ok(card.shadowRoot.querySelector('.task[data-task-id="T1"]'));
+  });
+});

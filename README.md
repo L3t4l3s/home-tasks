@@ -283,7 +283,18 @@ The old flat format (`list_id` at root level) is still supported and migrated au
 
 ### Styling
 
-The card renders inside its own shadow DOM, which `card-mod` cannot currently reach. Instead, the task title exposes CSS custom properties that you can set in a [Home Assistant theme](https://www.home-assistant.io/integrations/frontend/#defining-themes) (fallbacks equal the defaults):
+**card-mod** works on this card — a plain `style:` string is applied inside the card's shadow DOM, so you can target its classes directly:
+
+```yaml
+type: custom:home-tasks-card
+columns:
+  - list_id: ...
+card_mod:
+  style: |
+    .task-title { font-size: 16px !important; }
+```
+
+For a theme-wide setting, the task title also exposes CSS custom properties that you can set in a [Home Assistant theme](https://www.home-assistant.io/integrations/frontend/#defining-themes) — or per card via card-mod with `:host { --ht-task-title-font-size: 16px; }` (fallbacks equal the defaults):
 
 | Variable | Default |
 |----------|---------|
