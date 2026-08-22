@@ -908,12 +908,12 @@ describe('person chips toggle', () => {
 
 
 // ---------------------------------------------------------------------------
-// confirm_complete (issue #29) — opt-in prompt before completing
+// confirm_complete (issue #29) — opt-in in-card confirmation before completing
 // ---------------------------------------------------------------------------
 
 
 describe('confirm_complete column option', () => {
-  async function setup(colExtra, confirmResult) {
+  async function setup(colExtra) {
     const { HomeTasksCard } = await loadCard({ force: true });
     const hass = makeRecordingHass({
       'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'Test List' }] },
@@ -925,45 +925,73 @@ describe('confirm_complete column option', () => {
     card.setConfig({ columns: [{ list_id: 'L1', ...colExtra }] });
     card.hass = hass;
     await flush(card);
-    // Stub the realm's window.confirm
-    const win = card.ownerDocument.defaultView;
-    const confirms = [];
-    win.confirm = (msg) => { confirms.push(msg); return confirmResult; };
-    return { card, hass, confirms };
+    return { card, hass };
   }
+  const dialogOf = (card) => card.shadowRoot.querySelector('dialog.ht-confirm');
 
-  test('default (off): completing never prompts', async () => {
-    const { card, hass, confirms } = await setup({}, false);
+  test('default (off): completing never shows the dialog', async () => {
+    const { card, hass } = await setup({});
     await card._toggleTask('T1', false, 0);
     await flush(card);
-    assert.equal(confirms.length, 0);
+    assert.equal(dialogOf(card), null);
     assert.ok(hass.calls.some(c => c.type === 'home_tasks/update_task' && c.completed === true));
   });
 
-  test('enabled + cancel: no update is sent and the task stays open', async () => {
-    const { card, hass, confirms } = await setup({ confirm_complete: true }, false);
-    await card._toggleTask('T1', false, 0);
+  test('enabled: shows an in-card dialog (not window.confirm) with the task title', async () => {
+    const { card } = await setup({ confirm_complete: true });
+    const win = card.ownerDocument.defaultView;
+    let nativeCalls = 0;
+    win.confirm = () => { nativeCalls++; return true; };
+    const pending = card._toggleTask('T1', false, 0);
     await flush(card);
-    assert.equal(confirms.length, 1);
-    assert.match(confirms[0], /Careful/);
+    const dlg = dialogOf(card);
+    assert.ok(dlg, 'in-card dialog must be rendered into the shadow root');
+    assert.equal(nativeCalls, 0, 'must not use the native browser confirm');
+    assert.match(dlg.querySelector('.ht-confirm-msg').textContent, /Careful/);
+    assert.ok(dlg.querySelector('.ht-confirm-btn.primary'));
+    dlg.querySelector('.ht-confirm-btn:not(.primary)').click();  // cancel → settle
+    await pending;
+  });
+
+  test('enabled + cancel: no update is sent, dialog removed, task stays open', async () => {
+    const { card, hass } = await setup({ confirm_complete: true });
+    const pending = card._toggleTask('T1', false, 0);
+    await flush(card);
+    dialogOf(card).querySelector('.ht-confirm-btn:not(.primary)').click();
+    await pending;
+    await flush(card);
+    assert.equal(dialogOf(card), null, 'dialog must be removed after cancel');
     assert.ok(!hass.calls.some(c => c.type === 'home_tasks/update_task'));
     const cb = card.shadowRoot.querySelector('.task[data-task-id="T1"] input[type=checkbox]');
     assert.ok(cb && cb.checked === false, 'checkbox must be restored to unchecked');
   });
 
   test('enabled + confirm: completes as usual', async () => {
-    const { card, hass, confirms } = await setup({ confirm_complete: true }, true);
-    await card._toggleTask('T1', false, 0);
+    const { card, hass } = await setup({ confirm_complete: true });
+    const pending = card._toggleTask('T1', false, 0);
     await flush(card);
-    assert.equal(confirms.length, 1);
+    dialogOf(card).querySelector('.ht-confirm-btn.primary').click();
+    await pending;
+    await flush(card);
+    assert.equal(dialogOf(card), null);
     assert.ok(hass.calls.some(c => c.type === 'home_tasks/update_task' && c.completed === true));
   });
 
+  test('enabled: Escape (dialog cancel event) counts as cancel', async () => {
+    const { card, hass } = await setup({ confirm_complete: true });
+    const pending = card._toggleTask('T1', false, 0);
+    await flush(card);
+    const dlg = dialogOf(card);
+    dlg.dispatchEvent(new card.ownerDocument.defaultView.Event('cancel', { cancelable: true }));
+    await pending;
+    assert.ok(!hass.calls.some(c => c.type === 'home_tasks/update_task'));
+  });
+
   test('enabled: reopening (uncomplete) never prompts', async () => {
-    const { card, hass, confirms } = await setup({ confirm_complete: true }, false);
+    const { card } = await setup({ confirm_complete: true });
     await card._toggleTask('T1', true, 0);  // currently completed → reopen
     await flush(card);
-    assert.equal(confirms.length, 0);
+    assert.equal(dialogOf(card), null);
   });
 });
 
