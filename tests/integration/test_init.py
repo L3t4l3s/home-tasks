@@ -190,7 +190,10 @@ async def test_due_date_event_fires(hass: HomeAssistant, mock_config_entry, stor
     from freezegun import freeze_time
     from custom_components.home_tasks import _async_check_due_dates
 
-    with freeze_time("2026-04-03"):
+    # 20:00 UTC = 13:00 in the fixture's US/Pacific tz — same calendar date.
+    # The checker classifies by the HA-local date (not the process date), so
+    # freezing at UTC midnight would still be "yesterday" in Pacific.
+    with freeze_time("2026-04-03 20:00:00"):
         events = []
         hass.bus.async_listen(f"{DOMAIN}_task_due", lambda e: events.append(e))
 
@@ -230,7 +233,8 @@ async def test_due_event_not_fired_twice_same_day(
     from freezegun import freeze_time
     from custom_components.home_tasks import _async_check_due_dates
 
-    with freeze_time("2026-04-03"):
+    # 20:00 UTC = 13:00 Pacific — see test_due_date_event_fires.
+    with freeze_time("2026-04-03 20:00:00"):
         events = []
         hass.bus.async_listen(f"{DOMAIN}_task_due", lambda e: events.append(e))
 
@@ -491,6 +495,9 @@ class _FakeResources:
                 return item
         raise KeyError(item_id)
 
+    async def async_delete_item(self, item_id):
+        self._items = [i for i in self._items if i["id"] != item_id]
+
 
 async def test_lovelace_resource_created(hass: HomeAssistant) -> None:
     """A missing resource entry for the card is created (storage mode)."""
@@ -564,6 +571,56 @@ async def test_lovelace_resource_skips_yaml_mode_and_missing(hass: HomeAssistant
     yaml_resources = SimpleNamespace(loaded=True, async_items=lambda: [])
     hass.data["lovelace"] = SimpleNamespace(resources=yaml_resources)
     await _async_register_lovelace_resource(hass, f"{CARD_URL}?v=1")  # must not raise
+
+
+async def test_lovelace_resource_never_downgraded_to_unversioned(hass: HomeAssistant) -> None:
+    """A transient mtime failure (unversioned card_url) must not overwrite a
+    stored versioned resource URL — that would un-bust the cache."""
+    from types import SimpleNamespace
+    from custom_components.home_tasks import (
+        CARD_URL,
+        _async_register_lovelace_resource,
+    )
+
+    resources = _FakeResources(
+        items=[{"id": "r0", "res_type": "module", "url": f"{CARD_URL}?v=42"}]
+    )
+    hass.data["lovelace"] = SimpleNamespace(resources=resources)
+
+    await _async_register_lovelace_resource(hass, CARD_URL)  # unversioned
+    assert resources.async_items()[0]["url"] == f"{CARD_URL}?v=42"
+
+
+async def test_remove_last_entry_deletes_resource(
+    hass: HomeAssistant, mock_config_entry
+) -> None:
+    """Removing the last home_tasks entry deletes the auto-created resource;
+    with another entry remaining it is kept."""
+    from types import SimpleNamespace
+    from custom_components.home_tasks import (
+        CARD_URL,
+        async_remove_entry,
+    )
+
+    resources = _FakeResources(
+        items=[{"id": "r0", "res_type": "module", "url": f"{CARD_URL}?v=7"}]
+    )
+    hass.data["lovelace"] = SimpleNamespace(resources=resources)
+
+    # A second entry still exists -> resource must survive.
+    other = MockConfigEntry(domain=DOMAIN, data={"name": "Other"}, title="Other")
+    other.add_to_hass(hass)
+    await async_remove_entry(hass, mock_config_entry)
+    assert len(resources.async_items()) == 1
+
+    # Now `other` is conceptually the removed entry and mock_config_entry the
+    # only remaining one... remove both to hit the last-entry branch:
+    await hass.config_entries.async_remove(other.entry_id)
+    await hass.async_block_till_done()
+    await async_remove_entry(hass, mock_config_entry)
+    # mock_config_entry itself is excluded from "remaining" by entry_id,
+    # so with `other` gone this was the last entry -> resource deleted.
+    assert resources.async_items() == []
 
 
 # ---------------------------------------------------------------------------
@@ -1687,6 +1744,145 @@ async def test_recovery_does_not_resurrect_ended_recurrence(
 
         assert store.get_task(task["id"])["completed"] is True
         assert task["id"] not in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+
+
+# ---------------------------------------------------------------------------
+# Schedule edits while completed (code-review follow-up)
+#
+# reopen_at is armed at completion time; editing due/recurrence fields while
+# the task sits completed must rewrite it (and the timer), not leave recovery
+# aiming at the pre-edit configuration.
+# ---------------------------------------------------------------------------
+
+
+async def test_due_edit_while_completed_reaims_reopen(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Pushing due_date out while completed rewrites reopen_at + timer."""
+    from freezegun import freeze_time
+    from custom_components.home_tasks import DATA_RECURRENCE_TIMERS
+    from datetime import datetime as _dt, timezone as _tz
+
+    with freeze_time("2026-08-05 18:00:00+00:00"):
+        task = await store.async_add_task("Editable while completed")
+        await store.async_update_task(
+            task["id"],
+            due_date="2026-08-05",
+            recurrence_enabled=True,
+            recurrence_unit="days",
+            recurrence_value=1,
+        )
+        await store.async_update_task(task["id"], completed=True)
+        await hass.async_block_till_done()
+        # Completion armed the timer at the advanced due (2026-08-06).
+        assert store.get_task(task["id"])["due_date"] == "2026-08-06"
+
+        # User pushes the next occurrence out by two weeks while completed.
+        await store.async_update_task(task["id"], due_date="2026-08-20")
+        await hass.async_block_till_done()
+
+        stored = store.get_task(task["id"])
+        reopen_at = _dt.fromisoformat(stored["reopen_at"])
+        expected = _dt(2026, 8, 20, 0, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+        # Target is the edited due date itself — NOT due + another interval.
+        assert reopen_at == expected.astimezone(_tz.utc)
+        assert task["id"] in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+
+
+async def test_disable_recurrence_while_completed_clears_reopen(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Disabling recurrence while completed clears reopen_at and the timer;
+    the watchdog then leaves the task alone."""
+    from custom_components.home_tasks import (
+        _async_check_due_dates,
+        DATA_RECURRENCE_TIMERS,
+    )
+    from datetime import date as _date
+
+    task = await store.async_add_task("Disable while completed")
+    await store.async_update_task(
+        task["id"],
+        due_date=_date.today().isoformat(),
+        recurrence_enabled=True,
+        recurrence_unit="days",
+        recurrence_value=1,
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+    assert task["id"] in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+
+    await store.async_update_task(task["id"], recurrence_enabled=False)
+    await hass.async_block_till_done()
+
+    assert store.get_task(task["id"])["reopen_at"] is None
+    assert task["id"] not in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+
+    await _async_check_due_dates(hass)
+    await hass.async_block_till_done()
+    assert store.get_task(task["id"])["completed"] is True
+
+
+async def test_enable_recurrence_on_completed_oneoff_sets_target(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Enabling recurrence on an already-completed one-off arms a deliberate
+    target instead of leaving the watchdog to force-reopen it later."""
+    from freezegun import freeze_time
+    from custom_components.home_tasks import DATA_RECURRENCE_TIMERS
+    from datetime import datetime as _dt, timezone as _tz
+
+    with freeze_time("2026-08-05 18:00:00+00:00"):
+        task = await store.async_add_task("One-off gone recurring")
+        await store.async_update_task(task["id"], due_date="2026-08-10")
+        await store.async_update_task(task["id"], completed=True)
+        await hass.async_block_till_done()
+        assert store.get_task(task["id"])["reopen_at"] is None  # one-off
+
+        await store.async_update_task(
+            task["id"],
+            recurrence_enabled=True,
+            recurrence_unit="days",
+            recurrence_value=1,
+        )
+        await hass.async_block_till_done()
+
+        stored = store.get_task(task["id"])
+        reopen_at = _dt.fromisoformat(stored["reopen_at"])
+        expected = _dt(2026, 8, 10, 0, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+        assert reopen_at == expected.astimezone(_tz.utc)
+        assert task["id"] in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+        assert stored["completed"] is True  # not force-reopened
+
+
+async def test_recover_legacy_fallback_past_delay_reopens(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """The recompute fallback (no reopen_at key at all) must reopen
+    immediately when the recomputed moment already passed."""
+    from custom_components.home_tasks import (
+        _recover_recurrence_timers,
+        _cancel_recurrence,
+    )
+    from datetime import datetime as _dt, timezone as _tz
+
+    task = await store.async_add_task("Legacy, long overdue")
+    await store.async_update_task(
+        task["id"],
+        recurrence_enabled=True,
+        recurrence_unit="hours",
+        recurrence_value=1,
+    )
+    await store.async_update_task(task["id"], completed=True)
+    stored = store.get_task(task["id"])
+    stored["completed_at"] = (_dt.now(_tz.utc) - timedelta(days=7)).isoformat()
+    del stored["reopen_at"]  # pre-upgrade data: field never existed
+    await hass.async_block_till_done()
+    _cancel_recurrence(hass, task["id"])
+
+    _recover_recurrence_timers(hass, mock_config_entry.entry_id, store)
+    await hass.async_block_till_done()
+    assert store.get_task(task["id"])["completed"] is False
 
 
 # ---------------------------------------------------------------------------

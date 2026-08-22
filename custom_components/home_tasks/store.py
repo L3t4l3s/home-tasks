@@ -41,6 +41,19 @@ _MMDD_PATTERN = re.compile(r"^\d{2}-\d{2}$")
 _MAX_HISTORY = 50  # max history entries per task
 _HISTORY_FIELDS = ("title", "due_date", "due_time", "priority", "assigned_person", "tags", "notes", "recurrence_enabled")
 
+# Fields that determine WHEN a completed recurring task reopens.  Editing any
+# of them on a task that is (and stays) completed invalidates the persisted
+# reopen_at / armed timer — see on_task_schedule_changed.
+_SCHEDULE_FIELDS = (
+    "due_date", "due_time", "recurrence_enabled", "recurrence_unit",
+    "recurrence_value", "recurrence_type", "recurrence_weekdays",
+    "recurrence_time", "recurrence_start_date", "recurrence_end_date",
+    "recurrence_end_type", "recurrence_month_pattern",
+    "recurrence_day_of_month", "recurrence_nth_week",
+    "recurrence_anniversary", "recurrence_max_count",
+    "recurrence_remaining_count",
+)
+
 
 def _trim_history(hist: list) -> None:
     """Trim history in-place to _MAX_HISTORY entries."""
@@ -337,6 +350,10 @@ class HomeTasksStore:
         self.on_task_assigned: Callable[[dict, str | None], None] | None = None
         self.on_task_reopened: Callable[[dict], None] | None = None
         self.on_reminders_changed: Callable[[dict], None] | None = None
+        # Fired when due/recurrence fields of a task that is (and stays)
+        # completed are edited — the persisted reopen_at and any armed reopen
+        # timer describe the pre-edit configuration and must be recomputed.
+        self.on_task_schedule_changed: Callable[[dict], None] | None = None
 
     def async_add_listener(self, callback: Callable[[], None]) -> Callable[[], None]:
         """Add a listener for data changes. Returns a removal callable."""
@@ -504,6 +521,16 @@ class HomeTasksStore:
         snapshot = self._snapshot_task(task)
         self._apply_field_updates(task, kwargs)
         self._handle_completion_transition(task, snapshot, kwargs)
+        # Completed before AND after this update (transitions are handled by
+        # on_task_completed / on_task_reopened above): a due/recurrence edit
+        # invalidates the reopen schedule armed at completion time.
+        if (
+            snapshot["completed"]
+            and task.get("completed", False)
+            and any(k in kwargs for k in _SCHEDULE_FIELDS)
+            and self.on_task_schedule_changed
+        ):
+            self.on_task_schedule_changed(task)
         if any(k in kwargs for k in _HISTORY_FIELDS) or "completed" in kwargs:
             self._record_history(task, snapshot, kwargs, actor)
         self._fire_update_callbacks(task, snapshot)

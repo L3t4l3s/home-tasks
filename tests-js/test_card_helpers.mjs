@@ -299,6 +299,37 @@ describe('_formatDueDate', () => {
 });
 
 
+describe('_advanceDateClamped', () => {
+  // Regression: bare setMonth/setFullYear overflow month-end dates
+  // (Jan 31 + 1 month -> Mar 3), inflating the recurrence end-date minimum
+  // and silently clearing stored valid end dates.
+  test('clamps Jan 31 + 1 month to Feb 28', async () => {
+    const card = await makeCard();
+    const r = card._advanceDateClamped(new Date(2027, 0, 31), 'months', 1);
+    assert.equal(card._localDateStr(r), '2027-02-28');
+  });
+
+  test('clamps leap-day Feb 29 + 1 year to Feb 28', async () => {
+    const card = await makeCard();
+    const r = card._advanceDateClamped(new Date(2028, 1, 29), 'years', 1);
+    assert.equal(card._localDateStr(r), '2029-02-28');
+  });
+
+  test('keeps in-range days across month/year advance', async () => {
+    const card = await makeCard();
+    assert.equal(card._localDateStr(card._advanceDateClamped(new Date(2027, 5, 15), 'months', 2)), '2027-08-15');
+    assert.equal(card._localDateStr(card._advanceDateClamped(new Date(2027, 5, 15), 'years', 3)), '2030-06-15');
+  });
+
+  test('days and weeks advance plainly; hours leaves the date unchanged', async () => {
+    const card = await makeCard();
+    assert.equal(card._localDateStr(card._advanceDateClamped(new Date(2027, 5, 15), 'days', 20)), '2027-07-05');
+    assert.equal(card._localDateStr(card._advanceDateClamped(new Date(2027, 5, 15), 'weeks', 2)), '2027-06-29');
+    assert.equal(card._localDateStr(card._advanceDateClamped(new Date(2027, 5, 15), 'hours', 5)), '2027-06-15');
+  });
+});
+
+
 describe('_fmtTimestamp', () => {
   const TS = new Date(2026, 7, 22, 14, 5); // local 2026-08-22 14:05
 

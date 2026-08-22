@@ -31,6 +31,7 @@ PLATFORMS = ["todo", "sensor", "binary_sensor", "calendar"]
 EXTERNAL_PLATFORMS = ["calendar"]
 CARD_URL = "/home_tasks/home-tasks-card.js"
 DATA_SETUP_DONE = f"{DOMAIN}_setup_done"
+DATA_RESOURCE_UNSUB = f"{DOMAIN}_resource_unsub"
 DATA_RECURRENCE_TIMERS = f"{DOMAIN}_recurrence_timers"
 DATA_REMINDER_TIMERS = f"{DOMAIN}_reminder_timers"
 DATA_DUE_CHECK_UNSUB = f"{DOMAIN}_due_check_unsub"
@@ -133,9 +134,16 @@ async def _async_register_card(hass: HomeAssistant) -> None:
         hass.async_create_task(_async_register_lovelace_resource(hass, card_url))
     else:
         async def _on_started(_event) -> None:
+            hass.data.pop(DATA_RESOURCE_UNSUB, None)
+            # All entries removed before HA finished starting — don't
+            # (re)create a resource for an integration that is gone.
+            if not hass.config_entries.async_entries(DOMAIN):
+                return
             await _async_register_lovelace_resource(hass, card_url)
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _on_started)
+        hass.data[DATA_RESOURCE_UNSUB] = hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED, _on_started
+        )
 
 
 async def _async_register_lovelace_resource(hass: HomeAssistant, card_url: str) -> None:
@@ -161,6 +169,12 @@ async def _async_register_lovelace_resource(hass: HomeAssistant, card_url: str) 
         for item in resources.async_items():
             if (item.get("url") or "").split("?")[0] == CARD_URL:
                 if item["url"] != card_url:
+                    # Never downgrade a versioned URL to an unversioned one: an
+                    # unversioned card_url means the mtime lookup failed this
+                    # start (transient) — overwriting would un-bust the cache
+                    # for every client (the #24 stale-card class).
+                    if "?v=" in item["url"] and "?v=" not in card_url:
+                        return
                     await resources.async_update_item(
                         item["id"], {"url": card_url}
                     )
@@ -314,6 +328,44 @@ def _on_task_reopened(hass: HomeAssistant, entry_id: str, task: dict) -> None:
     _schedule_reminders(hass, entry_id, task)
 
 
+def _on_task_schedule_changed(hass: HomeAssistant, entry_id: str, task: dict) -> None:
+    """Due/recurrence fields of a task that is (and stays) completed were
+    edited: the reopen schedule armed at completion time describes the old
+    configuration.  Recompute the target from the current fields, rewrite the
+    persisted reopen_at, and re-arm (or drop) the timer.
+
+    Target semantics differ from completion time: the stored due_date already
+    IS the next occurrence (completion advanced it, or the user just set it),
+    so for date-based units the new target is due_date @ recurrence_time —
+    NOT due_date plus one more interval.  Hours stay elapsed-based from
+    completed_at; without a due_date the target is recomputed the same way
+    completion would have.  recurrence_start_date still applies.
+
+    (Reminders need no handling here — the store's on_reminders_changed
+    already fires on due_date/due_time edits.)
+    """
+    _cancel_recurrence(hass, task["id"])
+    if not task.get("recurrence_enabled"):
+        task["reopen_at"] = None
+        return
+
+    completed_at = _parse_completed_at(task)
+    if task.get("recurrence_unit") == "hours" or not task.get("due_date"):
+        target = _compute_next_reopen_target(task, completed_at)
+    else:
+        target = _due_date_reopen_target(task)
+        if target is not None:
+            target = _apply_start_date(task, target)
+    task["reopen_at"] = (
+        target.astimezone(timezone.utc).isoformat() if target is not None else None
+    )
+    if target is None:
+        return
+    _schedule_recurrence(
+        hass, entry_id, task, completed_at=completed_at, precomputed_target=target
+    )
+
+
 def _fire_assignment_event(
     hass: HomeAssistant, entry_id: str, task: dict, previous_person: str | None
 ) -> None:
@@ -361,7 +413,10 @@ def _schedule_startup_due_check(hass: HomeAssistant) -> None:
 
 async def _async_check_due_dates(hass: HomeAssistant, _now=None) -> None:
     """Check all tasks for due/overdue and fire events once per day per task."""
-    today = date.today().isoformat()
+    # HA-configured local date, NOT date.today(): HA never sets the process
+    # timezone, so in container installs date.today() can disagree with the
+    # profile timezone for hours each day and fire due/overdue on the wrong day.
+    today = dt_util.now().date().isoformat()
     fired = hass.data.setdefault(DATA_DUE_FIRED, {})
     stores = hass.data.get(DOMAIN, {})
     store_count = sum(1 for s in stores.values() if isinstance(s, HomeTasksStore))
@@ -377,6 +432,15 @@ async def _async_check_due_dates(hass: HomeAssistant, _now=None) -> None:
     # Also check external entities for due dates
     _check_external_due_dates(hass, today, fired)
 
+    # External self-heal: the startup recovery for external lists is a single
+    # shot 120s after boot and gives up silently when the third-party todo
+    # entity isn't loaded yet.  Re-running it hourly (it skips tasks that
+    # already own a live timer) closes that race — parity with the native
+    # watchdog above.
+    for entry_id, store in stores.items():
+        if isinstance(store, ExternalTaskOverlayStore):
+            _recover_external_recurrence_timers(hass, entry_id, store.entity_id)
+
 
 def _watchdog_recurring_reopen(hass: HomeAssistant, entry_id: str, task: dict) -> None:
     """Self-heal: a completed recurring task must never stay completed past
@@ -390,14 +454,15 @@ def _watchdog_recurring_reopen(hass: HomeAssistant, entry_id: str, task: dict) -
     """
     if not task.get("completed") or not task.get("recurrence_enabled"):
         return
+    # Cheap O(1) check first: a live timer owns this task — nothing to heal.
+    # (The common steady state; don't pay an ISO parse for it every hour.)
+    if task["id"] in hass.data.get(DATA_RECURRENCE_TIMERS, {}):
+        return
     if not task.get("completed_at"):
         return
     try:
         datetime.fromisoformat(task["completed_at"])
     except (ValueError, TypeError):
-        return
-    # A live timer owns this task — nothing to heal.
-    if task["id"] in hass.data.get(DATA_RECURRENCE_TIMERS, {}):
         return
     action = _rearm_or_reopen(hass, entry_id, task)
     if action:
@@ -1009,23 +1074,46 @@ def _recover_reminder_timers(hass: HomeAssistant, entry_id: str, store: HomeTask
         _schedule_reminders(hass, entry_id, task)
 
 
+def _due_date_reopen_target(task: dict) -> datetime | None:
+    """UTC datetime of the task's stored due_date at recurrence_time.
+
+    For date-based units, completion advances due_date to the next occurrence
+    and aims the reopen timer at exactly that day at recurrence_time (local
+    midnight when unset) — so "due_date @ recurrence_time" IS the reopen
+    moment encoded in the task itself.  Returns None when there is no
+    parseable due_date.
+    """
+    due_date_str = task.get("due_date")
+    if not due_date_str:
+        return None
+    try:
+        due_d = date.fromisoformat(due_date_str)
+    except (ValueError, TypeError):
+        return None
+    t_h, t_m = _parse_rec_time(task)
+    local_midnight = datetime(due_d.year, due_d.month, due_d.day, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+    return _set_local_time(local_midnight, t_h, t_m).astimezone(timezone.utc)
+
+
 def _recovery_reopen_target(task: dict, completed_at: datetime) -> datetime | None:
     """Reopen target for re-arming a completed recurring task's timer.
 
     The authoritative source is task["reopen_at"], persisted by
-    _on_task_completed at the moment the original timer was armed.  Feeding
-    the task back through _compute_next_reopen_target instead would anchor
-    on the already-advanced due_date and roll one interval further, leaving
-    the task completed a full extra interval after every restart
-    (#35, #36, #40).
+    _on_task_completed when the original timer was armed (and rewritten by
+    _on_task_schedule_changed when due/recurrence fields are edited while
+    the task sits completed).  Feeding the task back through
+    _compute_next_reopen_target instead would anchor on the already-advanced
+    due_date and roll one interval further, leaving the task completed a
+    full extra interval after every restart (#35, #36, #40).
 
-    A present-but-None reopen_at is meaningful (recurrence end reached —
-    nothing to re-arm) and returns None like any other fallthrough, which
-    makes the caller recompute; the recompute then hits the same end
-    condition and correctly does nothing.
+    Returns None when there is no usable persisted target; the caller then
+    falls back to recomputing from completed_at.  (The explicit
+    reopen_at=None case — nothing to re-arm — is short-circuited by
+    _rearm_or_reopen before this function is consulted; an unparseable
+    reopen_at string degrades to the recompute here.)
 
     Legacy tasks completed before reopen_at existed carry no key at all.
-    For those, the stored due_date at recurrence_time IS the original
+    For those, the stored due_date at recurrence_time is the original
     timer's target — provided it lies after completed_at (i.e. the due was
     actually advanced at completion) and the unit is date-based (for hours
     the due date carries no time-of-day information).
@@ -1045,17 +1133,8 @@ def _recovery_reopen_target(task: dict, completed_at: datetime) -> datetime | No
     # ---- Legacy inference (pre-reopen_at data) ----
     if task.get("recurrence_unit") == "hours":
         return None
-    due_date_str = task.get("due_date")
-    if not due_date_str:
-        return None
-    try:
-        due_d = date.fromisoformat(due_date_str)
-    except (ValueError, TypeError):
-        return None
-    t_h, t_m = _parse_rec_time(task)
-    local_midnight = datetime(due_d.year, due_d.month, due_d.day, tzinfo=dt_util.DEFAULT_TIME_ZONE)
-    target = _set_local_time(local_midnight, t_h, t_m).astimezone(timezone.utc)
-    if target <= completed_at:
+    target = _due_date_reopen_target(task)
+    if target is None or target <= completed_at:
         return None
     return target
 
@@ -1064,13 +1143,21 @@ def _rearm_or_reopen(hass: HomeAssistant, entry_id: str, task: dict) -> str | No
     """Re-arm the reopen timer for a completed recurring task, or reopen it
     immediately if its reopen moment has already passed.
 
-    Shared by startup recovery and the hourly watchdog.  Prefers the stored
-    due_date as the target (see _recovery_reopen_target); only falls back to
-    recomputing from completed_at when the stored due encodes no target.
+    Shared by startup recovery and the hourly watchdog.  Prefers the
+    persisted reopen_at; falls back to legacy due-date inference for
+    pre-upgrade data, then to recomputing from completed_at (hours unit,
+    no due_date).
 
     Returns "reopened", "scheduled", or None (nothing to do — e.g. the
     recurrence hit its end condition).
     """
+    if "reopen_at" in task and task["reopen_at"] is None:
+        # Explicitly no target: the recurrence hit its end condition at
+        # completion time (or the task completed as a one-off — enabling
+        # recurrence afterwards rewrites reopen_at via
+        # _on_task_schedule_changed).  Nothing to re-arm, and no point in
+        # recomputing this every hourly watchdog pass.
+        return None
     completed_at = _parse_completed_at(task)
     target = _recovery_reopen_target(task, completed_at)
     if target is not None:
@@ -1176,7 +1263,13 @@ async def _async_reopen_external_task(
 
 
 def _recover_external_recurrence_timers(hass: HomeAssistant, entry_id: str, entity_id: str) -> None:
-    """On startup, reschedule reopen timers for completed recurring external tasks."""
+    """Reschedule reopen timers for completed recurring external tasks.
+
+    Runs once 120s after startup AND hourly from the due checker (external
+    watchdog) — tasks that already own a live timer are skipped, so repeat
+    invocations only pick up what the startup shot missed (e.g. a provider
+    that loaded late).
+    """
     if _external_owns_recurrence(hass, entity_id):
         return
     store = hass.data.get(DOMAIN, {}).get(entry_id)
@@ -1189,9 +1282,12 @@ def _recover_external_recurrence_timers(hass: HomeAssistant, entry_id: str, enti
     except Exception as err:  # noqa: BLE001
         _LOGGER.debug("Could not recover external recurrence for %s: %s", entity_id, err)
         return
+    timers = hass.data.get(DATA_RECURRENCE_TIMERS, {})
     for task in merged:
         if not task.get("completed") or not task.get("recurrence_enabled"):
             continue
+        if task["id"] in timers:
+            continue  # live timer owns this task (hourly watchdog re-entry)
         if not task.get("completed_at"):
             continue
         try:
@@ -1427,6 +1523,7 @@ async def _async_setup_native_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
     store.on_task_assigned = lambda task, prev: _fire_assignment_event(hass, entry.entry_id, task, prev)
     store.on_task_reopened = lambda task: _on_task_reopened(hass, entry.entry_id, task)
     store.on_reminders_changed = lambda task: _schedule_reminders(hass, entry.entry_id, task)
+    store.on_task_schedule_changed = lambda task: _on_task_schedule_changed(hass, entry.entry_id, task)
 
     # Recover any pending timers from before restart
     _recover_recurrence_timers(hass, entry.entry_id, store)
@@ -1522,3 +1619,43 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id, None)
     return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """A config entry was permanently removed.
+
+    When it was the last home_tasks entry, delete the Lovelace resource this
+    integration auto-created — otherwise every dashboard render keeps trying
+    to import a module URL nothing serves after the next restart — and drop
+    the pending startup listener.  User-managed YAML resources and the
+    extra_js_url registration (page-serve-time only, not persisted) need no
+    cleanup.
+    """
+    remaining = [
+        e for e in hass.config_entries.async_entries(DOMAIN)
+        if e.entry_id != entry.entry_id
+    ]
+    if remaining:
+        return
+
+    unsub = hass.data.pop(DATA_RESOURCE_UNSUB, None)
+    if unsub:
+        unsub()
+
+    try:
+        lovelace = hass.data.get("lovelace")
+        resources = getattr(lovelace, "resources", None)
+        if resources is None and isinstance(lovelace, dict):
+            resources = lovelace.get("resources")
+        if resources is None or not hasattr(resources, "async_delete_item"):
+            return
+        if not resources.loaded:
+            await resources.async_load()
+            resources.loaded = True
+        for item in list(resources.async_items()):
+            if (item.get("url") or "").split("?")[0] == CARD_URL:
+                await resources.async_delete_item(item["id"])
+                _LOGGER.info("Removed Lovelace resource for Home Tasks card")
+                return
+    except Exception as err:  # noqa: BLE001 — cleanup must never block removal
+        _LOGGER.debug("Could not remove Lovelace resource: %s", err)

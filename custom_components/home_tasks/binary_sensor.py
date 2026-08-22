@@ -1,6 +1,6 @@
 """Binary sensor platform for Home Tasks integration."""
 
-from datetime import date
+
 import logging
 
 from homeassistant.components.binary_sensor import (
@@ -10,6 +10,8 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -45,7 +47,7 @@ class HomeTasksOverdueBinarySensor(BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return true if there are overdue tasks."""
-        today = date.today().isoformat()
+        today = dt_util.now().date().isoformat()
         return any(
             not t.get("completed") and t.get("due_date") and t["due_date"] < today
             for t in self._store.tasks
@@ -54,7 +56,7 @@ class HomeTasksOverdueBinarySensor(BinarySensorEntity):
     @property
     def extra_state_attributes(self) -> dict:
         """Return overdue task details."""
-        today = date.today().isoformat()
+        today = dt_util.now().date().isoformat()
         overdue = [
             t for t in self._store.tasks
             if not t.get("completed") and t.get("due_date") and t["due_date"] < today

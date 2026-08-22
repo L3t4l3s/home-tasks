@@ -1,12 +1,14 @@
 """Sensor platform for Home Tasks integration."""
 
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 import logging
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -49,7 +51,7 @@ class HomeTasksOpenTasksSensor(SensorEntity):
     @property
     def extra_state_attributes(self) -> dict:
         """Return additional attributes."""
-        today = date.today().isoformat()
+        today = dt_util.now().date().isoformat()
         open_tasks = [t for t in self._store.tasks if not t.get("completed")]
         overdue = [t for t in open_tasks if t.get("due_date") and t["due_date"] < today]
         return {

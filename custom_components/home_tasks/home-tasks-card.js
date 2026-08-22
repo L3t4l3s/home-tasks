@@ -1296,7 +1296,7 @@ class HomeTasksCard extends HTMLElement {
   }
 
   _t(key, ...args) {
-    let lang = (this._hass && this._hass.language) || "en";
+    let lang = this._localeCode();
     if (lang === "nb" || lang === "nn") lang = "no";
     const str = (_TRANSLATIONS[lang] || _TRANSLATIONS.en)[key] || _TRANSLATIONS.en[key] || key;
     return args.length ? str.replace(/\{(\d+)\}/g, (_, i) => args[i] ?? "") : str;
@@ -1317,7 +1317,7 @@ class HomeTasksCard extends HTMLElement {
   // Format an ordinal day-of-month in the user's language: "1." in
   // German/most European, "1st"/"2nd"/"3rd"/"4th" in English.
   _domOrdinal(d) {
-    const lang = (this._hass && this._hass.language) || "en";
+    const lang = this._localeCode();
     if (lang === "en" || lang.startsWith("en-") || lang === "en_US" || lang === "en_GB") {
       const mod100 = d % 100;
       if (mod100 >= 11 && mod100 <= 13) return `${d}th`;
@@ -2364,6 +2364,25 @@ class HomeTasksCard extends HTMLElement {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return due < today;
+  }
+
+  // Advance a Date by N days/weeks/months/years with month-end clamping:
+  // Jan 31 + 1 month must be Feb 28, not Mar 3 (bare setMonth overflows
+  // into the next month), and Feb 29 + 1 year must be Feb 28, not Mar 1.
+  // "hours" (or any unknown unit) returns the date unchanged.
+  _advanceDateClamped(from, unit, val) {
+    const next = new Date(from);
+    if (unit === "days") next.setDate(next.getDate() + val);
+    else if (unit === "weeks") next.setDate(next.getDate() + val * 7);
+    else if (unit === "months" || unit === "years") {
+      const day = next.getDate();
+      next.setDate(1); // avoid overflow while shifting month/year
+      if (unit === "months") next.setMonth(next.getMonth() + val);
+      else next.setFullYear(next.getFullYear() + val);
+      const lastDay = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+      next.setDate(Math.min(day, lastDay));
+    }
+    return next;
   }
 
   // Format a Date as its *local* YYYY-MM-DD calendar date. Never use
@@ -4567,7 +4586,7 @@ class HomeTasksCard extends HTMLElement {
     // happens to be a Monday, which lets us index dates 1..7 directly.
     const monthWeekdaySelect = this._el("select", {});
     const monthWeekdayInitial = (recurrenceWeekdays && recurrenceWeekdays.length) ? recurrenceWeekdays[0] : 0;
-    const _wdLang = this._hass?.language || "en";
+    const _wdLang = this._localeCode();
     for (let d = 0; d < 7; d++) {
       const fullName = new Date(2024, 0, d + 1).toLocaleString(_wdLang, { weekday: "long" });
       const opt = this._el("option", { value: String(d), textContent: fullName });
@@ -4651,7 +4670,7 @@ class HomeTasksCard extends HTMLElement {
     // MM as a localized dropdown — Januar, Februar, ... in the user's
     // language via Intl, so we don't need a translated month-name table.
     const annMonthSelect = this._el("select", {});
-    const _lang = this._hass?.language || "en";
+    const _lang = this._localeCode();
     for (let i = 1; i <= 12; i++) {
       const name = new Date(2024, i - 1, 1).toLocaleString(_lang, { month: "long" });
       annMonthSelect.appendChild(this._el("option", { value: String(i), textContent: name }));
@@ -4781,16 +4800,11 @@ class HomeTasksCard extends HTMLElement {
 
     // Compute the minimum allowed end date based on recurrence interval.
     const _computeMinEndDate = () => {
-      const today = new Date();
       const unit = recurrenceUnitSelect.value || "days";
       const val = parseInt(recurrenceValueInput.value) || 1;
-      const next = new Date(today);
-      // Hours: multiple occurrences fit in one day, so today is a valid end date.
-      if (unit === "days") next.setDate(next.getDate() + val);
-      else if (unit === "weeks") next.setDate(next.getDate() + val * 7);
-      else if (unit === "months") next.setMonth(next.getMonth() + val);
-      else if (unit === "years") next.setFullYear(next.getFullYear() + val);
-      return this._localDateStr(next);
+      // Hours: multiple occurrences fit in one day, so today is a valid end
+      // date (_advanceDateClamped leaves the date unchanged for "hours").
+      return this._localDateStr(this._advanceDateClamped(new Date(), unit, val));
     };
     const _updateEndDateMin = () => {
       const minEnd = _computeMinEndDate();
@@ -7317,7 +7331,8 @@ class HomeTasksCardEditor extends HTMLElement {
   }
 
   _t(key, ...args) {
-    let lang = (this._hass && this._hass.language) || "en";
+    // Same preference order as HomeTasksCard._localeCode (separate class).
+    let lang = this._hass?.locale?.language || this._hass?.language || "en";
     if (lang === "nb" || lang === "nn") lang = "no";
     const str = (_TRANSLATIONS[lang] || _TRANSLATIONS.en)[key] || _TRANSLATIONS.en[key] || key;
     return args.length ? str.replace(/\{(\d+)\}/g, (_, i) => args[i] ?? "") : str;

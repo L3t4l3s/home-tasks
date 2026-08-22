@@ -248,6 +248,25 @@ async def test_recover_schedules_future_reopen(hass: HomeAssistant, ext_entry) -
     assert "t1" in hass.data.get(DATA_RECURRENCE_TIMERS, {})
 
 
+async def test_recover_rerun_skips_live_timer(hass: HomeAssistant, ext_entry) -> None:
+    """Hourly watchdog re-entry: a task that already owns a live timer is
+    skipped, not rescheduled (the timer object must stay the same)."""
+    _register_todo_items(hass, [
+        TodoItem(uid="t1", summary="Recurring", status=TodoItemStatus.COMPLETED),
+    ])
+    await _overlay(hass, ext_entry).async_set_overlay(
+        "t1", recurrence_enabled=True, recurrence_unit="days", recurrence_value=1,
+        completed_at=datetime.now(timezone.utc).isoformat(),
+    )
+
+    _recover_external_recurrence_timers(hass, ext_entry.entry_id, ENTITY)
+    original = hass.data[DATA_RECURRENCE_TIMERS]["t1"]
+
+    # Second run (as the hourly due checker now does) must not re-arm.
+    _recover_external_recurrence_timers(hass, ext_entry.entry_id, ENTITY)
+    assert hass.data[DATA_RECURRENCE_TIMERS]["t1"] is original
+
+
 async def test_recover_skipped_when_provider_owns(hass: HomeAssistant, ext_entry) -> None:
     _set_adapter_owns_recurrence(hass, True)
     _register_todo_items(hass, [
