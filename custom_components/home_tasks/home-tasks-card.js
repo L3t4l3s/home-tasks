@@ -57,6 +57,8 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Sub-tasks",
     ed_show_person: "Assignees",
     ed_auto_delete: "Delete completed immediately",
+    ed_confirm_complete: "Confirm before completing",
+    confirm_complete_msg: "Mark \"{0}\" as completed?",
     ed_compact: "Compact",
     ed_show_tags: "Tags",
     ed_hint: "New lists can be created under Settings \u2192 Integrations \u2192 Home Tasks.",
@@ -187,6 +189,8 @@ const _TRANSLATIONS = {
     ed_show_due_date: "Deadlines", ed_show_notes: "Notities", ed_show_recurrence: "Herhalingen",
     ed_show_sub_items: "Subtaken", ed_show_person: "Personen",
     ed_auto_delete: "Voltooide meteen verwijderen", ed_compact: "Compact", ed_show_tags: "Tags",
+    ed_confirm_complete: "Bevestigen voor afronden",
+    confirm_complete_msg: "\u201e{0}\u201d als afgerond markeren?",
     ed_hint: "Nieuwe lijsten kunnen worden aangemaakt via Instellingen \u2192 Integraties \u2192 Home Tasks.",
     tags: "Tags", add_tag: "+ Tag toevoegen", tag_placeholder: "Nieuwe tag...", remove_tag: "Verwijderen", tag_suggestions_label: "Bestaande tags", tag_no_matches: "Geen overeenkomende tags",
     new_sub_item: "Nieuwe subtaak", remove_reminder: "Herinnering verwijderen",
@@ -258,6 +262,8 @@ const _TRANSLATIONS = {
     ed_show_due_date: "Scadenze", ed_show_notes: "Note", ed_show_recurrence: "Ricorrenze",
     ed_show_sub_items: "Sotto-attivit\u00e0", ed_show_person: "Persone",
     ed_auto_delete: "Elimina completate immediatamente", ed_compact: "Compatto", ed_show_tags: "Tag",
+    ed_confirm_complete: "Conferma prima di completare",
+    confirm_complete_msg: "Segnare \u201c{0}\u201d come completata?",
     ed_hint: "Nuove liste possono essere create in Impostazioni \u2192 Integrazioni \u2192 Home Tasks.",
     tags: "Tag", add_tag: "+ Aggiungi tag", tag_placeholder: "Nuovo tag...", remove_tag: "Rimuovi", tag_suggestions_label: "Tag esistenti", tag_no_matches: "Nessun tag corrispondente",
     new_sub_item: "Nuova sotto-attivit\u00e0", remove_reminder: "Rimuovi promemoria",
@@ -329,6 +335,8 @@ const _TRANSLATIONS = {
     ed_show_due_date: "Terminy", ed_show_notes: "Notatki", ed_show_recurrence: "Powtórzenia",
     ed_show_sub_items: "Podzadania", ed_show_person: "Osoby",
     ed_auto_delete: "Natychmiast usu\u0144 uko\u0144czone", ed_compact: "Kompaktowy", ed_show_tags: "Tagi",
+    ed_confirm_complete: "Potwierd\u017a przed uko\u0144czeniem",
+    confirm_complete_msg: "Oznaczy\u0107 \u201e{0}\u201d jako uko\u0144czone?",
     ed_hint: "Nowe listy mo\u017cna tworzy\u0107 w Ustawienia \u2192 Integracje \u2192 Home Tasks.",
     tags: "Tagi", add_tag: "+ Dodaj tag", tag_placeholder: "Nowy tag...", remove_tag: "Usu\u0144", tag_suggestions_label: "Istniej\u0105ce tagi", tag_no_matches: "Brak pasuj\u0105cych tag\u00f3w",
     new_sub_item: "Nowe podzadanie", remove_reminder: "Usu\u0144 przypomnienie",
@@ -400,6 +408,8 @@ const _TRANSLATIONS = {
     ed_show_due_date: "F\u00f6rfallodatum", ed_show_notes: "Anteckningar", ed_show_recurrence: "Upprepningar",
     ed_show_sub_items: "Deluppgifter", ed_show_person: "Personer",
     ed_auto_delete: "Ta bort slutf\u00f6rda omedelbart", ed_compact: "Kompakt", ed_show_tags: "Taggar",
+    ed_confirm_complete: "Bekr\u00e4fta innan slutf\u00f6rande",
+    confirm_complete_msg: "Markera \u201d{0}\u201d som slutf\u00f6rd?",
     ed_hint: "Nya listor kan skapas under Inst\u00e4llningar \u2192 Integrationer \u2192 Home Tasks.",
     tags: "Taggar", add_tag: "+ L\u00e4gg till tagg", tag_placeholder: "Ny tagg...", remove_tag: "Ta bort", tag_suggestions_label: "Befintliga taggar", tag_no_matches: "Inga matchande taggar",
     new_sub_item: "Ny deluppgift", remove_reminder: "Ta bort p\u00e5minnelse",
@@ -471,6 +481,8 @@ const _TRANSLATIONS = {
     ed_show_due_date: "\u00c9ch\u00e9ances", ed_show_notes: "Notes", ed_show_recurrence: "R\u00e9currences",
     ed_show_sub_items: "Sous-t\u00e2ches", ed_show_person: "Personnes",
     ed_auto_delete: "Supprimer les termin\u00e9es imm\u00e9diatement", ed_compact: "Compact", ed_show_tags: "\u00c9tiquettes",
+    ed_confirm_complete: "Confirmer avant de terminer",
+    confirm_complete_msg: "Marquer \u00ab\u202f{0}\u202f\u00bb comme termin\u00e9e\u202f?",
     ed_hint: "De nouvelles listes peuvent \u00eatre cr\u00e9\u00e9es dans Param\u00e8tres \u2192 Int\u00e9grations \u2192 Home Tasks.",
     tags: "\u00c9tiquettes", add_tag: "+ Ajouter une \u00e9tiquette", tag_placeholder: "Nouvelle \u00e9tiquette...", remove_tag: "Supprimer", tag_suggestions_label: "\u00c9tiquettes existantes", tag_no_matches: "Aucune \u00e9tiquette correspondante",
     new_sub_item: "Nouvelle sous-t\u00e2che", remove_reminder: "Supprimer le rappel",
@@ -542,6 +554,8 @@ const _TRANSLATIONS = {
     ed_show_due_date: "Prazos", ed_show_notes: "Notas", ed_show_recurrence: "Recorr\u00eancias",
     ed_show_sub_items: "Subtarefas", ed_show_person: "Pessoas",
     ed_auto_delete: "Excluir conclu\u00eddas imediatamente", ed_compact: "Compacto", ed_show_tags: "Etiquetas",
+    ed_confirm_complete: "Confirmar antes de concluir",
+    confirm_complete_msg: "Marcar \u201c{0}\u201d como conclu\u00edda?",
     ed_hint: "Novas listas podem ser criadas em Configura\u00e7\u00f5es \u2192 Integra\u00e7\u00f5es \u2192 Home Tasks.",
     tags: "Etiquetas", add_tag: "+ Adicionar etiqueta", tag_placeholder: "Nova etiqueta...", remove_tag: "Remover", tag_suggestions_label: "Etiquetas existentes", tag_no_matches: "Nenhuma etiqueta correspondente",
     new_sub_item: "Nova subtarefa", remove_reminder: "Remover lembrete",
@@ -613,6 +627,8 @@ const _TRANSLATIONS = {
     ed_show_due_date: "Vencimientos", ed_show_notes: "Notas", ed_show_recurrence: "Recurrencias",
     ed_show_sub_items: "Subtareas", ed_show_person: "Personas",
     ed_auto_delete: "Eliminar completadas inmediatamente", ed_compact: "Compacto", ed_show_tags: "Etiquetas",
+    ed_confirm_complete: "Confirmar antes de completar",
+    confirm_complete_msg: "\u00bfMarcar \u00ab{0}\u00bb como completada?",
     ed_hint: "Se pueden crear nuevas listas en Configuraci\u00f3n \u2192 Integraciones \u2192 Home Tasks.",
     tags: "Etiquetas", add_tag: "+ A\u00f1adir etiqueta", tag_placeholder: "Nueva etiqueta...", remove_tag: "Eliminar", tag_suggestions_label: "Etiquetas existentes", tag_no_matches: "No hay etiquetas coincidentes",
     new_sub_item: "Nueva subtarea", remove_reminder: "Eliminar recordatorio",
@@ -684,6 +700,8 @@ const _TRANSLATIONS = {
     ed_show_due_date: "\u0421\u0440\u043e\u043a\u0438", ed_show_notes: "\u0417\u0430\u043c\u0435\u0442\u043a\u0438", ed_show_recurrence: "\u041f\u043e\u0432\u0442\u043e\u0440\u0435\u043d\u0438\u044f",
     ed_show_sub_items: "\u041f\u043e\u0434\u0437\u0430\u0434\u0430\u0447\u0438", ed_show_person: "\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u0438",
     ed_auto_delete: "\u0421\u0440\u0430\u0437\u0443 \u0443\u0434\u0430\u043b\u044f\u0442\u044c \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043d\u044b\u0435", ed_compact: "\u041a\u043e\u043c\u043f\u0430\u043a\u0442\u043d\u044b\u0439", ed_show_tags: "\u0422\u0435\u0433\u0438",
+    ed_confirm_complete: "\u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0430\u0442\u044c \u043f\u0435\u0440\u0435\u0434 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u0438\u0435\u043c",
+    confirm_complete_msg: "\u041e\u0442\u043c\u0435\u0442\u0438\u0442\u044c \u00ab{0}\u00bb \u043a\u0430\u043a \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043d\u0443\u044e?",
     ed_hint: "\u041d\u043e\u0432\u044b\u0435 \u0441\u043f\u0438\u0441\u043a\u0438 \u043c\u043e\u0436\u043d\u043e \u0441\u043e\u0437\u0434\u0430\u0442\u044c \u0432 \u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 \u2192 \u0418\u043d\u0442\u0435\u0433\u0440\u0430\u0446\u0438\u0438 \u2192 Home Tasks.",
     tags: "\u0422\u0435\u0433\u0438", add_tag: "+ \u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0442\u0435\u0433", tag_placeholder: "\u041d\u043e\u0432\u044b\u0439 \u0442\u0435\u0433...", remove_tag: "\u0423\u0434\u0430\u043b\u0438\u0442\u044c", tag_suggestions_label: "\u0421\u0443\u0449\u0435\u0441\u0442\u0432\u0443\u044e\u0449\u0438\u0435 \u0442\u0435\u0433\u0438", tag_no_matches: "\u041d\u0435\u0442 \u0441\u043e\u0432\u043f\u0430\u0434\u0430\u044e\u0449\u0438\u0445 \u0442\u0435\u0433\u043e\u0432",
     new_sub_item: "\u041d\u043e\u0432\u0430\u044f \u043f\u043e\u0434\u0437\u0430\u0434\u0430\u0447\u0430", remove_reminder: "\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u043d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u0435",
@@ -755,6 +773,8 @@ const _TRANSLATIONS = {
     ed_show_due_date: "Term\u00edny", ed_show_notes: "Pozn\u00e1mky", ed_show_recurrence: "Opakov\u00e1n\u00ed",
     ed_show_sub_items: "Pod\u00fakoly", ed_show_person: "Osoby",
     ed_auto_delete: "Okam\u017eit\u011b smazat dokon\u010den\u00e9", ed_compact: "Kompaktn\u00ed", ed_show_tags: "\u0160t\u00edtky",
+    ed_confirm_complete: "Potvrdit p\u0159ed dokon\u010den\u00edm",
+    confirm_complete_msg: "Ozna\u010dit \u201e{0}\u201c jako dokon\u010den\u00e9?",
     ed_hint: "Nov\u00e9 seznamy lze vytvo\u0159it v Nastaven\u00ed \u2192 Integrace \u2192 Home Tasks.",
     tags: "\u0160t\u00edtky", add_tag: "+ P\u0159idat \u0161t\u00edtek", tag_placeholder: "Nov\u00fd \u0161t\u00edtek...", remove_tag: "Odebrat", tag_suggestions_label: "Existuj\u00edc\u00ed \u0161t\u00edtky", tag_no_matches: "\u017d\u00e1dn\u00e9 odpov\u00eddaj\u00edc\u00ed \u0161t\u00edtky",
     new_sub_item: "Nov\u00fd pod\u00fakol", remove_reminder: "Odebrat p\u0159ipom\u00ednku",
@@ -826,6 +846,8 @@ const _TRANSLATIONS = {
     ed_show_due_date: "Forfaldsdatoer", ed_show_notes: "Noter", ed_show_recurrence: "Gentagelser",
     ed_show_sub_items: "Delopgaver", ed_show_person: "Personer",
     ed_auto_delete: "Slet f\u00e6rdige \u00f8jeblikkeligt", ed_compact: "Kompakt", ed_show_tags: "Tags",
+    ed_confirm_complete: "Bekr\u00e6ft f\u00f8r fuldf\u00f8relse",
+    confirm_complete_msg: "Mark\u00e9r \u201d{0}\u201d som fuldf\u00f8rt?",
     ed_hint: "Nye lister kan oprettes under Indstillinger \u2192 Integrationer \u2192 Home Tasks.",
     tags: "Tags", add_tag: "+ Tilf\u00f8j tag", tag_placeholder: "Nyt tag...", remove_tag: "Fjern", tag_suggestions_label: "Eksisterende tags", tag_no_matches: "Ingen matchende tags",
     new_sub_item: "Ny delopgave", remove_reminder: "Fjern p\u00e5mindelse",
@@ -897,6 +919,8 @@ const _TRANSLATIONS = {
     ed_show_due_date: "Frister", ed_show_notes: "Notater", ed_show_recurrence: "Gjentakelser",
     ed_show_sub_items: "Deloppgaver", ed_show_person: "Personer",
     ed_auto_delete: "Slett ferdige umiddelbart", ed_compact: "Kompakt", ed_show_tags: "Tagger",
+    ed_confirm_complete: "Bekreft f\u00f8r fullf\u00f8ring",
+    confirm_complete_msg: "Merke \u00ab{0}\u00bb som fullf\u00f8rt?",
     ed_hint: "Nye lister kan opprettes under Innstillinger \u2192 Integrasjoner \u2192 Home Tasks.",
     tags: "Tagger", add_tag: "+ Legg til tagg", tag_placeholder: "Ny tagg...", remove_tag: "Fjern", tag_suggestions_label: "Eksisterende tagger", tag_no_matches: "Ingen samsvarende tagger",
     new_sub_item: "Ny deloppgave", remove_reminder: "Fjern p\u00e5minnelse",
@@ -968,6 +992,8 @@ const _TRANSLATIONS = {
     ed_show_due_date: "Er\u00e4p\u00e4iv\u00e4t", ed_show_notes: "Muistiinpanot", ed_show_recurrence: "Toistot",
     ed_show_sub_items: "Aliteht\u00e4v\u00e4t", ed_show_person: "Henkil\u00f6t",
     ed_auto_delete: "Poista valmiit v\u00e4litt\u00f6m\u00e4sti", ed_compact: "Kompakti", ed_show_tags: "Tunnisteet",
+    ed_confirm_complete: "Vahvista ennen valmiiksi merkitsemist\u00e4",
+    confirm_complete_msg: "Merkit\u00e4\u00e4nk\u00f6 \u201d{0}\u201d valmiiksi?",
     ed_hint: "Uusia listoja voi luoda kohdassa Asetukset \u2192 Integraatiot \u2192 Home Tasks.",
     tags: "Tunnisteet", add_tag: "+ Lis\u00e4\u00e4 tunniste", tag_placeholder: "Uusi tunniste...", remove_tag: "Poista", tag_suggestions_label: "Olemassa olevat tunnisteet", tag_no_matches: "Ei vastaavia tunnisteita",
     new_sub_item: "Uusi aliteht\u00e4v\u00e4", remove_reminder: "Poista muistutus",
@@ -1039,6 +1065,8 @@ const _TRANSLATIONS = {
     ed_show_due_date: "Hat\u00e1rid\u0151k", ed_show_notes: "Megjegyz\u00e9sek", ed_show_recurrence: "Ism\u00e9tl\u00e9sek",
     ed_show_sub_items: "Alfeladatok", ed_show_person: "Szem\u00e9lyek",
     ed_auto_delete: "K\u00e9sz feladatok azonnali t\u00f6rl\u00e9se", ed_compact: "Kompakt", ed_show_tags: "C\u00edmk\u00e9k",
+    ed_confirm_complete: "Meger\u0151s\u00edt\u00e9s befejez\u00e9s el\u0151tt",
+    confirm_complete_msg: "Megjel\u00f6l\u00f6d \u201e{0}\u201d-t k\u00e9szk\u00e9nt?",
     ed_hint: "\u00daj list\u00e1k a Be\u00e1ll\u00edt\u00e1sok \u2192 Integr\u00e1ci\u00f3k \u2192 Home Tasks alatt hozhat\u00f3k l\u00e9tre.",
     tags: "C\u00edmk\u00e9k", add_tag: "+ C\u00edmke hozz\u00e1ad\u00e1sa", tag_placeholder: "\u00daj c\u00edmke...", remove_tag: "Elt\u00e1vol\u00edt\u00e1s", tag_suggestions_label: "L\u00e9tez\u0151 c\u00edmk\u00e9k", tag_no_matches: "Nincs egyez\u0151 c\u00edmke",
     new_sub_item: "\u00daj alfeladat", remove_reminder: "Eml\u00e9keztet\u0151 elt\u00e1vol\u00edt\u00e1sa",
@@ -1131,6 +1159,8 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Unteraufgaben",
     ed_show_person: "Personen",
     ed_auto_delete: "Erledigte sofort l\u00f6schen",
+    ed_confirm_complete: "Vor dem Erledigen nachfragen",
+    confirm_complete_msg: "„{0}“ als erledigt markieren?",
     ed_compact: "Kompakt",
     ed_show_tags: "Tags",
     ed_hint: "Neue Listen k\u00f6nnen unter Einstellungen \u2192 Integrationen \u2192 Home Tasks erstellt werden.",
@@ -1735,6 +1765,17 @@ class HomeTasksCard extends HTMLElement {
     const task = cs.tasks.find(t => t.id === taskId);
     const hasRecurrence = task && task.recurrence_enabled && task.recurrence_unit;
 
+    // Opt-in guard against accidental taps (issue #29). Default off; the
+    // checkbox/swipe/long-press paths all funnel through here, so one
+    // prompt covers them all. On cancel, re-render to restore the checkbox
+    // the click already flipped.
+    if (newCompleted && col.confirm_complete === true) {
+      const ok = window.confirm(this._t("confirm_complete_msg", task ? task.title : ""));
+      if (!ok) {
+        this._render();
+        return;
+      }
+    }
 
     // auto_delete path → route through _deleteTask to reuse exit animation
     if (newCompleted && col.auto_delete_completed && !hasRecurrence) {
@@ -8056,6 +8097,7 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-progress", "ed_show_progress", "show_progress", true),
           makeToggle("show-add-task", "ed_show_add_task", "show_add_task", true),
           makeToggle("auto-delete", "ed_auto_delete", "auto_delete_completed", false),
+          makeToggle("confirm-complete", "ed_confirm_complete", "confirm_complete", false),
           makeToggle("show-sort", "ed_show_sort", "show_sort", true),
           makeToggle("show-filters", "ed_show_filters", "show_filters", true),
           makeToggle("show-tag-chips", "ed_show_tag_chips", "show_tag_chips", true),

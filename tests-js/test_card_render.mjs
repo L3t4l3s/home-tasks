@@ -906,3 +906,63 @@ describe('person chips toggle', () => {
   });
 });
 
+
+// ---------------------------------------------------------------------------
+// confirm_complete (issue #29) — opt-in prompt before completing
+// ---------------------------------------------------------------------------
+
+
+describe('confirm_complete column option', () => {
+  async function setup(colExtra, confirmResult) {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'Test List' }] },
+      'home_tasks/get_tasks': {
+        tasks: [{ id: 'T1', title: 'Careful', sort_order: 0, sub_items: [], completed: false }],
+      },
+    });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{ list_id: 'L1', ...colExtra }] });
+    card.hass = hass;
+    await flush(card);
+    // Stub the realm's window.confirm
+    const win = card.ownerDocument.defaultView;
+    const confirms = [];
+    win.confirm = (msg) => { confirms.push(msg); return confirmResult; };
+    return { card, hass, confirms };
+  }
+
+  test('default (off): completing never prompts', async () => {
+    const { card, hass, confirms } = await setup({}, false);
+    await card._toggleTask('T1', false, 0);
+    await flush(card);
+    assert.equal(confirms.length, 0);
+    assert.ok(hass.calls.some(c => c.type === 'home_tasks/update_task' && c.completed === true));
+  });
+
+  test('enabled + cancel: no update is sent and the task stays open', async () => {
+    const { card, hass, confirms } = await setup({ confirm_complete: true }, false);
+    await card._toggleTask('T1', false, 0);
+    await flush(card);
+    assert.equal(confirms.length, 1);
+    assert.match(confirms[0], /Careful/);
+    assert.ok(!hass.calls.some(c => c.type === 'home_tasks/update_task'));
+    const cb = card.shadowRoot.querySelector('.task[data-task-id="T1"] input[type=checkbox]');
+    assert.ok(cb && cb.checked === false, 'checkbox must be restored to unchecked');
+  });
+
+  test('enabled + confirm: completes as usual', async () => {
+    const { card, hass, confirms } = await setup({ confirm_complete: true }, true);
+    await card._toggleTask('T1', false, 0);
+    await flush(card);
+    assert.equal(confirms.length, 1);
+    assert.ok(hass.calls.some(c => c.type === 'home_tasks/update_task' && c.completed === true));
+  });
+
+  test('enabled: reopening (uncomplete) never prompts', async () => {
+    const { card, hass, confirms } = await setup({ confirm_complete: true }, false);
+    await card._toggleTask('T1', true, 0);  // currently completed → reopen
+    await flush(card);
+    assert.equal(confirms.length, 0);
+  });
+});

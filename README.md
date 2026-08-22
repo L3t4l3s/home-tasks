@@ -240,6 +240,7 @@ Each entry in `columns` accepts the following options.
 | `default_sort` | `manual` | Initial sort: `manual`, `due`, `priority`, `title`, or `person` |
 | `compact` | `false` | Compact mode for denser task rows |
 | `auto_delete_completed` | `false` | Automatically delete completed tasks |
+| `confirm_complete` | `false` | Ask for confirmation before marking a task as completed (guards against accidental taps on touch devices) |
 | **Header / chrome** | | |
 | `show_title` | `true` | Show/hide the column title |
 | `show_progress` | `true` | Show/hide the task progress counter |
