@@ -1304,17 +1304,12 @@ describe('show_add_due column option', () => {
     assert.equal(card.shadowRoot.querySelector('.add-task-group'), null);
   });
 
-  test('on: date + time row is always visible under the add input; x clears values', async () => {
+  test('on: date + time row is always visible under the add input (no toggle, no extra buttons)', async () => {
     const { card } = await setup({ list_id: 'L1', show_add_due: true });
     const r = row(card);
     assert.ok(r, 'due row must render without any toggle');
     assert.ok(r.querySelector('input[type=date]') && r.querySelector('input[type=time]'));
-    const cs = card._columns[0];
-    cs.newTaskDue = '2027-01-01'; cs.newTaskDueTime = '07:00';
-    r.querySelector('.add-due-clear').click();
-    assert.equal(cs.newTaskDue, '');
-    assert.equal(cs.newTaskDueTime, '');
-    assert.ok(row(card), 'row stays visible after clearing');
+    assert.equal(r.querySelectorAll('button').length, 0, 'native inputs bring their own clearing');
   });
 
   test('native add sends due_date + due_time in ONE add_task call and resets the values', async () => {

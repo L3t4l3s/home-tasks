@@ -3245,15 +3245,7 @@ class HomeTasksCard extends HTMLElement {
       });
       timeInput.addEventListener("change", () => { cs.newTaskDueTime = timeInput.value || ""; });
       timeInput.addEventListener("keydown", (e) => { if (e.key === "Enter") this._addTask(colIdx); });
-      const clearBtn = this._el("button", {
-        className: "add-due-clear", textContent: "\u00D7", type: "button",
-        title: this._t("dialog_cancel"),
-      });
-      clearBtn.addEventListener("click", () => {
-        cs.newTaskDue = ""; cs.newTaskDueTime = "";
-        dateInput.value = ""; timeInput.value = "";
-      });
-      dueRow = this._el("div", { className: "add-due-row" }, [dateInput, timeInput, clearBtn]);
+      dueRow = this._el("div", { className: "add-due-row" }, [dateInput, timeInput]);
     }
     children.push(addBtn);
     const row = this._el("div", { className: "add-task" }, children);
@@ -6785,11 +6777,6 @@ class HomeTasksCard extends HTMLElement {
         background: transparent; color: var(--todo-text); color-scheme: light dark;
       }
       .add-due-row input:focus { outline: none; border-color: var(--todo-primary); }
-      .add-due-clear {
-        flex-shrink: 0; width: 32px; height: 32px; padding: 0; border: none; border-radius: 50%;
-        background: transparent; color: var(--todo-secondary-text); font-size: 18px; line-height: 1; cursor: pointer;
-      }
-      .add-due-clear:hover { color: var(--error-color, #f44336); background: rgba(244, 67, 54, 0.15); }
       .compact .add-task-group { margin-bottom: 10px; }
       .compact .add-due-row input { padding: 5px 8px; font-size: 12px; }
       .mic-btn svg { width: 18px; height: 18px; fill: currentColor; }
