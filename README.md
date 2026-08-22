@@ -246,7 +246,7 @@ Each entry in `columns` accepts the following options.
 | `show_title` | `true` | Show/hide the column title |
 | `show_progress` | `true` | Show/hide the task progress counter |
 | `show_add_task` | `true` | Show/hide the "add task" input row (set `false` for a read-only display) |
-| `show_add_due` | `false` | Calendar toggle next to the add-task input that reveals a due date (+ time) row, so a due date can be set while creating the task. Hidden for external lists whose provider can't store due dates |
+| `show_add_due` | `false` | Show a due date (+ time) row under the add-task input so a due date can be set while creating the task; leave it empty to create without one. Hidden for external lists whose provider can't store due dates |
 | `show_voice` | `true` | Show/hide the voice-input mic button on the add-task row |
 | `show_sort` | `true` | Show/hide the sort button |
 | `show_filters` | `true` | Show/hide the All / Open / Done filter buttons |

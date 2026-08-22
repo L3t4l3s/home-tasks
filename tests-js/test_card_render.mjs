@@ -1295,41 +1295,36 @@ describe('show_add_due column option', () => {
     await flush(card);
     return { card, hass };
   }
-  const btn = (card) => card.shadowRoot.querySelector('.add-due-btn');
+  const row = (card) => card.shadowRoot.querySelector('.add-due-row');
 
-  test('off by default: add row is the single classic .add-task row, no toggle', async () => {
+  test('off by default: add row is the single classic .add-task row, no due row', async () => {
     const { card } = await setup({ list_id: 'L1' });
-    assert.equal(btn(card), null);
+    assert.equal(row(card), null);
     assert.ok(card.shadowRoot.querySelector('.add-task'));
     assert.equal(card.shadowRoot.querySelector('.add-task-group'), null);
   });
 
-  test('on: toggle button shows, click reveals date+time row, clear hides it', async () => {
+  test('on: date + time row is always visible under the add input; x clears values', async () => {
     const { card } = await setup({ list_id: 'L1', show_add_due: true });
-    assert.ok(btn(card), 'calendar toggle must render');
-    assert.equal(card.shadowRoot.querySelector('.add-due-row'), null);
-    btn(card).click();
-    await flush(card);
-    const row = card.shadowRoot.querySelector('.add-due-row');
-    assert.ok(row, 'due row must appear after toggle');
-    assert.ok(row.querySelector('input[type=date]'));
-    assert.ok(row.querySelector('input[type=time]'));
-    row.querySelector('.add-due-clear').click();
-    await flush(card);
-    assert.equal(card.shadowRoot.querySelector('.add-due-row'), null);
+    const r = row(card);
+    assert.ok(r, 'due row must render without any toggle');
+    assert.ok(r.querySelector('input[type=date]') && r.querySelector('input[type=time]'));
+    const cs = card._columns[0];
+    cs.newTaskDue = '2027-01-01'; cs.newTaskDueTime = '07:00';
+    r.querySelector('.add-due-clear').click();
+    assert.equal(cs.newTaskDue, '');
+    assert.equal(cs.newTaskDueTime, '');
+    assert.ok(row(card), 'row stays visible after clearing');
   });
 
-  test('native add sends due_date + due_time in ONE add_task call and resets the row', async () => {
+  test('native add sends due_date + due_time in ONE add_task call and resets the values', async () => {
     const { card, hass } = await setup({ list_id: 'L1', show_add_due: true });
-    btn(card).click();
-    await flush(card);
+    const win = card.ownerDocument.defaultView;
     const cs = card._columns[0];
-    const dateInput = card.shadowRoot.querySelector('.add-due-row input[type=date]');
-    dateInput.value = '2027-03-15';
-    dateInput.dispatchEvent(new card.ownerDocument.defaultView.Event('change'));
-    const timeInput = card.shadowRoot.querySelector('.add-due-row input[type=time]');
-    timeInput.value = '09:30';
-    timeInput.dispatchEvent(new card.ownerDocument.defaultView.Event('change'));
+    const dateInput = row(card).querySelector('input[type=date]');
+    dateInput.value = '2027-03-15'; dateInput.dispatchEvent(new win.Event('change'));
+    const timeInput = row(card).querySelector('input[type=time]');
+    timeInput.value = '09:30'; timeInput.dispatchEvent(new win.Event('change'));
     cs.newTaskTitle = 'Dentist';
     await card._addTask(0);
     await flush(card);
@@ -1338,13 +1333,12 @@ describe('show_add_due column option', () => {
     assert.equal(add.due_date, '2027-03-15');
     assert.equal(add.due_time, '09:30');
     assert.ok(!hass.calls.some(c => c.type === 'home_tasks/update_task'), 'no follow-up update call');
-    // state reset for the next task
     assert.equal(cs.newTaskDue, '');
     assert.equal(cs.newTaskDueTime, '');
-    assert.equal(cs.addDueOpen, false);
+    assert.ok(row(card), 'row remains for the next task');
   });
 
-  test('time without date is ignored', async () => {
+  test('empty date: task is created without due; time without date is ignored', async () => {
     const { card, hass } = await setup({ list_id: 'L1', show_add_due: true });
     const cs = card._columns[0];
     cs.newTaskDueTime = '10:00';  // no date
@@ -1355,11 +1349,11 @@ describe('show_add_due column option', () => {
     assert.equal(add.due_time, undefined);
   });
 
-  test('external column: due passed to create_external_task when the provider supports it, toggle hidden otherwise', async () => {
+  test('external column: due passed to create_external_task when the provider supports it, row hidden otherwise', async () => {
     const withDue = await setup({ entity_id: 'todo.a', show_add_due: true }, {
       externalLists: [{ entity_id: 'todo.a', name: 'A', linked: true, supported_features: 16, capabilities: {} }],
     });
-    assert.ok(btn(withDue.card), 'provider with SET_DUE_DATE must show the toggle');
+    assert.ok(row(withDue.card), 'provider with SET_DUE_DATE must show the row');
     const cs = withDue.card._columns[0];
     cs.newTaskDue = '2027-04-01'; cs.newTaskTitle = 'Ext';
     await withDue.card._addTask(0);
@@ -1369,6 +1363,6 @@ describe('show_add_due column option', () => {
     const noDue = await setup({ entity_id: 'todo.b', show_add_due: true }, {
       externalLists: [{ entity_id: 'todo.b', name: 'B', linked: true, supported_features: 0, capabilities: {} }],
     });
-    assert.equal(btn(noDue.card), null, 'provider without due support must not show the toggle');
+    assert.equal(row(noDue.card), null, 'provider without due support must not show the row');
   });
 });
