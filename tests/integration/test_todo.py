@@ -498,3 +498,20 @@ async def test_todo_move_item(
             await hass.async_block_till_done()
             ordered = sorted(store.tasks, key=lambda t: t["sort_order"])
             assert [t["id"] for t in ordered] == [t3["id"], t1["id"], t2["id"]]
+
+
+async def test_create_todo_item_with_due_is_atomic(hass: HomeAssistant, mock_config_entry, store) -> None:
+    """todo.add_item with a due datetime creates the task with due_date/due_time
+    in one step (single 'created' history entry)."""
+    from datetime import datetime as _dt
+    await hass.services.async_call(
+        "todo", "add_item",
+        {"item": "Dentist", "due_datetime": "2027-03-03T09:30:00"},
+        target={"entity_id": f"todo.{mock_config_entry.title.lower().replace(' ', '_')}"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    task = next(t for t in store.tasks if t["title"] == "Dentist")
+    assert task["due_date"] == "2027-03-03"
+    assert task["due_time"] == "09:30"
+    assert [h["action"] for h in task["history"]] == ["created"]

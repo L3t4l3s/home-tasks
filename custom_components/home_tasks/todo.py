@@ -106,17 +106,20 @@ class HomeTasksEntity(TodoListEntity):
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Create a new todo item."""
-        task = await self._store.async_add_task(item.summary or "")
+        # Due goes in at creation (single 'created' history entry, task_created
+        # carries the due); notes/completed remain follow-up updates.
+        due_date = due_time = None
+        if item.due:
+            if isinstance(item.due, datetime):
+                due_date = item.due.date().isoformat()
+                due_time = item.due.strftime("%H:%M")
+            else:
+                due_date = item.due.isoformat()
+        task = await self._store.async_add_task(
+            item.summary or "", due_date=due_date, due_time=due_time
+        )
         # Apply optional fields
         kwargs = {}
-        if item.due:
-            kwargs["due_date"] = (
-                item.due.date().isoformat()
-                if isinstance(item.due, datetime)
-                else item.due.isoformat()
-            )
-            if isinstance(item.due, datetime):
-                kwargs["due_time"] = item.due.strftime("%H:%M")
         if item.description:
             kwargs["notes"] = item.description
         if item.status == TodoItemStatus.COMPLETED:

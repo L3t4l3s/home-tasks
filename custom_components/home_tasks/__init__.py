@@ -1371,12 +1371,18 @@ def _async_register_services(hass: HomeAssistant) -> None:
     async def async_handle_add_task(call: ServiceCall) -> None:
         entry_id, store = _resolve_store(hass, call.data)
         actor = await _resolve_actor(hass, call)
-        task = await store.async_add_task(call.data["title"], actor=actor)
+        # Due goes in at creation (one task_created event carrying it, one
+        # 'created' history entry). assigned_person stays a follow-up update so
+        # the task_assigned event keeps firing for service-created tasks.
+        task = await store.async_add_task(
+            call.data["title"],
+            actor=actor,
+            due_date=call.data.get("due_date"),
+            due_time=call.data.get("due_time"),
+        )
         kwargs = {}
         if "assigned_person" in call.data:
             kwargs["assigned_person"] = call.data["assigned_person"]
-        if "due_date" in call.data:
-            kwargs["due_date"] = call.data["due_date"]
         if "tags" in call.data:
             raw = call.data["tags"]
             kwargs["tags"] = [t.strip() for t in raw.split(",") if t.strip()]
@@ -1457,6 +1463,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
             vol.Required("title"): cv.string,
             vol.Optional("assigned_person"): cv.string,
             vol.Optional("due_date"): cv.string,
+            vol.Optional("due_time"): cv.string,
             vol.Optional("tags"): cv.string,
         }),
     )

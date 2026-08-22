@@ -2888,3 +2888,28 @@ def test_dst_helper_southern_hemisphere() -> None:
     assert actual_offset == expected_utc_offset_hours, (
         f"Expected pre-fold AEDT (+11h), got {actual_offset:+}h"
     )
+
+
+async def test_service_add_task_due_at_creation(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """home_tasks.add_task stores due_date/due_time at creation: one 'created'
+    history entry, task_created already carries the due, assignment still a
+    follow-up (task_assigned keeps firing)."""
+    created = []
+    hass.bus.async_listen(f"{DOMAIN}_task_created", lambda e: created.append(e))
+    await hass.services.async_call(
+        DOMAIN, "add_task",
+        {"entry_id": mock_config_entry.entry_id, "title": "Svc due", "due_date": "2027-02-02", "due_time": "07:15", "assigned_person": "person.bob"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    task = next(t for t in store.tasks if t["title"] == "Svc due")
+    assert task["due_date"] == "2027-02-02"
+    assert task["due_time"] == "07:15"
+    assert task["assigned_person"] == "person.bob"
+    assert created and created[-1].data.get("due_date") == "2027-02-02"
+    # exactly one history row for the due (created), plus the assignment update
+    actions = [h["action"] for h in task["history"]]
+    assert actions[0] == "created"
+    assert not any(h.get("field") == "due_date" for h in task["history"])

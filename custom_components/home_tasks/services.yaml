@@ -31,6 +31,11 @@ add_task:
       description: Due date in YYYY-MM-DD format.
       selector:
         date:
+    due_time:
+      name: Due Time
+      description: Due time in HH:MM format (only used together with due_date).
+      selector:
+        time:
     tags:
       name: Tags
       description: Comma-separated list of tags (e.g. "kitchen,daily").

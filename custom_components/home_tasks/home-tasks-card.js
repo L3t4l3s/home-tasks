@@ -1317,6 +1317,23 @@ const REMINDER_OFFSETS = [
   [2880, "rem_2d"],
 ];
 
+// HA todo entity feature bits (TodoListEntityFeature) used for capability gating.
+const TODO_FEATURE = { SET_DUE_DATE: 16, SET_DUE_DATETIME: 32, SET_DESCRIPTION: 64 };
+
+// Can tasks of an external list carry a due date / a due time? `info` is an
+// entry of the get_external_lists result ({supported_features, capabilities}).
+// One definition shared by the card (add row, detail panel) and the editor so
+// the three places can't drift apart.
+function listSupportsDue(info) {
+  const features = (info && info.supported_features) || 0;
+  const caps = (info && info.capabilities) || {};
+  return !!((features & TODO_FEATURE.SET_DUE_DATE) || (features & TODO_FEATURE.SET_DUE_DATETIME) || caps.can_sync_due_time);
+}
+function listSupportsDueTime(info) {
+  const features = (info && info.supported_features) || 0;
+  return !!(features & TODO_FEATURE.SET_DUE_DATETIME);
+}
+
 class HomeTasksCard extends HTMLElement {
   constructor() {
     super();
@@ -1617,15 +1634,17 @@ class HomeTasksCard extends HTMLElement {
     return (this._externalLists || []).find(l => l.entity_id === entityId) || null;
   }
 
-  // Can tasks in this column carry a due date? Native lists always; external
-  // lists only when the provider supports SET_DUE_DATE / SET_DUE_DATETIME
-  // (HA todo features 16 / 32) or the adapter syncs due times itself.
+  // Can tasks in this column carry a due date / a due time? Native lists
+  // always; external lists per provider capability (see listSupportsDue /
+  // listSupportsDueTime at module level).
   _colSupportsDue(colIdx) {
     if (!this._isExternalCol(colIdx)) return true;
-    const info = this._getExternalListInfo(colIdx);
-    const features = info?.supported_features || 0;
-    const caps = info?.capabilities || {};
-    return !!((features & 16) || (features & 32) || caps.can_sync_due_time);
+    return listSupportsDue(this._getExternalListInfo(colIdx));
+  }
+
+  _colSupportsDueTime(colIdx) {
+    if (!this._isExternalCol(colIdx)) return true;
+    return listSupportsDueTime(this._getExternalListInfo(colIdx));
   }
 
   _colSupportedFeatures(colIdx) {
@@ -1745,6 +1764,21 @@ class HomeTasksCard extends HTMLElement {
     return this._config.columns[colIdx]?.list_id;
   }
 
+  // Enter inside the add-row date/time inputs: _render defers rebuilds while
+  // a date/time input has focus (its segment state would be lost), which
+  // would swallow the render that shows the new task. Hand focus to the
+  // title input first (focus restore after the rebuild targets it anyway).
+  _addTaskFromDueRow(colIdx) {
+    const titleInput = this.shadowRoot.querySelector(`.add-input[data-focus-key="add_task_col_${colIdx}"]`);
+    if (titleInput) {
+      try { titleInput.focus(); } catch (_) { /* best-effort */ }
+    } else {
+      const active = this.shadowRoot.activeElement;
+      if (active && active.blur) active.blur();
+    }
+    return this._addTask(colIdx);
+  }
+
   async _addTask(colIdx) {
     const cs = this._columns[colIdx];
     const title = cs.newTaskTitle.trim();
@@ -1771,7 +1805,7 @@ class HomeTasksCard extends HTMLElement {
     // Due date chosen in the add row (issue #38) — only when the option is
     // on and the column supports due dates; a time without a date is ignored.
     const addDue = (col.show_add_due === true && this._colSupportsDue(colIdx) && cs.newTaskDue) ? cs.newTaskDue : null;
-    const addDueTime = (addDue && cs.newTaskDueTime) ? cs.newTaskDueTime : null;
+    const addDueTime = (addDue && cs.newTaskDueTime && this._colSupportsDueTime(colIdx)) ? cs.newTaskDueTime : null;
     const resetAddDue = () => { cs.newTaskDue = ""; cs.newTaskDueTime = ""; };
 
     let result;
@@ -2543,13 +2577,20 @@ class HomeTasksCard extends HTMLElement {
     return Number.isFinite(n) && n > 0 ? Math.round(n) : 0;
   }
 
-  // Grow a textarea to fit its content (issue #32): reset to auto so it
-  // can also shrink, then take the scroll height. The CSS min-height still
-  // applies, and the manual resize handle keeps working.
+  // Grow a textarea to fit its content (issue #32): reset to auto so it can
+  // also shrink, then take the scroll height plus the border (the field is
+  // box-sizing: border-box, scrollHeight excludes borders). The CSS
+  // min-height still applies. If the user dragged the resize handle — the
+  // browser then writes its own inline height that differs from ours — stop
+  // auto-sizing that element so the manual size sticks.
   _autoGrowTextarea(el) {
     if (!el) return;
+    if (el.style.height && el.dataset.autoH && el.style.height !== el.dataset.autoH) return;
     el.style.height = "auto";
-    el.style.height = el.scrollHeight + "px";
+    const border = Math.max(0, (el.offsetHeight || 0) - (el.clientHeight || 0));
+    const h = el.scrollHeight + border;
+    el.style.height = h + "px";
+    el.dataset.autoH = h + "px";
   }
 
   // Format a Date as its *local* YYYY-MM-DD calendar date. Never use
@@ -2755,26 +2796,20 @@ class HomeTasksCard extends HTMLElement {
     }
 
     const root = this.shadowRoot;
-    // Preserve any open modal overlay (tile detail sheet, add-task dialog,
-    // media picker) across the rebuild so a background data refresh doesn't
-    // wipe it out from under the user mid-interaction.
-    //
-    // Also preserve card-mod's <card-mod> node (issue #31/#34): card-mod
-    // appends it — together with the user's <style> — directly into this
-    // shadow root once, via its hui-card hook. We are not a Lit element, so
-    // card-mod never re-applies after we wipe the root; re-attaching the
-    // same node lets its connectedCallback re-inject the styles.
-    const _preservedOverlays = [...root.querySelectorAll(
-      ".task-detail-backdrop, .task-detail-sheet, dialog, card-mod"
-    )].map((el) => {
-      // Detaching a scrollable element resets its scrollTop; capture the open
-      // sheet's scroll so re-attaching it below doesn't "jump" to the top.
-      const sb = el.querySelector ? el.querySelector(".sheet-body") : null;
-      return { el, wasOpenModal: el.tagName === "DIALOG" && el.open, scrollTop: sb ? sb.scrollTop : 0 };
-    });
-    _preservedOverlays.forEach((o) => o.el.remove());
+    // Rebuild only what this card owns. Long-lived nodes that other code put
+    // into the shadow root stay in place, untouched: an open modal <dialog>
+    // (confirm prompt, media picker — detaching a modal dialog drops it out of
+    // the top layer and showModal() can't re-open it), the tile detail sheet
+    // + backdrop, card-mod's <card-mod> node (issue #31/#34) and error
+    // toasts. Everything else (ha-card, drag clones) is removed and rebuilt;
+    // the <style> element is reused.
+    const KEEP = ".task-detail-backdrop, .task-detail-sheet, dialog, card-mod, .toast-error";
     this._clearTileLp(); // a rebuild removes the pressed tile → cancel its long-press
-    root.innerHTML = "";
+    for (const child of [...root.children]) {
+      if (child === this._styleEl) continue;
+      if (child.matches && child.matches(KEEP)) continue;
+      child.remove();
+    }
     // Stash for use after the rebuild
     this._pendingFocusRestore = focusSnap;
     this._updateFitRows();
@@ -2783,31 +2818,14 @@ class HomeTasksCard extends HTMLElement {
       this._styleEl = document.createElement("style");
       this._styleEl.textContent = this._getStyles();
     }
-    root.appendChild(this._styleEl);
+    if (!this._styleEl.isConnected) root.insertBefore(this._styleEl, root.firstChild);
 
     const card = this._el("ha-card", {}, [
       this._buildCardContent(),
     ]);
-    root.appendChild(card);
-    // Re-attach any preserved open overlay after the rebuild (see above).
-    // A modal <dialog> is implicitly closed when detached from the DOM, so
-    // re-open it — otherwise a background refresh dismisses the media picker.
-    _preservedOverlays.forEach((o) => {
-      // The detail sheet uses a slide-in transition; re-attaching it would
-      // replay that animation (the popup "jumps"). Suppress it for this frame.
-      const isSheet = o.el.classList && o.el.classList.contains("task-detail-sheet");
-      if (isSheet) o.el.style.transition = "none";
-      root.appendChild(o.el);
-      // Restore the scroll position lost by the detach/re-attach above.
-      if (o.scrollTop) {
-        const sb = o.el.querySelector ? o.el.querySelector(".sheet-body") : null;
-        if (sb) sb.scrollTop = o.scrollTop;
-      }
-      if (isSheet) requestAnimationFrame(() => { o.el.style.transition = ""; });
-      if (o.wasOpenModal && typeof o.el.showModal === "function") {
-        try { o.el.showModal(); } catch (_) {}
-      }
-    });
+    // Right after the style, i.e. before any kept overlay, so the sheet /
+    // backdrop / dialogs keep painting above the card (DOM order).
+    root.insertBefore(card, this._styleEl.nextSibling);
 
     // Restore focus to the element that had it before the DOM rebuild,
     // if it still exists in the new tree.  Fields tagged with
@@ -3237,15 +3255,29 @@ class HomeTasksCard extends HTMLElement {
         "aria-label": this._t("due_date_lbl"),
       });
       dateInput.addEventListener("change", () => { cs.newTaskDue = dateInput.value || ""; });
-      dateInput.addEventListener("keydown", (e) => { if (e.key === "Enter") this._addTask(colIdx); });
-      const timeInput = this._el("input", {
-        type: "time", className: "add-due-time", value: cs.newTaskDueTime || "",
-        "data-focus-key": `add_due_time_col_${colIdx}`,
-        "aria-label": this._t("due_time_lbl"),
+      dateInput.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        cs.newTaskDue = dateInput.value || "";
+        this._addTaskFromDueRow(colIdx);
       });
-      timeInput.addEventListener("change", () => { cs.newTaskDueTime = timeInput.value || ""; });
-      timeInput.addEventListener("keydown", (e) => { if (e.key === "Enter") this._addTask(colIdx); });
-      dueRow = this._el("div", { className: "add-due-row" }, [dateInput, timeInput]);
+      const rowChildren = [dateInput];
+      if (this._colSupportsDueTime(colIdx)) {
+        const timeInput = this._el("input", {
+          type: "time", className: "add-due-time", value: cs.newTaskDueTime || "",
+          "data-focus-key": `add_due_time_col_${colIdx}`,
+          "aria-label": this._t("due_time_lbl"),
+        });
+        timeInput.addEventListener("change", () => { cs.newTaskDueTime = timeInput.value || ""; });
+        timeInput.addEventListener("keydown", (e) => {
+          if (e.key !== "Enter") return;
+          e.preventDefault();
+          cs.newTaskDueTime = timeInput.value || "";
+          this._addTaskFromDueRow(colIdx);
+        });
+        rowChildren.push(timeInput);
+      }
+      dueRow = this._el("div", { className: "add-due-row" }, rowChildren);
     }
     children.push(addBtn);
     const row = this._el("div", { className: "add-task" }, children);
@@ -4525,7 +4557,7 @@ class HomeTasksCard extends HTMLElement {
     const dateInput = this._el("input", { type: "date", value: task.due_date || "" });
     // Check if external provider supports due time (SET_DUE_DATETIME_ON_ITEM = 32)
     const features = this._colSupportedFeatures(colIdx);
-    const supportsTime = !this._isExternalCol(colIdx) || !!(features & 32);
+    const supportsTime = this._colSupportsDueTime(colIdx);
 
     const timeInput = this._el("input", { type: "time", value: task.due_time || "" });
     if (!task.due_date) timeInput.disabled = true;
@@ -6733,12 +6765,15 @@ class HomeTasksCard extends HTMLElement {
       :host(.fit-rows) { display: block; height: 100%; }
       :host(.fit-rows) ha-card { height: 100%; }
       :host(.fit-rows) ha-card > div,
-      :host(.fit-rows) .multi-columns,
-      :host(.fit-rows) .card-column { flex: 1 1 auto; min-height: 0; }
+      :host(.fit-rows) .multi-columns { flex: 1 1 auto; min-height: 0; }
+      /* .card-column is deliberately NOT in that list: inside .multi-columns
+         the flex axis is horizontal and ".multi-columns .card-column { flex: 1 }"
+         keeps the kanban columns equal-width; vertical fill comes from
+         align-items: stretch plus the column's own min-height: 0. */
       .multi-columns { display: flex; gap: 0; align-items: stretch; }
       .multi-columns .card-column { flex: 1; min-width: 240px; border-right: 1px solid var(--todo-divider); }
       .multi-columns .card-column:last-child { border-right: none; }
-      @media (max-width: 600px) { .multi-columns { flex-direction: column; } .multi-columns .card-column { border-right: none; border-bottom: 1px solid var(--todo-divider); } .multi-columns .card-column:last-child { border-bottom: none; } }
+      @media (max-width: 600px) { .multi-columns { flex-direction: column; } .multi-columns .card-column { border-right: none; border-bottom: 1px solid var(--todo-divider); } .multi-columns .card-column:last-child { border-bottom: none; } :host(.fit-rows) .multi-columns .card-column { flex: 1 1 0%; } }
       .card-column.drag-target { outline: 2px dashed var(--todo-primary); outline-offset: -2px; border-radius: var(--todo-radius); }
       .card-column { padding: 16px; display: flex; flex-direction: column; min-height: 0; }
       .header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
@@ -7523,14 +7558,21 @@ class HomeTasksCard extends HTMLElement {
   // calling it when the hook already ran is a no-op, and the node survives
   // our re-renders (see _render's overlay preservation).
   _ensureCardMod() {
-    const cfg = this._config && this._config.card_mod;
-    if (!cfg) return;
+    if (!(this._config && this._config.card_mod)) return;
     if (!("customElements" in window) || !customElements.whenDefined) return;
+    // At most one pending waiter per element: when card-mod is not installed
+    // whenDefined() never settles, and every extra .then would keep this
+    // element (and its config) alive for the page lifetime.
+    if (this._cardModPending) return;
+    this._cardModPending = true;
     customElements.whenDefined("card-mod").then((cm) => {
-      if (!this.isConnected || !this._config || this._config.card_mod !== cfg) return;
+      this._cardModPending = false;
+      cm = cm || customElements.get("card-mod"); // older engines resolve with undefined
+      const cur = this._config && this._config.card_mod; // always the latest config
+      if (!this.isConnected || !cur) return;
       if (!cm || typeof cm.applyToElement !== "function") return;
       try {
-        cm.applyToElement(this, "card", cfg, { config: this._config }, true, "type-custom-home-tasks-card");
+        cm.applyToElement(this, "card", cur, { config: this._config }, true, "type-custom-home-tasks-card");
       } catch (_) { /* never let a styling add-on break the card */ }
     });
   }
@@ -7574,12 +7616,14 @@ class HomeTasksCard extends HTMLElement {
     };
   }
 
-  // Current HA API (sections view Layout tab). Rows default to "auto";
-  // a fixed number makes the card fill the cell and scroll its body.
+  // Current HA API (sections view Layout tab, 12-column grid — the legacy
+  // getLayoutOptions above speaks the old 4-column grid, HA migrates ×3).
+  // Rows default to "auto"; a fixed number makes the card fill the cell and
+  // scroll its body.
   getGridOptions() {
     return {
       columns: "full",
-      min_columns: 4,
+      min_columns: 12,
       rows: "auto",
       min_rows: 2,
     };
@@ -8149,19 +8193,19 @@ class HomeTasksCardEditor extends HTMLElement {
         // Auto-set visibility defaults for external lists:
         // - Rich adapters (Todoist): enable all synced fields based on capabilities
         // - Generic adapters: enable only fields supported by HA's todo entity interface
-        const HAS_DUE = (features & 16) || (features & 32);  // SET_DUE_DATE or SET_DUE_DATETIME
-        const HAS_DESC = !!(features & 64);                   // SET_DESCRIPTION
+        const HAS_DUE = listSupportsDue(extList);             // incl. adapters that sync due times
+        const HAS_DESC = !!(features & TODO_FEATURE.SET_DESCRIPTION);
         updateCol({
           entity_id: entityId,
           list_id: undefined,
           default_sort: "manual",
-          show_due_date: !!HAS_DUE || !!caps.can_sync_due_time,
+          show_due_date: HAS_DUE,
           show_notes: HAS_DESC || !!caps.can_sync_description,
           show_priority: !!caps.can_sync_priority,
           show_tags: !!caps.can_sync_labels,
           show_sub_tasks: !!caps.can_sync_sub_items,
           show_assigned_person: !!caps.can_sync_assignee,
-          show_reminders: !!HAS_DUE || !!caps.can_sync_due_time,
+          show_reminders: HAS_DUE,
           show_recurrence: !!caps.can_sync_recurrence,
           show_history: false,
         });

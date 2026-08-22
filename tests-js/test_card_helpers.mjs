@@ -393,12 +393,29 @@ describe('_thumbUrl', () => {
 
 
 describe('_autoGrowTextarea (issue #32)', () => {
-  test('sets height from scrollHeight after resetting to auto', async () => {
-    const card = await makeCard();
+  const fakeTextarea = (scrollHeight, border) => {
     const seen = [];
-    const fake = { style: { set height(v) { seen.push(v); }, get height() { return seen[seen.length - 1]; } }, scrollHeight: 123 };
-    card._autoGrowTextarea(fake);
-    assert.deepEqual(seen, ['auto', '123px']);
+    return { seen, el: {
+      style: { set height(v) { seen.push(v); }, get height() { return seen.length ? seen[seen.length - 1] : ''; } },
+      dataset: {}, scrollHeight, offsetHeight: 100 + border, clientHeight: 100,
+    } };
+  };
+
+  test('sets height from scrollHeight + border (box-sizing: border-box) after resetting to auto', async () => {
+    const card = await makeCard();
+    const { seen, el } = fakeTextarea(123, 2);
+    card._autoGrowTextarea(el);
+    assert.deepEqual(seen, ['auto', '125px']);
+    assert.equal(el.dataset.autoH, '125px');
+  });
+
+  test('respects a manual resize: a foreign inline height stops auto-sizing', async () => {
+    const card = await makeCard();
+    const { seen, el } = fakeTextarea(123, 2);
+    card._autoGrowTextarea(el);           // → 125px
+    seen.push('240px');                   // the user dragged the resize handle
+    card._autoGrowTextarea(el);           // must leave it alone
+    assert.equal(el.style.height, '240px');
   });
 
   test('tolerates a missing element', async () => {

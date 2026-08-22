@@ -1190,7 +1190,8 @@ describe('fixed-rows contract of HA sections view (--row-size)', () => {
   test('exposes getGridOptions (current HA API) with auto rows by default', async () => {
     const card = await setup(undefined);
     // JSON compare: the object comes from the jsdom realm (different Object prototype)
-    assert.equal(JSON.stringify(card.getGridOptions()), JSON.stringify({ columns: 'full', min_columns: 4, rows: 'auto', min_rows: 2 }));
+    // 12-column grid: min_columns 12 == full width (legacy getLayoutOptions says 4 on the old 4-grid)
+    assert.equal(JSON.stringify(card.getGridOptions()), JSON.stringify({ columns: 'full', min_columns: 12, rows: 'auto', min_rows: 2 }));
   });
 });
 
@@ -1359,5 +1360,112 @@ describe('show_add_due column option', () => {
       externalLists: [{ entity_id: 'todo.b', name: 'B', linked: true, supported_features: 0, capabilities: {} }],
     });
     assert.equal(row(noDue.card), null, 'provider without due support must not show the row');
+  });
+});
+
+
+
+// ---------------------------------------------------------------------------
+// Review follow-ups: open overlays survive a rebuild untouched, Enter in the
+// add-row due inputs still shows the new task, time input gated per provider
+// ---------------------------------------------------------------------------
+
+
+describe('rebuild keeps foreign / long-lived shadow-root nodes in place', () => {
+  test('an open confirm dialog is neither detached nor re-opened by _render', async () => {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'L' }] },
+      'home_tasks/get_tasks': { tasks: [{ id: 'T1', title: 'A', sort_order: 0, sub_items: [] }] },
+    });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{ list_id: 'L1', confirm_complete: true }] });
+    card.hass = hass;
+    await flush(card);
+    const pending = card._toggleTask('T1', false, 0);
+    await flush(card);
+    const dlg = card.shadowRoot.querySelector('dialog.ht-confirm');
+    assert.ok(dlg);
+    let disconnected = 0;
+    const origRemove = dlg.remove.bind(dlg);
+    dlg.remove = () => { disconnected++; origRemove(); };
+    card._render();  // background refresh while the prompt is up
+    await flush(card);
+    assert.equal(disconnected, 0, 'dialog must not be detached by a rebuild');
+    assert.strictEqual(card.shadowRoot.querySelector('dialog.ht-confirm'), dlg);
+    assert.ok(dlg.hasAttribute('open'), 'still open');
+    // DOM order: style, ha-card, then the dialog
+    const kids = [...card.shadowRoot.children].map(k => k.localName);
+    assert.ok(kids.indexOf('ha-card') < kids.indexOf('dialog'));
+    dlg.querySelector('.ht-confirm-btn.primary').click();
+    await pending;
+  });
+});
+
+
+describe('Enter inside the add-row due inputs', () => {
+  test('hands focus to the title input so the render is not deferred, and the task appears', async () => {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const tasks = [];
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'L' }] },
+      'home_tasks/get_tasks': () => ({ tasks: [...tasks] }),
+      'home_tasks/add_task': (msg) => { const t = { id: 'N' + tasks.length, title: msg.title, due_date: msg.due_date || null, due_time: msg.due_time || null, sort_order: tasks.length, sub_items: [] }; tasks.push(t); return t; },
+    });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{ list_id: 'L1', show_add_due: true }] });
+    card.hass = hass;
+    card.ownerDocument.body.appendChild(card);
+    await flush(card);
+    const win = card.ownerDocument.defaultView;
+    const cs = card._columns[0];
+    cs.newTaskTitle = 'From date field';
+    const dateInput = card.shadowRoot.querySelector('.add-due-row input[type=date]');
+    dateInput.value = '2027-05-05';
+    dateInput.focus();
+    assert.strictEqual(card.shadowRoot.activeElement, dateInput);
+    dateInput.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    await flush(card); await flush(card);
+    const add = hass.calls.find(c => c.type === 'home_tasks/add_task');
+    assert.ok(add && add.due_date === '2027-05-05', 'add_task sent with the date read from the input');
+    assert.ok(card.shadowRoot.querySelector('.task[data-task-id="N0"]'), 'new task must be rendered (render not swallowed by the date-input guard)');
+    assert.notStrictEqual(card.shadowRoot.activeElement && card.shadowRoot.activeElement.type, 'date');
+  });
+});
+
+
+describe('add-row time input follows the provider\'s due-time capability', () => {
+  async function setup(features) {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': { lists: [] },
+      'home_tasks/get_external_lists': { external_lists: [{ entity_id: 'todo.x', name: 'X', linked: true, supported_features: features, capabilities: {} }] },
+      'home_tasks/get_external_tasks': { tasks: [] },
+      'home_tasks/create_external_task': (msg) => ({ id: 'E1', title: msg.title }),
+    });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{ entity_id: 'todo.x', show_add_due: true }] });
+    card.hass = hass;
+    await flush(card);
+    return { card, hass };
+  }
+
+  test('SET_DUE_DATE only: date input, no time input; a stray time is not sent', async () => {
+    const { card, hass } = await setup(16);
+    const row = card.shadowRoot.querySelector('.add-due-row');
+    assert.ok(row.querySelector('input[type=date]'));
+    assert.equal(row.querySelector('input[type=time]'), null);
+    const cs = card._columns[0];
+    cs.newTaskDue = '2027-06-06'; cs.newTaskDueTime = '10:00'; cs.newTaskTitle = 'X';
+    await card._addTask(0);
+    const create = hass.calls.find(c => c.type === 'home_tasks/create_external_task');
+    assert.equal(create.due_date, '2027-06-06');
+    assert.equal(create.due_time, undefined);
+  });
+
+  test('SET_DUE_DATETIME: both inputs', async () => {
+    const { card } = await setup(32);
+    const row = card.shadowRoot.querySelector('.add-due-row');
+    assert.ok(row.querySelector('input[type=date]') && row.querySelector('input[type=time]'));
   });
 });
