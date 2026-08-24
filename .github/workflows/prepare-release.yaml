@@ -2,7 +2,8 @@ name: Prepare release
 
 # Manually triggered. Bumps the version in manifest.json and the card banner,
 # commits to main, creates the tag and a GitHub pre-release from THAT commit,
-# and attaches home_tasks.zip (runtime files only — no brand/ or icon.svg).
+# and attaches home_tasks.zip (the full integration directory — brand/ must
+# stay in: HA >=2026.3 serves it by convention via the /api/brands proxy).
 # HACS installs release versions from that zip asset (hacs.json zip_release),
 # so every release must carry it; release.yaml guards this on promotion.
 
@@ -63,9 +64,8 @@ jobs:
           git commit -m "chore(release): v$VERSION"
           git push origin HEAD:main
 
-      - name: Build HACS zip (runtime files only)
+      - name: Build HACS zip
         run: |
-          rm -rf custom_components/home_tasks/brand custom_components/home_tasks/icon.svg
           cd custom_components/home_tasks
           zip -r ../../home_tasks.zip .
           unzip -l ../../home_tasks.zip
