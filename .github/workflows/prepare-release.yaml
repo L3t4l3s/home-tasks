@@ -1,9 +1,10 @@
 name: Prepare release
 
 # Manually triggered. Bumps the version in manifest.json and the card banner,
-# commits to main, then creates the tag and a GitHub pre-release from THAT
-# commit. The version must be correct in the commit the tag points to, because
-# HACS installs the integration files from the release tag — not from main.
+# commits to main, creates the tag and a GitHub pre-release from THAT commit,
+# and attaches home_tasks.zip (runtime files only — no brand/ or icon.svg).
+# HACS installs release versions from that zip asset (hacs.json zip_release),
+# so every release must carry it; release.yaml guards this on promotion.
 
 on:
   workflow_dispatch:
@@ -62,11 +63,18 @@ jobs:
           git commit -m "chore(release): v$VERSION"
           git push origin HEAD:main
 
-      - name: Create tag and pre-release
+      - name: Build HACS zip (runtime files only)
+        run: |
+          rm -rf custom_components/home_tasks/brand custom_components/home_tasks/icon.svg
+          cd custom_components/home_tasks
+          zip -r ../../home_tasks.zip .
+          unzip -l ../../home_tasks.zip
+
+      - name: Create tag and pre-release with zip asset
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "v$VERSION" \
+          gh release create "v$VERSION" home_tasks.zip \
             --target "$(git rev-parse HEAD)" \
             --title "v$VERSION" \
             --prerelease \

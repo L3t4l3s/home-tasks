@@ -31,3 +31,14 @@ jobs:
             exit 1
           fi
           echo "Version OK."
+
+      - name: Release must carry the HACS zip asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ASSETS="$(gh release view "${{ github.event.release.tag_name }}" --repo "$GITHUB_REPOSITORY" --json assets -q '.assets[].name')"
+          echo "Assets on this release: $ASSETS"
+          if ! printf '%s\n' "$ASSETS" | grep -qx "home_tasks.zip"; then
+            echo "::error::Release has no home_tasks.zip asset — HACS zip_release installs will fail. Cut releases with the 'Prepare release' workflow."
+            exit 1
+          fi

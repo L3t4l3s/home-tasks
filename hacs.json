@@ -1,5 +1,7 @@
 {
   "name": "Home Tasks",
   "render_readme": true,
-  "content_in_root": false
+  "content_in_root": false,
+  "zip_release": true,
+  "filename": "home_tasks.zip"
 }
