@@ -1522,3 +1522,57 @@ describe('editor Defaults section (issues #44 / #46)', () => {
     assert.equal(root.querySelector('.defaults-editor'), null);
   });
 });
+
+
+describe('chip display toggles (issue #45)', () => {
+  const TASK = { id: 'T1', title: 'Rich', sort_order: 0, sub_items: [], priority: 3, due_date: '2099-01-01', tags: ['a'], reminders: [0], recurrence_enabled: true, recurrence_unit: 'days', recurrence_value: 1, assigned_person: 'person.alice' };
+  async function setup(colExtra) {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'L' }] },
+      'home_tasks/get_tasks': { tasks: [TASK] },
+    });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{ list_id: 'L1', ...colExtra }] });
+    card.hass = hass;
+    await flush(card);
+    return card;
+  }
+  const expand = async (card) => {
+    card._expandedTasks && card._expandedTasks.add && card._expandedTasks.add('T1');
+    if (!card._expandedTasks || !card._expandedTasks.add) card._expandedTaskId = 'T1';
+    card._render();
+  };
+
+  test('default: all chips render', async () => {
+    const card = await setup({});
+    const row = card.shadowRoot.querySelector('.task[data-task-id="T1"]');
+    assert.ok(row.querySelector('.priority-badge'));
+    assert.ok(row.querySelector('.due-date'));
+    assert.ok(row.querySelector('.tag-badge'));
+    assert.ok(row.querySelector('.reminder-badge'));
+    assert.ok(row.querySelector('.recurrence-badge'));
+  });
+
+  test('badge_reminders: false hides the chip but keeps the feature switch untouched', async () => {
+    const card = await setup({ badge_reminders: false });
+    const row = card.shadowRoot.querySelector('.task[data-task-id="T1"]');
+    assert.equal(row.querySelector('.reminder-badge'), null, 'reminder chip hidden');
+    assert.ok(row.querySelector('.due-date'), 'other chips unaffected');
+  });
+
+  test('badge toggles are independent per chip', async () => {
+    const card = await setup({ badge_tags: false, badge_priority: false });
+    const row = card.shadowRoot.querySelector('.task[data-task-id="T1"]');
+    assert.equal(row.querySelector('.tag-badge'), null);
+    assert.equal(row.querySelector('.priority-badge'), null);
+    assert.ok(row.querySelector('.due-date'));
+    assert.ok(row.querySelector('.reminder-badge'));
+  });
+
+  test('feature switch still hides the chip too (unchanged semantics)', async () => {
+    const card = await setup({ show_reminders: false });
+    const row = card.shadowRoot.querySelector('.task[data-task-id="T1"]');
+    assert.equal(row.querySelector('.reminder-badge'), null);
+  });
+});
