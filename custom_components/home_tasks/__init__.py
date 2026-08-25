@@ -71,7 +71,16 @@ async def _async_register_card(hass: HomeAssistant) -> None:
         StaticPathConfig(
             CARD_URL,
             f"{comp_path}/home-tasks-card.js",
-            cache_headers=False,
+            # Long-lived cache headers (31 days), like HACS serves /hacsfiles/
+            # and HA core serves /local/.  Safe because every load path uses
+            # the mtime-versioned ?v= URL: any file change produces a new URL
+            # and forces a fresh fetch.  Critically, the cached copy bridges
+            # the startup window in which the frontend is already serving but
+            # this static path is not yet registered (404), and failed
+            # revalidations on flaky reconnects (companion-app warm resume) —
+            # without it the module import fails and the dashboard shows
+            # "Custom element doesn't exist" until a full reload (#37).
+            cache_headers=True,
         ),
         StaticPathConfig(
             f"/brands/{DOMAIN}/icon.png",

@@ -459,6 +459,43 @@ async def test_card_registered_with_versioned_url(hass: HomeAssistant) -> None:
     assert url == f"{CARD_URL}?v={expected_v}"
 
 
+async def test_card_served_with_cache_headers(hass: HomeAssistant) -> None:
+    """The card static path is registered with long-lived cache headers.
+
+    Regression for the #37 follow-up: without Cache-Control the browser must
+    revalidate the module on (nearly) every dashboard load, so the ~5s window
+    during HA startup in which this path 404s — or a failed revalidation on a
+    companion-app warm resume — kills the card for the whole page session
+    ("Custom element doesn't exist", no retry).  With cache headers the cached
+    copy bridges both, and stale serving is impossible because every load path
+    uses the mtime-versioned ?v= URL (asserted above).
+    """
+    from homeassistant.setup import async_setup_component
+
+    from custom_components.home_tasks import CARD_URL
+
+    # hass.http only exists once the http component is set up; production gets
+    # it via the manifest dependency, the bare test fixture does not.
+    assert await async_setup_component(hass, "http", {})
+
+    captured = []
+    orig = hass.http.async_register_static_paths
+
+    async def _capture(configs):
+        captured.extend(configs)
+        return await orig(configs)
+
+    with patch.object(hass.http, "async_register_static_paths", _capture):
+        entry = MockConfigEntry(domain=DOMAIN, data={"name": "Cache List"}, title="Cache List")
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    card_cfgs = [c for c in captured if c.url_path == CARD_URL]
+    assert card_cfgs, "card static path was not registered"
+    assert card_cfgs[0].cache_headers is True
+
+
 # ---------------------------------------------------------------------------
 # Lovelace resource registration (#37 / #41)
 #
