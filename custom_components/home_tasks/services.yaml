@@ -36,6 +36,19 @@ add_task:
       description: Due time in HH:MM format (only used together with due_date).
       selector:
         time:
+    notes:
+      name: Notes
+      description: Task notes.
+      selector:
+        text:
+          multiline: true
+    priority:
+      name: Priority
+      description: 1 (low), 2 (medium) or 3 (high).
+      selector:
+        number:
+          min: 1
+          max: 3
     tags:
       name: Tags
       description: Comma-separated list of tags (e.g. "kitchen,daily").

@@ -514,6 +514,8 @@ The `home_tasks_task_reminder` event additionally includes `reminder_offset_minu
 | `assigned_person` | no | Person entity ID (e.g. `person.ben`) |
 | `due_date` | no | Due date (`YYYY-MM-DD`) |
 | `due_time` | no | Due time (`HH:MM`, needs `due_date`) |
+| `notes` | no | Notes text |
+| `priority` | no | `1` (low) – `3` (high) |
 | `tags` | no | Comma-separated tags (e.g. `"kitchen,daily"`) |
 | `reminders` | no | Minute offsets before the due moment, comma-separated or list (e.g. `"60, 0"`; `0` = at due time). An explicitly empty value creates the task without reminders even when the list has default reminders |
 

@@ -3146,3 +3146,19 @@ async def test_creation_assignee_recorded_in_history(
     fields = [(h.get("action"), h.get("field"), h.get("to")) for h in task["history"]]
     assert ("created", None, None) == fields[0]
     assert ("updated", "assigned_person", "person.anna") in fields
+
+
+async def test_service_add_task_notes_and_priority(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """home_tasks.add_task accepts notes and priority at creation."""
+    await hass.services.async_call(
+        DOMAIN, "add_task",
+        {"entry_id": mock_config_entry.entry_id, "title": "Svc full",
+         "notes": "bring the good bags", "priority": 3},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    task = next(t for t in store.tasks if t["title"] == "Svc full")
+    assert task["notes"] == "bring the good bags"
+    assert task["priority"] == 3

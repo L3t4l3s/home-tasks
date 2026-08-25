@@ -1442,10 +1442,17 @@ def _async_register_services(hass: HomeAssistant) -> None:
             due_time=call.data.get("due_time"),
             reminders=call.data.get("reminders"),
         )
+        # Fields the store's creation signature doesn't take go in as one
+        # follow-up update (same pattern tags always used).
+        kwargs = {}
         if "tags" in call.data:
-            await store.async_update_task(
-                task["id"], actor=actor, tags=_parse_service_tags(call.data["tags"])
-            )
+            kwargs["tags"] = _parse_service_tags(call.data["tags"])
+        if "notes" in call.data:
+            kwargs["notes"] = call.data["notes"]
+        if "priority" in call.data:
+            kwargs["priority"] = call.data["priority"]
+        if kwargs:
+            await store.async_update_task(task["id"], actor=actor, **kwargs)
 
     async def async_handle_update_task(call: ServiceCall) -> None:
         """Update fields of an existing task (issue #42) — find it by task_id
@@ -1539,6 +1546,8 @@ def _async_register_services(hass: HomeAssistant) -> None:
             vol.Optional("assigned_person"): cv.string,
             vol.Optional("due_date"): cv.string,
             vol.Optional("due_time"): cv.string,
+            vol.Optional("notes"): cv.string,
+            vol.Optional("priority"): vol.Any(vol.All(vol.Coerce(int), vol.In([1, 2, 3])), None),
             vol.Optional("tags"): cv.string,
             vol.Optional("reminders"): _validate_service_reminders,
         }),
