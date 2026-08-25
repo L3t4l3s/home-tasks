@@ -1576,3 +1576,83 @@ describe('chip display toggles (issue #45)', () => {
     assert.equal(row.querySelector('.reminder-badge'), null);
   });
 });
+
+
+// ---------------------------------------------------------------------------
+// Move to list (issue #47) — button next to Duplicate/Delete, in-card dialog
+// ---------------------------------------------------------------------------
+
+
+describe('move to list (issue #47)', () => {
+  async function setup(colExtra, lists) {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': { lists: lists || [{ id: 'L1', name: 'List 1' }, { id: 'L2', name: 'List 2' }] },
+      'home_tasks/get_tasks': {
+        tasks: [{ id: 'T1', title: 'Wander', sort_order: 0, sub_items: [], completed: false }],
+      },
+      'home_tasks/move_task': {},
+    });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{ list_id: 'L1', ...colExtra }] });
+    card.hass = hass;
+    await flush(card);
+    const task = card._columns[0].tasks[0];
+    return { card, hass, task };
+  }
+  const dialogOf = (card) => card.shadowRoot.querySelector('dialog.ht-confirm');
+
+  test('default: Move button renders next to Duplicate/Delete, targets exclude the source list', async () => {
+    const { card, task } = await setup({});
+    const actions = card._buildActionsSection(task, 0);
+    assert.ok(actions.querySelector('.move-task-btn'), 'move button present');
+    assert.ok(actions.querySelector('.duplicate-task-btn'), 'duplicate still present');
+    assert.ok(actions.querySelector('.delete-task-btn'), 'delete still present');
+    // JSON compare: objects come from the jsdom realm, deepEqual rejects them
+    assert.equal(JSON.stringify(card._moveTargets(0)), JSON.stringify([{ label: 'List 2', list_id: 'L2' }]));
+  });
+
+  test('show_move: false hides the button (Task features toggle)', async () => {
+    const { card, task } = await setup({ show_move: false });
+    const actions = card._buildActionsSection(task, 0);
+    assert.equal(actions.querySelector('.move-task-btn'), null);
+    assert.ok(actions.querySelector('.delete-task-btn'));
+  });
+
+  test('no other list -> no button even when enabled', async () => {
+    const { card, task } = await setup({}, [{ id: 'L1', name: 'List 1' }]);
+    const actions = card._buildActionsSection(task, 0);
+    assert.equal(actions.querySelector('.move-task-btn'), null);
+  });
+
+  test('confirming the dialog moves via the native fast path and closes the dialog', async () => {
+    const { card, hass, task } = await setup({});
+    const actions = card._buildActionsSection(task, 0);
+    actions.querySelector('.move-task-btn').click();
+    const dlg = dialogOf(card);
+    assert.ok(dlg, 'in-card dialog opened');
+    assert.match(dlg.querySelector('.ht-confirm-msg').textContent, /Wander/);
+    const sel = dlg.querySelector('.ht-move-select');
+    assert.equal(sel.options.length, 1);
+    assert.equal(sel.options[0].textContent, 'List 2');
+    dlg.querySelector('.ht-confirm-btn.primary').click();
+    await flush(card);
+    const move = hass.calls.find(c => c.type === 'home_tasks/move_task');
+    assert.ok(move, 'move_task called');
+    assert.equal(move.source_list_id, 'L1');
+    assert.equal(move.target_list_id, 'L2');
+    assert.equal(move.task_id, 'T1');
+    assert.equal(dialogOf(card), null, 'dialog removed');
+    assert.ok(!hass.calls.some(c => c.type === 'home_tasks/move_task_cross'), 'no cross path for native->native');
+  });
+
+  test('cancel makes no move call', async () => {
+    const { card, hass, task } = await setup({});
+    const actions = card._buildActionsSection(task, 0);
+    actions.querySelector('.move-task-btn').click();
+    dialogOf(card).querySelector('.ht-confirm-btn:not(.primary)').click();
+    await flush(card);
+    assert.ok(!hass.calls.some(c => c.type === 'home_tasks/move_task' || c.type === 'home_tasks/move_task_cross'));
+    assert.equal(dialogOf(card), null);
+  });
+});

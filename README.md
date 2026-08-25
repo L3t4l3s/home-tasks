@@ -269,6 +269,7 @@ Each entry in `columns` accepts the following options.
 | `show_recurrence` | `true` | Show/hide recurrence settings |
 | `show_history` | `false` | Show/hide the task change history |
 | `badge_priority` / `badge_progress` / `badge_due` / `badge_recurrence` / `badge_person` / `badge_tags` / `badge_reminders` | `true` | Show/hide the corresponding chip on task rows without disabling the feature itself — e.g. keep reminders active but hide their chip (`badge_reminders: false`). The matching `show_*` switch still controls the feature (detail editor + chip) |
+| `show_move` | `true` | Show/hide the Move button in the task details (moves a task to another list, next to Duplicate / Delete) |
 
 ### Card-level option reference
 
