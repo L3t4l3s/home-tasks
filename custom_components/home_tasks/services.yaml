@@ -41,6 +41,81 @@ add_task:
       description: Comma-separated list of tags (e.g. "kitchen,daily").
       selector:
         text:
+    reminders:
+      name: Reminders
+      description: Comma-separated minute offsets before the due moment (0 = at due time), e.g. "0,60,1440".
+      selector:
+        text:
+
+update_task:
+  name: Update Task
+  description: Update fields of an existing task (found by ID or title).
+  fields:
+    list_name:
+      name: List Name
+      description: The name of the task list.
+      example: "Shopping List"
+      selector:
+        text:
+    entry_id:
+      name: Entry ID
+      description: The config entry ID of the list (alternative to list name).
+      selector:
+        text:
+    task_id:
+      name: Task ID
+      description: The ID of the task to update.
+      selector:
+        text:
+    task_title:
+      name: Task Title
+      description: The title of the task to update (alternative to task_id; open tasks win on duplicates).
+      selector:
+        text:
+    title:
+      name: New Title
+      description: New task title.
+      selector:
+        text:
+    due_date:
+      name: Due Date
+      description: Due date in YYYY-MM-DD format.
+      selector:
+        date:
+    due_time:
+      name: Due Time
+      description: Due time in HH:MM format.
+      selector:
+        time:
+    notes:
+      name: Notes
+      description: Task notes.
+      selector:
+        text:
+          multiline: true
+    assigned_person:
+      name: Assigned Person
+      description: Person entity to assign (e.g. person.john).
+      selector:
+        entity:
+          domain: person
+    priority:
+      name: Priority
+      description: 1 (low), 2 (medium) or 3 (high).
+      selector:
+        number:
+          min: 1
+          max: 3
+    tags:
+      name: Tags
+      description: Comma-separated list of tags — replaces the task's tags.
+      selector:
+        text:
+    reminders:
+      name: Reminders
+      description: Comma-separated minute offsets before the due moment (0 = at due time) — replaces the task's reminders.
+      selector:
+        text:
 
 complete_task:
   name: Complete Task

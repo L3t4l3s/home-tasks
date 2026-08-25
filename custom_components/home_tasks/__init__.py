@@ -311,8 +311,12 @@ def _on_task_completed(hass: HomeAssistant, entry_id: str, task: dict) -> None:
 
 
 def _on_task_created(hass: HomeAssistant, entry_id: str, task: dict) -> None:
-    """Fire event when a task is created."""
+    """Fire event when a task is created; arm reminders when the task was
+    created with both a due date and reminders (issue #43) — previously only
+    the update path scheduled them."""
     hass.bus.async_fire(f"{DOMAIN}_task_created", _build_event_data(entry_id, task))
+    if task.get("reminders") and task.get("due_date"):
+        _schedule_reminders(hass, entry_id, task)
 
 
 def _on_task_deleted(hass: HomeAssistant, task_id: str) -> None:
@@ -1333,6 +1337,14 @@ def _resolve_store(hass: HomeAssistant, data: dict) -> tuple[str, HomeTasksStore
     raise vol.Invalid("Either entry_id or list_name must be provided")
 
 
+def _parse_service_reminders(value) -> list[int]:
+    """Service input for reminders: a list of ints or a comma-separated string
+    of minute offsets before the due moment (0 = at due time)."""
+    if isinstance(value, list):
+        return [int(v) for v in value]
+    return [int(part.strip()) for part in str(value).split(",") if part.strip()]
+
+
 def _resolve_task(store: HomeTasksStore, data: dict) -> dict:
     """Find a task by task_id or task_title."""
     task_id = data.get("task_id")
@@ -1374,11 +1386,15 @@ def _async_register_services(hass: HomeAssistant) -> None:
         # Due goes in at creation (one task_created event carrying it, one
         # 'created' history entry). assigned_person stays a follow-up update so
         # the task_assigned event keeps firing for service-created tasks.
+        reminders = None
+        if "reminders" in call.data:
+            reminders = _parse_service_reminders(call.data["reminders"])
         task = await store.async_add_task(
             call.data["title"],
             actor=actor,
             due_date=call.data.get("due_date"),
             due_time=call.data.get("due_time"),
+            reminders=reminders,
         )
         kwargs = {}
         if "assigned_person" in call.data:
@@ -1386,6 +1402,24 @@ def _async_register_services(hass: HomeAssistant) -> None:
         if "tags" in call.data:
             raw = call.data["tags"]
             kwargs["tags"] = [t.strip() for t in raw.split(",") if t.strip()]
+        if kwargs:
+            await store.async_update_task(task["id"], actor=actor, **kwargs)
+
+    async def async_handle_update_task(call: ServiceCall) -> None:
+        """Update fields of an existing task (issue #42) — find it by task_id
+        or task_title, then apply whatever fields the call provides."""
+        _entry_id, store = _resolve_store(hass, call.data)
+        actor = await _resolve_actor(hass, call)
+        task = _resolve_task(store, call.data)
+        kwargs: dict = {}
+        for key in ("title", "due_date", "due_time", "notes", "assigned_person", "priority"):
+            if key in call.data:
+                kwargs[key] = call.data[key]
+        if "tags" in call.data:
+            raw = call.data["tags"]
+            kwargs["tags"] = [t.strip() for t in raw.split(",") if t.strip()]
+        if "reminders" in call.data:
+            kwargs["reminders"] = _parse_service_reminders(call.data["reminders"])
         if kwargs:
             await store.async_update_task(task["id"], actor=actor, **kwargs)
 
@@ -1465,6 +1499,24 @@ def _async_register_services(hass: HomeAssistant) -> None:
             vol.Optional("due_date"): cv.string,
             vol.Optional("due_time"): cv.string,
             vol.Optional("tags"): cv.string,
+            vol.Optional("reminders"): vol.Any(cv.string, [vol.Coerce(int)]),
+        }),
+    )
+    hass.services.async_register(
+        DOMAIN, "update_task", async_handle_update_task,
+        schema=vol.Schema({
+            vol.Optional("entry_id"): cv.string,
+            vol.Optional("list_name"): cv.string,
+            vol.Optional("task_id"): cv.string,
+            vol.Optional("task_title"): cv.string,
+            vol.Optional("title"): cv.string,
+            vol.Optional("due_date"): cv.string,
+            vol.Optional("due_time"): cv.string,
+            vol.Optional("notes"): cv.string,
+            vol.Optional("assigned_person"): cv.string,
+            vol.Optional("priority"): vol.Any(vol.All(vol.Coerce(int), vol.In([1, 2, 3])), None),
+            vol.Optional("tags"): cv.string,
+            vol.Optional("reminders"): vol.Any(cv.string, [vol.Coerce(int)]),
         }),
     )
     hass.services.async_register(

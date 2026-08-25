@@ -152,6 +152,11 @@ async def ws_get_tasks(hass, connection, msg):
         vol.Optional("assigned_person"): vol.Any(str, None),
         vol.Optional("due_date"): _val_date,
         vol.Optional("due_time"): _val_time,
+        vol.Optional("reminders"): vol.All(
+            list,
+            vol.Length(max=MAX_REMINDERS_PER_TASK),
+            [vol.All(int, vol.Range(min=0, max=MAX_REMINDER_OFFSET_MINUTES))],
+        ),
     }
 )
 @websocket_api.async_response
@@ -166,6 +171,7 @@ async def ws_add_task(hass, connection, msg):
             assigned_person=msg.get("assigned_person"),
             due_date=msg.get("due_date"),
             due_time=msg.get("due_time"),
+            reminders=msg.get("reminders"),
         )
         connection.send_result(msg["id"], task)
     except Exception as err:

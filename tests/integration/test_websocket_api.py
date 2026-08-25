@@ -1682,3 +1682,19 @@ async def test_ws_add_task_invalid_due_rejected(hass: HomeAssistant, hass_ws_cli
     })
     msg = await client.receive_json()
     assert msg["success"] is False
+
+
+async def test_ws_add_task_with_reminders(hass: HomeAssistant, hass_ws_client, mock_config_entry) -> None:
+    """WS add_task accepts reminders at creation (issue #43)."""
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 210,
+        "type": "home_tasks/add_task",
+        "list_id": mock_config_entry.entry_id,
+        "title": "With reminders",
+        "due_date": "2099-02-02",
+        "reminders": [0, 30],
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    assert msg["result"]["reminders"] == [0, 30]

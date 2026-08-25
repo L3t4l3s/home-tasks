@@ -2913,3 +2913,58 @@ async def test_service_add_task_due_at_creation(
     actions = [h["action"] for h in task["history"]]
     assert actions[0] == "created"
     assert not any(h.get("field") == "due_date" for h in task["history"])
+
+
+async def test_service_update_task_sets_tags_and_more(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """home_tasks.update_task (issue #42): finds a task by title and applies
+    tags/priority/due to an existing task."""
+    task = await store.async_add_task("Categorize me")
+    await hass.services.async_call(
+        DOMAIN, "update_task",
+        {"entry_id": mock_config_entry.entry_id, "task_title": "Categorize me",
+         "tags": "kitchen, daily", "priority": 3, "due_date": "2027-04-04"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    t = store.get_task(task["id"])
+    assert t["tags"] == ["kitchen", "daily"]
+    assert t["priority"] == 3
+    assert t["due_date"] == "2027-04-04"
+
+
+async def test_service_update_task_reminders_comma_string(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """update_task accepts reminders as a comma string and replaces them."""
+    task = await store.async_add_task("Remind me")
+    await store.async_update_task(task["id"], due_date="2099-01-01", reminders=[5])
+    await hass.services.async_call(
+        DOMAIN, "update_task",
+        {"entry_id": mock_config_entry.entry_id, "task_id": task["id"], "reminders": "0, 60, 1440"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert store.get_task(task["id"])["reminders"] == [0, 60, 1440]
+
+
+async def test_service_add_task_with_reminders_arms_timers(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """add_task with reminders + due (issue #43): stored at creation and the
+    reminder timers are armed immediately (creation path now schedules)."""
+    from custom_components.home_tasks import DATA_REMINDER_TIMERS
+
+    await hass.services.async_call(
+        DOMAIN, "add_task",
+        {"entry_id": mock_config_entry.entry_id, "title": "Webhook task",
+         "due_date": "2099-06-01", "due_time": "12:00", "reminders": "0,60"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    t = next(x for x in store.tasks if x["title"] == "Webhook task")
+    assert t["reminders"] == [0, 60]
+    assert [h["action"] for h in t["history"]] == ["created"]
+    timers = hass.data.get(DATA_REMINDER_TIMERS, {})
+    assert any(k.startswith(f"{t['id']}_r") for k in timers), "reminder timers must be armed at creation"
