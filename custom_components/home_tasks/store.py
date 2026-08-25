@@ -465,13 +465,19 @@ class HomeTasksStore:
         current = self.get_defaults()
         if assignee is _UNSET:
             assignee = current["assignee"]
+        elif assignee:
+            assignee = validate_assigned_person(assignee)
         if reminders is _UNSET:
             reminders = current["reminders"]
-        if assignee:
-            assignee = validate_assigned_person(assignee)
-        reminders = validate_reminders(reminders) if reminders else []
+        else:
+            reminders = validate_reminders(reminders) if reminders else []
         self._data["defaults"] = {"assignee": assignee or None, "reminders": reminders}
-        self._store.async_delay_save(lambda: self._data, 2.0)
+        # Immediate save (not async_delay_save): a pending delayed write of an
+        # unloaded store instance could clobber newer disk state after a
+        # config-entry reload, and the WS ack must mean "persisted".  Client-
+        # side write coalescing already keeps the frequency low; only the
+        # entity listener fanout is skipped here.
+        await self._store.async_save(self._data)
         return self.get_defaults()
 
     async def async_add_task(
@@ -511,6 +517,21 @@ class HomeTasksStore:
         created_entry: dict = {"ts": datetime.now(timezone.utc).isoformat(), "action": "created"}
         if actor:
             created_entry["by"] = actor
+        history = [created_entry]
+        if assigned_person:
+            # A task born with an assignee records it, same entry shape as
+            # the update path — the history view otherwise never learns who
+            # the task was assigned to at creation.
+            assigned_entry: dict = {
+                "ts": created_entry["ts"],
+                "action": "updated",
+                "field": "assigned_person",
+                "from": None,
+                "to": assigned_person,
+            }
+            if actor:
+                assigned_entry["by"] = actor
+            history.append(assigned_entry)
         task = {
             "id": str(uuid.uuid4()),
             "title": title,
@@ -542,7 +563,7 @@ class HomeTasksStore:
             "assigned_person": assigned_person,
             "tags": [],
             "image_url": None,
-            "history": [created_entry],
+            "history": history,
             "external_id": None,
             "sync_source": None,
             "section_id": None,
@@ -785,14 +806,22 @@ class HomeTasksStore:
             self.on_task_deleted(task_id)
         return dict(task)
 
-    async def async_import_task(self, task: dict) -> dict:
-        """Insert an existing task dict into this list (for cross-list move)."""
+    async def async_import_task(self, task: dict, keep_section: bool = False) -> dict:
+        """Insert an existing task dict into this list (for cross-list move).
+
+        keep_section=True is for restoring a task into its ORIGINAL list
+        after a failed move — its section id is still valid there.
+        """
         if len(self._data["tasks"]) >= MAX_TASKS_PER_LIST:
             raise ValueError(f"Maximum number of tasks ({MAX_TASKS_PER_LIST}) reached")
         max_order = max((t["sort_order"] for t in self._data["tasks"]), default=-1)
         # Section ids are per-list: a moved task must not keep pointing at a
         # section of its source list (phantom grouping in the target).
-        task = {**task, "sort_order": max_order + 1, "section_id": None}
+        task = {
+            **task,
+            "sort_order": max_order + 1,
+            "section_id": task.get("section_id") if keep_section else None,
+        }
         self._data["tasks"].append(task)
         await self._async_save()
         if self.on_task_created:
@@ -842,6 +871,11 @@ class HomeTasksStore:
         await self._async_save()
         if self.on_task_created:
             self.on_task_created(new_task)
+        # Same contract as async_add_task: a copy born with an assignee
+        # (duplicate-for-another-person is this method's main use) announces
+        # it so "notify the assignee" automations fire.
+        if new_task.get("assigned_person") and self.on_task_assigned:
+            self.on_task_assigned(new_task, None)
         return new_task
 
     # --- Sub-task methods ---

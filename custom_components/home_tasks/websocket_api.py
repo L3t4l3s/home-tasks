@@ -478,7 +478,15 @@ async def ws_move_task(hass, connection, msg):
         src = _get_store(hass, msg["source_list_id"])
         tgt = _get_store(hass, msg["target_list_id"])
         task = await src.async_export_task(msg["task_id"])
-        await tgt.async_import_task(task)
+        try:
+            await tgt.async_import_task(task)
+        except ValueError:
+            # Target rejected the task (e.g. list full) AFTER the export
+            # already removed it from the source — put it back, then surface
+            # the error. Without this the task would exist only in a local
+            # variable and be permanently lost.
+            await src.async_import_task(task, keep_section=True)
+            raise
         connection.send_result(msg["id"])
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -522,7 +530,13 @@ async def ws_move_task_cross(hass, connection, msg):
             src_store = _get_store(hass, src_list_id)
             tgt_store = _get_store(hass, tgt_list_id)
             task_data = await src_store.async_export_task(task_id)
-            await tgt_store.async_import_task(task_data)
+            try:
+                await tgt_store.async_import_task(task_data)
+            except ValueError:
+                # Restore into the source (see ws_move_task) — never lose
+                # the task when the target rejects it.
+                await src_store.async_import_task(task_data, keep_section=True)
+                raise
             connection.send_result(msg["id"])
             return
 
@@ -613,15 +627,15 @@ async def ws_move_task_cross(hass, connection, msg):
         # --- Create task in target ---
         if tgt_is_native:
             tgt_store = _get_store(hass, tgt_list_id)
-            # Build a full native task dict
-            max_order = max((t["sort_order"] for t in tgt_store._data["tasks"]), default=-1)
+            # Build a full native task dict (sort_order/section_id are set by
+            # async_import_task, which also enforces the task cap)
             new_task = {
                 "id": str(_uuid.uuid4()),
                 "title": task_data.get("title", ""),
                 "completed": task_data.get("completed", False),
                 "notes": task_data.get("notes", ""),
                 "due_date": task_data.get("due_date"),
-                "sort_order": max_order + 1,
+                "sort_order": 0,
                 "sub_items": task_data.get("sub_items", []),
                 "priority": task_data.get("priority"),
                 "due_time": task_data.get("due_time"),
@@ -648,10 +662,7 @@ async def ws_move_task_cross(hass, connection, msg):
                 "external_id": None,
                 "sync_source": None,
             }
-            tgt_store._data["tasks"].append(new_task)
-            await tgt_store._async_save()
-            if tgt_store.on_task_created:
-                tgt_store.on_task_created(new_task)
+            await tgt_store.async_import_task(new_task)
         else:
             # External target: create via adapter, then set overlay for all fields
             tgt_adapter = _get_adapter(hass, tgt_entity_id)

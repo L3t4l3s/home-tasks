@@ -3120,3 +3120,29 @@ async def test_import_rearms_reopen_timer(
     })
     await hass.async_block_till_done()
     assert imported["id"] in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+
+
+async def test_duplicate_with_assignee_fires_task_assigned(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """A duplicate born with an assignee announces it, same contract as
+    async_add_task — duplicate-for-another-person is the main use case."""
+    events = []
+    hass.bus.async_listen(f"{DOMAIN}_task_assigned", lambda e: events.append(e))
+    source = await store.async_add_task("Original")
+    await store.async_duplicate_task(source["id"], assigned_person="person.bob")
+    await hass.async_block_till_done()
+    assert len(events) == 1
+    assert events[0].data["assigned_person"] == "person.bob"
+    assert events[0].data["previous_person"] is None
+
+
+async def test_creation_assignee_recorded_in_history(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """A task born with an assignee records it in history (the old service
+    follow-up update used to write this entry; creation now does)."""
+    task = await store.async_add_task("Documented", assigned_person="person.anna")
+    fields = [(h.get("action"), h.get("field"), h.get("to")) for h in task["history"]]
+    assert ("created", None, None) == fields[0]
+    assert ("updated", "assigned_person", "person.anna") in fields

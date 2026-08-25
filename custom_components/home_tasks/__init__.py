@@ -20,7 +20,7 @@ from .const import DOMAIN, RECURRENCE_UNIT_SECONDS
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 from .overlay_store import ExternalTaskOverlayStore
-from .store import HomeTasksStore, _REOPEN_UNCHANGED
+from .store import HomeTasksStore, _REOPEN_UNCHANGED, validate_reminders
 from .websocket_api import async_register_websocket_commands
 
 _LOGGER = logging.getLogger(__name__)
@@ -1373,8 +1373,6 @@ def _validate_service_reminders(value) -> list[int]:
     naming the field, not as a raw ValueError traceback from deep in the
     store.
     """
-    from .store import validate_reminders
-
     try:
         parsed = _parse_service_reminders(value)
     except (ValueError, TypeError):

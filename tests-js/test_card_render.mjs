@@ -1735,3 +1735,77 @@ describe('editor Defaults cache and non-preset offsets (review)', () => {
     ed.remove();
   });
 });
+
+
+describe('editor Defaults error paths and partial saves (review round 2)', () => {
+  async function makeEditor(wsImpl) {
+    const { window: win } = await loadCard({ force: true });
+    const ed = win.document.createElement('home-tasks-card-editor');
+    const calls = [];
+    ed.hass = {
+      language: 'en',
+      states: { 'person.alice': { attributes: { friendly_name: 'Alice' } } },
+      callWS: async (msg) => {
+        calls.push(msg);
+        const custom = wsImpl && wsImpl(msg);
+        if (custom !== undefined) return custom;
+        if (msg.type === 'home_tasks/get_defaults') return { defaults: { assignee: null, reminders: [0] } };
+        if (msg.type === 'home_tasks/set_defaults') return { defaults: { assignee: msg.assignee ?? null, reminders: msg.reminders ?? [0] } };
+        if (msg.type === 'home_tasks/get_lists') return { lists: [{ id: 'L1', name: 'L' }] };
+        if (msg.type === 'home_tasks/get_external_lists') return { external_lists: [] };
+        return null;
+      },
+    };
+    ed.setConfig({ columns: [{ list_id: 'L1' }] });
+    win.document.body.appendChild(ed);
+    await new Promise(r => setTimeout(r, 30));
+    return { ed, calls, root: ed.shadowRoot || ed };
+  }
+
+  test('failed get_defaults shows an error hint instead of an editable empty state', async () => {
+    const { ed, calls, root } = await makeEditor((msg) => {
+      if (msg.type === 'home_tasks/get_defaults') throw new Error('list not ready');
+    });
+    const container = root.querySelector('.defaults-editor');
+    assert.equal(container.querySelector('select'), null, 'no editable controls over fabricated defaults');
+    assert.match(container.textContent, /Could not load defaults/);
+    // cache must not be poisoned: every subsequent render retries the fetch
+    const before = calls.filter(c => c.type === 'home_tasks/get_defaults').length;
+    ed._render();
+    await new Promise(r => setTimeout(r, 20));
+    const after = calls.filter(c => c.type === 'home_tasks/get_defaults').length;
+    assert.ok(after > before, 'failed fetch must not be cached');
+    ed.remove();
+  });
+
+  test('changing the assignee sends a partial payload without reminders', async () => {
+    const { ed, calls, root } = await makeEditor();
+    const personSel = root.querySelector('.defaults-editor select');
+    personSel.value = 'person.alice';
+    personSel.dispatchEvent(new ed.ownerDocument.defaultView.Event('change'));
+    await new Promise(r => setTimeout(r, 10));
+    const set = calls.find(c => c.type === 'home_tasks/set_defaults');
+    assert.ok(set);
+    assert.equal(set.assignee, 'person.alice');
+    assert.ok(!('reminders' in set), 'untouched field must be omitted (backend keeps it)');
+    ed.remove();
+  });
+
+  test('a failed save shows the error flash and invalidates the session cache', async () => {
+    const { ed, calls, root } = await makeEditor((msg) => {
+      if (msg.type === 'home_tasks/set_defaults') throw new Error('boom');
+    });
+    const personSel = root.querySelector('.defaults-editor select');
+    personSel.value = 'person.alice';
+    personSel.dispatchEvent(new ed.ownerDocument.defaultView.Event('change'));
+    await new Promise(r => setTimeout(r, 10));
+    const flash = root.querySelector('.def-saved-flash');
+    assert.ok(flash.classList.contains('err'), 'error state shown');
+    assert.match(flash.textContent, /Save failed/);
+    // cache dropped: the next render refetches instead of serving stale state
+    ed._render();
+    await new Promise(r => setTimeout(r, 20));
+    assert.equal(calls.filter(c => c.type === 'home_tasks/get_defaults').length, 2);
+    ed.remove();
+  });
+});

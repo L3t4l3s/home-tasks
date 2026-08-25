@@ -1762,3 +1762,42 @@ async def test_ws_defaults_roundtrip_and_applied(hass: HomeAssistant, hass_ws_cl
     })
     msg = await client.receive_json()
     assert msg["result"]["defaults"] == {"assignee": None, "reminders": []}
+
+
+async def test_ws_move_task_full_target_keeps_task_in_source(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store, patch_add_extra_js_url
+) -> None:
+    """A move into a full list must fail WITHOUT losing the task: the export
+    already removed it from the source, so the handler restores it (including
+    its section id) when the import raises."""
+    entry2 = MockConfigEntry(
+        domain=DOMAIN, data={"name": "Full List"}, title="Full List"
+    )
+    entry2.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry2.entry_id)
+    await hass.async_block_till_done()
+    store2 = hass.data[DOMAIN][entry2.entry_id]
+    await store2.async_add_task("Occupies the only slot")
+
+    section = await store.async_add_section("Keep")
+    task = await store.async_add_task("Precious")
+    await store.async_update_task(task["id"], section_id=section["id"])
+
+    from unittest.mock import patch
+
+    client = await hass_ws_client(hass)
+    with patch("custom_components.home_tasks.store.MAX_TASKS_PER_LIST", 1):
+        await client.send_json({
+            "id": 20,
+            "type": "home_tasks/move_task",
+            "source_list_id": mock_config_entry.entry_id,
+            "target_list_id": entry2.entry_id,
+            "task_id": task["id"],
+        })
+        msg = await client.receive_json()
+    assert msg["success"] is False
+    assert "Maximum number of tasks" in msg["error"]["message"]
+    restored = store.get_task(task["id"])
+    assert restored is not None, "task must survive a rejected move"
+    assert restored["section_id"] == section["id"], "restore keeps the original section"
+    assert all(t["id"] != task["id"] for t in store2.tasks)
