@@ -7830,8 +7830,11 @@ class HomeTasksCardEditor extends HTMLElement {
           personSelect.appendChild(opt);
         }
         personSelect.addEventListener("change", () => { defaults.assignee = personSelect.value || null; save(); });
-        kids.push(this._el("div", { className: "field" }, [
-          this._el("div", { className: "sel-wrap" }, [personSelect, this._el("span", { textContent: this._t("ed_default_assignee") })]),
+        // Same field-wrap + floating-label pattern as makeSelect ("View mode"
+        // etc.) — sel-wrap is card CSS and doesn't exist in the editor styles.
+        kids.push(this._el("div", { className: "field-wrap" }, [
+          personSelect,
+          this._el("span", { textContent: this._t("ed_default_assignee") }),
         ]));
         (defaults.reminders || []).forEach((offset, ri) => {
           const sel = this._el("select", { className: "editor-native-select" });
@@ -7841,15 +7844,15 @@ class HomeTasksCardEditor extends HTMLElement {
             sel.appendChild(opt);
           }
           sel.addEventListener("change", () => { defaults.reminders[ri] = parseInt(sel.value, 10); save(); });
-          const removeBtn = this._el("button", { className: "reminder-remove", textContent: "\u00D7", title: this._t("remove_reminder"), type: "button" });
+          const removeBtn = this._el("button", { className: "icon-btn del", textContent: "\u00D7", title: this._t("remove_reminder"), type: "button" });
           removeBtn.addEventListener("click", () => { defaults.reminders.splice(ri, 1); save(); renderInto(); });
-          kids.push(this._el("div", { className: "reminder-row" }, [
-            this._el("div", { className: "sel-wrap" }, [sel, this._el("span", { textContent: this._t("reminder") })]),
+          kids.push(this._el("div", { className: "def-reminder-row" }, [
+            this._el("div", { className: "field-wrap" }, [sel, this._el("span", { textContent: this._t("reminder") })]),
             removeBtn,
           ]));
         });
         if ((defaults.reminders || []).length < 5) {
-          const addBtn = this._el("button", { className: "add-reminder-btn", textContent: this._t("rem_add"), type: "button" });
+          const addBtn = this._el("button", { className: "add-section-btn", textContent: this._t("rem_add"), type: "button" });
           addBtn.addEventListener("click", () => {
             const used = new Set(defaults.reminders);
             const next = (REMINDER_OFFSETS.find(([v]) => !used.has(v)) || REMINDER_OFFSETS[0])[0];
@@ -8144,6 +8147,10 @@ class HomeTasksCardEditor extends HTMLElement {
       .icon-btn ha-icon { --mdc-icon-size: 18px; }
       .add-section-btn { margin-top: 8px; padding: 8px 14px; border: 1px dashed var(--primary-color); border-radius: 6px; background: transparent; color: var(--primary-color); cursor: pointer; font-family: inherit; font-size: 14px; }
       .add-section-btn:hover { background: rgba(3,169,244,0.08); }
+      .defaults-editor { display: flex; flex-direction: column; gap: 16px; }
+      .def-reminder-row { display: flex; align-items: center; gap: 8px; }
+      .def-reminder-row .field-wrap { flex: 1; min-width: 0; }
+      .def-reminder-row .icon-btn { font-size: 18px; line-height: 1; }
       .field-wrap select { width: 100%; box-sizing: border-box; padding: 20px 12px 6px; height: 48px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; background: var(--mdc-text-field-fill-color, var(--input-fill-color, transparent)); color: var(--primary-text-color); font-size: 0.875rem; font-family: inherit; outline: none; cursor: pointer; }
       .field-wrap select:focus { border: 2px solid var(--primary-color); padding: 19px 11px 5px; }
       .field-wrap select:focus ~ span { color: var(--primary-color); }
