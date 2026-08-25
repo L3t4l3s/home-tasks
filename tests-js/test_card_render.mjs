@@ -1656,3 +1656,82 @@ describe('move to list (issue #47)', () => {
     assert.equal(dialogOf(card), null);
   });
 });
+
+
+// ---------------------------------------------------------------------------
+// Code-review fixes: move error surfacing, defaults cache, non-preset offsets
+// ---------------------------------------------------------------------------
+
+
+describe('move failure surfacing (review)', () => {
+  test('a failed move shows the error toast instead of a silent no-op', async () => {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'List 1' }, { id: 'L2', name: 'List 2' }] },
+      'home_tasks/get_tasks': {
+        tasks: [{ id: 'T1', title: 'Doomed', sort_order: 0, sub_items: [], completed: false }],
+      },
+      'home_tasks/move_task': () => { throw new Error('Task not found'); },
+    });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{ list_id: 'L1' }] });
+    card.hass = hass;
+    await flush(card);
+    const task = card._columns[0].tasks[0];
+    const actions = card._buildActionsSection(task, 0);
+    actions.querySelector('.move-task-btn').click();
+    card.shadowRoot.querySelector('dialog.ht-confirm .ht-confirm-btn.primary').click();
+    await flush(card);
+    const toast = card.shadowRoot.querySelector('.toast-error');
+    assert.ok(toast, 'error toast must appear');
+    assert.match(toast.textContent, /Task not found/);
+  });
+});
+
+
+describe('editor Defaults cache and non-preset offsets (review)', () => {
+  async function makeEditor(wsResponses = {}) {
+    const { window: win } = await loadCard({ force: true });
+    const ed = win.document.createElement('home-tasks-card-editor');
+    const calls = [];
+    ed.hass = {
+      language: 'en',
+      states: { 'person.alice': { attributes: { friendly_name: 'Alice' } } },
+      callWS: async (msg) => {
+        calls.push(msg);
+        if (msg.type === 'home_tasks/get_defaults') return wsResponses.get_defaults ?? { defaults: { assignee: null, reminders: [0] } };
+        if (msg.type === 'home_tasks/set_defaults') return { defaults: {} };
+        if (msg.type === 'home_tasks/get_lists') return { lists: [{ id: 'L1', name: 'L' }] };
+        if (msg.type === 'home_tasks/get_external_lists') return { external_lists: [] };
+        return null;
+      },
+    };
+    ed.setConfig({ columns: [{ list_id: 'L1' }] });
+    win.document.body.appendChild(ed);
+    await new Promise(r => setTimeout(r, 30));
+    return { ed, calls, root: ed.shadowRoot || ed };
+  }
+
+  test('get_defaults is fetched once and served from cache on re-renders', async () => {
+    const { ed, calls } = await makeEditor();
+    const before = calls.filter(c => c.type === 'home_tasks/get_defaults').length;
+    assert.equal(before, 1, 'exactly one fetch on first render');
+    ed._render();
+    await new Promise(r => setTimeout(r, 20));
+    const after = calls.filter(c => c.type === 'home_tasks/get_defaults').length;
+    assert.equal(after, 1, 're-render must not re-fetch');
+    assert.ok((ed.shadowRoot || ed).querySelector('.defaults-editor select'), 'cached content renders synchronously');
+    ed.remove();
+  });
+
+  test('a stored non-preset offset gets its own selected option instead of masquerading as "At due time"', async () => {
+    const { ed, root } = await makeEditor({ get_defaults: { defaults: { assignee: null, reminders: [10080] } } });
+    const rows = root.querySelectorAll('.def-reminder-row select');
+    assert.equal(rows.length, 1);
+    const sel = rows[0];
+    assert.equal(sel.value, '10080');
+    const selected = sel.options[sel.selectedIndex];
+    assert.match(selected.textContent, /10080/);
+    ed.remove();
+  });
+});

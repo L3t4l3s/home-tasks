@@ -1736,7 +1736,29 @@ async def test_ws_defaults_roundtrip_and_applied(hass: HomeAssistant, hass_ws_cl
     assert msg["result"]["assigned_person"] == "person.bob"
     assert msg["result"]["reminders"] == [15]
 
-    # clearing
-    await client.send_json({"id": 305, "type": "home_tasks/set_defaults", "list_id": mock_config_entry.entry_id})
+    # partial update: an omitted field keeps its value (a client changing
+    # only the assignee must not silently wipe the default reminders)
+    await client.send_json({
+        "id": 305, "type": "home_tasks/set_defaults",
+        "list_id": mock_config_entry.entry_id, "assignee": "person.bob",
+    })
+    msg = await client.receive_json()
+    assert msg["result"]["defaults"] == {"assignee": "person.bob", "reminders": [0, 60]}
+
+    # explicit empty reminders at creation win over the default ([] means
+    # "no reminders"; only an omitted field falls back to the default)
+    await client.send_json({
+        "id": 306, "type": "home_tasks/add_task",
+        "list_id": mock_config_entry.entry_id, "title": "Opted out", "reminders": [],
+    })
+    msg = await client.receive_json()
+    assert msg["result"]["reminders"] == []
+    assert msg["result"]["assigned_person"] == "person.bob"
+
+    # clearing is explicit: null / empty values
+    await client.send_json({
+        "id": 307, "type": "home_tasks/set_defaults",
+        "list_id": mock_config_entry.entry_id, "assignee": None, "reminders": [],
+    })
     msg = await client.receive_json()
     assert msg["result"]["defaults"] == {"assignee": None, "reminders": []}

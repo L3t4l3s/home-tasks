@@ -9,6 +9,7 @@ from collections.abc import Callable
 from datetime import datetime, timezone
 
 _REOPEN_UNCHANGED = object()  # sentinel for "do not change this field"
+_UNSET = object()  # sentinel for "field not provided" (partial defaults update)
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
@@ -450,14 +451,27 @@ class HomeTasksStore:
         return {"assignee": d.get("assignee") or None, "reminders": list(d.get("reminders") or [])}
 
     async def async_set_defaults(
-        self, assignee: str | None = None, reminders: list | None = None
+        self, assignee: object = _UNSET, reminders: object = _UNSET
     ) -> dict:
-        """Replace the list-level defaults; None / empty clears a field."""
+        """Update the list-level defaults.
+
+        Partial semantics: a field left at _UNSET keeps its current value, so
+        WS clients updating only one field cannot silently wipe the other.
+        Passing None (assignee) or [] (reminders) clears a field explicitly.
+        Defaults are not reflected in any entity state, so this skips the
+        listener fanout and coalesces disk writes instead of forcing an
+        immediate full-store save per editor interaction.
+        """
+        current = self.get_defaults()
+        if assignee is _UNSET:
+            assignee = current["assignee"]
+        if reminders is _UNSET:
+            reminders = current["reminders"]
         if assignee:
             assignee = validate_assigned_person(assignee)
         reminders = validate_reminders(reminders) if reminders else []
         self._data["defaults"] = {"assignee": assignee or None, "reminders": reminders}
-        await self._async_save()
+        self._store.async_delay_save(lambda: self._data, 2.0)
         return self.get_defaults()
 
     async def async_add_task(
@@ -478,12 +492,13 @@ class HomeTasksStore:
         """
         title = validate_text(title, MAX_TITLE_LENGTH, "Task title")
         # List-level defaults (issues #44 / #46): only fill fields the caller
-        # did not provide, so explicit values (e.g. the card's auto-assign)
-        # always win.
+        # did not provide, so explicit values always win — including an
+        # explicit empty reminders list ([] means "no reminders", only None
+        # means "not provided", mirroring the assignee check).
         defaults = self._data.get("defaults") or {}
         if assigned_person is None and defaults.get("assignee"):
             assigned_person = defaults["assignee"]
-        if not reminders and defaults.get("reminders"):
+        if reminders is None and defaults.get("reminders"):
             reminders = list(defaults["reminders"])
         if assigned_person is not None:
             assigned_person = validate_assigned_person(assigned_person)
@@ -536,6 +551,11 @@ class HomeTasksStore:
         await self._async_save()
         if self.on_task_created:
             self.on_task_created(task)
+        # A task born with an assignee (explicit or via the list default)
+        # still announces it, so "notify the assignee" automations keep
+        # working for creation paths that never go through async_update_task.
+        if assigned_person and self.on_task_assigned:
+            self.on_task_assigned(task, None)
         return task
 
     def get_task(self, task_id: str) -> dict:
@@ -767,8 +787,12 @@ class HomeTasksStore:
 
     async def async_import_task(self, task: dict) -> dict:
         """Insert an existing task dict into this list (for cross-list move)."""
+        if len(self._data["tasks"]) >= MAX_TASKS_PER_LIST:
+            raise ValueError(f"Maximum number of tasks ({MAX_TASKS_PER_LIST}) reached")
         max_order = max((t["sort_order"] for t in self._data["tasks"]), default=-1)
-        task = {**task, "sort_order": max_order + 1}
+        # Section ids are per-list: a moved task must not keep pointing at a
+        # section of its source list (phantom grouping in the target).
+        task = {**task, "sort_order": max_order + 1, "section_id": None}
         self._data["tasks"].append(task)
         await self._async_save()
         if self.on_task_created:

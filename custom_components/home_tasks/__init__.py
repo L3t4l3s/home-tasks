@@ -125,6 +125,11 @@ async def _async_register_card(hass: HomeAssistant) -> None:
         mtime = await hass.async_add_executor_job(os.path.getmtime, card_path)
         card_url = f"{CARD_URL}?v={int(mtime)}"
     except OSError as err:
+        # Never advertise the bare URL: with cache_headers=True an unversioned
+        # response would be cached for a month.  A per-boot timestamp busts
+        # the cache each restart in this (rare) error path, which is the safe
+        # direction; the next successful stat restores mtime versioning.
+        card_url = f"{CARD_URL}?v={int(datetime.now(timezone.utc).timestamp())}"
         _LOGGER.warning("Could not stat card file for cache-busting: %s", err)
 
     # Auto-register card JS so users don't need to add a Lovelace resource manually
@@ -326,6 +331,12 @@ def _on_task_created(hass: HomeAssistant, entry_id: str, task: dict) -> None:
     hass.bus.async_fire(f"{DOMAIN}_task_created", _build_event_data(entry_id, task))
     if task.get("reminders") and task.get("due_date"):
         _schedule_reminders(hass, entry_id, task)
+    # A completed recurring task can arrive here via cross-list import (move):
+    # its reopen timer was cancelled on export by on_task_deleted, so re-arm
+    # it (or reopen immediately if overdue) instead of leaving the task
+    # completed until the hourly watchdog pass.
+    if task.get("completed") and task.get("recurrence_enabled"):
+        _rearm_or_reopen(hass, entry_id, task)
 
 
 def _on_task_deleted(hass: HomeAssistant, task_id: str) -> None:
@@ -1354,6 +1365,34 @@ def _parse_service_reminders(value) -> list[int]:
     return [int(part.strip()) for part in str(value).split(",") if part.strip()]
 
 
+def _validate_service_reminders(value) -> list[int]:
+    """Schema-time validator for the reminders service field.
+
+    Parses and range-checks at validation time so bad input ("5m", negative
+    offsets, too many entries) surfaces as a proper service validation error
+    naming the field, not as a raw ValueError traceback from deep in the
+    store.
+    """
+    from .store import validate_reminders
+
+    try:
+        parsed = _parse_service_reminders(value)
+    except (ValueError, TypeError):
+        raise vol.Invalid(
+            'reminders must be integer minute offsets before the due moment, '
+            'e.g. "60, 0" (0 = at due time)'
+        ) from None
+    try:
+        return validate_reminders(parsed)
+    except ValueError as err:
+        raise vol.Invalid(str(err)) from None
+
+
+def _parse_service_tags(value: str) -> list[str]:
+    """Service input for tags: a comma-separated string."""
+    return [t.strip() for t in value.split(",") if t.strip()]
+
+
 def _resolve_task(store: HomeTasksStore, data: dict) -> dict:
     """Find a task by task_id or task_title."""
     task_id = data.get("task_id")
@@ -1392,27 +1431,23 @@ def _async_register_services(hass: HomeAssistant) -> None:
     async def async_handle_add_task(call: ServiceCall) -> None:
         entry_id, store = _resolve_store(hass, call.data)
         actor = await _resolve_actor(hass, call)
-        # Due goes in at creation (one task_created event carrying it, one
-        # 'created' history entry). assigned_person stays a follow-up update so
-        # the task_assigned event keeps firing for service-created tasks.
-        reminders = None
-        if "reminders" in call.data:
-            reminders = _parse_service_reminders(call.data["reminders"])
+        # Everything goes in at creation (one task_created event, one
+        # 'created' history entry, no intermediate bare state); the store
+        # fires task_assigned itself for tasks born with an assignee, so the
+        # old follow-up-update workaround is no longer needed — and no longer
+        # correct, since the list default assignee is applied at creation.
         task = await store.async_add_task(
             call.data["title"],
             actor=actor,
+            assigned_person=call.data.get("assigned_person"),
             due_date=call.data.get("due_date"),
             due_time=call.data.get("due_time"),
-            reminders=reminders,
+            reminders=call.data.get("reminders"),
         )
-        kwargs = {}
-        if "assigned_person" in call.data:
-            kwargs["assigned_person"] = call.data["assigned_person"]
         if "tags" in call.data:
-            raw = call.data["tags"]
-            kwargs["tags"] = [t.strip() for t in raw.split(",") if t.strip()]
-        if kwargs:
-            await store.async_update_task(task["id"], actor=actor, **kwargs)
+            await store.async_update_task(
+                task["id"], actor=actor, tags=_parse_service_tags(call.data["tags"])
+            )
 
     async def async_handle_update_task(call: ServiceCall) -> None:
         """Update fields of an existing task (issue #42) — find it by task_id
@@ -1425,10 +1460,9 @@ def _async_register_services(hass: HomeAssistant) -> None:
             if key in call.data:
                 kwargs[key] = call.data[key]
         if "tags" in call.data:
-            raw = call.data["tags"]
-            kwargs["tags"] = [t.strip() for t in raw.split(",") if t.strip()]
+            kwargs["tags"] = _parse_service_tags(call.data["tags"])
         if "reminders" in call.data:
-            kwargs["reminders"] = _parse_service_reminders(call.data["reminders"])
+            kwargs["reminders"] = call.data["reminders"]
         if kwargs:
             await store.async_update_task(task["id"], actor=actor, **kwargs)
 
@@ -1508,7 +1542,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
             vol.Optional("due_date"): cv.string,
             vol.Optional("due_time"): cv.string,
             vol.Optional("tags"): cv.string,
-            vol.Optional("reminders"): vol.Any(cv.string, [vol.Coerce(int)]),
+            vol.Optional("reminders"): _validate_service_reminders,
         }),
     )
     hass.services.async_register(
@@ -1525,7 +1559,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
             vol.Optional("assigned_person"): cv.string,
             vol.Optional("priority"): vol.Any(vol.All(vol.Coerce(int), vol.In([1, 2, 3])), None),
             vol.Optional("tags"): cv.string,
-            vol.Optional("reminders"): vol.Any(cv.string, [vol.Coerce(int)]),
+            vol.Optional("reminders"): _validate_service_reminders,
         }),
     )
     hass.services.async_register(

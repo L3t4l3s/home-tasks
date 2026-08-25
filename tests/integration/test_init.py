@@ -2930,9 +2930,9 @@ def test_dst_helper_southern_hemisphere() -> None:
 async def test_service_add_task_due_at_creation(
     hass: HomeAssistant, mock_config_entry, store
 ) -> None:
-    """home_tasks.add_task stores due_date/due_time at creation: one 'created'
-    history entry, task_created already carries the due, assignment still a
-    follow-up (task_assigned keeps firing)."""
+    """home_tasks.add_task stores due_date/due_time (and the assignee) at
+    creation: one 'created' history entry, task_created already carries the
+    due; the store itself fires task_assigned for tasks born assigned."""
     created = []
     hass.bus.async_listen(f"{DOMAIN}_task_created", lambda e: created.append(e))
     await hass.services.async_call(
@@ -3021,3 +3021,102 @@ async def test_list_defaults_apply_to_service_and_todo_paths(
     t = next(x for x in store.tasks if x["title"] == "Routed")
     assert t["assigned_person"] == "person.carol"
     assert t["reminders"] == [30]
+
+
+async def test_default_assignee_fires_task_assigned(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """A task born with an assignee — via the list default or an explicit
+    value at creation — fires task_assigned with previous_person None, so
+    "notify the assignee" automations keep working for every creation path."""
+    events = []
+    hass.bus.async_listen(f"{DOMAIN}_task_assigned", lambda e: events.append(e))
+    await store.async_set_defaults(assignee="person.anna")
+
+    # default-assigned creation (card quick-add / todo platform path)
+    await store.async_add_task("Defaulted")
+    await hass.async_block_till_done()
+    assert len(events) == 1
+    assert events[0].data["assigned_person"] == "person.anna"
+    assert events[0].data["previous_person"] is None
+
+    # service call whose explicit assignee equals the default: exactly one
+    # event (previously the follow-up update saw no change and fired none)
+    await hass.services.async_call(
+        DOMAIN, "add_task",
+        {"entry_id": mock_config_entry.entry_id, "title": "Svc same",
+         "assigned_person": "person.anna"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert len(events) == 2
+    assert events[1].data["previous_person"] is None
+
+
+async def test_explicit_empty_reminders_beat_default(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """[] means "no reminders" and wins over the list default; only an
+    omitted (None) reminders field falls back to the default."""
+    await store.async_set_defaults(reminders=[30])
+    opted_out = await store.async_add_task("No reminders", reminders=[])
+    assert opted_out["reminders"] == []
+    defaulted = await store.async_add_task("Defaulted reminders")
+    assert defaulted["reminders"] == [30]
+
+
+async def test_import_strips_section_and_enforces_cap(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Cross-list import drops the source list's section_id (per-list ids)
+    and enforces MAX_TASKS_PER_LIST like every other creation path."""
+    imported = await store.async_import_task({
+        "id": "moved-1", "title": "Moved", "completed": False, "sort_order": 0,
+        "sub_items": [], "history": [], "section_id": "foreign-section",
+    })
+    assert imported["section_id"] is None
+
+    with patch("custom_components.home_tasks.store.MAX_TASKS_PER_LIST", 1):
+        with pytest.raises(ValueError, match="Maximum number of tasks"):
+            await store.async_import_task({
+                "id": "moved-2", "title": "Over cap", "completed": False,
+                "sort_order": 0, "sub_items": [], "history": [],
+            })
+
+
+async def test_service_reminders_bad_input_is_schema_error(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Malformed reminders fail at schema time with a message naming the
+    field, not as a raw int() traceback from deep in the store."""
+    import voluptuous as vol
+
+    task = await store.async_add_task("Reminder target")
+    for bad in ("5m, 1h", "-10", [0, 15, 30, 60, 120, 240]):
+        with pytest.raises(vol.Invalid):
+            await hass.services.async_call(
+                DOMAIN, "update_task",
+                {"entry_id": mock_config_entry.entry_id, "task_id": task["id"],
+                 "reminders": bad},
+                blocking=True,
+            )
+
+
+async def test_import_rearms_reopen_timer(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """A completed recurring task arriving via cross-list import gets its
+    reopen timer re-armed immediately instead of waiting for the hourly
+    watchdog (the export side cancelled it via on_task_deleted)."""
+    from custom_components.home_tasks import DATA_RECURRENCE_TIMERS
+
+    future = (datetime.now(timezone.utc) + timedelta(minutes=30)).isoformat()
+    imported = await store.async_import_task({
+        "id": "moved-recurring", "title": "Water plants", "completed": True,
+        "completed_at": datetime.now(timezone.utc).isoformat(),
+        "recurrence_enabled": True, "recurrence_unit": "hours",
+        "recurrence_value": 1, "recurrence_type": "interval",
+        "reopen_at": future, "sort_order": 0, "sub_items": [], "history": [],
+    })
+    await hass.async_block_till_done()
+    assert imported["id"] in hass.data.get(DATA_RECURRENCE_TIMERS, {})

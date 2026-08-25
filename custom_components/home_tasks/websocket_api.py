@@ -19,6 +19,11 @@ _val_id = vol.All(str, vol.Length(min=1, max=40))
 _val_entity_id = vol.All(str, vol.Length(min=1, max=255))
 _val_task_uid = vol.All(str, vol.Length(min=1, max=255))
 _val_date = vol.Any(vol.All(str, vol.Match(r"^\d{4}-\d{2}-\d{2}$")), None)
+_val_reminders = vol.All(
+    list,
+    vol.Length(max=MAX_REMINDERS_PER_TASK),
+    [vol.All(int, vol.Range(min=0, max=MAX_REMINDER_OFFSET_MINUTES))],
+)
 _val_time = vol.Any(vol.All(str, vol.Match(r"^\d{2}:\d{2}$")), None)
 # Anniversary is "MM-DD" — month 01–12, day 01–31.  The deeper calendar
 # check (e.g. rejecting 02-30) lives in store.py's validate_recurrence_anniversary;
@@ -154,11 +159,7 @@ async def ws_get_tasks(hass, connection, msg):
         vol.Optional("assigned_person"): vol.Any(str, None),
         vol.Optional("due_date"): _val_date,
         vol.Optional("due_time"): _val_time,
-        vol.Optional("reminders"): vol.All(
-            list,
-            vol.Length(max=MAX_REMINDERS_PER_TASK),
-            [vol.All(int, vol.Range(min=0, max=MAX_REMINDER_OFFSET_MINUTES))],
-        ),
+        vol.Optional("reminders"): _val_reminders,
     }
 )
 @websocket_api.async_response
@@ -201,23 +202,27 @@ async def ws_get_defaults(hass, connection, msg):
         vol.Required("type"): "home_tasks/set_defaults",
         vol.Required("list_id"): _val_id,
         vol.Optional("assignee"): vol.Any(str, None),
-        vol.Optional("reminders"): vol.All(
-            list,
-            vol.Length(max=MAX_REMINDERS_PER_TASK),
-            [vol.All(int, vol.Range(min=0, max=MAX_REMINDER_OFFSET_MINUTES))],
-        ),
+        vol.Optional("reminders"): _val_reminders,
     }
 )
 @websocket_api.async_response
 async def ws_set_defaults(hass, connection, msg):
-    """Replace the list-level defaults for new tasks (issues #44 / #46)."""
+    """Update the list-level defaults for new tasks (issues #44 / #46).
+
+    Partial update: omitted fields keep their current value.
+    """
     try:
         store = _get_store(hass, msg["list_id"])
-        await store.async_set_defaults(
-            assignee=msg.get("assignee"),
-            reminders=msg.get("reminders"),
-        )
-        connection.send_result(msg["id"], {"defaults": store.get_defaults()})
+        # Pass only the fields the client sent: async_set_defaults has
+        # partial-update semantics, so an omitted field keeps its value
+        # instead of being silently cleared.
+        kwargs = {}
+        if "assignee" in msg:
+            kwargs["assignee"] = msg["assignee"]
+        if "reminders" in msg:
+            kwargs["reminders"] = msg["reminders"]
+        defaults = await store.async_set_defaults(**kwargs)
+        connection.send_result(msg["id"], {"defaults": defaults})
     except Exception as err:
         _handle_error(connection, msg["id"], err)
 
@@ -232,11 +237,7 @@ async def ws_set_defaults(hass, connection, msg):
         vol.Optional("notes"): vol.All(str, vol.Length(max=5000)),
         vol.Optional("due_date"): _val_date,
         vol.Optional("due_time"): _val_time,
-        vol.Optional("reminders"): vol.All(
-            list,
-            vol.Length(max=MAX_REMINDERS_PER_TASK),
-            [vol.All(int, vol.Range(min=0, max=MAX_REMINDER_OFFSET_MINUTES))],
-        ),
+        vol.Optional("reminders"): _val_reminders,
         vol.Optional("priority"): vol.Any(vol.In([1, 2, 3]), None),
         vol.Optional("recurrence_value"): vol.All(int, vol.Range(min=1, max=MAX_RECURRENCE_VALUE)),
         vol.Optional("recurrence_unit"): vol.Any(vol.In(list(VALID_RECURRENCE_UNITS)), None),
@@ -1014,11 +1015,7 @@ async def ws_get_external_tasks(hass, connection, msg):
         vol.Optional("due_time"): _val_time,
         vol.Optional("assigned_person"): vol.Any(str, None),
         vol.Optional("tags"): vol.All(list, vol.Length(max=MAX_TAGS_PER_TASK)),
-        vol.Optional("reminders"): vol.All(
-            list,
-            vol.Length(max=MAX_REMINDERS_PER_TASK),
-            [vol.All(int, vol.Range(min=0, max=MAX_REMINDER_OFFSET_MINUTES))],
-        ),
+        vol.Optional("reminders"): _val_reminders,
         vol.Optional("sort_order"): int,
         vol.Optional("recurrence_value"): vol.All(int, vol.Range(min=1, max=MAX_RECURRENCE_VALUE)),
         vol.Optional("recurrence_unit"): vol.Any(vol.In(list(VALID_RECURRENCE_UNITS)), None),
@@ -1219,11 +1216,7 @@ def _fire_external_task_event(
         vol.Optional("priority"): vol.Any(vol.In([1, 2, 3]), None),
         vol.Optional("tags"): vol.All(list, vol.Length(max=MAX_TAGS_PER_TASK)),
         vol.Optional("assigned_person"): vol.Any(str, None),
-        vol.Optional("reminders"): vol.All(
-            list,
-            vol.Length(max=MAX_REMINDERS_PER_TASK),
-            [vol.All(int, vol.Range(min=0, max=MAX_REMINDER_OFFSET_MINUTES))],
-        ),
+        vol.Optional("reminders"): _val_reminders,
         vol.Optional("recurrence_enabled"): bool,
         vol.Optional("recurrence_type"): vol.In(["interval", "weekdays"]),
         vol.Optional("recurrence_value"): vol.All(int, vol.Range(min=1, max=MAX_RECURRENCE_VALUE)),
@@ -1297,11 +1290,7 @@ async def ws_create_external_task(hass, connection, msg):
         vol.Optional("priority"): vol.Any(vol.In([1, 2, 3]), None),
         vol.Optional("tags"): vol.All(list, vol.Length(max=MAX_TAGS_PER_TASK)),
         vol.Optional("assigned_person"): vol.Any(str, None),
-        vol.Optional("reminders"): vol.All(
-            list,
-            vol.Length(max=MAX_REMINDERS_PER_TASK),
-            [vol.All(int, vol.Range(min=0, max=MAX_REMINDER_OFFSET_MINUTES))],
-        ),
+        vol.Optional("reminders"): _val_reminders,
         vol.Optional("sort_order"): int,
         vol.Optional("recurrence_enabled"): bool,
         vol.Optional("recurrence_type"): vol.In(["interval", "weekdays"]),
