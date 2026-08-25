@@ -60,6 +60,9 @@ const _TRANSLATIONS = {
     ed_confirm_complete: "Confirm before completing",
     ed_show_add_due: "Due date when adding",
     ed_max_height: "Max height (px, 0 = unlimited)",
+    ed_sec_defaults: "Defaults",
+    ed_default_assignee: "Default assignee",
+    ed_defaults_hint: "Applied to every new task in this list \u2014 no matter how it is created (card, service, voice, todo).",
     confirm_complete_msg: "Mark \"{0}\" as completed?",
     confirm_complete_ok: "Complete",
     ed_compact: "Compact",
@@ -195,6 +198,9 @@ const _TRANSLATIONS = {
     ed_confirm_complete: "Bevestigen voor afronden",
     ed_show_add_due: "Vervaldatum bij toevoegen",
     ed_max_height: "Max. hoogte (px, 0 = onbeperkt)",
+    ed_sec_defaults: "Standaardwaarden",
+    ed_default_assignee: "Standaard toegewezene",
+    ed_defaults_hint: "Geldt voor elke nieuwe taak in deze lijst \u2014 ongeacht hoe die wordt aangemaakt.",
     confirm_complete_msg: "\u201e{0}\u201d als afgerond markeren?",
     confirm_complete_ok: "Afronden",
     ed_hint: "Nieuwe lijsten kunnen worden aangemaakt via Instellingen \u2192 Integraties \u2192 Home Tasks.",
@@ -271,6 +277,9 @@ const _TRANSLATIONS = {
     ed_confirm_complete: "Conferma prima di completare",
     ed_show_add_due: "Scadenza alla creazione",
     ed_max_height: "Altezza max (px, 0 = illimitata)",
+    ed_sec_defaults: "Predefiniti",
+    ed_default_assignee: "Assegnatario predefinito",
+    ed_defaults_hint: "Si applica a ogni nuova attivit\u00e0 di questo elenco, comunque venga creata.",
     confirm_complete_msg: "Segnare \u201c{0}\u201d come completata?",
     confirm_complete_ok: "Completa",
     ed_hint: "Nuove liste possono essere create in Impostazioni \u2192 Integrazioni \u2192 Home Tasks.",
@@ -347,6 +356,9 @@ const _TRANSLATIONS = {
     ed_confirm_complete: "Potwierd\u017a przed uko\u0144czeniem",
     ed_show_add_due: "Termin przy dodawaniu",
     ed_max_height: "Maks. wysoko\u015b\u0107 (px, 0 = bez limitu)",
+    ed_sec_defaults: "Domy\u015blne",
+    ed_default_assignee: "Domy\u015blny przypisany",
+    ed_defaults_hint: "Dotyczy ka\u017cdego nowego zadania na tej li\u015bcie \u2014 niezale\u017cnie od sposobu utworzenia.",
     confirm_complete_msg: "Oznaczy\u0107 \u201e{0}\u201d jako uko\u0144czone?",
     confirm_complete_ok: "Uko\u0144cz",
     ed_hint: "Nowe listy mo\u017cna tworzy\u0107 w Ustawienia \u2192 Integracje \u2192 Home Tasks.",
@@ -423,6 +435,9 @@ const _TRANSLATIONS = {
     ed_confirm_complete: "Bekr\u00e4fta innan slutf\u00f6rande",
     ed_show_add_due: "F\u00f6rfallodatum vid till\u00e4gg",
     ed_max_height: "Maxh\u00f6jd (px, 0 = obegr\u00e4nsad)",
+    ed_sec_defaults: "Standardv\u00e4rden",
+    ed_default_assignee: "Standardtilldelad",
+    ed_defaults_hint: "G\u00e4ller varje ny uppgift i listan \u2014 oavsett hur den skapas.",
     confirm_complete_msg: "Markera \u201d{0}\u201d som slutf\u00f6rd?",
     confirm_complete_ok: "Slutf\u00f6r",
     ed_hint: "Nya listor kan skapas under Inst\u00e4llningar \u2192 Integrationer \u2192 Home Tasks.",
@@ -499,6 +514,9 @@ const _TRANSLATIONS = {
     ed_confirm_complete: "Confirmer avant de terminer",
     ed_show_add_due: "\u00c9ch\u00e9ance \u00e0 la cr\u00e9ation",
     ed_max_height: "Hauteur max (px, 0 = illimit\u00e9e)",
+    ed_sec_defaults: "Valeurs par d\u00e9faut",
+    ed_default_assignee: "Assign\u00e9 par d\u00e9faut",
+    ed_defaults_hint: "S'applique \u00e0 chaque nouvelle t\u00e2che de cette liste, quelle que soit sa cr\u00e9ation.",
     confirm_complete_msg: "Marquer \u00ab\u202f{0}\u202f\u00bb comme termin\u00e9e\u202f?",
     confirm_complete_ok: "Terminer",
     ed_hint: "De nouvelles listes peuvent \u00eatre cr\u00e9\u00e9es dans Param\u00e8tres \u2192 Int\u00e9grations \u2192 Home Tasks.",
@@ -575,6 +593,9 @@ const _TRANSLATIONS = {
     ed_confirm_complete: "Confirmar antes de concluir",
     ed_show_add_due: "Prazo ao adicionar",
     ed_max_height: "Altura m\u00e1x. (px, 0 = ilimitada)",
+    ed_sec_defaults: "Padr\u00f5es",
+    ed_default_assignee: "Respons\u00e1vel padr\u00e3o",
+    ed_defaults_hint: "Aplica-se a cada nova tarefa desta lista, seja como for criada.",
     confirm_complete_msg: "Marcar \u201c{0}\u201d como conclu\u00edda?",
     confirm_complete_ok: "Concluir",
     ed_hint: "Novas listas podem ser criadas em Configura\u00e7\u00f5es \u2192 Integra\u00e7\u00f5es \u2192 Home Tasks.",
@@ -651,6 +672,9 @@ const _TRANSLATIONS = {
     ed_confirm_complete: "Confirmar antes de completar",
     ed_show_add_due: "Fecha l\u00edmite al a\u00f1adir",
     ed_max_height: "Altura m\u00e1x. (px, 0 = ilimitada)",
+    ed_sec_defaults: "Predeterminados",
+    ed_default_assignee: "Asignado por defecto",
+    ed_defaults_hint: "Se aplica a cada nueva tarea de esta lista, sin importar c\u00f3mo se cree.",
     confirm_complete_msg: "\u00bfMarcar \u00ab{0}\u00bb como completada?",
     confirm_complete_ok: "Completar",
     ed_hint: "Se pueden crear nuevas listas en Configuraci\u00f3n \u2192 Integraciones \u2192 Home Tasks.",
@@ -727,6 +751,9 @@ const _TRANSLATIONS = {
     ed_confirm_complete: "\u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0430\u0442\u044c \u043f\u0435\u0440\u0435\u0434 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u0438\u0435\u043c",
     ed_show_add_due: "\u0421\u0440\u043e\u043a \u043f\u0440\u0438 \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u0438\u0438",
     ed_max_height: "\u041c\u0430\u043a\u0441. \u0432\u044b\u0441\u043e\u0442\u0430 (px, 0 = \u0431\u0435\u0437 \u043e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d\u0438\u044f)",
+    ed_sec_defaults: "\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u044f \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e",
+    ed_default_assignee: "\u041e\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0435\u043d\u043d\u044b\u0439 \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e",
+    ed_defaults_hint: "\u041f\u0440\u0438\u043c\u0435\u043d\u044f\u0435\u0442\u0441\u044f \u043a \u043a\u0430\u0436\u0434\u043e\u0439 \u043d\u043e\u0432\u043e\u0439 \u0437\u0430\u0434\u0430\u0447\u0435 \u044d\u0442\u043e\u0433\u043e \u0441\u043f\u0438\u0441\u043a\u0430.",
     confirm_complete_msg: "\u041e\u0442\u043c\u0435\u0442\u0438\u0442\u044c \u00ab{0}\u00bb \u043a\u0430\u043a \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043d\u0443\u044e?",
     confirm_complete_ok: "\u0412\u044b\u043f\u043e\u043b\u043d\u0438\u0442\u044c",
     ed_hint: "\u041d\u043e\u0432\u044b\u0435 \u0441\u043f\u0438\u0441\u043a\u0438 \u043c\u043e\u0436\u043d\u043e \u0441\u043e\u0437\u0434\u0430\u0442\u044c \u0432 \u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 \u2192 \u0418\u043d\u0442\u0435\u0433\u0440\u0430\u0446\u0438\u0438 \u2192 Home Tasks.",
@@ -803,6 +830,9 @@ const _TRANSLATIONS = {
     ed_confirm_complete: "Potvrdit p\u0159ed dokon\u010den\u00edm",
     ed_show_add_due: "Term\u00edn p\u0159i p\u0159id\u00e1n\u00ed",
     ed_max_height: "Max. v\u00fd\u0161ka (px, 0 = bez limitu)",
+    ed_sec_defaults: "V\u00fdchoz\u00ed hodnoty",
+    ed_default_assignee: "V\u00fdchoz\u00ed p\u0159i\u0159azen\u00ed",
+    ed_defaults_hint: "Plat\u00ed pro ka\u017ed\u00fd nov\u00fd \u00fakol v tomto seznamu.",
     confirm_complete_msg: "Ozna\u010dit \u201e{0}\u201c jako dokon\u010den\u00e9?",
     confirm_complete_ok: "Dokon\u010dit",
     ed_hint: "Nov\u00e9 seznamy lze vytvo\u0159it v Nastaven\u00ed \u2192 Integrace \u2192 Home Tasks.",
@@ -879,6 +909,9 @@ const _TRANSLATIONS = {
     ed_confirm_complete: "Bekr\u00e6ft f\u00f8r fuldf\u00f8relse",
     ed_show_add_due: "Forfaldsdato ved tilf\u00f8jelse",
     ed_max_height: "Maks. h\u00f8jde (px, 0 = ubegr\u00e6nset)",
+    ed_sec_defaults: "Standarder",
+    ed_default_assignee: "Standardtildelt",
+    ed_defaults_hint: "G\u00e6lder for hver ny opgave p\u00e5 listen \u2014 uanset hvordan den oprettes.",
     confirm_complete_msg: "Mark\u00e9r \u201d{0}\u201d som fuldf\u00f8rt?",
     confirm_complete_ok: "Fuldf\u00f8r",
     ed_hint: "Nye lister kan oprettes under Indstillinger \u2192 Integrationer \u2192 Home Tasks.",
@@ -955,6 +988,9 @@ const _TRANSLATIONS = {
     ed_confirm_complete: "Bekreft f\u00f8r fullf\u00f8ring",
     ed_show_add_due: "Forfallsdato ved tillegg",
     ed_max_height: "Maks. h\u00f8yde (px, 0 = ubegrenset)",
+    ed_sec_defaults: "Standarder",
+    ed_default_assignee: "Standardtildelt",
+    ed_defaults_hint: "Gjelder hver ny oppgave i listen \u2014 uansett hvordan den opprettes.",
     confirm_complete_msg: "Merke \u00ab{0}\u00bb som fullf\u00f8rt?",
     confirm_complete_ok: "Fullf\u00f8r",
     ed_hint: "Nye lister kan opprettes under Innstillinger \u2192 Integrasjoner \u2192 Home Tasks.",
@@ -1031,6 +1067,9 @@ const _TRANSLATIONS = {
     ed_confirm_complete: "Vahvista ennen valmiiksi merkitsemist\u00e4",
     ed_show_add_due: "Er\u00e4p\u00e4iv\u00e4 lis\u00e4tt\u00e4ess\u00e4",
     ed_max_height: "Enimm\u00e4iskorkeus (px, 0 = rajaton)",
+    ed_sec_defaults: "Oletukset",
+    ed_default_assignee: "Oletusvastuuhenkil\u00f6",
+    ed_defaults_hint: "Koskee jokaista listan uutta teht\u00e4v\u00e4\u00e4 luontitavasta riippumatta.",
     confirm_complete_msg: "Merkit\u00e4\u00e4nk\u00f6 \u201d{0}\u201d valmiiksi?",
     confirm_complete_ok: "Merkitse valmiiksi",
     ed_hint: "Uusia listoja voi luoda kohdassa Asetukset \u2192 Integraatiot \u2192 Home Tasks.",
@@ -1107,6 +1146,9 @@ const _TRANSLATIONS = {
     ed_confirm_complete: "Meger\u0151s\u00edt\u00e9s befejez\u00e9s el\u0151tt",
     ed_show_add_due: "Hat\u00e1rid\u0151 hozz\u00e1ad\u00e1skor",
     ed_max_height: "Max. magass\u00e1g (px, 0 = korl\u00e1tlan)",
+    ed_sec_defaults: "Alap\u00e9rtelmez\u00e9sek",
+    ed_default_assignee: "Alap\u00e9rtelmezett felel\u0151s",
+    ed_defaults_hint: "A lista minden \u00faj feladat\u00e1ra \u00e9rv\u00e9nyes, b\u00e1rhogyan is j\u00f6n l\u00e9tre.",
     confirm_complete_msg: "Megjel\u00f6l\u00f6d \u201e{0}\u201d-t k\u00e9szk\u00e9nt?",
     confirm_complete_ok: "K\u00e9sz",
     ed_hint: "\u00daj list\u00e1k a Be\u00e1ll\u00edt\u00e1sok \u2192 Integr\u00e1ci\u00f3k \u2192 Home Tasks alatt hozhat\u00f3k l\u00e9tre.",
@@ -1204,6 +1246,9 @@ const _TRANSLATIONS = {
     ed_confirm_complete: "Vor dem Erledigen nachfragen",
     ed_show_add_due: "F\u00e4lligkeit beim Anlegen",
     ed_max_height: "Max. H\u00f6he (px, 0 = unbegrenzt)",
+    ed_sec_defaults: "Standardwerte",
+    ed_default_assignee: "Standard-Zust\u00e4ndige(r)",
+    ed_defaults_hint: "Gilt f\u00fcr jede neue Aufgabe dieser Liste \u2014 egal wie sie angelegt wird (Karte, Service, Sprache, Todo).",
     confirm_complete_msg: "„{0}“ als erledigt markieren?",
     confirm_complete_ok: "Erledigen",
     ed_compact: "Kompakt",
@@ -7634,6 +7679,74 @@ class HomeTasksCard extends HTMLElement {
  * Card Editor — uses safe DOM construction
  */
 class HomeTasksCardEditor extends HTMLElement {
+  // "Defaults" section (issues #44 / #46): list-level default assignee and
+  // reminders, stored in the list itself so they apply to every creation
+  // path (card, service, WS, voice, todo). Loaded/saved via WS.
+  _buildDefaultsEditor(listId) {
+    const container = this._el("div", { className: "defaults-editor" }, [
+      this._el("span", { className: "hint", textContent: this._t("ed_loading") }),
+    ]);
+    (async () => {
+      let defaults = { assignee: null, reminders: [] };
+      try {
+        const r = await this._hass.callWS({ type: "home_tasks/get_defaults", list_id: listId });
+        if (r && r.defaults) defaults = { assignee: r.defaults.assignee || null, reminders: [...(r.defaults.reminders || [])] };
+      } catch (_) { /* list not ready — start empty */ }
+      const save = () => {
+        this._hass.callWS({
+          type: "home_tasks/set_defaults", list_id: listId,
+          assignee: defaults.assignee, reminders: defaults.reminders,
+        }).catch(() => { /* surfaced on next load */ });
+      };
+      const renderInto = () => {
+        const kids = [this._el("span", { className: "hint", textContent: this._t("ed_defaults_hint") })];
+        const personSelect = this._el("select", { className: "editor-native-select" });
+        const noneOpt = this._el("option", { value: "", textContent: this._t("nobody") });
+        if (!defaults.assignee) noneOpt.selected = true;
+        personSelect.appendChild(noneOpt);
+        const persons = Object.keys((this._hass && this._hass.states) || {}).filter((e) => e.startsWith("person.")).sort();
+        for (const eid of persons) {
+          const st = this._hass.states[eid];
+          const opt = this._el("option", { value: eid, textContent: (st && st.attributes && st.attributes.friendly_name) || eid });
+          if (eid === defaults.assignee) opt.selected = true;
+          personSelect.appendChild(opt);
+        }
+        personSelect.addEventListener("change", () => { defaults.assignee = personSelect.value || null; save(); });
+        kids.push(this._el("div", { className: "field" }, [
+          this._el("div", { className: "sel-wrap" }, [personSelect, this._el("span", { textContent: this._t("ed_default_assignee") })]),
+        ]));
+        (defaults.reminders || []).forEach((offset, ri) => {
+          const sel = this._el("select", { className: "editor-native-select" });
+          for (const [val, key] of REMINDER_OFFSETS) {
+            const opt = this._el("option", { value: String(val), textContent: this._t(key) });
+            if (val === offset) opt.selected = true;
+            sel.appendChild(opt);
+          }
+          sel.addEventListener("change", () => { defaults.reminders[ri] = parseInt(sel.value, 10); save(); });
+          const removeBtn = this._el("button", { className: "reminder-remove", textContent: "\u00D7", title: this._t("remove_reminder"), type: "button" });
+          removeBtn.addEventListener("click", () => { defaults.reminders.splice(ri, 1); save(); renderInto(); });
+          kids.push(this._el("div", { className: "reminder-row" }, [
+            this._el("div", { className: "sel-wrap" }, [sel, this._el("span", { textContent: this._t("reminder") })]),
+            removeBtn,
+          ]));
+        });
+        if ((defaults.reminders || []).length < 5) {
+          const addBtn = this._el("button", { className: "add-reminder-btn", textContent: this._t("rem_add"), type: "button" });
+          addBtn.addEventListener("click", () => {
+            const used = new Set(defaults.reminders);
+            const next = (REMINDER_OFFSETS.find(([v]) => !used.has(v)) || REMINDER_OFFSETS[0])[0];
+            defaults.reminders = [...(defaults.reminders || []), next];
+            save(); renderInto();
+          });
+          kids.push(addBtn);
+        }
+        container.replaceChildren(...kids);
+      };
+      renderInto();
+    })();
+    return container;
+  }
+
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -8470,6 +8583,9 @@ class HomeTasksCardEditor extends HTMLElement {
           ? [this._el("div", { className: "hint", textContent: this._t("ed_tile_help"), style: "white-space:pre-line" })]
           : []),
       ]),
+      ...(col.list_id ? [makeSection("defaults", "mdi:account-check-outline", "ed_sec_defaults", [
+        this._buildDefaultsEditor(col.list_id),
+      ], false)] : []),
       makeSection("filters", "mdi:filter-variant", "ed_sec_filters", [
         filterField,
         dueSoonToggle,

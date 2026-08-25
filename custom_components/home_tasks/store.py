@@ -364,11 +364,12 @@ class HomeTasksStore:
         """Load data from disk."""
         data = await self._store.async_load()
         if data is None:
-            self._data = {"tasks": [], "sections": []}
+            self._data = {"tasks": [], "sections": [], "defaults": {}}
             await self._async_save()
         else:
             self._data = data
             self._data.setdefault("sections", [])
+            self._data.setdefault("defaults", {})
             self._backfill_recurrence_fields()
             self._backfill_section_id()
             self._migrate_v1_to_v2()
@@ -441,6 +442,24 @@ class HomeTasksStore:
         """Return all tasks sorted by order."""
         return sorted(self._data["tasks"], key=lambda t: t["sort_order"])
 
+    def get_defaults(self) -> dict:
+        """List-level defaults applied to every newly created task, no matter
+        which path creates it — card, WS, service, voice or todo platform
+        (issues #44 / #46)."""
+        d = self._data.get("defaults") or {}
+        return {"assignee": d.get("assignee") or None, "reminders": list(d.get("reminders") or [])}
+
+    async def async_set_defaults(
+        self, assignee: str | None = None, reminders: list | None = None
+    ) -> dict:
+        """Replace the list-level defaults; None / empty clears a field."""
+        if assignee:
+            assignee = validate_assigned_person(assignee)
+        reminders = validate_reminders(reminders) if reminders else []
+        self._data["defaults"] = {"assignee": assignee or None, "reminders": reminders}
+        await self._async_save()
+        return self.get_defaults()
+
     async def async_add_task(
         self,
         title: str,
@@ -458,6 +477,14 @@ class HomeTasksStore:
         A due_time without a due_date is meaningless and dropped.
         """
         title = validate_text(title, MAX_TITLE_LENGTH, "Task title")
+        # List-level defaults (issues #44 / #46): only fill fields the caller
+        # did not provide, so explicit values (e.g. the card's auto-assign)
+        # always win.
+        defaults = self._data.get("defaults") or {}
+        if assigned_person is None and defaults.get("assignee"):
+            assigned_person = defaults["assignee"]
+        if not reminders and defaults.get("reminders"):
+            reminders = list(defaults["reminders"])
         if assigned_person is not None:
             assigned_person = validate_assigned_person(assigned_person)
         due_date = validate_date(due_date, "due_date")

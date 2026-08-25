@@ -1469,3 +1469,56 @@ describe('add-row time input follows the provider\'s due-time capability', () =>
     assert.ok(row.querySelector('input[type=date]') && row.querySelector('input[type=time]'));
   });
 });
+
+
+describe('editor Defaults section (issues #44 / #46)', () => {
+  async function makeEditor(colExtra, wsResponses = {}) {
+    const { HomeTasksCard, window: win } = await loadCard({ force: true });
+    const ed = win.document.createElement('home-tasks-card-editor');
+    const calls = [];
+    ed.hass = {
+      language: 'en',
+      states: { 'person.alice': { attributes: { friendly_name: 'Alice' } } },
+      callWS: async (msg) => {
+        calls.push(msg);
+        if (msg.type === 'home_tasks/get_defaults') return wsResponses.get_defaults ?? { defaults: { assignee: 'person.alice', reminders: [0] } };
+        if (msg.type === 'home_tasks/set_defaults') return { defaults: {} };
+        if (msg.type === 'home_tasks/get_lists') return { lists: [{ id: 'L1', name: 'L' }] };
+        if (msg.type === 'home_tasks/get_external_lists') return { external_lists: [] };
+        return null;
+      },
+    };
+    ed.setConfig({ columns: [colExtra] });
+    win.document.body.appendChild(ed);
+    await new Promise(r => setTimeout(r, 30));
+    return { ed, calls, root: ed.shadowRoot || ed };
+  }
+
+  test('native list: section renders and loads the stored defaults', async () => {
+    const { ed, calls, root } = await makeEditor({ list_id: 'L1' });
+    assert.ok(calls.some(c => c.type === 'home_tasks/get_defaults' && c.list_id === 'L1'));
+    const container = root.querySelector('.defaults-editor');
+    assert.ok(container, 'defaults editor container must render');
+    const personSel = container.querySelector('select');
+    assert.equal(personSel.value, 'person.alice');
+    assert.ok(container.textContent.includes('Applied to every new task'));
+    ed.remove();
+  });
+
+  test('changing the assignee saves via set_defaults', async () => {
+    const { ed, calls, root } = await makeEditor({ list_id: 'L1' });
+    const personSel = root.querySelector('.defaults-editor select');
+    personSel.value = '';
+    personSel.dispatchEvent(new ed.ownerDocument.defaultView.Event('change'));
+    await new Promise(r => setTimeout(r, 10));
+    const set = calls.find(c => c.type === 'home_tasks/set_defaults');
+    assert.ok(set);
+    assert.equal(set.assignee, null);
+    ed.remove();
+  });
+
+  test('external column: no Defaults section', async () => {
+    const { root } = await makeEditor({ entity_id: 'todo.x' });
+    assert.equal(root.querySelector('.defaults-editor'), null);
+  });
+});

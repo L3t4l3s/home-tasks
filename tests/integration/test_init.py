@@ -2968,3 +2968,19 @@ async def test_service_add_task_with_reminders_arms_timers(
     assert [h["action"] for h in t["history"]] == ["created"]
     timers = hass.data.get(DATA_REMINDER_TIMERS, {})
     assert any(k.startswith(f"{t['id']}_r") for k in timers), "reminder timers must be armed at creation"
+
+
+async def test_list_defaults_apply_to_service_and_todo_paths(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Defaults live in the store, so the service path gets them too (issue #46)."""
+    await store.async_set_defaults(assignee="person.carol", reminders=[30])
+    await hass.services.async_call(
+        DOMAIN, "add_task",
+        {"entry_id": mock_config_entry.entry_id, "title": "Routed"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    t = next(x for x in store.tasks if x["title"] == "Routed")
+    assert t["assigned_person"] == "person.carol"
+    assert t["reminders"] == [30]

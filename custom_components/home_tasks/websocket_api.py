@@ -46,6 +46,8 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_reorder_sub_tasks)
     websocket_api.async_register_command(hass, ws_move_task)
     websocket_api.async_register_command(hass, ws_move_task_cross)
+    websocket_api.async_register_command(hass, ws_get_defaults)
+    websocket_api.async_register_command(hass, ws_set_defaults)
     # External list commands
     websocket_api.async_register_command(hass, ws_get_external_lists)
     websocket_api.async_register_command(hass, ws_get_external_tasks)
@@ -174,6 +176,48 @@ async def ws_add_task(hass, connection, msg):
             reminders=msg.get("reminders"),
         )
         connection.send_result(msg["id"], task)
+    except Exception as err:
+        _handle_error(connection, msg["id"], err)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "home_tasks/get_defaults",
+        vol.Required("list_id"): _val_id,
+    }
+)
+@websocket_api.async_response
+async def ws_get_defaults(hass, connection, msg):
+    """Get the list-level defaults for new tasks (issues #44 / #46)."""
+    try:
+        store = _get_store(hass, msg["list_id"])
+        connection.send_result(msg["id"], {"defaults": store.get_defaults()})
+    except Exception as err:
+        _handle_error(connection, msg["id"], err)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "home_tasks/set_defaults",
+        vol.Required("list_id"): _val_id,
+        vol.Optional("assignee"): vol.Any(str, None),
+        vol.Optional("reminders"): vol.All(
+            list,
+            vol.Length(max=MAX_REMINDERS_PER_TASK),
+            [vol.All(int, vol.Range(min=0, max=MAX_REMINDER_OFFSET_MINUTES))],
+        ),
+    }
+)
+@websocket_api.async_response
+async def ws_set_defaults(hass, connection, msg):
+    """Replace the list-level defaults for new tasks (issues #44 / #46)."""
+    try:
+        store = _get_store(hass, msg["list_id"])
+        await store.async_set_defaults(
+            assignee=msg.get("assignee"),
+            reminders=msg.get("reminders"),
+        )
+        connection.send_result(msg["id"], {"defaults": store.get_defaults()})
     except Exception as err:
         _handle_error(connection, msg["id"], err)
 

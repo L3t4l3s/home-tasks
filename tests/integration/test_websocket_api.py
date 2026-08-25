@@ -1698,3 +1698,45 @@ async def test_ws_add_task_with_reminders(hass: HomeAssistant, hass_ws_client, m
     msg = await client.receive_json()
     assert msg["success"] is True
     assert msg["result"]["reminders"] == [0, 30]
+
+
+async def test_ws_defaults_roundtrip_and_applied(hass: HomeAssistant, hass_ws_client, mock_config_entry) -> None:
+    """List defaults (issues #44/#46): set via WS, read back, and applied to
+    tasks created without explicit values — explicit values win."""
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 301, "type": "home_tasks/set_defaults",
+        "list_id": mock_config_entry.entry_id,
+        "assignee": "person.alice", "reminders": [0, 60],
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    assert msg["result"]["defaults"] == {"assignee": "person.alice", "reminders": [0, 60]}
+
+    await client.send_json({"id": 302, "type": "home_tasks/get_defaults", "list_id": mock_config_entry.entry_id})
+    msg = await client.receive_json()
+    assert msg["result"]["defaults"]["assignee"] == "person.alice"
+
+    # created without explicit values → defaults apply (any creation path)
+    await client.send_json({
+        "id": 303, "type": "home_tasks/add_task",
+        "list_id": mock_config_entry.entry_id, "title": "Defaulted",
+    })
+    msg = await client.receive_json()
+    assert msg["result"]["assigned_person"] == "person.alice"
+    assert msg["result"]["reminders"] == [0, 60]
+
+    # explicit values win over defaults
+    await client.send_json({
+        "id": 304, "type": "home_tasks/add_task",
+        "list_id": mock_config_entry.entry_id, "title": "Explicit",
+        "assigned_person": "person.bob", "reminders": [15],
+    })
+    msg = await client.receive_json()
+    assert msg["result"]["assigned_person"] == "person.bob"
+    assert msg["result"]["reminders"] == [15]
+
+    # clearing
+    await client.send_json({"id": 305, "type": "home_tasks/set_defaults", "list_id": mock_config_entry.entry_id})
+    msg = await client.receive_json()
+    assert msg["result"]["defaults"] == {"assignee": None, "reminders": []}

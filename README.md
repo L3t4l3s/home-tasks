@@ -283,6 +283,14 @@ These options live at the **root** of the card config, not inside a column.
 
 The old flat format (`list_id` at root level) is still supported and migrated automatically.
 
+### List defaults
+
+Native lists can define **defaults for new tasks** (card editor → *Defaults* section):
+a default assignee and default reminders. They apply to every task created in that list,
+no matter how it is created — card, `home_tasks.add_task`, voice input or `todo.add_item`.
+Explicitly provided values (e.g. the card's auto-assign from an active person filter) win
+over the defaults.
+
 ### Styling
 
 **card-mod** works on this card — a plain `style:` string is applied inside the card's shadow DOM, so you can target its classes directly:
