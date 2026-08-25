@@ -9012,9 +9012,30 @@ if (_htIsPolyfillReady()) {
   let _htAttempts = 0;
   const _htPoll = setInterval(() => {
     _htAttempts++;
-    if (_htIsPolyfillReady() || _htAttempts > 200) {
+    if (_htIsPolyfillReady()) {
       clearInterval(_htPoll);
       _htRegister();
+    } else if (_htAttempts > 200) {
+      // 10s without the polyfill — register natively so a genuinely
+      // polyfill-free environment still gets the card (unchanged fallback).
+      clearInterval(_htPoll);
+      _htRegister();
+      // #37 follow-up: if the polyfill installs even later (very slow
+      // devices), the native registration above is invisible to its
+      // registry. Keep watching at a slow tick and register again through
+      // the wrapped define — depending on the polyfill build this heals
+      // the mismatch; at worst the duplicate define throws into the
+      // try/catch inside _htRegister and nothing changes.
+      let _htLate = 0;
+      const _htLatePoll = setInterval(() => {
+        _htLate++;
+        if (_htIsPolyfillReady()) {
+          clearInterval(_htLatePoll);
+          _htRegister();
+        } else if (_htLate > 300) {
+          clearInterval(_htLatePoll); // give up after ~5 min
+        }
+      }, 1000);
     }
   }, 50);
 }
