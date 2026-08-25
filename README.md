@@ -290,6 +290,9 @@ The old flat format (`list_id` at root level) is still supported and migrated au
 Native lists can define **defaults for new tasks** (card editor → *Defaults* section):
 a default assignee and default reminders. They apply to every task created in that list,
 no matter how it is created — card, `home_tasks.add_task`, voice input or `todo.add_item`.
+Explicit values in the creating call always win, including an explicitly empty
+reminders list (`reminders: []` / `""` means "no reminders" — only an omitted field
+falls back to the default).
 Explicitly provided values (e.g. the card's auto-assign from an active person filter) win
 over the defaults.
 
@@ -491,7 +494,7 @@ grid_options:
 | `home_tasks_task_completed` | Fired when a task is marked as done |
 | `home_tasks_task_due` | Fired when a task's due date is today (once per day) |
 | `home_tasks_task_overdue` | Fired when a task is past its due date (once per day) |
-| `home_tasks_task_assigned` | Fired when a person is assigned to a task |
+| `home_tasks_task_assigned` | Fired when a person is assigned to a task — including tasks *created* with an assignee (explicitly, via the list default, or by duplicating for another person); `previous_person` is `null` in that case |
 | `home_tasks_task_reopened` | Fired when a task is reopened (manually or by recurrence) |
 | `home_tasks_task_reminder` | Fired at the configured offset before a task's due time |
 
@@ -510,7 +513,28 @@ The `home_tasks_task_reminder` event additionally includes `reminder_offset_minu
 | `title` | yes | Task title |
 | `assigned_person` | no | Person entity ID (e.g. `person.ben`) |
 | `due_date` | no | Due date (`YYYY-MM-DD`) |
+| `due_time` | no | Due time (`HH:MM`, needs `due_date`) |
 | `tags` | no | Comma-separated tags (e.g. `"kitchen,daily"`) |
+| `reminders` | no | Minute offsets before the due moment, comma-separated or list (e.g. `"60, 0"`; `0` = at due time). An explicitly empty value creates the task without reminders even when the list has default reminders |
+
+#### `home_tasks.update_task`
+
+Update any field of an existing task, found by `task_id` or `task_title`. Only the provided fields change.
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `list_name` | * | Name of the list |
+| `entry_id` | * | Config entry ID |
+| `task_title` | ** | Title of the task |
+| `task_id` | ** | UUID of the task |
+| `title` | no | New title |
+| `due_date` | no | Due date (`YYYY-MM-DD`) |
+| `due_time` | no | Due time (`HH:MM`) |
+| `notes` | no | Notes text |
+| `assigned_person` | no | Person entity ID |
+| `priority` | no | `1` (low) – `3` (high) |
+| `tags` | no | Comma-separated tags — replaces the existing tags |
+| `reminders` | no | Minute offsets before the due moment — replaces the existing reminders |
 
 #### `home_tasks.complete_task`
 
