@@ -1810,6 +1810,22 @@ class HomeTasksCard extends HTMLElement {
       ? externalResult.external_lists.filter(l => l.linked)
       : [];
 
+    // Boot-window self-heal (#37 family): during HA startup this card — now
+    // served reliably from the browser cache — can initialize before the
+    // integration has registered its WS commands or loaded every store. The
+    // initial fetch then fails (null) or misses configured lists, and
+    // nothing else re-triggers it: the cross-device state watcher needs the
+    // very list metadata that just failed to load. Retry with backoff until
+    // the backend answers completely.
+    const missingConfigured = this._config.columns.some(
+      (c) => c.list_id && !this._lists.some((l) => l.id === c.list_id)
+    );
+    if (nativeResult === null || externalResult === null || missingConfigured) {
+      this._scheduleListsRetry();
+    } else {
+      this._listsRetryCount = 0;
+    }
+
     // Auto-select first list if no column has a list configured
     const hasAnyList = this._config.columns.some(c => c.list_id || c.entity_id);
     if (!hasAnyList && this._lists.length > 0) {
@@ -1819,6 +1835,22 @@ class HomeTasksCard extends HTMLElement {
       this._columns[0].filter = newCols[0].default_filter || "all";
     }
     await this._loadAllTasks();
+  }
+
+  _scheduleListsRetry() {
+    // 2s → 5s → 10s → 30s, then once a minute; give up after ~5 minutes
+    // (matches the register block's watch horizon). Runs as a background
+    // update so a retry never steals focus from an input mid-typing.
+    const delays = [2000, 5000, 10000, 30000, 60000, 60000, 60000, 60000];
+    const attempt = this._listsRetryCount || 0;
+    if (attempt >= delays.length || this._listsRetryTimer) return;
+    this._listsRetryCount = attempt + 1;
+    this._listsRetryTimer = setTimeout(() => {
+      this._listsRetryTimer = null;
+      if (!this.isConnected) return;
+      this._isBackgroundUpdate = true;
+      this._loadLists().finally(() => { this._isBackgroundUpdate = false; });
+    }, delays[attempt]);
   }
 
   async _loadAllTasks() {
@@ -7768,6 +7800,7 @@ class HomeTasksCard extends HTMLElement {
     if (this._touchStartTimer) { clearTimeout(this._touchStartTimer); this._touchStartTimer = null; }
     if (this._subTouchStartTimer) { clearTimeout(this._subTouchStartTimer); this._subTouchStartTimer = null; }
     if (this._extPollTimer) { clearInterval(this._extPollTimer); this._extPollTimer = null; }
+    if (this._listsRetryTimer) { clearTimeout(this._listsRetryTimer); this._listsRetryTimer = null; }
     // Stop any active voice recording so the mic stream, AudioContext and
     // pipeline subscription are released when the card is removed mid-recording.
     if (this._voiceActive) {

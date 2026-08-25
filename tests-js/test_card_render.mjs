@@ -1809,3 +1809,65 @@ describe('editor Defaults error paths and partial saves (review round 2)', () =>
     ed.remove();
   });
 });
+
+
+describe('boot-window lists retry (#37 family)', () => {
+  async function makeCard(responses) {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const hass = makeRecordingHass(responses);
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{ list_id: 'L1' }] });
+    card.hass = hass;
+    await flush(card);
+    return { card, hass };
+  }
+
+  test('failed get_lists schedules a backoff retry instead of giving up', async () => {
+    const { card } = await makeCard({
+      'home_tasks/get_lists': () => { throw new Error('unknown command'); },
+      'home_tasks/get_external_lists': () => { throw new Error('unknown command'); },
+    });
+    assert.ok(card._listsRetryTimer, 'retry timer armed');
+    assert.equal(card._listsRetryCount, 1);
+    card.remove(); // disconnectedCallback clears the pending timer
+  });
+
+  test('a configured list missing from the response also triggers the retry', async () => {
+    const { card } = await makeCard({
+      'home_tasks/get_lists': { lists: [{ id: 'OTHER', name: 'Not mine' }] },
+      'home_tasks/get_tasks': { tasks: [] },
+    });
+    assert.ok(card._listsRetryTimer, 'retry armed while configured list is absent');
+    card.remove();
+  });
+
+  test('a later successful load heals the card and resets the retry state', async () => {
+    const responses = {
+      'home_tasks/get_lists': () => { throw new Error('unknown command'); },
+      'home_tasks/get_tasks': { tasks: [{ id: 'T1', title: 'Back', sort_order: 0, sub_items: [] }] },
+    };
+    const { card } = await makeCard(responses);
+    assert.equal(card._lists.length, 0);
+    // backend comes up: the same fetch now answers
+    responses['home_tasks/get_lists'] = { lists: [{ id: 'L1', name: 'Mine' }] };
+    clearTimeout(card._listsRetryTimer);
+    card._listsRetryTimer = null;
+    await card._loadLists();
+    await flush(card);
+    assert.equal(card._lists.length, 1);
+    assert.equal(card._listsRetryCount, 0, 'retry state reset after full success');
+    assert.equal(card._listsRetryTimer, null);
+    assert.ok(card.shadowRoot.querySelector('.task[data-task-id="T1"]'), 'tasks render after heal');
+    card.remove();
+  });
+
+  test('a clean load never schedules a retry', async () => {
+    const { card } = await makeCard({
+      'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'Mine' }] },
+      'home_tasks/get_tasks': { tasks: [] },
+    });
+    assert.equal(card._listsRetryTimer ?? null, null);
+    assert.equal(card._listsRetryCount ?? 0, 0);
+    card.remove();
+  });
+});
