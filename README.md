@@ -498,7 +498,7 @@ grid_options:
 | `home_tasks_task_reopened` | Fired when a task is reopened (manually or by recurrence) |
 | `home_tasks_task_reminder` | Fired at the configured offset before a task's due time |
 
-All events include: `entry_id`, `task_id`, `task_title`, `list_name`, and (if set) `assigned_person`, `due_date`, `due_time`, `priority`, `notes`, `tags`.
+All events include: `entry_id`, `task_id`, `task_title`, `list_name`, and (if set) `assigned_person`, `due_date`, `due_time`, `priority`, `notes` (truncated to 255 chars), `tags`.
 Events for external lists additionally include `entity_id` (the external todo entity).
 The `home_tasks_task_reminder` event additionally includes `reminder_offset_minutes`.
 
@@ -546,8 +546,9 @@ Move a task to another list — same as the card's Move button. Provide exactly 
 |-------|----------|-------------|
 | `list_name` | * | Name of the source list |
 | `entry_id` | * | Config entry ID of the source list |
+| `source_entity_id` | * | Linked external todo entity to move the task out of (requires `task_id`) |
 | `task_title` | ** | Title of the task |
-| `task_id` | ** | UUID of the task |
+| `task_id` | ** | UUID of the task (required with `source_entity_id`) |
 | `target_list_name` | *** | Name of the native target list |
 | `target_entry_id` | *** | Config entry ID of the native target list |
 | `target_entity_id` | *** | Linked external todo entity to move the task into |

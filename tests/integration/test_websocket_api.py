@@ -893,6 +893,7 @@ class _MockAdapter:
         )
         self.created: list[dict] = []
         self.deleted: list[str] = []
+        self.updated: list[tuple] = []
         self._tasks: list[dict] = []
         self._next_id = 1
 
@@ -908,6 +909,10 @@ class _MockAdapter:
     async def async_delete_task(self, task_uid):
         self.deleted.append(task_uid)
         self._tasks = [t for t in self._tasks if t["uid"] != task_uid]
+
+    async def async_update_task(self, task_uid, fields):
+        self.updated.append((task_uid, dict(fields)))
+        return {}
 
     async def async_read_tasks(self):
         return list(self._tasks)
@@ -1785,6 +1790,11 @@ async def test_ws_move_task_full_target_keeps_task_in_source(
 
     from unittest.mock import patch
 
+    later = await store.async_add_task("Comes after")
+    created_events = []
+    hass.bus.async_listen("home_tasks_task_created", lambda e: created_events.append(e))
+    original_order = store.get_task(task["id"])["sort_order"]
+
     client = await hass_ws_client(hass)
     with patch("custom_components.home_tasks.store.MAX_TASKS_PER_LIST", 1):
         await client.send_json({
@@ -1795,9 +1805,39 @@ async def test_ws_move_task_full_target_keeps_task_in_source(
             "task_id": task["id"],
         })
         msg = await client.receive_json()
+    await hass.async_block_till_done()
     assert msg["success"] is False
     assert "Maximum number of tasks" in msg["error"]["message"]
     restored = store.get_task(task["id"])
     assert restored is not None, "task must survive a rejected move"
     assert restored["section_id"] == section["id"], "restore keeps the original section"
+    assert restored["sort_order"] == original_order, "restore keeps the sort position"
+    assert restored["sort_order"] < store.get_task(later["id"])["sort_order"]
+    assert not created_events, "a restore must not fire task_created"
     assert all(t["id"] != task["id"] for t in store2.tasks)
+
+
+async def test_ws_move_task_cross_completed_stays_completed(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store,
+    external_config_entry,
+) -> None:
+    """A completed task moved to an external list arrives completed there —
+    providers create items open, so the status is synced explicitly."""
+    mock_adapter = _MockAdapter("generic")
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})["todo.ws_external"] = mock_adapter
+
+    task = await store.async_add_task("Done deal")
+    await store.async_update_task(task["id"], completed=True)
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 120,
+        "type": "home_tasks/move_task_cross",
+        "task_id": task["id"],
+        "source_list_id": mock_config_entry.entry_id,
+        "target_entity_id": "todo.ws_external",
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    new_uid = mock_adapter.created[0]["uid"]
+    assert (new_uid, {"completed": True}) in mock_adapter.updated

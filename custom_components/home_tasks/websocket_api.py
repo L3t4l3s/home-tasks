@@ -473,20 +473,12 @@ async def ws_reorder_sub_tasks(hass, connection, msg):
 async def ws_move_task(hass, connection, msg):
     """Move a task from one list to another."""
     try:
-        if msg["source_list_id"] == msg["target_list_id"]:
-            raise ValueError("source_list_id and target_list_id must be different")
-        src = _get_store(hass, msg["source_list_id"])
-        tgt = _get_store(hass, msg["target_list_id"])
-        task = await src.async_export_task(msg["task_id"])
-        try:
-            await tgt.async_import_task(task)
-        except ValueError:
-            # Target rejected the task (e.g. list full) AFTER the export
-            # already removed it from the source — put it back, then surface
-            # the error. Without this the task would exist only in a local
-            # variable and be permanently lost.
-            await src.async_import_task(task, keep_section=True)
-            raise
+        await async_move_task_any(
+            hass,
+            task_id=msg["task_id"],
+            src_list_id=msg["source_list_id"],
+            tgt_list_id=msg["target_list_id"],
+        )
         connection.send_result(msg["id"])
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -506,8 +498,7 @@ async def async_move_task_any(
     and the home_tasks.move_task service. Raises ValueError on invalid input
     or provider errors; the callers translate that for their client.
     """
-    import uuid as _uuid
-    from .store import HomeTasksStore
+    import uuid
 
     if not (src_list_id or src_entity_id):
         raise ValueError("source_list_id or source_entity_id required")
@@ -527,9 +518,11 @@ async def async_move_task_any(
         try:
             await tgt_store.async_import_task(task_data)
         except ValueError:
-            # Restore into the source (see ws_move_task) — never lose
-            # the task when the target rejects it.
-            await src_store.async_import_task(task_data, keep_section=True)
+            # Never lose the task when the target rejects it (e.g. list
+            # full): put it back where it was — same section, same sort
+            # position, and no task_created event (on_task_restored only
+            # re-arms the timers the export side cancelled).
+            await src_store.async_import_task(task_data, restore=True)
             raise
         return
 
@@ -623,7 +616,7 @@ async def async_move_task_any(
         # Build a full native task dict (sort_order/section_id are set by
         # async_import_task, which also enforces the task cap)
         new_task = {
-            "id": str(_uuid.uuid4()),
+            "id": str(uuid.uuid4()),
             "title": task_data.get("title", ""),
             "completed": task_data.get("completed", False),
             "notes": task_data.get("notes", ""),
@@ -684,11 +677,8 @@ async def async_move_task_any(
                 if task_data.get(k) is not None:
                     create_fields[k] = task_data[k]
 
-        if tgt_adapter:
-            new_uid, _adapter_unsynced = await tgt_adapter.async_create_task(create_fields)
-        else:
-            generic = GenericAdapter(hass, tgt_entity_id, {})
-            new_uid, _adapter_unsynced = await generic.async_create_task(create_fields)
+        create_adapter = tgt_adapter or GenericAdapter(hass, tgt_entity_id, {})
+        new_uid, _adapter_unsynced = await create_adapter.async_create_task(create_fields)
 
         # If the adapter couldn't discover the UID on its own, fall back
         # to re-fetching and picking the newest matching task by title.
@@ -701,6 +691,17 @@ async def async_move_task_any(
                 if (ni.get("summary") or "").lower() == title_lower:
                     new_uid = ni.get("uid")
                     break
+
+        # A completed task must arrive completed: providers create items open,
+        # and neither create_fields nor the overlay carries completion state.
+        if new_uid and task_data.get("completed"):
+            try:
+                await create_adapter.async_update_task(new_uid, {"completed": True})
+            except Exception:  # noqa: BLE001
+                _LOGGER.warning(
+                    "Could not mark moved task %s as completed in %s",
+                    new_uid, tgt_entity_id,
+                )
 
         # Sync reminders after creation (avoids duplicates with provider defaults)
         if new_uid and move_reminders and tgt_adapter and hasattr(tgt_adapter, "_sync_reminders"):

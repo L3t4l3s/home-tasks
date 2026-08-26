@@ -234,7 +234,7 @@ describe('_render guard for background updates', () => {
 
     // Simulate editing
     card._editingTaskId = 'T1';
-    card._isBackgroundUpdate = true;
+    card._bgUpdates = 1;
     card._render();
     // _pendingRender should be set, no actual render took place
     assert.equal(card._pendingRender, true);
@@ -254,7 +254,7 @@ describe('_render guard for background updates', () => {
     await flush(card);
 
     card._editingTaskId = 'T1';
-    // _isBackgroundUpdate stays false → render should proceed
+    // _bgUpdates stays 0 → render should proceed
     card._render();
     assert.equal(card._pendingRender, false);
   });
@@ -270,7 +270,7 @@ describe('_render guard for background updates', () => {
     await flush(card);
 
     card._draggedTaskId = 'T1';
-    card._isBackgroundUpdate = true;
+    card._bgUpdates = 1;
     card._render();
     assert.equal(card._pendingRender, true);
   });
@@ -1868,6 +1868,70 @@ describe('boot-window lists retry (#37 family)', () => {
     });
     assert.equal(card._listsRetryTimer ?? null, null);
     assert.equal(card._listsRetryCount ?? 0, 0);
+    card.remove();
+  });
+});
+
+
+describe('review round 3 card fixes', () => {
+  test('server response adoption is skipped while a local patch is pending', async () => {
+    const { window: win } = await loadCard({ force: true });
+    const ed = win.document.createElement('home-tasks-card-editor');
+    let resolveFirst;
+    let setCalls = 0;
+    ed.hass = {
+      language: 'en',
+      states: {},
+      callWS: async (msg) => {
+        if (msg.type === 'home_tasks/get_defaults') return { defaults: { assignee: null, reminders: [10, 30] } };
+        if (msg.type === 'home_tasks/set_defaults') {
+          setCalls++;
+          if (setCalls === 1) {
+            // stale server state from BEFORE the second local edit
+            return new Promise((res) => { resolveFirst = () => res({ defaults: { assignee: null, reminders: [30] } }); });
+          }
+          return { defaults: { assignee: null, reminders: msg.reminders } };
+        }
+        if (msg.type === 'home_tasks/get_lists') return { lists: [{ id: 'L1', name: 'L' }] };
+        if (msg.type === 'home_tasks/get_external_lists') return { external_lists: [] };
+        return null;
+      },
+    };
+    ed.setConfig({ columns: [{ list_id: 'L1' }] });
+    win.document.body.appendChild(ed);
+    await new Promise(r => setTimeout(r, 30));
+    const root = ed.shadowRoot || ed;
+    const removeButtons = () => root.querySelectorAll('.def-reminder-row .icon-btn');
+    assert.equal(removeButtons().length, 2);
+    removeButtons()[0].click();           // remove 10 -> flush-1 in flight (hangs)
+    await new Promise(r => setTimeout(r, 5));
+    removeButtons()[0].click();           // remove 30 -> queued as pending, local []
+    await new Promise(r => setTimeout(r, 5));
+    resolveFirst();                        // stale response [30] arrives
+    await new Promise(r => setTimeout(r, 10));
+    // adoption must NOT revert the local state to [30] while pending existed;
+    // the trailing flush sends [] and its response is adopted instead
+    assert.equal(removeButtons().length, 0, 'both removed rows stay removed');
+    ed.remove();
+  });
+
+  test('a pending lists retry resumes after detach/reattach', async () => {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': () => { throw new Error('unknown command'); },
+      'home_tasks/get_external_lists': () => { throw new Error('unknown command'); },
+    });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{ list_id: 'L1' }] });
+    const doc = card.ownerDocument;
+    doc.body.appendChild(card);
+    card.hass = hass;
+    await flush(card);
+    assert.ok(card._listsRetryTimer, 'retry armed after failed boot fetch');
+    card.remove();                         // disconnect cancels the timer
+    assert.equal(card._listsRetryTimer, null);
+    doc.body.appendChild(card);            // reattach (dashboard view switch)
+    assert.ok(card._listsRetryTimer, 'retry rescheduled on reattach');
     card.remove();
   });
 });

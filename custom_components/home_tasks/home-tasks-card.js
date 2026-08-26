@@ -1585,8 +1585,8 @@ class HomeTasksCard extends HTMLElement {
         // --- External list: watch the todo entity directly ---
         if (col.entity_id) {
           if (prev.states?.[col.entity_id] !== hass.states?.[col.entity_id]) {
-            this._isBackgroundUpdate = true;
-            this._loadAllTasks().finally(() => { this._isBackgroundUpdate = false; });
+            this._bgUpdates = (this._bgUpdates || 0) + 1;
+            this._loadAllTasks().finally(() => { this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1); });
             return;
           }
         }
@@ -1596,8 +1596,8 @@ class HomeTasksCard extends HTMLElement {
           const list = (this._lists || []).find(l => l.id === col.list_id);
           const seid = list?.sensor_entity_id;
           if (seid && prev.states?.[seid] !== hass.states?.[seid]) {
-            this._isBackgroundUpdate = true;
-            this._loadAllTasks().finally(() => { this._isBackgroundUpdate = false; });
+            this._bgUpdates = (this._bgUpdates || 0) + 1;
+            this._loadAllTasks().finally(() => { this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1); });
             return;
           }
         }
@@ -1612,8 +1612,8 @@ class HomeTasksCard extends HTMLElement {
     const hasExternal = this._config.columns.some(c => c.entity_id);
     if (hasExternal && !this._extPollTimer) {
       this._extPollTimer = setInterval(async () => {
-        this._isBackgroundUpdate = true;
-        try { await this._loadAllTasks(); } finally { this._isBackgroundUpdate = false; }
+        this._bgUpdates = (this._bgUpdates || 0) + 1;
+        try { await this._loadAllTasks(); } finally { this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1); }
       }, 30000);
     } else if (!hasExternal && this._extPollTimer) {
       clearInterval(this._extPollTimer);
@@ -1824,6 +1824,10 @@ class HomeTasksCard extends HTMLElement {
       this._scheduleListsRetry();
     } else {
       this._listsRetryCount = 0;
+      if (this._listsRetryTimer) {
+        clearTimeout(this._listsRetryTimer);
+        this._listsRetryTimer = null;
+      }
     }
 
     // Auto-select first list if no column has a list configured
@@ -1848,8 +1852,8 @@ class HomeTasksCard extends HTMLElement {
     this._listsRetryTimer = setTimeout(() => {
       this._listsRetryTimer = null;
       if (!this.isConnected) return;
-      this._isBackgroundUpdate = true;
-      this._loadLists().finally(() => { this._isBackgroundUpdate = false; });
+      this._bgUpdates = (this._bgUpdates || 0) + 1;
+      this._loadLists().finally(() => { this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1); });
     }, delays[attempt]);
   }
 
@@ -2827,7 +2831,10 @@ class HomeTasksCard extends HTMLElement {
     // Don't tear down DOM while the user is interacting — but only for
     // background updates (polling, state changes). User-initiated renders
     // (clicks, edits, saves) must always go through.
-    if (this._isBackgroundUpdate) {
+    // Counter, not a boolean: several background loaders (state watcher,
+    // external poll, lists retry) can overlap, and one finishing must not
+    // reclassify the others\u2019 still-running loads as foreground.
+    if (this._bgUpdates > 0) {
       // A FLIP animation is mid-flight — rebuilding now would wipe the in-flight
       // transforms (intermittent missing animation). Defer; _applyFlip flushes.
       if (this._flipActive) { this._pendingRender = true; return; }
@@ -5549,12 +5556,12 @@ class HomeTasksCard extends HTMLElement {
       // an option, then clicking the next field, would tear down the DOM
       // mid-click and the click would be lost.
       promise?.then(async () => {
-        this._isBackgroundUpdate = true;
+        this._bgUpdates = (this._bgUpdates || 0) + 1;
         try {
           if (this._isExternalCol(colIdx)) await this._reloadExternal();
           else await this._loadAllTasks();
         } finally {
-          this._isBackgroundUpdate = false;
+          this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1);
         }
       });
     };
@@ -6049,8 +6056,8 @@ class HomeTasksCard extends HTMLElement {
 
   // Single move executor shared by cross-column drag & drop and the detail
   // sheet's Move dialog: native→native goes through the move_task fast path,
-  // anything external through move_task_cross. Failures (backend errors, 5s
-  // timeout) surface as the in-card error toast instead of vanishing in
+  // anything external through move_task_cross. Failures (backend errors,
+  // disconnects) surface as the in-card error toast instead of vanishing in
   // _callWs's silent catch. Returns true on success.
   async _execMove(payload) {
     const bothNative = !!(payload.source_list_id && payload.target_list_id);
@@ -7752,6 +7759,13 @@ class HomeTasksCard extends HTMLElement {
   connectedCallback() {
     this._ensureCardMod();
     this._updateFitRows();
+    // A pending lists retry is cancelled on disconnect — resume the ladder
+    // when the card is re-attached (dashboard view switch during startup),
+    // repeating the cancelled attempt instead of skipping it.
+    if (this._initialized && this._listsRetryCount > 0 && !this._listsRetryTimer) {
+      this._listsRetryCount--;
+      this._scheduleListsRetry();
+    }
   }
 
   // HA's sections view sets --row-size on the card's grid cell wrapper when
@@ -7896,20 +7910,25 @@ class HomeTasksCardEditor extends HTMLElement {
       saving = true;
       this._hass.callWS({ type: "home_tasks/set_defaults", list_id: listId, ...patch })
         .then((r) => {
-          // Adopt the server-normalized state (e.g. deduped, sorted
-          // reminders) so the session cache cannot diverge from the store.
-          const d = (r && r.defaults) || {};
-          const norm = d.reminders || [];
-          const changed = (d.assignee || null) !== defaults.assignee ||
-            JSON.stringify(norm) !== JSON.stringify(defaults.reminders);
-          defaults.assignee = d.assignee || null;
-          defaults.reminders.splice(0, defaults.reminders.length, ...norm);
+          // Adopt the server-normalized state (deduped, sorted reminders) so
+          // the session cache cannot diverge from the store — but NEVER while
+          // a newer local patch is queued: adopting then would revert the
+          // optimistic DOM state and later row clicks would splice stale
+          // indices. The trailing flush's response adopts instead.
+          if (!pending) {
+            const d = (r && r.defaults) || {};
+            const norm = d.reminders || [];
+            const changed = (d.assignee || null) !== defaults.assignee ||
+              JSON.stringify(norm) !== JSON.stringify(defaults.reminders);
+            defaults.assignee = d.assignee || null;
+            defaults.reminders.splice(0, defaults.reminders.length, ...norm);
+            if (changed) renderInto();
+          }
           savedFlash.classList.remove("err");
           savedFlash.textContent = "\u2713 " + this._t("ed_defaults_saved");
           savedFlash.classList.add("show");
           clearTimeout(savedFlash._hideT);
           savedFlash._hideT = setTimeout(() => savedFlash.classList.remove("show"), 1500);
-          if (changed && !pending) renderInto();
         })
         .catch(() => {
           // Make the failure visible (the flash stays until the next

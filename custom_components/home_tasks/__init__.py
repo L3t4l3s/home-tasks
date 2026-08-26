@@ -12,6 +12,7 @@ from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.util import dt as dt_util
@@ -231,7 +232,11 @@ def _build_event_data(hass: HomeAssistant, entry_id: str, task: dict) -> dict:
     if task.get("priority"):
         data["priority"] = task["priority"]
     if task.get("notes"):
-        data["notes"] = task["notes"]
+        # Events are persisted verbatim by HA's recorder; full notes (up to
+        # 5000 chars, re-fired daily by due/overdue) would bloat the events
+        # table and can push an event over the recorder size cap. Ship a
+        # preview; consumers needing the full text fetch the task.
+        data["notes"] = task["notes"][:255]
     if task.get("tags"):
         data["tags"] = task["tags"]
     return data
@@ -333,19 +338,23 @@ def _on_task_completed(hass: HomeAssistant, entry_id: str, task: dict) -> None:
     _schedule_reminders(hass, entry_id, task)
 
 
-def _on_task_created(hass: HomeAssistant, entry_id: str, task: dict) -> None:
-    """Fire event when a task is created; arm reminders when the task was
-    created with both a due date and reminders (issue #43) — previously only
-    the update path scheduled them."""
-    hass.bus.async_fire(f"{DOMAIN}_task_created", _build_event_data(hass, entry_id, task))
+def _rearm_task_timers(hass: HomeAssistant, entry_id: str, task: dict) -> None:
+    """(Re-)arm a task's reminder and recurrence-reopen timers.
+
+    Used after creation/import — and alone (no task_created event) when a
+    task is restored into its source list after a failed move, where the
+    export side had cancelled its timers."""
     if task.get("reminders") and task.get("due_date"):
         _schedule_reminders(hass, entry_id, task)
-    # A completed recurring task can arrive here via cross-list import (move):
-    # its reopen timer was cancelled on export by on_task_deleted, so re-arm
-    # it (or reopen immediately if overdue) instead of leaving the task
-    # completed until the hourly watchdog pass.
     if task.get("completed") and task.get("recurrence_enabled"):
         _rearm_or_reopen(hass, entry_id, task)
+
+
+def _on_task_created(hass: HomeAssistant, entry_id: str, task: dict) -> None:
+    """Fire event when a task is created and arm its timers (issue #43;
+    completed recurring tasks arrive via cross-list import)."""
+    hass.bus.async_fire(f"{DOMAIN}_task_created", _build_event_data(hass, entry_id, task))
+    _rearm_task_timers(hass, entry_id, task)
 
 
 def _on_task_deleted(hass: HomeAssistant, task_id: str) -> None:
@@ -1450,18 +1459,16 @@ def _async_register_services(hass: HomeAssistant) -> None:
             due_date=call.data.get("due_date"),
             due_time=call.data.get("due_time"),
             reminders=call.data.get("reminders"),
+            notes=call.data.get("notes"),
+            priority=call.data.get("priority"),
         )
-        # Fields the store's creation signature doesn't take go in as one
-        # follow-up update (same pattern tags always used).
-        kwargs = {}
+        # Only tags remain a follow-up update (comma parsing stays service-
+        # side); everything else goes in at creation so the task_created
+        # event and history carry it.
         if "tags" in call.data:
-            kwargs["tags"] = _parse_service_tags(call.data["tags"])
-        if "notes" in call.data:
-            kwargs["notes"] = call.data["notes"]
-        if "priority" in call.data:
-            kwargs["priority"] = call.data["priority"]
-        if kwargs:
-            await store.async_update_task(task["id"], actor=actor, **kwargs)
+            await store.async_update_task(
+                task["id"], actor=actor, tags=_parse_service_tags(call.data["tags"])
+            )
 
     async def async_handle_update_task(call: ServiceCall) -> None:
         """Update fields of an existing task (issue #42) — find it by task_id
@@ -1483,32 +1490,48 @@ def _async_register_services(hass: HomeAssistant) -> None:
     async def async_handle_move_task(call: ServiceCall) -> None:
         """Move a task to another list — parity with the card's Move button.
 
-        Native target via target_list_name / target_entry_id, external todo
-        entity via target_entity_id (routes through the same shared cross-move
-        implementation as the card, including the full-target safety net).
+        Source: a native list (list_name/entry_id + task_title/task_id) or a
+        linked external todo entity (source_entity_id + task_id). Target:
+        exactly one of target_list_name / target_entry_id (native) or
+        target_entity_id (linked external). Routes through the same shared
+        cross-move implementation as the card, incl. the full-target safety
+        net; errors surface as clean service validation messages.
         """
-        entry_id, store = _resolve_store(hass, call.data)
-        task = _resolve_task(store, call.data)
+        src_entity = call.data.get("source_entity_id")
+        if src_entity:
+            task_id = call.data.get("task_id")
+            if not task_id:
+                raise ServiceValidationError(
+                    "task_id is required when source_entity_id is used"
+                )
+            src_list_id = None
+        else:
+            src_list_id, store = _resolve_store(hass, call.data)
+            task_id = _resolve_task(store, call.data)["id"]
         tgt_entity = call.data.get("target_entity_id")
         tgt_entry = call.data.get("target_entry_id")
         tgt_name = call.data.get("target_list_name")
         if sum(1 for x in (tgt_entity, tgt_entry, tgt_name) if x) != 1:
-            raise vol.Invalid(
+            raise ServiceValidationError(
                 "Provide exactly one of target_list_name, target_entry_id "
                 "or target_entity_id"
             )
         tgt_list_id = None
         if not tgt_entity:
-            tgt_list_id, _tgt_store = _resolve_store(
+            tgt_list_id, _ = _resolve_store(
                 hass, {"entry_id": tgt_entry, "list_name": tgt_name}
             )
-        await async_move_task_any(
-            hass,
-            task_id=task["id"],
-            src_list_id=entry_id,
-            tgt_list_id=tgt_list_id,
-            tgt_entity_id=tgt_entity,
-        )
+        try:
+            await async_move_task_any(
+                hass,
+                task_id=task_id,
+                src_list_id=src_list_id,
+                src_entity_id=src_entity,
+                tgt_list_id=tgt_list_id,
+                tgt_entity_id=tgt_entity,
+            )
+        except ValueError as err:
+            raise ServiceValidationError(str(err)) from err
 
     async def async_handle_complete_task(call: ServiceCall) -> None:
         _entry_id, store = _resolve_store(hass, call.data)
@@ -1613,6 +1636,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
         schema=vol.Schema({
             vol.Optional("entry_id"): cv.string,
             vol.Optional("list_name"): cv.string,
+            vol.Optional("source_entity_id"): cv.string,
             vol.Optional("task_id"): cv.string,
             vol.Optional("task_title"): cv.string,
             vol.Optional("target_list_name"): cv.string,
@@ -1680,6 +1704,7 @@ async def _async_setup_native_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
     store.on_task_completed = lambda task: _on_task_completed(hass, entry.entry_id, task)
     store.on_task_created = lambda task: _on_task_created(hass, entry.entry_id, task)
     store.on_task_deleted = lambda task_id: _on_task_deleted(hass, task_id)
+    store.on_task_restored = lambda task: _rearm_task_timers(hass, entry.entry_id, task)
     store.on_task_assigned = lambda task, prev: _fire_assignment_event(hass, entry.entry_id, task, prev)
     store.on_task_reopened = lambda task: _on_task_reopened(hass, entry.entry_id, task)
     store.on_reminders_changed = lambda task: _schedule_reminders(hass, entry.entry_id, task)

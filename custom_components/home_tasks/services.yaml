@@ -147,6 +147,12 @@ move_task:
       description: The config entry ID of the source list (alternative to list name).
       selector:
         text:
+    source_entity_id:
+      name: Source Entity
+      description: Linked external todo entity to move the task out of (requires task_id).
+      selector:
+        entity:
+          domain: todo
     task_title:
       name: Task Title
       description: Title of the task to move (alternative to task_id).

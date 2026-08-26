@@ -3151,7 +3151,10 @@ async def test_creation_assignee_recorded_in_history(
 async def test_service_add_task_notes_and_priority(
     hass: HomeAssistant, mock_config_entry, store
 ) -> None:
-    """home_tasks.add_task accepts notes and priority at creation."""
+    """home_tasks.add_task sets notes and priority at creation: the
+    task_created event carries them and history stays a single entry."""
+    events = []
+    hass.bus.async_listen(f"{DOMAIN}_task_created", lambda e: events.append(e))
     await hass.services.async_call(
         DOMAIN, "add_task",
         {"entry_id": mock_config_entry.entry_id, "title": "Svc full",
@@ -3162,6 +3165,9 @@ async def test_service_add_task_notes_and_priority(
     task = next(t for t in store.tasks if t["title"] == "Svc full")
     assert task["notes"] == "bring the good bags"
     assert task["priority"] == 3
+    assert events[0].data["notes"] == "bring the good bags"
+    assert events[0].data["priority"] == 3
+    assert [h["action"] for h in task["history"]] == ["created"]
 
 
 async def test_service_move_task(
@@ -3185,12 +3191,20 @@ async def test_service_move_task(
     store2 = hass.data[DOMAIN][entry2.entry_id]
     assert any(t["id"] == task["id"] for t in store2.tasks)
 
-    # exactly one target required
-    import voluptuous as vol
-    with pytest.raises((vol.Invalid, Exception)):
+    # exactly one target required — surfaced as a clean service error
+    from homeassistant.exceptions import ServiceValidationError
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN, "move_task",
             {"entry_id": entry2.entry_id, "task_id": task["id"]},
+            blocking=True,
+        )
+    # external source requires task_id
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN, "move_task",
+            {"source_entity_id": "todo.somewhere", "task_title": "x",
+             "target_list_name": "Archive"},
             blocking=True,
         )
 

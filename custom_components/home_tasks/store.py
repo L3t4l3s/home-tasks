@@ -349,6 +349,9 @@ class HomeTasksStore:
         self.on_task_created: Callable[[dict], None] | None = None
         self.on_task_deleted: Callable[[str], None] | None = None
         self.on_task_assigned: Callable[[dict, str | None], None] | None = None
+        # Fired instead of on_task_created when a task is RE-inserted into its
+        # original list after a failed move: re-arms timers, no created event.
+        self.on_task_restored: Callable[[dict], None] | None = None
         self.on_task_reopened: Callable[[dict], None] | None = None
         self.on_reminders_changed: Callable[[dict], None] | None = None
         # Fired when due/recurrence fields of a task that is (and stays)
@@ -488,9 +491,11 @@ class HomeTasksStore:
         due_date: str | None = None,
         due_time: str | None = None,
         reminders: list | None = None,
+        notes: str | None = None,
+        priority: int | None = None,
     ) -> dict:
-        """Add a task, optionally with an initial due date/time (issue #38)
-        and reminders (issue #43).
+        """Add a task, optionally with an initial due date/time (issue #38),
+        reminders (issue #43), notes and priority.
 
         Creating with these set (instead of add + update) keeps a single
         history entry / task_created event and no intermediate bare state.
@@ -511,6 +516,8 @@ class HomeTasksStore:
         due_date = validate_date(due_date, "due_date")
         due_time = validate_time(due_time) if due_date else None
         reminders = validate_reminders(reminders) if reminders else []
+        notes = validate_notes(notes) if notes else ""
+        priority = validate_priority(priority)
         if len(self._data["tasks"]) >= MAX_TASKS_PER_LIST:
             raise ValueError(f"Maximum number of tasks ({MAX_TASKS_PER_LIST}) reached")
         max_order = max((t["sort_order"] for t in self._data["tasks"]), default=-1)
@@ -536,11 +543,11 @@ class HomeTasksStore:
             "id": str(uuid.uuid4()),
             "title": title,
             "completed": False,
-            "notes": "",
+            "notes": notes,
             "due_date": due_date,
             "sort_order": max_order + 1,
             "sub_items": [],
-            "priority": None,
+            "priority": priority,
             "due_time": due_time,
             "reminders": reminders,
             "recurrence_value": 1,
@@ -806,25 +813,33 @@ class HomeTasksStore:
             self.on_task_deleted(task_id)
         return dict(task)
 
-    async def async_import_task(self, task: dict, keep_section: bool = False) -> dict:
+    async def async_import_task(self, task: dict, restore: bool = False) -> dict:
         """Insert an existing task dict into this list (for cross-list move).
 
-        keep_section=True is for restoring a task into its ORIGINAL list
-        after a failed move — its section id is still valid there.
+        restore=True re-inserts a task into its ORIGINAL list after a failed
+        move: its section id and sort position are still valid there, and the
+        re-insert must not look like a brand-new task — no task_created event
+        fires; on_task_restored only re-arms the timers the export cancelled.
         """
-        if len(self._data["tasks"]) >= MAX_TASKS_PER_LIST:
+        # A restore puts a task back where it just came from — it can never
+        # overfill the list and MUST NOT fail, or the task would be lost.
+        if not restore and len(self._data["tasks"]) >= MAX_TASKS_PER_LIST:
             raise ValueError(f"Maximum number of tasks ({MAX_TASKS_PER_LIST}) reached")
         max_order = max((t["sort_order"] for t in self._data["tasks"]), default=-1)
         # Section ids are per-list: a moved task must not keep pointing at a
         # section of its source list (phantom grouping in the target).
         task = {
             **task,
-            "sort_order": max_order + 1,
-            "section_id": task.get("section_id") if keep_section else None,
+            "sort_order": task.get("sort_order", max_order + 1) if restore else max_order + 1,
+            "section_id": task.get("section_id") if restore else None,
         }
         self._data["tasks"].append(task)
         await self._async_save()
-        if self.on_task_created:
+        if restore:
+            cb = self.on_task_restored or self.on_task_created
+            if cb:
+                cb(task)
+        elif self.on_task_created:
             self.on_task_created(task)
         return task
 
