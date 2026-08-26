@@ -21,7 +21,7 @@ from .const import DOMAIN, RECURRENCE_UNIT_SECONDS
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 from .overlay_store import ExternalTaskOverlayStore
 from .store import HomeTasksStore, _REOPEN_UNCHANGED, validate_reminders
-from .websocket_api import async_register_websocket_commands
+from .websocket_api import async_move_task_any, async_register_websocket_commands
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -210,19 +210,28 @@ async def _async_register_lovelace_resource(hass: HomeAssistant, card_url: str) 
 #  Events
 # ---------------------------------------------------------------------------
 
-def _build_event_data(entry_id: str, task: dict) -> dict:
+def _build_event_data(hass: HomeAssistant, entry_id: str, task: dict) -> dict:
     """Build common event data dict."""
     data = {
         "entry_id": entry_id,
         "task_id": task["id"],
         "task_title": task.get("title", ""),
     }
+    entry = hass.config_entries.async_get_entry(entry_id)
+    if entry:
+        data["list_name"] = entry.data.get("name", entry.title)
     if task.get("_entity_id"):
         data["entity_id"] = task["_entity_id"]
     if task.get("assigned_person"):
         data["assigned_person"] = task["assigned_person"]
     if task.get("due_date"):
         data["due_date"] = task["due_date"]
+    if task.get("due_time"):
+        data["due_time"] = task["due_time"]
+    if task.get("priority"):
+        data["priority"] = task["priority"]
+    if task.get("notes"):
+        data["notes"] = task["notes"]
     if task.get("tags"):
         data["tags"] = task["tags"]
     return data
@@ -285,7 +294,7 @@ def _on_task_completed(hass: HomeAssistant, entry_id: str, task: dict) -> None:
     _async_save() (which is triggered by the same update_task call that
     invoked this callback).
     """
-    hass.bus.async_fire(f"{DOMAIN}_task_completed", _build_event_data(entry_id, task))
+    hass.bus.async_fire(f"{DOMAIN}_task_completed", _build_event_data(hass, entry_id, task))
 
     completed_at = _parse_completed_at(task)
 
@@ -328,7 +337,7 @@ def _on_task_created(hass: HomeAssistant, entry_id: str, task: dict) -> None:
     """Fire event when a task is created; arm reminders when the task was
     created with both a due date and reminders (issue #43) — previously only
     the update path scheduled them."""
-    hass.bus.async_fire(f"{DOMAIN}_task_created", _build_event_data(entry_id, task))
+    hass.bus.async_fire(f"{DOMAIN}_task_created", _build_event_data(hass, entry_id, task))
     if task.get("reminders") and task.get("due_date"):
         _schedule_reminders(hass, entry_id, task)
     # A completed recurring task can arrive here via cross-list import (move):
@@ -348,7 +357,7 @@ def _on_task_deleted(hass: HomeAssistant, task_id: str) -> None:
 
 def _on_task_reopened(hass: HomeAssistant, entry_id: str, task: dict) -> None:
     """Fire event when a task is reopened and reschedule its reminders."""
-    hass.bus.async_fire(f"{DOMAIN}_task_reopened", _build_event_data(entry_id, task))
+    hass.bus.async_fire(f"{DOMAIN}_task_reopened", _build_event_data(hass, entry_id, task))
     _schedule_reminders(hass, entry_id, task)
 
 
@@ -394,7 +403,7 @@ def _fire_assignment_event(
     hass: HomeAssistant, entry_id: str, task: dict, previous_person: str | None
 ) -> None:
     """Fire an event when a task's assigned person changes."""
-    data = _build_event_data(entry_id, task)
+    data = _build_event_data(hass, entry_id, task)
     data["previous_person"] = previous_person
     hass.bus.async_fire(f"{DOMAIN}_task_assigned", data)
 
@@ -506,7 +515,7 @@ def _check_task_due(hass: HomeAssistant, entry_id: str, task: dict, today: str, 
     task_id = task["id"]
     task_fired = fired.setdefault(task_id, {})
 
-    event_data = _build_event_data(entry_id, task)
+    event_data = _build_event_data(hass, entry_id, task)
 
     if dd == today and task_fired.get("due") != today:
         _LOGGER.info("Firing task_due for '%s' (due=%s)", task.get("title"), dd)
@@ -568,7 +577,7 @@ def _fire_external_assignment(hass: HomeAssistant, entry_id: str, entity_id: str
     task = _build_external_task(hass, entry_id, entity_id, task_uid) or {
         "id": task_uid, "title": "", "_entity_id": entity_id,
     }
-    data = _build_event_data(entry_id, task)
+    data = _build_event_data(hass, entry_id, task)
     data["previous_person"] = previous_person
     hass.bus.async_fire(f"{DOMAIN}_task_assigned", data)
 
@@ -1056,7 +1065,7 @@ def _schedule_reminders(hass: HomeAssistant, entry_id: str, task: dict) -> None:
             key = f"{_task['id']}_r{_offset}"
             hass.data.get(DATA_REMINDER_TIMERS, {}).pop(key, None)
             event_data = {
-                **_build_event_data(entry_id, _task),
+                **_build_event_data(hass, entry_id, _task),
                 "reminder_offset_minutes": _offset,
             }
             hass.bus.async_fire(f"{DOMAIN}_task_reminder", event_data)
@@ -1281,7 +1290,7 @@ async def _async_reopen_external_task(
     await _get_overlay_store(hass, entity_id).async_set_overlay(task_uid, **overlay_kwargs)
     task["completed"] = False
     task["completed_at"] = None
-    hass.bus.async_fire(f"{DOMAIN}_task_reopened", _build_event_data(entry_id, task))
+    hass.bus.async_fire(f"{DOMAIN}_task_reopened", _build_event_data(hass, entry_id, task))
     _schedule_reminders(hass, entry_id, task)
     _LOGGER.info("Recurring external task '%s' reopened", task.get("title", task_uid))
 
@@ -1471,6 +1480,36 @@ def _async_register_services(hass: HomeAssistant) -> None:
         if kwargs:
             await store.async_update_task(task["id"], actor=actor, **kwargs)
 
+    async def async_handle_move_task(call: ServiceCall) -> None:
+        """Move a task to another list — parity with the card's Move button.
+
+        Native target via target_list_name / target_entry_id, external todo
+        entity via target_entity_id (routes through the same shared cross-move
+        implementation as the card, including the full-target safety net).
+        """
+        entry_id, store = _resolve_store(hass, call.data)
+        task = _resolve_task(store, call.data)
+        tgt_entity = call.data.get("target_entity_id")
+        tgt_entry = call.data.get("target_entry_id")
+        tgt_name = call.data.get("target_list_name")
+        if sum(1 for x in (tgt_entity, tgt_entry, tgt_name) if x) != 1:
+            raise vol.Invalid(
+                "Provide exactly one of target_list_name, target_entry_id "
+                "or target_entity_id"
+            )
+        tgt_list_id = None
+        if not tgt_entity:
+            tgt_list_id, _tgt_store = _resolve_store(
+                hass, {"entry_id": tgt_entry, "list_name": tgt_name}
+            )
+        await async_move_task_any(
+            hass,
+            task_id=task["id"],
+            src_list_id=entry_id,
+            tgt_list_id=tgt_list_id,
+            tgt_entity_id=tgt_entity,
+        )
+
     async def async_handle_complete_task(call: ServiceCall) -> None:
         _entry_id, store = _resolve_store(hass, call.data)
         actor = await _resolve_actor(hass, call)
@@ -1567,6 +1606,18 @@ def _async_register_services(hass: HomeAssistant) -> None:
             vol.Optional("priority"): vol.Any(vol.All(vol.Coerce(int), vol.In([1, 2, 3])), None),
             vol.Optional("tags"): cv.string,
             vol.Optional("reminders"): _validate_service_reminders,
+        }),
+    )
+    hass.services.async_register(
+        DOMAIN, "move_task", async_handle_move_task,
+        schema=vol.Schema({
+            vol.Optional("entry_id"): cv.string,
+            vol.Optional("list_name"): cv.string,
+            vol.Optional("task_id"): cv.string,
+            vol.Optional("task_title"): cv.string,
+            vol.Optional("target_list_name"): cv.string,
+            vol.Optional("target_entry_id"): cv.string,
+            vol.Optional("target_entity_id"): cv.string,
         }),
     )
     hass.services.async_register(

@@ -3162,3 +3162,53 @@ async def test_service_add_task_notes_and_priority(
     task = next(t for t in store.tasks if t["title"] == "Svc full")
     assert task["notes"] == "bring the good bags"
     assert task["priority"] == 3
+
+
+async def test_service_move_task(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """home_tasks.move_task moves a task to another native list by name."""
+    entry2 = MockConfigEntry(domain=DOMAIN, data={"name": "Archive"}, title="Archive")
+    entry2.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry2.entry_id)
+    await hass.async_block_till_done()
+
+    task = await store.async_add_task("Shift me")
+    await hass.services.async_call(
+        DOMAIN, "move_task",
+        {"entry_id": mock_config_entry.entry_id, "task_title": "Shift me",
+         "target_list_name": "Archive"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert all(t["id"] != task["id"] for t in store.tasks)
+    store2 = hass.data[DOMAIN][entry2.entry_id]
+    assert any(t["id"] == task["id"] for t in store2.tasks)
+
+    # exactly one target required
+    import voluptuous as vol
+    with pytest.raises((vol.Invalid, Exception)):
+        await hass.services.async_call(
+            DOMAIN, "move_task",
+            {"entry_id": entry2.entry_id, "task_id": task["id"]},
+            blocking=True,
+        )
+
+
+async def test_event_payload_includes_full_task_info(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Events carry list_name, due_time, priority and notes (gap closure)."""
+    events = []
+    hass.bus.async_listen(f"{DOMAIN}_task_completed", lambda e: events.append(e))
+    task = await store.async_add_task("Rich event", due_date="2027-05-05", due_time="08:30")
+    await store.async_update_task(task["id"], priority=2, notes="event payload test")
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+    assert len(events) == 1
+    data = events[0].data
+    assert data["list_name"] == "Test List"
+    assert data["due_date"] == "2027-05-05"
+    assert data["due_time"] == "08:30"
+    assert data["priority"] == 2
+    assert data["notes"] == "event payload test"
