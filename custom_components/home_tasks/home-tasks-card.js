@@ -88,6 +88,7 @@ const _TRANSLATIONS = {
     ed_show_tag_chips: "Tag filter",
     ed_show_person_chips: "Person filter",
     ed_show_voice: "Voice input",
+    ed_task_search: "Task search",
     ed_auto_image: "Auto-generate image",
     ed_show_priority: "Priorities",
     ed_default_sort: "Default sort",
@@ -1273,6 +1274,7 @@ const _TRANSLATIONS = {
     ed_show_tag_chips: "Tag-Filter",
     ed_show_person_chips: "Personen-Filter",
     ed_show_voice: "Spracheingabe",
+    ed_task_search: "Aufgaben-Suche",
     ed_auto_image: "Bild automatisch generieren",
     ed_default_sort: "Standard-Sortierung",
     reminder: "Erinnerungen",
@@ -1465,7 +1467,9 @@ class HomeTasksCard extends HTMLElement {
   }
 
   _defaultColState() {
-    return { filter: "all", sortBy: "manual", sortOpen: false, tagFilters: new Set(), personFilters: new Set(), tasks: [], sections: [], newTaskTitle: "", newTaskDue: "", newTaskDueTime: "" };
+    // taskSearchQuery holds the text currently typed into the add-task
+    // field (see _buildColumnAddTask / _buildColumnTaskList).
+    return { filter: "all", sortBy: "manual", sortOpen: false, tagFilters: new Set(), personFilters: new Set(), tasks: [], sections: [], newTaskTitle: "", newTaskDue: "", newTaskDueTime: "", taskSearchQuery: "" };
   }
 
   _t(key, ...args) {
@@ -1900,6 +1904,8 @@ class HomeTasksCard extends HTMLElement {
     const cs = this._columns[colIdx];
     const title = cs.newTaskTitle.trim();
     if (!title) return;
+    // Adding a task clears any active search.
+    cs.taskSearchQuery = "";
     if (!this._colListId(colIdx) && !this._colEntityId(colIdx)) return;
 
     // Capture add-input position for the entry animation
@@ -1978,7 +1984,20 @@ class HomeTasksCard extends HTMLElement {
     }
   }
 
+  // Wrapper around the original toggle logic: if a search was active when
+  // the task was checked, clear it afterwards so the section view returns.
   async _toggleTask(taskId, completed, colIdx) {
+    const cs = this._columns[colIdx];
+    const wasSearching = !!(cs && cs.taskSearchQuery && cs.taskSearchQuery.trim());
+    await this._toggleTaskCore(taskId, completed, colIdx);
+    if (wasSearching) {
+      cs.taskSearchQuery = "";
+      cs.newTaskTitle = "";
+      this._render();
+    }
+  }
+
+  async _toggleTaskCore(taskId, completed, colIdx) {
     const col = this._config.columns[colIdx];
     const cs = this._columns[colIdx];
     const newCompleted = !completed;
@@ -3340,18 +3359,66 @@ class HomeTasksCard extends HTMLElement {
     }
   }
 
+  // Updates only the task list, leaving the add-task <input> untouched.
+  //
+  // A full this._render() rebuilds the whole card, and even though focus
+  // and caret position are restored afterwards via data-focus-key, the
+  // <input> DOM node is technically removed and recreated in the process.
+  // On mobile this makes the on-screen keyboard flicker closed and open
+  // again on every keystroke. Replacing only the ".task-list" container
+  // avoids that, since the <input> is never touched.
+  _refreshTaskListDOM(colIdx) {
+    const col = this._config.columns[colIdx];
+    // Tile view has its own build path (_buildColumnTileGrid) that isn't
+    // wired up here; fall back to a full render rather than duplicating it.
+    if (col.view_mode === "tiles") { this._render(); return; }
+
+    const filteredTasks = this._filteredTasks(colIdx);
+    const newList = this._buildColumnTaskList(filteredTasks, colIdx);
+    const oldList = this.shadowRoot.querySelector(`.task-list[data-col-idx="${colIdx}"]`);
+    if (oldList && oldList.parentNode) {
+      oldList.replaceWith(newList);
+    } else {
+      this._render();
+    }
+  }
+
   _buildColumnAddTask(cs, colIdx) {
     const col = this._config.columns[colIdx];
+    // Per-column opt-out via show_task_search (default on); editor switch
+    // lives in HomeTasksCardEditor further below.
+    const searchEnabled = col.show_task_search !== false;
+
     const addInput = this._el("input", {
       type: "text",
       className: "add-input",
       placeholder: this._t("add_placeholder"),
       value: cs.newTaskTitle,
       "data-focus-key": `add_task_col_${colIdx}`,
+      autocomplete: "off",
     });
-    addInput.addEventListener("input", (e) => { cs.newTaskTitle = e.target.value; });
+    addInput.addEventListener("input", (e) => {
+      cs.newTaskTitle = e.target.value;
+      if (searchEnabled) {
+        // Mirror the search text and refresh only the list (see
+        // _refreshTaskListDOM above — no this._render() here, to avoid
+        // the mobile keyboard flicker on every keystroke).
+        cs.taskSearchQuery = e.target.value.trim();
+        this._refreshTaskListDOM(colIdx);
+      }
+    });
     addInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") this._addTask(colIdx);
+      if (e.key === "Enter") {
+        this._addTask(colIdx);
+      } else if (searchEnabled && e.key === "Escape" && cs.taskSearchQuery) {
+        // Escape cancels the search and restores the section view.
+        // Same targeted update as above, for the same reason.
+        e.preventDefault();
+        addInput.value = "";
+        cs.newTaskTitle = "";
+        cs.taskSearchQuery = "";
+        this._refreshTaskListDOM(colIdx);
+      }
     });
     const addBtn = this._el("button", { className: "add-btn", textContent: "+" });
     addBtn.addEventListener("click", () => this._addTask(colIdx));
@@ -3591,9 +3658,43 @@ class HomeTasksCard extends HTMLElement {
       : null;
   }
 
+  // While searching, replaces the normal section-grouped view with a flat
+  // list of matches (open + completed, across all sections) so section
+  // headers don't eat the whole screen on mobile. Intentionally ignores
+  // the active All/Open/Done filter and tag/person chips.
+  _buildTaskSearchResults(query, colIdx) {
+    const cs = this._columns[colIdx];
+    const q = query.toLowerCase();
+    const matches = (cs.tasks || [])
+      .filter((t) => t.title && t.title.toLowerCase().includes(q))
+      .sort((a, b) => {
+        const aStarts = a.title.toLowerCase().startsWith(q) ? 0 : 1;
+        const bStarts = b.title.toLowerCase().startsWith(q) ? 0 : 1;
+        if (aStarts !== bStarts) return aStarts - bStarts;
+        return a.title.localeCompare(b.title);
+      });
+
+    const children = [];
+    if (matches.length === 0) {
+      children.push(this._el("div", { className: "task-search-empty", textContent: this._t("empty") }));
+    } else {
+      for (const task of matches) children.push(this._buildTask(task, colIdx));
+    }
+    return this._el("div", { className: "task-list", "data-col-idx": String(colIdx) }, children);
+  }
+
   _buildColumnTaskList(filteredTasks, colIdx) {
     const cs = this._columns[colIdx];
     const col = this._config.columns[colIdx];
+
+    // Branch off into the search results view when a search is active
+    // (and not disabled via the editor toggle).
+    const searchEnabled = col.show_task_search !== false;
+    const activeQuery = searchEnabled ? (cs.taskSearchQuery || "").trim() : "";
+    if (activeQuery) {
+      return this._buildTaskSearchResults(activeQuery, colIdx);
+    }
+
     const sections = (cs.sections || []).slice().sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
 
     const taskListChildren = [];
@@ -7254,6 +7355,10 @@ class HomeTasksCard extends HTMLElement {
         padding: 8px 14px; font-size: 12px; font-style: italic;
         color: var(--todo-secondary-text);
       }
+      .task-search-empty {
+        padding: 24px 8px; text-align: center; font-size: 13px; font-style: italic;
+        color: var(--todo-secondary-text);
+      }
       .recurrence-toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
       .recurrence-input-row { display: flex; align-items: flex-end; gap: 8px; }
       .rec-remaining { font-size: 12px; color: var(--secondary-text-color); align-self: center; flex-shrink: 0; }
@@ -8803,6 +8908,8 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-title", "ed_show_title", "show_title", true),
           makeToggle("show-progress", "ed_show_progress", "show_progress", true),
           makeToggle("show-add-task", "ed_show_add_task", "show_add_task", true),
+          // On/off switch for the live search in the add-task field.
+          makeToggle("task-search", "ed_task_search", "show_task_search", true),
           makeToggle("show-add-due", "ed_show_add_due", "show_add_due", false),
           makeToggle("auto-delete", "ed_auto_delete", "auto_delete_completed", false),
           makeToggle("confirm-complete", "ed_confirm_complete", "confirm_complete", false),
