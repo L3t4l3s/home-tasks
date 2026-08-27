@@ -64,6 +64,7 @@ OVERLAY_FIELDS = (
     "history",
     "completed_at",
     "section_id",
+    "image_url",
 )
 
 _MAX_HISTORY = 50
@@ -99,6 +100,7 @@ def _empty_overlay() -> dict:
         "history": [],
         "completed_at": None,
         "section_id": None,
+        "image_url": None,
     }
 
 

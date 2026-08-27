@@ -335,6 +335,23 @@ async def test_ws_update_external_overlay(
     assert "work" in msg["result"]["tags"]
 
 
+async def test_ws_update_external_overlay_image_url(
+    hass: HomeAssistant, hass_ws_client, external_config_entry
+) -> None:
+    """An external task image URL is stored without changing the provider task."""
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 211,
+        "type": "home_tasks/update_external_overlay",
+        "entity_id": "todo.ws_external",
+        "task_uid": "ext-image-1",
+        "image_url": "/local/home_tasks/external.png?v=1",
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True
+    assert msg["result"]["image_url"] == "/local/home_tasks/external.png?v=1"
+
+
 async def test_ws_add_external_sub_task(
     hass: HomeAssistant, hass_ws_client, external_config_entry
 ) -> None:
@@ -530,7 +547,12 @@ async def test_ws_get_external_tasks_merges_overlay(
     from custom_components.home_tasks.overlay_store import ExternalTaskOverlayStore
     overlay_store = hass.data[DOMAIN][external_config_entry.entry_id]
     assert isinstance(overlay_store, ExternalTaskOverlayStore)
-    await overlay_store.async_set_overlay("ext-1", priority=3, tags=["urgent"])
+    await overlay_store.async_set_overlay(
+        "ext-1",
+        priority=3,
+        tags=["urgent"],
+        image_url="/local/home_tasks/ext-1.png",
+    )
 
     client = await hass_ws_client(hass)
     await client.send_json({
@@ -548,10 +570,78 @@ async def test_ws_get_external_tasks_merges_overlay(
     assert task_a["priority"] == 3
     assert task_a["tags"] == ["urgent"]
     assert task_a["due_date"] == "2026-06-15"
+    assert task_a["image_url"] == "/local/home_tasks/ext-1.png"
     assert task_a["_external"] is True
 
     task_b = next(t for t in tasks if t["id"] == "ext-2")
     assert task_b["completed"] is True
+
+
+async def test_generate_image_for_external_task_uses_title_only(
+    hass: HomeAssistant, hass_ws_client, external_config_entry
+) -> None:
+    """Todoist images persist in overlay and disclose no task metadata but title."""
+    from unittest.mock import AsyncMock, MagicMock, patch
+
+    from homeassistant.components.todo import TodoItem, TodoItemStatus
+    from homeassistant.core import SupportsResponse
+
+    mock_entity = MagicMock()
+    mock_entity.todo_items = [
+        TodoItem(
+            uid="todoist-1",
+            summary="Buy milk",
+            description="PRIVATE NOTE MUST NOT BE SENT",
+            status=TodoItemStatus.NEEDS_ACTION,
+        )
+    ]
+    mock_comp = MagicMock()
+    mock_comp.get_entity.return_value = mock_entity
+    hass.data["todo"] = mock_comp
+    hass.states.async_set("todo.ws_external", "1")
+
+    calls = []
+
+    async def _generate(call):  # noqa: ANN001
+        calls.append(call.data)
+        return {"media_source_id": "media-source://media_source/generated.png"}
+
+    hass.services.async_register(
+        "ai_task",
+        "generate_image",
+        _generate,
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+
+    client = await hass_ws_client(hass)
+    with patch(
+        "custom_components.home_tasks.websocket_api._save_image_to_public_media",
+        new=AsyncMock(return_value="/local/home_tasks/generated.png"),
+    ):
+        await client.send_json({
+            "id": 401,
+            "type": "home_tasks/generate_task_image",
+            "todo_entity_id": "todo.ws_external",
+            "task_id": "todoist-1",
+            "entity_id": "ai_task.google_ai_task",
+            "force": True,
+        })
+        msg = await client.receive_json()
+
+    assert msg["success"] is True, msg
+    assert msg["result"]["task"]["image_url"].startswith(
+        "/local/home_tasks/generated.png?v="
+    )
+    assert len(calls) == 1
+    assert calls[0]["instructions"] == (
+        "Buy milk\n\nThe image must have a square 1:1 aspect ratio."
+    )
+    assert "PRIVATE NOTE" not in calls[0]["instructions"]
+
+    overlay_store = hass.data[DOMAIN][external_config_entry.entry_id]
+    assert overlay_store.get_overlay("todoist-1")["image_url"].startswith(
+        "/local/home_tasks/generated.png?v="
+    )
 
 
 async def test_merge_tasks_provider_owns_order_true_ignores_overlay(

@@ -23,6 +23,7 @@ async def test_empty_overlay_returned_for_unknown_uid(hass: HomeAssistant, overl
     assert overlay["tags"] == []
     assert overlay["sub_items"] == []
     assert overlay["recurrence_enabled"] is False
+    assert overlay["image_url"] is None
 
 
 async def test_set_and_get_overlay(hass: HomeAssistant, overlay_store) -> None:
@@ -31,6 +32,23 @@ async def test_set_and_get_overlay(hass: HomeAssistant, overlay_store) -> None:
     overlay = overlay_store.get_overlay("uid-1")
     assert overlay["priority"] == 2
     assert overlay["tags"] == ["urgent"]
+
+
+async def test_image_url_is_persisted(hass: HomeAssistant, overlay_store) -> None:
+    """External tasks can keep a generated image in the local overlay."""
+    url = "/local/home_tasks/todoist-task.png?v=1"
+    await overlay_store.async_set_overlay("uid-image", image_url=url)
+    assert overlay_store.get_overlay("uid-image")["image_url"] == url
+
+
+async def test_image_url_length_is_validated(hass: HomeAssistant, overlay_store) -> None:
+    """Overlay image URLs use the same safety limit as native tasks."""
+    from custom_components.home_tasks.const import MAX_IMAGE_URL_LENGTH
+
+    with pytest.raises(ValueError, match="image_url"):
+        await overlay_store.async_set_overlay(
+            "uid-image", image_url="x" * (MAX_IMAGE_URL_LENGTH + 1)
+        )
 
 
 async def test_overlay_tags_deduplicated(hass: HomeAssistant, overlay_store) -> None:
