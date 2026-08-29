@@ -1,0 +1,48 @@
+# Home Tasks — View Assist view with a per-satellite list (advanced)
+#
+# Same card as hometasks.yaml, but the list is chosen at runtime: the view
+# reads the `home_tasks_list` attribute of the satellite's View Assist sensor
+# and shows that list. The included blueprint sets the attribute before it
+# navigates here, so "show me the shopping list" and "show me the chores"
+# can land on the same view with different content.
+#
+# It also picks up the standard View Assist chrome (title bar, status icons,
+# tap-to-hold) from `body_template`, like the built-in list view does.
+#
+# Requires custom:button-card and card-mod — both are View Assist
+# requirements already. Install it under the SAME name as the simple view
+# (/config/view_assist/views/hometasks/hometasks.yaml); use one or the other.
+#
+# Falls back to the first Home Tasks list when the attribute is not set, and
+# shows an empty list (no error) when it points at a deleted list.
+#
+# The card is capped at 78vh and scrolls, matching the built-in list view.
+# For a fixed header with only the task body scrolling, drop the card_mod
+# block and put `max_height: 280` (px) in the column instead.
+type: custom:button-card
+template:
+  - variable_template
+  - body_template
+variables:
+  hometasksversion: 1.0.0
+  var_ht_list_id: >-
+    [[[ try { return hass.states[variables.var_assistsat_entity].attributes.home_tasks_list || "" } catch (e) { return "" } ]]]
+custom_fields:
+  message:
+    card:
+      type: custom:home-tasks-card
+      columns:
+        - list_id: '[[[ return variables.var_ht_list_id ]]]'
+          compact: true
+          confirm_complete: true
+          default_filter: open
+          default_sort: due
+          show_history: false
+          show_move: false
+      card_mod:
+        style:
+          .: |
+            ha-card {
+              max-height: 78vh;
+              overflow-y: auto;
+            }

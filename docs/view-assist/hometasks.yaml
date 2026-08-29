@@ -1,0 +1,36 @@
+# Home Tasks — View Assist view (recommended)
+#
+# Shows a Home Tasks list on a View Assist satellite with the full card:
+# priorities, tags, sub-tasks, due dates, reminders, images, voice input.
+# Needs no extra frontend cards — View Assist wraps this into a panel view
+# at /view-assist/hometasks.
+#
+# Install (see docs/view-assist/README.md for the full walkthrough):
+#   1. Save this file on the HA machine as
+#      /config/view_assist/views/hometasks/hometasks.yaml
+#   2. Run the action:
+#        action: view_assist.load_asset
+#        data:
+#          asset_class: views
+#          name: hometasks
+#          download_from_repo: false
+#
+# Which list?  With no `list_id` the card shows the FIRST Home Tasks list.
+# To pin one, add `list_id: <config entry id>` to the column below.
+#
+# Screen height: on a 1280x800 satellite the whole card fits. On 800x480 the
+# page scrolls; if you would rather keep the header and the add-task row
+# fixed, add `max_height: 280` (px, task body only) to the column — or drop
+# `show_tag_chips` / `show_person_chips` to `false`, which frees ~55px.
+#
+# Every option is documented under "Card Configuration" in the main README.
+type: custom:home-tasks-card
+variables:
+  hometasksversion: 1.0.0
+columns:
+  - compact: true
+    confirm_complete: true
+    default_filter: open
+    default_sort: due
+    show_history: false
+    show_move: false

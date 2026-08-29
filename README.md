@@ -170,6 +170,7 @@ columns:
 - **Calendar**: every list — native **and external** — gets a `calendar.*` entity. Tasks with due dates appear as all-day or timed events, and **recurring tasks are projected onto every occurrence** (each week, month, etc.) via standard RRULE, usable in any HA calendar card or automation
 - **Todo entity**: each native list is exposed as a standard `todo.*` entity with full HA todo platform support (Companion App, Apple Watch, etc.)
 - **Multiple lists** via separate integration config entries
+- **[View Assist](#view-assist)**: a ready-made view and a voice blueprint for View Assist satellites
 
 ### Languages
 
@@ -652,6 +653,23 @@ automation:
           list_name: "Household"
           tag: "weekend"
 ```
+
+## View Assist
+
+[View Assist](https://dinki.github.io/View-Assist/) turns tablets and old smart
+displays into voice satellites with a screen. [`docs/view-assist/`](docs/view-assist/)
+ships the pieces to put a Home Tasks list on one:
+
+- **A view** — the full Home Tasks card as a View Assist panel view at `/view-assist/hometasks`, with satellite-friendly defaults (compact rows, confirm-before-complete, open tasks only, sorted by due date). A second variant picks the list per satellite at runtime.
+- **A blueprint** — "show me my task list" makes the satellite say how many tasks are open and open the view. Sentences and spoken responses are configurable.
+
+Both are copy-and-install files, so a Home Tasks update never overwrites your
+customised view. Installation, how to pin a specific list, and how to tune the
+view for 800×480 screens: **[docs/view-assist/README.md](docs/view-assist/README.md)**.
+
+Home Tasks lists are ordinary `todo.*` entities, so View Assist's built-in
+**list** view and its **List Management** blueprint work with them out of the
+box too — the view above just shows the real card instead of a plain todo list.
 
 ## Support
 

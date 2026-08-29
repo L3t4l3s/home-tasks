@@ -1,0 +1,158 @@
+blueprint:
+  name: View Assist - Home Tasks
+  description: >-
+    Ask "show me my tasks" and the satellite opens the Home Tasks view and
+    says how many tasks are open. Pair it with the hometasks view from
+    https://github.com/L3t4l3s/home-tasks/tree/main/docs/view-assist
+
+    Requires the View Assist integration (for the view_assist_entity template
+    function and the navigate / set_state actions) and Home Tasks.
+
+    Home Tasks View Assist blueprint v1.0.0
+  domain: automation
+  homeassistant:
+    min_version: "2024.10.0"
+  input:
+    command_show1:
+      name: Command text 1
+      description: First phrase for showing the list
+      default: (show | show me) [my | the] task[s] [list]
+    command_show2:
+      name: Command text 2
+      description: Second phrase for showing the list
+      default: (what's | what is) on [my | the] task list
+    command_show3:
+      name: Command text 3
+      description: Third phrase for showing the list
+      default: what do I have to do [today]
+    todo_entity:
+      name: Home Tasks list
+      description: >-
+        The Home Tasks list to show. Pick the todo entity of the list — the
+        view is pointed at the matching list automatically.
+      selector:
+        entity:
+          filter:
+            - integration: home_tasks
+              domain: todo
+    view:
+      name: Dashboard view
+      description: The View Assist dashboard view to navigate to
+      default: /view-assist/hometasks
+      selector:
+        text:
+    list_name_override:
+      name: List name override
+      description: Spoken name of the list. Empty = the entity's friendly name.
+      default: ""
+      selector:
+        text:
+    max_items_readout:
+      name: Maximum items to read out
+      description: How many task titles to speak (0 = all)
+      default: 5
+      selector:
+        number:
+          min: 0
+          max: 50
+          step: 1
+    response_empty:
+      name: Response - nothing open
+      description: "Placeholders: {list_name}"
+      default: "There is nothing open on your {list_name}"
+      selector:
+        text:
+    response_one:
+      name: Response - one task
+      description: "Placeholders: {list_name}, {items}"
+      default: "There is one open task on your {list_name}. It is {items}"
+      selector:
+        text:
+    response_many:
+      name: Response - several tasks
+      description: "Placeholders: {list_name}, {count}, {items}"
+      default: "There are {count} open tasks on your {list_name}. The next ones are {items}"
+      selector:
+        text:
+
+mode: single
+
+triggers:
+  - trigger: conversation
+    command:
+      - !input command_show1
+      - !input command_show2
+      - !input command_show3
+
+actions:
+  - variables:
+      todo_entity: !input todo_entity
+      view: !input view
+      list_name_override: !input list_name_override
+      max_items_readout_str: !input max_items_readout
+      max_items_readout: "{{ max_items_readout_str | int }}"
+      response_empty: !input response_empty
+      response_one: !input response_one
+      response_many: !input response_many
+      # The Home Tasks card addresses a native list by its config entry id,
+      # which is exactly the config entry the todo entity belongs to.
+      list_id: "{{ config_entry_id(todo_entity) }}"
+      list_name: >-
+        {% if list_name_override == "" %}
+          {{ state_attr(todo_entity, 'friendly_name') }}
+        {% else %}
+          {{ list_name_override }}
+        {% endif %}
+      target_satellite_device: "{{ view_assist_entity(trigger.device_id) }}"
+      target_satellite_device_type: "{{ state_attr(target_satellite_device, 'type') }}"
+
+  - action: todo.get_items
+    target:
+      entity_id: "{{ todo_entity }}"
+    data:
+      status: needs_action
+    response_variable: list_items
+
+  - variables:
+      items: "{{ list_items[todo_entity]['items'] | map(attribute='summary') | list }}"
+      count: "{{ items | count }}"
+      spoken_items: >-
+        {% if max_items_readout > 0 %}
+          {{ items[:max_items_readout] }}
+        {% else %}
+          {{ items }}
+        {% endif %}
+      conversation_response: >-
+        {% if count | int == 0 %}
+          {{ response_empty.replace('{list_name}', list_name) }}
+        {% elif count | int == 1 %}
+          {{ response_one.replace('{list_name}', list_name).replace('{items}', spoken_items | join(', ')) }}
+        {% else %}
+          {{ response_many.replace('{list_name}', list_name).replace('{count}', count | string).replace('{items}', spoken_items | join(', ')) }}
+        {% endif %}
+
+  - set_conversation_response: "{{ conversation_response }}"
+
+  - action: view_assist.set_state
+    target:
+      entity_id: "{{ target_satellite_device }}"
+    data:
+      last_said: "{{ conversation_response }}"
+
+  - if:
+      - condition: template
+        value_template: "{{ target_satellite_device_type != 'audio_only' }}"
+    then:
+      # `home_tasks_list` is what the hometasks-dynamic view reads; `list` and
+      # `title` keep the satellite consistent with View Assist's own list view.
+      - action: view_assist.set_state
+        target:
+          entity_id: "{{ target_satellite_device }}"
+        data:
+          home_tasks_list: "{{ list_id }}"
+          list: "{{ todo_entity }}"
+          title: "{{ list_name }}"
+      - action: view_assist.navigate
+        data:
+          device: "{{ target_satellite_device }}"
+          path: "{{ view }}"
