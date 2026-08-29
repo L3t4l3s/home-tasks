@@ -3419,9 +3419,16 @@ class HomeTasksCard extends HTMLElement {
       this._render();
       return;
     }
+    // Same FLIP as sorting and filtering: every task that survives the new
+    // query slides from where it was to where it now is, instead of the whole
+    // body jumping. Tiles reflow in two dimensions, which is where a hard cut
+    // is most jarring. Shorter than the sort animation (0.3s) because this
+    // runs on every keystroke and must keep up with typing.
+    const before = this._captureListFlip(colIdx);
     const newBody = this._buildColumnBody(this._filteredTasks(colIdx), colIdx);
     this._applyColumnMaxHeight(newBody, col);
     oldBody.replaceWith(newBody);
+    this._applyFlip(before, colIdx, 0.2);
   }
 
   _buildColumnAddTask(cs, colIdx) {

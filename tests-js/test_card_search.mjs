@@ -136,6 +136,36 @@ describe('add-task search', () => {
     assert.equal(input(card), before, 'same DOM node — otherwise the mobile keyboard flickers');
   });
 
+  // Tasks that survive the query slide from their old spot to their new one,
+  // the same FLIP sorting and filtering use — most visible in tiles view,
+  // where the grid reflows in two dimensions. jsdom has no layout engine
+  // (every rect is 0×0), so the transforms themselves can only be verified in
+  // a real browser; what is pinned here is the wiring: positions captured
+  // before the swap, flip applied after, with the whole pre-search set as the
+  // reference so nothing is left to jump.
+  test('the surviving tasks are handed to the FLIP animation', async () => {
+    const { card } = await mount();
+    const seen = [];
+    const capture = card._captureListFlip.bind(card);
+    const apply = card._applyFlip.bind(card);
+    card._captureListFlip = (i) => {
+      const m = capture(i);
+      seen.push({ step: 'capture', ids: [...m.keys()].sort() });
+      return m;
+    };
+    card._applyFlip = (before, i, duration) => {
+      seen.push({ step: 'apply', ids: [...before.keys()].sort(), duration });
+      return apply(before, i, duration);
+    };
+
+    await type(card, 'bin');
+
+    assert.deepEqual(seen.map((s) => s.step), ['capture', 'apply']);
+    assert.deepEqual(seen[0].ids, ['T1', 'T2', 'T3', 'T4'], 'captured before the swap');
+    assert.deepEqual(seen[1].ids, seen[0].ids);
+    assert.equal(seen[1].duration, 0.2, 'shorter than sort/filter — it runs per keystroke');
+  });
+
   test('show_task_search: false leaves the list alone', async () => {
     const { card } = await mount({ show_task_search: false });
     await type(card, 'bin');
