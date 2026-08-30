@@ -51,6 +51,7 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_reorder_sub_tasks)
     websocket_api.async_register_command(hass, ws_move_task)
     websocket_api.async_register_command(hass, ws_move_task_cross)
+    websocket_api.async_register_command(hass, ws_set_list_settings)
     websocket_api.async_register_command(hass, ws_get_defaults)
     websocket_api.async_register_command(hass, ws_set_defaults)
     # External list commands
@@ -126,6 +127,10 @@ async def ws_get_lists(hass, connection, msg):
                 "name": entry.data.get("name", entry.title),
                 "task_count": len(store.tasks) if store and isinstance(store, HomeTasksStore) else 0,
                 "sensor_entity_id": sensor_entity_id,
+                "share_images": (
+                    store.get_settings()["share_images"]
+                    if store and isinstance(store, HomeTasksStore) else True
+                ),
             })
         connection.send_result(msg["id"], {"lists": lists})
     except Exception as err:
@@ -177,6 +182,29 @@ async def ws_add_task(hass, connection, msg):
             reminders=msg.get("reminders"),
         )
         connection.send_result(msg["id"], task)
+    except Exception as err:
+        _handle_error(connection, msg["id"], err)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "home_tasks/set_list_settings",
+        vol.Optional("list_id"): _val_id,
+        vol.Optional("entity_id"): _val_entity_id,
+        vol.Required("share_images"): bool,
+    }
+)
+@websocket_api.async_response
+async def ws_set_list_settings(hass, connection, msg):
+    """Set per-list policy settings for a native or a linked list."""
+    try:
+        list_id = msg.get("list_id")
+        entity_id = msg.get("entity_id")
+        if bool(list_id) == bool(entity_id):
+            raise ValueError("Provide exactly one of list_id or entity_id")
+        store = _get_store(hass, list_id) if list_id else _get_overlay_store(hass, entity_id)
+        settings = await store.async_set_settings(share_images=msg["share_images"])
+        connection.send_result(msg["id"], {"settings": settings})
     except Exception as err:
         _handle_error(connection, msg["id"], err)
 
@@ -989,6 +1017,15 @@ async def ws_get_external_lists(hass, connection, msg):
             provider_type = adapter.provider_type if adapter else "generic"
             capabilities = adapter.capabilities.to_dict() if adapter else {}
 
+            share_images = True
+            if entity_entry.entity_id in linked_entity_ids:
+                try:
+                    share_images = _get_overlay_store(
+                        hass, entity_entry.entity_id
+                    ).get_settings()["share_images"]
+                except ValueError:
+                    pass  # linked but not loaded yet — report the default
+
             external.append({
                 "entity_id": entity_entry.entity_id,
                 "name": entity_entry.name or entity_entry.original_name or entity_entry.entity_id,
@@ -996,6 +1033,7 @@ async def ws_get_external_lists(hass, connection, msg):
                 "supported_features": features,
                 "provider_type": provider_type,
                 "capabilities": capabilities,
+                "share_images": share_images,
             })
 
         connection.send_result(msg["id"], {"external_lists": external})
@@ -1976,16 +2014,33 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
         title_hash = hashlib.md5(title_key.encode(), usedforsecurity=False).hexdigest()[:16]
 
         all_stores = hass.data.get(DOMAIN, {})
-        # Read every linked list once — both the reuse check below and the
-        # fan-out afterwards match on titles the providers hold.
-        external_lists = (
-            await _async_all_external_lists(
-                hass,
-                (todo_entity_id, external_tasks, overlay_store) if overlay_store else None,
-            )
-            if title_key
-            else []
-        )
+
+        # Same-title sharing is per-list opt-out. A list with share_images off
+        # keeps to itself in both directions: it neither takes an image from
+        # another list nor hands one over. Three children with the same chore
+        # on three lists want three pictures, not one.
+        source_store = overlay_store or store
+        shares = source_store.get_settings()["share_images"]
+        if shares:
+            native_stores = [
+                st for st in all_stores.values()
+                if hasattr(st, "tasks") and st.get_settings()["share_images"]
+            ]
+            # Read every linked list once — both the reuse check below and the
+            # fan-out afterwards match on titles the providers hold.
+            external_lists = [
+                (ov, tasks)
+                for ov, tasks in await _async_all_external_lists(
+                    hass,
+                    (todo_entity_id, external_tasks, overlay_store) if overlay_store else None,
+                )
+                if ov.get_settings()["share_images"]
+            ] if title_key else []
+        else:
+            # Keeping to itself still means sharing *within* this one list:
+            # two identical titles in the same list use one picture.
+            native_stores = [store] if store is not None else []
+            external_lists = [(overlay_store, external_tasks)] if overlay_store else []
 
         # ------------------------------------------------------------------
         # 1. Reuse: if any task with the same title already has an image URL,
@@ -1993,9 +2048,7 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
         # ------------------------------------------------------------------
         if not msg.get("force", False) and title_key:
             existing_url: str | None = None
-            for s in all_stores.values():
-                if not hasattr(s, "tasks"):
-                    continue
+            for s in native_stores:
                 for t in s.tasks:
                     if t.get("title", "").strip().lower() == title_key and t.get("image_url"):
                         existing_url = t["image_url"]
@@ -2108,9 +2161,7 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
         # title would match every blank-title task across all lists and overwrite
         # their images.
         if title_key:
-            for s in all_stores.values():
-                if not hasattr(s, "tasks"):
-                    continue
+            for s in native_stores:
                 for t in s.tasks:
                     if t.get("title", "").strip().lower() == title_key and t.get("image_url") != image_url:
                         stamped = await s.async_update_task(t["id"], image_url=image_url)

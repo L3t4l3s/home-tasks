@@ -242,6 +242,45 @@ describe('external task images', () => {
     });
   });
 
+  // The backend decides what is stored; the card must not paint an image
+  // into a column whose list opted out of the pool, or it shows something
+  // that disappears on the next reload.
+  test('a list that opted out is not painted by a generation elsewhere', async () => {
+    const card = await externalCard(async () => ({
+      task: { id: 'a1', title: 'Zimmer aufräumen', image_url: '/local/gen.png' },
+    }));
+    card._config.columns.push({ entity_id: 'todo.kid_b', show_images: true });
+    card._externalLists = [
+      { entity_id: 'todo.do_zrobienia', share_images: true },
+      { entity_id: 'todo.kid_b', share_images: false },
+    ];
+    card._columns[0].tasks = [{ id: 'a1', title: 'Zimmer aufräumen' }];
+    card._columns.push({ tasks: [{ id: 'b1', title: 'Zimmer aufräumen' }] });
+
+    await card._generateTaskImage(card._columns[0].tasks[0], 0);
+
+    assert.equal(card._columns[0].tasks[0].image_url, '/local/gen.png');
+    assert.equal(card._columns[1].tasks[0].image_url, undefined);
+  });
+
+  test('a source list that opted out does not paint the others', async () => {
+    const card = await externalCard(async () => ({
+      task: { id: 'a1', title: 'Zimmer aufräumen', image_url: '/local/gen.png' },
+    }));
+    card._config.columns.push({ entity_id: 'todo.kid_b', show_images: true });
+    card._externalLists = [
+      { entity_id: 'todo.do_zrobienia', share_images: false },
+      { entity_id: 'todo.kid_b', share_images: true },
+    ];
+    card._columns[0].tasks = [{ id: 'a1', title: 'Zimmer aufräumen' }];
+    card._columns.push({ tasks: [{ id: 'b1', title: 'Zimmer aufräumen' }] });
+
+    await card._generateTaskImage(card._columns[0].tasks[0], 0);
+
+    assert.equal(card._columns[0].tasks[0].image_url, '/local/gen.png');
+    assert.equal(card._columns[1].tasks[0].image_url, undefined);
+  });
+
   test('generated images reach every column showing that list', async () => {
     const card = await externalCard(async () => ({
       task: { id: 'todoist-5', title: 'Buy milk', image_url: '/local/gen.png' },

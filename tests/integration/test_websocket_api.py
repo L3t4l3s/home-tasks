@@ -898,6 +898,161 @@ async def test_generated_image_reaches_every_list(
     assert overlay_b.get_overlay("ext-b-2")["image_url"] is None
 
 
+async def test_list_with_sharing_off_keeps_its_images(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store, external_config_entry
+) -> None:
+    """A list that opts out neither takes an image nor hands one over.
+
+    Three children with the same chore on three lists want three pictures.
+    """
+    from unittest.mock import AsyncMock, patch
+
+    from homeassistant.components.todo import TodoItem, TodoItemStatus
+    from homeassistant.core import SupportsResponse
+
+    entry_b = MockConfigEntry(domain=DOMAIN, data={"name": "Kid B"}, title="Kid B")
+    entry_b.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry_b.entry_id)
+    await hass.async_block_till_done()
+    store_b = hass.data[DOMAIN][entry_b.entry_id]
+
+    await _two_external_lists(hass, {
+        "todo.ws_external": [
+            TodoItem(uid="ext-share-1", summary="Zimmer aufräumen", status=TodoItemStatus.NEEDS_ACTION)
+        ],
+    })
+
+    a = await store.async_add_task("Zimmer aufräumen")
+    b = await store_b.async_add_task("Zimmer aufräumen")
+
+    client = await hass_ws_client(hass)
+    # Kid B keeps to itself; the linked list stays in the pool.
+    await client.send_json({
+        "id": 430,
+        "type": "home_tasks/set_list_settings",
+        "list_id": entry_b.entry_id,
+        "share_images": False,
+    })
+    assert (await client.receive_json())["success"] is True
+
+    hass.services.async_register(
+        "ai_task",
+        "generate_image",
+        AsyncMock(return_value={"media_source_id": "media-source://media_source/g.png"}),
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+    with patch(
+        "custom_components.home_tasks.websocket_api._save_image_to_public_media",
+        new=AsyncMock(return_value="/local/home_tasks/g.png"),
+    ):
+        await client.send_json({
+            "id": 431,
+            "type": "home_tasks/generate_task_image",
+            "entry_id": mock_config_entry.entry_id,
+            "task_id": a["id"],
+            "entity_id": "ai_task.test",
+            "force": True,
+        })
+        msg = await client.receive_json()
+
+    assert msg["success"] is True, msg
+    url = msg["result"]["task"]["image_url"]
+    assert store.get_task(a["id"])["image_url"] == url
+    assert store_b.get_task(b["id"]).get("image_url") is None, "opted-out list must be skipped"
+    overlay = hass.data[DOMAIN][external_config_entry.entry_id]
+    assert overlay.get_overlay("ext-share-1")["image_url"] == url, "sharing lists still take part"
+
+
+async def test_list_with_sharing_off_still_shares_inside_itself(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store
+) -> None:
+    """Opting out is about *other* lists — one list still uses one picture."""
+    from unittest.mock import AsyncMock, patch
+
+    from homeassistant.core import SupportsResponse
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 432,
+        "type": "home_tasks/set_list_settings",
+        "list_id": mock_config_entry.entry_id,
+        "share_images": False,
+    })
+    assert (await client.receive_json())["success"] is True
+
+    a = await store.async_add_task("Zimmer aufräumen")
+    b = await store.async_add_task("Zimmer aufräumen")
+
+    hass.services.async_register(
+        "ai_task",
+        "generate_image",
+        AsyncMock(return_value={"media_source_id": "media-source://media_source/g.png"}),
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+    with patch(
+        "custom_components.home_tasks.websocket_api._save_image_to_public_media",
+        new=AsyncMock(return_value="/local/home_tasks/g.png"),
+    ):
+        await client.send_json({
+            "id": 433,
+            "type": "home_tasks/generate_task_image",
+            "entry_id": mock_config_entry.entry_id,
+            "task_id": a["id"],
+            "entity_id": "ai_task.test",
+            "force": True,
+        })
+        msg = await client.receive_json()
+
+    assert msg["success"] is True, msg
+    assert store.get_task(b["id"])["image_url"] == store.get_task(a["id"])["image_url"]
+
+
+async def test_list_settings_round_trip(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, external_config_entry
+) -> None:
+    """The flag defaults to on and is reported back through the list payloads."""
+    from homeassistant.helpers import entity_registry as er
+
+    # ws_get_external_lists walks the entity registry, so the linked entity
+    # has to exist there — the config entry alone is not enough.
+    er.async_get(hass).async_get_or_create(
+        "todo", "demo", "ws-ext-1", suggested_object_id="ws_external"
+    )
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 434, "type": "home_tasks/get_lists"})
+    lists = (await client.receive_json())["result"]["lists"]
+    assert all(l["share_images"] is True for l in lists), "default is on"
+
+    await client.send_json({
+        "id": 435,
+        "type": "home_tasks/set_list_settings",
+        "entity_id": "todo.ws_external",
+        "share_images": False,
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True, msg
+    assert msg["result"]["settings"]["share_images"] is False
+
+    await client.send_json({"id": 436, "type": "home_tasks/get_external_lists"})
+    ext = (await client.receive_json())["result"]["external_lists"]
+    linked = next((e for e in ext if e["entity_id"] == "todo.ws_external"), None)
+    assert linked is not None, ext
+    assert linked["linked"] is True
+    assert linked["share_images"] is False
+
+    # Exactly one target must be given.
+    await client.send_json({
+        "id": 437,
+        "type": "home_tasks/set_list_settings",
+        "list_id": mock_config_entry.entry_id,
+        "entity_id": "todo.ws_external",
+        "share_images": True,
+    })
+    assert (await client.receive_json())["success"] is False
+
+
 async def test_image_of_an_external_task_is_reused_for_a_native_one(
     hass: HomeAssistant, hass_ws_client, mock_config_entry, store, external_config_entry
 ) -> None:

@@ -61,6 +61,9 @@ const _TRANSLATIONS = {
     ed_show_add_due: "Due date when adding",
     ed_max_height: "Max height (px, 0 = unlimited)", ed_badge_priority: "Priority chips", ed_badge_progress: "Progress chips", ed_badge_due: "Due chips", ed_badge_recurrence: "Recurrence chips", ed_badge_person: "Person chips", ed_badge_tags: "Tag chips", ed_badge_reminders: "Reminder chips",
     ed_sec_defaults: "Defaults",
+    ed_sec_images: "Images",
+    ed_share_images: "Share images with other lists",
+    ed_share_images_hint: "Off keeps this list's pictures to itself — the same task title on another list gets its own image.",
     ed_default_assignee: "Default assignee",
     ed_defaults_hint: "Applied to every new task in this list \u2014 no matter how it is created (card, service, voice, todo). Changes are saved immediately.", ed_defaults_saved: "Saved", ed_defaults_load_failed: "Could not load defaults", ed_defaults_save_failed: "Save failed",
     confirm_complete_msg: "Mark \"{0}\" as completed?",
@@ -200,6 +203,9 @@ const _TRANSLATIONS = {
     ed_show_add_due: "Vervaldatum bij toevoegen",
     ed_max_height: "Max. hoogte (px, 0 = onbeperkt)", ed_badge_priority: "Prioriteitschips", ed_badge_progress: "Voortgangschips", ed_badge_due: "Vervaldatumchips", ed_badge_recurrence: "Herhalingschips", ed_badge_person: "Persoonchips", ed_badge_tags: "Tagchips", ed_badge_reminders: "Herinneringschips",
     ed_sec_defaults: "Standaardwaarden",
+    ed_sec_images: "Afbeeldingen",
+    ed_share_images: "Afbeeldingen delen met andere lijsten",
+    ed_share_images_hint: "Uit houdt de afbeeldingen van deze lijst apart — dezelfde taaktitel op een andere lijst krijgt een eigen afbeelding.",
     ed_default_assignee: "Standaard toegewezene",
     ed_defaults_hint: "Geldt voor elke nieuwe taak in deze lijst \u2014 ongeacht hoe die wordt aangemaakt. Wijzigingen worden direct opgeslagen.", ed_defaults_saved: "Opgeslagen", ed_defaults_load_failed: "Standaardwaarden konden niet worden geladen", ed_defaults_save_failed: "Opslaan mislukt",
     confirm_complete_msg: "\u201e{0}\u201d als afgerond markeren?",
@@ -279,6 +285,9 @@ const _TRANSLATIONS = {
     ed_show_add_due: "Scadenza alla creazione",
     ed_max_height: "Altezza max (px, 0 = illimitata)", ed_badge_priority: "Chip priorit\u00e0", ed_badge_progress: "Chip avanzamento", ed_badge_due: "Chip scadenza", ed_badge_recurrence: "Chip ricorrenza", ed_badge_person: "Chip persona", ed_badge_tags: "Chip tag", ed_badge_reminders: "Chip promemoria",
     ed_sec_defaults: "Predefiniti",
+    ed_sec_images: "Immagini",
+    ed_share_images: "Condividi le immagini con altri elenchi",
+    ed_share_images_hint: "Disattivato mantiene le immagini di questo elenco separate — lo stesso titolo in un altro elenco riceve un'immagine propria.",
     ed_default_assignee: "Assegnatario predefinito",
     ed_defaults_hint: "Si applica a ogni nuova attivit\u00e0 di questo elenco, comunque venga creata. Le modifiche vengono salvate immediatamente.", ed_defaults_saved: "Salvato", ed_defaults_load_failed: "Impossibile caricare i valori predefiniti", ed_defaults_save_failed: "Salvataggio non riuscito",
     confirm_complete_msg: "Segnare \u201c{0}\u201d come completata?",
@@ -358,6 +367,9 @@ const _TRANSLATIONS = {
     ed_show_add_due: "Termin przy dodawaniu",
     ed_max_height: "Maks. wysoko\u015b\u0107 (px, 0 = bez limitu)", ed_badge_priority: "Znaczniki priorytetu", ed_badge_progress: "Znaczniki post\u0119pu", ed_badge_due: "Znaczniki terminu", ed_badge_recurrence: "Znaczniki powtarzania", ed_badge_person: "Znaczniki osoby", ed_badge_tags: "Znaczniki tag\u00f3w", ed_badge_reminders: "Znaczniki przypomnie\u0144",
     ed_sec_defaults: "Domy\u015blne",
+    ed_sec_images: "Obrazy",
+    ed_share_images: "Współdziel obrazy z innymi listami",
+    ed_share_images_hint: "Wyłączone zachowuje obrazy tej listy osobno — ten sam tytuł na innej liście otrzyma własny obraz.",
     ed_default_assignee: "Domy\u015blny przypisany",
     ed_defaults_hint: "Dotyczy ka\u017cdego nowego zadania na tej li\u015bcie \u2014 niezale\u017cnie od sposobu utworzenia. Zmiany s\u0105 zapisywane natychmiast.", ed_defaults_saved: "Zapisano", ed_defaults_load_failed: "Nie uda\u0142o si\u0119 wczyta\u0107 ustawie\u0144 domy\u015blnych", ed_defaults_save_failed: "Zapis nie powi\u00f3d\u0142 si\u0119",
     confirm_complete_msg: "Oznaczy\u0107 \u201e{0}\u201d jako uko\u0144czone?",
@@ -437,6 +449,9 @@ const _TRANSLATIONS = {
     ed_show_add_due: "F\u00f6rfallodatum vid till\u00e4gg",
     ed_max_height: "Maxh\u00f6jd (px, 0 = obegr\u00e4nsad)", ed_badge_priority: "Prioritetschips", ed_badge_progress: "F\u00f6rloppschips", ed_badge_due: "F\u00f6rfallochips", ed_badge_recurrence: "Upprepningschips", ed_badge_person: "Personchips", ed_badge_tags: "Taggchips", ed_badge_reminders: "P\u00e5minnelsechips",
     ed_sec_defaults: "Standardv\u00e4rden",
+    ed_sec_images: "Bilder",
+    ed_share_images: "Dela bilder med andra listor",
+    ed_share_images_hint: "Av håller listans bilder för sig själv — samma uppgiftstitel i en annan lista får en egen bild.",
     ed_default_assignee: "Standardtilldelad",
     ed_defaults_hint: "G\u00e4ller varje ny uppgift i listan \u2014 oavsett hur den skapas. \u00c4ndringar sparas direkt.", ed_defaults_saved: "Sparat", ed_defaults_load_failed: "Det gick inte att l\u00e4sa in standardv\u00e4rdena", ed_defaults_save_failed: "Det gick inte att spara",
     confirm_complete_msg: "Markera \u201d{0}\u201d som slutf\u00f6rd?",
@@ -516,6 +531,9 @@ const _TRANSLATIONS = {
     ed_show_add_due: "\u00c9ch\u00e9ance \u00e0 la cr\u00e9ation",
     ed_max_height: "Hauteur max (px, 0 = illimit\u00e9e)", ed_badge_priority: "Puces priorit\u00e9", ed_badge_progress: "Puces progression", ed_badge_due: "Puces \u00e9ch\u00e9ance", ed_badge_recurrence: "Puces r\u00e9currence", ed_badge_person: "Puces personne", ed_badge_tags: "Puces \u00e9tiquettes", ed_badge_reminders: "Puces rappel",
     ed_sec_defaults: "Valeurs par d\u00e9faut",
+    ed_sec_images: "Images",
+    ed_share_images: "Partager les images avec d'autres listes",
+    ed_share_images_hint: "Désactivé garde les images de cette liste pour elle — le même titre dans une autre liste obtient sa propre image.",
     ed_default_assignee: "Assign\u00e9 par d\u00e9faut",
     ed_defaults_hint: "S'applique \u00e0 chaque nouvelle t\u00e2che de cette liste, quelle que soit sa cr\u00e9ation. Les modifications sont enregistr\u00e9es imm\u00e9diatement.", ed_defaults_saved: "Enregistr\u00e9", ed_defaults_load_failed: "Impossible de charger les valeurs par d\u00e9faut", ed_defaults_save_failed: "\u00c9chec de l'enregistrement",
     confirm_complete_msg: "Marquer \u00ab\u202f{0}\u202f\u00bb comme termin\u00e9e\u202f?",
@@ -595,6 +613,9 @@ const _TRANSLATIONS = {
     ed_show_add_due: "Prazo ao adicionar",
     ed_max_height: "Altura m\u00e1x. (px, 0 = ilimitada)", ed_badge_priority: "Chips de prioridade", ed_badge_progress: "Chips de progresso", ed_badge_due: "Chips de prazo", ed_badge_recurrence: "Chips de recorr\u00eancia", ed_badge_person: "Chips de pessoa", ed_badge_tags: "Chips de etiquetas", ed_badge_reminders: "Chips de lembrete",
     ed_sec_defaults: "Padr\u00f5es",
+    ed_sec_images: "Imagens",
+    ed_share_images: "Partilhar imagens com outras listas",
+    ed_share_images_hint: "Desligado mantém as imagens desta lista separadas — o mesmo título noutra lista recebe a sua própria imagem.",
     ed_default_assignee: "Respons\u00e1vel padr\u00e3o",
     ed_defaults_hint: "Aplica-se a cada nova tarefa desta lista, seja como for criada. As altera\u00e7\u00f5es s\u00e3o guardadas imediatamente.", ed_defaults_saved: "Guardado", ed_defaults_load_failed: "N\u00e3o foi poss\u00edvel carregar as predefini\u00e7\u00f5es", ed_defaults_save_failed: "Falha ao guardar",
     confirm_complete_msg: "Marcar \u201c{0}\u201d como conclu\u00edda?",
@@ -674,6 +695,9 @@ const _TRANSLATIONS = {
     ed_show_add_due: "Fecha l\u00edmite al a\u00f1adir",
     ed_max_height: "Altura m\u00e1x. (px, 0 = ilimitada)", ed_badge_priority: "Chips de prioridad", ed_badge_progress: "Chips de progreso", ed_badge_due: "Chips de vencimiento", ed_badge_recurrence: "Chips de repetici\u00f3n", ed_badge_person: "Chips de persona", ed_badge_tags: "Chips de etiquetas", ed_badge_reminders: "Chips de recordatorio",
     ed_sec_defaults: "Predeterminados",
+    ed_sec_images: "Imágenes",
+    ed_share_images: "Compartir imágenes con otras listas",
+    ed_share_images_hint: "Desactivado mantiene las imágenes de esta lista aparte: el mismo título en otra lista obtiene su propia imagen.",
     ed_default_assignee: "Asignado por defecto",
     ed_defaults_hint: "Se aplica a cada nueva tarea de esta lista, sin importar c\u00f3mo se cree. Los cambios se guardan inmediatamente.", ed_defaults_saved: "Guardado", ed_defaults_load_failed: "No se pudieron cargar los valores predeterminados", ed_defaults_save_failed: "Error al guardar",
     confirm_complete_msg: "\u00bfMarcar \u00ab{0}\u00bb como completada?",
@@ -753,6 +777,9 @@ const _TRANSLATIONS = {
     ed_show_add_due: "\u0421\u0440\u043e\u043a \u043f\u0440\u0438 \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u0438\u0438",
     ed_max_height: "\u041c\u0430\u043a\u0441. \u0432\u044b\u0441\u043e\u0442\u0430 (px, 0 = \u0431\u0435\u0437 \u043e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d\u0438\u044f)", ed_badge_priority: "\u0427\u0438\u043f\u044b \u043f\u0440\u0438\u043e\u0440\u0438\u0442\u0435\u0442\u0430", ed_badge_progress: "\u0427\u0438\u043f\u044b \u043f\u0440\u043e\u0433\u0440\u0435\u0441\u0441\u0430", ed_badge_due: "\u0427\u0438\u043f\u044b \u0441\u0440\u043e\u043a\u0430", ed_badge_recurrence: "\u0427\u0438\u043f\u044b \u043f\u043e\u0432\u0442\u043e\u0440\u0435\u043d\u0438\u044f", ed_badge_person: "\u0427\u0438\u043f\u044b \u0447\u0435\u043b\u043e\u0432\u0435\u043a\u0430", ed_badge_tags: "\u0427\u0438\u043f\u044b \u0442\u0435\u0433\u043e\u0432", ed_badge_reminders: "\u0427\u0438\u043f\u044b \u043d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u0439",
     ed_sec_defaults: "\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u044f \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e",
+    ed_sec_images: "Изображения",
+    ed_share_images: "Делиться изображениями с другими списками",
+    ed_share_images_hint: "Выключено — изображения этого списка остаются только в нём: одинаковое название в другом списке получит своё изображение.",
     ed_default_assignee: "\u041e\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0435\u043d\u043d\u044b\u0439 \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e",
     ed_defaults_hint: "\u041f\u0440\u0438\u043c\u0435\u043d\u044f\u0435\u0442\u0441\u044f \u043a \u043a\u0430\u0436\u0434\u043e\u0439 \u043d\u043e\u0432\u043e\u0439 \u0437\u0430\u0434\u0430\u0447\u0435 \u044d\u0442\u043e\u0433\u043e \u0441\u043f\u0438\u0441\u043a\u0430. \u0418\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f \u0441\u043e\u0445\u0440\u0430\u043d\u044f\u044e\u0442\u0441\u044f \u0441\u0440\u0430\u0437\u0443.", ed_defaults_saved: "\u0421\u043e\u0445\u0440\u0430\u043d\u0435\u043d\u043e", ed_defaults_load_failed: "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u0437\u043d\u0430\u0447\u0435\u043d\u0438\u044f \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e", ed_defaults_save_failed: "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0441\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c",
     confirm_complete_msg: "\u041e\u0442\u043c\u0435\u0442\u0438\u0442\u044c \u00ab{0}\u00bb \u043a\u0430\u043a \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043d\u0443\u044e?",
@@ -832,6 +859,9 @@ const _TRANSLATIONS = {
     ed_show_add_due: "Term\u00edn p\u0159i p\u0159id\u00e1n\u00ed",
     ed_max_height: "Max. v\u00fd\u0161ka (px, 0 = bez limitu)", ed_badge_priority: "\u010cipy priority", ed_badge_progress: "\u010cipy pr\u016fb\u011bhu", ed_badge_due: "\u010cipy term\u00ednu", ed_badge_recurrence: "\u010cipy opakov\u00e1n\u00ed", ed_badge_person: "\u010cipy osoby", ed_badge_tags: "\u010cipy \u0161t\u00edtk\u016f", ed_badge_reminders: "\u010cipy p\u0159ipomenut\u00ed",
     ed_sec_defaults: "V\u00fdchoz\u00ed hodnoty",
+    ed_sec_images: "Obrázky",
+    ed_share_images: "Sdílet obrázky s jinými seznamy",
+    ed_share_images_hint: "Vypnuto ponechá obrázky tohoto seznamu jen jemu — stejný název v jiném seznamu dostane vlastní obrázek.",
     ed_default_assignee: "V\u00fdchoz\u00ed p\u0159i\u0159azen\u00ed",
     ed_defaults_hint: "Plat\u00ed pro ka\u017ed\u00fd nov\u00fd \u00fakol v tomto seznamu. Zm\u011bny se ukl\u00e1daj\u00ed okam\u017eit\u011b.", ed_defaults_saved: "Ulo\u017eeno", ed_defaults_load_failed: "V\u00fdchoz\u00ed hodnoty se nepoda\u0159ilo na\u010d\u00edst", ed_defaults_save_failed: "Ulo\u017een\u00ed se nezda\u0159ilo",
     confirm_complete_msg: "Ozna\u010dit \u201e{0}\u201c jako dokon\u010den\u00e9?",
@@ -911,6 +941,9 @@ const _TRANSLATIONS = {
     ed_show_add_due: "Forfaldsdato ved tilf\u00f8jelse",
     ed_max_height: "Maks. h\u00f8jde (px, 0 = ubegr\u00e6nset)", ed_badge_priority: "Prioritetschips", ed_badge_progress: "Fremdriftschips", ed_badge_due: "Forfaldschips", ed_badge_recurrence: "Gentagelseschips", ed_badge_person: "Personchips", ed_badge_tags: "Tagchips", ed_badge_reminders: "P\u00e5mindelseschips",
     ed_sec_defaults: "Standarder",
+    ed_sec_images: "Billeder",
+    ed_share_images: "Del billeder med andre lister",
+    ed_share_images_hint: "Fra holder listens billeder for sig selv — samme opgavetitel på en anden liste får sit eget billede.",
     ed_default_assignee: "Standardtildelt",
     ed_defaults_hint: "G\u00e6lder for hver ny opgave p\u00e5 listen \u2014 uanset hvordan den oprettes. \u00c6ndringer gemmes med det samme.", ed_defaults_saved: "Gemt", ed_defaults_load_failed: "Standardv\u00e6rdierne kunne ikke indl\u00e6ses", ed_defaults_save_failed: "Kunne ikke gemme",
     confirm_complete_msg: "Mark\u00e9r \u201d{0}\u201d som fuldf\u00f8rt?",
@@ -990,6 +1023,9 @@ const _TRANSLATIONS = {
     ed_show_add_due: "Forfallsdato ved tillegg",
     ed_max_height: "Maks. h\u00f8yde (px, 0 = ubegrenset)", ed_badge_priority: "Prioritetschips", ed_badge_progress: "Fremdriftschips", ed_badge_due: "Forfallschips", ed_badge_recurrence: "Gjentakelseschips", ed_badge_person: "Personchips", ed_badge_tags: "Taggchips", ed_badge_reminders: "P\u00e5minnelseschips",
     ed_sec_defaults: "Standarder",
+    ed_sec_images: "Bilder",
+    ed_share_images: "Del bilder med andre lister",
+    ed_share_images_hint: "Av holder listens bilder for seg selv — samme oppgavetittel i en annen liste får sitt eget bilde.",
     ed_default_assignee: "Standardtildelt",
     ed_defaults_hint: "Gjelder hver ny oppgave i listen \u2014 uansett hvordan den opprettes. Endringer lagres umiddelbart.", ed_defaults_saved: "Lagret", ed_defaults_load_failed: "Kunne ikke laste standardverdiene", ed_defaults_save_failed: "Kunne ikke lagre",
     confirm_complete_msg: "Merke \u00ab{0}\u00bb som fullf\u00f8rt?",
@@ -1069,6 +1105,9 @@ const _TRANSLATIONS = {
     ed_show_add_due: "Er\u00e4p\u00e4iv\u00e4 lis\u00e4tt\u00e4ess\u00e4",
     ed_max_height: "Enimm\u00e4iskorkeus (px, 0 = rajaton)", ed_badge_priority: "Prioriteettimerkit", ed_badge_progress: "Edistymismerkit", ed_badge_due: "Er\u00e4p\u00e4iv\u00e4merkit", ed_badge_recurrence: "Toistomerkit", ed_badge_person: "Henkil\u00f6merkit", ed_badge_tags: "Tunnistemerkit", ed_badge_reminders: "Muistutusmerkit",
     ed_sec_defaults: "Oletukset",
+    ed_sec_images: "Kuvat",
+    ed_share_images: "Jaa kuvat muiden listojen kanssa",
+    ed_share_images_hint: "Pois pitää tämän listan kuvat omanaan — sama tehtävän nimi toisessa listassa saa oman kuvansa.",
     ed_default_assignee: "Oletusvastuuhenkil\u00f6",
     ed_defaults_hint: "Koskee jokaista listan uutta teht\u00e4v\u00e4\u00e4 luontitavasta riippumatta. Muutokset tallennetaan heti.", ed_defaults_saved: "Tallennettu", ed_defaults_load_failed: "Oletuksia ei voitu ladata", ed_defaults_save_failed: "Tallennus ep\u00e4onnistui",
     confirm_complete_msg: "Merkit\u00e4\u00e4nk\u00f6 \u201d{0}\u201d valmiiksi?",
@@ -1148,6 +1187,9 @@ const _TRANSLATIONS = {
     ed_show_add_due: "Hat\u00e1rid\u0151 hozz\u00e1ad\u00e1skor",
     ed_max_height: "Max. magass\u00e1g (px, 0 = korl\u00e1tlan)", ed_badge_priority: "Priorit\u00e1s-c\u00edmk\u00e9k", ed_badge_progress: "Folyamat-c\u00edmk\u00e9k", ed_badge_due: "Hat\u00e1rid\u0151-c\u00edmk\u00e9k", ed_badge_recurrence: "Ism\u00e9tl\u00e9s-c\u00edmk\u00e9k", ed_badge_person: "Szem\u00e9ly-c\u00edmk\u00e9k", ed_badge_tags: "C\u00edmke-chipek", ed_badge_reminders: "Eml\u00e9keztet\u0151-c\u00edmk\u00e9k",
     ed_sec_defaults: "Alap\u00e9rtelmez\u00e9sek",
+    ed_sec_images: "Képek",
+    ed_share_images: "Képek megosztása más listákkal",
+    ed_share_images_hint: "Kikapcsolva a lista képei csak ehhez a listához tartoznak — ugyanaz a cím egy másik listán saját képet kap.",
     ed_default_assignee: "Alap\u00e9rtelmezett felel\u0151s",
     ed_defaults_hint: "A lista minden \u00faj feladat\u00e1ra \u00e9rv\u00e9nyes, b\u00e1rhogyan is j\u00f6n l\u00e9tre. A m\u00f3dos\u00edt\u00e1sok azonnal ment\u00e9sre ker\u00fclnek.", ed_defaults_saved: "Mentve", ed_defaults_load_failed: "Az alap\u00e9rtelmez\u00e9sek bet\u00f6lt\u00e9se sikertelen", ed_defaults_save_failed: "A ment\u00e9s sikertelen",
     confirm_complete_msg: "Megjel\u00f6l\u00f6d \u201e{0}\u201d-t k\u00e9szk\u00e9nt?",
@@ -1248,6 +1290,9 @@ const _TRANSLATIONS = {
     ed_show_add_due: "F\u00e4lligkeit beim Anlegen",
     ed_max_height: "Max. H\u00f6he (px, 0 = unbegrenzt)", ed_badge_priority: "Priorit\u00e4ts-Chips", ed_badge_progress: "Fortschritts-Chips", ed_badge_due: "F\u00e4lligkeits-Chips", ed_badge_recurrence: "Wiederholungs-Chips", ed_badge_person: "Personen-Chips", ed_badge_tags: "Tag-Chips", ed_badge_reminders: "Erinnerungs-Chips",
     ed_sec_defaults: "Standardwerte",
+    ed_sec_images: "Bilder",
+    ed_share_images: "Bilder mit anderen Listen teilen",
+    ed_share_images_hint: "Aus behält die Bilder dieser Liste für sich — der gleiche Aufgabentitel auf einer anderen Liste bekommt ein eigenes Bild.",
     ed_default_assignee: "Standard-Zust\u00e4ndige(r)",
     ed_defaults_hint: "Gilt f\u00fcr jede neue Aufgabe dieser Liste \u2014 egal wie sie angelegt wird (Karte, Service, Sprache, Todo). \u00c4nderungen werden sofort gespeichert.", ed_defaults_saved: "Gespeichert", ed_defaults_load_failed: "Defaults konnten nicht geladen werden", ed_defaults_save_failed: "Speichern fehlgeschlagen",
     confirm_complete_msg: "„{0}“ als erledigt markieren?",
@@ -1890,6 +1935,18 @@ class HomeTasksCard extends HTMLElement {
 
   _colListId(colIdx) {
     return this._config.columns[colIdx]?.list_id;
+  }
+
+  // Whether the column's list takes part in the cross-list image pool. The
+  // backend decides what is actually stored; the card asks the same question
+  // so its optimistic update does not show an image that will never arrive.
+  _colSharesImages(colIdx) {
+    const col = this._config.columns[colIdx];
+    if (!col) return false;
+    const info = col.entity_id
+      ? (this._externalLists || []).find(l => l.entity_id === col.entity_id)
+      : (this._lists || []).find(l => l.id === col.list_id);
+    return info ? info.share_images !== false : true;
   }
 
   // Identity of the list a column shows, for deciding which columns hold the
@@ -6532,15 +6589,20 @@ class HomeTasksCard extends HTMLElement {
       const newImageUrl = result.task?.image_url;
       const titleKey = (task.title || "").trim().toLowerCase();
       const sourceKey = this._colSourceKey(colIdx);
+      // A list that keeps its images to itself only shares within itself.
+      const sourceShares = this._colSharesImages(colIdx);
       for (let ci = 0; ci < this._columns.length; ci++) {
         const cs = this._columns[ci];
         if (!cs || !cs.tasks) continue;
         const sameSource = this._colSourceKey(ci) === sourceKey;
+        const sharesWithSource = sameSource
+          || (sourceShares && this._colSharesImages(ci));
         for (let i = 0; i < cs.tasks.length; i++) {
           const t = cs.tasks[i];
           if (sameSource && t.id === task.id) {
             cs.tasks[i] = result.task;
-          } else if (newImageUrl && titleKey && (t.title || "").trim().toLowerCase() === titleKey) {
+          } else if (sharesWithSource && newImageUrl && titleKey
+                     && (t.title || "").trim().toLowerCase() === titleKey) {
             cs.tasks[i] = { ...t, image_url: newImageUrl };
           }
         }
@@ -8121,6 +8183,35 @@ class HomeTasksCardEditor extends HTMLElement {
     return container;
   }
 
+  // Whether this column's LIST takes part in the cross-list image pool.
+  // Unlike the switches above this is not a card option: it belongs to the
+  // list itself, so every card showing it behaves the same and the backend
+  // can honour it for generations triggered anywhere.
+  _buildShareImagesToggle(col) {
+    const info = col.entity_id
+      ? (this._externalLists || []).find(l => l.entity_id === col.entity_id)
+      : (this._lists || []).find(l => l.id === col.list_id);
+    const sw = document.createElement("ha-switch");
+    sw.checked = info ? info.share_images !== false : true;
+    sw.disabled = !info;
+    sw.setAttribute("aria-label", this._t("ed_share_images"));
+    sw.addEventListener("change", async () => {
+      const target = col.entity_id ? { entity_id: col.entity_id } : { list_id: col.list_id };
+      try {
+        await this._hass.callWS({
+          type: "home_tasks/set_list_settings", ...target, share_images: sw.checked,
+        });
+        if (info) info.share_images = sw.checked;  // keep the cached list in sync
+      } catch (e) {
+        sw.checked = !sw.checked;  // put the switch back if the write failed
+      }
+    });
+    return this._el("div", { className: "toggle-row" }, [
+      this._el("span", { className: "toggle-label", textContent: this._t("ed_share_images") }),
+      sw,
+    ]);
+  }
+
   _renderDefaultsInto(container, listId, defaults) {
     const savedFlash = this._el("span", { className: "def-saved-flash" });
     // Partial saves with in-flight coalescing: each change sends only the
@@ -9085,6 +9176,10 @@ class HomeTasksCardEditor extends HTMLElement {
       ]),
       ...(col.list_id ? [makeSection("defaults", "mdi:account-check-outline", "ed_sec_defaults", [
         this._buildDefaultsEditor(col.list_id),
+      ], false)] : []),
+      ...(col.list_id || col.entity_id ? [makeSection("images", "mdi:image-multiple", "ed_sec_images", [
+        this._buildShareImagesToggle(col),
+        this._el("div", { className: "hint", textContent: this._t("ed_share_images_hint") }),
       ], false)] : []),
       makeSection("filters", "mdi:filter-variant", "ed_sec_filters", [
         filterField,

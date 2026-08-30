@@ -368,12 +368,13 @@ class HomeTasksStore:
         """Load data from disk."""
         data = await self._store.async_load()
         if data is None:
-            self._data = {"tasks": [], "sections": [], "defaults": {}}
+            self._data = {"tasks": [], "sections": [], "defaults": {}, "settings": {}}
             await self._async_save()
         else:
             self._data = data
             self._data.setdefault("sections", [])
             self._data.setdefault("defaults", {})
+            self._data.setdefault("settings", {})
             self._backfill_recurrence_fields()
             self._backfill_section_id()
             self._migrate_v1_to_v2()
@@ -445,6 +446,30 @@ class HomeTasksStore:
     def tasks(self) -> list[dict]:
         """Return all tasks sorted by order."""
         return sorted(self._data["tasks"], key=lambda t: t["sort_order"])
+
+    def get_settings(self) -> dict:
+        """Per-list policy settings (not task defaults).
+
+        share_images: whether this list takes part in the cross-list image
+        pool. Default True — the historical behaviour, where generating an
+        image assigns it to every task with the same title everywhere. Off
+        means this list neither takes an image from another list nor hands
+        one over, which is what separate-but-similar lists need (three kids,
+        the same chore, their own pictures).
+        """
+        s = self._data.get("settings") or {}
+        return {"share_images": s.get("share_images", True) is not False}
+
+    async def async_set_settings(self, share_images: object = _UNSET) -> dict:
+        """Update per-list settings. Omitted fields keep their value."""
+        current = self.get_settings()
+        if share_images is _UNSET:
+            share_images = current["share_images"]
+        self._data["settings"] = {"share_images": bool(share_images)}
+        # Same reasoning as async_set_defaults: persist immediately, skip the
+        # entity listener fanout (no entity state depends on this).
+        await self._store.async_save(self._data)
+        return self.get_settings()
 
     def get_defaults(self) -> dict:
         """List-level defaults applied to every newly created task, no matter

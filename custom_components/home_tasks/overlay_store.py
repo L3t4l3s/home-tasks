@@ -143,11 +143,12 @@ class ExternalTaskOverlayStore:
         """Load overlay data from disk."""
         data = await self._store.async_load()
         if data is None:
-            self._data = {"overlays": {}, "sections": []}
+            self._data = {"overlays": {}, "sections": [], "settings": {}}
             await self._async_save()
         else:
             self._data = data
             self._data.setdefault("sections", [])
+            self._data.setdefault("settings", {})
             self._strip_default_overlays()
 
     def _strip_default_overlays(self) -> None:
@@ -180,6 +181,18 @@ class ExternalTaskOverlayStore:
             listener()
 
     # -- read --
+
+    def get_settings(self) -> dict:
+        """Per-list policy settings — mirrors HomeTasksStore.get_settings."""
+        s = self._data.get("settings") or {}
+        return {"share_images": s.get("share_images", True) is not False}
+
+    async def async_set_settings(self, share_images: object = None) -> dict:
+        """Update per-list settings. None keeps the current value."""
+        if share_images is not None:
+            self._data["settings"] = {"share_images": bool(share_images)}
+            await self._async_save()
+        return self.get_settings()
 
     def get_overlay(self, task_uid: str) -> dict:
         """Return the overlay for *task_uid*, creating a blank one if needed."""
