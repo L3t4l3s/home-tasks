@@ -42,7 +42,7 @@ Display tasks from **any HA todo integration** alongside native Home Tasks lists
 
 - Link external todo entities via **Settings > Integrations > Home Tasks > Link external todo list**
 - Provider type is **auto-detected** (Todoist, CalDAV, Google Tasks, etc.) — no extra configuration needed
-- For **generic providers** (CalDAV, Google Tasks, Shopping List, etc.): each field is bidirectionally synced only if the provider's todo entity advertises the matching capability (SET_DUE_DATE, SET_DESCRIPTION, …). Everything else — priority, tags, sub-tasks, reminders, recurrence, and base fields the provider can't hold — lives in a local overlay so every Home Tasks feature keeps working.
+- For **generic providers** (CalDAV, Google Tasks, Shopping List, etc.): each field is bidirectionally synced only if the provider's todo entity advertises the matching capability (SET_DUE_DATE, SET_DESCRIPTION, …). Everything else — priority, tags, sub-tasks, reminders, recurrence, [task images](#task-images--ai-generation), and base fields the provider can't hold — lives in a local overlay so every Home Tasks feature keeps working.
 - For **Todoist**: full bidirectional sync via direct API access — see [Todoist Deep Integration](#todoist-deep-integration) below
 - The card editor **auto-configures visibility** based on the provider's capabilities when you select an external list
 - You can manually enable overlay fields for external lists if you want them locally
@@ -139,7 +139,7 @@ Give tasks a picture — handy for recipes, products on a shopping list, or visu
 - **Generate with AI** — the generate button creates an image from the task title via an [`ai_task`](https://www.home-assistant.io/integrations/ai_task/) entity (configured card-wide, see below)
 - **Remove** an image anytime with the × on its thumbnail
 
-Images are managed on **native** Home Tasks lists.
+Images work on **native and external lists alike**. For an external list the picture is kept in the local overlay and never sent to the provider — Todoist, Nextcloud or Bring stay untouched, and the image is visible only in Home Assistant.
 
 **AI image generation setup** (card-level, in the visual editor under *AI Image Generation*):
 
@@ -154,11 +154,12 @@ columns:
     auto_generate_image: true        # generate automatically on task creation
 ```
 
-> The main **Model** of your AI entity must be a text/vision model; the actual image model is configured in the AI integration's *image generation* option. `auto_generate_image` only runs when `show_images` is on **and** an `image_generation` entity is set.
+> The main **Model** of your AI entity must be a text/vision model; the actual image model is configured in the AI integration's *image generation* option. `auto_generate_image` only runs when `show_images` is on **and** an `image_generation` entity is set, and only for native lists.
 
 **Good to know:**
 
-- **No duplicate work** — if another task with the same title already has an image, it's reused instead of generating again; regenerating an image updates every task with that title across the card.
+- **No duplicate work** — if another task with the same title already has an image, it's reused instead of generating again; regenerating an image updates every task with that title across the card. The lookup covers all native lists plus the external list you generated from — a same-titled task in a *second* external list gets its own image.
+- **Only the title leaves the house** — the AI prompt is built from the task title alone; notes and other fields are never sent.
 - **Persistent** — generated and picked images are copied into `config/www/home_tasks/` and served from `/local/…`, so they keep working regardless of how you access Home Assistant (local IP, custom port, or a domain) and don't expire. Unused image files are cleaned up automatically.
 - **Duplicating** a task copies its image too.
 
@@ -259,7 +260,7 @@ Each entry in `columns` accepts the following options.
 | `hide_overdue` | `false` | Hide overdue tasks in the "Due Soon" filter (overdue shown by default) |
 | **Per-task fields** | | |
 | `show_images` | `false` | Show task images (tile background / list thumbnail) |
-| `auto_generate_image` | `false` | Auto-generate an image with AI when a task is created (needs `show_images` + a card-level `image_generation` entity) |
+| `auto_generate_image` | `false` | Auto-generate an image with AI when a task is created (needs `show_images` + a card-level `image_generation` entity). Native lists only — on an external list, generate images with the button in the task's detail view |
 | `show_tile_title` | `true` | (Tiles view) Show the title overlay on each tile |
 | `show_notes` | `true` | Show/hide the notes field |
 | `show_sub_tasks` | `true` | Show/hide sub-tasks |

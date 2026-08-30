@@ -1892,6 +1892,18 @@ class HomeTasksCard extends HTMLElement {
     return this._config.columns[colIdx]?.list_id;
   }
 
+  // Identity of the list a column shows, for deciding which columns hold the
+  // same task. Task ids are only unique within a list — external providers
+  // hand out their own uids and two of them can collide — so anything that
+  // patches "this task everywhere" must compare source, not just id.
+  _colSourceKey(colIdx) {
+    const col = this._config.columns[colIdx];
+    if (!col) return null;
+    if (col.entity_id) return `ext:${col.entity_id}`;
+    if (col.list_id) return `native:${col.list_id}`;
+    return null;
+  }
+
   // Enter inside the add-row date/time inputs: _render defers rebuilds while
   // a date/time input has focus (its segment state would be lost), which
   // would swallow the render that shows the new task. Hand focus to the
@@ -6485,16 +6497,20 @@ class HomeTasksCard extends HTMLElement {
       // • Same title, different ID → image_url-only patch (same-title tasks in
       //   other lists that the backend also updated — they share the image but
       //   have their own task objects).
-      // External providers may use overlapping task IDs, so an ID match in a
-      // different column must never replace that column's task object.
+      // An id match only counts within the same list — external providers can
+      // hand out colliding uids, so replacing a foreign column's task object
+      // by id would corrupt it. Same list in two columns (open | done) still
+      // gets the full replacement in both.
       const newImageUrl = result.task?.image_url;
       const titleKey = (task.title || "").trim().toLowerCase();
+      const sourceKey = this._colSourceKey(colIdx);
       for (let ci = 0; ci < this._columns.length; ci++) {
         const cs = this._columns[ci];
         if (!cs || !cs.tasks) continue;
+        const sameSource = this._colSourceKey(ci) === sourceKey;
         for (let i = 0; i < cs.tasks.length; i++) {
           const t = cs.tasks[i];
-          if (ci === colIdx && t.id === task.id) {
+          if (sameSource && t.id === task.id) {
             cs.tasks[i] = result.task;
           } else if (newImageUrl && titleKey && (t.title || "").trim().toLowerCase() === titleKey) {
             cs.tasks[i] = { ...t, image_url: newImageUrl };
@@ -6547,7 +6563,12 @@ class HomeTasksCard extends HTMLElement {
           task_uid: task.id,
           image_url: url,
         });
-        result = { ...task, ...overlay };
+        // Take ONLY the image from the response. The overlay always comes back
+        // complete (every field, defaults included), so spreading it over the
+        // task would reset everything the provider owns — a Todoist task would
+        // lose its due date, notes, priority, tags and sub-items until the next
+        // reload.
+        result = { ...task, image_url: overlay?.image_url ?? url };
       } else {
         result = await this._hass.callWS({
           type: "home_tasks/update_task",
@@ -6556,11 +6577,18 @@ class HomeTasksCard extends HTMLElement {
           image_url: url,
         });
       }
-      // Replace only the source task. External providers may use overlapping
-      // task IDs, so updating all columns by ID could corrupt another list.
-      const cs = this._columns[colIdx];
-      const idx = cs?.tasks?.findIndex(t => t.id === task.id) ?? -1;
-      if (idx >= 0) cs.tasks[idx] = result;
+      // Update the task in every column showing the SAME list — the same list
+      // can legitimately appear twice on one card (e.g. open | done), and
+      // leaving the second copy behind means it keeps showing the old image.
+      // Matching by task id alone is not enough: two providers can hand out
+      // the same uid, and patching a foreign list by id would corrupt it.
+      const sourceKey = this._colSourceKey(colIdx);
+      for (let ci = 0; ci < this._columns.length; ci++) {
+        if (this._colSourceKey(ci) !== sourceKey) continue;
+        const cs = this._columns[ci];
+        const idx = cs?.tasks?.findIndex(t => t.id === task.id) ?? -1;
+        if (idx >= 0) cs.tasks[idx] = result;
+      }
       // Update the open sheet + tiles in place (a full _render() would keep the
       // old sheet DOM — showing the old image — and reset the scroll position).
       this._refreshOpenSheetImage(task.id, colIdx);
