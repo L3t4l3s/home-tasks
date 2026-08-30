@@ -644,18 +644,192 @@ async def test_generate_image_for_external_task_uses_title_only(
     )
 
 
-async def _two_external_lists(hass, items_by_entity: dict[str, list]) -> None:
-    """Wire a mock todo component that answers for several entity ids."""
+async def _two_external_lists(hass, items_by_entity: dict[str, list]) -> dict:
+    """Wire a mock todo component that answers for several entity ids.
+
+    Returns the entity mocks so a test can mutate ``todo_items`` — the
+    generic adapter discovers a new uid by diffing the list after add_item.
+    """
     from unittest.mock import AsyncMock, MagicMock
 
+    entities = {
+        eid: MagicMock(todo_items=list(items)) for eid, items in items_by_entity.items()
+    }
     mock_comp = MagicMock()
-    mock_comp.get_entity.side_effect = lambda eid: MagicMock(todo_items=items_by_entity[eid])
+    mock_comp.get_entity.side_effect = entities.get
     # Teardown unloads the todo entries through this component — without an
     # awaitable the fixture logs a noisy (harmless) traceback.
     mock_comp.async_unload_entry = AsyncMock(return_value=True)
     hass.data["todo"] = mock_comp
     for entity_id in items_by_entity:
         hass.states.async_set(entity_id, str(len(items_by_entity[entity_id])))
+    return entities
+
+
+async def test_external_image_pick_is_republished_locally(
+    hass: HomeAssistant, hass_ws_client, external_config_entry
+) -> None:
+    """A media-source id picked for an external task is copied into www.
+
+    Storing it verbatim would leave the card rendering
+    <img src="media-source://..."> — an image that never loads.
+    """
+    from unittest.mock import AsyncMock, patch
+
+    client = await hass_ws_client(hass)
+    with patch(
+        "custom_components.home_tasks.websocket_api._save_image_to_public_media",
+        new=AsyncMock(return_value="/local/home_tasks/copied.jpg"),
+    ) as saved:
+        await client.send_json({
+            "id": 420,
+            "type": "home_tasks/update_external_overlay",
+            "entity_id": "todo.ws_external",
+            "task_uid": "ext-pick-1",
+            "image_url": "media-source://media_source/local/holidays/beach.jpg",
+        })
+        msg = await client.receive_json()
+
+    assert msg["success"] is True, msg
+    assert msg["result"]["image_url"] == "/local/home_tasks/copied.jpg"
+    assert saved.await_count == 1
+    overlay_store = hass.data[DOMAIN][external_config_entry.entry_id]
+    assert overlay_store.get_overlay("ext-pick-1")["image_url"] == "/local/home_tasks/copied.jpg"
+
+
+async def test_external_image_already_public_is_kept_as_is(
+    hass: HomeAssistant, hass_ws_client, external_config_entry
+) -> None:
+    """A /local/home_tasks URL is stored unchanged — no needless copy."""
+    from unittest.mock import AsyncMock, patch
+
+    client = await hass_ws_client(hass)
+    with patch(
+        "custom_components.home_tasks.websocket_api._save_image_to_public_media",
+        new=AsyncMock(return_value="/local/home_tasks/should_not_be_used.png"),
+    ) as saved:
+        await client.send_json({
+            "id": 421,
+            "type": "home_tasks/update_external_overlay",
+            "entity_id": "todo.ws_external",
+            "task_uid": "ext-pick-2",
+            "image_url": "/local/home_tasks/generated.png?v=7",
+        })
+        msg = await client.receive_json()
+
+    assert msg["success"] is True, msg
+    assert msg["result"]["image_url"] == "/local/home_tasks/generated.png?v=7"
+    assert saved.await_count == 0
+
+
+async def test_move_from_external_to_native_keeps_the_image(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store, external_config_entry
+) -> None:
+    """Moving a linked task into a native list keeps its picture and its file.
+
+    The external→native branch builds the target task field by field. A
+    missing image_url there does not merely detach the picture: nothing
+    references the file afterwards, so the orphan cleanup that runs on the
+    source side deletes it.
+    """
+    import pathlib
+
+    from homeassistant.components.todo import TodoItem, TodoItemStatus
+
+    await _two_external_lists(hass, {
+        "todo.ws_external": [
+            TodoItem(uid="ext-move-1", summary="Zahnarzt", status=TodoItemStatus.NEEDS_ACTION)
+        ],
+    })
+    # The generic adapter deletes through the todo entity.
+    hass.services.async_register("todo", "remove_item", lambda call: None)
+
+    overlay_store = hass.data[DOMAIN][external_config_entry.entry_id]
+    await overlay_store.async_set_overlay(
+        "ext-move-1", image_url="/local/home_tasks/moved.png"
+    )
+
+    img_dir = pathlib.Path(hass.config.path("www", "home_tasks"))
+
+    def _mk() -> None:
+        img_dir.mkdir(parents=True, exist_ok=True)
+        (img_dir / "moved.png").write_bytes(b"img")
+
+    await hass.async_add_executor_job(_mk)
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 422,
+        "type": "home_tasks/move_task_cross",
+        "source_entity_id": "todo.ws_external",
+        "target_list_id": mock_config_entry.entry_id,
+        "task_id": "ext-move-1",
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True, msg
+
+    moved = next(t for t in store.tasks if t["title"] == "Zahnarzt")
+    assert moved["image_url"] == "/local/home_tasks/moved.png"
+    assert (img_dir / "moved.png").exists(), "the image file must survive the move"
+
+
+async def test_move_between_external_lists_keeps_the_image(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, external_config_entry
+) -> None:
+    """The same for a move from one linked list to another."""
+    import pathlib
+
+    from homeassistant.components.todo import TodoItem, TodoItemStatus
+
+    entry_b = MockConfigEntry(
+        domain=DOMAIN,
+        data={"type": "external", "entity_id": "todo.ws_external_b", "name": "WS External B"},
+        title="WS External B (External)",
+    )
+    entry_b.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry_b.entry_id)
+    await hass.async_block_till_done()
+
+    entities = await _two_external_lists(hass, {
+        "todo.ws_external": [
+            TodoItem(uid="ext-move-2", summary="Zahnarzt", status=TodoItemStatus.NEEDS_ACTION)
+        ],
+        "todo.ws_external_b": [],
+    })
+
+    def _add_item(call) -> None:  # noqa: ANN001 — the adapter finds the new uid by diffing
+        entities["todo.ws_external_b"].todo_items.append(
+            TodoItem(uid="ext-b-new", summary=call.data["item"], status=TodoItemStatus.NEEDS_ACTION)
+        )
+
+    hass.services.async_register("todo", "add_item", _add_item)
+    hass.services.async_register("todo", "remove_item", lambda call: None)
+
+    overlay_a = hass.data[DOMAIN][external_config_entry.entry_id]
+    await overlay_a.async_set_overlay("ext-move-2", image_url="/local/home_tasks/moved2.png")
+
+    img_dir = pathlib.Path(hass.config.path("www", "home_tasks"))
+
+    def _mk() -> None:
+        img_dir.mkdir(parents=True, exist_ok=True)
+        (img_dir / "moved2.png").write_bytes(b"img")
+
+    await hass.async_add_executor_job(_mk)
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 423,
+        "type": "home_tasks/move_task_cross",
+        "source_entity_id": "todo.ws_external",
+        "target_entity_id": "todo.ws_external_b",
+        "task_id": "ext-move-2",
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True, msg
+
+    overlay_b = hass.data[DOMAIN][entry_b.entry_id]
+    assert overlay_b.get_overlay("ext-b-new")["image_url"] == "/local/home_tasks/moved2.png"
+    assert (img_dir / "moved2.png").exists(), "the image file must survive the move"
 
 
 async def test_generated_image_reaches_every_list(

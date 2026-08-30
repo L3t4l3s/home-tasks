@@ -161,7 +161,7 @@ columns:
 - **No duplicate work** — if another task with the same title already has an image, it's reused instead of generating again; generating an image assigns it to every task with that title, in every list — native and linked alike. Linked lists are read from their provider for this, so a generation with several linked lists takes a moment longer.
 - **Only the title leaves the house** — the AI prompt is built from the task title alone; notes and other fields are never sent.
 - **Persistent** — generated and picked images are copied into `config/www/home_tasks/` and served from `/local/…`, so they keep working regardless of how you access Home Assistant (local IP, custom port, or a domain) and don't expire. Unused image files are cleaned up automatically.
-- **Duplicating** a task copies its image too.
+- **Duplicating** a task copies its image too, and **moving** a task to another list — native or linked — takes the image along.
 
 ### Home Assistant Integration
 

@@ -295,16 +295,8 @@ async def ws_update_task(hass, connection, msg):
                 old_image_url = store.get_task(msg["task_id"]).get("image_url")
             except Exception:  # noqa: BLE001
                 old_image_url = None
-        if iu and (
-            iu.startswith("media-source://")
-            or (iu.startswith("/") and not iu.split("?")[0].startswith("/local/home_tasks/"))
-        ):
-            import hashlib
-            import os
-            clean = iu.split("?")[0]
-            ext = os.path.splitext(clean)[1] or ".png"
-            fn = f"{hashlib.sha1(clean.encode()).hexdigest()[:16]}{ext}"
-            kwargs["image_url"] = await _save_image_to_public_media(hass, connection, iu, fn)
+        if iu:
+            kwargs["image_url"] = await _async_publish_image_url(hass, connection, iu)
         task = await store.async_update_task(msg["task_id"], actor=actor, **kwargs)
         if "image_url" in kwargs:
             await _cleanup_orphan_image(hass, old_image_url, kwargs.get("image_url"))
@@ -573,6 +565,7 @@ async def async_move_task_any(
                 "recurrence_anniversary": item.get("recurrence_anniversary"),
                 "completed_at": item.get("completed_at"),
                 "history": item.get("history", []),
+                "image_url": item.get("image_url"),
             }
         else:
             # Generic path — HA entity + overlay
@@ -608,6 +601,7 @@ async def async_move_task_any(
                 "recurrence_anniversary": overlay.get("recurrence_anniversary"),
                 "completed_at": overlay.get("completed_at"),
                 "history": overlay.get("history", []),
+                "image_url": overlay.get("image_url"),
             }
 
     # --- Create task in target ---
@@ -645,6 +639,10 @@ async def async_move_task_any(
             "assigned_person": task_data.get("assigned_person"),
             "tags": task_data.get("tags", []),
             "history": task_data.get("history", []),
+            # Without this the picture is not just detached from the moved
+            # task: nothing references the file afterwards, so the orphan
+            # cleanup on the source side deletes it.
+            "image_url": task_data.get("image_url"),
             "external_id": None,
             "sync_source": None,
         }
@@ -1117,6 +1115,13 @@ async def ws_update_external_overlay(hass, connection, msg):
         for key in OVERLAY_FIELDS:
             if key in msg:
                 kwargs[key] = msg[key]
+        if kwargs.get("image_url"):
+            # Same re-publish as the native path: a media-source id or signed
+            # path would otherwise be stored verbatim and render as a broken
+            # image.
+            kwargs["image_url"] = await _async_publish_image_url(
+                hass, connection, kwargs["image_url"]
+            )
         overlay = await overlay_store.async_set_overlay(msg["task_uid"], **kwargs)
         if "image_url" in kwargs:
             await _cleanup_orphan_image(hass, old_image_url, kwargs["image_url"])
@@ -1744,6 +1749,30 @@ async def _backfill_thumbnails(hass) -> None:
         await hass.async_add_executor_job(_scan)
     except Exception as err:  # noqa: BLE001
         _LOGGER.debug("Thumbnail backfill failed: %s", err)
+
+
+async def _async_publish_image_url(hass, connection, url: str | None) -> str | None:
+    """Return a public /local URL for a picked image, copying it if needed.
+
+    media-source:// URIs are copied off disk and internal signed paths are
+    downloaded, so the card can load the image without auth and it does not
+    expire with the token that issued it. Values that are already public
+    (/local/home_tasks/...) or external are returned unchanged. Every route
+    that accepts a user-picked image_url has to go through here — native and
+    external alike, or the card ends up rendering an unusable URI.
+    """
+    if not url or not (
+        url.startswith("media-source://")
+        or (url.startswith("/") and not url.split("?")[0].startswith("/local/home_tasks/"))
+    ):
+        return url
+    import hashlib
+    import os
+
+    clean = url.split("?")[0]
+    ext = os.path.splitext(clean)[1] or ".png"
+    fn = f"{hashlib.sha1(clean.encode()).hexdigest()[:16]}{ext}"
+    return await _save_image_to_public_media(hass, connection, url, fn)
 
 
 async def _save_image_to_public_media(hass, connection, image_url: str, filename: str) -> str:
