@@ -4826,7 +4826,7 @@ class HomeTasksCard extends HTMLElement {
     if (col.show_reminders !== false) details.push(this._buildRemindersSection(task, colIdx));
     if (col.show_recurrence !== false) details.push(this._buildRecurrenceSection(task, colIdx));
     if (col.show_history) details.push(this._buildHistorySection(task));
-    if (!this._isExternalCol(colIdx) && col.show_images === true) details.push(this._buildImageSection(task, colIdx));
+    if (col.show_images === true) details.push(this._buildImageSection(task, colIdx));
     details.push(this._buildActionsSection(task, colIdx));
 
     const inner = this._el("div", { className: "task-details-inner" }, details);
@@ -6266,10 +6266,8 @@ class HomeTasksCard extends HTMLElement {
       // Remove image button (×)
       const removeBtn = this._el("button", { className: "task-image-remove", title: this._t("img_remove") });
       removeBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>`;
-      // Reuse _saveImageUrl(null): it clears the image, syncs cs.tasks in EVERY
-      // column from the server result, and refreshes the open sheet + all tiles
-      // (the old inline copy only patched the current column, so the same task in
-      // other columns kept showing the deleted image).
+      // Reuse _saveImageUrl(null): it clears the image in the source column and
+      // refreshes the open sheet + visible tiles without a full render.
       removeBtn.addEventListener("click", () => this._saveImageUrl(task, colIdx, null));
       imgWrap.appendChild(removeBtn);
       children.push(imgWrap);
@@ -6472,20 +6470,23 @@ class HomeTasksCard extends HTMLElement {
 
     const payload = {
       type: "home_tasks/generate_task_image",
-      entry_id: col.list_id,
       task_id: task.id,
       force: force,
     };
+    if (col.entity_id) payload.todo_entity_id = col.entity_id;
+    else payload.entry_id = col.list_id;
     if (imgCfg.prompt_prefix) payload.prompt_prefix = imgCfg.prompt_prefix;
     if (imgCfg.entity_id) payload.entity_id = imgCfg.entity_id;
 
     try {
       const result = await this._hass.callWS(payload);
       // Update every column immediately.
-      // • Exact ID match  → full task replacement (the generating task itself).
+      // • Exact ID match in the source column → full task replacement.
       // • Same title, different ID → image_url-only patch (same-title tasks in
       //   other lists that the backend also updated — they share the image but
       //   have their own task objects).
+      // External providers may use overlapping task IDs, so an ID match in a
+      // different column must never replace that column's task object.
       const newImageUrl = result.task?.image_url;
       const titleKey = (task.title || "").trim().toLowerCase();
       for (let ci = 0; ci < this._columns.length; ci++) {
@@ -6493,7 +6494,7 @@ class HomeTasksCard extends HTMLElement {
         if (!cs || !cs.tasks) continue;
         for (let i = 0; i < cs.tasks.length; i++) {
           const t = cs.tasks[i];
-          if (t.id === task.id) {
+          if (ci === colIdx && t.id === task.id) {
             cs.tasks[i] = result.task;
           } else if (newImageUrl && titleKey && (t.title || "").trim().toLowerCase() === titleKey) {
             cs.tasks[i] = { ...t, image_url: newImageUrl };
@@ -6538,19 +6539,28 @@ class HomeTasksCard extends HTMLElement {
   async _saveImageUrl(task, colIdx, url) {
     const col = this._config.columns[colIdx];
     try {
-      const result = await this._hass.callWS({
-        type: "home_tasks/update_task",
-        list_id: col.list_id,
-        task_id: task.id,
-        image_url: url,
-      });
-      // Update every column so the change is visible immediately everywhere.
-      for (let ci = 0; ci < this._columns.length; ci++) {
-        const cs = this._columns[ci];
-        if (!cs || !cs.tasks) continue;
-        const idx = cs.tasks.findIndex(t => t.id === task.id);
-        if (idx >= 0) cs.tasks[idx] = result;
+      let result;
+      if (col.entity_id) {
+        const overlay = await this._hass.callWS({
+          type: "home_tasks/update_external_overlay",
+          entity_id: col.entity_id,
+          task_uid: task.id,
+          image_url: url,
+        });
+        result = { ...task, ...overlay };
+      } else {
+        result = await this._hass.callWS({
+          type: "home_tasks/update_task",
+          list_id: col.list_id,
+          task_id: task.id,
+          image_url: url,
+        });
       }
+      // Replace only the source task. External providers may use overlapping
+      // task IDs, so updating all columns by ID could corrupt another list.
+      const cs = this._columns[colIdx];
+      const idx = cs?.tasks?.findIndex(t => t.id === task.id) ?? -1;
+      if (idx >= 0) cs.tasks[idx] = result;
       // Update the open sheet + tiles in place (a full _render() would keep the
       // old sheet DOM — showing the old image — and reset the scroll position).
       this._refreshOpenSheetImage(task.id, colIdx);

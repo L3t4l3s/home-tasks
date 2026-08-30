@@ -750,8 +750,11 @@ async def async_move_task_any(
         else:
             generic = GenericAdapter(hass, src_entity_id, {})
             await generic.async_delete_task(task_id)
-        # Clean up overlay
+        # Clean up overlay and delete its image file when the move did not
+        # transfer a reference to the target task.
+        old_image_url = src_overlay.get_overlay(task_id).get("image_url")
         await src_overlay.async_delete_overlay(task_id)
+        await _cleanup_orphan_image(hass, old_image_url, None)
 
 
 
@@ -858,6 +861,7 @@ def _merge_tasks_with_overlays(
             "assigned_person": overlay.get("assigned_person"),
             "tags": overlay.get("tags", []),
             "history": overlay.get("history", []),
+            "image_url": overlay.get("image_url"),
             # Mark as external so the card knows how to route CRUD
             "_external": True,
         }
@@ -941,6 +945,7 @@ def _merge_tasks_with_adapter_data(
             # History & completed_at always from overlay
             "completed_at": overlay.get("completed_at"),
             "history": overlay.get("history", []),
+            "image_url": overlay.get("image_url"),
             # Todoist recurrence string for read-only display
             "_todoist_recurrence_string": item.get("_todoist_recurrence_string"),
             # Mark as external
@@ -1000,6 +1005,27 @@ async def ws_get_external_lists(hass, connection, msg):
         _handle_error(connection, msg["id"], err)
 
 
+async def _async_get_external_tasks(hass, entity_id: str) -> tuple[list[dict], ExternalTaskOverlayStore]:
+    """Read an external list and merge provider data with its local overlay."""
+    overlay_store = _get_overlay_store(hass, entity_id)
+    adapter = _get_adapter(hass, entity_id)
+
+    if adapter and not isinstance(adapter, GenericAdapter):
+        external_items = await adapter.async_read_tasks()
+        tasks = _merge_tasks_with_adapter_data(
+            external_items, overlay_store, adapter.capabilities,
+        )
+    else:
+        external_items = _get_external_todo_items(hass, entity_id)
+        features = 0
+        state = hass.states.get(entity_id)
+        if state and state.attributes:
+            features = state.attributes.get("supported_features", 0)
+        provider_owns_order = bool(features & 8)  # MOVE_TODO_ITEM
+        tasks = _merge_tasks_with_overlays(external_items, overlay_store, provider_owns_order)
+    return tasks, overlay_store
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "home_tasks/get_external_tasks",
@@ -1010,25 +1036,7 @@ async def ws_get_external_lists(hass, connection, msg):
 async def ws_get_external_tasks(hass, connection, msg):
     """Get tasks from an external todo entity, merged with overlay data."""
     try:
-        entity_id = msg["entity_id"]
-        overlay_store = _get_overlay_store(hass, entity_id)
-        adapter = _get_adapter(hass, entity_id)
-
-        if adapter and not isinstance(adapter, GenericAdapter):
-            # Rich adapter (e.g. Todoist) — read directly from provider API
-            external_items = await adapter.async_read_tasks()
-            tasks = _merge_tasks_with_adapter_data(
-                external_items, overlay_store, adapter.capabilities,
-            )
-        else:
-            # Generic path — read via HA todo entity + overlay
-            external_items = _get_external_todo_items(hass, entity_id)
-            features = 0
-            state = hass.states.get(entity_id)
-            if state and state.attributes:
-                features = state.attributes.get("supported_features", 0)
-            provider_owns_order = bool(features & 8)  # MOVE_TODO_ITEM
-            tasks = _merge_tasks_with_overlays(external_items, overlay_store, provider_owns_order)
+        tasks, overlay_store = await _async_get_external_tasks(hass, msg["entity_id"])
 
         connection.send_result(msg["id"], {"tasks": tasks, "sections": overlay_store.sections})
     except Exception as err:
@@ -1062,6 +1070,9 @@ async def ws_get_external_tasks(hass, connection, msg):
         vol.Optional("recurrence_nth_week"): vol.Any(vol.All(int, vol.Range(min=1, max=4)), "last", None),
         vol.Optional("recurrence_anniversary"): _val_anniversary,
         vol.Optional("section_id"): vol.Any(_val_id, None),
+        vol.Optional("image_url"): vol.Any(
+            vol.All(str, vol.Length(max=MAX_IMAGE_URL_LENGTH)), None
+        ),
     }
 )
 @websocket_api.async_response
@@ -1069,11 +1080,14 @@ async def ws_update_external_overlay(hass, connection, msg):
     """Update overlay fields for an external task."""
     try:
         overlay_store = _get_overlay_store(hass, msg["entity_id"])
+        old_image_url = overlay_store.get_overlay(msg["task_uid"]).get("image_url")
         kwargs = {}
         for key in OVERLAY_FIELDS:
             if key in msg:
                 kwargs[key] = msg[key]
         overlay = await overlay_store.async_set_overlay(msg["task_uid"], **kwargs)
+        if "image_url" in kwargs:
+            await _cleanup_orphan_image(hass, old_image_url, kwargs["image_url"])
         connection.send_result(msg["id"], overlay)
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -1447,7 +1461,9 @@ async def ws_delete_external_overlay(hass, connection, msg):
     """Delete overlay data for an external task (cleanup after deletion)."""
     try:
         overlay_store = _get_overlay_store(hass, msg["entity_id"])
+        old_image_url = overlay_store.get_overlay(msg["task_uid"]).get("image_url")
         await overlay_store.async_delete_overlay(msg["task_uid"])
+        await _cleanup_orphan_image(hass, old_image_url, None)
         # Cancel any pending reminder/recurrence timers so they don't fire (and
         # leak) for a task that no longer exists.
         from . import _cancel_recurrence, _cancel_reminders
@@ -1617,12 +1633,15 @@ async def _cleanup_orphan_image(hass, old_url: str | None, new_url: str | None) 
     if new_url and _local_image_name(new_url) is None:
         return
     for s in hass.data.get(DOMAIN, {}).values():
-        if not hasattr(s, "tasks"):
+        if isinstance(s, ExternalTaskOverlayStore):
+            tasks = s.get_all_overlays().values()
+        elif hasattr(s, "tasks"):
+            # Membership only — read the raw list instead of the .tasks property,
+            # which builds a freshly-sorted copy on every access.
+            raw = getattr(s, "_data", None)
+            tasks = raw["tasks"] if isinstance(raw, dict) and "tasks" in raw else s.tasks
+        else:
             continue
-        # Membership only — read the raw list instead of the .tasks property,
-        # which builds a freshly-sorted copy on every access.
-        raw = getattr(s, "_data", None)
-        tasks = raw["tasks"] if isinstance(raw, dict) and "tasks" in raw else s.tasks
         for t in tasks:
             if _local_image_name(t.get("image_url")) == old_name:
                 return  # still referenced — keep the file
@@ -1844,8 +1863,9 @@ async def _save_image_to_public_media(hass, connection, image_url: str, filename
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "home_tasks/generate_task_image",
-        vol.Required("entry_id"): _val_id,
-        vol.Required("task_id"): _val_id,
+        vol.Optional("entry_id"): _val_id,
+        vol.Optional("todo_entity_id"): _val_entity_id,
+        vol.Required("task_id"): _val_task_uid,
         vol.Optional("prompt_prefix"): vol.All(str, vol.Length(max=200)),
         vol.Optional("entity_id"): _val_entity_id,
         vol.Optional("force"): bool,
@@ -1860,14 +1880,34 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
     lands in HA's Media Source; no API key handling or file I/O needed here.
 
     Tasks with the same normalised title share a single image: before calling
-    the service the stores are checked for an existing URL.  After generation
-    the URL is propagated to every task with the same title across all lists.
+    the service the native stores and selected external list are checked for
+    an existing URL. After generation the URL is propagated to matching native
+    tasks and matching tasks in the selected external list.
     """
     import hashlib
 
     try:
-        store = _get_store(hass, msg["entry_id"])
-        task = store.get_task(msg["task_id"])
+        entry_id = msg.get("entry_id")
+        todo_entity_id = msg.get("todo_entity_id")
+        if bool(entry_id) == bool(todo_entity_id):
+            raise ValueError("Provide exactly one of entry_id or todo_entity_id")
+
+        store = None
+        overlay_store = None
+        external_tasks: list[dict] = []
+        if todo_entity_id:
+            external_tasks, overlay_store = await _async_get_external_tasks(
+                hass, todo_entity_id
+            )
+            task = next(
+                (candidate for candidate in external_tasks if candidate["id"] == msg["task_id"]),
+                None,
+            )
+            if task is None:
+                raise ValueError("Task not found")
+        else:
+            store = _get_store(hass, entry_id)
+            task = store.get_task(msg["task_id"])
 
         title = task.get("title", "")
         title_key = title.strip().lower()
@@ -1891,8 +1931,25 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
                 if existing_url:
                     break
 
+            if not existing_url:
+                for candidate in external_tasks:
+                    if (
+                        candidate.get("title", "").strip().lower() == title_key
+                        and candidate.get("image_url")
+                    ):
+                        existing_url = candidate["image_url"]
+                        break
+
             if existing_url:
-                updated_task = await store.async_update_task(msg["task_id"], image_url=existing_url)
+                if overlay_store:
+                    await overlay_store.async_set_overlay(
+                        msg["task_id"], image_url=existing_url
+                    )
+                    updated_task = {**task, "image_url": existing_url}
+                else:
+                    updated_task = await store.async_update_task(
+                        msg["task_id"], image_url=existing_url
+                    )
                 connection.send_result(msg["id"], {"task": updated_task})
                 return
 
@@ -1969,7 +2026,8 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
             image_url = f"{image_url}?v={int(time.time())}"
 
         # ------------------------------------------------------------------
-        # 3. Propagate URL to every task with the same title across all lists.
+        # 3. Propagate the URL to matching native tasks and to matching tasks
+        #    in the selected external list.
         # ------------------------------------------------------------------
         updated_task = None
         # Only fan out to same-title tasks when the title is non-empty — an empty
@@ -1985,8 +2043,28 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
                         if t["id"] == msg["task_id"]:
                             updated_task = stamped
 
+            # External provider tasks keep Home Tasks-only image metadata in
+            # their overlay; Todoist itself is never edited by this operation.
+            if overlay_store:
+                for candidate in external_tasks:
+                    if (
+                        candidate.get("title", "").strip().lower() == title_key
+                        and candidate.get("image_url") != image_url
+                    ):
+                        await overlay_store.async_set_overlay(
+                            candidate["id"], image_url=image_url
+                        )
+                        if candidate["id"] == msg["task_id"]:
+                            updated_task = {**candidate, "image_url": image_url}
+
         if updated_task is None:
-            updated_task = await store.async_update_task(msg["task_id"], image_url=image_url)
+            if overlay_store:
+                await overlay_store.async_set_overlay(msg["task_id"], image_url=image_url)
+                updated_task = {**task, "image_url": image_url}
+            else:
+                updated_task = await store.async_update_task(
+                    msg["task_id"], image_url=image_url
+                )
 
         connection.send_result(msg["id"], {"task": updated_task})
 
