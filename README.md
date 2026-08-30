@@ -154,7 +154,7 @@ columns:
     auto_generate_image: true        # generate automatically on task creation
 ```
 
-> The main **Model** of your AI entity must be a text/vision model; the actual image model is configured in the AI integration's *image generation* option. `auto_generate_image` only runs when `show_images` is on **and** an `image_generation` entity is set, and only for native lists.
+> The main **Model** of your AI entity must be a text/vision model; the actual image model is configured in the AI integration's *image generation* option. `auto_generate_image` only runs when `show_images` is on **and** an `image_generation` entity is set.
 
 **Good to know:**
 
@@ -260,7 +260,7 @@ Each entry in `columns` accepts the following options.
 | `hide_overdue` | `false` | Hide overdue tasks in the "Due Soon" filter (overdue shown by default) |
 | **Per-task fields** | | |
 | `show_images` | `false` | Show task images (tile background / list thumbnail) |
-| `auto_generate_image` | `false` | Auto-generate an image with AI when a task is created (needs `show_images` + a card-level `image_generation` entity). Native lists only — on an external list, generate images with the button in the task's detail view |
+| `auto_generate_image` | `false` | Auto-generate an image with AI when a task is created (needs `show_images` + a card-level `image_generation` entity). Works on native and external lists; on an external list the image follows once the provider has assigned the task its id |
 | `show_tile_title` | `true` | (Tiles view) Show the title overlay on each tile |
 | `show_notes` | `true` | Show/hide the notes field |
 | `show_sub_tasks` | `true` | Show/hide sub-tasks |

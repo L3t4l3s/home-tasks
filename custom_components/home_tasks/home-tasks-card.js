@@ -1980,6 +1980,14 @@ class HomeTasksCard extends HTMLElement {
         console.warn("Failed to create external task:", err);
       }
       this._reloadExternal(colIdx);
+      // C12 for external lists: the provider assigns the uid, and the card
+      // only sees the real task after the reload above — the row on screen is
+      // still the placeholder with a temporary id. Hand the generation the
+      // uid and let it wait for the task to arrive.
+      if (result?.uid && col.auto_generate_image && col.show_images === true
+          && this._config.image_generation?.entity_id) {
+        this._autoGenerateExternalImage(colIdx, String(result.uid));
+      }
     } else {
       const payload = { list_id: this._colListId(colIdx), title };
       if (autoAssignPerson) payload.assigned_person = autoAssignPerson;
@@ -6471,6 +6479,26 @@ class HomeTasksCard extends HTMLElement {
     const st = body ? body.scrollTop : 0;
     oldSec.replaceWith(this._buildImageSection(task, colIdx));
     if (body) body.scrollTop = st;
+  }
+
+  // Auto-generation for an external column, waiting for the task the provider
+  // just created to reach the card. Polls rather than chaining onto
+  // _reloadExternal, which is a fire-and-forget timer. Gives up quietly: an
+  // automatic extra is not worth an error popup, and the button in the task
+  // details still works.
+  async _autoGenerateExternalImage(colIdx, uid) {
+    const sourceKey = this._colSourceKey(colIdx);
+    for (let attempt = 0; attempt < 12; attempt++) {
+      if (!this.isConnected) return;
+      // The column may have been re-pointed at another list meanwhile.
+      if (this._colSourceKey(colIdx) !== sourceKey) return;
+      const task = this._columns[colIdx]?.tasks?.find(t => String(t.id) === uid);
+      if (task) {
+        if (!task.image_url) await this._generateTaskImage(task, colIdx);
+        return;
+      }
+      await new Promise(r => setTimeout(r, 500));
+    }
   }
 
   async _generateTaskImage(task, colIdx, force = false) {

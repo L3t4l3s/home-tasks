@@ -172,6 +172,76 @@ describe('external task images', () => {
     assert.equal(card._columns[1].tasks[0].image_url, null);
   });
 
+  // auto_generate_image on an external column: the row the add path puts on
+  // screen carries a temporary id, and the provider's uid only arrives with
+  // the reload afterwards — so the generation has to wait for the real task.
+  describe('auto-generation on create', () => {
+    async function autoCard({ uid = 'todoist-new', colExtra = {} } = {}) {
+      const calls = [];
+      const card = await externalCard(async (msg) => {
+        calls.push(msg);
+        if (msg.type === 'home_tasks/create_external_task') return { uid };
+        if (msg.type === 'home_tasks/generate_task_image') {
+          return { task: { id: msg.task_id, title: 'Milch', image_url: '/local/auto.png' } };
+        }
+        return null;
+      });
+      Object.assign(card._config.columns[0], {
+        auto_generate_image: true, show_images: true, ...colExtra,
+      });
+      card._config.image_generation = { entity_id: 'ai_task.google_ai_task' };
+      card._columns[0].newTaskTitle = 'Milch';
+      // The generation waits for the real task and gives up on a detached
+      // card, so this one has to live in the document.
+      document.body.appendChild(card);
+      card._reloadExternal = () => {};   // the real one is a 1.5s timer
+      card._render = () => {};
+      return { card, calls };
+    }
+    const generated = (calls) => calls.filter((c) => c.type === 'home_tasks/generate_task_image');
+    const settle = () => new Promise((r) => setTimeout(r, 50));
+
+    test('generates once the provider task has arrived', async () => {
+      const { card, calls } = await autoCard();
+      const pending = card._addTask(0);
+      // Stand in for the post-create reload bringing in the real task.
+      card._columns[0].tasks = [{ id: 'todoist-new', title: 'Milch' }];
+      await pending;
+      await settle();
+
+      const gen = generated(calls);
+      assert.equal(gen.length, 1);
+      assert.equal(gen[0].task_id, 'todoist-new');
+      assert.equal(gen[0].todo_entity_id, 'todo.do_zrobienia');
+      assert.equal(gen[0].entry_id, undefined, 'must not be routed as a native list');
+    });
+
+    test('does nothing when the provider returned no uid', async () => {
+      const { card, calls } = await autoCard({ uid: '' });
+      await card._addTask(0);
+      await settle();
+      assert.deepEqual(generated(calls), []);
+    });
+
+    test('does nothing when the option is off', async () => {
+      const { card, calls } = await autoCard({ colExtra: { auto_generate_image: false } });
+      const pending = card._addTask(0);
+      card._columns[0].tasks = [{ id: 'todoist-new', title: 'Milch' }];
+      await pending;
+      await settle();
+      assert.deepEqual(generated(calls), []);
+    });
+
+    test('skips a task that already carries an image', async () => {
+      const { card, calls } = await autoCard();
+      const pending = card._addTask(0);
+      card._columns[0].tasks = [{ id: 'todoist-new', title: 'Milch', image_url: '/local/known.png' }];
+      await pending;
+      await settle();
+      assert.deepEqual(generated(calls), [], 'the same-title image is already there');
+    });
+  });
+
   test('generated images reach every column showing that list', async () => {
     const card = await externalCard(async () => ({
       task: { id: 'todoist-5', title: 'Buy milk', image_url: '/local/gen.png' },
