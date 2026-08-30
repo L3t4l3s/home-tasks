@@ -1005,6 +1005,38 @@ async def ws_get_external_lists(hass, connection, msg):
         _handle_error(connection, msg["id"], err)
 
 
+async def _async_all_external_lists(
+    hass, preloaded: tuple[str, list[dict], ExternalTaskOverlayStore] | None = None
+) -> list[tuple[ExternalTaskOverlayStore, list[dict]]]:
+    """Read every linked external list, merged with its overlay.
+
+    Same-title image sharing has to match on titles, and an external task's
+    title lives at the provider — so every linked list has to be read. The
+    caller's own list is passed in as *preloaded* so it is not fetched twice,
+    and a provider that is unreachable is skipped instead of failing the whole
+    operation.
+    """
+    lists: list[tuple[ExternalTaskOverlayStore, list[dict]]] = []
+    seen: set[str] = set()
+    if preloaded:
+        entity_id, tasks, overlay_store = preloaded
+        lists.append((overlay_store, tasks))
+        seen.add(entity_id)
+    for store in list(hass.data.get(DOMAIN, {}).values()):
+        if not isinstance(store, ExternalTaskOverlayStore) or store.entity_id in seen:
+            continue
+        seen.add(store.entity_id)
+        try:
+            tasks, _ = await _async_get_external_tasks(hass, store.entity_id)
+        except Exception as err:  # noqa: BLE001 — one dead provider must not block the rest
+            _LOGGER.debug(
+                "Skipping external list %s while sharing an image: %s", store.entity_id, err
+            )
+            continue
+        lists.append((store, tasks))
+    return lists
+
+
 async def _async_get_external_tasks(hass, entity_id: str) -> tuple[list[dict], ExternalTaskOverlayStore]:
     """Read an external list and merge provider data with its local overlay."""
     overlay_store = _get_overlay_store(hass, entity_id)
@@ -1879,10 +1911,11 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
     provider (OpenAI, Gemini, Anthropic, local models).  The generated image
     lands in HA's Media Source; no API key handling or file I/O needed here.
 
-    Tasks with the same normalised title share a single image: before calling
-    the service the native stores and selected external list are checked for
-    an existing URL. After generation the URL is propagated to matching native
-    tasks and matching tasks in the selected external list.
+    Tasks with the same normalised title share a single image, across every
+    list: before calling the service all lists — native and linked — are
+    checked for an existing URL, and after generation the URL is written to
+    every task with that title. Linked lists have to be read from their
+    provider for this, since that is where the titles live.
     """
     import hashlib
 
@@ -1914,6 +1947,16 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
         title_hash = hashlib.md5(title_key.encode(), usedforsecurity=False).hexdigest()[:16]
 
         all_stores = hass.data.get(DOMAIN, {})
+        # Read every linked list once — both the reuse check below and the
+        # fan-out afterwards match on titles the providers hold.
+        external_lists = (
+            await _async_all_external_lists(
+                hass,
+                (todo_entity_id, external_tasks, overlay_store) if overlay_store else None,
+            )
+            if title_key
+            else []
+        )
 
         # ------------------------------------------------------------------
         # 1. Reuse: if any task with the same title already has an image URL,
@@ -1932,12 +1975,15 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
                     break
 
             if not existing_url:
-                for candidate in external_tasks:
-                    if (
-                        candidate.get("title", "").strip().lower() == title_key
-                        and candidate.get("image_url")
-                    ):
-                        existing_url = candidate["image_url"]
+                for _ov_store, ext_tasks in external_lists:
+                    for candidate in ext_tasks:
+                        if (
+                            candidate.get("title", "").strip().lower() == title_key
+                            and candidate.get("image_url")
+                        ):
+                            existing_url = candidate["image_url"]
+                            break
+                    if existing_url:
                         break
 
             if existing_url:
@@ -2026,8 +2072,7 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
             image_url = f"{image_url}?v={int(time.time())}"
 
         # ------------------------------------------------------------------
-        # 3. Propagate the URL to matching native tasks and to matching tasks
-        #    in the selected external list.
+        # 3. Propagate the URL to every task with that title, in every list.
         # ------------------------------------------------------------------
         updated_task = None
         # Only fan out to same-title tasks when the title is non-empty — an empty
@@ -2044,17 +2089,20 @@ async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
                             updated_task = stamped
 
             # External provider tasks keep Home Tasks-only image metadata in
-            # their overlay; Todoist itself is never edited by this operation.
-            if overlay_store:
-                for candidate in external_tasks:
+            # their overlay; the providers themselves are never edited here.
+            for ov_store, ext_tasks in external_lists:
+                for candidate in ext_tasks:
                     if (
                         candidate.get("title", "").strip().lower() == title_key
                         and candidate.get("image_url") != image_url
                     ):
-                        await overlay_store.async_set_overlay(
+                        await ov_store.async_set_overlay(
                             candidate["id"], image_url=image_url
                         )
-                        if candidate["id"] == msg["task_id"]:
+                        # Only the list this request came from can hold the
+                        # requested task — uids are unique per provider, not
+                        # across providers.
+                        if ov_store is overlay_store and candidate["id"] == msg["task_id"]:
                             updated_task = {**candidate, "image_url": image_url}
 
         if updated_task is None:

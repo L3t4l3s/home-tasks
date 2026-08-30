@@ -644,6 +644,129 @@ async def test_generate_image_for_external_task_uses_title_only(
     )
 
 
+async def _two_external_lists(hass, items_by_entity: dict[str, list]) -> None:
+    """Wire a mock todo component that answers for several entity ids."""
+    from unittest.mock import AsyncMock, MagicMock
+
+    mock_comp = MagicMock()
+    mock_comp.get_entity.side_effect = lambda eid: MagicMock(todo_items=items_by_entity[eid])
+    # Teardown unloads the todo entries through this component — without an
+    # awaitable the fixture logs a noisy (harmless) traceback.
+    mock_comp.async_unload_entry = AsyncMock(return_value=True)
+    hass.data["todo"] = mock_comp
+    for entity_id in items_by_entity:
+        hass.states.async_set(entity_id, str(len(items_by_entity[entity_id])))
+
+
+async def test_generated_image_reaches_every_list(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store, external_config_entry
+) -> None:
+    """Same-title image sharing spans native lists AND every linked list."""
+    from unittest.mock import AsyncMock, patch
+
+    from homeassistant.components.todo import TodoItem, TodoItemStatus
+    from homeassistant.core import SupportsResponse
+
+    entry_b = MockConfigEntry(
+        domain=DOMAIN,
+        data={"type": "external", "entity_id": "todo.ws_external_b", "name": "WS External B"},
+        title="WS External B (External)",
+    )
+    entry_b.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry_b.entry_id)
+    await hass.async_block_till_done()
+
+    item = lambda uid, summary: TodoItem(  # noqa: E731
+        uid=uid, summary=summary, status=TodoItemStatus.NEEDS_ACTION
+    )
+    await _two_external_lists(hass, {
+        "todo.ws_external": [item("ext-a-1", "Buy milk")],
+        "todo.ws_external_b": [item("ext-b-1", "Buy milk"), item("ext-b-2", "Bread")],
+    })
+
+    native = await store.async_add_task("Buy milk")
+    other = await store.async_add_task("Bread")
+
+    hass.services.async_register(
+        "ai_task",
+        "generate_image",
+        AsyncMock(return_value={"media_source_id": "media-source://media_source/g.png"}),
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+
+    client = await hass_ws_client(hass)
+    with patch(
+        "custom_components.home_tasks.websocket_api._save_image_to_public_media",
+        new=AsyncMock(return_value="/local/home_tasks/g.png"),
+    ):
+        await client.send_json({
+            "id": 410,
+            "type": "home_tasks/generate_task_image",
+            "entry_id": mock_config_entry.entry_id,
+            "task_id": native["id"],
+            "entity_id": "ai_task.test",
+            "force": True,
+        })
+        msg = await client.receive_json()
+
+    assert msg["success"] is True, msg
+    url = msg["result"]["task"]["image_url"]
+
+    assert store.get_task(native["id"])["image_url"] == url
+    assert not store.get_task(other["id"]).get("image_url"), "different title, no image"
+
+    overlay_a = hass.data[DOMAIN][external_config_entry.entry_id]
+    overlay_b = hass.data[DOMAIN][entry_b.entry_id]
+    assert overlay_a.get_overlay("ext-a-1")["image_url"] == url
+    assert overlay_b.get_overlay("ext-b-1")["image_url"] == url, (
+        "a second linked list must share the image too"
+    )
+    assert overlay_b.get_overlay("ext-b-2")["image_url"] is None
+
+
+async def test_image_of_an_external_task_is_reused_for_a_native_one(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store, external_config_entry
+) -> None:
+    """An image already on a linked task is reused instead of generating again."""
+    from unittest.mock import AsyncMock, patch
+
+    from homeassistant.components.todo import TodoItem, TodoItemStatus
+    from homeassistant.core import SupportsResponse
+
+    await _two_external_lists(hass, {
+        "todo.ws_external": [
+            TodoItem(uid="ext-a-1", summary="Buy milk", status=TodoItemStatus.NEEDS_ACTION)
+        ],
+    })
+    overlay = hass.data[DOMAIN][external_config_entry.entry_id]
+    await overlay.async_set_overlay("ext-a-1", image_url="/local/home_tasks/known.png")
+
+    native = await store.async_add_task("Buy milk")
+
+    generate = AsyncMock(return_value={"media_source_id": "media-source://media_source/new.png"})
+    hass.services.async_register(
+        "ai_task", "generate_image", generate, supports_response=SupportsResponse.OPTIONAL
+    )
+
+    client = await hass_ws_client(hass)
+    with patch(
+        "custom_components.home_tasks.websocket_api._save_image_to_public_media",
+        new=AsyncMock(return_value="/local/home_tasks/new.png"),
+    ):
+        await client.send_json({
+            "id": 411,
+            "type": "home_tasks/generate_task_image",
+            "entry_id": mock_config_entry.entry_id,
+            "task_id": native["id"],
+            "entity_id": "ai_task.test",
+        })
+        msg = await client.receive_json()
+
+    assert msg["success"] is True, msg
+    assert generate.await_count == 0, "no second image should be generated"
+    assert store.get_task(native["id"])["image_url"] == "/local/home_tasks/known.png"
+
+
 async def test_merge_tasks_provider_owns_order_true_ignores_overlay(
     hass: HomeAssistant,
 ) -> None:
