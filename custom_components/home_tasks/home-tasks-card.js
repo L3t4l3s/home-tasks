@@ -9488,19 +9488,21 @@ class HomeTasksCardEditor extends HTMLElement {
             this._syncAutoGenerate(col, on);
             this._render();
           }),
+          ...(col.list_id || col.entity_id
+            ? [this._buildListSettingToggle(col, "share_images", "ed_share_images", true)]
+            : []),
         ]),
+        ...(col.list_id || col.entity_id
+          ? [this._el("div", { className: "hint", textContent: this._t("ed_share_images_hint") })]
+          : []),
         this._buildImgGenForm(),
         this._el("div", { className: "hint", textContent: this._t("ed_ai_image_hint") }),
-        ...(col.list_id || col.entity_id ? [
-          this._buildListSettingToggle(col, "share_images", "ed_share_images", true),
-          this._el("div", { className: "hint", textContent: this._t("ed_share_images_hint") }),
-          // Only worth showing once the list actually asks for background
-          // generation - otherwise "nothing waiting" is a sentence without a
-          // subject.
-          ...(col.auto_generate_image === true ? [
-            this._el("label", { textContent: this._t("ed_queue_title") }),
-            this._buildQueuePanel(),
-          ] : []),
+        // Only worth showing once the list actually asks for background
+        // generation - otherwise "nothing waiting" is a sentence without a
+        // subject.
+        ...((col.list_id || col.entity_id) && col.auto_generate_image === true ? [
+          this._el("label", { textContent: this._t("ed_queue_title") }),
+          this._buildQueuePanel(),
         ] : []),
       ]),
     ]);

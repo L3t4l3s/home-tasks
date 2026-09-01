@@ -16,6 +16,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
+from .image_library import async_get_image_library, async_register_image_library
 from .image_queue import async_register_image_queue
 from homeassistant.util import dt as dt_util
 
@@ -54,12 +55,21 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     await _async_register_card(hass)
     _async_register_services(hass)
     _async_register_due_checker(hass)
+    async_register_image_library(hass)
     async_register_image_queue(hass)
+    hass.async_create_task(_async_load_image_library(hass))
     # One-time: generate thumbnails for any pre-existing task images so tile
     # grids load fast without re-saving each image. Runs in the background.
     from .websocket_api import _backfill_thumbnails
     hass.async_create_task(_backfill_thumbnails(hass))
     return True
+
+
+async def _async_load_image_library(hass: HomeAssistant) -> None:
+    """Read the title-to-picture library from disk once."""
+    library = async_get_image_library(hass)
+    if library is not None:
+        await library.async_load()
 
 
 async def _async_register_card(hass: HomeAssistant) -> None:

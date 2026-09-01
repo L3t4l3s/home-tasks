@@ -8,6 +8,8 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
+from .image_library import async_get_image_library
+from .image_library import async_get_image_library
 from .image_queue import PLACEHOLDER_IMAGE_URLS, async_get_image_queue
 from .const import DOMAIN, MAX_IMAGE_URL_LENGTH, MAX_REORDER_IDS, MAX_RECURRENCE_VALUE, MAX_REMINDER_OFFSET_MINUTES, MAX_REMINDERS_PER_TASK, MAX_SUB_TASKS_PER_TASK, MAX_TAGS_PER_TASK, MAX_TITLE_LENGTH, VALID_RECURRENCE_UNITS
 from .overlay_store import ExternalTaskOverlayStore, OVERLAY_FIELDS
@@ -433,6 +435,7 @@ async def ws_update_task(hass, connection, msg):
             kwargs["image_url"] = await _async_publish_image_url(hass, connection, iu)
         task = await store.async_update_task(msg["task_id"], actor=actor, **kwargs)
         if "image_url" in kwargs:
+            await _async_forget_rejected(hass, old_image_url, kwargs.get("image_url"))
             await _cleanup_orphan_image(hass, old_image_url, kwargs.get("image_url"))
         connection.send_result(msg["id"], task)
     except Exception as err:
@@ -1147,6 +1150,30 @@ async def ws_get_external_lists(hass, connection, msg):
         _handle_error(connection, msg["id"], err)
 
 
+async def _async_forget_rejected(hass, old_url: str | None, new_url: str | None) -> None:
+    """Clearing or replacing a picture rejects it — drop it from the library.
+
+    Otherwise the next generation for that title would hand back the very
+    image the user just got rid of.
+    """
+    if not _is_real_image(old_url) or old_url == new_url:
+        return
+    library = async_get_image_library(hass)
+    if library is not None:
+        # The file itself is reclaimed by _cleanup_orphan_image right after,
+        # which checks whether any task still uses it.
+        await library.async_forget(old_url, delete_file=False)
+
+
+async def _async_remember_image(hass, title: str, url: str | None, shares: bool) -> None:
+    """Keep a title-to-picture pair for later, if the list shares at all."""
+    if not shares or not title or not _is_real_image(url):
+        return
+    library = async_get_image_library(hass)
+    if library is not None:
+        await library.async_remember(title, url)
+
+
 def _is_real_image(url: str | None) -> bool:
     """Whether a task image may be handed to a same-titled task.
 
@@ -1278,6 +1305,7 @@ async def ws_update_external_overlay(hass, connection, msg):
             )
         overlay = await overlay_store.async_set_overlay(msg["task_uid"], **kwargs)
         if "image_url" in kwargs:
+            await _async_forget_rejected(hass, old_image_url, kwargs["image_url"])
             await _cleanup_orphan_image(hass, old_image_url, kwargs["image_url"])
         connection.send_result(msg["id"], overlay)
     except Exception as err:
@@ -2175,6 +2203,28 @@ async def async_generate_task_image(
             if existing_url:
                 break
 
+        # Nothing open has that title — but something did once. The library
+        # only serves lists that take part in the shared pool; a list that
+        # keeps to itself must not draw from it either.
+        if not existing_url and shares:
+            library = async_get_image_library(hass)
+            if library is not None:
+                remembered = library.find(title)
+                if remembered and _is_real_image(remembered):
+                    existing_url = remembered
+                    await library.async_touch(remembered)
+
+        # Nothing open has that title — but something did once. The library
+        # only serves lists that take part in the shared pool; a list that
+        # keeps to itself must not draw from it either.
+        if not existing_url and shares:
+            library = async_get_image_library(hass)
+            if library is not None:
+                remembered = library.find(title)
+                if remembered and _is_real_image(remembered):
+                    existing_url = remembered
+                    await library.async_touch(remembered)
+
         if not existing_url:
             for _ov_store, ext_tasks in external_lists:
                 for candidate in ext_tasks:
@@ -2188,6 +2238,9 @@ async def async_generate_task_image(
                     break
 
         if existing_url:
+            # (already in the library, or just found in a live task — remember
+            # either way so the next lookup is a hit)
+            await _async_remember_image(hass, title, existing_url, shares)
             if overlay_store:
                 await overlay_store.async_set_overlay(
                     task_id, image_url=existing_url
@@ -2312,6 +2365,7 @@ async def async_generate_task_image(
                 task_id, image_url=image_url
             )
 
+    await _async_remember_image(hass, title, image_url, shares)
     return {"task": updated_task, "reused": False}
 
 

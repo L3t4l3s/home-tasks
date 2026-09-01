@@ -184,7 +184,19 @@ since otherwise the next scan would queue the task straight back.
 **Good to know:**
 
 - **No duplicate work** — if another task with the same title already has an image, it's reused instead of generating again; generating an image assigns it to every task with that title, in every list — native and linked alike. Linked lists are read from their provider for this, so a generation with several linked lists takes a moment longer.
-- **Per-list opt-out** — a list can keep its pictures to itself: card editor → *Images* → **Share images with other lists** (on by default). Off means the list neither takes an image from another list nor hands one over, while two identical titles *inside* it still share one picture. That is what you want for, say, three children with their own list of the same chores and their own images — instead of nudging titles apart with extra spaces.
+- **Pictures outlive their task** — Home Tasks keeps a library of title →
+  picture, independent of any task. Tick off "take out the bins", let the
+  recurrence recreate it, and the picture comes back from disk instead of the
+  provider. Near-identical titles count too, conservatively: "book a blood
+  draw" finds the picture of "book a blood test", while "milk 1l" never
+  matches "milk 2l" and "Zimmer aufräumen Mia" never matches "…Ben" — a
+  differing word must not be a quantity, and one differing word out of two is
+  not enough. Matching is local string comparison; nothing is sent anywhere.
+  Removing a picture from a task counts as rejecting it: it leaves the library
+  and will not be handed back. The library keeps the 2000 most recently used
+  pictures and deletes the files of the ones it drops, unless a task still
+  points at them.
+- **Per-list opt-out** — a list can keep its pictures to itself: card editor → *Images* → **Share images with other lists** (on by default). Off means the list neither takes an image from another list nor from the library, and hands none over either, while two identical titles *inside* it still share one picture. That is what you want for, say, three children with their own list of the same chores and their own images — instead of nudging titles apart with extra spaces.
 - **Only the title leaves the house** — the AI prompt is built from the task title alone; notes and other fields are never sent.
 - **Persistent** — generated and picked images are copied into `config/www/home_tasks/` and served from `/local/…`, so they keep working regardless of how you access Home Assistant (local IP, custom port, or a domain) and don't expire. Unused image files are cleaned up automatically.
 - **Duplicating** a task copies its image too, and **moving** a task to another list — native or linked — takes the image along.
