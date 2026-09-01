@@ -174,9 +174,12 @@ Switching `auto_generate_image` off stops the list at once: whatever is still
 queued for it is dropped and the waiting placeholders disappear again. Turning
 it on and off repeatedly costs nothing — a task is only ever queued once.
 
-The card editor's *Images* section lists what is still waiting and lets you
-cancel single jobs — cancelling also switches that list's automatic generation
-off, since otherwise the next scan would queue the task straight back.
+Everything image-related lives in one place: the card editor's **Images**
+section holds the two switches, the `ai_task` entity and prompt prefix, the
+per-list sharing switch, and the queue. The queue shows what is being
+generated right now and numbers what comes next, and single jobs can be
+cancelled — cancelling also switches that list's automatic generation off,
+since otherwise the next scan would queue the task straight back.
 
 **Good to know:**
 

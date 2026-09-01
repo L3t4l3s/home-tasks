@@ -18,6 +18,82 @@ async function externalCard(callWS) {
   return card;
 }
 
+describe('editor image section', () => {
+  async function editor(queueResult) {
+    const { window } = await loadCard({ force: true });
+    const Editor = window.customElements.get('home-tasks-card-editor');
+    const ed = new Editor();
+    ed.hass = makeMockHass({
+      callWS: async (m) => {
+        if (m.type === 'home_tasks/get_lists') {
+          return { lists: [{ id: 'L1', name: 'Household', share_images: true }] };
+        }
+        if (m.type === 'home_tasks/get_external_lists') return { external_lists: [] };
+        if (m.type === 'home_tasks/get_image_queue') return queueResult;
+        return null;
+      },
+    });
+    ed.setConfig({
+      image_generation: { entity_id: 'ai_task.openai' },
+      columns: [{ list_id: 'L1', show_images: true, auto_generate_image: true }],
+    });
+    window.document.body.appendChild(ed);
+    await new Promise((r) => setTimeout(r, 150));
+    return ed;
+  }
+  const sections = (ed) =>
+    [...ed.shadowRoot.querySelectorAll('details > summary')].map(s => s.textContent.trim());
+  const imageSection = (ed) =>
+    [...ed.shadowRoot.querySelectorAll('details')].find(
+      d => (d.querySelector('summary')?.textContent || '').toLowerCase().includes('image')
+    );
+
+  // Everything about images used to be in three places: two switches in
+  // Display, the AI entity in its own section at the bottom, the list
+  // settings in a third. One section now.
+  test('gathers the switches, the AI entity and the list settings', async () => {
+    const ed = await editor({ current: null, queue: [] });
+    try {
+      assert.ok(!sections(ed).some(s => /AI Image/i.test(s)), 'no separate AI section');
+      const sec = imageSection(ed);
+      assert.ok(sec, 'an Images section exists');
+      const toggles = [...sec.querySelectorAll('.toggle-label')].map(e => e.textContent.trim());
+      assert.deepEqual(toggles, ['Images', 'Auto-generate image', 'Share images with other lists']);
+      assert.ok(sec.querySelector('ha-form'), 'the ai_task entity is configured here');
+    } finally {
+      ed.remove();
+    }
+  });
+
+  test('shows what is generating and numbers what comes next', async () => {
+    const ed = await editor({
+      current: { list_id: 'L1', task_id: 'T9', title: 'Running one' },
+      queue: [
+        { list_id: 'L1', task_id: 'T1', title: 'First in line' },
+        { list_id: 'L1', task_id: 'T2', title: 'Second in line' },
+      ],
+    });
+    try {
+      const rows = [...imageSection(ed).querySelectorAll('.queue-row')].map(r => ({
+        title: r.querySelector('.queue-title').textContent,
+        pos: r.querySelector('.queue-pos').textContent,
+        running: r.classList.contains('current'),
+        cancellable: !!r.querySelector('.queue-cancel'),
+      }));
+      assert.equal(rows.length, 3);
+      assert.deepEqual(rows[0], {
+        title: 'Running one', pos: '▶', running: true,
+        cancellable: false,  // the provider call is already out
+      });
+      assert.equal(rows[1].pos, '1.', 'the next one is numbered 1');
+      assert.equal(rows[2].pos, '2.');
+      assert.ok(rows[1].cancellable && rows[2].cancellable);
+    } finally {
+      ed.remove();
+    }
+  });
+});
+
 describe('external task images', () => {
   test('shows image controls in external task details', async () => {
     const card = await externalCard(async () => null);

@@ -63,6 +63,7 @@ class ImageQueue:
         self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
         self._data: dict = {"config": {}, "queue": [], "failed": []}
         self._running = False
+        self._current: dict | None = None
         self._unsub_scan = None
 
     # -- persistence ---------------------------------------------------------
@@ -124,6 +125,11 @@ class ImageQueue:
     def queue(self) -> list[dict]:
         """The pending entries, oldest first."""
         return list(self._data.get("queue") or [])
+
+    @property
+    def current(self) -> dict | None:
+        """The entry being generated right now, if any."""
+        return self._current
 
     @property
     def failed(self) -> list[tuple]:
@@ -295,7 +301,11 @@ class ImageQueue:
                     # older version) — drop it, placeholder and all.
                     await self._async_clear_pending([entry])
                     continue
-                await self._async_generate(entry)
+                self._current = entry
+                try:
+                    await self._async_generate(entry)
+                finally:
+                    self._current = None
         finally:
             self._running = False
 

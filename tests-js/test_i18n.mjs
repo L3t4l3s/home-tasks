@@ -39,8 +39,11 @@ test("recent feature keys are translated in every language", () => {
   const t = loadTranslations();
   const required = [
     "ed_view_mode", "ed_view_mode_tiles", "ed_show_images", "ed_auto_image",
-    "ed_ai_image_section", "ed_ai_image_entity", "ed_show_voice", "duplicate_task",
+    // The AI settings live in the column's Images section now, so
+    // ed_ai_image_section is gone and ed_sec_images names that section.
+    "ed_sec_images", "ed_ai_image_entity", "ed_show_voice", "duplicate_task",
     "img_generate", "img_from_media", "mb_title", "voice_input",
+    "ed_queue_running", "ed_queue_cancel", "ed_share_images",
   ];
   for (const lang of Object.keys(t)) {
     for (const key of required) {

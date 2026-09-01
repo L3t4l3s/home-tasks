@@ -67,6 +67,8 @@ const _TRANSLATIONS = {
     ed_queue_empty: "Nothing waiting for a picture.",
     ed_queue_pending: "Waiting for a picture: {0}",
     ed_queue_cancel: "Cancel",
+    ed_ai_image_hint: "Applies to the whole card, not just this column.",
+    ed_queue_running: "generating…",
     ed_default_assignee: "Default assignee",
     ed_defaults_hint: "Applied to every new task in this list \u2014 no matter how it is created (card, service, voice, todo). Changes are saved immediately.", ed_defaults_saved: "Saved", ed_defaults_load_failed: "Could not load defaults", ed_defaults_save_failed: "Save failed",
     confirm_complete_msg: "Mark \"{0}\" as completed?",
@@ -166,7 +168,6 @@ const _TRANSLATIONS = {
     ed_preset_assignees: "Limit to assignees",
     ed_preset_labels: "Limit to tags",
     ed_ms_add: "Add…",
-    ed_ai_image_section: "AI Image Generation",
     ed_ai_image_entity: "AI entity for image generation",
     ed_ai_image_entity_placeholder: "e.g. ai_task.openai",
     ed_ai_prompt_prefix: "Prompt prefix (optional)",
@@ -174,7 +175,7 @@ const _TRANSLATIONS = {
   },
   nl: {
     voice_failed: "Spraakinvoer mislukt",
-    confirm_delete_section: "Deze sectie verwijderen? Taken erin worden ongesorteerd.", done_section_header: "Klaar", duplicate_task: "Dupliceren", move_task: "Verplaatsen", move_task_msg: "\u201e{0}\u201d verplaatsen naar:", ed_show_move: "Verplaatsknop", ed_add_section: "+ Sectie toevoegen", ed_ai_image_entity: "AI-entiteit voor beeldgeneratie", ed_ai_image_entity_placeholder: "bijv. ai_task.openai", ed_ai_image_section: "AI-beeldgeneratie", ed_ai_prompt_prefix: "Prompt-prefix (optioneel)", ed_ai_prompt_prefix_placeholder: "bijv. Minimalistisch icoon van", ed_auto_image: "Afbeelding automatisch genereren", ed_delete_section: "Sectie verwijderen", ed_external_lists: "Extern", ed_loading: "Laden…", ed_move_down: "Omlaag verplaatsen", ed_move_up: "Omhoog verplaatsen", ed_sec_sections: "Secties", ed_section_icon: "Pictogram", ed_section_name: "Naam", ed_section_name_prompt: "Sectienaam:", ed_sections_empty: "Nog geen secties — taken worden plat weergegeven.", ed_sections_select_list_hint: "Selecteer eerst een lijst om de secties te beheren.", ed_show_filters: "Statusfilter", ed_show_images: "Afbeeldingen", ed_show_person_chips: "Persoonfilter", ed_show_tag_chips: "Tagfilter", ed_show_tile_title: "Titel in tegels", ed_show_voice: "Spraakinvoer", ed_task_search: "Taken zoeken", ed_tile_help: "Tegelweergave:\n• Klikken = voltooien\n• Vasthouden = bewerken\n• Slepen = volgorde wijzigen", ed_view_mode: "Weergavemodus", ed_view_mode_list: "Lijst", ed_view_mode_tiles: "Tegels",
+    confirm_delete_section: "Deze sectie verwijderen? Taken erin worden ongesorteerd.", done_section_header: "Klaar", duplicate_task: "Dupliceren", move_task: "Verplaatsen", move_task_msg: "\u201e{0}\u201d verplaatsen naar:", ed_show_move: "Verplaatsknop", ed_add_section: "+ Sectie toevoegen", ed_ai_image_entity: "AI-entiteit voor beeldgeneratie", ed_ai_image_entity_placeholder: "bijv. ai_task.openai", ed_ai_prompt_prefix: "Prompt-prefix (optioneel)", ed_ai_prompt_prefix_placeholder: "bijv. Minimalistisch icoon van", ed_auto_image: "Afbeelding automatisch genereren", ed_delete_section: "Sectie verwijderen", ed_external_lists: "Extern", ed_loading: "Laden…", ed_move_down: "Omlaag verplaatsen", ed_move_up: "Omhoog verplaatsen", ed_sec_sections: "Secties", ed_section_icon: "Pictogram", ed_section_name: "Naam", ed_section_name_prompt: "Sectienaam:", ed_sections_empty: "Nog geen secties — taken worden plat weergegeven.", ed_sections_select_list_hint: "Selecteer eerst een lijst om de secties te beheren.", ed_show_filters: "Statusfilter", ed_show_images: "Afbeeldingen", ed_show_person_chips: "Persoonfilter", ed_show_tag_chips: "Tagfilter", ed_show_tile_title: "Titel in tegels", ed_show_voice: "Spraakinvoer", ed_task_search: "Taken zoeken", ed_tile_help: "Tegelweergave:\n• Klikken = voltooien\n• Vasthouden = bewerken\n• Slepen = volgorde wijzigen", ed_view_mode: "Weergavemodus", ed_view_mode_list: "Lijst", ed_view_mode_tiles: "Tegels",
     voice_input: "Spraakinvoer", voice_stop: "Opname stoppen", img_label: "Afbeelding", img_generate: "Genereren", img_regenerate: "Opnieuw genereren", img_generating: "Genereren…", img_from_media: "Uit mediabibliotheek", img_remove: "Afbeelding verwijderen", img_generate_failed: "Genereren van afbeelding mislukt: ", img_save_failed: "Afbeelding opslaan mislukt: ", mb_title: "Mediabibliotheek", mb_loading: "Laden…", mb_root: "Media", mb_back: "Terug", mb_empty: "Geen bestanden", mb_error: "Fout: ",
     my_tasks: "Mijn taken",
     add_placeholder: "Nieuwe taak toevoegen...",
@@ -212,6 +213,8 @@ const _TRANSLATIONS = {
     ed_queue_empty: "Niets wacht op een afbeelding.",
     ed_queue_pending: "Wacht op een afbeelding: {0}",
     ed_queue_cancel: "Annuleren",
+    ed_ai_image_hint: "Geldt voor de hele kaart, niet alleen voor deze kolom.",
+    ed_queue_running: "wordt gemaakt…",
     ed_default_assignee: "Standaard toegewezene",
     ed_defaults_hint: "Geldt voor elke nieuwe taak in deze lijst \u2014 ongeacht hoe die wordt aangemaakt. Wijzigingen worden direct opgeslagen.", ed_defaults_saved: "Opgeslagen", ed_defaults_load_failed: "Standaardwaarden konden niet worden geladen", ed_defaults_save_failed: "Opslaan mislukt",
     confirm_complete_msg: "\u201e{0}\u201d als afgerond markeren?",
@@ -259,7 +262,7 @@ const _TRANSLATIONS = {
   },
   it: {
     voice_failed: "Input vocale non riuscito",
-    confirm_delete_section: "Eliminare questa sezione? Le attività al suo interno diventeranno non ordinate.", done_section_header: "Fatto", duplicate_task: "Duplica", move_task: "Sposta", move_task_msg: "Sposta \u201c{0}\u201d in:", ed_show_move: "Pulsante Sposta", ed_add_section: "+ Aggiungi sezione", ed_ai_image_entity: "Entità IA per la generazione di immagini", ed_ai_image_entity_placeholder: "es. ai_task.openai", ed_ai_image_section: "Generazione immagini IA", ed_ai_prompt_prefix: "Prefisso prompt (facoltativo)", ed_ai_prompt_prefix_placeholder: "es. Icona minimalista di", ed_auto_image: "Genera immagine automaticamente", ed_delete_section: "Elimina sezione", ed_external_lists: "Esterna", ed_loading: "Caricamento…", ed_move_down: "Sposta giù", ed_move_up: "Sposta su", ed_sec_sections: "Sezioni", ed_section_icon: "Icona", ed_section_name: "Nome", ed_section_name_prompt: "Nome sezione:", ed_sections_empty: "Nessuna sezione — le attività verranno mostrate senza raggruppamenti.", ed_sections_select_list_hint: "Seleziona prima un elenco per gestirne le sezioni.", ed_show_filters: "Filtro stato", ed_show_images: "Immagini", ed_show_person_chips: "Filtro persone", ed_show_tag_chips: "Filtro tag", ed_show_tile_title: "Titolo nelle caselle", ed_show_voice: "Input vocale", ed_task_search: "Ricerca attività", ed_tile_help: "Vista a caselle:\n• Clic = completa\n• Tieni premuto = modifica\n• Trascina = riordina", ed_view_mode: "Modalità di visualizzazione", ed_view_mode_list: "Elenco", ed_view_mode_tiles: "Caselle",
+    confirm_delete_section: "Eliminare questa sezione? Le attività al suo interno diventeranno non ordinate.", done_section_header: "Fatto", duplicate_task: "Duplica", move_task: "Sposta", move_task_msg: "Sposta \u201c{0}\u201d in:", ed_show_move: "Pulsante Sposta", ed_add_section: "+ Aggiungi sezione", ed_ai_image_entity: "Entità IA per la generazione di immagini", ed_ai_image_entity_placeholder: "es. ai_task.openai", ed_ai_prompt_prefix: "Prefisso prompt (facoltativo)", ed_ai_prompt_prefix_placeholder: "es. Icona minimalista di", ed_auto_image: "Genera immagine automaticamente", ed_delete_section: "Elimina sezione", ed_external_lists: "Esterna", ed_loading: "Caricamento…", ed_move_down: "Sposta giù", ed_move_up: "Sposta su", ed_sec_sections: "Sezioni", ed_section_icon: "Icona", ed_section_name: "Nome", ed_section_name_prompt: "Nome sezione:", ed_sections_empty: "Nessuna sezione — le attività verranno mostrate senza raggruppamenti.", ed_sections_select_list_hint: "Seleziona prima un elenco per gestirne le sezioni.", ed_show_filters: "Filtro stato", ed_show_images: "Immagini", ed_show_person_chips: "Filtro persone", ed_show_tag_chips: "Filtro tag", ed_show_tile_title: "Titolo nelle caselle", ed_show_voice: "Input vocale", ed_task_search: "Ricerca attività", ed_tile_help: "Vista a caselle:\n• Clic = completa\n• Tieni premuto = modifica\n• Trascina = riordina", ed_view_mode: "Modalità di visualizzazione", ed_view_mode_list: "Elenco", ed_view_mode_tiles: "Caselle",
     voice_input: "Input vocale", voice_stop: "Interrompi registrazione", img_label: "Immagine", img_generate: "Genera", img_regenerate: "Rigenera", img_generating: "Generazione…", img_from_media: "Dalla libreria multimediale", img_remove: "Rimuovi immagine", img_generate_failed: "Generazione immagine non riuscita: ", img_save_failed: "Salvataggio immagine non riuscito: ", mb_title: "Libreria multimediale", mb_loading: "Caricamento…", mb_root: "Media", mb_back: "Indietro", mb_empty: "Nessun file", mb_error: "Errore: ",
     my_tasks: "Le mie attivit\u00e0",
     add_placeholder: "Aggiungi nuova attivit\u00e0...",
@@ -297,6 +300,8 @@ const _TRANSLATIONS = {
     ed_queue_empty: "Nessuna attesa di immagine.",
     ed_queue_pending: "In attesa di un'immagine: {0}",
     ed_queue_cancel: "Annulla",
+    ed_ai_image_hint: "Vale per l'intera scheda, non solo per questa colonna.",
+    ed_queue_running: "in creazione…",
     ed_default_assignee: "Assegnatario predefinito",
     ed_defaults_hint: "Si applica a ogni nuova attivit\u00e0 di questo elenco, comunque venga creata. Le modifiche vengono salvate immediatamente.", ed_defaults_saved: "Salvato", ed_defaults_load_failed: "Impossibile caricare i valori predefiniti", ed_defaults_save_failed: "Salvataggio non riuscito",
     confirm_complete_msg: "Segnare \u201c{0}\u201d come completata?",
@@ -344,7 +349,7 @@ const _TRANSLATIONS = {
   },
   pl: {
     voice_failed: "Wprowadzanie głosowe nie powiodło się",
-    confirm_delete_section: "Usunąć tę sekcję? Zadania w niej staną się nieposortowane.", done_section_header: "Gotowe", duplicate_task: "Duplikuj", move_task: "Przenie\u015b", move_task_msg: "Przenie\u015b \u201e{0}\u201d do:", ed_show_move: "Przycisk przenoszenia", ed_add_section: "+ Dodaj sekcję", ed_ai_image_entity: "Encja AI do generowania obrazów", ed_ai_image_entity_placeholder: "np. ai_task.openai", ed_ai_image_section: "Generowanie obrazów AI", ed_ai_prompt_prefix: "Prefiks promptu (opcjonalnie)", ed_ai_prompt_prefix_placeholder: "np. Minimalistyczna ikona", ed_auto_image: "Automatycznie generuj obraz", ed_delete_section: "Usuń sekcję", ed_external_lists: "Zewnętrzna", ed_loading: "Ładowanie…", ed_move_down: "Przenieś w dół", ed_move_up: "Przenieś w górę", ed_sec_sections: "Sekcje", ed_section_icon: "Ikona", ed_section_name: "Nazwa", ed_section_name_prompt: "Nazwa sekcji:", ed_sections_empty: "Brak sekcji — zadania będą wyświetlane płasko.", ed_sections_select_list_hint: "Najpierw wybierz listę, aby zarządzać jej sekcjami.", ed_show_filters: "Filtr statusu", ed_show_images: "Obrazy", ed_show_person_chips: "Filtr os\u00f3b", ed_show_tag_chips: "Filtr tag\u00f3w", ed_show_tile_title: "Tytuł na kafelkach", ed_show_voice: "Wprowadzanie głosowe", ed_task_search: "Wyszukiwanie zadań", ed_tile_help: "Widok kafelków:\n• Kliknięcie = ukończ\n• Przytrzymanie = edycja\n• Przeciągnięcie = zmiana kolejności", ed_view_mode: "Tryb widoku", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Kafelki",
+    confirm_delete_section: "Usunąć tę sekcję? Zadania w niej staną się nieposortowane.", done_section_header: "Gotowe", duplicate_task: "Duplikuj", move_task: "Przenie\u015b", move_task_msg: "Przenie\u015b \u201e{0}\u201d do:", ed_show_move: "Przycisk przenoszenia", ed_add_section: "+ Dodaj sekcję", ed_ai_image_entity: "Encja AI do generowania obrazów", ed_ai_image_entity_placeholder: "np. ai_task.openai", ed_ai_prompt_prefix: "Prefiks promptu (opcjonalnie)", ed_ai_prompt_prefix_placeholder: "np. Minimalistyczna ikona", ed_auto_image: "Automatycznie generuj obraz", ed_delete_section: "Usuń sekcję", ed_external_lists: "Zewnętrzna", ed_loading: "Ładowanie…", ed_move_down: "Przenieś w dół", ed_move_up: "Przenieś w górę", ed_sec_sections: "Sekcje", ed_section_icon: "Ikona", ed_section_name: "Nazwa", ed_section_name_prompt: "Nazwa sekcji:", ed_sections_empty: "Brak sekcji — zadania będą wyświetlane płasko.", ed_sections_select_list_hint: "Najpierw wybierz listę, aby zarządzać jej sekcjami.", ed_show_filters: "Filtr statusu", ed_show_images: "Obrazy", ed_show_person_chips: "Filtr os\u00f3b", ed_show_tag_chips: "Filtr tag\u00f3w", ed_show_tile_title: "Tytuł na kafelkach", ed_show_voice: "Wprowadzanie głosowe", ed_task_search: "Wyszukiwanie zadań", ed_tile_help: "Widok kafelków:\n• Kliknięcie = ukończ\n• Przytrzymanie = edycja\n• Przeciągnięcie = zmiana kolejności", ed_view_mode: "Tryb widoku", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Kafelki",
     voice_input: "Wprowadzanie głosowe", voice_stop: "Zatrzymaj nagrywanie", img_label: "Obraz", img_generate: "Generuj", img_regenerate: "Generuj ponownie", img_generating: "Generowanie…", img_from_media: "Z biblioteki multimediów", img_remove: "Usuń obraz", img_generate_failed: "Generowanie obrazu nie powiodło się: ", img_save_failed: "Zapisywanie obrazu nie powiodło się: ", mb_title: "Biblioteka multimediów", mb_loading: "Ładowanie…", mb_root: "Multimedia", mb_back: "Wstecz", mb_empty: "Brak plików", mb_error: "Błąd: ",
     my_tasks: "Moje zadania",
     add_placeholder: "Dodaj nowe zadanie...",
@@ -382,6 +387,8 @@ const _TRANSLATIONS = {
     ed_queue_empty: "Nic nie czeka na obraz.",
     ed_queue_pending: "Czeka na obraz: {0}",
     ed_queue_cancel: "Anuluj",
+    ed_ai_image_hint: "Dotyczy całej karty, nie tylko tej kolumny.",
+    ed_queue_running: "generowanie…",
     ed_default_assignee: "Domy\u015blny przypisany",
     ed_defaults_hint: "Dotyczy ka\u017cdego nowego zadania na tej li\u015bcie \u2014 niezale\u017cnie od sposobu utworzenia. Zmiany s\u0105 zapisywane natychmiast.", ed_defaults_saved: "Zapisano", ed_defaults_load_failed: "Nie uda\u0142o si\u0119 wczyta\u0107 ustawie\u0144 domy\u015blnych", ed_defaults_save_failed: "Zapis nie powi\u00f3d\u0142 si\u0119",
     confirm_complete_msg: "Oznaczy\u0107 \u201e{0}\u201d jako uko\u0144czone?",
@@ -429,7 +436,7 @@ const _TRANSLATIONS = {
   },
   sv: {
     voice_failed: "Röstinmatning misslyckades",
-    confirm_delete_section: "Ta bort det här avsnittet? Uppgifter i det blir osorterade.", done_section_header: "Klar", duplicate_task: "Duplicera", move_task: "Flytta", move_task_msg: "Flytta \u201d{0}\u201d till:", ed_show_move: "Flytta-knapp", ed_add_section: "+ Lägg till avsnitt", ed_ai_image_entity: "AI-entitet för bildgenerering", ed_ai_image_entity_placeholder: "t.ex. ai_task.openai", ed_ai_image_section: "AI-bildgenerering", ed_ai_prompt_prefix: "Promptprefix (valfritt)", ed_ai_prompt_prefix_placeholder: "t.ex. Minimalistisk ikon av", ed_auto_image: "Generera bild automatiskt", ed_delete_section: "Ta bort avsnitt", ed_external_lists: "Extern", ed_loading: "Läser in…", ed_move_down: "Flytta ned", ed_move_up: "Flytta upp", ed_sec_sections: "Avsnitt", ed_section_icon: "Ikon", ed_section_name: "Namn", ed_section_name_prompt: "Avsnittsnamn:", ed_sections_empty: "Inga avsnitt än — uppgifter visas platt.", ed_sections_select_list_hint: "Välj en lista först för att hantera dess avsnitt.", ed_show_filters: "Statusfilter", ed_show_images: "Bilder", ed_show_person_chips: "Personfilter", ed_show_tag_chips: "Taggfilter", ed_show_tile_title: "Titel i rutor", ed_show_voice: "Röstinmatning", ed_task_search: "Uppgiftssökning", ed_tile_help: "Rutvy:\n• Klick = slutför\n• Håll = redigera\n• Dra = ändra ordning", ed_view_mode: "Visningsläge", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Rutor",
+    confirm_delete_section: "Ta bort det här avsnittet? Uppgifter i det blir osorterade.", done_section_header: "Klar", duplicate_task: "Duplicera", move_task: "Flytta", move_task_msg: "Flytta \u201d{0}\u201d till:", ed_show_move: "Flytta-knapp", ed_add_section: "+ Lägg till avsnitt", ed_ai_image_entity: "AI-entitet för bildgenerering", ed_ai_image_entity_placeholder: "t.ex. ai_task.openai", ed_ai_prompt_prefix: "Promptprefix (valfritt)", ed_ai_prompt_prefix_placeholder: "t.ex. Minimalistisk ikon av", ed_auto_image: "Generera bild automatiskt", ed_delete_section: "Ta bort avsnitt", ed_external_lists: "Extern", ed_loading: "Läser in…", ed_move_down: "Flytta ned", ed_move_up: "Flytta upp", ed_sec_sections: "Avsnitt", ed_section_icon: "Ikon", ed_section_name: "Namn", ed_section_name_prompt: "Avsnittsnamn:", ed_sections_empty: "Inga avsnitt än — uppgifter visas platt.", ed_sections_select_list_hint: "Välj en lista först för att hantera dess avsnitt.", ed_show_filters: "Statusfilter", ed_show_images: "Bilder", ed_show_person_chips: "Personfilter", ed_show_tag_chips: "Taggfilter", ed_show_tile_title: "Titel i rutor", ed_show_voice: "Röstinmatning", ed_task_search: "Uppgiftssökning", ed_tile_help: "Rutvy:\n• Klick = slutför\n• Håll = redigera\n• Dra = ändra ordning", ed_view_mode: "Visningsläge", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Rutor",
     voice_input: "Röstinmatning", voice_stop: "Stoppa inspelning", img_label: "Bild", img_generate: "Generera", img_regenerate: "Generera igen", img_generating: "Genererar…", img_from_media: "Från mediabibliotek", img_remove: "Ta bort bild", img_generate_failed: "Bildgenerering misslyckades: ", img_save_failed: "Det gick inte att spara bilden: ", mb_title: "Mediabibliotek", mb_loading: "Läser in…", mb_root: "Media", mb_back: "Tillbaka", mb_empty: "Inga filer", mb_error: "Fel: ",
     my_tasks: "Mina uppgifter",
     add_placeholder: "L\u00e4gg till ny uppgift...",
@@ -467,6 +474,8 @@ const _TRANSLATIONS = {
     ed_queue_empty: "Inget väntar på en bild.",
     ed_queue_pending: "Väntar på en bild: {0}",
     ed_queue_cancel: "Avbryt",
+    ed_ai_image_hint: "Gäller hela kortet, inte bara den här kolumnen.",
+    ed_queue_running: "skapas…",
     ed_default_assignee: "Standardtilldelad",
     ed_defaults_hint: "G\u00e4ller varje ny uppgift i listan \u2014 oavsett hur den skapas. \u00c4ndringar sparas direkt.", ed_defaults_saved: "Sparat", ed_defaults_load_failed: "Det gick inte att l\u00e4sa in standardv\u00e4rdena", ed_defaults_save_failed: "Det gick inte att spara",
     confirm_complete_msg: "Markera \u201d{0}\u201d som slutf\u00f6rd?",
@@ -514,7 +523,7 @@ const _TRANSLATIONS = {
   },
   fr: {
     voice_failed: "Échec de la saisie vocale",
-    confirm_delete_section: "Supprimer cette section ? Les tâches qu'elle contient ne seront plus triées.", done_section_header: "Terminé", duplicate_task: "Dupliquer", move_task: "D\u00e9placer", move_task_msg: "D\u00e9placer \u00ab\u202f{0}\u202f\u00bb vers\u00a0:", ed_show_move: "Bouton D\u00e9placer", ed_add_section: "+ Ajouter une section", ed_ai_image_entity: "Entité IA pour la génération d'images", ed_ai_image_entity_placeholder: "ex. ai_task.openai", ed_ai_image_section: "Génération d'images par IA", ed_ai_prompt_prefix: "Préfixe d'invite (facultatif)", ed_ai_prompt_prefix_placeholder: "ex. Icône minimaliste de", ed_auto_image: "Générer l'image automatiquement", ed_delete_section: "Supprimer la section", ed_external_lists: "Externe", ed_loading: "Chargement…", ed_move_down: "Déplacer vers le bas", ed_move_up: "Déplacer vers le haut", ed_sec_sections: "Sections", ed_section_icon: "Icône", ed_section_name: "Nom", ed_section_name_prompt: "Nom de la section :", ed_sections_empty: "Aucune section pour l'instant — les tâches s'affichent à plat.", ed_sections_select_list_hint: "Sélectionnez d'abord une liste pour gérer ses sections.", ed_show_filters: "Filtre d'\u00e9tat", ed_show_images: "Images", ed_show_person_chips: "Filtre de personnes", ed_show_tag_chips: "Filtre d'\u00e9tiquettes", ed_show_tile_title: "Titre sur les tuiles", ed_show_voice: "Saisie vocale", ed_task_search: "Recherche de tâches", ed_tile_help: "Vue en tuiles :\n• Clic = terminer\n• Maintenir = modifier\n• Glisser = réorganiser", ed_view_mode: "Mode d'affichage", ed_view_mode_list: "Liste", ed_view_mode_tiles: "Tuiles",
+    confirm_delete_section: "Supprimer cette section ? Les tâches qu'elle contient ne seront plus triées.", done_section_header: "Terminé", duplicate_task: "Dupliquer", move_task: "D\u00e9placer", move_task_msg: "D\u00e9placer \u00ab\u202f{0}\u202f\u00bb vers\u00a0:", ed_show_move: "Bouton D\u00e9placer", ed_add_section: "+ Ajouter une section", ed_ai_image_entity: "Entité IA pour la génération d'images", ed_ai_image_entity_placeholder: "ex. ai_task.openai", ed_ai_prompt_prefix: "Préfixe d'invite (facultatif)", ed_ai_prompt_prefix_placeholder: "ex. Icône minimaliste de", ed_auto_image: "Générer l'image automatiquement", ed_delete_section: "Supprimer la section", ed_external_lists: "Externe", ed_loading: "Chargement…", ed_move_down: "Déplacer vers le bas", ed_move_up: "Déplacer vers le haut", ed_sec_sections: "Sections", ed_section_icon: "Icône", ed_section_name: "Nom", ed_section_name_prompt: "Nom de la section :", ed_sections_empty: "Aucune section pour l'instant — les tâches s'affichent à plat.", ed_sections_select_list_hint: "Sélectionnez d'abord une liste pour gérer ses sections.", ed_show_filters: "Filtre d'\u00e9tat", ed_show_images: "Images", ed_show_person_chips: "Filtre de personnes", ed_show_tag_chips: "Filtre d'\u00e9tiquettes", ed_show_tile_title: "Titre sur les tuiles", ed_show_voice: "Saisie vocale", ed_task_search: "Recherche de tâches", ed_tile_help: "Vue en tuiles :\n• Clic = terminer\n• Maintenir = modifier\n• Glisser = réorganiser", ed_view_mode: "Mode d'affichage", ed_view_mode_list: "Liste", ed_view_mode_tiles: "Tuiles",
     voice_input: "Saisie vocale", voice_stop: "Arrêter l'enregistrement", img_label: "Image", img_generate: "Générer", img_regenerate: "Régénérer", img_generating: "Génération…", img_from_media: "Depuis la médiathèque", img_remove: "Supprimer l'image", img_generate_failed: "Échec de la génération de l'image : ", img_save_failed: "Échec de l'enregistrement de l'image : ", mb_title: "Médiathèque", mb_loading: "Chargement…", mb_root: "Médias", mb_back: "Retour", mb_empty: "Aucun fichier", mb_error: "Erreur : ",
     my_tasks: "Mes t\u00e2ches",
     add_placeholder: "Ajouter une nouvelle t\u00e2che...",
@@ -552,6 +561,8 @@ const _TRANSLATIONS = {
     ed_queue_empty: "Rien n'attend d'image.",
     ed_queue_pending: "En attente d'une image : {0}",
     ed_queue_cancel: "Annuler",
+    ed_ai_image_hint: "S'applique à toute la carte, pas seulement à cette colonne.",
+    ed_queue_running: "en cours…",
     ed_default_assignee: "Assign\u00e9 par d\u00e9faut",
     ed_defaults_hint: "S'applique \u00e0 chaque nouvelle t\u00e2che de cette liste, quelle que soit sa cr\u00e9ation. Les modifications sont enregistr\u00e9es imm\u00e9diatement.", ed_defaults_saved: "Enregistr\u00e9", ed_defaults_load_failed: "Impossible de charger les valeurs par d\u00e9faut", ed_defaults_save_failed: "\u00c9chec de l'enregistrement",
     confirm_complete_msg: "Marquer \u00ab\u202f{0}\u202f\u00bb comme termin\u00e9e\u202f?",
@@ -599,7 +610,7 @@ const _TRANSLATIONS = {
   },
   pt: {
     voice_failed: "Falha na entrada de voz",
-    confirm_delete_section: "Excluir esta seção? As tarefas dentro dela ficarão sem ordenação.", done_section_header: "Concluído", duplicate_task: "Duplicar", move_task: "Mover", move_task_msg: "Mover \u201c{0}\u201d para:", ed_show_move: "Bot\u00e3o Mover", ed_add_section: "+ Adicionar seção", ed_ai_image_entity: "Entidade de IA para geração de imagens", ed_ai_image_entity_placeholder: "ex. ai_task.openai", ed_ai_image_section: "Geração de imagens por IA", ed_ai_prompt_prefix: "Prefixo do prompt (opcional)", ed_ai_prompt_prefix_placeholder: "ex. Ícone minimalista de", ed_auto_image: "Gerar imagem automaticamente", ed_delete_section: "Excluir seção", ed_external_lists: "Externa", ed_loading: "Carregando…", ed_move_down: "Mover para baixo", ed_move_up: "Mover para cima", ed_sec_sections: "Seções", ed_section_icon: "Ícone", ed_section_name: "Nome", ed_section_name_prompt: "Nome da seção:", ed_sections_empty: "Nenhuma seção ainda — as tarefas serão exibidas sem agrupamento.", ed_sections_select_list_hint: "Selecione uma lista primeiro para gerenciar suas seções.", ed_show_filters: "Filtro de estado", ed_show_images: "Imagens", ed_show_person_chips: "Filtro de pessoas", ed_show_tag_chips: "Filtro de etiquetas", ed_show_tile_title: "Título nos blocos", ed_show_voice: "Entrada de voz", ed_task_search: "Pesquisa de tarefas", ed_tile_help: "Visualização em blocos:\n• Clique = concluir\n• Segurar = editar\n• Arrastar = reordenar", ed_view_mode: "Modo de exibição", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Blocos",
+    confirm_delete_section: "Excluir esta seção? As tarefas dentro dela ficarão sem ordenação.", done_section_header: "Concluído", duplicate_task: "Duplicar", move_task: "Mover", move_task_msg: "Mover \u201c{0}\u201d para:", ed_show_move: "Bot\u00e3o Mover", ed_add_section: "+ Adicionar seção", ed_ai_image_entity: "Entidade de IA para geração de imagens", ed_ai_image_entity_placeholder: "ex. ai_task.openai", ed_ai_prompt_prefix: "Prefixo do prompt (opcional)", ed_ai_prompt_prefix_placeholder: "ex. Ícone minimalista de", ed_auto_image: "Gerar imagem automaticamente", ed_delete_section: "Excluir seção", ed_external_lists: "Externa", ed_loading: "Carregando…", ed_move_down: "Mover para baixo", ed_move_up: "Mover para cima", ed_sec_sections: "Seções", ed_section_icon: "Ícone", ed_section_name: "Nome", ed_section_name_prompt: "Nome da seção:", ed_sections_empty: "Nenhuma seção ainda — as tarefas serão exibidas sem agrupamento.", ed_sections_select_list_hint: "Selecione uma lista primeiro para gerenciar suas seções.", ed_show_filters: "Filtro de estado", ed_show_images: "Imagens", ed_show_person_chips: "Filtro de pessoas", ed_show_tag_chips: "Filtro de etiquetas", ed_show_tile_title: "Título nos blocos", ed_show_voice: "Entrada de voz", ed_task_search: "Pesquisa de tarefas", ed_tile_help: "Visualização em blocos:\n• Clique = concluir\n• Segurar = editar\n• Arrastar = reordenar", ed_view_mode: "Modo de exibição", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Blocos",
     voice_input: "Entrada de voz", voice_stop: "Parar gravação", img_label: "Imagem", img_generate: "Gerar", img_regenerate: "Gerar novamente", img_generating: "Gerando…", img_from_media: "Da biblioteca de mídia", img_remove: "Remover imagem", img_generate_failed: "Falha ao gerar imagem: ", img_save_failed: "Falha ao salvar imagem: ", mb_title: "Biblioteca de mídia", mb_loading: "Carregando…", mb_root: "Mídia", mb_back: "Voltar", mb_empty: "Sem arquivos", mb_error: "Erro: ",
     my_tasks: "Minhas tarefas",
     add_placeholder: "Adicionar nova tarefa...",
@@ -637,6 +648,8 @@ const _TRANSLATIONS = {
     ed_queue_empty: "Nada à espera de imagem.",
     ed_queue_pending: "À espera de uma imagem: {0}",
     ed_queue_cancel: "Cancelar",
+    ed_ai_image_hint: "Aplica-se a todo o cartão, não apenas a esta coluna.",
+    ed_queue_running: "a gerar…",
     ed_default_assignee: "Respons\u00e1vel padr\u00e3o",
     ed_defaults_hint: "Aplica-se a cada nova tarefa desta lista, seja como for criada. As altera\u00e7\u00f5es s\u00e3o guardadas imediatamente.", ed_defaults_saved: "Guardado", ed_defaults_load_failed: "N\u00e3o foi poss\u00edvel carregar as predefini\u00e7\u00f5es", ed_defaults_save_failed: "Falha ao guardar",
     confirm_complete_msg: "Marcar \u201c{0}\u201d como conclu\u00edda?",
@@ -684,7 +697,7 @@ const _TRANSLATIONS = {
   },
   es: {
     voice_failed: "Error en la entrada de voz",
-    confirm_delete_section: "¿Eliminar esta sección? Las tareas que contiene quedarán sin ordenar.", done_section_header: "Hecho", duplicate_task: "Duplicar", move_task: "Mover", move_task_msg: "Mover \u201c{0}\u201d a:", ed_show_move: "Bot\u00f3n Mover", ed_add_section: "+ Añadir sección", ed_ai_image_entity: "Entidad de IA para la generación de imágenes", ed_ai_image_entity_placeholder: "p. ej. ai_task.openai", ed_ai_image_section: "Generación de imágenes con IA", ed_ai_prompt_prefix: "Prefijo del prompt (opcional)", ed_ai_prompt_prefix_placeholder: "p. ej. Icono minimalista de", ed_auto_image: "Generar imagen automáticamente", ed_delete_section: "Eliminar sección", ed_external_lists: "Externa", ed_loading: "Cargando…", ed_move_down: "Mover abajo", ed_move_up: "Mover arriba", ed_sec_sections: "Secciones", ed_section_icon: "Icono", ed_section_name: "Nombre", ed_section_name_prompt: "Nombre de la sección:", ed_sections_empty: "Aún no hay secciones: las tareas se mostrarán sin agrupar.", ed_sections_select_list_hint: "Selecciona primero una lista para gestionar sus secciones.", ed_show_filters: "Filtro de estado", ed_show_images: "Imágenes", ed_show_person_chips: "Filtro de personas", ed_show_tag_chips: "Filtro de etiquetas", ed_show_tile_title: "Título en mosaicos", ed_show_voice: "Entrada de voz", ed_task_search: "Búsqueda de tareas", ed_tile_help: "Vista de mosaicos:\n• Clic = completar\n• Mantener = editar\n• Arrastrar = reordenar", ed_view_mode: "Modo de vista", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Mosaicos",
+    confirm_delete_section: "¿Eliminar esta sección? Las tareas que contiene quedarán sin ordenar.", done_section_header: "Hecho", duplicate_task: "Duplicar", move_task: "Mover", move_task_msg: "Mover \u201c{0}\u201d a:", ed_show_move: "Bot\u00f3n Mover", ed_add_section: "+ Añadir sección", ed_ai_image_entity: "Entidad de IA para la generación de imágenes", ed_ai_image_entity_placeholder: "p. ej. ai_task.openai", ed_ai_prompt_prefix: "Prefijo del prompt (opcional)", ed_ai_prompt_prefix_placeholder: "p. ej. Icono minimalista de", ed_auto_image: "Generar imagen automáticamente", ed_delete_section: "Eliminar sección", ed_external_lists: "Externa", ed_loading: "Cargando…", ed_move_down: "Mover abajo", ed_move_up: "Mover arriba", ed_sec_sections: "Secciones", ed_section_icon: "Icono", ed_section_name: "Nombre", ed_section_name_prompt: "Nombre de la sección:", ed_sections_empty: "Aún no hay secciones: las tareas se mostrarán sin agrupar.", ed_sections_select_list_hint: "Selecciona primero una lista para gestionar sus secciones.", ed_show_filters: "Filtro de estado", ed_show_images: "Imágenes", ed_show_person_chips: "Filtro de personas", ed_show_tag_chips: "Filtro de etiquetas", ed_show_tile_title: "Título en mosaicos", ed_show_voice: "Entrada de voz", ed_task_search: "Búsqueda de tareas", ed_tile_help: "Vista de mosaicos:\n• Clic = completar\n• Mantener = editar\n• Arrastrar = reordenar", ed_view_mode: "Modo de vista", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Mosaicos",
     voice_input: "Entrada de voz", voice_stop: "Detener grabación", img_label: "Imagen", img_generate: "Generar", img_regenerate: "Regenerar", img_generating: "Generando…", img_from_media: "Desde la biblioteca multimedia", img_remove: "Eliminar imagen", img_generate_failed: "Error al generar la imagen: ", img_save_failed: "Error al guardar la imagen: ", mb_title: "Biblioteca multimedia", mb_loading: "Cargando…", mb_root: "Multimedia", mb_back: "Atrás", mb_empty: "Sin archivos", mb_error: "Error: ",
     my_tasks: "Mis tareas",
     add_placeholder: "A\u00f1adir nueva tarea...",
@@ -722,6 +735,8 @@ const _TRANSLATIONS = {
     ed_queue_empty: "Nada esperando imagen.",
     ed_queue_pending: "Esperando una imagen: {0}",
     ed_queue_cancel: "Cancelar",
+    ed_ai_image_hint: "Se aplica a toda la tarjeta, no solo a esta columna.",
+    ed_queue_running: "generando…",
     ed_default_assignee: "Asignado por defecto",
     ed_defaults_hint: "Se aplica a cada nueva tarea de esta lista, sin importar c\u00f3mo se cree. Los cambios se guardan inmediatamente.", ed_defaults_saved: "Guardado", ed_defaults_load_failed: "No se pudieron cargar los valores predeterminados", ed_defaults_save_failed: "Error al guardar",
     confirm_complete_msg: "\u00bfMarcar \u00ab{0}\u00bb como completada?",
@@ -769,7 +784,7 @@ const _TRANSLATIONS = {
   },
   ru: {
     voice_failed: "Сбой голосового ввода",
-    confirm_delete_section: "Удалить этот раздел? Задачи в нём станут несортированными.", done_section_header: "Готово", duplicate_task: "Дублировать", move_task: "\u041f\u0435\u0440\u0435\u043c\u0435\u0441\u0442\u0438\u0442\u044c", move_task_msg: "\u041f\u0435\u0440\u0435\u043c\u0435\u0441\u0442\u0438\u0442\u044c \u00ab{0}\u00bb \u0432:", ed_show_move: "\u041a\u043d\u043e\u043f\u043a\u0430 \u043f\u0435\u0440\u0435\u043c\u0435\u0449\u0435\u043d\u0438\u044f", ed_add_section: "+ Добавить раздел", ed_ai_image_entity: "ИИ-сущность для генерации изображений", ed_ai_image_entity_placeholder: "напр. ai_task.openai", ed_ai_image_section: "Генерация изображений ИИ", ed_ai_prompt_prefix: "Префикс запроса (необязательно)", ed_ai_prompt_prefix_placeholder: "напр. Минималистичная иконка", ed_auto_image: "Автоматически генерировать изображение", ed_delete_section: "Удалить раздел", ed_external_lists: "Внешний", ed_loading: "Загрузка…", ed_move_down: "Переместить вниз", ed_move_up: "Переместить вверх", ed_sec_sections: "Разделы", ed_section_icon: "Значок", ed_section_name: "Имя", ed_section_name_prompt: "Название раздела:", ed_sections_empty: "Разделов пока нет — задачи отображаются списком.", ed_sections_select_list_hint: "Сначала выберите список, чтобы управлять его разделами.", ed_show_filters: "\u0424\u0438\u043b\u044c\u0442\u0440 \u0441\u0442\u0430\u0442\u0443\u0441\u0430", ed_show_images: "Изображения", ed_show_person_chips: "\u0424\u0438\u043b\u044c\u0442\u0440 \u043b\u044e\u0434\u0435\u0439", ed_show_tag_chips: "\u0424\u0438\u043b\u044c\u0442\u0440 \u0442\u0435\u0433\u043e\u0432", ed_show_tile_title: "Заголовок на плитках", ed_show_voice: "Голосовой ввод", ed_task_search: "Поиск задач", ed_tile_help: "Режим плиток:\n• Клик = выполнить\n• Удержание = редактировать\n• Перетаскивание = изменить порядок", ed_view_mode: "Режим отображения", ed_view_mode_list: "Список", ed_view_mode_tiles: "Плитки",
+    confirm_delete_section: "Удалить этот раздел? Задачи в нём станут несортированными.", done_section_header: "Готово", duplicate_task: "Дублировать", move_task: "\u041f\u0435\u0440\u0435\u043c\u0435\u0441\u0442\u0438\u0442\u044c", move_task_msg: "\u041f\u0435\u0440\u0435\u043c\u0435\u0441\u0442\u0438\u0442\u044c \u00ab{0}\u00bb \u0432:", ed_show_move: "\u041a\u043d\u043e\u043f\u043a\u0430 \u043f\u0435\u0440\u0435\u043c\u0435\u0449\u0435\u043d\u0438\u044f", ed_add_section: "+ Добавить раздел", ed_ai_image_entity: "ИИ-сущность для генерации изображений", ed_ai_image_entity_placeholder: "напр. ai_task.openai", ed_ai_prompt_prefix: "Префикс запроса (необязательно)", ed_ai_prompt_prefix_placeholder: "напр. Минималистичная иконка", ed_auto_image: "Автоматически генерировать изображение", ed_delete_section: "Удалить раздел", ed_external_lists: "Внешний", ed_loading: "Загрузка…", ed_move_down: "Переместить вниз", ed_move_up: "Переместить вверх", ed_sec_sections: "Разделы", ed_section_icon: "Значок", ed_section_name: "Имя", ed_section_name_prompt: "Название раздела:", ed_sections_empty: "Разделов пока нет — задачи отображаются списком.", ed_sections_select_list_hint: "Сначала выберите список, чтобы управлять его разделами.", ed_show_filters: "\u0424\u0438\u043b\u044c\u0442\u0440 \u0441\u0442\u0430\u0442\u0443\u0441\u0430", ed_show_images: "Изображения", ed_show_person_chips: "\u0424\u0438\u043b\u044c\u0442\u0440 \u043b\u044e\u0434\u0435\u0439", ed_show_tag_chips: "\u0424\u0438\u043b\u044c\u0442\u0440 \u0442\u0435\u0433\u043e\u0432", ed_show_tile_title: "Заголовок на плитках", ed_show_voice: "Голосовой ввод", ed_task_search: "Поиск задач", ed_tile_help: "Режим плиток:\n• Клик = выполнить\n• Удержание = редактировать\n• Перетаскивание = изменить порядок", ed_view_mode: "Режим отображения", ed_view_mode_list: "Список", ed_view_mode_tiles: "Плитки",
     voice_input: "Голосовой ввод", voice_stop: "Остановить запись", img_label: "Изображение", img_generate: "Сгенерировать", img_regenerate: "Сгенерировать заново", img_generating: "Генерация…", img_from_media: "Из медиатеки", img_remove: "Удалить изображение", img_generate_failed: "Не удалось сгенерировать изображение: ", img_save_failed: "Не удалось сохранить изображение: ", mb_title: "Медиатека", mb_loading: "Загрузка…", mb_root: "Медиа", mb_back: "Назад", mb_empty: "Нет файлов", mb_error: "Ошибка: ",
     my_tasks: "\u041c\u043e\u0438 \u0437\u0430\u0434\u0430\u0447\u0438",
     add_placeholder: "\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043d\u043e\u0432\u0443\u044e \u0437\u0430\u0434\u0430\u0447\u0443...",
@@ -807,6 +822,8 @@ const _TRANSLATIONS = {
     ed_queue_empty: "Ничто не ждёт изображения.",
     ed_queue_pending: "Ждут изображения: {0}",
     ed_queue_cancel: "Отмена",
+    ed_ai_image_hint: "Действует для всей карточки, а не только для этого столбца.",
+    ed_queue_running: "создаётся…",
     ed_default_assignee: "\u041e\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0435\u043d\u043d\u044b\u0439 \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e",
     ed_defaults_hint: "\u041f\u0440\u0438\u043c\u0435\u043d\u044f\u0435\u0442\u0441\u044f \u043a \u043a\u0430\u0436\u0434\u043e\u0439 \u043d\u043e\u0432\u043e\u0439 \u0437\u0430\u0434\u0430\u0447\u0435 \u044d\u0442\u043e\u0433\u043e \u0441\u043f\u0438\u0441\u043a\u0430. \u0418\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f \u0441\u043e\u0445\u0440\u0430\u043d\u044f\u044e\u0442\u0441\u044f \u0441\u0440\u0430\u0437\u0443.", ed_defaults_saved: "\u0421\u043e\u0445\u0440\u0430\u043d\u0435\u043d\u043e", ed_defaults_load_failed: "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u0437\u043d\u0430\u0447\u0435\u043d\u0438\u044f \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e", ed_defaults_save_failed: "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0441\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c",
     confirm_complete_msg: "\u041e\u0442\u043c\u0435\u0442\u0438\u0442\u044c \u00ab{0}\u00bb \u043a\u0430\u043a \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043d\u0443\u044e?",
@@ -854,7 +871,7 @@ const _TRANSLATIONS = {
   },
   cs: {
     voice_failed: "Hlasový vstup selhal",
-    confirm_delete_section: "Odstranit tuto sekci? Úkoly v ní zůstanou neseřazené.", done_section_header: "Hotovo", duplicate_task: "Duplikovat", move_task: "P\u0159esunout", move_task_msg: "P\u0159esunout \u201e{0}\u201c do:", ed_show_move: "Tla\u010d\u00edtko p\u0159esunut\u00ed", ed_add_section: "+ Přidat sekci", ed_ai_image_entity: "Entita AI pro generování obrázků", ed_ai_image_entity_placeholder: "např. ai_task.openai", ed_ai_image_section: "Generování obrázků pomocí AI", ed_ai_prompt_prefix: "Předpona promptu (volitelné)", ed_ai_prompt_prefix_placeholder: "např. Minimalistická ikona", ed_auto_image: "Automaticky generovat obrázek", ed_delete_section: "Odstranit sekci", ed_external_lists: "Externí", ed_loading: "Načítání…", ed_move_down: "Posunout dolů", ed_move_up: "Posunout nahoru", ed_sec_sections: "Sekce", ed_section_icon: "Ikona", ed_section_name: "Název", ed_section_name_prompt: "Název sekce:", ed_sections_empty: "Zatím žádné sekce — úkoly se zobrazí bez seskupení.", ed_sections_select_list_hint: "Nejprve vyberte seznam pro správu jeho sekcí.", ed_show_filters: "Filtr stavu", ed_show_images: "Obrázky", ed_show_person_chips: "Filtr osob", ed_show_tag_chips: "Filtr \u0161t\u00edtk\u016f", ed_show_tile_title: "Název na dlaždicích", ed_show_voice: "Hlasový vstup", ed_task_search: "Hledání úkolů", ed_tile_help: "Zobrazení dlaždic:\n• Kliknutí = dokončit\n• Podržení = upravit\n• Přetažení = změnit pořadí", ed_view_mode: "Režim zobrazení", ed_view_mode_list: "Seznam", ed_view_mode_tiles: "Dlaždice",
+    confirm_delete_section: "Odstranit tuto sekci? Úkoly v ní zůstanou neseřazené.", done_section_header: "Hotovo", duplicate_task: "Duplikovat", move_task: "P\u0159esunout", move_task_msg: "P\u0159esunout \u201e{0}\u201c do:", ed_show_move: "Tla\u010d\u00edtko p\u0159esunut\u00ed", ed_add_section: "+ Přidat sekci", ed_ai_image_entity: "Entita AI pro generování obrázků", ed_ai_image_entity_placeholder: "např. ai_task.openai", ed_ai_prompt_prefix: "Předpona promptu (volitelné)", ed_ai_prompt_prefix_placeholder: "např. Minimalistická ikona", ed_auto_image: "Automaticky generovat obrázek", ed_delete_section: "Odstranit sekci", ed_external_lists: "Externí", ed_loading: "Načítání…", ed_move_down: "Posunout dolů", ed_move_up: "Posunout nahoru", ed_sec_sections: "Sekce", ed_section_icon: "Ikona", ed_section_name: "Název", ed_section_name_prompt: "Název sekce:", ed_sections_empty: "Zatím žádné sekce — úkoly se zobrazí bez seskupení.", ed_sections_select_list_hint: "Nejprve vyberte seznam pro správu jeho sekcí.", ed_show_filters: "Filtr stavu", ed_show_images: "Obrázky", ed_show_person_chips: "Filtr osob", ed_show_tag_chips: "Filtr \u0161t\u00edtk\u016f", ed_show_tile_title: "Název na dlaždicích", ed_show_voice: "Hlasový vstup", ed_task_search: "Hledání úkolů", ed_tile_help: "Zobrazení dlaždic:\n• Kliknutí = dokončit\n• Podržení = upravit\n• Přetažení = změnit pořadí", ed_view_mode: "Režim zobrazení", ed_view_mode_list: "Seznam", ed_view_mode_tiles: "Dlaždice",
     voice_input: "Hlasový vstup", voice_stop: "Zastavit nahrávání", img_label: "Obrázek", img_generate: "Vygenerovat", img_regenerate: "Vygenerovat znovu", img_generating: "Generování…", img_from_media: "Z knihovny médií", img_remove: "Odebrat obrázek", img_generate_failed: "Generování obrázku se nezdařilo: ", img_save_failed: "Uložení obrázku se nezdařilo: ", mb_title: "Knihovna médií", mb_loading: "Načítání…", mb_root: "Média", mb_back: "Zpět", mb_empty: "Žádné soubory", mb_error: "Chyba: ",
     my_tasks: "Moje \u00fakoly",
     add_placeholder: "P\u0159idat nov\u00fd \u00fakol...",
@@ -892,6 +909,8 @@ const _TRANSLATIONS = {
     ed_queue_empty: "Nic nečeká na obrázek.",
     ed_queue_pending: "Čeká na obrázek: {0}",
     ed_queue_cancel: "Zrušit",
+    ed_ai_image_hint: "Platí pro celou kartu, nejen pro tento sloupec.",
+    ed_queue_running: "generuje se…",
     ed_default_assignee: "V\u00fdchoz\u00ed p\u0159i\u0159azen\u00ed",
     ed_defaults_hint: "Plat\u00ed pro ka\u017ed\u00fd nov\u00fd \u00fakol v tomto seznamu. Zm\u011bny se ukl\u00e1daj\u00ed okam\u017eit\u011b.", ed_defaults_saved: "Ulo\u017eeno", ed_defaults_load_failed: "V\u00fdchoz\u00ed hodnoty se nepoda\u0159ilo na\u010d\u00edst", ed_defaults_save_failed: "Ulo\u017een\u00ed se nezda\u0159ilo",
     confirm_complete_msg: "Ozna\u010dit \u201e{0}\u201c jako dokon\u010den\u00e9?",
@@ -939,7 +958,7 @@ const _TRANSLATIONS = {
   },
   da: {
     voice_failed: "Stemmeinput mislykkedes",
-    confirm_delete_section: "Slet dette afsnit? Opgaver i det bliver usorterede.", done_section_header: "Færdig", duplicate_task: "Dupliker", move_task: "Flyt", move_task_msg: "Flyt \u201d{0}\u201d til:", ed_show_move: "Flyt-knap", ed_add_section: "+ Tilføj afsnit", ed_ai_image_entity: "AI-entitet til billedgenerering", ed_ai_image_entity_placeholder: "f.eks. ai_task.openai", ed_ai_image_section: "AI-billedgenerering", ed_ai_prompt_prefix: "Prompt-præfiks (valgfrit)", ed_ai_prompt_prefix_placeholder: "f.eks. Minimalistisk ikon af", ed_auto_image: "Generér billede automatisk", ed_delete_section: "Slet afsnit", ed_external_lists: "Ekstern", ed_loading: "Indlæser…", ed_move_down: "Flyt ned", ed_move_up: "Flyt op", ed_sec_sections: "Afsnit", ed_section_icon: "Ikon", ed_section_name: "Navn", ed_section_name_prompt: "Afsnitsnavn:", ed_sections_empty: "Ingen afsnit endnu — opgaver vises fladt.", ed_sections_select_list_hint: "Vælg først en liste for at administrere dens afsnit.", ed_show_filters: "Statusfilter", ed_show_images: "Billeder", ed_show_person_chips: "Personfilter", ed_show_tag_chips: "Tagfilter", ed_show_tile_title: "Titel i fliser", ed_show_voice: "Stemmeinput", ed_task_search: "Opgavesøgning", ed_tile_help: "Flisevisning:\n• Klik = fuldfør\n• Hold = rediger\n• Træk = omarrangér", ed_view_mode: "Visningstilstand", ed_view_mode_list: "Liste", ed_view_mode_tiles: "Fliser",
+    confirm_delete_section: "Slet dette afsnit? Opgaver i det bliver usorterede.", done_section_header: "Færdig", duplicate_task: "Dupliker", move_task: "Flyt", move_task_msg: "Flyt \u201d{0}\u201d til:", ed_show_move: "Flyt-knap", ed_add_section: "+ Tilføj afsnit", ed_ai_image_entity: "AI-entitet til billedgenerering", ed_ai_image_entity_placeholder: "f.eks. ai_task.openai", ed_ai_prompt_prefix: "Prompt-præfiks (valgfrit)", ed_ai_prompt_prefix_placeholder: "f.eks. Minimalistisk ikon af", ed_auto_image: "Generér billede automatisk", ed_delete_section: "Slet afsnit", ed_external_lists: "Ekstern", ed_loading: "Indlæser…", ed_move_down: "Flyt ned", ed_move_up: "Flyt op", ed_sec_sections: "Afsnit", ed_section_icon: "Ikon", ed_section_name: "Navn", ed_section_name_prompt: "Afsnitsnavn:", ed_sections_empty: "Ingen afsnit endnu — opgaver vises fladt.", ed_sections_select_list_hint: "Vælg først en liste for at administrere dens afsnit.", ed_show_filters: "Statusfilter", ed_show_images: "Billeder", ed_show_person_chips: "Personfilter", ed_show_tag_chips: "Tagfilter", ed_show_tile_title: "Titel i fliser", ed_show_voice: "Stemmeinput", ed_task_search: "Opgavesøgning", ed_tile_help: "Flisevisning:\n• Klik = fuldfør\n• Hold = rediger\n• Træk = omarrangér", ed_view_mode: "Visningstilstand", ed_view_mode_list: "Liste", ed_view_mode_tiles: "Fliser",
     voice_input: "Stemmeinput", voice_stop: "Stop optagelse", img_label: "Billede", img_generate: "Generér", img_regenerate: "Generér igen", img_generating: "Genererer…", img_from_media: "Fra mediebibliotek", img_remove: "Fjern billede", img_generate_failed: "Billedgenerering mislykkedes: ", img_save_failed: "Kunne ikke gemme billede: ", mb_title: "Mediebibliotek", mb_loading: "Indlæser…", mb_root: "Medier", mb_back: "Tilbage", mb_empty: "Ingen filer", mb_error: "Fejl: ",
     my_tasks: "Mine opgaver",
     add_placeholder: "Tilf\u00f8j ny opgave...",
@@ -977,6 +996,8 @@ const _TRANSLATIONS = {
     ed_queue_empty: "Intet venter på et billede.",
     ed_queue_pending: "Venter på et billede: {0}",
     ed_queue_cancel: "Annullér",
+    ed_ai_image_hint: "Gælder hele kortet, ikke kun denne kolonne.",
+    ed_queue_running: "genereres…",
     ed_default_assignee: "Standardtildelt",
     ed_defaults_hint: "G\u00e6lder for hver ny opgave p\u00e5 listen \u2014 uanset hvordan den oprettes. \u00c6ndringer gemmes med det samme.", ed_defaults_saved: "Gemt", ed_defaults_load_failed: "Standardv\u00e6rdierne kunne ikke indl\u00e6ses", ed_defaults_save_failed: "Kunne ikke gemme",
     confirm_complete_msg: "Mark\u00e9r \u201d{0}\u201d som fuldf\u00f8rt?",
@@ -1024,7 +1045,7 @@ const _TRANSLATIONS = {
   },
   no: {
     voice_failed: "Taleinndata mislyktes",
-    confirm_delete_section: "Slette denne seksjonen? Oppgaver i den blir usorterte.", done_section_header: "Ferdig", duplicate_task: "Dupliser", move_task: "Flytt", move_task_msg: "Flytt \u201d{0}\u201d til:", ed_show_move: "Flytt-knapp", ed_add_section: "+ Legg til seksjon", ed_ai_image_entity: "AI-entitet for bildegenerering", ed_ai_image_entity_placeholder: "f.eks. ai_task.openai", ed_ai_image_section: "AI-bildegenerering", ed_ai_prompt_prefix: "Ledetekst-prefiks (valgfritt)", ed_ai_prompt_prefix_placeholder: "f.eks. Minimalistisk ikon av", ed_auto_image: "Generer bilde automatisk", ed_delete_section: "Slett seksjon", ed_external_lists: "Ekstern", ed_loading: "Laster…", ed_move_down: "Flytt ned", ed_move_up: "Flytt opp", ed_sec_sections: "Seksjoner", ed_section_icon: "Ikon", ed_section_name: "Navn", ed_section_name_prompt: "Seksjonsnavn:", ed_sections_empty: "Ingen seksjoner ennå — oppgaver vises flatt.", ed_sections_select_list_hint: "Velg en liste først for å administrere seksjonene.", ed_show_filters: "Statusfilter", ed_show_images: "Bilder", ed_show_person_chips: "Personfilter", ed_show_tag_chips: "Taggfilter", ed_show_tile_title: "Tittel i fliser", ed_show_voice: "Taleinndata", ed_task_search: "Oppgavesøk", ed_tile_help: "Flisevisning:\n• Klikk = fullfør\n• Hold = rediger\n• Dra = endre rekkefølge", ed_view_mode: "Visningsmodus", ed_view_mode_list: "Liste", ed_view_mode_tiles: "Fliser",
+    confirm_delete_section: "Slette denne seksjonen? Oppgaver i den blir usorterte.", done_section_header: "Ferdig", duplicate_task: "Dupliser", move_task: "Flytt", move_task_msg: "Flytt \u201d{0}\u201d til:", ed_show_move: "Flytt-knapp", ed_add_section: "+ Legg til seksjon", ed_ai_image_entity: "AI-entitet for bildegenerering", ed_ai_image_entity_placeholder: "f.eks. ai_task.openai", ed_ai_prompt_prefix: "Ledetekst-prefiks (valgfritt)", ed_ai_prompt_prefix_placeholder: "f.eks. Minimalistisk ikon av", ed_auto_image: "Generer bilde automatisk", ed_delete_section: "Slett seksjon", ed_external_lists: "Ekstern", ed_loading: "Laster…", ed_move_down: "Flytt ned", ed_move_up: "Flytt opp", ed_sec_sections: "Seksjoner", ed_section_icon: "Ikon", ed_section_name: "Navn", ed_section_name_prompt: "Seksjonsnavn:", ed_sections_empty: "Ingen seksjoner ennå — oppgaver vises flatt.", ed_sections_select_list_hint: "Velg en liste først for å administrere seksjonene.", ed_show_filters: "Statusfilter", ed_show_images: "Bilder", ed_show_person_chips: "Personfilter", ed_show_tag_chips: "Taggfilter", ed_show_tile_title: "Tittel i fliser", ed_show_voice: "Taleinndata", ed_task_search: "Oppgavesøk", ed_tile_help: "Flisevisning:\n• Klikk = fullfør\n• Hold = rediger\n• Dra = endre rekkefølge", ed_view_mode: "Visningsmodus", ed_view_mode_list: "Liste", ed_view_mode_tiles: "Fliser",
     voice_input: "Taleinndata", voice_stop: "Stopp opptak", img_label: "Bilde", img_generate: "Generer", img_regenerate: "Generer på nytt", img_generating: "Genererer…", img_from_media: "Fra mediebibliotek", img_remove: "Fjern bilde", img_generate_failed: "Bildegenerering mislyktes: ", img_save_failed: "Kunne ikke lagre bilde: ", mb_title: "Mediebibliotek", mb_loading: "Laster…", mb_root: "Medier", mb_back: "Tilbake", mb_empty: "Ingen filer", mb_error: "Feil: ",
     my_tasks: "Mine oppgaver",
     add_placeholder: "Legg til ny oppgave...",
@@ -1062,6 +1083,8 @@ const _TRANSLATIONS = {
     ed_queue_empty: "Ingenting venter på et bilde.",
     ed_queue_pending: "Venter på et bilde: {0}",
     ed_queue_cancel: "Avbryt",
+    ed_ai_image_hint: "Gjelder hele kortet, ikke bare denne kolonnen.",
+    ed_queue_running: "genereres…",
     ed_default_assignee: "Standardtildelt",
     ed_defaults_hint: "Gjelder hver ny oppgave i listen \u2014 uansett hvordan den opprettes. Endringer lagres umiddelbart.", ed_defaults_saved: "Lagret", ed_defaults_load_failed: "Kunne ikke laste standardverdiene", ed_defaults_save_failed: "Kunne ikke lagre",
     confirm_complete_msg: "Merke \u00ab{0}\u00bb som fullf\u00f8rt?",
@@ -1109,7 +1132,7 @@ const _TRANSLATIONS = {
   },
   fi: {
     voice_failed: "Puhesyöttö epäonnistui",
-    confirm_delete_section: "Poistetaanko tämä osio? Sen tehtävät muuttuvat lajittelemattomiksi.", done_section_header: "Valmis", duplicate_task: "Monista", move_task: "Siirr\u00e4", move_task_msg: "Siirr\u00e4 \u201d{0}\u201d kohteeseen:", ed_show_move: "Siirr\u00e4-painike", ed_add_section: "+ Lisää osio", ed_ai_image_entity: "Tekoälyentiteetti kuvien luontiin", ed_ai_image_entity_placeholder: "esim. ai_task.openai", ed_ai_image_section: "Tekoälykuvien luonti", ed_ai_prompt_prefix: "Kehotteen etuliite (valinnainen)", ed_ai_prompt_prefix_placeholder: "esim. Minimalistinen kuvake", ed_auto_image: "Luo kuva automaattisesti", ed_delete_section: "Poista osio", ed_external_lists: "Ulkoinen", ed_loading: "Ladataan…", ed_move_down: "Siirrä alas", ed_move_up: "Siirrä ylös", ed_sec_sections: "Osiot", ed_section_icon: "Kuvake", ed_section_name: "Nimi", ed_section_name_prompt: "Osion nimi:", ed_sections_empty: "Ei vielä osioita — tehtävät näytetään listana.", ed_sections_select_list_hint: "Valitse ensin lista hallitaksesi sen osioita.", ed_show_filters: "Tilasuodatin", ed_show_images: "Kuvat", ed_show_person_chips: "Henkil\u00f6suodatin", ed_show_tag_chips: "Tunnistesuodatin", ed_show_tile_title: "Otsikko ruuduissa", ed_show_voice: "Puhesyöttö", ed_task_search: "Tehtävähaku", ed_tile_help: "Ruutunäkymä:\n• Napsautus = valmis\n• Pidä = muokkaa\n• Vedä = järjestä uudelleen", ed_view_mode: "Näkymätila", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Ruudut",
+    confirm_delete_section: "Poistetaanko tämä osio? Sen tehtävät muuttuvat lajittelemattomiksi.", done_section_header: "Valmis", duplicate_task: "Monista", move_task: "Siirr\u00e4", move_task_msg: "Siirr\u00e4 \u201d{0}\u201d kohteeseen:", ed_show_move: "Siirr\u00e4-painike", ed_add_section: "+ Lisää osio", ed_ai_image_entity: "Tekoälyentiteetti kuvien luontiin", ed_ai_image_entity_placeholder: "esim. ai_task.openai", ed_ai_prompt_prefix: "Kehotteen etuliite (valinnainen)", ed_ai_prompt_prefix_placeholder: "esim. Minimalistinen kuvake", ed_auto_image: "Luo kuva automaattisesti", ed_delete_section: "Poista osio", ed_external_lists: "Ulkoinen", ed_loading: "Ladataan…", ed_move_down: "Siirrä alas", ed_move_up: "Siirrä ylös", ed_sec_sections: "Osiot", ed_section_icon: "Kuvake", ed_section_name: "Nimi", ed_section_name_prompt: "Osion nimi:", ed_sections_empty: "Ei vielä osioita — tehtävät näytetään listana.", ed_sections_select_list_hint: "Valitse ensin lista hallitaksesi sen osioita.", ed_show_filters: "Tilasuodatin", ed_show_images: "Kuvat", ed_show_person_chips: "Henkil\u00f6suodatin", ed_show_tag_chips: "Tunnistesuodatin", ed_show_tile_title: "Otsikko ruuduissa", ed_show_voice: "Puhesyöttö", ed_task_search: "Tehtävähaku", ed_tile_help: "Ruutunäkymä:\n• Napsautus = valmis\n• Pidä = muokkaa\n• Vedä = järjestä uudelleen", ed_view_mode: "Näkymätila", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Ruudut",
     voice_input: "Puhesyöttö", voice_stop: "Lopeta nauhoitus", img_label: "Kuva", img_generate: "Luo", img_regenerate: "Luo uudelleen", img_generating: "Luodaan…", img_from_media: "Mediakirjastosta", img_remove: "Poista kuva", img_generate_failed: "Kuvan luonti epäonnistui: ", img_save_failed: "Kuvan tallennus epäonnistui: ", mb_title: "Mediakirjasto", mb_loading: "Ladataan…", mb_root: "Media", mb_back: "Takaisin", mb_empty: "Ei tiedostoja", mb_error: "Virhe: ",
     my_tasks: "Omat teht\u00e4v\u00e4t",
     add_placeholder: "Lis\u00e4\u00e4 uusi teht\u00e4v\u00e4...",
@@ -1147,6 +1170,8 @@ const _TRANSLATIONS = {
     ed_queue_empty: "Mikään ei odota kuvaa.",
     ed_queue_pending: "Odottaa kuvaa: {0}",
     ed_queue_cancel: "Peruuta",
+    ed_ai_image_hint: "Koskee koko korttia, ei vain tätä saraketta.",
+    ed_queue_running: "luodaan…",
     ed_default_assignee: "Oletusvastuuhenkil\u00f6",
     ed_defaults_hint: "Koskee jokaista listan uutta teht\u00e4v\u00e4\u00e4 luontitavasta riippumatta. Muutokset tallennetaan heti.", ed_defaults_saved: "Tallennettu", ed_defaults_load_failed: "Oletuksia ei voitu ladata", ed_defaults_save_failed: "Tallennus ep\u00e4onnistui",
     confirm_complete_msg: "Merkit\u00e4\u00e4nk\u00f6 \u201d{0}\u201d valmiiksi?",
@@ -1194,7 +1219,7 @@ const _TRANSLATIONS = {
   },
   hu: {
     voice_failed: "A hangbevitel sikertelen",
-    confirm_delete_section: "Törli ezt a szakaszt? A benne lévő feladatok rendezetlenné válnak.", done_section_header: "Kész", duplicate_task: "Másolat", move_task: "\u00c1thelyez\u00e9s", move_task_msg: "\u201e{0}\u201d \u00e1thelyez\u00e9se ide:", ed_show_move: "\u00c1thelyez\u00e9s gomb", ed_add_section: "+ Szakasz hozzáadása", ed_ai_image_entity: "MI-entitás képgeneráláshoz", ed_ai_image_entity_placeholder: "pl. ai_task.openai", ed_ai_image_section: "MI-képgenerálás", ed_ai_prompt_prefix: "Prompt előtag (opcionális)", ed_ai_prompt_prefix_placeholder: "pl. Minimalista ikon", ed_auto_image: "Kép automatikus generálása", ed_delete_section: "Szakasz törlése", ed_external_lists: "Külső", ed_loading: "Betöltés…", ed_move_down: "Mozgatás le", ed_move_up: "Mozgatás fel", ed_sec_sections: "Szakaszok", ed_section_icon: "Ikon", ed_section_name: "Név", ed_section_name_prompt: "Szakasz neve:", ed_sections_empty: "Még nincsenek szakaszok — a feladatok csoportosítás nélkül jelennek meg.", ed_sections_select_list_hint: "Először válassz egy listát a szakaszok kezeléséhez.", ed_show_filters: "\u00c1llapotsz\u0171r\u0151", ed_show_images: "Képek", ed_show_person_chips: "Szem\u00e9lysz\u0171r\u0151", ed_show_tag_chips: "C\u00edmkesz\u0171r\u0151", ed_show_tile_title: "Cím a csempéken", ed_show_voice: "Hangbevitel", ed_task_search: "Feladatkeresés", ed_tile_help: "Csempenézet:\n• Kattintás = kész\n• Nyomva tartás = szerkesztés\n• Húzás = átrendezés", ed_view_mode: "Nézet mód", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Csempék",
+    confirm_delete_section: "Törli ezt a szakaszt? A benne lévő feladatok rendezetlenné válnak.", done_section_header: "Kész", duplicate_task: "Másolat", move_task: "\u00c1thelyez\u00e9s", move_task_msg: "\u201e{0}\u201d \u00e1thelyez\u00e9se ide:", ed_show_move: "\u00c1thelyez\u00e9s gomb", ed_add_section: "+ Szakasz hozzáadása", ed_ai_image_entity: "MI-entitás képgeneráláshoz", ed_ai_image_entity_placeholder: "pl. ai_task.openai", ed_ai_prompt_prefix: "Prompt előtag (opcionális)", ed_ai_prompt_prefix_placeholder: "pl. Minimalista ikon", ed_auto_image: "Kép automatikus generálása", ed_delete_section: "Szakasz törlése", ed_external_lists: "Külső", ed_loading: "Betöltés…", ed_move_down: "Mozgatás le", ed_move_up: "Mozgatás fel", ed_sec_sections: "Szakaszok", ed_section_icon: "Ikon", ed_section_name: "Név", ed_section_name_prompt: "Szakasz neve:", ed_sections_empty: "Még nincsenek szakaszok — a feladatok csoportosítás nélkül jelennek meg.", ed_sections_select_list_hint: "Először válassz egy listát a szakaszok kezeléséhez.", ed_show_filters: "\u00c1llapotsz\u0171r\u0151", ed_show_images: "Képek", ed_show_person_chips: "Szem\u00e9lysz\u0171r\u0151", ed_show_tag_chips: "C\u00edmkesz\u0171r\u0151", ed_show_tile_title: "Cím a csempéken", ed_show_voice: "Hangbevitel", ed_task_search: "Feladatkeresés", ed_tile_help: "Csempenézet:\n• Kattintás = kész\n• Nyomva tartás = szerkesztés\n• Húzás = átrendezés", ed_view_mode: "Nézet mód", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Csempék",
     voice_input: "Hangbevitel", voice_stop: "Felvétel leállítása", img_label: "Kép", img_generate: "Generálás", img_regenerate: "Újragenerálás", img_generating: "Generálás…", img_from_media: "Médiatárból", img_remove: "Kép eltávolítása", img_generate_failed: "A képgenerálás sikertelen: ", img_save_failed: "A kép mentése sikertelen: ", mb_title: "Médiatár", mb_loading: "Betöltés…", mb_root: "Média", mb_back: "Vissza", mb_empty: "Nincsenek fájlok", mb_error: "Hiba: ",
     my_tasks: "Feladataim",
     add_placeholder: "\u00daj feladat hozz\u00e1ad\u00e1sa...",
@@ -1232,6 +1257,8 @@ const _TRANSLATIONS = {
     ed_queue_empty: "Semmi sem vár képre.",
     ed_queue_pending: "Képre vár: {0}",
     ed_queue_cancel: "Mégse",
+    ed_ai_image_hint: "Az egész kártyára vonatkozik, nem csak erre az oszlopra.",
+    ed_queue_running: "készül…",
     ed_default_assignee: "Alap\u00e9rtelmezett felel\u0151s",
     ed_defaults_hint: "A lista minden \u00faj feladat\u00e1ra \u00e9rv\u00e9nyes, b\u00e1rhogyan is j\u00f6n l\u00e9tre. A m\u00f3dos\u00edt\u00e1sok azonnal ment\u00e9sre ker\u00fclnek.", ed_defaults_saved: "Mentve", ed_defaults_load_failed: "Az alap\u00e9rtelmez\u00e9sek bet\u00f6lt\u00e9se sikertelen", ed_defaults_save_failed: "A ment\u00e9s sikertelen",
     confirm_complete_msg: "Megjel\u00f6l\u00f6d \u201e{0}\u201d-t k\u00e9szk\u00e9nt?",
@@ -1338,6 +1365,8 @@ const _TRANSLATIONS = {
     ed_queue_empty: "Nichts wartet auf ein Bild.",
     ed_queue_pending: "Wartet auf ein Bild: {0}",
     ed_queue_cancel: "Abbrechen",
+    ed_ai_image_hint: "Gilt für die ganze Karte, nicht nur für diese Spalte.",
+    ed_queue_running: "wird erzeugt…",
     ed_default_assignee: "Standard-Zust\u00e4ndige(r)",
     ed_defaults_hint: "Gilt f\u00fcr jede neue Aufgabe dieser Liste \u2014 egal wie sie angelegt wird (Karte, Service, Sprache, Todo). \u00c4nderungen werden sofort gespeichert.", ed_defaults_saved: "Gespeichert", ed_defaults_load_failed: "Defaults konnten nicht geladen werden", ed_defaults_save_failed: "Speichern fehlgeschlagen",
     confirm_complete_msg: "„{0}“ als erledigt markieren?",
@@ -1435,7 +1464,6 @@ const _TRANSLATIONS = {
     ed_preset_assignees: "Auf Personen begrenzen",
     ed_preset_labels: "Auf Tags begrenzen",
     ed_ms_add: "Hinzufügen…",
-    ed_ai_image_section: "KI-Bildgenerierung",
     ed_ai_image_entity: "KI-Entität für Bildgenerierung",
     ed_ai_image_entity_placeholder: "z.B. ai_task.openai",
     ed_ai_prompt_prefix: "Prompt-Präfix (optional)",
@@ -7456,6 +7484,12 @@ class HomeTasksCard extends HTMLElement {
         background: var(--todo-surface, rgba(127,127,127,0.08));
       }
       .queue-title { flex: 1; min-width: 0; font-size: 13px; word-break: break-word; }
+      .queue-row.current { background: var(--todo-primary-faded, rgba(3,169,244,0.12)); }
+      .queue-pos {
+        flex-shrink: 0; min-width: 18px; font-size: 12px;
+        color: var(--todo-secondary-text); font-variant-numeric: tabular-nums;
+      }
+      .queue-state { flex-shrink: 0; font-size: 12px; color: var(--todo-secondary-text); }
       .queue-cancel {
         border: none; background: transparent; cursor: pointer;
         font-size: 18px; line-height: 1; color: var(--todo-secondary-text);
@@ -8315,46 +8349,80 @@ class HomeTasksCardEditor extends HTMLElement {
 
   _buildQueuePanel() {
     const wrap = this._el("div", { className: "queue-panel" });
-    const render = (jobs) => {
+
+    const cancelBtn = (job) => {
+      const btn = this._el("button", { className: "queue-cancel", textContent: "\u00d7" });
+      btn.title = this._t("ed_queue_cancel");
+      btn.addEventListener("click", async () => {
+        btn.disabled = true;
+        try {
+          await this._hass.callWS({
+            type: "home_tasks/cancel_image_queue",
+            jobs: [{
+              ...(job.list_id ? { list_id: job.list_id } : {}),
+              ...(job.entity_id ? { entity_id: job.entity_id } : {}),
+              task_id: job.task_id,
+            }],
+          });
+        } catch (e) { /* the refresh below shows what actually happened */ }
+        load();
+      });
+      return btn;
+    };
+
+    const render = (current, jobs) => {
       wrap.innerHTML = "";
-      if (!jobs.length) {
+      if (!current && !jobs.length) {
         wrap.appendChild(this._el("div", {
           className: "hint", textContent: this._t("ed_queue_empty"),
         }));
         return;
       }
-      wrap.appendChild(this._el("div", {
-        className: "hint", textContent: this._t("ed_queue_pending", String(jobs.length)),
-      }));
-      for (const job of jobs) {
-        const row = this._el("div", { className: "queue-row" });
-        row.appendChild(this._el("span", { className: "queue-title", textContent: job.title || job.task_id }));
-        const btn = this._el("button", { className: "queue-cancel", textContent: "\u00d7" });
-        btn.title = this._t("ed_queue_cancel");
-        btn.addEventListener("click", async () => {
-          btn.disabled = true;
-          try {
-            await this._hass.callWS({
-              type: "home_tasks/cancel_image_queue",
-              jobs: [{
-                ...(job.list_id ? { list_id: job.list_id } : {}),
-                ...(job.entity_id ? { entity_id: job.entity_id } : {}),
-                task_id: job.task_id,
-              }],
-            });
-          } catch (e) { /* the refresh below shows what actually happened */ }
-          load();
-        });
-        row.appendChild(btn);
+      if (current) {
+        // The one being generated right now cannot be cancelled - the
+        // provider call is already out.
+        const row = this._el("div", { className: "queue-row current" }, [
+          this._el("span", { className: "queue-pos", textContent: "\u25b6" }),
+          this._el("span", { className: "queue-title", textContent: current.title || current.task_id }),
+          this._el("span", { className: "queue-state", textContent: this._t("ed_queue_running") }),
+        ]);
         wrap.appendChild(row);
       }
+      if (jobs.length) {
+        wrap.appendChild(this._el("div", {
+          className: "hint", textContent: this._t("ed_queue_pending", String(jobs.length)),
+        }));
+      }
+      jobs.forEach((job, i) => {
+        const row = this._el("div", { className: "queue-row" }, [
+          // Numbered so the order is not a guess: 1 is generated next.
+          this._el("span", { className: "queue-pos", textContent: `${i + 1}.` }),
+          this._el("span", { className: "queue-title", textContent: job.title || job.task_id }),
+        ]);
+        row.appendChild(cancelBtn(job));
+        wrap.appendChild(row);
+      });
     };
+
+    // Generation takes seconds, so the panel follows along — but only while
+    // there is something to follow. Once the queue is empty it stops polling
+    // instead of ticking forever behind a closed editor (an interval would
+    // also outlive the panel, and in tests the process with it).
+    let timer = null;
+    const stop = () => { if (timer) { clearTimeout(timer); timer = null; } };
     const load = async () => {
+      stop();
+      if (!wrap.isConnected && timer !== null) return;
+      let current = null;
+      let jobs = [];
       try {
         const r = await this._hass.callWS({ type: "home_tasks/get_image_queue" });
-        render((r && r.queue) || []);
-      } catch (e) {
-        render([]);
+        current = (r && r.current) || null;
+        jobs = (r && r.queue) || [];
+      } catch (e) { /* render the empty state below */ }
+      render(current, jobs);
+      if ((current || jobs.length) && wrap.isConnected) {
+        timer = setTimeout(load, 3000);
       }
     };
     load();
@@ -8923,12 +8991,16 @@ class HomeTasksCardEditor extends HTMLElement {
       ? this._buildCodeEditor(activeTab)
       : this._buildVisualEditor(activeTab);
 
-    const imgGenSection = this._buildImgGenSection();
-    const editor = this._el("div", { className: "editor" }, [cardTitleRow, tabsRow, controls, tabContent, imgGenSection]);
+    // The AI settings used to sit in their own section at the bottom, which
+    // is not where anyone looks for them — everything about images is in the
+    // column's "Images" section now.
+    const editor = this._el("div", { className: "editor" }, [cardTitleRow, tabsRow, controls, tabContent]);
     root.appendChild(editor);
   }
 
-  _buildImgGenSection() {
+  // The card-level ai_task entity and prompt prefix, rendered inside the
+  // column's Images section. Card-level, but shown where images are.
+  _buildImgGenForm() {
     const imgGen = this._config.image_generation || {};
 
     const form = document.createElement("ha-form");
@@ -8957,25 +9029,7 @@ class HomeTasksCardEditor extends HTMLElement {
       this._fireChanged();
     });
 
-    const det = document.createElement("details");
-    det.style.marginTop = "8px"; // match the .visual-editor inter-section gap
-    if (this._sectionOpen?.imggen) det.open = true;
-    det.addEventListener("toggle", () => {
-      this._sectionOpen = { ...(this._sectionOpen || {}), imggen: det.open };
-    });
-    const sum = document.createElement("summary");
-    const ico = document.createElement("ha-icon");
-    ico.setAttribute("icon", "mdi:image-plus");
-    ico.style.cssText = "--mdc-icon-size:20px;width:20px;height:20px;flex-shrink:0;";
-    const lbl = this._el("span", { textContent: this._t("ed_ai_image_section"), style: "flex:1" });
-    const chev = document.createElement("ha-icon");
-    chev.setAttribute("icon", "mdi:chevron-down");
-    chev.className = "sum-chevron";
-    chev.style.cssText = "--mdc-icon-size:20px;width:20px;height:20px;";
-    sum.append(ico, lbl, chev);
-    det.appendChild(sum);
-    det.appendChild(this._el("div", { className: "section-content" }, [form]));
-    return det;
+    return form;
   }
 
   _buildCodeEditor(tabIdx) {
@@ -9314,12 +9368,6 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("badge-person", "ed_badge_person", "badge_person", true),
           makeToggle("badge-tags", "ed_badge_tags", "badge_tags", true),
           makeToggle("badge-reminders", "ed_badge_reminders", "badge_reminders", true),
-          makeToggle("show-images", "ed_show_images", "show_images", false),
-          // Also tells the integration to generate for this list when no
-          // dashboard is open - one switch, both behaviours.
-          makeToggle("auto-image", "ed_auto_image", "auto_generate_image", false, (on) => {
-            this._syncAutoGenerate(col, on);
-          }),
           ...(col.view_mode === "tiles"
             ? [makeToggle("show-tile-title", "ed_show_tile_title", "show_tile_title", true)]
             : []),
@@ -9358,11 +9406,23 @@ class HomeTasksCardEditor extends HTMLElement {
       ...(col.list_id ? [makeSection("defaults", "mdi:account-check-outline", "ed_sec_defaults", [
         this._buildDefaultsEditor(col.list_id),
       ], false)] : []),
-      ...(col.list_id || col.entity_id ? [makeSection("images", "mdi:image-multiple", "ed_sec_images", [
-        this._buildListSettingToggle(col, "share_images", "ed_share_images", true),
-        this._el("div", { className: "hint", textContent: this._t("ed_share_images_hint") }),
-        this._buildQueuePanel(),
-      ], false)] : []),
+      makeSection("images", "mdi:image-multiple", "ed_sec_images", [
+        this._el("div", { className: "toggle-grid" }, [
+          makeToggle("show-images", "ed_show_images", "show_images", false),
+          // Also tells the integration to generate for this list when no
+          // dashboard is open - one switch, both behaviours.
+          makeToggle("auto-image", "ed_auto_image", "auto_generate_image", false, (on) => {
+            this._syncAutoGenerate(col, on);
+          }),
+        ]),
+        this._buildImgGenForm(),
+        this._el("div", { className: "hint", textContent: this._t("ed_ai_image_hint") }),
+        ...(col.list_id || col.entity_id ? [
+          this._buildListSettingToggle(col, "share_images", "ed_share_images", true),
+          this._el("div", { className: "hint", textContent: this._t("ed_share_images_hint") }),
+          this._buildQueuePanel(),
+        ] : []),
+      ], false),
       makeSection("filters", "mdi:filter-variant", "ed_sec_filters", [
         filterField,
         dueSoonToggle,

@@ -197,9 +197,10 @@ async def ws_get_image_queue(hass, connection, msg):
     """What the background image queue still has to do."""
     queue = async_get_image_queue(hass)
     if queue is None:
-        connection.send_result(msg["id"], {"queue": [], "failed": 0})
+        connection.send_result(msg["id"], {"current": None, "queue": [], "failed": 0})
         return
     connection.send_result(msg["id"], {
+        "current": queue.current,
         "queue": queue.queue,
         "failed": len(queue.failed),
     })
