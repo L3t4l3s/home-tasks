@@ -69,6 +69,7 @@ const _TRANSLATIONS = {
     ed_queue_cancel: "Cancel",
     ed_ai_image_hint: "Applies to the whole card, not just this column.",
     ed_queue_running: "generating…",
+    ed_queue_title: "Generation queue",
     ed_default_assignee: "Default assignee",
     ed_defaults_hint: "Applied to every new task in this list \u2014 no matter how it is created (card, service, voice, todo). Changes are saved immediately.", ed_defaults_saved: "Saved", ed_defaults_load_failed: "Could not load defaults", ed_defaults_save_failed: "Save failed",
     confirm_complete_msg: "Mark \"{0}\" as completed?",
@@ -215,6 +216,7 @@ const _TRANSLATIONS = {
     ed_queue_cancel: "Annuleren",
     ed_ai_image_hint: "Geldt voor de hele kaart, niet alleen voor deze kolom.",
     ed_queue_running: "wordt gemaakt…",
+    ed_queue_title: "Wachtrij",
     ed_default_assignee: "Standaard toegewezene",
     ed_defaults_hint: "Geldt voor elke nieuwe taak in deze lijst \u2014 ongeacht hoe die wordt aangemaakt. Wijzigingen worden direct opgeslagen.", ed_defaults_saved: "Opgeslagen", ed_defaults_load_failed: "Standaardwaarden konden niet worden geladen", ed_defaults_save_failed: "Opslaan mislukt",
     confirm_complete_msg: "\u201e{0}\u201d als afgerond markeren?",
@@ -302,6 +304,7 @@ const _TRANSLATIONS = {
     ed_queue_cancel: "Annulla",
     ed_ai_image_hint: "Vale per l'intera scheda, non solo per questa colonna.",
     ed_queue_running: "in creazione…",
+    ed_queue_title: "Coda di generazione",
     ed_default_assignee: "Assegnatario predefinito",
     ed_defaults_hint: "Si applica a ogni nuova attivit\u00e0 di questo elenco, comunque venga creata. Le modifiche vengono salvate immediatamente.", ed_defaults_saved: "Salvato", ed_defaults_load_failed: "Impossibile caricare i valori predefiniti", ed_defaults_save_failed: "Salvataggio non riuscito",
     confirm_complete_msg: "Segnare \u201c{0}\u201d come completata?",
@@ -389,6 +392,7 @@ const _TRANSLATIONS = {
     ed_queue_cancel: "Anuluj",
     ed_ai_image_hint: "Dotyczy całej karty, nie tylko tej kolumny.",
     ed_queue_running: "generowanie…",
+    ed_queue_title: "Kolejka generowania",
     ed_default_assignee: "Domy\u015blny przypisany",
     ed_defaults_hint: "Dotyczy ka\u017cdego nowego zadania na tej li\u015bcie \u2014 niezale\u017cnie od sposobu utworzenia. Zmiany s\u0105 zapisywane natychmiast.", ed_defaults_saved: "Zapisano", ed_defaults_load_failed: "Nie uda\u0142o si\u0119 wczyta\u0107 ustawie\u0144 domy\u015blnych", ed_defaults_save_failed: "Zapis nie powi\u00f3d\u0142 si\u0119",
     confirm_complete_msg: "Oznaczy\u0107 \u201e{0}\u201d jako uko\u0144czone?",
@@ -476,6 +480,7 @@ const _TRANSLATIONS = {
     ed_queue_cancel: "Avbryt",
     ed_ai_image_hint: "Gäller hela kortet, inte bara den här kolumnen.",
     ed_queue_running: "skapas…",
+    ed_queue_title: "Genereringskö",
     ed_default_assignee: "Standardtilldelad",
     ed_defaults_hint: "G\u00e4ller varje ny uppgift i listan \u2014 oavsett hur den skapas. \u00c4ndringar sparas direkt.", ed_defaults_saved: "Sparat", ed_defaults_load_failed: "Det gick inte att l\u00e4sa in standardv\u00e4rdena", ed_defaults_save_failed: "Det gick inte att spara",
     confirm_complete_msg: "Markera \u201d{0}\u201d som slutf\u00f6rd?",
@@ -563,6 +568,7 @@ const _TRANSLATIONS = {
     ed_queue_cancel: "Annuler",
     ed_ai_image_hint: "S'applique à toute la carte, pas seulement à cette colonne.",
     ed_queue_running: "en cours…",
+    ed_queue_title: "File de génération",
     ed_default_assignee: "Assign\u00e9 par d\u00e9faut",
     ed_defaults_hint: "S'applique \u00e0 chaque nouvelle t\u00e2che de cette liste, quelle que soit sa cr\u00e9ation. Les modifications sont enregistr\u00e9es imm\u00e9diatement.", ed_defaults_saved: "Enregistr\u00e9", ed_defaults_load_failed: "Impossible de charger les valeurs par d\u00e9faut", ed_defaults_save_failed: "\u00c9chec de l'enregistrement",
     confirm_complete_msg: "Marquer \u00ab\u202f{0}\u202f\u00bb comme termin\u00e9e\u202f?",
@@ -650,6 +656,7 @@ const _TRANSLATIONS = {
     ed_queue_cancel: "Cancelar",
     ed_ai_image_hint: "Aplica-se a todo o cartão, não apenas a esta coluna.",
     ed_queue_running: "a gerar…",
+    ed_queue_title: "Fila de geração",
     ed_default_assignee: "Respons\u00e1vel padr\u00e3o",
     ed_defaults_hint: "Aplica-se a cada nova tarefa desta lista, seja como for criada. As altera\u00e7\u00f5es s\u00e3o guardadas imediatamente.", ed_defaults_saved: "Guardado", ed_defaults_load_failed: "N\u00e3o foi poss\u00edvel carregar as predefini\u00e7\u00f5es", ed_defaults_save_failed: "Falha ao guardar",
     confirm_complete_msg: "Marcar \u201c{0}\u201d como conclu\u00edda?",
@@ -737,6 +744,7 @@ const _TRANSLATIONS = {
     ed_queue_cancel: "Cancelar",
     ed_ai_image_hint: "Se aplica a toda la tarjeta, no solo a esta columna.",
     ed_queue_running: "generando…",
+    ed_queue_title: "Cola de generación",
     ed_default_assignee: "Asignado por defecto",
     ed_defaults_hint: "Se aplica a cada nueva tarea de esta lista, sin importar c\u00f3mo se cree. Los cambios se guardan inmediatamente.", ed_defaults_saved: "Guardado", ed_defaults_load_failed: "No se pudieron cargar los valores predeterminados", ed_defaults_save_failed: "Error al guardar",
     confirm_complete_msg: "\u00bfMarcar \u00ab{0}\u00bb como completada?",
@@ -824,6 +832,7 @@ const _TRANSLATIONS = {
     ed_queue_cancel: "Отмена",
     ed_ai_image_hint: "Действует для всей карточки, а не только для этого столбца.",
     ed_queue_running: "создаётся…",
+    ed_queue_title: "Очередь генерации",
     ed_default_assignee: "\u041e\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0435\u043d\u043d\u044b\u0439 \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e",
     ed_defaults_hint: "\u041f\u0440\u0438\u043c\u0435\u043d\u044f\u0435\u0442\u0441\u044f \u043a \u043a\u0430\u0436\u0434\u043e\u0439 \u043d\u043e\u0432\u043e\u0439 \u0437\u0430\u0434\u0430\u0447\u0435 \u044d\u0442\u043e\u0433\u043e \u0441\u043f\u0438\u0441\u043a\u0430. \u0418\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f \u0441\u043e\u0445\u0440\u0430\u043d\u044f\u044e\u0442\u0441\u044f \u0441\u0440\u0430\u0437\u0443.", ed_defaults_saved: "\u0421\u043e\u0445\u0440\u0430\u043d\u0435\u043d\u043e", ed_defaults_load_failed: "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u0437\u043d\u0430\u0447\u0435\u043d\u0438\u044f \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e", ed_defaults_save_failed: "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0441\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c",
     confirm_complete_msg: "\u041e\u0442\u043c\u0435\u0442\u0438\u0442\u044c \u00ab{0}\u00bb \u043a\u0430\u043a \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043d\u0443\u044e?",
@@ -911,6 +920,7 @@ const _TRANSLATIONS = {
     ed_queue_cancel: "Zrušit",
     ed_ai_image_hint: "Platí pro celou kartu, nejen pro tento sloupec.",
     ed_queue_running: "generuje se…",
+    ed_queue_title: "Fronta generování",
     ed_default_assignee: "V\u00fdchoz\u00ed p\u0159i\u0159azen\u00ed",
     ed_defaults_hint: "Plat\u00ed pro ka\u017ed\u00fd nov\u00fd \u00fakol v tomto seznamu. Zm\u011bny se ukl\u00e1daj\u00ed okam\u017eit\u011b.", ed_defaults_saved: "Ulo\u017eeno", ed_defaults_load_failed: "V\u00fdchoz\u00ed hodnoty se nepoda\u0159ilo na\u010d\u00edst", ed_defaults_save_failed: "Ulo\u017een\u00ed se nezda\u0159ilo",
     confirm_complete_msg: "Ozna\u010dit \u201e{0}\u201c jako dokon\u010den\u00e9?",
@@ -998,6 +1008,7 @@ const _TRANSLATIONS = {
     ed_queue_cancel: "Annullér",
     ed_ai_image_hint: "Gælder hele kortet, ikke kun denne kolonne.",
     ed_queue_running: "genereres…",
+    ed_queue_title: "Genereringskø",
     ed_default_assignee: "Standardtildelt",
     ed_defaults_hint: "G\u00e6lder for hver ny opgave p\u00e5 listen \u2014 uanset hvordan den oprettes. \u00c6ndringer gemmes med det samme.", ed_defaults_saved: "Gemt", ed_defaults_load_failed: "Standardv\u00e6rdierne kunne ikke indl\u00e6ses", ed_defaults_save_failed: "Kunne ikke gemme",
     confirm_complete_msg: "Mark\u00e9r \u201d{0}\u201d som fuldf\u00f8rt?",
@@ -1085,6 +1096,7 @@ const _TRANSLATIONS = {
     ed_queue_cancel: "Avbryt",
     ed_ai_image_hint: "Gjelder hele kortet, ikke bare denne kolonnen.",
     ed_queue_running: "genereres…",
+    ed_queue_title: "Genereringskø",
     ed_default_assignee: "Standardtildelt",
     ed_defaults_hint: "Gjelder hver ny oppgave i listen \u2014 uansett hvordan den opprettes. Endringer lagres umiddelbart.", ed_defaults_saved: "Lagret", ed_defaults_load_failed: "Kunne ikke laste standardverdiene", ed_defaults_save_failed: "Kunne ikke lagre",
     confirm_complete_msg: "Merke \u00ab{0}\u00bb som fullf\u00f8rt?",
@@ -1172,6 +1184,7 @@ const _TRANSLATIONS = {
     ed_queue_cancel: "Peruuta",
     ed_ai_image_hint: "Koskee koko korttia, ei vain tätä saraketta.",
     ed_queue_running: "luodaan…",
+    ed_queue_title: "Luontijono",
     ed_default_assignee: "Oletusvastuuhenkil\u00f6",
     ed_defaults_hint: "Koskee jokaista listan uutta teht\u00e4v\u00e4\u00e4 luontitavasta riippumatta. Muutokset tallennetaan heti.", ed_defaults_saved: "Tallennettu", ed_defaults_load_failed: "Oletuksia ei voitu ladata", ed_defaults_save_failed: "Tallennus ep\u00e4onnistui",
     confirm_complete_msg: "Merkit\u00e4\u00e4nk\u00f6 \u201d{0}\u201d valmiiksi?",
@@ -1259,6 +1272,7 @@ const _TRANSLATIONS = {
     ed_queue_cancel: "Mégse",
     ed_ai_image_hint: "Az egész kártyára vonatkozik, nem csak erre az oszlopra.",
     ed_queue_running: "készül…",
+    ed_queue_title: "Generálási sor",
     ed_default_assignee: "Alap\u00e9rtelmezett felel\u0151s",
     ed_defaults_hint: "A lista minden \u00faj feladat\u00e1ra \u00e9rv\u00e9nyes, b\u00e1rhogyan is j\u00f6n l\u00e9tre. A m\u00f3dos\u00edt\u00e1sok azonnal ment\u00e9sre ker\u00fclnek.", ed_defaults_saved: "Mentve", ed_defaults_load_failed: "Az alap\u00e9rtelmez\u00e9sek bet\u00f6lt\u00e9se sikertelen", ed_defaults_save_failed: "A ment\u00e9s sikertelen",
     confirm_complete_msg: "Megjel\u00f6l\u00f6d \u201e{0}\u201d-t k\u00e9szk\u00e9nt?",
@@ -1367,6 +1381,7 @@ const _TRANSLATIONS = {
     ed_queue_cancel: "Abbrechen",
     ed_ai_image_hint: "Gilt für die ganze Karte, nicht nur für diese Spalte.",
     ed_queue_running: "wird erzeugt…",
+    ed_queue_title: "Warteschlange",
     ed_default_assignee: "Standard-Zust\u00e4ndige(r)",
     ed_defaults_hint: "Gilt f\u00fcr jede neue Aufgabe dieser Liste \u2014 egal wie sie angelegt wird (Karte, Service, Sprache, Todo). \u00c4nderungen werden sofort gespeichert.", ed_defaults_saved: "Gespeichert", ed_defaults_load_failed: "Defaults konnten nicht geladen werden", ed_defaults_save_failed: "Speichern fehlgeschlagen",
     confirm_complete_msg: "„{0}“ als erledigt markieren?",
@@ -7477,25 +7492,6 @@ class HomeTasksCard extends HTMLElement {
         padding: 1px 2px 1px 1px; scrollbar-gutter: stable;
       }
       :host(.fit-rows) .task-list, :host(.fit-rows) .tile-grid-wrap { flex: 1 1 auto; min-height: 40px; }
-      .queue-panel { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
-      .queue-row {
-        display: flex; align-items: center; gap: 8px;
-        padding: 4px 8px; border-radius: 6px;
-        background: var(--todo-surface, rgba(127,127,127,0.08));
-      }
-      .queue-title { flex: 1; min-width: 0; font-size: 13px; word-break: break-word; }
-      .queue-row.current { background: var(--todo-primary-faded, rgba(3,169,244,0.12)); }
-      .queue-pos {
-        flex-shrink: 0; min-width: 18px; font-size: 12px;
-        color: var(--todo-secondary-text); font-variant-numeric: tabular-nums;
-      }
-      .queue-state { flex-shrink: 0; font-size: 12px; color: var(--todo-secondary-text); }
-      .queue-cancel {
-        border: none; background: transparent; cursor: pointer;
-        font-size: 18px; line-height: 1; color: var(--todo-secondary-text);
-      }
-      .queue-cancel:hover { color: var(--error-color, #db4437); }
-      .queue-cancel:disabled { opacity: 0.4; cursor: default; }
       .empty-state { text-align: center; padding: 24px; color: var(--todo-disabled); font-size: 14px; }
       .section-header {
         display: flex; align-items: center; gap: 6px;
@@ -8285,6 +8281,22 @@ class HomeTasksCardEditor extends HTMLElement {
   // "Defaults" section (issues #44 / #46): list-level default assignee and
   // reminders, stored in the list itself so they apply to every creation
   // path (card, service, WS, voice, todo). Loaded/saved via WS.
+  _loadSectionState() {
+    try {
+      const raw = localStorage.getItem("ht-editor-sections");
+      const parsed = raw ? JSON.parse(raw) : null;
+      return parsed && typeof parsed === "object" ? parsed : {};
+    } catch (e) {
+      return {};  // private mode, blocked storage - just start folded
+    }
+  }
+
+  _saveSectionState() {
+    try {
+      localStorage.setItem("ht-editor-sections", JSON.stringify(this._sectionOpen));
+    } catch (e) { /* not worth bothering the user about */ }
+  }
+
   _buildDefaultsEditor(listId) {
     const container = this._el("div", { className: "defaults-editor" });
     const cached = this._listDefaults[listId];
@@ -8573,7 +8585,12 @@ class HomeTasksCardEditor extends HTMLElement {
     this._listsLoaded = false;
     this._editorTab = 0;
     this._editorCodeMode = {};  // { tabIdx: bool }
-    this._sectionOpen = {};     // { translationKey: bool } — persists across re-renders
+    // { sectionId: bool } — which editor sections are unfolded. Kept in
+    // localStorage because the editor is thrown away every time the dialog
+    // closes, and re-opening it to find everything folded shut again (or
+    // everything open again) is equally annoying. Nothing is open until the
+    // user opens it.
+    this._sectionOpen = this._loadSectionState();
     this._ignoreNextSetConfig = false; // skip the echo setConfig() call after _fireChanged
     this._listSections = {};    // { sourceKey: [{id,name,icon,sort_order}] } — server-loaded sections
     this._listMeta = {};        // { sourceKey: {tags:[], persons:[]} } — derived from the list's tasks
@@ -8822,6 +8839,25 @@ class HomeTasksCardEditor extends HTMLElement {
       .hint { font-size: 12px; color: var(--secondary-text-color); font-style: italic; margin-top: 2px; }
       .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; min-height: 40px; }
       .toggle-label { font-size: 14px; color: var(--primary-text-color); }
+      .queue-panel { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+      .queue-row {
+        display: flex; align-items: center; gap: 8px;
+        padding: 4px 8px; border-radius: 6px;
+        background: var(--secondary-background-color, rgba(127,127,127,0.08));
+      }
+      .queue-row.current { background: var(--primary-color, #03a9f4); background: color-mix(in srgb, var(--primary-color, #03a9f4) 14%, transparent); }
+      .queue-pos {
+        flex-shrink: 0; min-width: 18px; font-size: 12px;
+        color: var(--secondary-text-color); font-variant-numeric: tabular-nums;
+      }
+      .queue-title { flex: 1; min-width: 0; font-size: 13px; word-break: break-word; color: var(--primary-text-color); }
+      .queue-state { flex-shrink: 0; font-size: 12px; font-style: italic; color: var(--secondary-text-color); }
+      .queue-cancel {
+        border: none; background: transparent; cursor: pointer;
+        font-size: 18px; line-height: 1; color: var(--secondary-text-color);
+      }
+      .queue-cancel:hover { color: var(--error-color, #db4437); }
+      .queue-cancel:disabled { opacity: 0.4; cursor: default; }
       .field-wrap { position: relative; width: 100%; }
       .field-wrap input { width: 100%; box-sizing: border-box; padding: 20px 12px 6px; height: 48px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; background: var(--mdc-text-field-fill-color, var(--input-fill-color, transparent)); color: var(--primary-text-color); font-size: 0.875rem; font-family: inherit; outline: none; }
       .field-wrap input:focus { border: 2px solid var(--primary-color); padding: 19px 11px 5px; }
@@ -9204,9 +9240,9 @@ class HomeTasksCardEditor extends HTMLElement {
 
     const hint = this._el("span", { className: "hint", textContent: this._t("ed_hint") });
 
-    const makeSection = (sectionId, icon, titleKey, nodes, defaultOpen = true) => {
+    const makeSection = (sectionId, icon, titleKey, nodes) => {
       const det = document.createElement("details");
-      const isOpen = sectionId in this._sectionOpen ? this._sectionOpen[sectionId] : defaultOpen;
+      const isOpen = this._sectionOpen[sectionId] === true;
       if (isOpen) det.open = true;
       const sum = document.createElement("summary");
       const ico = document.createElement("ha-icon");
@@ -9237,6 +9273,7 @@ class HomeTasksCardEditor extends HTMLElement {
         if (det.open) {
           // Mark closed immediately so any mid-animation re-render preserves state
           this._sectionOpen[sectionId] = false;
+          this._saveSectionState();
           const h = wrap.offsetHeight;
           if (!h) { det.open = false; return; }
           wrap.style.cssText = `overflow:hidden;max-height:${h}px;`;
@@ -9253,6 +9290,7 @@ class HomeTasksCardEditor extends HTMLElement {
         } else {
           // Mark open immediately so any mid-animation re-render preserves state
           this._sectionOpen[sectionId] = true;
+          this._saveSectionState();
           det.open = true;
           wrap.style.cssText = "overflow:hidden;max-height:0;";
           requestAnimationFrame(() => {
@@ -9405,7 +9443,7 @@ class HomeTasksCardEditor extends HTMLElement {
       ]),
       ...(col.list_id ? [makeSection("defaults", "mdi:account-check-outline", "ed_sec_defaults", [
         this._buildDefaultsEditor(col.list_id),
-      ], false)] : []),
+      ])] : []),
       makeSection("images", "mdi:image-multiple", "ed_sec_images", [
         this._el("div", { className: "toggle-grid" }, [
           makeToggle("show-images", "ed_show_images", "show_images", false),
@@ -9420,9 +9458,15 @@ class HomeTasksCardEditor extends HTMLElement {
         ...(col.list_id || col.entity_id ? [
           this._buildListSettingToggle(col, "share_images", "ed_share_images", true),
           this._el("div", { className: "hint", textContent: this._t("ed_share_images_hint") }),
-          this._buildQueuePanel(),
+          // Only worth showing once the list actually asks for background
+          // generation - otherwise "nothing waiting" is a sentence without a
+          // subject.
+          ...(col.auto_generate_image === true ? [
+            this._el("label", { textContent: this._t("ed_queue_title") }),
+            this._buildQueuePanel(),
+          ] : []),
         ] : []),
-      ], false),
+      ]),
       makeSection("filters", "mdi:filter-variant", "ed_sec_filters", [
         filterField,
         dueSoonToggle,
@@ -9453,7 +9497,7 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-history", "ed_show_history", "show_history", false),
           makeToggle("show-move", "ed_show_move", "show_move", true),
         ]),
-      ], false),
+      ]),
       this._buildSectionsEditor(col),
     ]);
   }
@@ -9569,6 +9613,7 @@ class HomeTasksCardEditor extends HTMLElement {
     sum.appendChild(chevWrap);
     sum.addEventListener("click", () => {
       this._sectionOpen.sections = !det.open;
+      this._saveSectionState();
     });
     det.appendChild(sum);
 

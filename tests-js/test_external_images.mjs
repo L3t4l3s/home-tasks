@@ -19,7 +19,7 @@ async function externalCard(callWS) {
 }
 
 describe('editor image section', () => {
-  async function editor(queueResult) {
+  async function editor(queueResult, colExtra = {}) {
     const { window } = await loadCard({ force: true });
     const Editor = window.customElements.get('home-tasks-card-editor');
     const ed = new Editor();
@@ -35,7 +35,7 @@ describe('editor image section', () => {
     });
     ed.setConfig({
       image_generation: { entity_id: 'ai_task.openai' },
-      columns: [{ list_id: 'L1', show_images: true, auto_generate_image: true }],
+      columns: [{ list_id: 'L1', show_images: true, auto_generate_image: true, ...colExtra }],
     });
     window.document.body.appendChild(ed);
     await new Promise((r) => setTimeout(r, 150));
@@ -60,6 +60,29 @@ describe('editor image section', () => {
       const toggles = [...sec.querySelectorAll('.toggle-label')].map(e => e.textContent.trim());
       assert.deepEqual(toggles, ['Images', 'Auto-generate image', 'Share images with other lists']);
       assert.ok(sec.querySelector('ha-form'), 'the ai_task entity is configured here');
+    } finally {
+      ed.remove();
+    }
+  });
+
+  test('hides the queue until the list asks for background generation', async () => {
+    const ed = await editor({ current: null, queue: [] }, { auto_generate_image: false });
+    try {
+      const sec = imageSection(ed);
+      assert.equal(sec.querySelector('.queue-panel'), null);
+      const hints = [...sec.querySelectorAll('.hint')].map(h => h.textContent);
+      assert.ok(!hints.some(h => /Nothing waiting/.test(h)),
+        'no sentence about a queue nobody asked for');
+    } finally {
+      ed.remove();
+    }
+  });
+
+  test('starts with every section folded', async () => {
+    const ed = await editor({ current: null, queue: [] });
+    try {
+      const open = [...ed.shadowRoot.querySelectorAll('details')].filter(d => d.open);
+      assert.deepEqual(open, [], 'the editor remembers what you opened, nothing more');
     } finally {
       ed.remove();
     }
