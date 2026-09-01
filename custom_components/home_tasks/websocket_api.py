@@ -998,6 +998,10 @@ def _merge_tasks_with_overlays(
             "tags": overlay.get("tags", []),
             "history": overlay.get("history", []),
             "image_url": overlay.get("image_url"),
+            # Sections live in the overlay for external lists; without
+            # this the card reloads after a drop and puts the task
+            # straight back into the unsorted bucket (issue #60).
+            "section_id": overlay.get("section_id"),
             # Mark as external so the card knows how to route CRUD
             "_external": True,
         }
@@ -1082,6 +1086,8 @@ def _merge_tasks_with_adapter_data(
             "completed_at": overlay.get("completed_at"),
             "history": overlay.get("history", []),
             "image_url": overlay.get("image_url"),
+            # Sections are ours, never the provider's (issue #60).
+            "section_id": overlay.get("section_id"),
             # Todoist recurrence string for read-only display
             "_todoist_recurrence_string": item.get("_todoist_recurrence_string"),
             # Mark as external
