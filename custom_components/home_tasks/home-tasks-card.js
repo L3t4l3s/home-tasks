@@ -13,6 +13,7 @@ const _TRANSLATIONS = {
     voice_input: "Voice input", voice_stop: "Stop recording", img_label: "Image", img_generate: "Generate", img_regenerate: "Regenerate", img_generating: "Generating…", img_from_media: "From media library", img_remove: "Remove image", img_generate_failed: "Image generation failed: ", img_save_failed: "Saving image failed: ", mb_title: "Media library", mb_loading: "Loading…", mb_root: "Media", mb_back: "Back", mb_empty: "No files", mb_error: "Error: ",
     my_tasks: "My Tasks",
     add_placeholder: "Add new task...",
+    add_failed: "Could not add task",
     dialog_cancel: "Cancel", dialog_add: "Add",
     filter_all: "All",
     filter_open: "Open",
@@ -180,6 +181,7 @@ const _TRANSLATIONS = {
     voice_input: "Spraakinvoer", voice_stop: "Opname stoppen", img_label: "Afbeelding", img_generate: "Genereren", img_regenerate: "Opnieuw genereren", img_generating: "Genereren…", img_from_media: "Uit mediabibliotheek", img_remove: "Afbeelding verwijderen", img_generate_failed: "Genereren van afbeelding mislukt: ", img_save_failed: "Afbeelding opslaan mislukt: ", mb_title: "Mediabibliotheek", mb_loading: "Laden…", mb_root: "Media", mb_back: "Terug", mb_empty: "Geen bestanden", mb_error: "Fout: ",
     my_tasks: "Mijn taken",
     add_placeholder: "Nieuwe taak toevoegen...",
+    add_failed: "Taak kon niet worden toegevoegd",
     dialog_cancel: "Annuleren", dialog_add: "Toevoegen",
     filter_all: "Alle", filter_open: "Open", filter_done: "Klaar", filter_due_soon: "Binnenkort",
     ed_show_due_soon_filter: "Binnenkort-filter", ed_due_soon_days: "Dagen vooruit", ed_hide_overdue: "Verlopen verbergen",
@@ -268,6 +270,7 @@ const _TRANSLATIONS = {
     voice_input: "Input vocale", voice_stop: "Interrompi registrazione", img_label: "Immagine", img_generate: "Genera", img_regenerate: "Rigenera", img_generating: "Generazione…", img_from_media: "Dalla libreria multimediale", img_remove: "Rimuovi immagine", img_generate_failed: "Generazione immagine non riuscita: ", img_save_failed: "Salvataggio immagine non riuscito: ", mb_title: "Libreria multimediale", mb_loading: "Caricamento…", mb_root: "Media", mb_back: "Indietro", mb_empty: "Nessun file", mb_error: "Errore: ",
     my_tasks: "Le mie attivit\u00e0",
     add_placeholder: "Aggiungi nuova attivit\u00e0...",
+    add_failed: "Impossibile aggiungere l'attività",
     dialog_cancel: "Annulla", dialog_add: "Aggiungi",
     filter_all: "Tutte", filter_open: "Aperte", filter_done: "Completate", filter_due_soon: "In scadenza",
     ed_show_due_soon_filter: "Filtro in scadenza", ed_due_soon_days: "Giorni avanti", ed_hide_overdue: "Nascondi scadute",
@@ -356,6 +359,7 @@ const _TRANSLATIONS = {
     voice_input: "Wprowadzanie głosowe", voice_stop: "Zatrzymaj nagrywanie", img_label: "Obraz", img_generate: "Generuj", img_regenerate: "Generuj ponownie", img_generating: "Generowanie…", img_from_media: "Z biblioteki multimediów", img_remove: "Usuń obraz", img_generate_failed: "Generowanie obrazu nie powiodło się: ", img_save_failed: "Zapisywanie obrazu nie powiodło się: ", mb_title: "Biblioteka multimediów", mb_loading: "Ładowanie…", mb_root: "Multimedia", mb_back: "Wstecz", mb_empty: "Brak plików", mb_error: "Błąd: ",
     my_tasks: "Moje zadania",
     add_placeholder: "Dodaj nowe zadanie...",
+    add_failed: "Nie udało się dodać zadania",
     dialog_cancel: "Anuluj", dialog_add: "Dodaj",
     filter_all: "Wszystkie", filter_open: "Otwarte", filter_done: "Uko\u0144czone", filter_due_soon: "Wkr\u00f3tce",
     ed_show_due_soon_filter: "Filtr wkr\u00f3tce", ed_due_soon_days: "Dni naprz\u00f3d", ed_hide_overdue: "Ukryj zaleg\u0142e",
@@ -444,6 +448,7 @@ const _TRANSLATIONS = {
     voice_input: "Röstinmatning", voice_stop: "Stoppa inspelning", img_label: "Bild", img_generate: "Generera", img_regenerate: "Generera igen", img_generating: "Genererar…", img_from_media: "Från mediabibliotek", img_remove: "Ta bort bild", img_generate_failed: "Bildgenerering misslyckades: ", img_save_failed: "Det gick inte att spara bilden: ", mb_title: "Mediabibliotek", mb_loading: "Läser in…", mb_root: "Media", mb_back: "Tillbaka", mb_empty: "Inga filer", mb_error: "Fel: ",
     my_tasks: "Mina uppgifter",
     add_placeholder: "L\u00e4gg till ny uppgift...",
+    add_failed: "Kunde inte lägga till uppgiften",
     dialog_cancel: "Avbryt", dialog_add: "L\u00e4gg till",
     filter_all: "Alla", filter_open: "\u00d6ppna", filter_done: "Klara", filter_due_soon: "Snart",
     ed_show_due_soon_filter: "Snart-filter", ed_due_soon_days: "Dagar fram\u00e5t", ed_hide_overdue: "D\u00f6lj f\u00f6rsenade",
@@ -532,6 +537,7 @@ const _TRANSLATIONS = {
     voice_input: "Saisie vocale", voice_stop: "Arrêter l'enregistrement", img_label: "Image", img_generate: "Générer", img_regenerate: "Régénérer", img_generating: "Génération…", img_from_media: "Depuis la médiathèque", img_remove: "Supprimer l'image", img_generate_failed: "Échec de la génération de l'image : ", img_save_failed: "Échec de l'enregistrement de l'image : ", mb_title: "Médiathèque", mb_loading: "Chargement…", mb_root: "Médias", mb_back: "Retour", mb_empty: "Aucun fichier", mb_error: "Erreur : ",
     my_tasks: "Mes t\u00e2ches",
     add_placeholder: "Ajouter une nouvelle t\u00e2che...",
+    add_failed: "Impossible d'ajouter la tâche",
     dialog_cancel: "Annuler", dialog_add: "Ajouter",
     filter_all: "Toutes", filter_open: "Ouvertes", filter_done: "Termin\u00e9es", filter_due_soon: "Bient\u00f4t",
     ed_show_due_soon_filter: "Filtre bient\u00f4t", ed_due_soon_days: "Jours \u00e0 venir", ed_hide_overdue: "Masquer en retard",
@@ -620,6 +626,7 @@ const _TRANSLATIONS = {
     voice_input: "Entrada de voz", voice_stop: "Parar gravação", img_label: "Imagem", img_generate: "Gerar", img_regenerate: "Gerar novamente", img_generating: "Gerando…", img_from_media: "Da biblioteca de mídia", img_remove: "Remover imagem", img_generate_failed: "Falha ao gerar imagem: ", img_save_failed: "Falha ao salvar imagem: ", mb_title: "Biblioteca de mídia", mb_loading: "Carregando…", mb_root: "Mídia", mb_back: "Voltar", mb_empty: "Sem arquivos", mb_error: "Erro: ",
     my_tasks: "Minhas tarefas",
     add_placeholder: "Adicionar nova tarefa...",
+    add_failed: "Não foi possível adicionar a tarefa",
     dialog_cancel: "Cancelar", dialog_add: "Adicionar",
     filter_all: "Todas", filter_open: "Abertas", filter_done: "Conclu\u00eddas", filter_due_soon: "Em breve",
     ed_show_due_soon_filter: "Filtro em breve", ed_due_soon_days: "Dias \u00e0 frente", ed_hide_overdue: "Ocultar atrasadas",
@@ -708,6 +715,7 @@ const _TRANSLATIONS = {
     voice_input: "Entrada de voz", voice_stop: "Detener grabación", img_label: "Imagen", img_generate: "Generar", img_regenerate: "Regenerar", img_generating: "Generando…", img_from_media: "Desde la biblioteca multimedia", img_remove: "Eliminar imagen", img_generate_failed: "Error al generar la imagen: ", img_save_failed: "Error al guardar la imagen: ", mb_title: "Biblioteca multimedia", mb_loading: "Cargando…", mb_root: "Multimedia", mb_back: "Atrás", mb_empty: "Sin archivos", mb_error: "Error: ",
     my_tasks: "Mis tareas",
     add_placeholder: "A\u00f1adir nueva tarea...",
+    add_failed: "No se pudo añadir la tarea",
     dialog_cancel: "Cancelar", dialog_add: "Agregar",
     filter_all: "Todas", filter_open: "Abiertas", filter_done: "Completadas", filter_due_soon: "Pr\u00f3ximamente",
     ed_show_due_soon_filter: "Filtro pr\u00f3ximo", ed_due_soon_days: "D\u00edas adelante", ed_hide_overdue: "Ocultar vencidas",
@@ -796,6 +804,7 @@ const _TRANSLATIONS = {
     voice_input: "Голосовой ввод", voice_stop: "Остановить запись", img_label: "Изображение", img_generate: "Сгенерировать", img_regenerate: "Сгенерировать заново", img_generating: "Генерация…", img_from_media: "Из медиатеки", img_remove: "Удалить изображение", img_generate_failed: "Не удалось сгенерировать изображение: ", img_save_failed: "Не удалось сохранить изображение: ", mb_title: "Медиатека", mb_loading: "Загрузка…", mb_root: "Медиа", mb_back: "Назад", mb_empty: "Нет файлов", mb_error: "Ошибка: ",
     my_tasks: "\u041c\u043e\u0438 \u0437\u0430\u0434\u0430\u0447\u0438",
     add_placeholder: "\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043d\u043e\u0432\u0443\u044e \u0437\u0430\u0434\u0430\u0447\u0443...",
+    add_failed: "Не удалось добавить задачу",
     dialog_cancel: "\u041e\u0442\u043c\u0435\u043d\u0430", dialog_add: "\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c",
     filter_all: "\u0412\u0441\u0435", filter_open: "\u041e\u0442\u043a\u0440\u044b\u0442\u044b\u0435", filter_done: "\u0412\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043d\u044b\u0435", filter_due_soon: "\u0421\u043a\u043e\u0440\u043e",
     ed_show_due_soon_filter: "\u0424\u0438\u043b\u044c\u0442\u0440 \u0441\u043a\u043e\u0440\u043e", ed_due_soon_days: "\u0414\u043d\u0435\u0439 \u0432\u043f\u0435\u0440\u0451\u0434", ed_hide_overdue: "\u0421\u043a\u0440\u044b\u0442\u044c \u043f\u0440\u043e\u0441\u0440\u043e\u0447\u0435\u043d\u043d\u044b\u0435",
@@ -884,6 +893,7 @@ const _TRANSLATIONS = {
     voice_input: "Hlasový vstup", voice_stop: "Zastavit nahrávání", img_label: "Obrázek", img_generate: "Vygenerovat", img_regenerate: "Vygenerovat znovu", img_generating: "Generování…", img_from_media: "Z knihovny médií", img_remove: "Odebrat obrázek", img_generate_failed: "Generování obrázku se nezdařilo: ", img_save_failed: "Uložení obrázku se nezdařilo: ", mb_title: "Knihovna médií", mb_loading: "Načítání…", mb_root: "Média", mb_back: "Zpět", mb_empty: "Žádné soubory", mb_error: "Chyba: ",
     my_tasks: "Moje \u00fakoly",
     add_placeholder: "P\u0159idat nov\u00fd \u00fakol...",
+    add_failed: "Úkol se nepodařilo přidat",
     dialog_cancel: "Zru\u0161it", dialog_add: "P\u0159idat",
     filter_all: "V\u0161e", filter_open: "Otev\u0159en\u00e9", filter_done: "Dokon\u010den\u00e9", filter_due_soon: "Brzy",
     ed_show_due_soon_filter: "Filtr brzy", ed_due_soon_days: "Dn\u016f dop\u0159edu", ed_hide_overdue: "Skr\u00fdt po term\u00ednu",
@@ -972,6 +982,7 @@ const _TRANSLATIONS = {
     voice_input: "Stemmeinput", voice_stop: "Stop optagelse", img_label: "Billede", img_generate: "Generér", img_regenerate: "Generér igen", img_generating: "Genererer…", img_from_media: "Fra mediebibliotek", img_remove: "Fjern billede", img_generate_failed: "Billedgenerering mislykkedes: ", img_save_failed: "Kunne ikke gemme billede: ", mb_title: "Mediebibliotek", mb_loading: "Indlæser…", mb_root: "Medier", mb_back: "Tilbage", mb_empty: "Ingen filer", mb_error: "Fejl: ",
     my_tasks: "Mine opgaver",
     add_placeholder: "Tilf\u00f8j ny opgave...",
+    add_failed: "Opgaven kunne ikke tilføjes",
     dialog_cancel: "Annull\u00e9r", dialog_add: "Tilf\u00f8j",
     filter_all: "Alle", filter_open: "\u00c5bne", filter_done: "F\u00e6rdige", filter_due_soon: "Snart",
     ed_show_due_soon_filter: "Snart-filter", ed_due_soon_days: "Dage frem", ed_hide_overdue: "Skjul forfaldne",
@@ -1060,6 +1071,7 @@ const _TRANSLATIONS = {
     voice_input: "Taleinndata", voice_stop: "Stopp opptak", img_label: "Bilde", img_generate: "Generer", img_regenerate: "Generer på nytt", img_generating: "Genererer…", img_from_media: "Fra mediebibliotek", img_remove: "Fjern bilde", img_generate_failed: "Bildegenerering mislyktes: ", img_save_failed: "Kunne ikke lagre bilde: ", mb_title: "Mediebibliotek", mb_loading: "Laster…", mb_root: "Medier", mb_back: "Tilbake", mb_empty: "Ingen filer", mb_error: "Feil: ",
     my_tasks: "Mine oppgaver",
     add_placeholder: "Legg til ny oppgave...",
+    add_failed: "Kunne ikke legge til oppgaven",
     dialog_cancel: "Avbryt", dialog_add: "Legg til",
     filter_all: "Alle", filter_open: "\u00c5pne", filter_done: "Ferdige", filter_due_soon: "Snart",
     ed_show_due_soon_filter: "Snart-filter", ed_due_soon_days: "Dager fremover", ed_hide_overdue: "Skjul forfalte",
@@ -1148,6 +1160,7 @@ const _TRANSLATIONS = {
     voice_input: "Puhesyöttö", voice_stop: "Lopeta nauhoitus", img_label: "Kuva", img_generate: "Luo", img_regenerate: "Luo uudelleen", img_generating: "Luodaan…", img_from_media: "Mediakirjastosta", img_remove: "Poista kuva", img_generate_failed: "Kuvan luonti epäonnistui: ", img_save_failed: "Kuvan tallennus epäonnistui: ", mb_title: "Mediakirjasto", mb_loading: "Ladataan…", mb_root: "Media", mb_back: "Takaisin", mb_empty: "Ei tiedostoja", mb_error: "Virhe: ",
     my_tasks: "Omat teht\u00e4v\u00e4t",
     add_placeholder: "Lis\u00e4\u00e4 uusi teht\u00e4v\u00e4...",
+    add_failed: "Tehtävän lisääminen epäonnistui",
     dialog_cancel: "Peruuta", dialog_add: "Lis\u00e4\u00e4",
     filter_all: "Kaikki", filter_open: "Avoimet", filter_done: "Valmiit", filter_due_soon: "Pian",
     ed_show_due_soon_filter: "Pian-suodatin", ed_due_soon_days: "P\u00e4ivi\u00e4 eteenp\u00e4in", ed_hide_overdue: "Piilota my\u00f6h\u00e4ss\u00e4 olevat",
@@ -1236,6 +1249,7 @@ const _TRANSLATIONS = {
     voice_input: "Hangbevitel", voice_stop: "Felvétel leállítása", img_label: "Kép", img_generate: "Generálás", img_regenerate: "Újragenerálás", img_generating: "Generálás…", img_from_media: "Médiatárból", img_remove: "Kép eltávolítása", img_generate_failed: "A képgenerálás sikertelen: ", img_save_failed: "A kép mentése sikertelen: ", mb_title: "Médiatár", mb_loading: "Betöltés…", mb_root: "Média", mb_back: "Vissza", mb_empty: "Nincsenek fájlok", mb_error: "Hiba: ",
     my_tasks: "Feladataim",
     add_placeholder: "\u00daj feladat hozz\u00e1ad\u00e1sa...",
+    add_failed: "A feladat hozzáadása nem sikerült",
     dialog_cancel: "M\u00e9gse", dialog_add: "Hozz\u00e1ad",
     filter_all: "\u00d6sszes", filter_open: "Nyitott", filter_done: "K\u00e9sz", filter_due_soon: "Hamarosan",
     ed_show_due_soon_filter: "Hamarosan sz\u0171r\u0151", ed_due_soon_days: "Napok el\u0151re", ed_hide_overdue: "Lej\u00e1rtak elrejt\u00e9se",
@@ -1324,6 +1338,7 @@ const _TRANSLATIONS = {
     voice_input: "Spracheingabe", voice_stop: "Aufnahme stoppen", img_label: "Bild", img_generate: "Generieren", img_regenerate: "Neu generieren", img_generating: "Generiere…", img_from_media: "Aus Mediathek", img_remove: "Bild entfernen", img_generate_failed: "Bildgenerierung fehlgeschlagen: ", img_save_failed: "Bild speichern fehlgeschlagen: ", mb_title: "Mediathek", mb_loading: "Lädt…", mb_root: "Medien", mb_back: "Zurück", mb_empty: "Keine Dateien", mb_error: "Fehler: ",
     my_tasks: "Meine Aufgaben",
     add_placeholder: "Neue Aufgabe hinzuf\u00fcgen...",
+    add_failed: "Aufgabe konnte nicht hinzugefügt werden",
     dialog_cancel: "Abbrechen", dialog_add: "Hinzuf\u00fcgen",
     filter_all: "Alle",
     filter_open: "Offen",
@@ -2103,10 +2118,28 @@ class HomeTasksCard extends HTMLElement {
     return this._addTask(colIdx);
   }
 
+  _nudgeAddInput(colIdx) {
+    const el = this.shadowRoot?.querySelector(
+      `.add-input[data-focus-key="add_task_col_${colIdx}"]`
+    );
+    if (!el) return;
+    try { el.focus(); } catch (_) { /* focus is a nicety, never a failure */ }
+    el.classList.remove("nudge");
+    void el.offsetWidth;  // restart the animation if it is already running
+    el.classList.add("nudge");
+    setTimeout(() => el.classList.remove("nudge"), 700);
+  }
+
   async _addTask(colIdx) {
     const cs = this._columns[colIdx];
     const title = cs.newTaskTitle.trim();
-    if (!title) return;
+    if (!title) {
+      // Pressing + with an empty field used to do nothing at all, which
+      // reads as a dead button (issue #59). Put the cursor where the text
+      // belongs and nudge the field so the eye follows it.
+      this._nudgeAddInput(colIdx);
+      return;
+    }
     // Adding a task clears any active search.
     cs.taskSearchQuery = "";
     if (!this._colListId(colIdx) && !this._colEntityId(colIdx)) return;
@@ -2163,6 +2196,9 @@ class HomeTasksCard extends HTMLElement {
       } catch (err) {
         console.warn("Failed to create external task:", err);
       }
+      // _callWs swallows errors and returns null, so the placeholder row
+      // would just disappear on the reload below without a word (issue #59).
+      if (!result) this._showError(this._t("add_failed"));
       this._reloadExternal(colIdx);
       // C12 for external lists: the provider assigns the uid, and the card
       // only sees the real task after the reload above — the row on screen is
@@ -2191,6 +2227,8 @@ class HomeTasksCard extends HTMLElement {
             && this._config.image_generation?.entity_id) {
           this._generateTaskImage(result, colIdx);
         }
+      } else {
+        this._showError(this._t("add_failed"));
       }
     }
   }
@@ -7411,6 +7449,14 @@ class HomeTasksCard extends HTMLElement {
         color: var(--todo-text); font-size: 14px; outline: none; font-family: inherit;
       }
       .add-input:focus { border-color: var(--todo-primary); }
+      .add-input.nudge { animation: ht-add-nudge 0.6s ease; }
+      @keyframes ht-add-nudge {
+        0%, 100% { border-color: var(--todo-divider); }
+        25%, 75% { border-color: var(--todo-primary); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .add-input.nudge { animation: none; border-color: var(--todo-primary); }
+      }
       .add-input::placeholder { color: var(--todo-disabled); }
       .add-btn {
         padding: 10px 20px; background: var(--todo-primary); color: #fff;
