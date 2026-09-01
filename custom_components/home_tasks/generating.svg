@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Generating image">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#33415a"/>
+      <stop offset="1" stop-color="#25304a"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <g fill="none" stroke="#8fb3e0" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="136" y="152" width="240" height="180" rx="16"/>
+    <path d="M136 276l58-54 46 42 44-40 92 76"/>
+  </g>
+  <circle cx="256" cy="200" r="16" fill="#8fb3e0"/>
+  <g fill="#8fb3e0">
+    <circle cx="212" cy="392" r="14">
+      <animate attributeName="opacity" values="1;0.25;1" dur="1.2s" begin="0s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="256" cy="392" r="14">
+      <animate attributeName="opacity" values="1;0.25;1" dur="1.2s" begin="0.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="300" cy="392" r="14">
+      <animate attributeName="opacity" values="1;0.25;1" dur="1.2s" begin="0.4s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  <text x="256" y="452" text-anchor="middle" font-family="Roboto, Helvetica, Arial, sans-serif" font-size="32" fill="#c3d3ea">Generating image</text>
+</svg>

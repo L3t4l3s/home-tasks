@@ -64,8 +64,9 @@ const _TRANSLATIONS = {
     ed_sec_images: "Images",
     ed_share_images: "Share images with other lists",
     ed_share_images_hint: "Off keeps this list's pictures to itself — the same task title on another list gets its own image.",
-    ed_auto_queue: "Generate images in the background",
-    ed_auto_queue_hint: "Home Tasks generates missing images for this list on its own, one at a time with a pause in between. Set the AI entity and the pause with the home_tasks.configure_image_queue action.",
+    ed_queue_empty: "Nothing waiting for a picture.",
+    ed_queue_pending: "Waiting for a picture: {0}",
+    ed_queue_cancel: "Cancel",
     ed_default_assignee: "Default assignee",
     ed_defaults_hint: "Applied to every new task in this list \u2014 no matter how it is created (card, service, voice, todo). Changes are saved immediately.", ed_defaults_saved: "Saved", ed_defaults_load_failed: "Could not load defaults", ed_defaults_save_failed: "Save failed",
     confirm_complete_msg: "Mark \"{0}\" as completed?",
@@ -208,8 +209,9 @@ const _TRANSLATIONS = {
     ed_sec_images: "Afbeeldingen",
     ed_share_images: "Afbeeldingen delen met andere lijsten",
     ed_share_images_hint: "Uit houdt de afbeeldingen van deze lijst apart — dezelfde taaktitel op een andere lijst krijgt een eigen afbeelding.",
-    ed_auto_queue: "Afbeeldingen op de achtergrond genereren",
-    ed_auto_queue_hint: "Home Tasks genereert ontbrekende afbeeldingen voor deze lijst zelf, een voor een met een pauze ertussen. Stel de AI-entiteit en de pauze in met de actie home_tasks.configure_image_queue.",
+    ed_queue_empty: "Niets wacht op een afbeelding.",
+    ed_queue_pending: "Wacht op een afbeelding: {0}",
+    ed_queue_cancel: "Annuleren",
     ed_default_assignee: "Standaard toegewezene",
     ed_defaults_hint: "Geldt voor elke nieuwe taak in deze lijst \u2014 ongeacht hoe die wordt aangemaakt. Wijzigingen worden direct opgeslagen.", ed_defaults_saved: "Opgeslagen", ed_defaults_load_failed: "Standaardwaarden konden niet worden geladen", ed_defaults_save_failed: "Opslaan mislukt",
     confirm_complete_msg: "\u201e{0}\u201d als afgerond markeren?",
@@ -292,8 +294,9 @@ const _TRANSLATIONS = {
     ed_sec_images: "Immagini",
     ed_share_images: "Condividi le immagini con altri elenchi",
     ed_share_images_hint: "Disattivato mantiene le immagini di questo elenco separate — lo stesso titolo in un altro elenco riceve un'immagine propria.",
-    ed_auto_queue: "Genera immagini in background",
-    ed_auto_queue_hint: "Home Tasks genera da solo le immagini mancanti di questo elenco, una alla volta con una pausa. Configura l'entità IA e la pausa con l'azione home_tasks.configure_image_queue.",
+    ed_queue_empty: "Nessuna attesa di immagine.",
+    ed_queue_pending: "In attesa di un'immagine: {0}",
+    ed_queue_cancel: "Annulla",
     ed_default_assignee: "Assegnatario predefinito",
     ed_defaults_hint: "Si applica a ogni nuova attivit\u00e0 di questo elenco, comunque venga creata. Le modifiche vengono salvate immediatamente.", ed_defaults_saved: "Salvato", ed_defaults_load_failed: "Impossibile caricare i valori predefiniti", ed_defaults_save_failed: "Salvataggio non riuscito",
     confirm_complete_msg: "Segnare \u201c{0}\u201d come completata?",
@@ -376,8 +379,9 @@ const _TRANSLATIONS = {
     ed_sec_images: "Obrazy",
     ed_share_images: "Współdziel obrazy z innymi listami",
     ed_share_images_hint: "Wyłączone zachowuje obrazy tej listy osobno — ten sam tytuł na innej liście otrzyma własny obraz.",
-    ed_auto_queue: "Generuj obrazy w tle",
-    ed_auto_queue_hint: "Home Tasks samodzielnie generuje brakujące obrazy tej listy, pojedynczo z przerwą. Encję AI i przerwę ustawisz akcją home_tasks.configure_image_queue.",
+    ed_queue_empty: "Nic nie czeka na obraz.",
+    ed_queue_pending: "Czeka na obraz: {0}",
+    ed_queue_cancel: "Anuluj",
     ed_default_assignee: "Domy\u015blny przypisany",
     ed_defaults_hint: "Dotyczy ka\u017cdego nowego zadania na tej li\u015bcie \u2014 niezale\u017cnie od sposobu utworzenia. Zmiany s\u0105 zapisywane natychmiast.", ed_defaults_saved: "Zapisano", ed_defaults_load_failed: "Nie uda\u0142o si\u0119 wczyta\u0107 ustawie\u0144 domy\u015blnych", ed_defaults_save_failed: "Zapis nie powi\u00f3d\u0142 si\u0119",
     confirm_complete_msg: "Oznaczy\u0107 \u201e{0}\u201d jako uko\u0144czone?",
@@ -460,8 +464,9 @@ const _TRANSLATIONS = {
     ed_sec_images: "Bilder",
     ed_share_images: "Dela bilder med andra listor",
     ed_share_images_hint: "Av håller listans bilder för sig själv — samma uppgiftstitel i en annan lista får en egen bild.",
-    ed_auto_queue: "Generera bilder i bakgrunden",
-    ed_auto_queue_hint: "Home Tasks genererar saknade bilder för den här listan själv, en i taget med paus emellan. Ställ in AI-entitet och paus med åtgärden home_tasks.configure_image_queue.",
+    ed_queue_empty: "Inget väntar på en bild.",
+    ed_queue_pending: "Väntar på en bild: {0}",
+    ed_queue_cancel: "Avbryt",
     ed_default_assignee: "Standardtilldelad",
     ed_defaults_hint: "G\u00e4ller varje ny uppgift i listan \u2014 oavsett hur den skapas. \u00c4ndringar sparas direkt.", ed_defaults_saved: "Sparat", ed_defaults_load_failed: "Det gick inte att l\u00e4sa in standardv\u00e4rdena", ed_defaults_save_failed: "Det gick inte att spara",
     confirm_complete_msg: "Markera \u201d{0}\u201d som slutf\u00f6rd?",
@@ -544,8 +549,9 @@ const _TRANSLATIONS = {
     ed_sec_images: "Images",
     ed_share_images: "Partager les images avec d'autres listes",
     ed_share_images_hint: "Désactivé garde les images de cette liste pour elle — le même titre dans une autre liste obtient sa propre image.",
-    ed_auto_queue: "Générer les images en arrière-plan",
-    ed_auto_queue_hint: "Home Tasks génère lui-même les images manquantes de cette liste, une par une avec une pause. Configurez l'entité IA et la pause avec l'action home_tasks.configure_image_queue.",
+    ed_queue_empty: "Rien n'attend d'image.",
+    ed_queue_pending: "En attente d'une image : {0}",
+    ed_queue_cancel: "Annuler",
     ed_default_assignee: "Assign\u00e9 par d\u00e9faut",
     ed_defaults_hint: "S'applique \u00e0 chaque nouvelle t\u00e2che de cette liste, quelle que soit sa cr\u00e9ation. Les modifications sont enregistr\u00e9es imm\u00e9diatement.", ed_defaults_saved: "Enregistr\u00e9", ed_defaults_load_failed: "Impossible de charger les valeurs par d\u00e9faut", ed_defaults_save_failed: "\u00c9chec de l'enregistrement",
     confirm_complete_msg: "Marquer \u00ab\u202f{0}\u202f\u00bb comme termin\u00e9e\u202f?",
@@ -628,8 +634,9 @@ const _TRANSLATIONS = {
     ed_sec_images: "Imagens",
     ed_share_images: "Partilhar imagens com outras listas",
     ed_share_images_hint: "Desligado mantém as imagens desta lista separadas — o mesmo título noutra lista recebe a sua própria imagem.",
-    ed_auto_queue: "Gerar imagens em segundo plano",
-    ed_auto_queue_hint: "O Home Tasks gera sozinho as imagens em falta desta lista, uma de cada vez com uma pausa. Configure a entidade de IA e a pausa com a ação home_tasks.configure_image_queue.",
+    ed_queue_empty: "Nada à espera de imagem.",
+    ed_queue_pending: "À espera de uma imagem: {0}",
+    ed_queue_cancel: "Cancelar",
     ed_default_assignee: "Respons\u00e1vel padr\u00e3o",
     ed_defaults_hint: "Aplica-se a cada nova tarefa desta lista, seja como for criada. As altera\u00e7\u00f5es s\u00e3o guardadas imediatamente.", ed_defaults_saved: "Guardado", ed_defaults_load_failed: "N\u00e3o foi poss\u00edvel carregar as predefini\u00e7\u00f5es", ed_defaults_save_failed: "Falha ao guardar",
     confirm_complete_msg: "Marcar \u201c{0}\u201d como conclu\u00edda?",
@@ -712,8 +719,9 @@ const _TRANSLATIONS = {
     ed_sec_images: "Imágenes",
     ed_share_images: "Compartir imágenes con otras listas",
     ed_share_images_hint: "Desactivado mantiene las imágenes de esta lista aparte: el mismo título en otra lista obtiene su propia imagen.",
-    ed_auto_queue: "Generar imágenes en segundo plano",
-    ed_auto_queue_hint: "Home Tasks genera por su cuenta las imágenes que faltan en esta lista, una a una con una pausa. Configura la entidad de IA y la pausa con la acción home_tasks.configure_image_queue.",
+    ed_queue_empty: "Nada esperando imagen.",
+    ed_queue_pending: "Esperando una imagen: {0}",
+    ed_queue_cancel: "Cancelar",
     ed_default_assignee: "Asignado por defecto",
     ed_defaults_hint: "Se aplica a cada nueva tarea de esta lista, sin importar c\u00f3mo se cree. Los cambios se guardan inmediatamente.", ed_defaults_saved: "Guardado", ed_defaults_load_failed: "No se pudieron cargar los valores predeterminados", ed_defaults_save_failed: "Error al guardar",
     confirm_complete_msg: "\u00bfMarcar \u00ab{0}\u00bb como completada?",
@@ -796,8 +804,9 @@ const _TRANSLATIONS = {
     ed_sec_images: "Изображения",
     ed_share_images: "Делиться изображениями с другими списками",
     ed_share_images_hint: "Выключено — изображения этого списка остаются только в нём: одинаковое название в другом списке получит своё изображение.",
-    ed_auto_queue: "Создавать изображения в фоне",
-    ed_auto_queue_hint: "Home Tasks сам создаёт недостающие изображения этого списка, по одному с паузой. Сущность ИИ и паузу настройте действием home_tasks.configure_image_queue.",
+    ed_queue_empty: "Ничто не ждёт изображения.",
+    ed_queue_pending: "Ждут изображения: {0}",
+    ed_queue_cancel: "Отмена",
     ed_default_assignee: "\u041e\u0442\u0432\u0435\u0442\u0441\u0442\u0432\u0435\u043d\u043d\u044b\u0439 \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e",
     ed_defaults_hint: "\u041f\u0440\u0438\u043c\u0435\u043d\u044f\u0435\u0442\u0441\u044f \u043a \u043a\u0430\u0436\u0434\u043e\u0439 \u043d\u043e\u0432\u043e\u0439 \u0437\u0430\u0434\u0430\u0447\u0435 \u044d\u0442\u043e\u0433\u043e \u0441\u043f\u0438\u0441\u043a\u0430. \u0418\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f \u0441\u043e\u0445\u0440\u0430\u043d\u044f\u044e\u0442\u0441\u044f \u0441\u0440\u0430\u0437\u0443.", ed_defaults_saved: "\u0421\u043e\u0445\u0440\u0430\u043d\u0435\u043d\u043e", ed_defaults_load_failed: "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u0437\u043d\u0430\u0447\u0435\u043d\u0438\u044f \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e", ed_defaults_save_failed: "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0441\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c",
     confirm_complete_msg: "\u041e\u0442\u043c\u0435\u0442\u0438\u0442\u044c \u00ab{0}\u00bb \u043a\u0430\u043a \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043d\u0443\u044e?",
@@ -880,8 +889,9 @@ const _TRANSLATIONS = {
     ed_sec_images: "Obrázky",
     ed_share_images: "Sdílet obrázky s jinými seznamy",
     ed_share_images_hint: "Vypnuto ponechá obrázky tohoto seznamu jen jemu — stejný název v jiném seznamu dostane vlastní obrázek.",
-    ed_auto_queue: "Generovat obrázky na pozadí",
-    ed_auto_queue_hint: "Home Tasks sám generuje chybějící obrázky tohoto seznamu, po jednom s pauzou. Entitu AI a pauzu nastavíš akcí home_tasks.configure_image_queue.",
+    ed_queue_empty: "Nic nečeká na obrázek.",
+    ed_queue_pending: "Čeká na obrázek: {0}",
+    ed_queue_cancel: "Zrušit",
     ed_default_assignee: "V\u00fdchoz\u00ed p\u0159i\u0159azen\u00ed",
     ed_defaults_hint: "Plat\u00ed pro ka\u017ed\u00fd nov\u00fd \u00fakol v tomto seznamu. Zm\u011bny se ukl\u00e1daj\u00ed okam\u017eit\u011b.", ed_defaults_saved: "Ulo\u017eeno", ed_defaults_load_failed: "V\u00fdchoz\u00ed hodnoty se nepoda\u0159ilo na\u010d\u00edst", ed_defaults_save_failed: "Ulo\u017een\u00ed se nezda\u0159ilo",
     confirm_complete_msg: "Ozna\u010dit \u201e{0}\u201c jako dokon\u010den\u00e9?",
@@ -964,8 +974,9 @@ const _TRANSLATIONS = {
     ed_sec_images: "Billeder",
     ed_share_images: "Del billeder med andre lister",
     ed_share_images_hint: "Fra holder listens billeder for sig selv — samme opgavetitel på en anden liste får sit eget billede.",
-    ed_auto_queue: "Generér billeder i baggrunden",
-    ed_auto_queue_hint: "Home Tasks genererer selv manglende billeder til denne liste, ét ad gangen med pause imellem. Konfigurér AI-entitet og pause med handlingen home_tasks.configure_image_queue.",
+    ed_queue_empty: "Intet venter på et billede.",
+    ed_queue_pending: "Venter på et billede: {0}",
+    ed_queue_cancel: "Annullér",
     ed_default_assignee: "Standardtildelt",
     ed_defaults_hint: "G\u00e6lder for hver ny opgave p\u00e5 listen \u2014 uanset hvordan den oprettes. \u00c6ndringer gemmes med det samme.", ed_defaults_saved: "Gemt", ed_defaults_load_failed: "Standardv\u00e6rdierne kunne ikke indl\u00e6ses", ed_defaults_save_failed: "Kunne ikke gemme",
     confirm_complete_msg: "Mark\u00e9r \u201d{0}\u201d som fuldf\u00f8rt?",
@@ -1048,8 +1059,9 @@ const _TRANSLATIONS = {
     ed_sec_images: "Bilder",
     ed_share_images: "Del bilder med andre lister",
     ed_share_images_hint: "Av holder listens bilder for seg selv — samme oppgavetittel i en annen liste får sitt eget bilde.",
-    ed_auto_queue: "Generer bilder i bakgrunnen",
-    ed_auto_queue_hint: "Home Tasks genererer selv manglende bilder for denne listen, ett om gangen med pause mellom. Konfigurer AI-entitet og pause med handlingen home_tasks.configure_image_queue.",
+    ed_queue_empty: "Ingenting venter på et bilde.",
+    ed_queue_pending: "Venter på et bilde: {0}",
+    ed_queue_cancel: "Avbryt",
     ed_default_assignee: "Standardtildelt",
     ed_defaults_hint: "Gjelder hver ny oppgave i listen \u2014 uansett hvordan den opprettes. Endringer lagres umiddelbart.", ed_defaults_saved: "Lagret", ed_defaults_load_failed: "Kunne ikke laste standardverdiene", ed_defaults_save_failed: "Kunne ikke lagre",
     confirm_complete_msg: "Merke \u00ab{0}\u00bb som fullf\u00f8rt?",
@@ -1132,8 +1144,9 @@ const _TRANSLATIONS = {
     ed_sec_images: "Kuvat",
     ed_share_images: "Jaa kuvat muiden listojen kanssa",
     ed_share_images_hint: "Pois pitää tämän listan kuvat omanaan — sama tehtävän nimi toisessa listassa saa oman kuvansa.",
-    ed_auto_queue: "Luo kuvat taustalla",
-    ed_auto_queue_hint: "Home Tasks luo tämän listan puuttuvat kuvat itse, yksi kerrallaan tauon kanssa. Määritä tekoälyentiteetti ja tauko toiminnolla home_tasks.configure_image_queue.",
+    ed_queue_empty: "Mikään ei odota kuvaa.",
+    ed_queue_pending: "Odottaa kuvaa: {0}",
+    ed_queue_cancel: "Peruuta",
     ed_default_assignee: "Oletusvastuuhenkil\u00f6",
     ed_defaults_hint: "Koskee jokaista listan uutta teht\u00e4v\u00e4\u00e4 luontitavasta riippumatta. Muutokset tallennetaan heti.", ed_defaults_saved: "Tallennettu", ed_defaults_load_failed: "Oletuksia ei voitu ladata", ed_defaults_save_failed: "Tallennus ep\u00e4onnistui",
     confirm_complete_msg: "Merkit\u00e4\u00e4nk\u00f6 \u201d{0}\u201d valmiiksi?",
@@ -1216,8 +1229,9 @@ const _TRANSLATIONS = {
     ed_sec_images: "Képek",
     ed_share_images: "Képek megosztása más listákkal",
     ed_share_images_hint: "Kikapcsolva a lista képei csak ehhez a listához tartoznak — ugyanaz a cím egy másik listán saját képet kap.",
-    ed_auto_queue: "Képek generálása a háttérben",
-    ed_auto_queue_hint: "A Home Tasks maga generálja a lista hiányzó képeit, egyesével szünettel. Az MI-entitást és a szünetet a home_tasks.configure_image_queue művelettel állíthatod be.",
+    ed_queue_empty: "Semmi sem vár képre.",
+    ed_queue_pending: "Képre vár: {0}",
+    ed_queue_cancel: "Mégse",
     ed_default_assignee: "Alap\u00e9rtelmezett felel\u0151s",
     ed_defaults_hint: "A lista minden \u00faj feladat\u00e1ra \u00e9rv\u00e9nyes, b\u00e1rhogyan is j\u00f6n l\u00e9tre. A m\u00f3dos\u00edt\u00e1sok azonnal ment\u00e9sre ker\u00fclnek.", ed_defaults_saved: "Mentve", ed_defaults_load_failed: "Az alap\u00e9rtelmez\u00e9sek bet\u00f6lt\u00e9se sikertelen", ed_defaults_save_failed: "A ment\u00e9s sikertelen",
     confirm_complete_msg: "Megjel\u00f6l\u00f6d \u201e{0}\u201d-t k\u00e9szk\u00e9nt?",
@@ -1321,8 +1335,9 @@ const _TRANSLATIONS = {
     ed_sec_images: "Bilder",
     ed_share_images: "Bilder mit anderen Listen teilen",
     ed_share_images_hint: "Aus behält die Bilder dieser Liste für sich — der gleiche Aufgabentitel auf einer anderen Liste bekommt ein eigenes Bild.",
-    ed_auto_queue: "Bilder im Hintergrund erzeugen",
-    ed_auto_queue_hint: "Home Tasks erzeugt fehlende Bilder dieser Liste selbst, eines nach dem anderen mit Pause dazwischen. KI-Entität und Pause stellst du mit der Aktion home_tasks.configure_image_queue ein.",
+    ed_queue_empty: "Nichts wartet auf ein Bild.",
+    ed_queue_pending: "Wartet auf ein Bild: {0}",
+    ed_queue_cancel: "Abbrechen",
     ed_default_assignee: "Standard-Zust\u00e4ndige(r)",
     ed_defaults_hint: "Gilt f\u00fcr jede neue Aufgabe dieser Liste \u2014 egal wie sie angelegt wird (Karte, Service, Sprache, Todo). \u00c4nderungen werden sofort gespeichert.", ed_defaults_saved: "Gespeichert", ed_defaults_load_failed: "Defaults konnten nicht geladen werden", ed_defaults_save_failed: "Speichern fehlgeschlagen",
     confirm_complete_msg: "„{0}“ als erledigt markieren?",
@@ -1651,6 +1666,7 @@ class HomeTasksCard extends HTMLElement {
     } else {
       this._render();
     }
+    this._syncImageGenerationConfig();
     // Config may arrive after we're already connected (editor preview);
     // connectedCallback covers the other order. No-op when not connected.
     this._ensureCardMod();
@@ -1884,6 +1900,41 @@ class HomeTasksCard extends HTMLElement {
     setTimeout(() => toast.remove(), 4000);
   }
 
+  // A card is the only place auto_generate_image and the ai_task entity are
+  // configured, but the background queue has to work without one being open.
+  // Whenever a card with the option loads, it hands both to the backend.
+  async _syncImageGenerationConfig() {
+    if (!this._hass || !this._config) return;
+    const wanted = (this._config.columns || []).filter(
+      c => c.auto_generate_image === true && c.show_images === true && (c.list_id || c.entity_id)
+    );
+    if (!wanted.length) return;
+    const imgCfg = this._config.image_generation || {};
+    try {
+      if (imgCfg.entity_id) {
+        await this._hass.callWS({
+          type: "home_tasks/sync_image_config",
+          ai_task_entity_id: imgCfg.entity_id,
+          prompt_prefix: imgCfg.prompt_prefix || "",
+        });
+      }
+      for (const col of wanted) {
+        const info = col.entity_id
+          ? (this._externalLists || []).find(l => l.entity_id === col.entity_id)
+          : (this._lists || []).find(l => l.id === col.list_id);
+        if (info && info.auto_generate_images === true) continue;  // already on
+        await this._hass.callWS({
+          type: "home_tasks/set_list_settings",
+          ...(col.entity_id ? { entity_id: col.entity_id } : { list_id: col.list_id }),
+          auto_generate_images: true,
+        });
+        if (info) info.auto_generate_images = true;
+      }
+    } catch (e) {
+      console.warn("Could not sync automatic image generation:", e);
+    }
+  }
+
   async _loadLists() {
     const [nativeResult, externalResult] = await Promise.all([
       this._callWs("home_tasks/get_lists"),
@@ -1915,6 +1966,9 @@ class HomeTasksCard extends HTMLElement {
         this._listsRetryTimer = null;
       }
     }
+
+    // The list metadata the sync needs (share/auto flags) is only here now.
+    this._syncImageGenerationConfig();
 
     // Auto-select first list if no column has a list configured
     const hasAnyList = this._config.columns.some(c => c.list_id || c.entity_id);
@@ -7395,6 +7449,19 @@ class HomeTasksCard extends HTMLElement {
         padding: 1px 2px 1px 1px; scrollbar-gutter: stable;
       }
       :host(.fit-rows) .task-list, :host(.fit-rows) .tile-grid-wrap { flex: 1 1 auto; min-height: 40px; }
+      .queue-panel { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+      .queue-row {
+        display: flex; align-items: center; gap: 8px;
+        padding: 4px 8px; border-radius: 6px;
+        background: var(--todo-surface, rgba(127,127,127,0.08));
+      }
+      .queue-title { flex: 1; min-width: 0; font-size: 13px; word-break: break-word; }
+      .queue-cancel {
+        border: none; background: transparent; cursor: pointer;
+        font-size: 18px; line-height: 1; color: var(--todo-secondary-text);
+      }
+      .queue-cancel:hover { color: var(--error-color, #db4437); }
+      .queue-cancel:disabled { opacity: 0.4; cursor: default; }
       .empty-state { text-align: center; padding: 24px; color: var(--todo-disabled); font-size: 14px; }
       .section-header {
         display: flex; align-items: center; gap: 6px;
@@ -8217,6 +8284,83 @@ class HomeTasksCardEditor extends HTMLElement {
   // Unlike the switches above this is not a card option: it belongs to the
   // list itself, so every card showing it behaves the same and the backend
   // can honour it for generations triggered anywhere.
+  // What the background generation still has to do. Cancelling a job also
+  // switches its list's automatic generation off - leaving it on would just
+  // put the task back on the next scan and make the button look broken.
+  // The queue runs without a dashboard, so the list has to remember that it
+  // wants images, and the backend has to know which ai_task entity to use.
+  async _syncAutoGenerate(col, on) {
+    const target = col.entity_id ? { entity_id: col.entity_id } : { list_id: col.list_id };
+    if (!target.entity_id && !target.list_id) return;
+    try {
+      const imgCfg = this._config?.image_generation || {};
+      if (on && imgCfg.entity_id) {
+        await this._hass.callWS({
+          type: "home_tasks/sync_image_config",
+          ai_task_entity_id: imgCfg.entity_id,
+          prompt_prefix: imgCfg.prompt_prefix || "",
+        });
+      }
+      await this._hass.callWS({
+        type: "home_tasks/set_list_settings", ...target, auto_generate_images: on,
+      });
+      const info = col.entity_id
+        ? (this._externalLists || []).find(l => l.entity_id === col.entity_id)
+        : (this._lists || []).find(l => l.id === col.list_id);
+      if (info) info.auto_generate_images = on;
+    } catch (e) {
+      console.warn("Could not sync automatic image generation:", e);
+    }
+  }
+
+  _buildQueuePanel() {
+    const wrap = this._el("div", { className: "queue-panel" });
+    const render = (jobs) => {
+      wrap.innerHTML = "";
+      if (!jobs.length) {
+        wrap.appendChild(this._el("div", {
+          className: "hint", textContent: this._t("ed_queue_empty"),
+        }));
+        return;
+      }
+      wrap.appendChild(this._el("div", {
+        className: "hint", textContent: this._t("ed_queue_pending", String(jobs.length)),
+      }));
+      for (const job of jobs) {
+        const row = this._el("div", { className: "queue-row" });
+        row.appendChild(this._el("span", { className: "queue-title", textContent: job.title || job.task_id }));
+        const btn = this._el("button", { className: "queue-cancel", textContent: "\u00d7" });
+        btn.title = this._t("ed_queue_cancel");
+        btn.addEventListener("click", async () => {
+          btn.disabled = true;
+          try {
+            await this._hass.callWS({
+              type: "home_tasks/cancel_image_queue",
+              jobs: [{
+                ...(job.list_id ? { list_id: job.list_id } : {}),
+                ...(job.entity_id ? { entity_id: job.entity_id } : {}),
+                task_id: job.task_id,
+              }],
+            });
+          } catch (e) { /* the refresh below shows what actually happened */ }
+          load();
+        });
+        row.appendChild(btn);
+        wrap.appendChild(row);
+      }
+    };
+    const load = async () => {
+      try {
+        const r = await this._hass.callWS({ type: "home_tasks/get_image_queue" });
+        render((r && r.queue) || []);
+      } catch (e) {
+        render([]);
+      }
+    };
+    load();
+    return wrap;
+  }
+
   _buildListSettingToggle(col, key, labelKey, defaultOn) {
     const info = col.entity_id
       ? (this._externalLists || []).find(l => l.entity_id === col.entity_id)
@@ -8989,12 +9133,15 @@ class HomeTasksCardEditor extends HTMLElement {
     );
 
     // Toggle helper — uses ha-switch for native HA look
-    const makeToggle = (_id, labelKey, configKey, defaultOn = true) => {
+    const makeToggle = (_id, labelKey, configKey, defaultOn = true, onChange = null) => {
       const checked = defaultOn ? col[configKey] !== false : col[configKey] === true;
       const sw = document.createElement("ha-switch");
       sw.checked = checked;
       sw.setAttribute("aria-label", this._t(labelKey));
-      sw.addEventListener("change", () => updateCol({ [configKey]: sw.checked }));
+      sw.addEventListener("change", () => {
+        updateCol({ [configKey]: sw.checked });
+        if (onChange) onChange(sw.checked);
+      });
       return this._el("div", { className: "toggle-row" }, [
         this._el("span", { className: "toggle-label", textContent: this._t(labelKey) }),
         sw,
@@ -9168,7 +9315,11 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("badge-tags", "ed_badge_tags", "badge_tags", true),
           makeToggle("badge-reminders", "ed_badge_reminders", "badge_reminders", true),
           makeToggle("show-images", "ed_show_images", "show_images", false),
-          makeToggle("auto-image", "ed_auto_image", "auto_generate_image", false),
+          // Also tells the integration to generate for this list when no
+          // dashboard is open - one switch, both behaviours.
+          makeToggle("auto-image", "ed_auto_image", "auto_generate_image", false, (on) => {
+            this._syncAutoGenerate(col, on);
+          }),
           ...(col.view_mode === "tiles"
             ? [makeToggle("show-tile-title", "ed_show_tile_title", "show_tile_title", true)]
             : []),
@@ -9210,8 +9361,7 @@ class HomeTasksCardEditor extends HTMLElement {
       ...(col.list_id || col.entity_id ? [makeSection("images", "mdi:image-multiple", "ed_sec_images", [
         this._buildListSettingToggle(col, "share_images", "ed_share_images", true),
         this._el("div", { className: "hint", textContent: this._t("ed_share_images_hint") }),
-        this._buildListSettingToggle(col, "auto_generate_images", "ed_auto_queue", false),
-        this._el("div", { className: "hint", textContent: this._t("ed_auto_queue_hint") }),
+        this._buildQueuePanel(),
       ], false)] : []),
       makeSection("filters", "mdi:filter-variant", "ed_sec_filters", [
         filterField,

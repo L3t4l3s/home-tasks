@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Image generation failed">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a3f4b"/>
+      <stop offset="1" stop-color="#272b33"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <g fill="none" stroke="#8b929e" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="136" y="152" width="240" height="180" rx="16"/>
+    <path d="M136 276l58-54 46 42 44-40 92 76"/>
+  </g>
+  <circle cx="256" cy="200" r="16" fill="#8b929e"/>
+  <g stroke="#d9534f" stroke-width="20" stroke-linecap="round">
+    <path d="M186 202l140 140"/>
+  </g>
+  <text x="256" y="392" text-anchor="middle" font-family="Roboto, Helvetica, Arial, sans-serif" font-size="34" fill="#c7ccd4">Image generation</text>
+  <text x="256" y="432" text-anchor="middle" font-family="Roboto, Helvetica, Arial, sans-serif" font-size="34" fill="#c7ccd4">failed</text>
+</svg>

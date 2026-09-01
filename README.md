@@ -158,27 +158,21 @@ columns:
 
 **Background generation** (no dashboard required)
 
-`auto_generate_image` only fires while a browser has the card open. For tasks
-that appear by voice, service call or recurrence, switch on **Generate images
-in the background** for the list (card editor -> *Images*) and configure the
-queue once:
+`auto_generate_image` also tells the integration to look after that list on
+its own: whenever a task shows up without a picture — by voice, by a service
+call, by a recurrence at 3am — Home Tasks generates one, no browser needed.
+It works through them back to back, so switching the option on fills a list
+within minutes rather than trickling.
 
-```yaml
-action: home_tasks.configure_image_queue
-data:
-  enabled: true
-  ai_task_entity_id: ai_task.openai
-  prompt_prefix: "Minimalist icon of"   # optional
-  min_minutes: 20                        # optional, default 20
-  max_minutes: 35                        # optional, default 35
-```
+There are **no retries**. A task is attempted once; if the provider fails, the
+task gets a "generation failed" placeholder so you can see it, and is left
+alone. Switching `auto_generate_image` off and on again gives those tasks
+another go, and the generate button in the task details always works. While a
+task waits its turn it shows a "generating image" placeholder.
 
-Home Tasks then looks for open tasks without an image in those lists and works
-through them **one at a time**, pausing a random 20-35 minutes between provider
-calls. Queue, pause and configuration survive a restart, so restarting is not a
-way around the pacing. Reusing an image that already exists locally costs
-nothing and does not consume the pause. Remove an image you don't like and the
-task simply queues up again behind the current pause.
+The card editor's *Images* section lists what is still waiting and lets you
+cancel single jobs — cancelling also switches that list's automatic generation
+off, since otherwise the next scan would queue the task straight back.
 
 **Good to know:**
 

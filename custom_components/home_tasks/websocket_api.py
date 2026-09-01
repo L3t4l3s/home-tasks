@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
+from .image_queue import PLACEHOLDER_IMAGE_URLS, async_get_image_queue
 from .const import DOMAIN, MAX_IMAGE_URL_LENGTH, MAX_REORDER_IDS, MAX_RECURRENCE_VALUE, MAX_REMINDER_OFFSET_MINUTES, MAX_REMINDERS_PER_TASK, MAX_SUB_TASKS_PER_TASK, MAX_TAGS_PER_TASK, MAX_TITLE_LENGTH, VALID_RECURRENCE_UNITS
 from .overlay_store import ExternalTaskOverlayStore, OVERLAY_FIELDS
 from .provider_adapters import ProviderAdapter, GenericAdapter, _get_external_todo_items
@@ -52,6 +53,9 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_move_task)
     websocket_api.async_register_command(hass, ws_move_task_cross)
     websocket_api.async_register_command(hass, ws_set_list_settings)
+    websocket_api.async_register_command(hass, ws_get_image_queue)
+    websocket_api.async_register_command(hass, ws_cancel_image_queue)
+    websocket_api.async_register_command(hass, ws_sync_image_config)
     websocket_api.async_register_command(hass, ws_get_defaults)
     websocket_api.async_register_command(hass, ws_set_defaults)
     # External list commands
@@ -187,6 +191,89 @@ async def ws_add_task(hass, connection, msg):
         _handle_error(connection, msg["id"], err)
 
 
+@websocket_api.websocket_command({vol.Required("type"): "home_tasks/get_image_queue"})
+@websocket_api.async_response
+async def ws_get_image_queue(hass, connection, msg):
+    """What the background image queue still has to do."""
+    queue = async_get_image_queue(hass)
+    if queue is None:
+        connection.send_result(msg["id"], {"queue": [], "failed": 0})
+        return
+    connection.send_result(msg["id"], {
+        "queue": queue.queue,
+        "failed": len(queue.failed),
+    })
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "home_tasks/cancel_image_queue",
+        vol.Required("jobs"): [
+            {
+                vol.Optional("list_id"): vol.Any(_val_id, None),
+                vol.Optional("entity_id"): vol.Any(_val_entity_id, None),
+                vol.Required("task_id"): _val_task_uid,
+            }
+        ],
+    }
+)
+@websocket_api.async_response
+async def ws_cancel_image_queue(hass, connection, msg):
+    """Drop queued jobs and stop the list that produced them.
+
+    Cancelling a job the user never asked for individually would be futile
+    while the switch that queued it is still on: the next scan would put it
+    straight back. So the lists involved are switched off as well.
+    """
+    try:
+        queue = async_get_image_queue(hass)
+        if queue is None:
+            raise ValueError("Image queue is not running")
+        jobs = msg["jobs"]
+        keys = [(j.get("list_id"), j.get("entity_id"), j["task_id"]) for j in jobs]
+        removed = await queue.async_cancel(keys)
+
+        stopped = []
+        for list_id, entity_id, _task in set((k[0], k[1], None) for k in keys):
+            try:
+                store = _get_store(hass, list_id) if list_id else _get_overlay_store(hass, entity_id)
+            except ValueError:
+                continue
+            if store.get_settings()["auto_generate_images"]:
+                await store.async_set_settings(auto_generate_images=False)
+                stopped.append(list_id or entity_id)
+        connection.send_result(msg["id"], {"removed": removed, "stopped": stopped})
+    except Exception as err:
+        _handle_error(connection, msg["id"], err)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "home_tasks/sync_image_config",
+        vol.Optional("ai_task_entity_id"): vol.Any(_val_entity_id, None),
+        vol.Optional("prompt_prefix"): vol.All(str, vol.Length(max=200)),
+    }
+)
+@websocket_api.async_response
+async def ws_sync_image_config(hass, connection, msg):
+    """Adopt the card's image-generation settings for background use.
+
+    The queue has no dashboard to read them from, so the card hands them over
+    whenever it loads a configuration that asks for automatic images.
+    """
+    try:
+        queue = async_get_image_queue(hass)
+        if queue is None:
+            raise ValueError("Image queue is not running")
+        cfg = await queue.async_sync_config(
+            ai_task_entity_id=msg.get("ai_task_entity_id"),
+            prompt_prefix=msg.get("prompt_prefix"),
+        )
+        connection.send_result(msg["id"], {"config": cfg})
+    except Exception as err:
+        _handle_error(connection, msg["id"], err)
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "home_tasks/set_list_settings",
@@ -208,7 +295,15 @@ async def ws_set_list_settings(hass, connection, msg):
         kwargs = {k: msg[k] for k in ("share_images", "auto_generate_images") if k in msg}
         if not kwargs:
             raise ValueError("No settings given")
+        was_on = store.get_settings()["auto_generate_images"]
         settings = await store.async_set_settings(**kwargs)
+
+        queue = async_get_image_queue(hass)
+        if queue is not None and settings["auto_generate_images"] and not was_on:
+            # Switched on: give the tasks that failed before another go — the
+            # placeholder on them would otherwise keep them out forever.
+            await queue.async_clear_failed_for(list_id, entity_id)
+            queue.async_kick()
         connection.send_result(msg["id"], {"settings": settings})
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -1044,6 +1139,16 @@ async def ws_get_external_lists(hass, connection, msg):
         connection.send_result(msg["id"], {"external_lists": external})
     except Exception as err:
         _handle_error(connection, msg["id"], err)
+
+
+def _is_real_image(url: str | None) -> bool:
+    """Whether a task image may be handed to a same-titled task.
+
+    The "generating" and "generation failed" placeholders are status, not
+    pictures: sharing one would spread a spinner across the card and, worse,
+    count as "this title already has an image".
+    """
+    return bool(url) and url.split("?")[0] not in PLACEHOLDER_IMAGE_URLS
 
 
 async def _async_all_external_lists(
@@ -2055,7 +2160,10 @@ async def async_generate_task_image(
         existing_url: str | None = None
         for s in native_stores:
             for t in s.tasks:
-                if t.get("title", "").strip().lower() == title_key and t.get("image_url"):
+                if (
+                    t.get("title", "").strip().lower() == title_key
+                    and _is_real_image(t.get("image_url"))
+                ):
                     existing_url = t["image_url"]
                     break
             if existing_url:
@@ -2066,7 +2174,7 @@ async def async_generate_task_image(
                 for candidate in ext_tasks:
                     if (
                         candidate.get("title", "").strip().lower() == title_key
-                        and candidate.get("image_url")
+                        and _is_real_image(candidate.get("image_url"))
                     ):
                         existing_url = candidate["image_url"]
                         break
