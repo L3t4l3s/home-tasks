@@ -3342,7 +3342,7 @@ class HomeTasksCard extends HTMLElement {
     const KEEP = ".task-detail-backdrop, .task-detail-sheet, dialog, card-mod, .toast-error";
     this._clearTileLp(); // a rebuild removes the pressed tile → cancel its long-press
     for (const child of [...root.children]) {
-      if (child === this._styleEl) continue;
+      if (child === this._styleEl || child === this._cardEl) continue;
       if (child.matches && child.matches(KEEP)) continue;
       child.remove();
     }
@@ -3356,12 +3356,17 @@ class HomeTasksCard extends HTMLElement {
     }
     if (!this._styleEl.isConnected) root.insertBefore(this._styleEl, root.firstChild);
 
-    const card = this._el("ha-card", {}, [
-      this._buildCardContent(),
-    ]);
+    // The ha-card itself is kept and refilled. Recreating it on every render
+    // means a fresh custom element on every keystroke in the editor, and it
+    // paints one frame in its default state before Home Assistant's own
+    // styles land on it - which is the frame you see flash around the header.
+    if (!this._cardEl) this._cardEl = this._el("ha-card", {}, []);
+    this._cardEl.replaceChildren(this._buildCardContent());
     // Right after the style, i.e. before any kept overlay, so the sheet /
     // backdrop / dialogs keep painting above the card (DOM order).
-    root.insertBefore(card, this._styleEl.nextSibling);
+    if (this._cardEl.previousSibling !== this._styleEl) {
+      root.insertBefore(this._cardEl, this._styleEl.nextSibling);
+    }
 
     // Restore focus to the element that had it before the DOM rebuild,
     // if it still exists in the new tree.  Fields tagged with
@@ -9402,11 +9407,18 @@ class HomeTasksCardEditor extends HTMLElement {
     // Off / Profile picture / Name / Both, for the filter row and for the
     // task row. Both keys are written on every change and the three older
     // ones dropped, so the two can never disagree about the picture.
+    //
+    // Read from the config as it is *now*, never from the `col` captured when
+    // the editor was drawn: the editor ignores the setConfig echo of its own
+    // change and so does not re-render, which would make the second dropdown
+    // write back the value the first one had already replaced.
     const personMode = (which) => {
-      const chosen = which === "badge" ? col.person_badge : col.person_filter;
+      const current = (this._config.columns || [])[tabIdx] || {};
+      const chosen = which === "badge" ? current.person_badge : current.person_filter;
       if (["off", "picture", "name", "both"].includes(chosen)) return chosen;
-      const chipOn = which === "badge" ? col.badge_person !== false : col.show_person_chips !== false;
-      const picture = col.show_person_avatar === true;
+      const chipOn = which === "badge"
+        ? current.badge_person !== false : current.show_person_chips !== false;
+      const picture = current.show_person_avatar === true;
       if (!chipOn) return picture ? "picture" : "off";
       return picture ? "both" : "name";
     };
@@ -9731,7 +9743,6 @@ class HomeTasksCardEditor extends HTMLElement {
             this._el("span", { textContent: this._t("ed_max_height") }),
           ]);
         })()]),
-        sortField,
         groupLabel("ed_group_header"),
         this._el("div", { className: "field" }, [titleInput]),
         this._el("div", { className: "field" }, [iconPicker]),
@@ -9764,9 +9775,12 @@ class HomeTasksCardEditor extends HTMLElement {
         ]),
         makePersonSelect("badge"),
       ]),
-      ...(col.list_id ? [makeSection("defaults", "mdi:account-check-outline", "ed_sec_defaults", [
-        this._buildDefaultsEditor(col.list_id),
-      ])] : []),
+      makeSection("defaults", "mdi:account-check-outline", "ed_sec_defaults", [
+        sortField,
+        // The per-list defaults (assignee, reminders) live in the integration,
+        // so they exist for native lists only.
+        ...(col.list_id ? [this._buildDefaultsEditor(col.list_id)] : []),
+      ]),
       makeSection("filters", "mdi:filter-variant", "ed_sec_filters", [
         filterField,
         dueSoonToggle,

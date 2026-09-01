@@ -1935,3 +1935,62 @@ describe('review round 3 card fixes', () => {
     card.remove();
   });
 });
+
+// ---------------------------------------------------------------------------
+// The ha-card survives a re-render (issue #48 follow-up).
+//
+// Every editor keystroke re-renders the preview. Recreating the ha-card each
+// time means a fresh custom element that paints one frame in its default
+// state before Home Assistant's styles land on it - visible as a frame
+// flashing around the header.
+// ---------------------------------------------------------------------------
+
+describe('re-rendering keeps the ha-card', () => {
+  async function card() {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'Test List' }] },
+      'home_tasks/get_tasks': { tasks: [{ id: 'T1', title: 'First', sort_order: 0, sub_items: [] }] },
+    });
+    const el = new HomeTasksCard();
+    el.setConfig({ columns: [{ list_id: 'L1' }] });
+    el.hass = hass;
+    await flush(el);
+    return el;
+  }
+
+  test('the same element is refilled, not replaced', async () => {
+    const el = await card();
+    const before = el.shadowRoot.querySelector('ha-card');
+    assert.ok(before);
+
+    el.setConfig({ columns: [{ list_id: 'L1', show_title: false }] });
+    el._render();
+    await flush(el);
+
+    assert.equal(el.shadowRoot.querySelector('ha-card'), before, 'same node across renders');
+    assert.equal(el.shadowRoot.querySelectorAll('ha-card').length, 1, 'and only one of it');
+  });
+
+  test('its content is still rebuilt', async () => {
+    const el = await card();
+    assert.ok(el.shadowRoot.querySelector('.header'), 'header there to begin with');
+
+    el.setConfig({ columns: [{ list_id: 'L1', show_title: false, show_progress: false }] });
+    el._render();
+    await flush(el);
+
+    assert.equal(el.shadowRoot.querySelector('.header'), null, 'the switch took effect');
+    assert.ok(el.shadowRoot.querySelector('.task'), 'and the tasks are still drawn');
+  });
+
+  test('the style element is reused too', async () => {
+    const el = await card();
+    const style = el.shadowRoot.querySelector('style');
+    el._render();
+    await flush(el);
+    assert.equal(el.shadowRoot.querySelector('style'), style);
+    assert.equal(el.shadowRoot.querySelectorAll('style').length, 1);
+  });
+});
+

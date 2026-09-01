@@ -71,6 +71,23 @@ describe('person dropdowns', () => {
       assert.equal(col[legacy], undefined, `${legacy} must not linger and contradict the modes`);
     }
   });
+
+  test('setting one row does not undo the other', async () => {
+    // The editor does not re-render on its own change (it ignores the echo
+    // from HA), so the second change must read the config as it is now, not
+    // as it was when the editor was drawn.
+    const { ed, changes, window } = await editor({ badge_person: false, show_person_avatar: true });
+    const [filterSel, badgeSel] = personSelects(ed);
+
+    badgeSel.value = 'both';
+    badgeSel.dispatchEvent(new window.Event('change'));
+    filterSel.value = 'both';
+    filterSel.dispatchEvent(new window.Event('change'));
+
+    const col = changes.at(-1).columns[0];
+    assert.equal(col.person_badge, 'both', 'the task row keeps what was just set for it');
+    assert.equal(col.person_filter, 'both');
+  });
 });
 
 describe('the Display section is split into groups', () => {
@@ -111,6 +128,35 @@ describe('what sits in which group', () => {
     assert.ok(header > 0);
     assert.deepEqual(marks.slice(header, header + 3), ['Header', 'title', 'icon']);
     assert.ok(marks.indexOf('Tasks') > marks.indexOf('icon'), 'and Tasks comes after');
+  });
+});
+
+describe('the default sort', () => {
+  const sortSelect = (ed) =>
+    [...ed.shadowRoot.querySelectorAll('select')].find(
+      (sel) => [...sel.options].some((o) => o.value === 'priority'));
+
+  const sectionOf = (ed, el) => {
+    const det = el.closest('details');
+    return det ? det.querySelector('summary').textContent.trim() : null;
+  };
+
+  test('sits with the other defaults, not with the card settings', async () => {
+    const { ed } = await editor();
+    const sel = sortSelect(ed);
+    assert.ok(sel, 'the sort select is still there');
+    assert.match(sectionOf(ed, sel), /Defaults/);
+  });
+
+  test('an external list gets the section too', async () => {
+    // Per-list defaults (assignee, reminders) are native-only, but the sort
+    // order is a card setting and belongs to every column.
+    const { ed } = await editor();
+    ed.setConfig({ columns: [{ entity_id: 'todo.shopping' }] });
+    await new Promise((r) => setTimeout(r, 150));
+    const sel = sortSelect(ed);
+    assert.ok(sel, 'still reachable without a native list');
+    assert.match(sectionOf(ed, sel), /Defaults/);
   });
 });
 
