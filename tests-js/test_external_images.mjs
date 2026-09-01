@@ -88,6 +88,38 @@ describe('editor image section', () => {
     }
   });
 
+  // The switch takes effect on the list immediately, not on save, so the
+  // queue it enables has to show up immediately too.
+  test('the queue appears as soon as the switch is flipped', async () => {
+    const ed = await editor(
+      { current: null, queue: [{ list_id: 'L1', task_id: 'T1', title: 'Waiting one' }] },
+      { auto_generate_image: false },
+    );
+    try {
+      assert.equal(imageSection(ed).querySelector('.queue-panel'), null);
+
+      const sec = imageSection(ed);
+      const sw = [...sec.querySelectorAll('ha-switch')][1];  // Auto-generate image
+      sw.checked = true;
+      sw.dispatchEvent(new (ed.ownerDocument.defaultView.Event)('change'));
+      await new Promise((r) => setTimeout(r, 200));
+
+      assert.ok(imageSection(ed).querySelector('.queue-panel'), 'no save needed');
+      assert.equal(imageSection(ed).querySelectorAll('.queue-row').length, 1);
+    } finally {
+      ed.remove();
+    }
+  });
+
+  test('sits where the AI settings used to, at the end', async () => {
+    const ed = await editor({ current: null, queue: [] });
+    try {
+      assert.equal(sections(ed).at(-1), 'Images');
+    } finally {
+      ed.remove();
+    }
+  });
+
   test('shows what is generating and numbers what comes next', async () => {
     const ed = await editor({
       current: { list_id: 'L1', task_id: 'T9', title: 'Running one' },

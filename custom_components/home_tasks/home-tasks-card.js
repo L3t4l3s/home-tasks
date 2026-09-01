@@ -9444,29 +9444,6 @@ class HomeTasksCardEditor extends HTMLElement {
       ...(col.list_id ? [makeSection("defaults", "mdi:account-check-outline", "ed_sec_defaults", [
         this._buildDefaultsEditor(col.list_id),
       ])] : []),
-      makeSection("images", "mdi:image-multiple", "ed_sec_images", [
-        this._el("div", { className: "toggle-grid" }, [
-          makeToggle("show-images", "ed_show_images", "show_images", false),
-          // Also tells the integration to generate for this list when no
-          // dashboard is open - one switch, both behaviours.
-          makeToggle("auto-image", "ed_auto_image", "auto_generate_image", false, (on) => {
-            this._syncAutoGenerate(col, on);
-          }),
-        ]),
-        this._buildImgGenForm(),
-        this._el("div", { className: "hint", textContent: this._t("ed_ai_image_hint") }),
-        ...(col.list_id || col.entity_id ? [
-          this._buildListSettingToggle(col, "share_images", "ed_share_images", true),
-          this._el("div", { className: "hint", textContent: this._t("ed_share_images_hint") }),
-          // Only worth showing once the list actually asks for background
-          // generation - otherwise "nothing waiting" is a sentence without a
-          // subject.
-          ...(col.auto_generate_image === true ? [
-            this._el("label", { textContent: this._t("ed_queue_title") }),
-            this._buildQueuePanel(),
-          ] : []),
-        ] : []),
-      ]),
       makeSection("filters", "mdi:filter-variant", "ed_sec_filters", [
         filterField,
         dueSoonToggle,
@@ -9499,6 +9476,33 @@ class HomeTasksCardEditor extends HTMLElement {
         ]),
       ]),
       this._buildSectionsEditor(col),
+      makeSection("images", "mdi:image-multiple", "ed_sec_images", [
+        this._el("div", { className: "toggle-grid" }, [
+          makeToggle("show-images", "ed_show_images", "show_images", false),
+          // Also tells the integration to generate for this list when no
+          // dashboard is open - one switch, both behaviours.
+          makeToggle("auto-image", "ed_auto_image", "auto_generate_image", false, (on) => {
+            // The list is switched over right away, not on save — so redraw
+            // now as well, or the queue below would only turn up after the
+            // dialog is saved and reopened.
+            this._syncAutoGenerate(col, on);
+            this._render();
+          }),
+        ]),
+        this._buildImgGenForm(),
+        this._el("div", { className: "hint", textContent: this._t("ed_ai_image_hint") }),
+        ...(col.list_id || col.entity_id ? [
+          this._buildListSettingToggle(col, "share_images", "ed_share_images", true),
+          this._el("div", { className: "hint", textContent: this._t("ed_share_images_hint") }),
+          // Only worth showing once the list actually asks for background
+          // generation - otherwise "nothing waiting" is a sentence without a
+          // subject.
+          ...(col.auto_generate_image === true ? [
+            this._el("label", { textContent: this._t("ed_queue_title") }),
+            this._buildQueuePanel(),
+          ] : []),
+        ] : []),
+      ]),
     ]);
   }
 
