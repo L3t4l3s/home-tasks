@@ -1483,6 +1483,7 @@ describe('editor Defaults section (issues #44 / #46)', () => {
         calls.push(msg);
         if (msg.type === 'home_tasks/get_defaults') return wsResponses.get_defaults ?? { defaults: { assignee: 'person.alice', reminders: [0] } };
         if (msg.type === 'home_tasks/set_defaults') return { defaults: {} };
+        if (msg.type === 'home_tasks/get_sections') return { sections: wsResponses.sections ?? [] };
         if (msg.type === 'home_tasks/get_lists') return { lists: [{ id: 'L1', name: 'L' }] };
         if (msg.type === 'home_tasks/get_external_lists') return { external_lists: [] };
         return null;
@@ -1517,9 +1518,60 @@ describe('editor Defaults section (issues #44 / #46)', () => {
     ed.remove();
   });
 
-  test('external column: no Defaults section', async () => {
-    const { root } = await makeEditor({ entity_id: 'todo.x' });
-    assert.equal(root.querySelector('.defaults-editor'), null);
+  // Defaults used to be native-only, which made them invisible on exactly the
+  // lists most people point this card at.
+  test('external column: the section is there and asks the entity', async () => {
+    const { calls, root } = await makeEditor({ entity_id: 'todo.x' });
+    assert.ok(calls.some(c => c.type === 'home_tasks/get_defaults' && c.entity_id === 'todo.x'),
+      'the overlay store is asked, not a list id');
+    assert.ok(root.querySelector('.defaults-editor'));
+  });
+
+  test('a default priority renders and saves', async () => {
+    const { ed, calls, root } = await makeEditor(
+      { list_id: 'L1' },
+      { get_defaults: { defaults: { assignee: null, reminders: [], tags: [], priority: 2, section_id: null } } },
+    );
+    const selects = [...root.querySelectorAll('.defaults-editor select')];
+    const priority = selects.find(sel => [...sel.options].some(o => o.value === '3'));
+    assert.ok(priority, 'a priority picker is there');
+    assert.equal(priority.value, '2', 'and it opens on what is stored');
+
+    priority.value = '';
+    priority.dispatchEvent(new ed.ownerDocument.defaultView.Event('change'));
+    await new Promise(r => setTimeout(r, 10));
+
+    const set = calls.find(c => c.type === 'home_tasks/set_defaults');
+    assert.equal(set.priority, null, 'cleared, not omitted');
+    ed.remove();
+  });
+
+  test('a default section appears once the list has sections', async () => {
+    const { ed, calls, root } = await makeEditor(
+      { list_id: 'L1' },
+      {
+        sections: [{ id: 'S1', name: 'Kitchen', sort_order: 0 }],
+        get_defaults: { defaults: { assignee: null, reminders: [], tags: [], priority: null, section_id: null } },
+      },
+    );
+    await new Promise(r => setTimeout(r, 60));
+    const selects = [...root.querySelectorAll('.defaults-editor select')];
+    const section = selects.find(sel => [...sel.options].some(o => o.value === 'S1'));
+    assert.ok(section, 'the section picker lists the list’s sections');
+
+    section.value = 'S1';
+    section.dispatchEvent(new ed.ownerDocument.defaultView.Event('change'));
+    await new Promise(r => setTimeout(r, 10));
+
+    const set = calls.find(c => c.type === 'home_tasks/set_defaults' && 'section_id' in c);
+    assert.equal(set.section_id, 'S1');
+    ed.remove();
+  });
+
+  test('without sections there is nothing to pick', async () => {
+    const { root } = await makeEditor({ list_id: 'L1' });
+    const selects = [...root.querySelectorAll('.defaults-editor select')];
+    assert.equal(selects.filter(sel => [...sel.options].some(o => o.value === 'S1')).length, 0);
   });
 });
 

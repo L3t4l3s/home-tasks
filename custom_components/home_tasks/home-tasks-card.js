@@ -9,6 +9,10 @@ console.info("%c HOME-TASKS-CARD %c v2.2.2 ", "color: white; background: #03a9f4
 
 const _TRANSLATIONS = {
   en: {
+    ed_default_priority: "Default priority",
+    ed_default_tags: "Default tags",
+    ed_default_section: "Default section",
+    ed_default_none: "– None –",
     ed_group_card: "Card",
     ed_person_off: "Off",
     ed_person_name: "Name",
@@ -183,6 +187,10 @@ const _TRANSLATIONS = {
     ed_ai_prompt_prefix_placeholder: "e.g. Minimalist icon of",
   },
   nl: {
+    ed_default_priority: "Standaardprioriteit",
+    ed_default_tags: "Standaardtags",
+    ed_default_section: "Standaardsectie",
+    ed_default_none: "– Geen –",
     ed_group_card: "Kaart",
     ed_person_off: "Uit",
     ed_person_name: "Naam",
@@ -279,6 +287,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} u {1} min geleden", due_ago_minutes: "{0} min geleden", due_ago_seconds: "Zojuist",
   },
   it: {
+    ed_default_priority: "Priorità predefinita",
+    ed_default_tags: "Tag predefiniti",
+    ed_default_section: "Sezione predefinita",
+    ed_default_none: "– Nessuna –",
     ed_group_card: "Scheda",
     ed_person_off: "Disattivato",
     ed_person_name: "Nome",
@@ -375,6 +387,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} h {1} min fa", due_ago_minutes: "{0} min fa", due_ago_seconds: "Proprio ora",
   },
   pl: {
+    ed_default_priority: "Domyślny priorytet",
+    ed_default_tags: "Domyślne tagi",
+    ed_default_section: "Domyślna sekcja",
+    ed_default_none: "– Brak –",
     ed_group_card: "Karta",
     ed_person_off: "Wyłączone",
     ed_person_name: "Imię",
@@ -471,6 +487,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} godz. {1} min temu", due_ago_minutes: "{0} min temu", due_ago_seconds: "W\u0142a\u015bnie",
   },
   sv: {
+    ed_default_priority: "Standardprioritet",
+    ed_default_tags: "Standardtaggar",
+    ed_default_section: "Standardavsnitt",
+    ed_default_none: "– Ingen –",
     ed_group_card: "Kort",
     ed_person_off: "Av",
     ed_person_name: "Namn",
@@ -567,6 +587,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} tim {1} min sedan", due_ago_minutes: "{0} min sedan", due_ago_seconds: "Just nu",
   },
   fr: {
+    ed_default_priority: "Priorité par défaut",
+    ed_default_tags: "Étiquettes par défaut",
+    ed_default_section: "Section par défaut",
+    ed_default_none: "– Aucune –",
     ed_group_card: "Carte",
     ed_person_off: "Désactivé",
     ed_person_name: "Nom",
@@ -663,6 +687,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "Il y a {0} h {1} min", due_ago_minutes: "Il y a {0} min", due_ago_seconds: "\u00c0 l'instant",
   },
   pt: {
+    ed_default_priority: "Prioridade padrão",
+    ed_default_tags: "Etiquetas padrão",
+    ed_default_section: "Seção padrão",
+    ed_default_none: "– Nenhuma –",
     ed_group_card: "Cartão",
     ed_person_off: "Desativado",
     ed_person_name: "Nome",
@@ -759,6 +787,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "H\u00e1 {0} h {1} min", due_ago_minutes: "H\u00e1 {0} min", due_ago_seconds: "Agora mesmo",
   },
   es: {
+    ed_default_priority: "Prioridad predeterminada",
+    ed_default_tags: "Etiquetas predeterminadas",
+    ed_default_section: "Sección predeterminada",
+    ed_default_none: "– Ninguna –",
     ed_group_card: "Tarjeta",
     ed_person_off: "Desactivado",
     ed_person_name: "Nombre",
@@ -855,6 +887,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "Hace {0} h {1} min", due_ago_minutes: "Hace {0} min", due_ago_seconds: "Ahora mismo",
   },
   ru: {
+    ed_default_priority: "Приоритет по умолчанию",
+    ed_default_tags: "Теги по умолчанию",
+    ed_default_section: "Раздел по умолчанию",
+    ed_default_none: "– Нет –",
     ed_group_card: "Карточка",
     ed_person_off: "Выкл.",
     ed_person_name: "Имя",
@@ -951,6 +987,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} \u0447 {1} \u043c\u0438\u043d \u043d\u0430\u0437\u0430\u0434", due_ago_minutes: "{0} \u043c\u0438\u043d \u043d\u0430\u0437\u0430\u0434", due_ago_seconds: "\u0422\u043e\u043b\u044c\u043a\u043e \u0447\u0442\u043e",
   },
   cs: {
+    ed_default_priority: "Výchozí priorita",
+    ed_default_tags: "Výchozí štítky",
+    ed_default_section: "Výchozí sekce",
+    ed_default_none: "– Žádná –",
     ed_group_card: "Karta",
     ed_person_off: "Vypnuto",
     ed_person_name: "Jméno",
@@ -1047,6 +1087,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "P\u0159ed {0} hod {1} min", due_ago_minutes: "P\u0159ed {0} min", due_ago_seconds: "Pr\u00e1v\u011b te\u010f",
   },
   da: {
+    ed_default_priority: "Standardprioritet",
+    ed_default_tags: "Standardtags",
+    ed_default_section: "Standardafsnit",
+    ed_default_none: "– Ingen –",
     ed_group_card: "Kort",
     ed_person_off: "Fra",
     ed_person_name: "Navn",
@@ -1143,6 +1187,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} t {1} min siden", due_ago_minutes: "{0} min siden", due_ago_seconds: "Lige nu",
   },
   no: {
+    ed_default_priority: "Standardprioritet",
+    ed_default_tags: "Standardtagger",
+    ed_default_section: "Standardseksjon",
+    ed_default_none: "– Ingen –",
     ed_group_card: "Kort",
     ed_person_off: "Av",
     ed_person_name: "Navn",
@@ -1239,6 +1287,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} t {1} min siden", due_ago_minutes: "{0} min siden", due_ago_seconds: "Akkurat n\u00e5",
   },
   fi: {
+    ed_default_priority: "Oletusprioriteetti",
+    ed_default_tags: "Oletustunnisteet",
+    ed_default_section: "Oletusosio",
+    ed_default_none: "– Ei mitään –",
     ed_group_card: "Kortti",
     ed_person_off: "Pois",
     ed_person_name: "Nimi",
@@ -1335,6 +1387,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} t {1} min sitten", due_ago_minutes: "{0} min sitten", due_ago_seconds: "Juuri nyt",
   },
   hu: {
+    ed_default_priority: "Alapértelmezett prioritás",
+    ed_default_tags: "Alapértelmezett címkék",
+    ed_default_section: "Alapértelmezett szakasz",
+    ed_default_none: "– Nincs –",
     ed_group_card: "Kártya",
     ed_person_off: "Ki",
     ed_person_name: "Név",
@@ -1431,6 +1487,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} \u00f3 {1} perccel ezel\u0151tt", due_ago_minutes: "{0} perccel ezel\u0151tt", due_ago_seconds: "\u00c9pp most",
   },
   de: {
+    ed_default_priority: "Standard-Priorität",
+    ed_default_tags: "Standard-Tags",
+    ed_default_section: "Standard-Bereich",
+    ed_default_none: "– Keine –",
     ed_group_card: "Karte",
     ed_person_off: "Aus",
     ed_person_name: "Name",
@@ -8611,11 +8671,14 @@ class HomeTasksCardEditor extends HTMLElement {
     } catch (e) { /* not worth bothering the user about */ }
   }
 
-  _buildDefaultsEditor(listId) {
+  _buildDefaultsEditor(col) {
     const container = this._el("div", { className: "defaults-editor" });
-    const cached = this._listDefaults[listId];
+    const target = this._sectionsTargetPayload(col);
+    const key = this._sourceKeyForCol(col);
+    if (!target) return container;
+    const cached = this._listDefaults[key];
     if (cached) {
-      this._renderDefaultsInto(container, listId, cached);
+      this._renderDefaultsInto(container, col, cached);
       return container;
     }
     container.appendChild(this._el("span", { className: "hint", textContent: this._t("ed_loading") }));
@@ -8623,11 +8686,17 @@ class HomeTasksCardEditor extends HTMLElement {
     // _listMeta: the editor rebuilds its DOM on every structural change, and
     // an uncached fetch would flash "Loading\u2026" and hit the backend each
     // time.
-    this._hass.callWS({ type: "home_tasks/get_defaults", list_id: listId })
+    this._hass.callWS({ type: "home_tasks/get_defaults", ...target })
       .then((r) => {
         const d = (r && r.defaults) || {};
-        this._listDefaults[listId] = { assignee: d.assignee || null, reminders: [...(d.reminders || [])] };
-        this._renderDefaultsInto(container, listId, this._listDefaults[listId]);
+        this._listDefaults[key] = {
+          assignee: d.assignee || null,
+          reminders: [...(d.reminders || [])],
+          tags: [...(d.tags || [])],
+          priority: d.priority ?? null,
+          section_id: d.section_id || null,
+        };
+        this._renderDefaultsInto(container, col, this._listDefaults[key]);
       })
       .catch(() => {
         // Never seed the cache with fabricated empty defaults: an editable
@@ -8780,7 +8849,9 @@ class HomeTasksCardEditor extends HTMLElement {
     ]);
   }
 
-  _renderDefaultsInto(container, listId, defaults) {
+  _renderDefaultsInto(container, col, defaults) {
+    const target = this._sectionsTargetPayload(col);
+    const key = this._sourceKeyForCol(col);
     const savedFlash = this._el("span", { className: "def-saved-flash" });
     // Partial saves with in-flight coalescing: each change sends only the
     // field(s) it touched (the backend keeps omitted fields), and changes
@@ -8792,7 +8863,7 @@ class HomeTasksCardEditor extends HTMLElement {
       const patch = pending;
       pending = null;
       saving = true;
-      this._hass.callWS({ type: "home_tasks/set_defaults", list_id: listId, ...patch })
+      this._hass.callWS({ type: "home_tasks/set_defaults", ...target, ...patch })
         .then((r) => {
           // Adopt the server-normalized state (deduped, sorted reminders) so
           // the session cache cannot diverge from the store — but NEVER while
@@ -8802,10 +8873,17 @@ class HomeTasksCardEditor extends HTMLElement {
           if (!pending) {
             const d = (r && r.defaults) || {};
             const norm = d.reminders || [];
+            const normTags = d.tags || [];
             const changed = (d.assignee || null) !== defaults.assignee ||
-              JSON.stringify(norm) !== JSON.stringify(defaults.reminders);
+              (d.priority ?? null) !== defaults.priority ||
+              (d.section_id || null) !== defaults.section_id ||
+              JSON.stringify(norm) !== JSON.stringify(defaults.reminders) ||
+              JSON.stringify(normTags) !== JSON.stringify(defaults.tags);
             defaults.assignee = d.assignee || null;
+            defaults.priority = d.priority ?? null;
+            defaults.section_id = d.section_id || null;
             defaults.reminders.splice(0, defaults.reminders.length, ...norm);
+            defaults.tags.splice(0, defaults.tags.length, ...normTags);
             if (changed) renderInto();
           }
           savedFlash.classList.remove("err");
@@ -8821,7 +8899,7 @@ class HomeTasksCardEditor extends HTMLElement {
           clearTimeout(savedFlash._hideT);
           savedFlash.textContent = "\u2717 " + this._t("ed_defaults_save_failed");
           savedFlash.classList.add("err", "show");
-          delete this._listDefaults[listId];
+          delete this._listDefaults[key];
         })
         .then(() => {
           saving = false;
@@ -8857,6 +8935,59 @@ class HomeTasksCardEditor extends HTMLElement {
         personSelect,
         this._el("span", { textContent: this._t("ed_default_assignee") }),
       ]));
+
+      const prioritySelect = this._el("select", { className: "editor-native-select" });
+      for (const [value, labelKey] of [["", "ed_default_none"], ["1", "pri_low"], ["2", "pri_medium"], ["3", "pri_high"]]) {
+        const opt = this._el("option", { value, textContent: this._t(labelKey) });
+        if (String(defaults.priority ?? "") === value) opt.selected = true;
+        prioritySelect.appendChild(opt);
+      }
+      prioritySelect.addEventListener("change", () => {
+        defaults.priority = prioritySelect.value ? parseInt(prioritySelect.value, 10) : null;
+        save({ priority: defaults.priority });
+      });
+      kids.push(this._el("div", { className: "field-wrap" }, [
+        prioritySelect,
+        this._el("span", { textContent: this._t("ed_default_priority") }),
+      ]));
+
+      // Suggestions come from the tags already in use on this list; the
+      // multi-select takes free text too, same as the preset filters.
+      const known = (key && this._listMeta[key]) || { tags: [] };
+      kids.push(this._buildMultiSelect(
+        this._t("ed_default_tags"),
+        defaults.tags,
+        known.tags,
+        (vals) => {
+          defaults.tags.splice(0, defaults.tags.length, ...vals);
+          save({ tags: [...defaults.tags] });
+        },
+      ));
+
+      // Sections are loaded for the Sections editor in the same render pass;
+      // until they arrive this is just the "no section" entry, and the load
+      // re-renders the editor.
+      const sections = (key && this._listSections[key]) || [];
+      if (sections.length) {
+        const sectionSelect = this._el("select", { className: "editor-native-select" });
+        const noSection = this._el("option", { value: "", textContent: this._t("ed_default_none") });
+        if (!defaults.section_id) noSection.selected = true;
+        sectionSelect.appendChild(noSection);
+        for (const s of [...sections].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))) {
+          const opt = this._el("option", { value: s.id, textContent: s.name });
+          if (s.id === defaults.section_id) opt.selected = true;
+          sectionSelect.appendChild(opt);
+        }
+        sectionSelect.addEventListener("change", () => {
+          defaults.section_id = sectionSelect.value || null;
+          save({ section_id: defaults.section_id });
+        });
+        kids.push(this._el("div", { className: "field-wrap" }, [
+          sectionSelect,
+          this._el("span", { textContent: this._t("ed_default_section") }),
+        ]));
+      }
+
       defaults.reminders.forEach((offset, ri) => {
         const sel = this._el("select", { className: "editor-native-select" });
         for (const opt of reminderOffsetOptions(this, offset)) sel.appendChild(opt);
@@ -9813,9 +9944,9 @@ class HomeTasksCardEditor extends HTMLElement {
       ]),
       makeSection("defaults", "mdi:account-check-outline", "ed_sec_defaults", [
         sortField,
-        // The per-list defaults (assignee, reminders) live in the integration,
-        // so they exist for native lists only.
-        ...(col.list_id ? [this._buildDefaultsEditor(col.list_id)] : []),
+        // Defaults live with the list, native or external, so they apply
+        // however the task is created - card, voice, service or todo entity.
+        this._buildDefaultsEditor(col),
       ]),
       makeSection("filters", "mdi:filter-variant", "ed_sec_filters", [
         filterField,

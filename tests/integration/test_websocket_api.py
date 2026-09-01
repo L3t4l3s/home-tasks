@@ -2258,7 +2258,10 @@ async def test_ws_defaults_roundtrip_and_applied(hass: HomeAssistant, hass_ws_cl
     })
     msg = await client.receive_json()
     assert msg["success"] is True
-    assert msg["result"]["defaults"] == {"assignee": "person.alice", "reminders": [0, 60]}
+    assert msg["result"]["defaults"] == {
+        "assignee": "person.alice", "reminders": [0, 60],
+        "tags": [], "priority": None, "section_id": None,
+    }
 
     await client.send_json({"id": 302, "type": "home_tasks/get_defaults", "list_id": mock_config_entry.entry_id})
     msg = await client.receive_json()
@@ -2290,7 +2293,10 @@ async def test_ws_defaults_roundtrip_and_applied(hass: HomeAssistant, hass_ws_cl
         "list_id": mock_config_entry.entry_id, "assignee": "person.bob",
     })
     msg = await client.receive_json()
-    assert msg["result"]["defaults"] == {"assignee": "person.bob", "reminders": [0, 60]}
+    assert msg["result"]["defaults"] == {
+        "assignee": "person.bob", "reminders": [0, 60],
+        "tags": [], "priority": None, "section_id": None,
+    }
 
     # explicit empty reminders at creation win over the default ([] means
     # "no reminders"; only an omitted field falls back to the default)
@@ -2308,7 +2314,10 @@ async def test_ws_defaults_roundtrip_and_applied(hass: HomeAssistant, hass_ws_cl
         "list_id": mock_config_entry.entry_id, "assignee": None, "reminders": [],
     })
     msg = await client.receive_json()
-    assert msg["result"]["defaults"] == {"assignee": None, "reminders": []}
+    assert msg["result"]["defaults"] == {
+        "assignee": None, "reminders": [],
+        "tags": [], "priority": None, "section_id": None,
+    }
 
 
 async def test_ws_move_task_full_target_keeps_task_in_source(

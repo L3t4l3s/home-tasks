@@ -332,9 +332,12 @@ The old flat format (`list_id` at root level) is still supported and migrated au
 
 ### List defaults
 
-Native lists can define **defaults for new tasks** (card editor → *Defaults* section):
-a default assignee and default reminders. They apply to every task created in that list,
-no matter how it is created — card, `home_tasks.add_task`, voice input or `todo.add_item`.
+Every list — native or linked external — can define **defaults for new tasks**
+(card editor → *Defaults* section): a default assignee, reminders, tags, priority and
+section. They apply to every task created in that list, no matter how it is created —
+card, `home_tasks.add_task`, voice input or `todo.add_item`. On an external list the
+defaults are offered to the provider first, so one that syncs labels or priority stores
+them itself; the section is kept locally, like all sections.
 Explicit values in the creating call always win, including an explicitly empty
 reminders list (`reminders: []` / `""` means "no reminders" — only an omitted field
 falls back to the default).

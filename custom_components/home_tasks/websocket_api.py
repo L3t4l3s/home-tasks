@@ -84,6 +84,25 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_generate_task_image)
 
 
+# Which list a command is aimed at: a native list by config entry, or an
+# external one by entity id. Same pair as the section commands use.
+_TARGET = {
+    vol.Exclusive("list_id", "target"): _val_id,
+    vol.Exclusive("entity_id", "target"): _val_entity_id,
+}
+
+DEFAULT_FIELDS = ("assignee", "reminders", "tags", "priority", "section_id")
+
+
+def _get_target_store(hass, msg):
+    """Return the store that holds this target's own data (native or overlay)."""
+    if "list_id" in msg:
+        return _get_store(hass, msg["list_id"])
+    if "entity_id" in msg:
+        return _get_overlay_store(hass, msg["entity_id"])
+    raise ValueError("Either list_id or entity_id is required")
+
+
 def _get_store(hass, entry_id):
     """Get native HomeTasksStore for a config entry."""
     from .store import HomeTasksStore
@@ -321,14 +340,17 @@ async def ws_set_list_settings(hass, connection, msg):
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "home_tasks/get_defaults",
-        vol.Required("list_id"): _val_id,
+        **_TARGET,
     }
 )
 @websocket_api.async_response
 async def ws_get_defaults(hass, connection, msg):
-    """Get the list-level defaults for new tasks (issues #44 / #46)."""
+    """Get the list-level defaults for new tasks (issues #44 / #46).
+
+    Native list or external one: both stores answer the same question.
+    """
     try:
-        store = _get_store(hass, msg["list_id"])
+        store = _get_target_store(hass, msg)
         connection.send_result(msg["id"], {"defaults": store.get_defaults()})
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -337,9 +359,12 @@ async def ws_get_defaults(hass, connection, msg):
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "home_tasks/set_defaults",
-        vol.Required("list_id"): _val_id,
         vol.Optional("assignee"): vol.Any(str, None),
         vol.Optional("reminders"): _val_reminders,
+        vol.Optional("tags"): vol.All(list, vol.Length(max=MAX_TAGS_PER_TASK)),
+        vol.Optional("priority"): vol.Any(vol.In([1, 2, 3]), None),
+        vol.Optional("section_id"): vol.Any(_val_id, None),
+        **_TARGET,
     }
 )
 @websocket_api.async_response
@@ -349,15 +374,11 @@ async def ws_set_defaults(hass, connection, msg):
     Partial update: omitted fields keep their current value.
     """
     try:
-        store = _get_store(hass, msg["list_id"])
+        store = _get_target_store(hass, msg)
         # Pass only the fields the client sent: async_set_defaults has
         # partial-update semantics, so an omitted field keeps its value
         # instead of being silently cleared.
-        kwargs = {}
-        if "assignee" in msg:
-            kwargs["assignee"] = msg["assignee"]
-        if "reminders" in msg:
-            kwargs["reminders"] = msg["reminders"]
+        kwargs = {k: msg[k] for k in DEFAULT_FIELDS if k in msg}
         defaults = await store.async_set_defaults(**kwargs)
         connection.send_result(msg["id"], {"defaults": defaults})
     except Exception as err:
@@ -1509,6 +1530,32 @@ async def ws_create_external_task(hass, connection, msg):
 
         fields = {k: v for k, v in msg.items() if k not in ("id", "type", "entity_id")}
 
+        # List-level defaults, same rule as the native path: fill only what
+        # the caller left out, and do it before the adapter runs so a provider
+        # that syncs labels or priority gets them too.
+        # An unlinked external entity has no overlay store, and no defaults.
+        try:
+            overlay_store = _get_overlay_store(hass, entity_id)
+        except ValueError:
+            overlay_store = None
+        default_section = None
+        if overlay_store is not None:
+            defaults = overlay_store.get_defaults()
+            if fields.get("assigned_person") is None and defaults["assignee"]:
+                fields["assigned_person"] = defaults["assignee"]
+            if not fields.get("reminders") and defaults["reminders"]:
+                fields["reminders"] = list(defaults["reminders"])
+            if not fields.get("tags") and defaults["tags"]:
+                fields["tags"] = list(defaults["tags"])
+            if fields.get("priority") is None and defaults["priority"]:
+                fields["priority"] = defaults["priority"]
+            # Sections are ours alone - no provider knows about them, so this
+            # one goes straight into the overlay below.
+            if defaults["section_id"] and any(
+                s["id"] == defaults["section_id"] for s in overlay_store.sections
+            ):
+                default_section = defaults["section_id"]
+
         if adapter:
             new_uid, adapter_unsynced = await adapter.async_create_task(fields)
         else:
@@ -1528,6 +1575,8 @@ async def ws_create_external_task(hass, connection, msg):
             for key in ("recurrence_end_type", "recurrence_max_count", "recurrence_remaining_count"):
                 if key in fields:
                     overlay_fields.setdefault(key, fields[key])
+            if default_section:
+                overlay_fields.setdefault("section_id", default_section)
             # Only persist keys the overlay store knows about
             overlay_kwargs = {k: v for k, v in overlay_fields.items() if k in OVERLAY_FIELDS}
             if overlay_kwargs:
@@ -1716,10 +1765,7 @@ def _get_sections_store(hass, msg):
     raise ValueError("Either list_id or entity_id is required")
 
 
-_SECTION_TARGET = {
-    vol.Exclusive("list_id", "target"): _val_id,
-    vol.Exclusive("entity_id", "target"): _val_entity_id,
-}
+_SECTION_TARGET = _TARGET
 
 
 @websocket_api.websocket_command(

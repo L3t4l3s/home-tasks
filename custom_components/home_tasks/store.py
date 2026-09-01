@@ -490,10 +490,21 @@ class HomeTasksStore:
         which path creates it — card, WS, service, voice or todo platform
         (issues #44 / #46)."""
         d = self._data.get("defaults") or {}
-        return {"assignee": d.get("assignee") or None, "reminders": list(d.get("reminders") or [])}
+        return {
+            "assignee": d.get("assignee") or None,
+            "reminders": list(d.get("reminders") or []),
+            "tags": list(d.get("tags") or []),
+            "priority": d.get("priority"),
+            "section_id": d.get("section_id") or None,
+        }
 
     async def async_set_defaults(
-        self, assignee: object = _UNSET, reminders: object = _UNSET
+        self,
+        assignee: object = _UNSET,
+        reminders: object = _UNSET,
+        tags: object = _UNSET,
+        priority: object = _UNSET,
+        section_id: object = _UNSET,
     ) -> dict:
         """Update the list-level defaults.
 
@@ -513,7 +524,25 @@ class HomeTasksStore:
             reminders = current["reminders"]
         else:
             reminders = validate_reminders(reminders) if reminders else []
-        self._data["defaults"] = {"assignee": assignee or None, "reminders": reminders}
+        if tags is _UNSET:
+            tags = current["tags"]
+        else:
+            tags = validate_tags(tags) if tags else []
+        if priority is _UNSET:
+            priority = current["priority"]
+        else:
+            priority = validate_priority(priority)
+        if section_id is _UNSET:
+            section_id = current["section_id"]
+        elif section_id:
+            self._validate_section_id(section_id)
+        self._data["defaults"] = {
+            "assignee": assignee or None,
+            "reminders": reminders,
+            "tags": tags,
+            "priority": priority,
+            "section_id": section_id or None,
+        }
         # Immediate save (not async_delay_save): a pending delayed write of an
         # unloaded store instance could clobber newer disk state after a
         # config-entry reload, and the WS ack must mean "persisted".  Client-
@@ -532,6 +561,8 @@ class HomeTasksStore:
         reminders: list | None = None,
         notes: str | None = None,
         priority: int | None = None,
+        tags: list | None = None,
+        section_id: str | None = None,
     ) -> dict:
         """Add a task, optionally with an initial due date/time (issue #38),
         reminders (issue #43), notes and priority.
@@ -550,6 +581,17 @@ class HomeTasksStore:
             assigned_person = defaults["assignee"]
         if reminders is None and defaults.get("reminders"):
             reminders = list(defaults["reminders"])
+        if tags is None and defaults.get("tags"):
+            tags = list(defaults["tags"])
+        if priority is None and defaults.get("priority"):
+            priority = defaults["priority"]
+        if section_id is None and defaults.get("section_id"):
+            # A default pointing at a section that has since been deleted is a
+            # stale preference, not an instruction: ignore it rather than
+            # letting it fail every creation on the list.
+            known = {s["id"] for s in self._data.get("sections", [])}
+            if defaults["section_id"] in known:
+                section_id = defaults["section_id"]
         if assigned_person is not None:
             assigned_person = validate_assigned_person(assigned_person)
         due_date = validate_date(due_date, "due_date")
@@ -557,6 +599,9 @@ class HomeTasksStore:
         reminders = validate_reminders(reminders) if reminders else []
         notes = validate_notes(notes) if notes else ""
         priority = validate_priority(priority)
+        tags = validate_tags(tags) if tags else []
+        if section_id is not None:
+            self._validate_section_id(section_id)
         if len(self._data["tasks"]) >= MAX_TASKS_PER_LIST:
             raise ValueError(f"Maximum number of tasks ({MAX_TASKS_PER_LIST}) reached")
         max_order = max((t["sort_order"] for t in self._data["tasks"]), default=-1)
@@ -607,12 +652,12 @@ class HomeTasksStore:
             "completed_at": None,
             "reopen_at": None,
             "assigned_person": assigned_person,
-            "tags": [],
+            "tags": tags,
             "image_url": None,
             "history": history,
             "external_id": None,
             "sync_source": None,
-            "section_id": None,
+            "section_id": section_id,
         }
         self._data["tasks"].append(task)
         await self._async_save()
@@ -1037,6 +1082,11 @@ class HomeTasksStore:
         for task in self._data.get("tasks", []):
             if task.get("section_id") == section_id:
                 task["section_id"] = None
+        # A default that points at the deleted section would put every new
+        # task into a section that is not there any more.
+        defaults = self._data.get("defaults") or {}
+        if defaults.get("section_id") == section_id:
+            defaults["section_id"] = None
         await self._async_save()
 
     async def async_reorder_sections(self, section_ids: list[str]) -> None:
