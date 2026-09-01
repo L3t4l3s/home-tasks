@@ -38,16 +38,27 @@ async def _queue(hass: HomeAssistant, **config) -> ImageQueue:
     return q
 
 
-def _generation(fail: bool = False, reused: bool = False):
-    """Stand in for the generation core."""
+def _generation(fail: bool = False, reused: bool = False, store=None):
+    """Stand in for the generation core.
+
+    Pass *store* to have it write a real image like the real thing does —
+    without that the task keeps the waiting placeholder and every later scan
+    would (correctly) queue it again.
+    """
     if fail:
         return patch(
             "custom_components.home_tasks.websocket_api.async_generate_task_image",
             new=AsyncMock(side_effect=RuntimeError("provider down")),
         )
+
+    async def _run(hass, connection, *, task_id, **kwargs):
+        if store is not None:
+            await store.async_update_task(task_id, image_url="/local/home_tasks/gen.png")
+        return {"task": {"id": task_id}, "reused": reused}
+
     return patch(
         "custom_components.home_tasks.websocket_api.async_generate_task_image",
-        new=AsyncMock(return_value={"task": {"id": "x"}, "reused": reused}),
+        new=AsyncMock(side_effect=_run),
     )
 
 
@@ -194,6 +205,116 @@ async def test_a_new_task_is_queued_without_waiting_for_a_scan(
         await store.async_add_task("Fresh")
         await hass.async_block_till_done()
         assert gen.await_count == 1
+
+
+async def test_toggling_the_switch_does_not_duplicate_jobs(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store
+) -> None:
+    """Flipping the option repeatedly must not queue a task several times."""
+    await store.async_add_task("Toggle me")
+    q = await _queue(hass, ai_task_entity_id="ai_task.test")
+    client = await hass_ws_client(hass)
+
+    with _generation(store=store) as gen:
+        for i, value in enumerate([True, False, True, False, True]):
+            await client.send_json({
+                "id": 540 + i,
+                "type": "home_tasks/set_list_settings",
+                "list_id": mock_config_entry.entry_id,
+                "auto_generate_images": value,
+            })
+            assert (await client.receive_json())["success"] is True
+        await hass.async_block_till_done()
+        await q.async_run()
+
+    # Switching on generates straight away, so the task is done after the
+    # first "on" — the later ones must neither queue it again nor pay for a
+    # second picture.
+    assert gen.await_count == 1, "one task, one generation"
+    assert q.queue == []
+
+
+async def test_switching_off_clears_the_queue_for_that_list(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store
+) -> None:
+    """Off means off: no pending generation, no leftover placeholder.
+
+    A second list that is still on keeps its own work.
+    """
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    other = MockConfigEntry(domain=DOMAIN, data={"name": "Other"}, title="Other")
+    other.add_to_hass(hass)
+    await hass.config_entries.async_setup(other.entry_id)
+    await hass.async_block_till_done()
+    other_store = hass.data[DOMAIN][other.entry_id]
+
+    mine = await store.async_add_task("Mine")
+    theirs = await other_store.async_add_task("Theirs")
+    await store.async_set_settings(auto_generate_images=True)
+    await other_store.async_set_settings(auto_generate_images=True)
+
+    q = await _queue(hass, ai_task_entity_id="ai_task.test")
+    await q.async_scan()
+    assert len(q.queue) == 2
+    assert store.get_task(mine["id"])["image_url"] == PENDING_IMAGE_URL
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 545,
+        "type": "home_tasks/set_list_settings",
+        "list_id": mock_config_entry.entry_id,
+        "auto_generate_images": False,
+    })
+    assert (await client.receive_json())["success"] is True
+
+    assert [e["list_id"] for e in q.queue] == [other.entry_id]
+    assert store.get_task(mine["id"])["image_url"] is None, "placeholder removed"
+    assert other_store.get_task(theirs["id"])["image_url"] == PENDING_IMAGE_URL
+
+    with _generation() as gen:
+        await q.async_run()
+        assert gen.await_count == 1, "only the list that is still on"
+
+
+async def test_a_stale_job_is_dropped_instead_of_generated(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """The worker re-checks the switch before spending a provider call."""
+    task = await store.async_add_task("Stale")
+    await store.async_set_settings(auto_generate_images=True)
+    q = await _queue(hass, ai_task_entity_id="ai_task.test")
+    await q.async_scan()
+    assert len(q.queue) == 1
+
+    # Switched off directly on the store, so the queue was never told.
+    await store.async_set_settings(auto_generate_images=False)
+
+    with _generation() as gen:
+        await q.async_run()
+        assert gen.await_count == 0
+    assert q.queue == []
+    assert store.get_task(task["id"])["image_url"] is None
+
+
+async def test_cancelling_a_job_clears_its_placeholder(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store
+) -> None:
+    task = await store.async_add_task("Cancel and clear")
+    await store.async_set_settings(auto_generate_images=True)
+    q = await _queue(hass)
+    await q.async_scan()
+    assert store.get_task(task["id"])["image_url"] == PENDING_IMAGE_URL
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 546,
+        "type": "home_tasks/cancel_image_queue",
+        "jobs": [{"list_id": mock_config_entry.entry_id, "task_id": task["id"]}],
+    })
+    assert (await client.receive_json())["success"] is True
+
+    assert store.get_task(task["id"])["image_url"] is None
 
 
 # --- durability -------------------------------------------------------------

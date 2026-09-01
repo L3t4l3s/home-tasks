@@ -299,11 +299,16 @@ async def ws_set_list_settings(hass, connection, msg):
         settings = await store.async_set_settings(**kwargs)
 
         queue = async_get_image_queue(hass)
-        if queue is not None and settings["auto_generate_images"] and not was_on:
-            # Switched on: give the tasks that failed before another go — the
-            # placeholder on them would otherwise keep them out forever.
-            await queue.async_clear_failed_for(list_id, entity_id)
-            queue.async_kick()
+        if queue is not None and "auto_generate_images" in kwargs:
+            if settings["auto_generate_images"] and not was_on:
+                # Switched on: give the tasks that failed before another go —
+                # the placeholder on them would otherwise keep them out for
+                # ever.
+                await queue.async_clear_failed_for(list_id, entity_id)
+                queue.async_kick()
+            elif not settings["auto_generate_images"] and was_on:
+                # Switched off: stop what is still queued for this list.
+                await queue.async_drop_for(list_id, entity_id)
         connection.send_result(msg["id"], {"settings": settings})
     except Exception as err:
         _handle_error(connection, msg["id"], err)

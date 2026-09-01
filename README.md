@@ -170,6 +170,10 @@ alone. Switching `auto_generate_image` off and on again gives those tasks
 another go, and the generate button in the task details always works. While a
 task waits its turn it shows a "generating image" placeholder.
 
+Switching `auto_generate_image` off stops the list at once: whatever is still
+queued for it is dropped and the waiting placeholders disappear again. Turning
+it on and off repeatedly costs nothing — a task is only ever queued once.
+
 The card editor's *Images* section lists what is still waiting and lets you
 cancel single jobs — cancelling also switches that list's automatic generation
 off, since otherwise the next scan would queue the task straight back.

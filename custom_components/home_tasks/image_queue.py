@@ -152,11 +152,50 @@ class ImageQueue:
         """Drop entries from the queue. Returns how many were removed."""
         drop = set(keys)
         remaining = [e for e in self.queue if self._key(e) not in drop]
-        removed = len(self.queue) - len(remaining)
-        if removed:
-            self._data["queue"] = remaining
-            await self._async_save()
-        return removed
+        dropped = [e for e in self.queue if self._key(e) in drop]
+        if not dropped:
+            return 0
+        self._data["queue"] = remaining
+        await self._async_save()
+        await self._async_clear_pending(dropped)
+        return len(dropped)
+
+    async def async_drop_for(self, list_id: str | None, entity_id: str | None) -> int:
+        """Forget everything queued for one list.
+
+        Switching automatic generation off has to stop the pending work too —
+        otherwise the next pass would still generate for a list the user just
+        turned off, and its tasks would wear the "generating" placeholder for
+        ever.
+        """
+        keys = [
+            self._key(e) for e in self.queue
+            if e.get("list_id") == list_id and e.get("entity_id") == entity_id
+        ]
+        return await self.async_cancel(keys)
+
+    async def _async_clear_pending(self, entries: list[dict]) -> None:
+        """Remove the waiting placeholder from tasks that are no longer queued.
+
+        Only where it is still showing: a task that meanwhile got a real
+        picture (or the failure placeholder) must keep it.
+        """
+        for entry in entries:
+            try:
+                current = await self._async_current_image(entry)
+            except Exception:  # noqa: BLE001
+                continue
+            if current and current.split("?")[0] == PENDING_IMAGE_URL:
+                await self._async_set_image(entry, None)
+
+    async def _async_current_image(self, entry: dict) -> str | None:
+        from .websocket_api import _get_overlay_store, _get_store
+
+        if entry.get("entity_id"):
+            store = _get_overlay_store(self.hass, entry["entity_id"])
+            return store.get_overlay(entry["task_id"]).get("image_url")
+        store = _get_store(self.hass, entry["list_id"])
+        return store.get_task(entry["task_id"]).get("image_url")
 
     async def async_clear_failed_for(self, list_id: str | None, entity_id: str | None) -> None:
         """Forget the failure marks of one list.
@@ -251,9 +290,29 @@ class ImageQueue:
                 # task block the queue forever.
                 self._data["queue"] = queue[1:]
                 await self._async_save()
+                if not self._wants_images(entry):
+                    # Switched off while this was waiting (or left over from an
+                    # older version) — drop it, placeholder and all.
+                    await self._async_clear_pending([entry])
+                    continue
                 await self._async_generate(entry)
         finally:
             self._running = False
+
+    def _wants_images(self, entry: dict) -> bool:
+        """Whether the entry's list still asks for automatic generation."""
+        from .websocket_api import _get_overlay_store
+
+        try:
+            if entry.get("entity_id"):
+                store = _get_overlay_store(self.hass, entry["entity_id"])
+            else:
+                store = self.hass.data.get(DOMAIN, {}).get(entry.get("list_id"))
+            if store is None or not hasattr(store, "get_settings"):
+                return False
+            return bool(store.get_settings()["auto_generate_images"])
+        except Exception:  # noqa: BLE001
+            return False
 
     async def _async_generate(self, entry: dict) -> None:
         """Generate one image. A failure is marked, never retried."""
@@ -277,8 +336,8 @@ class ImageQueue:
             await self._async_mark_failed(entry)
             await self._async_set_image(entry, FAILED_IMAGE_URL)
 
-    async def _async_set_image(self, entry: dict, url: str) -> None:
-        """Put a placeholder on the task. Best effort - it is only cosmetic."""
+    async def _async_set_image(self, entry: dict, url: str | None) -> None:
+        """Put a placeholder on the task (None clears it). Best effort."""
         from .websocket_api import _get_overlay_store, _get_store
 
         try:
