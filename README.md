@@ -306,7 +306,7 @@ Each entry in `columns` accepts the following options.
 | `show_notes` | `true` | Show/hide the notes field |
 | `show_sub_tasks` | `true` | Show/hide sub-tasks |
 | `show_assigned_person` | `true` | Show/hide person assignment |
-| `show_person_avatar` | `false` | Show the person's Home Assistant profile picture on the badge and filter chips (initials when they have none) |
+| `show_person_avatar` | `false` | Show the person's Home Assistant profile picture on the badge and filter chips (initials when they have none). With `badge_person` or `show_person_chips` off, the picture replaces the chip |
 | `show_priority` | `true` | Show/hide priority field and badge |
 | `show_tags` | `true` | Show/hide tags, badges, and filter chips |
 | `show_due_date` | `true` | Show/hide due date and time |

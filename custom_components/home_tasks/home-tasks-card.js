@@ -9,7 +9,7 @@ console.info("%c HOME-TASKS-CARD %c v2.2.2 ", "color: white; background: #03a9f4
 
 const _TRANSLATIONS = {
   en: {
-    ed_show_person_avatar: "Person picture",
+    ed_show_person_avatar: "Profile picture",
     voice_failed: "Voice input failed",
     voice_input: "Voice input", voice_stop: "Stop recording", img_label: "Image", img_generate: "Generate", img_regenerate: "Regenerate", img_generating: "Generating…", img_from_media: "From media library", img_remove: "Remove image", img_generate_failed: "Image generation failed: ", img_save_failed: "Saving image failed: ", mb_title: "Media library", mb_loading: "Loading…", mb_root: "Media", mb_back: "Back", mb_empty: "No files", mb_error: "Error: ",
     my_tasks: "My Tasks",
@@ -3339,7 +3339,9 @@ class HomeTasksCard extends HTMLElement {
     const addTask = this._buildColumnAddTask(cs, colIdx);
     const sortBtnWrapper = (col.show_sort !== false) ? this._buildColumnSortControl(col, cs, colIdx) : null;
     const tagChips = col.show_tag_chips === false ? null : this._buildColumnTagChips(col, cs, colIdx);
-    const personChips = col.show_person_chips === false ? null : this._buildColumnPersonChips(col, cs, colIdx);
+    // Chips off but pictures on: the faces stay, the pills go (issue #48).
+    const personChipsOff = col.show_person_chips === false && col.show_person_avatar !== true;
+    const personChips = personChipsOff ? null : this._buildColumnPersonChips(col, cs, colIdx);
 
     // Sort button placement: move into first available chips row when filters are hidden
     const sortInTagRow = hideFilters && tagChips !== null && sortBtnWrapper !== null;
@@ -3908,12 +3910,20 @@ class HomeTasksCard extends HTMLElement {
     if (this._hass && this._hass.states && this._hass.states[eid]) {
       name = this._hass.states[eid].attributes?.friendly_name || eid;
     }
-    const withAvatar = this._config.columns[colIdx]?.show_person_avatar === true;
+    const col = this._config.columns[colIdx] || {};
+    const withAvatar = col.show_person_avatar === true;
+    // Switching the chips off with the picture on leaves just the face, at
+    // the size the chip was tall.
+    const avatarOnly = withAvatar && col.show_person_chips === false;
     const chip = this._el("button", {
-      className: "person-chip" + (isActive ? " active" : "") + (withAvatar ? " with-avatar" : ""),
+      className: "person-chip" + (isActive ? " active" : "") + (withAvatar ? " with-avatar" : "")
+        + (avatarOnly ? " avatar-only" : ""),
       "data-eid": eid,
+      title: name,
     });
-    if (withAvatar) {
+    if (avatarOnly) {
+      chip.appendChild(this._buildPersonAvatar(eid, name));
+    } else if (withAvatar) {
       chip.append(this._buildPersonAvatar(eid, name), this._el("span", { textContent: name }));
     } else {
       chip.textContent = "\uD83D\uDC64 " + name;
@@ -4837,7 +4847,8 @@ class HomeTasksCard extends HTMLElement {
       const badge = this._buildRecurrenceBadge(task);
       if (badge) meta.push(badge);
     }
-    if ((task.assigned_person || task.assigned_name) && col.show_assigned_person !== false && col.badge_person !== false) {
+    if ((task.assigned_person || task.assigned_name) && col.show_assigned_person !== false
+        && (col.badge_person !== false || col.show_person_avatar === true)) {
       meta.push(this._buildAssignedPersonBadge(task, cs, colIdx));
     }
     if (task.tags && task.tags.length > 0 && col.show_tags !== false && col.badge_tags !== false) {
@@ -4975,12 +4986,18 @@ class HomeTasksCard extends HTMLElement {
       personName = task.assigned_person;
     }
     const isActivePerson = cs.personFilters.has(task.assigned_person);
-    const withAvatar = this._config.columns[colIdx]?.show_person_avatar === true;
+    const col = this._config.columns[colIdx] || {};
+    const withAvatar = col.show_person_avatar === true;
+    const avatarOnly = withAvatar && col.badge_person === false;
     const assignedBadge = this._el("span", {
-      className: "assigned-badge" + (isActivePerson ? " active" : "") + (withAvatar ? " with-avatar" : ""),
+      className: "assigned-badge" + (isActivePerson ? " active" : "") + (withAvatar ? " with-avatar" : "")
+        + (avatarOnly ? " avatar-only" : ""),
       "data-eid": task.assigned_person,
+      title: personName,
     });
-    if (withAvatar) {
+    if (avatarOnly) {
+      assignedBadge.appendChild(this._buildPersonAvatar(task.assigned_person, personName));
+    } else if (withAvatar) {
       assignedBadge.append(
         this._buildPersonAvatar(task.assigned_person, personName),
         this._el("span", { textContent: personName }),
@@ -7734,6 +7751,15 @@ class HomeTasksCard extends HTMLElement {
         display: inline-flex; align-items: center; justify-content: center;
         color: #fff; font-weight: 500; line-height: 1;
       }
+      .assigned-badge.avatar-only, .person-chip.avatar-only {
+        background: none; border: none; padding: 0; border-radius: 50%;
+      }
+      .assigned-badge.avatar-only .person-avatar { width: 20px; height: 20px; font-size: 10px; }
+      .person-chip.avatar-only .person-avatar { width: 24px; height: 24px; font-size: 11px; }
+      .assigned-badge.avatar-only.active .person-avatar,
+      .person-chip.avatar-only.active .person-avatar {
+        box-shadow: 0 0 0 2px var(--todo-primary);
+      }
       .assigned-badge .person-avatar { width: 16px; height: 16px; font-size: 9px; }
       .person-chip .person-avatar { width: 18px; height: 18px; font-size: 10px; }
       .compact .assigned-badge .person-avatar { width: 14px; height: 14px; font-size: 8px; }
@@ -9545,6 +9571,7 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("badge-due", "ed_badge_due", "badge_due", true),
           makeToggle("badge-recurrence", "ed_badge_recurrence", "badge_recurrence", true),
           makeToggle("badge-person", "ed_badge_person", "badge_person", true),
+          makeToggle("show-person-avatar", "ed_show_person_avatar", "show_person_avatar", false),
           makeToggle("badge-tags", "ed_badge_tags", "badge_tags", true),
           makeToggle("badge-reminders", "ed_badge_reminders", "badge_reminders", true),
           ...(col.view_mode === "tiles"
@@ -9607,7 +9634,6 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-notes", "ed_show_notes", "show_notes", true),
           makeToggle("show-sub-tasks", "ed_show_sub_items", "show_sub_tasks", true),
           makeToggle("show-person", "ed_show_person", "show_assigned_person", true),
-          makeToggle("show-person-avatar", "ed_show_person_avatar", "show_person_avatar", false),
           makeToggle("show-priority", "ed_show_priority", "show_priority", true),
           makeToggle("show-tags", "ed_show_tags", "show_tags", true),
           makeToggle("show-due-date", "ed_show_due_date", "show_due_date", true),

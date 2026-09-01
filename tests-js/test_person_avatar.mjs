@@ -139,3 +139,49 @@ describe('assignee avatars', () => {
     assert.ok(card._columns[0].personFilters.has('person.kevin'), 'the avatar must not eat the click');
   });
 });
+
+describe('the picture can stand in for the chip', () => {
+  test('row chips off, picture on: the face stays, the pill goes', async () => {
+    const card = await mount({ show_person_avatar: true, badge_person: false });
+    const b = badge(card, 'person.kevin');
+    assert.ok(b, 'the face is still there');
+    assert.ok(b.classList.contains('avatar-only'));
+    assert.equal(b.textContent.trim(), '', 'no name, no pill');
+    assert.equal(b.getAttribute('title'), 'Kevin Schimnick', 'the name is one hover away');
+    assert.equal(avatarIn(b).tagName, 'IMG');
+  });
+
+  test('and it still filters when clicked', async () => {
+    const card = await mount({ show_person_avatar: true, badge_person: false });
+    const win = card.ownerDocument.defaultView;
+    badge(card, 'person.kevin').dispatchEvent(new win.MouseEvent('click', { bubbles: true }));
+    await flush();
+    assert.ok(card._columns[0].personFilters.has('person.kevin'));
+  });
+
+  test('filter chips off, picture on: the same, one size up', async () => {
+    const card = await mount({ show_person_avatar: true, show_person_chips: false });
+    const chip = card.shadowRoot.querySelector('.person-chip[data-eid="person.kevin"]');
+    assert.ok(chip);
+    assert.ok(chip.classList.contains('avatar-only'));
+    assert.equal(chip.textContent.trim(), '');
+  });
+
+  test('with the picture off, switching chips off still removes them', async () => {
+    const withoutRowChips = await mount({ badge_person: false });
+    assert.equal(badge(withoutRowChips, 'person.kevin'), null);
+    const withoutFilterChips = await mount({ show_person_chips: false });
+    assert.equal(withoutFilterChips.shadowRoot.querySelector('.person-chip'), null);
+  });
+
+  test('turning the person feature off takes the pictures with it', async () => {
+    const card = await mount({ show_person_avatar: true, show_assigned_person: false });
+    assert.equal(badge(card, 'person.kevin'), null);
+    assert.equal(card.shadowRoot.querySelector('.person-chip'), null);
+  });
+
+  test('the switch is called what people call it', async () => {
+    const card = await mount();
+    assert.equal(card._t('ed_show_person_avatar'), 'Profile picture');
+  });
+});
