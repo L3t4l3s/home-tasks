@@ -187,11 +187,12 @@ since otherwise the next scan would queue the task straight back.
 - **Pictures outlive their task** — Home Tasks keeps a library of title →
   picture, independent of any task. Tick off "take out the bins", let the
   recurrence recreate it, and the picture comes back from disk instead of the
-  provider. Near-identical titles count too, conservatively: "book a blood
-  draw" finds the picture of "book a blood test", while "milk 1l" never
-  matches "milk 2l" and "Zimmer aufräumen Mia" never matches "…Ben" — a
-  differing word must not be a quantity, and one differing word out of two is
-  not enough. Matching is local string comparison; nothing is sent anywhere.
+  provider. A title matches when every word is there — case, punctuation,
+  word order and an inflected ending don't matter ("take out the bin" finds
+  "Take out the bins"), but a **different word means a different task**:
+  "Ben's room tidy" never takes the picture of "Ben's room vacuum", "paint
+  Kevin's wall" none from "paint Kevin's ceiling", "milk 1l" none from "milk
+  2l". Matching is local string comparison; nothing is sent anywhere.
   Removing a picture from a task counts as rejecting it: it leaves the library
   and will not be handed back. The library keeps the 2000 most recently used
   pictures and deletes the files of the ones it drops, unless a task still

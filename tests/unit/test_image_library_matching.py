@@ -1,8 +1,9 @@
 """The near-match rule of the image library (issue #56).
 
-A wrong picture is worse than a missing one, so the rule has to be provably
-narrow. These cases are the contract: what may share a picture, and what may
-never.
+A wrong picture is worse than a missing one, so the rule is narrow on
+purpose: every word of a title has to be there, and a word only counts as
+present if it is the same word. An inflected ending may differ, nothing else.
+These cases are the contract.
 """
 from __future__ import annotations
 
@@ -11,6 +12,10 @@ import pytest
 from custom_components.home_tasks.image_library import is_near_match, normalize_title
 
 pytestmark = pytest.mark.unit
+
+
+def match(a: str, b: str) -> bool:
+    return is_near_match(normalize_title(a), normalize_title(b))
 
 
 @pytest.mark.parametrize(
@@ -28,37 +33,37 @@ def test_normalisation(raw: str, expected: str) -> None:
 
 
 @pytest.mark.parametrize(
-    ("a", "b"),
+    ("a", "b", "why"),
     [
-        # the case from the issue
-        ("book a blood draw", "book a blood test"),
-        ("take out the bins", "take out the bin"),
-        ("water the plants", "water the plant"),
+        ("Take out the bins", "take out the bins", "same title, different case"),
+        ("Zimmer aufräumen", "  zimmer   aufräumen!  ", "punctuation and spacing"),
+        ("Take out the bins", "Take out the bin", "singular and plural"),
+        ("Water the plants", "Water the plant", "same"),
+        ("Zimmer aufräumen", "aufräumen Zimmer", "same words, other order"),
     ],
 )
-def test_matches(a: str, b: str) -> None:
-    assert is_near_match(normalize_title(a), normalize_title(b)), f"{a!r} should match {b!r}"
+def test_matches(a: str, b: str, why: str) -> None:
+    assert match(a, b), why
 
 
 @pytest.mark.parametrize(
     ("a", "b", "why"),
     [
-        ("milk 1l", "milk 2l", "a number is never noise"),
+        # A different word is a different task. Nothing in a title says which
+        # word carries the meaning, so none of them may differ.
+        ("Bens Zimmer aufräumen", "Bens Zimmer saugen", "different verb"),
+        ("Bens Zimmer aufräumen", "Bens Zimmer putzen", "different verb"),
+        ("Kevins Wand streichen", "Kevins Decke streichen", "different object"),
+        ("Zimmer aufräumen Mia", "Zimmer aufräumen Ben", "different child"),
+        ("Zimmer aufräumen für Mia", "Zimmer aufräumen für Ben", "same, longer title"),
+        ("book a blood draw", "book a blood test", "different word, however similar"),
+        ("Bens Zimmer saugen", "Bens Zimmer sagen", "similar spelling, unrelated meaning"),
+        ("milk 1l", "milk 2l", "a quantity is a word too"),
         ("buy 2 apples", "buy 3 apples", "same"),
-        ("zimmer aufräumen mia", "zimmer aufräumen ben", "different person, same chore"),
-        ("call mum", "call mia", "two words, one of them different: too little in common"),
-        ("call the plumber", "call a plumber",
-         "'a' and 'the' are just words to us - a missed match costs one "
-         "generation, a wrong picture costs trust"),
-        ("take out the bins", "clean the windows", "unrelated"),
-        ("milk", "milch", "single words are matched exactly or not at all"),
-        ("water the plants", "water the plants in the greenhouse", "too many words apart"),
+        ("milk", "milch", "not an ending, a different word"),
+        ("water the plants", "water the plants in the greenhouse", "extra words"),
         ("", "anything", "empty"),
     ],
 )
 def test_does_not_match(a: str, b: str, why: str) -> None:
-    assert not is_near_match(normalize_title(a), normalize_title(b)), why
-
-
-def test_identical_titles_match() -> None:
-    assert is_near_match("take out the bins", "take out the bins")
+    assert not match(a, b), why

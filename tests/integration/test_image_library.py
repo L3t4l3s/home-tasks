@@ -67,23 +67,34 @@ async def test_a_picture_outlives_the_task(
     assert generate.await_count == 1, "no second provider call"
 
 
-async def test_a_near_identical_title_is_served_too(
+async def test_a_retyped_title_is_served_too(
     hass: HomeAssistant, hass_ws_client, mock_config_entry, store
 ) -> None:
+    """An inflected ending is the only difference a title may have.
+
+    Typing the chore back in slightly differently should not cost a picture;
+    a different word would be a different chore.
+    """
     library = async_get_image_library(hass)
     await library.async_load()
     generate = _register_provider(hass)
     client = await hass_ws_client(hass)
 
-    a = await store.async_add_task("Book a blood draw")
+    a = await store.async_add_task("Take out the bins")
     msg = await _generate(hass, client, 710, mock_config_entry.entry_id, a["id"])
     url = msg["result"]["task"]["image_url"]
     await store.async_delete_task(a["id"])
 
-    b = await store.async_add_task("Book a blood test")
+    b = await store.async_add_task("take out the bin")
     msg = await _generate(hass, client, 711, mock_config_entry.entry_id, b["id"])
     assert msg["result"]["task"]["image_url"] == url
     assert generate.await_count == 1
+
+    # ...but a different word is a different task, and gets its own picture.
+    c = await store.async_add_task("take out the recycling")
+    await _generate(hass, client, 712, mock_config_entry.entry_id, c["id"],
+                    url="/local/home_tasks/other.png")
+    assert generate.await_count == 2
 
 
 async def test_removing_an_image_rejects_it(

@@ -28,7 +28,6 @@ from __future__ import annotations
 import logging
 import re
 from datetime import datetime, timezone
-from difflib import SequenceMatcher
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
@@ -46,13 +45,10 @@ DATA_IMAGE_LIBRARY = f"{DOMAIN}_image_library"
 # that the oldest unused ones go.
 MAX_ENTRIES = 2000
 
-# A near match needs to clear all of these. They are deliberately strict:
-# a wrong picture is worse than a missing one, and the provider call it saves
-# costs cents.
-MIN_SIMILARITY = 0.72   # character-level, over the whole normalised title
-MIN_TOKEN_OVERLAP = 0.6  # shared words / all words
-MIN_TOKENS = 2           # single-word titles are matched exactly or not at all
-MAX_DIFFERING_TOKENS = 1
+# How much a word may grow or shrink and still count as the same word:
+# "bin"/"bins", "plant"/"plants". Anything else is a different word.
+MIN_WORD_LENGTH = 3
+MAX_SUFFIX_DIFFERENCE = 2
 
 _PUNCT = re.compile(r"[^\w\s]", re.UNICODE)
 _SPACE = re.compile(r"\s+")
@@ -70,60 +66,54 @@ def _tokens(normalized: str) -> list[str]:
 
 
 def _same_word(a: str, b: str) -> bool:
-    """Whether two words are the same word for our purposes.
+    """Whether two words are the same word, allowing an inflected ending.
 
-    Singular and plural, or a spelling variant, should not cost a second
-    picture: "plant"/"plants", "aufraumen"/"aufraeumen". Anything shorter
-    than four characters is compared strictly — "mia" and "mum" are not the
-    same person, and "1l" is not "2l".
+    Only a short suffix may differ, and only on top of the whole other word:
+    "bin"/"bins", "plant"/"plants". Not a similarity score — "saugen" and
+    "sagen" are 0.91 similar and mean entirely different things, which is
+    exactly the kind of match that puts the wrong picture on a task.
     """
     if a == b:
         return True
-    if min(len(a), len(b)) < 4:
+    short, long = sorted((a, b), key=len)
+    if len(short) < MIN_WORD_LENGTH:
+        return False  # "1l" is not "2l", "mia" is not "ben"
+    if len(long) - len(short) > MAX_SUFFIX_DIFFERENCE:
         return False
-    if a.startswith(b) or b.startswith(a):
-        return True
-    return SequenceMatcher(None, a, b).ratio() >= 0.85
+    return long.startswith(short)
 
 
 def is_near_match(a: str, b: str) -> bool:
-    """Whether two normalised titles mean the same task, conservatively.
+    """Whether two normalised titles are the same title.
 
-    Same words but for one, that one not a number, and the strings still
-    similar as strings — which keeps "buy 2 apples" apart from "buy 3
-    apples" and "call mum" apart from "call mia".
+    Every word has to be there, in whatever order, and a word only counts as
+    present if it is the same word — an inflected ending is allowed, a
+    different word is not. That last part is the whole rule:
+
+        "Bens Zimmer aufraeumen" and "Bens Zimmer saugen" are two chores.
+        "Kevins Wand streichen" and "Kevins Decke streichen" are two jobs.
+        "Zimmer aufraeumen Mia" and "Zimmer aufraeumen Ben" are two children.
+
+    Nothing about the sentence tells us which word carries the meaning, so
+    none of them may differ. What is left is tolerance for plurals and
+    inflection, which is what makes a recreated task find its own picture
+    back rather than a stranger's.
     """
-    if not a or not b or a == b:
-        return a == b and bool(a)
+    if not a or not b:
+        return False
+    if a == b:
+        return True
     ta, tb = _tokens(a), _tokens(b)
-    if len(ta) < MIN_TOKENS or len(tb) < MIN_TOKENS:
-        return False
-    if abs(len(ta) - len(tb)) > MAX_DIFFERING_TOKENS:
+    if len(ta) != len(tb):
         return False
 
-    # Pair the words up first, so a plural does not read as a different word.
-    unmatched_b = list(tb)
-    shared = 0
-    only_a: list[str] = []
+    unmatched = list(tb)
     for word in ta:
-        hit = next((w for w in unmatched_b if _same_word(word, w)), None)
+        hit = next((w for w in unmatched if _same_word(word, w)), None)
         if hit is None:
-            only_a.append(word)
-        else:
-            unmatched_b.remove(hit)
-            shared += 1
-    only_b = unmatched_b
-
-    if len(only_a) > MAX_DIFFERING_TOKENS or len(only_b) > MAX_DIFFERING_TOKENS:
-        return False
-    # A quantity is never noise: "milk 1l" and "milk 2l" are different things.
-    if any(any(c.isdigit() for c in t) for t in only_a + only_b):
-        return False
-
-    overlap = shared / (shared + len(only_a) + len(only_b))
-    if overlap < MIN_TOKEN_OVERLAP:
-        return False
-    return SequenceMatcher(None, a, b).ratio() >= MIN_SIMILARITY
+            return False
+        unmatched.remove(hit)
+    return True
 
 
 class ImageLibrary:
