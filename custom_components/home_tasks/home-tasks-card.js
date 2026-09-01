@@ -3342,7 +3342,7 @@ class HomeTasksCard extends HTMLElement {
     const KEEP = ".task-detail-backdrop, .task-detail-sheet, dialog, card-mod, .toast-error";
     this._clearTileLp(); // a rebuild removes the pressed tile → cancel its long-press
     for (const child of [...root.children]) {
-      if (child === this._styleEl || child === this._cardEl) continue;
+      if (child === this._styleEl) continue;
       if (child.matches && child.matches(KEEP)) continue;
       child.remove();
     }
@@ -3356,17 +3356,12 @@ class HomeTasksCard extends HTMLElement {
     }
     if (!this._styleEl.isConnected) root.insertBefore(this._styleEl, root.firstChild);
 
-    // The ha-card itself is kept and refilled. Recreating it on every render
-    // means a fresh custom element on every keystroke in the editor, and it
-    // paints one frame in its default state before Home Assistant's own
-    // styles land on it - which is the frame you see flash around the header.
-    if (!this._cardEl) this._cardEl = this._el("ha-card", {}, []);
-    this._cardEl.replaceChildren(this._buildCardContent());
+    const card = this._el("ha-card", {}, [
+      this._buildCardContent(),
+    ]);
     // Right after the style, i.e. before any kept overlay, so the sheet /
     // backdrop / dialogs keep painting above the card (DOM order).
-    if (this._cardEl.previousSibling !== this._styleEl) {
-      root.insertBefore(this._cardEl, this._styleEl.nextSibling);
-    }
+    root.insertBefore(card, this._styleEl.nextSibling);
 
     // Restore focus to the element that had it before the DOM rebuild,
     // if it still exists in the new tree.  Fields tagged with
