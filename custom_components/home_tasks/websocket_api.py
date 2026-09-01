@@ -1,5 +1,6 @@
 """WebSocket API for Home Tasks - extended features (sub-tasks, reorder, external)."""
 
+import asyncio
 import logging
 import time
 
@@ -2108,7 +2109,57 @@ async def _save_image_to_public_media(hass, connection, image_url: str, filename
     except Exception as exc:  # noqa: BLE001
         _LOGGER.warning("Failed to save image to public media dir: %s", exc)
         return image_url
+DATA_IMAGE_INFLIGHT = f"{DOMAIN}_image_inflight"
+
+
 async def async_generate_task_image(
+    hass: HomeAssistant,
+    connection,
+    *,
+    task_id: str,
+    entry_id: str | None = None,
+    todo_entity_id: str | None = None,
+    prompt_prefix: str = "",
+    ai_entity_id: str | None = None,
+    force: bool = False,
+) -> dict:
+    """Generate the image for one task, once, however many callers ask.
+
+    The card generates for a task the moment it creates it, and the
+    background queue picks the same task up from the created event. Both
+    looked for an existing image, neither had finished yet, and the provider
+    was paid twice for the same picture. The first caller here does the work;
+    the others wait for its result and take it. A forced regeneration is an
+    explicit request and never waits.
+    """
+    inflight = hass.data.setdefault(DATA_IMAGE_INFLIGHT, {})
+    key = (entry_id or todo_entity_id, task_id)
+    pending = inflight.get(key)
+    if pending is not None and not force:
+        # shield: our caller going away must not cancel the generation the
+        # others are waiting on.
+        result = await asyncio.shield(pending)
+        if result is not None:
+            return {"task": result["task"], "reused": True}
+
+    flight: asyncio.Future = hass.loop.create_future()
+    inflight[key] = flight
+    try:
+        result = await _async_generate_task_image(
+            hass, connection, task_id=task_id, entry_id=entry_id,
+            todo_entity_id=todo_entity_id, prompt_prefix=prompt_prefix,
+            ai_entity_id=ai_entity_id, force=force,
+        )
+        if not flight.done():
+            flight.set_result(result)
+        return result
+    finally:
+        inflight.pop(key, None)
+        if not flight.done():
+            flight.set_result(None)  # failed: the waiters generate for themselves
+
+
+async def _async_generate_task_image(
     hass: HomeAssistant,
     connection,
     *,
@@ -2202,17 +2253,6 @@ async def async_generate_task_image(
                     break
             if existing_url:
                 break
-
-        # Nothing open has that title — but something did once. The library
-        # only serves lists that take part in the shared pool; a list that
-        # keeps to itself must not draw from it either.
-        if not existing_url and shares:
-            library = async_get_image_library(hass)
-            if library is not None:
-                remembered = library.find(title)
-                if remembered and _is_real_image(remembered):
-                    existing_url = remembered
-                    await library.async_touch(remembered)
 
         # Nothing open has that title — but something did once. The library
         # only serves lists that take part in the shared pool; a list that

@@ -161,6 +161,95 @@ async def test_a_list_that_keeps_to_itself_is_not_served_from_the_library(
     assert library.find("Zimmer aufräumen") == shared_url
 
 
+async def test_one_provider_call_when_two_callers_want_the_same_picture(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store
+) -> None:
+    """The card and the background queue both go for a task they just saw.
+
+    Neither finds an existing image — the other has not finished yet — so the
+    provider used to be paid twice for one picture.
+    """
+    import asyncio
+
+    from custom_components.home_tasks.image_queue import async_get_image_queue
+
+    library = async_get_image_library(hass)
+    await library.async_load()
+    queue = async_get_image_queue(hass)
+    await queue.async_load()
+    await queue.async_sync_config(ai_task_entity_id="ai_task.test")
+
+    calls: list[str] = []
+    slow = asyncio.Event()
+
+    async def _gen(call):
+        # A real provider takes seconds; hold every call until both are in.
+        calls.append(call.data.get("instructions", ""))
+        await slow.wait()
+        return {"media_source_id": "media-source://media_source/g.png"}
+
+    hass.services.async_register(
+        "ai_task", "generate_image", _gen, supports_response=SupportsResponse.OPTIONAL
+    )
+    await store.async_set_settings(auto_generate_images=True)
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "custom_components.home_tasks.websocket_api._save_image_to_public_media",
+        new=AsyncMock(return_value="/local/home_tasks/g.png"),
+    ):
+        task = await store.async_add_task("Banana")   # the queue hears this
+        await client.send_json({                      # and the card asks too
+            "id": 740,
+            "type": "home_tasks/generate_task_image",
+            "entry_id": mock_config_entry.entry_id,
+            "task_id": task["id"],
+            "entity_id": "ai_task.test",
+        })
+        await asyncio.sleep(0.05)                     # both are inside the call now
+        slow.set()
+        msg = await client.receive_json()
+        await hass.async_block_till_done()
+
+    assert msg["success"] is True, msg
+    assert len(calls) == 1, f"one picture, one call: {calls}"
+    assert store.get_task(task["id"])["image_url"].startswith("/local/home_tasks/g.png")
+
+
+async def test_the_library_learns_pictures_that_were_already_there(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Pictures made before the library existed must not be invisible.
+
+    Otherwise the first generation after an update pays again for something
+    that is already on disk.
+    """
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    private = MockConfigEntry(domain=DOMAIN, data={"name": "Kid"}, title="Kid")
+    private.add_to_hass(hass)
+    await hass.config_entries.async_setup(private.entry_id)
+    await hass.async_block_till_done()
+    private_store = hass.data[DOMAIN][private.entry_id]
+    await private_store.async_set_settings(share_images=False)
+
+    old = await store.async_add_task("Bananas")
+    await store.async_update_task(old["id"], image_url="/local/home_tasks/old.png")
+    kept = await private_store.async_add_task("Zimmer aufräumen")
+    await private_store.async_update_task(kept["id"], image_url="/local/home_tasks/kid.png")
+
+    library = async_get_image_library(hass)
+    await library.async_load()
+    assert library.find("Bananas") is None, "nothing known yet"
+
+    learned = await library.async_backfill()
+
+    assert learned == 1
+    assert library.find("Bananas") == "/local/home_tasks/old.png"
+    assert library.find("Banana") == "/local/home_tasks/old.png", "and a retyped title too"
+    assert library.find("Zimmer aufräumen") is None, "a list that keeps to itself stays out"
+
+
 async def test_the_library_is_capped_and_evicts_the_oldest(
     hass: HomeAssistant, mock_config_entry
 ) -> None:

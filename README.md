@@ -193,6 +193,8 @@ since otherwise the next scan would queue the task straight back.
   "Ben's room tidy" never takes the picture of "Ben's room vacuum", "paint
   Kevin's wall" none from "paint Kevin's ceiling", "milk 1l" none from "milk
   2l". Matching is local string comparison; nothing is sent anywhere.
+  Pictures that were already on tasks when you update are learned a minute
+  after start, so they are reusable too.
   Removing a picture from a task counts as rejecting it: it leaves the library
   and will not be handed back. The library keeps the 2000 most recently used
   pictures and deletes the files of the ones it drops, unless a task still

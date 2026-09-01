@@ -211,6 +211,37 @@ class ImageLibrary:
             await self.async_forget(url)
 
 
+    async def async_backfill(self) -> int:
+        """Learn the pictures that were already on tasks when we arrived.
+
+        Without this the library only knows what it saw generated, so every
+        picture made before it existed is invisible and gets paid for again
+        the next time that title comes up. Only lists that take part in the
+        shared pool contribute, same as everywhere else.
+        """
+        from .websocket_api import _is_real_image
+
+        learned = 0
+        for store in list(self.hass.data.get(DOMAIN, {}).values()):
+            if not hasattr(store, "tasks") or not hasattr(store, "get_settings"):
+                continue
+            try:
+                if not store.get_settings()["share_images"]:
+                    continue
+            except Exception:  # noqa: BLE001
+                continue
+            for task in store.tasks:
+                title, url = task.get("title"), task.get("image_url")
+                if not title or not _is_real_image(url):
+                    continue
+                if self.find(title) is None:
+                    await self.async_remember(title, url)
+                    learned += 1
+        if learned:
+            _LOGGER.debug("Image library learned %s existing picture(s)", learned)
+        return learned
+
+
 @callback
 def async_register_image_library(hass: HomeAssistant) -> None:
     """Create the library once, globally."""

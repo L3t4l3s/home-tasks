@@ -66,10 +66,21 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 
 async def _async_load_image_library(hass: HomeAssistant) -> None:
-    """Read the title-to-picture library from disk once."""
+    """Read the title-to-picture library from disk once, then learn.
+
+    The backfill waits: config entries are set up after async_setup, so at
+    this point there are no lists to read pictures from yet.
+    """
     library = async_get_image_library(hass)
-    if library is not None:
-        await library.async_load()
+    if library is None:
+        return
+    await library.async_load()
+
+    @callback
+    def _backfill(_now) -> None:
+        hass.async_create_task(library.async_backfill())
+
+    async_call_later(hass, 60, _backfill)
 
 
 async def _async_register_card(hass: HomeAssistant) -> None:
