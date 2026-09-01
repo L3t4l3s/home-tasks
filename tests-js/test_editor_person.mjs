@@ -42,7 +42,7 @@ describe('person dropdowns', () => {
     for (const sel of sels) {
       assert.deepEqual([...sel.options].map((o) => o.value), ['off', 'picture', 'name', 'both']);
       assert.deepEqual([...sel.options].map((o) => o.textContent),
-        ['Off', 'Profile picture', 'Name', 'Both']);
+        ['Off', 'Profile picture', 'Name', 'Picture and name']);
     }
   });
 
@@ -73,10 +73,10 @@ describe('person dropdowns', () => {
   });
 });
 
-describe('the Display section is split in two', () => {
-  test('header and tasks', async () => {
+describe('the Display section is split into groups', () => {
+  test('card, header, tasks', async () => {
     const { ed } = await editor();
-    assert.deepEqual(groupLabels(ed), ['Header', 'Tasks']);
+    assert.deepEqual(groupLabels(ed), ['Card', 'Header', 'Tasks']);
   });
 
   test('the person dropdowns sit one per group, filter first', async () => {
@@ -84,6 +84,33 @@ describe('the Display section is split in two', () => {
     const labels = [...ed.shadowRoot.querySelectorAll('.group-label, .field-wrap')]
       .filter((e) => e.classList.contains('group-label') || e.querySelector('select option[value="off"]'))
       .map((e) => e.classList.contains('group-label') ? e.textContent.trim() : 'person-select');
-    assert.deepEqual(labels, ['Header', 'person-select', 'Tasks', 'person-select']);
+    assert.deepEqual(labels, ['Card', 'Header', 'person-select', 'Tasks', 'person-select']);
   });
 });
+
+describe('what sits in which group', () => {
+  // Reads the Display section top to bottom and notes only the landmarks.
+  const outline = (ed) => {
+    const section = [...ed.shadowRoot.querySelectorAll('details')].find(
+      (d) => (d.querySelector('summary')?.textContent || '').includes('Display'));
+    const marks = [];
+    for (const el of section.querySelectorAll('.group-label, .field, .field-wrap')) {
+      if (el.classList.contains('group-label')) marks.push(el.textContent.trim());
+      else if (el.querySelector('ha-icon-picker')) marks.push('icon');
+      else if (el.querySelector('ha-textfield')) marks.push('title');
+      else if (el.querySelector('select option[value="tiles"]')) marks.push('view-mode');
+    }
+    return marks;
+  };
+
+  test('view mode leads the card group, title and icon belong to the header', async () => {
+    const { ed } = await editor();
+    const marks = outline(ed);
+    assert.deepEqual(marks.slice(0, 2), ['Card', 'view-mode'], 'view mode comes first');
+    const header = marks.indexOf('Header');
+    assert.ok(header > 0);
+    assert.deepEqual(marks.slice(header, header + 3), ['Header', 'title', 'icon']);
+    assert.ok(marks.indexOf('Tasks') > marks.indexOf('icon'), 'and Tasks comes after');
+  });
+});
+

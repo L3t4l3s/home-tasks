@@ -9,9 +9,10 @@ console.info("%c HOME-TASKS-CARD %c v2.2.2 ", "color: white; background: #03a9f4
 
 const _TRANSLATIONS = {
   en: {
+    ed_group_card: "Card",
     ed_person_off: "Off",
     ed_person_name: "Name",
-    ed_person_both: "Both",
+    ed_person_both: "Picture and name",
     ed_group_header: "Header",
     ed_group_tasks: "Tasks",
     ed_show_person_avatar: "Profile picture",
@@ -182,9 +183,10 @@ const _TRANSLATIONS = {
     ed_ai_prompt_prefix_placeholder: "e.g. Minimalist icon of",
   },
   nl: {
+    ed_group_card: "Kaart",
     ed_person_off: "Uit",
     ed_person_name: "Naam",
-    ed_person_both: "Beide",
+    ed_person_both: "Foto en naam",
     ed_group_header: "Koptekst",
     ed_group_tasks: "Taken",
     ed_show_person_avatar: "Profielfoto",
@@ -277,9 +279,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} u {1} min geleden", due_ago_minutes: "{0} min geleden", due_ago_seconds: "Zojuist",
   },
   it: {
+    ed_group_card: "Scheda",
     ed_person_off: "Disattivato",
     ed_person_name: "Nome",
-    ed_person_both: "Entrambi",
+    ed_person_both: "Foto e nome",
     ed_group_header: "Intestazione",
     ed_group_tasks: "Attività",
     ed_show_person_avatar: "Foto del profilo",
@@ -372,9 +375,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} h {1} min fa", due_ago_minutes: "{0} min fa", due_ago_seconds: "Proprio ora",
   },
   pl: {
+    ed_group_card: "Karta",
     ed_person_off: "Wyłączone",
     ed_person_name: "Imię",
-    ed_person_both: "Oba",
+    ed_person_both: "Zdjęcie i imię",
     ed_group_header: "Nagłówek",
     ed_group_tasks: "Zadania",
     ed_show_person_avatar: "Zdjęcie profilowe",
@@ -467,9 +471,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} godz. {1} min temu", due_ago_minutes: "{0} min temu", due_ago_seconds: "W\u0142a\u015bnie",
   },
   sv: {
+    ed_group_card: "Kort",
     ed_person_off: "Av",
     ed_person_name: "Namn",
-    ed_person_both: "Båda",
+    ed_person_both: "Bild och namn",
     ed_group_header: "Sidhuvud",
     ed_group_tasks: "Uppgifter",
     ed_show_person_avatar: "Profilbild",
@@ -562,9 +567,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} tim {1} min sedan", due_ago_minutes: "{0} min sedan", due_ago_seconds: "Just nu",
   },
   fr: {
+    ed_group_card: "Carte",
     ed_person_off: "Désactivé",
     ed_person_name: "Nom",
-    ed_person_both: "Les deux",
+    ed_person_both: "Photo et nom",
     ed_group_header: "En-tête",
     ed_group_tasks: "Tâches",
     ed_show_person_avatar: "Photo de profil",
@@ -657,9 +663,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "Il y a {0} h {1} min", due_ago_minutes: "Il y a {0} min", due_ago_seconds: "\u00c0 l'instant",
   },
   pt: {
+    ed_group_card: "Cartão",
     ed_person_off: "Desativado",
     ed_person_name: "Nome",
-    ed_person_both: "Ambos",
+    ed_person_both: "Foto e nome",
     ed_group_header: "Cabeçalho",
     ed_group_tasks: "Tarefas",
     ed_show_person_avatar: "Foto do perfil",
@@ -752,9 +759,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "H\u00e1 {0} h {1} min", due_ago_minutes: "H\u00e1 {0} min", due_ago_seconds: "Agora mesmo",
   },
   es: {
+    ed_group_card: "Tarjeta",
     ed_person_off: "Desactivado",
     ed_person_name: "Nombre",
-    ed_person_both: "Ambos",
+    ed_person_both: "Foto y nombre",
     ed_group_header: "Encabezado",
     ed_group_tasks: "Tareas",
     ed_show_person_avatar: "Foto de perfil",
@@ -847,9 +855,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "Hace {0} h {1} min", due_ago_minutes: "Hace {0} min", due_ago_seconds: "Ahora mismo",
   },
   ru: {
+    ed_group_card: "Карточка",
     ed_person_off: "Выкл.",
     ed_person_name: "Имя",
-    ed_person_both: "Оба",
+    ed_person_both: "Фото и имя",
     ed_group_header: "Заголовок",
     ed_group_tasks: "Задачи",
     ed_show_person_avatar: "Фото профиля",
@@ -942,9 +951,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} \u0447 {1} \u043c\u0438\u043d \u043d\u0430\u0437\u0430\u0434", due_ago_minutes: "{0} \u043c\u0438\u043d \u043d\u0430\u0437\u0430\u0434", due_ago_seconds: "\u0422\u043e\u043b\u044c\u043a\u043e \u0447\u0442\u043e",
   },
   cs: {
+    ed_group_card: "Karta",
     ed_person_off: "Vypnuto",
     ed_person_name: "Jméno",
-    ed_person_both: "Obojí",
+    ed_person_both: "Fotka a jméno",
     ed_group_header: "Záhlaví",
     ed_group_tasks: "Úkoly",
     ed_show_person_avatar: "Profilová fotka",
@@ -1037,9 +1047,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "P\u0159ed {0} hod {1} min", due_ago_minutes: "P\u0159ed {0} min", due_ago_seconds: "Pr\u00e1v\u011b te\u010f",
   },
   da: {
+    ed_group_card: "Kort",
     ed_person_off: "Fra",
     ed_person_name: "Navn",
-    ed_person_both: "Begge",
+    ed_person_both: "Billede og navn",
     ed_group_header: "Sidehoved",
     ed_group_tasks: "Opgaver",
     ed_show_person_avatar: "Profilbillede",
@@ -1132,9 +1143,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} t {1} min siden", due_ago_minutes: "{0} min siden", due_ago_seconds: "Lige nu",
   },
   no: {
+    ed_group_card: "Kort",
     ed_person_off: "Av",
     ed_person_name: "Navn",
-    ed_person_both: "Begge",
+    ed_person_both: "Bilde og navn",
     ed_group_header: "Topptekst",
     ed_group_tasks: "Oppgaver",
     ed_show_person_avatar: "Profilbilde",
@@ -1227,9 +1239,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} t {1} min siden", due_ago_minutes: "{0} min siden", due_ago_seconds: "Akkurat n\u00e5",
   },
   fi: {
+    ed_group_card: "Kortti",
     ed_person_off: "Pois",
     ed_person_name: "Nimi",
-    ed_person_both: "Molemmat",
+    ed_person_both: "Kuva ja nimi",
     ed_group_header: "Yläosa",
     ed_group_tasks: "Tehtävät",
     ed_show_person_avatar: "Profiilikuva",
@@ -1322,9 +1335,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} t {1} min sitten", due_ago_minutes: "{0} min sitten", due_ago_seconds: "Juuri nyt",
   },
   hu: {
+    ed_group_card: "Kártya",
     ed_person_off: "Ki",
     ed_person_name: "Név",
-    ed_person_both: "Mindkettő",
+    ed_person_both: "Kép és név",
     ed_group_header: "Fejléc",
     ed_group_tasks: "Feladatok",
     ed_show_person_avatar: "Profilkép",
@@ -1417,9 +1431,10 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} \u00f3 {1} perccel ezel\u0151tt", due_ago_minutes: "{0} perccel ezel\u0151tt", due_ago_seconds: "\u00c9pp most",
   },
   de: {
+    ed_group_card: "Karte",
     ed_person_off: "Aus",
     ed_person_name: "Name",
-    ed_person_both: "Beides",
+    ed_person_both: "Bild und Name",
     ed_group_header: "Kopfzeile",
     ed_group_tasks: "Aufgaben",
     ed_show_person_avatar: "Profilbild",
@@ -9080,8 +9095,13 @@ class HomeTasksCardEditor extends HTMLElement {
       .icon-btn-spacer { flex: 1; }
       .toggle-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
       .group-label {
+        display: flex; align-items: center; gap: 10px; margin: 14px 0 2px;
         font-size: 12px; font-weight: 500; color: var(--secondary-text-color, #888);
-        text-transform: uppercase; letter-spacing: 0.04em; margin: 6px 0 -2px;
+        text-transform: uppercase; letter-spacing: 0.06em;
+      }
+      .group-label::before, .group-label::after {
+        content: ""; flex: 1; height: 1px;
+        background: var(--divider-color, rgba(127,127,127,0.3));
       }
       .visual-editor { display: flex; flex-direction: column; gap: 8px; }
       .field { display: flex; flex-direction: column; gap: 6px; }
@@ -9356,6 +9376,11 @@ class HomeTasksCardEditor extends HTMLElement {
       this._config = { ...this._config, columns: newCols };
       this._fireChanged();
     };
+
+    const groupLabel = (key) =>
+      this._el("div", { className: "group-label" }, [
+        this._el("span", { textContent: this._t(key) }),
+      ]);
 
     const makeSelect = (labelKey, options, currentVal, onChange) => {
       const sel = document.createElement("select");
@@ -9669,43 +9694,23 @@ class HomeTasksCardEditor extends HTMLElement {
         hint,
       ]),
       makeSection("view", "mdi:eye", "ed_sec_view", [
-        this._el("div", { className: "field" }, [titleInput]),
-        this._el("div", { className: "field" }, [iconPicker]),
+        // Two dozen switches in one grid meant reading every label to find
+        // the one you wanted, and two of them said "person". Three groups
+        // by where the effect shows up: the card as a whole, its header,
+        // the task rows.
+        groupLabel("ed_group_card"),
+        makeSelect(
+          "ed_view_mode",
+          [["list", "ed_view_mode_list"], ["tiles", "ed_view_mode_tiles"]],
+          col.view_mode || "list",
+          (val) => { updateCol({ view_mode: val === "list" ? undefined : val }); this._render(); }
+        ),
+        ...(col.view_mode === "tiles"
+          ? [this._el("div", { className: "hint", textContent: this._t("ed_tile_help"), style: "white-space:pre-line" })]
+          : []),
         this._el("div", { className: "toggle-grid" }, [
           makeToggle("compact", "ed_compact", "compact", false),
         ]),
-        // Two dozen switches in one grid meant reading every label to find
-        // the one you wanted, and two of them said "person". They are split
-        // by where their effect shows up.
-        this._el("div", { className: "group-label", textContent: this._t("ed_group_header") }),
-        this._el("div", { className: "toggle-grid" }, [
-          makeToggle("show-title", "ed_show_title", "show_title", true),
-          makeToggle("show-progress", "ed_show_progress", "show_progress", true),
-          makeToggle("show-add-task", "ed_show_add_task", "show_add_task", true),
-          // On/off switch for the live search in the add-task field.
-          makeToggle("task-search", "ed_task_search", "show_task_search", true),
-          makeToggle("show-add-due", "ed_show_add_due", "show_add_due", false),
-          makeToggle("show-voice", "ed_show_voice", "show_voice", true),
-          makeToggle("show-sort", "ed_show_sort", "show_sort", true),
-          makeToggle("show-filters", "ed_show_filters", "show_filters", true),
-          makeToggle("show-tag-chips", "ed_show_tag_chips", "show_tag_chips", true),
-        ]),
-        makePersonSelect("filter"),
-        this._el("div", { className: "group-label", textContent: this._t("ed_group_tasks") }),
-        this._el("div", { className: "toggle-grid" }, [
-          makeToggle("badge-priority", "ed_badge_priority", "badge_priority", true),
-          makeToggle("badge-progress", "ed_badge_progress", "badge_progress", true),
-          makeToggle("badge-due", "ed_badge_due", "badge_due", true),
-          makeToggle("badge-recurrence", "ed_badge_recurrence", "badge_recurrence", true),
-          makeToggle("badge-tags", "ed_badge_tags", "badge_tags", true),
-          makeToggle("badge-reminders", "ed_badge_reminders", "badge_reminders", true),
-          makeToggle("auto-delete", "ed_auto_delete", "auto_delete_completed", false),
-          makeToggle("confirm-complete", "ed_confirm_complete", "confirm_complete", false),
-          ...(col.view_mode === "tiles"
-            ? [makeToggle("show-tile-title", "ed_show_tile_title", "show_tile_title", true)]
-            : []),
-        ]),
-        makePersonSelect("badge"),
         this._el("div", { className: "field" }, [(() => {
           // max_height (px): 0 / empty = unlimited. Caps the task body only.
           // (Editor is its own class — don't reach for HomeTasksCard helpers here.)
@@ -9727,15 +9732,37 @@ class HomeTasksCardEditor extends HTMLElement {
           ]);
         })()]),
         sortField,
-        makeSelect(
-          "ed_view_mode",
-          [["list", "ed_view_mode_list"], ["tiles", "ed_view_mode_tiles"]],
-          col.view_mode || "list",
-          (val) => { updateCol({ view_mode: val === "list" ? undefined : val }); this._render(); }
-        ),
-        ...(col.view_mode === "tiles"
-          ? [this._el("div", { className: "hint", textContent: this._t("ed_tile_help"), style: "white-space:pre-line" })]
-          : []),
+        groupLabel("ed_group_header"),
+        this._el("div", { className: "field" }, [titleInput]),
+        this._el("div", { className: "field" }, [iconPicker]),
+        this._el("div", { className: "toggle-grid" }, [
+          makeToggle("show-title", "ed_show_title", "show_title", true),
+          makeToggle("show-progress", "ed_show_progress", "show_progress", true),
+          makeToggle("show-add-task", "ed_show_add_task", "show_add_task", true),
+          // On/off switch for the live search in the add-task field.
+          makeToggle("task-search", "ed_task_search", "show_task_search", true),
+          makeToggle("show-add-due", "ed_show_add_due", "show_add_due", false),
+          makeToggle("show-voice", "ed_show_voice", "show_voice", true),
+          makeToggle("show-sort", "ed_show_sort", "show_sort", true),
+          makeToggle("show-filters", "ed_show_filters", "show_filters", true),
+          makeToggle("show-tag-chips", "ed_show_tag_chips", "show_tag_chips", true),
+        ]),
+        makePersonSelect("filter"),
+        groupLabel("ed_group_tasks"),
+        this._el("div", { className: "toggle-grid" }, [
+          makeToggle("badge-priority", "ed_badge_priority", "badge_priority", true),
+          makeToggle("badge-progress", "ed_badge_progress", "badge_progress", true),
+          makeToggle("badge-due", "ed_badge_due", "badge_due", true),
+          makeToggle("badge-recurrence", "ed_badge_recurrence", "badge_recurrence", true),
+          makeToggle("badge-tags", "ed_badge_tags", "badge_tags", true),
+          makeToggle("badge-reminders", "ed_badge_reminders", "badge_reminders", true),
+          makeToggle("auto-delete", "ed_auto_delete", "auto_delete_completed", false),
+          makeToggle("confirm-complete", "ed_confirm_complete", "confirm_complete", false),
+          ...(col.view_mode === "tiles"
+            ? [makeToggle("show-tile-title", "ed_show_tile_title", "show_tile_title", true)]
+            : []),
+        ]),
+        makePersonSelect("badge"),
       ]),
       ...(col.list_id ? [makeSection("defaults", "mdi:account-check-outline", "ed_sec_defaults", [
         this._buildDefaultsEditor(col.list_id),
