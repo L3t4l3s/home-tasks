@@ -456,16 +456,30 @@ class HomeTasksStore:
         means this list neither takes an image from another list nor hands
         one over, which is what separate-but-similar lists need (three kids,
         the same chore, their own pictures).
+
+        auto_generate_images: whether the background queue generates images
+        for open tasks in this list. Default False — it spends money at the
+        AI provider, so it has to be asked for.
         """
         s = self._data.get("settings") or {}
-        return {"share_images": s.get("share_images", True) is not False}
+        return {
+            "share_images": s.get("share_images", True) is not False,
+            "auto_generate_images": s.get("auto_generate_images", False) is True,
+        }
 
-    async def async_set_settings(self, share_images: object = _UNSET) -> dict:
+    async def async_set_settings(
+        self, share_images: object = _UNSET, auto_generate_images: object = _UNSET
+    ) -> dict:
         """Update per-list settings. Omitted fields keep their value."""
         current = self.get_settings()
         if share_images is _UNSET:
             share_images = current["share_images"]
-        self._data["settings"] = {"share_images": bool(share_images)}
+        if auto_generate_images is _UNSET:
+            auto_generate_images = current["auto_generate_images"]
+        self._data["settings"] = {
+            "share_images": bool(share_images),
+            "auto_generate_images": bool(auto_generate_images),
+        }
         # Same reasoning as async_set_defaults: persist immediately, skip the
         # entity listener fanout (no entity state depends on this).
         await self._store.async_save(self._data)

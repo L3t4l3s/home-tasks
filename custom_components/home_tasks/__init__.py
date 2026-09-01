@@ -15,6 +15,8 @@ from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
+
+from .image_queue import async_get_image_queue, async_register_image_queue
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, RECURRENCE_UNIT_SECONDS
@@ -52,6 +54,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     await _async_register_card(hass)
     _async_register_services(hass)
     _async_register_due_checker(hass)
+    async_register_image_queue(hass)
     # One-time: generate thumbnails for any pre-existing task images so tile
     # grids load fast without re-saving each image. Runs in the background.
     from .websocket_api import _backfill_thumbnails
@@ -1676,6 +1679,40 @@ def _async_register_services(hass: HomeAssistant) -> None:
             vol.Optional("tags"): cv.string,
         }),
     )
+    async def _handle_configure_image_queue(call: ServiceCall) -> None:
+        """Configure the background image queue (issue #55).
+
+        Everything is optional: a call that only flips `enabled` keeps the
+        pacing and the entity that were configured before.
+        """
+        queue = async_get_image_queue(hass)
+        if queue is None:
+            raise ServiceValidationError("Image queue is not running")
+        try:
+            cfg = await queue.async_configure(
+                enabled=call.data.get("enabled"),
+                ai_task_entity_id=call.data.get("ai_task_entity_id"),
+                prompt_prefix=call.data.get("prompt_prefix"),
+                min_minutes=call.data.get("min_minutes"),
+                max_minutes=call.data.get("max_minutes"),
+            )
+        except ValueError as err:
+            raise ServiceValidationError(str(err)) from err
+        _LOGGER.info("Image queue configured: %s", cfg)
+
+    hass.services.async_register(
+        DOMAIN,
+        "configure_image_queue",
+        _handle_configure_image_queue,
+        schema=vol.Schema({
+            vol.Optional("enabled"): cv.boolean,
+            vol.Optional("ai_task_entity_id"): cv.entity_id,
+            vol.Optional("prompt_prefix"): cv.string,
+            vol.Optional("min_minutes"): vol.All(vol.Coerce(int), vol.Range(min=1, max=1440)),
+            vol.Optional("max_minutes"): vol.All(vol.Coerce(int), vol.Range(min=1, max=1440)),
+        }),
+    )
+
     _LOGGER.info("Home Tasks services registered")
 
 

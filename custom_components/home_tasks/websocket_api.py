@@ -127,9 +127,10 @@ async def ws_get_lists(hass, connection, msg):
                 "name": entry.data.get("name", entry.title),
                 "task_count": len(store.tasks) if store and isinstance(store, HomeTasksStore) else 0,
                 "sensor_entity_id": sensor_entity_id,
-                "share_images": (
-                    store.get_settings()["share_images"]
-                    if store and isinstance(store, HomeTasksStore) else True
+                **(
+                    store.get_settings()
+                    if store and isinstance(store, HomeTasksStore)
+                    else {"share_images": True, "auto_generate_images": False}
                 ),
             })
         connection.send_result(msg["id"], {"lists": lists})
@@ -191,7 +192,8 @@ async def ws_add_task(hass, connection, msg):
         vol.Required("type"): "home_tasks/set_list_settings",
         vol.Optional("list_id"): _val_id,
         vol.Optional("entity_id"): _val_entity_id,
-        vol.Required("share_images"): bool,
+        vol.Optional("share_images"): bool,
+        vol.Optional("auto_generate_images"): bool,
     }
 )
 @websocket_api.async_response
@@ -203,7 +205,10 @@ async def ws_set_list_settings(hass, connection, msg):
         if bool(list_id) == bool(entity_id):
             raise ValueError("Provide exactly one of list_id or entity_id")
         store = _get_store(hass, list_id) if list_id else _get_overlay_store(hass, entity_id)
-        settings = await store.async_set_settings(share_images=msg["share_images"])
+        kwargs = {k: msg[k] for k in ("share_images", "auto_generate_images") if k in msg}
+        if not kwargs:
+            raise ValueError("No settings given")
+        settings = await store.async_set_settings(**kwargs)
         connection.send_result(msg["id"], {"settings": settings})
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -1017,14 +1022,14 @@ async def ws_get_external_lists(hass, connection, msg):
             provider_type = adapter.provider_type if adapter else "generic"
             capabilities = adapter.capabilities.to_dict() if adapter else {}
 
-            share_images = True
+            settings = {"share_images": True, "auto_generate_images": False}
             if entity_entry.entity_id in linked_entity_ids:
                 try:
-                    share_images = _get_overlay_store(
+                    settings = _get_overlay_store(
                         hass, entity_entry.entity_id
-                    ).get_settings()["share_images"]
+                    ).get_settings()
                 except ValueError:
-                    pass  # linked but not loaded yet — report the default
+                    pass  # linked but not loaded yet — report the defaults
 
             external.append({
                 "entity_id": entity_entry.entity_id,
@@ -1033,7 +1038,7 @@ async def ws_get_external_lists(hass, connection, msg):
                 "supported_features": features,
                 "provider_type": provider_type,
                 "capabilities": capabilities,
-                "share_images": share_images,
+                **settings,
             })
 
         connection.send_result(msg["id"], {"external_lists": external})
@@ -1903,6 +1908,9 @@ async def _save_image_to_public_media(hass, connection, image_url: str, filename
                     pass
                 is_internal = host in ha_hosts
             if is_internal:
+                if connection is None:
+                    _LOGGER.debug("No websocket connection; cannot download %s", image_url)
+                    return image_url
                 refresh_token = hass.auth.async_get_refresh_token(connection.refresh_token_id)
                 if refresh_token is None:
                     _LOGGER.warning("No refresh token available for internal URL download")
@@ -1921,6 +1929,9 @@ async def _save_image_to_public_media(hass, connection, image_url: str, filename
                 headers = {}
         else:
             # HA-internal path — needs Bearer token + loopback URL
+            if connection is None:
+                _LOGGER.debug("No websocket connection; cannot download %s", image_url)
+                return image_url
             refresh_token = hass.auth.async_get_refresh_token(connection.refresh_token_id)
             if refresh_token is None:
                 _LOGGER.warning("No refresh token available; skipping image re-save")
@@ -1958,6 +1969,238 @@ async def _save_image_to_public_media(hass, connection, image_url: str, filename
     except Exception as exc:  # noqa: BLE001
         _LOGGER.warning("Failed to save image to public media dir: %s", exc)
         return image_url
+async def async_generate_task_image(
+    hass: HomeAssistant,
+    connection,
+    *,
+    task_id: str,
+    entry_id: str | None = None,
+    todo_entity_id: str | None = None,
+    prompt_prefix: str = "",
+    ai_entity_id: str | None = None,
+    force: bool = False,
+) -> dict:
+    """Generate (or reuse) the image for one task. Raises on failure.
+
+    Returns {"task": <updated task>, "reused": bool} - reused meaning an
+    image with the same title already existed, so no provider call was
+    made. Callers that pace provider requests need that distinction.
+
+    connection may be None when no websocket client is involved (the
+    background queue): only the download branch for HA-internal signed
+    URLs needs it, and ai_task hands back a media-source id, which is
+    copied off disk instead.
+    """
+    import hashlib
+    entry_id = entry_id
+    todo_entity_id = todo_entity_id
+    if bool(entry_id) == bool(todo_entity_id):
+        raise ValueError("Provide exactly one of entry_id or todo_entity_id")
+
+    store = None
+    overlay_store = None
+    external_tasks: list[dict] = []
+    if todo_entity_id:
+        external_tasks, overlay_store = await _async_get_external_tasks(
+            hass, todo_entity_id
+        )
+        task = next(
+            (candidate for candidate in external_tasks if candidate["id"] == task_id),
+            None,
+        )
+        if task is None:
+            raise ValueError("Task not found")
+    else:
+        store = _get_store(hass, entry_id)
+        task = store.get_task(task_id)
+
+    title = task.get("title", "")
+    title_key = title.strip().lower()
+    title_hash = hashlib.md5(title_key.encode(), usedforsecurity=False).hexdigest()[:16]
+
+    all_stores = hass.data.get(DOMAIN, {})
+
+    # Same-title sharing is per-list opt-out. A list with share_images off
+    # keeps to itself in both directions: it neither takes an image from
+    # another list nor hands one over. Three children with the same chore
+    # on three lists want three pictures, not one.
+    source_store = overlay_store or store
+    shares = source_store.get_settings()["share_images"]
+    if shares:
+        native_stores = [
+            st for st in all_stores.values()
+            if hasattr(st, "tasks") and st.get_settings()["share_images"]
+        ]
+        # Read every linked list once — both the reuse check below and the
+        # fan-out afterwards match on titles the providers hold.
+        external_lists = [
+            (ov, tasks)
+            for ov, tasks in await _async_all_external_lists(
+                hass,
+                (todo_entity_id, external_tasks, overlay_store) if overlay_store else None,
+            )
+            if ov.get_settings()["share_images"]
+        ] if title_key else []
+    else:
+        # Keeping to itself still means sharing *within* this one list:
+        # two identical titles in the same list use one picture.
+        native_stores = [store] if store is not None else []
+        external_lists = [(overlay_store, external_tasks)] if overlay_store else []
+
+    # ------------------------------------------------------------------
+    # 1. Reuse: if any task with the same title already has an image URL,
+    #    skip the service call (bypass with force=True).
+    # ------------------------------------------------------------------
+    if not force and title_key:
+        existing_url: str | None = None
+        for s in native_stores:
+            for t in s.tasks:
+                if t.get("title", "").strip().lower() == title_key and t.get("image_url"):
+                    existing_url = t["image_url"]
+                    break
+            if existing_url:
+                break
+
+        if not existing_url:
+            for _ov_store, ext_tasks in external_lists:
+                for candidate in ext_tasks:
+                    if (
+                        candidate.get("title", "").strip().lower() == title_key
+                        and candidate.get("image_url")
+                    ):
+                        existing_url = candidate["image_url"]
+                        break
+                if existing_url:
+                    break
+
+        if existing_url:
+            if overlay_store:
+                await overlay_store.async_set_overlay(
+                    task_id, image_url=existing_url
+                )
+                updated_task = {**task, "image_url": existing_url}
+            else:
+                updated_task = await store.async_update_task(
+                    task_id, image_url=existing_url
+                )
+            return {"task": updated_task, "reused": True}
+
+    # ------------------------------------------------------------------
+    # 2. Generate via ai_task.generate_image (provider-agnostic).
+    # ------------------------------------------------------------------
+    prompt_prefix = prompt_prefix
+    prompt = f"{prompt_prefix}{title}" if prompt_prefix else title
+    # The card renders images in square tiles. ai_task exposes no size
+    # parameter, but gpt-image (and most models) honour an explicit aspect
+    # instruction — so ask for 1:1 to avoid the tiles cropping the result.
+    # For providers that ignore it this is just harmless extra prompt text.
+    instructions = f"{prompt}\n\nThe image must have a square 1:1 aspect ratio."
+
+    entity_id = ai_entity_id
+    if not entity_id:
+        from homeassistant.helpers import entity_registry as er
+        ent_reg = er.async_get(hass)
+        ai_entities = [
+            e.entity_id for e in ent_reg.entities.values()
+            if e.domain == "ai_task" and not e.disabled_by
+        ]
+        if not ai_entities:
+            raise ValueError("No ai_task entity found — configure one in the card editor")
+        entity_id = ai_entities[0]
+
+    try:
+        service_result = await hass.services.async_call(
+            "ai_task",
+            "generate_image",
+            {
+                "task_name": f"home_tasks_{title_hash}",
+                "instructions": instructions,
+                "entity_id": entity_id,
+            },
+            blocking=True,
+            return_response=True,
+        )
+    except Exception as service_err:
+        raise ValueError(f"Image generation failed: {service_err}") from service_err
+
+    _LOGGER.debug("ai_task.generate_image result: %s", service_result)
+    result_dict = service_result or {}
+    # Prefer the media-source id: it lets _save_image_to_public_media copy
+    # the file straight off disk (no auth-dependent HTTP download). The
+    # signed "url" is only a fallback.
+    image_url = (
+        result_dict.get("media_source_id")
+        or result_dict.get("url")
+        or (result_dict.get("image") or {}).get("url")
+    )
+    if not image_url:
+        raise ValueError(
+            f"ai_task.generate_image returned no image URL. Full result: {result_dict}"
+        )
+
+    # Convert auth-required internal URLs to public /media/local/ URLs so
+    # the Lovelace card can display them without auth headers.
+    image_filename = f"{title_hash}.png"
+    image_url = await _save_image_to_public_media(hass, connection, image_url, image_filename)
+
+    # Never persist an unresolved media-source:// URI — the browser can't
+    # render it, so it would show as a permanently broken image. Surface a
+    # clear error instead (e.g. media-source resolution failed above).
+    if image_url and image_url.startswith("media-source://"):
+        raise ValueError(
+            "Generated image could not be resolved to a displayable URL"
+        )
+
+    # Append a cache-busting timestamp so browsers/apps that cache by URL
+    # (including the Android HA app which cannot be hard-refreshed) always
+    # fetch the new image after regeneration.
+    if image_url.startswith("/local/home_tasks/"):
+        image_url = f"{image_url}?v={int(time.time())}"
+
+    # ------------------------------------------------------------------
+    # 3. Propagate the URL to every task with that title, in every list.
+    # ------------------------------------------------------------------
+    updated_task = None
+    # Only fan out to same-title tasks when the title is non-empty — an empty
+    # title would match every blank-title task across all lists and overwrite
+    # their images.
+    if title_key:
+        for s in native_stores:
+            for t in s.tasks:
+                if t.get("title", "").strip().lower() == title_key and t.get("image_url") != image_url:
+                    stamped = await s.async_update_task(t["id"], image_url=image_url)
+                    if t["id"] == task_id:
+                        updated_task = stamped
+
+        # External provider tasks keep Home Tasks-only image metadata in
+        # their overlay; the providers themselves are never edited here.
+        for ov_store, ext_tasks in external_lists:
+            for candidate in ext_tasks:
+                if (
+                    candidate.get("title", "").strip().lower() == title_key
+                    and candidate.get("image_url") != image_url
+                ):
+                    await ov_store.async_set_overlay(
+                        candidate["id"], image_url=image_url
+                    )
+                    # Only the list this request came from can hold the
+                    # requested task — uids are unique per provider, not
+                    # across providers.
+                    if ov_store is overlay_store and candidate["id"] == task_id:
+                        updated_task = {**candidate, "image_url": image_url}
+
+    if updated_task is None:
+        if overlay_store:
+            await overlay_store.async_set_overlay(task_id, image_url=image_url)
+            updated_task = {**task, "image_url": image_url}
+        else:
+            updated_task = await store.async_update_task(
+                task_id, image_url=image_url
+            )
+
+    return {"task": updated_task, "reused": False}
+
+
 
 @websocket_api.websocket_command(
     {
@@ -1972,229 +2215,18 @@ async def _save_image_to_public_media(hass, connection, image_url: str, filename
 )
 @websocket_api.async_response
 async def ws_generate_task_image(hass: HomeAssistant, connection, msg):
-    """Generate an AI image for a task via HA's ai_task integration.
-
-    Delegates to ai_task.generate_image — works with any configured AI
-    provider (OpenAI, Gemini, Anthropic, local models).  The generated image
-    lands in HA's Media Source; no API key handling or file I/O needed here.
-
-    Tasks with the same normalised title share a single image, across every
-    list: before calling the service all lists — native and linked — are
-    checked for an existing URL, and after generation the URL is written to
-    every task with that title. Linked lists have to be read from their
-    provider for this, since that is where the titles live.
-    """
-    import hashlib
-
+    """Websocket entry point - the work happens in the core above."""
     try:
-        entry_id = msg.get("entry_id")
-        todo_entity_id = msg.get("todo_entity_id")
-        if bool(entry_id) == bool(todo_entity_id):
-            raise ValueError("Provide exactly one of entry_id or todo_entity_id")
-
-        store = None
-        overlay_store = None
-        external_tasks: list[dict] = []
-        if todo_entity_id:
-            external_tasks, overlay_store = await _async_get_external_tasks(
-                hass, todo_entity_id
-            )
-            task = next(
-                (candidate for candidate in external_tasks if candidate["id"] == msg["task_id"]),
-                None,
-            )
-            if task is None:
-                raise ValueError("Task not found")
-        else:
-            store = _get_store(hass, entry_id)
-            task = store.get_task(msg["task_id"])
-
-        title = task.get("title", "")
-        title_key = title.strip().lower()
-        title_hash = hashlib.md5(title_key.encode(), usedforsecurity=False).hexdigest()[:16]
-
-        all_stores = hass.data.get(DOMAIN, {})
-
-        # Same-title sharing is per-list opt-out. A list with share_images off
-        # keeps to itself in both directions: it neither takes an image from
-        # another list nor hands one over. Three children with the same chore
-        # on three lists want three pictures, not one.
-        source_store = overlay_store or store
-        shares = source_store.get_settings()["share_images"]
-        if shares:
-            native_stores = [
-                st for st in all_stores.values()
-                if hasattr(st, "tasks") and st.get_settings()["share_images"]
-            ]
-            # Read every linked list once — both the reuse check below and the
-            # fan-out afterwards match on titles the providers hold.
-            external_lists = [
-                (ov, tasks)
-                for ov, tasks in await _async_all_external_lists(
-                    hass,
-                    (todo_entity_id, external_tasks, overlay_store) if overlay_store else None,
-                )
-                if ov.get_settings()["share_images"]
-            ] if title_key else []
-        else:
-            # Keeping to itself still means sharing *within* this one list:
-            # two identical titles in the same list use one picture.
-            native_stores = [store] if store is not None else []
-            external_lists = [(overlay_store, external_tasks)] if overlay_store else []
-
-        # ------------------------------------------------------------------
-        # 1. Reuse: if any task with the same title already has an image URL,
-        #    skip the service call (bypass with force=True).
-        # ------------------------------------------------------------------
-        if not msg.get("force", False) and title_key:
-            existing_url: str | None = None
-            for s in native_stores:
-                for t in s.tasks:
-                    if t.get("title", "").strip().lower() == title_key and t.get("image_url"):
-                        existing_url = t["image_url"]
-                        break
-                if existing_url:
-                    break
-
-            if not existing_url:
-                for _ov_store, ext_tasks in external_lists:
-                    for candidate in ext_tasks:
-                        if (
-                            candidate.get("title", "").strip().lower() == title_key
-                            and candidate.get("image_url")
-                        ):
-                            existing_url = candidate["image_url"]
-                            break
-                    if existing_url:
-                        break
-
-            if existing_url:
-                if overlay_store:
-                    await overlay_store.async_set_overlay(
-                        msg["task_id"], image_url=existing_url
-                    )
-                    updated_task = {**task, "image_url": existing_url}
-                else:
-                    updated_task = await store.async_update_task(
-                        msg["task_id"], image_url=existing_url
-                    )
-                connection.send_result(msg["id"], {"task": updated_task})
-                return
-
-        # ------------------------------------------------------------------
-        # 2. Generate via ai_task.generate_image (provider-agnostic).
-        # ------------------------------------------------------------------
-        prompt_prefix = msg.get("prompt_prefix", "")
-        prompt = f"{prompt_prefix}{title}" if prompt_prefix else title
-        # The card renders images in square tiles. ai_task exposes no size
-        # parameter, but gpt-image (and most models) honour an explicit aspect
-        # instruction — so ask for 1:1 to avoid the tiles cropping the result.
-        # For providers that ignore it this is just harmless extra prompt text.
-        instructions = f"{prompt}\n\nThe image must have a square 1:1 aspect ratio."
-
-        entity_id = msg.get("entity_id")
-        if not entity_id:
-            from homeassistant.helpers import entity_registry as er
-            ent_reg = er.async_get(hass)
-            ai_entities = [
-                e.entity_id for e in ent_reg.entities.values()
-                if e.domain == "ai_task" and not e.disabled_by
-            ]
-            if not ai_entities:
-                raise ValueError("No ai_task entity found — configure one in the card editor")
-            entity_id = ai_entities[0]
-
-        try:
-            service_result = await hass.services.async_call(
-                "ai_task",
-                "generate_image",
-                {
-                    "task_name": f"home_tasks_{title_hash}",
-                    "instructions": instructions,
-                    "entity_id": entity_id,
-                },
-                blocking=True,
-                return_response=True,
-            )
-        except Exception as service_err:
-            raise ValueError(f"Image generation failed: {service_err}") from service_err
-
-        _LOGGER.debug("ai_task.generate_image result: %s", service_result)
-        result_dict = service_result or {}
-        # Prefer the media-source id: it lets _save_image_to_public_media copy
-        # the file straight off disk (no auth-dependent HTTP download). The
-        # signed "url" is only a fallback.
-        image_url = (
-            result_dict.get("media_source_id")
-            or result_dict.get("url")
-            or (result_dict.get("image") or {}).get("url")
+        result = await async_generate_task_image(
+            hass,
+            connection,
+            task_id=msg["task_id"],
+            entry_id=msg.get("entry_id"),
+            todo_entity_id=msg.get("todo_entity_id"),
+            prompt_prefix=msg.get("prompt_prefix", ""),
+            ai_entity_id=msg.get("entity_id"),
+            force=msg.get("force", False),
         )
-        if not image_url:
-            raise ValueError(
-                f"ai_task.generate_image returned no image URL. Full result: {result_dict}"
-            )
-
-        # Convert auth-required internal URLs to public /media/local/ URLs so
-        # the Lovelace card can display them without auth headers.
-        image_filename = f"{title_hash}.png"
-        image_url = await _save_image_to_public_media(hass, connection, image_url, image_filename)
-
-        # Never persist an unresolved media-source:// URI — the browser can't
-        # render it, so it would show as a permanently broken image. Surface a
-        # clear error instead (e.g. media-source resolution failed above).
-        if image_url and image_url.startswith("media-source://"):
-            raise ValueError(
-                "Generated image could not be resolved to a displayable URL"
-            )
-
-        # Append a cache-busting timestamp so browsers/apps that cache by URL
-        # (including the Android HA app which cannot be hard-refreshed) always
-        # fetch the new image after regeneration.
-        if image_url.startswith("/local/home_tasks/"):
-            image_url = f"{image_url}?v={int(time.time())}"
-
-        # ------------------------------------------------------------------
-        # 3. Propagate the URL to every task with that title, in every list.
-        # ------------------------------------------------------------------
-        updated_task = None
-        # Only fan out to same-title tasks when the title is non-empty — an empty
-        # title would match every blank-title task across all lists and overwrite
-        # their images.
-        if title_key:
-            for s in native_stores:
-                for t in s.tasks:
-                    if t.get("title", "").strip().lower() == title_key and t.get("image_url") != image_url:
-                        stamped = await s.async_update_task(t["id"], image_url=image_url)
-                        if t["id"] == msg["task_id"]:
-                            updated_task = stamped
-
-            # External provider tasks keep Home Tasks-only image metadata in
-            # their overlay; the providers themselves are never edited here.
-            for ov_store, ext_tasks in external_lists:
-                for candidate in ext_tasks:
-                    if (
-                        candidate.get("title", "").strip().lower() == title_key
-                        and candidate.get("image_url") != image_url
-                    ):
-                        await ov_store.async_set_overlay(
-                            candidate["id"], image_url=image_url
-                        )
-                        # Only the list this request came from can hold the
-                        # requested task — uids are unique per provider, not
-                        # across providers.
-                        if ov_store is overlay_store and candidate["id"] == msg["task_id"]:
-                            updated_task = {**candidate, "image_url": image_url}
-
-        if updated_task is None:
-            if overlay_store:
-                await overlay_store.async_set_overlay(msg["task_id"], image_url=image_url)
-                updated_task = {**task, "image_url": image_url}
-            else:
-                updated_task = await store.async_update_task(
-                    msg["task_id"], image_url=image_url
-                )
-
-        connection.send_result(msg["id"], {"task": updated_task})
-
+        connection.send_result(msg["id"], {"task": result["task"]})
     except Exception as err:
         _handle_error(connection, msg["id"], err)

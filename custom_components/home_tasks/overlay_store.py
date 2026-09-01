@@ -185,13 +185,29 @@ class ExternalTaskOverlayStore:
     def get_settings(self) -> dict:
         """Per-list policy settings — mirrors HomeTasksStore.get_settings."""
         s = self._data.get("settings") or {}
-        return {"share_images": s.get("share_images", True) is not False}
+        return {
+            "share_images": s.get("share_images", True) is not False,
+            "auto_generate_images": s.get("auto_generate_images", False) is True,
+        }
 
-    async def async_set_settings(self, share_images: object = None) -> dict:
+    async def async_set_settings(
+        self, share_images: object = None, auto_generate_images: object = None
+    ) -> dict:
         """Update per-list settings. None keeps the current value."""
-        if share_images is not None:
-            self._data["settings"] = {"share_images": bool(share_images)}
-            await self._async_save()
+        if share_images is None and auto_generate_images is None:
+            return self.get_settings()
+        current = self.get_settings()
+        self._data["settings"] = {
+            "share_images": bool(
+                current["share_images"] if share_images is None else share_images
+            ),
+            "auto_generate_images": bool(
+                current["auto_generate_images"]
+                if auto_generate_images is None
+                else auto_generate_images
+            ),
+        }
+        await self._async_save()
         return self.get_settings()
 
     def get_overlay(self, task_uid: str) -> dict:

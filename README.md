@@ -156,6 +156,30 @@ columns:
 
 > The main **Model** of your AI entity must be a text/vision model; the actual image model is configured in the AI integration's *image generation* option. `auto_generate_image` only runs when `show_images` is on **and** an `image_generation` entity is set.
 
+**Background generation** (no dashboard required)
+
+`auto_generate_image` only fires while a browser has the card open. For tasks
+that appear by voice, service call or recurrence, switch on **Generate images
+in the background** for the list (card editor -> *Images*) and configure the
+queue once:
+
+```yaml
+action: home_tasks.configure_image_queue
+data:
+  enabled: true
+  ai_task_entity_id: ai_task.openai
+  prompt_prefix: "Minimalist icon of"   # optional
+  min_minutes: 20                        # optional, default 20
+  max_minutes: 35                        # optional, default 35
+```
+
+Home Tasks then looks for open tasks without an image in those lists and works
+through them **one at a time**, pausing a random 20-35 minutes between provider
+calls. Queue, pause and configuration survive a restart, so restarting is not a
+way around the pacing. Reusing an image that already exists locally costs
+nothing and does not consume the pause. Remove an image you don't like and the
+task simply queues up again behind the current pause.
+
 **Good to know:**
 
 - **No duplicate work** — if another task with the same title already has an image, it's reused instead of generating again; generating an image assigns it to every task with that title, in every list — native and linked alike. Linked lists are read from their provider for this, so a generation with several linked lists takes a moment longer.
