@@ -1666,6 +1666,9 @@ const PERSON_COLORS = [
   "#3b6d11", "#854f0b", "#a32d2d", "#5f5e5a",
 ];
 
+// Marker for "we stopped waiting", as opposed to "the backend said no".
+const WS_TIMEOUT = "timeout";
+
 // HA todo entity feature bits (TodoListEntityFeature) used for capability gating.
 const TODO_FEATURE = { SET_DUE_DATE: 16, SET_DUE_DATETIME: 32, SET_DESCRIPTION: 64 };
 
@@ -1950,11 +1953,14 @@ class HomeTasksCard extends HTMLElement {
 
   // --- Data methods ---
 
-  async _callWs(type, data = {}) {
+  // `rethrow` is for callers that have to tell a refusal from our own 5s
+  // race: the backend saying no means the action did not happen, a timeout
+  // means we stopped waiting and it may well have happened anyway.
+  async _callWs(type, data = {}, { rethrow = false } = {}) {
     if (!this._hass) return null;
     try {
       const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("timeout")), 5000)
+        setTimeout(() => reject(new Error(WS_TIMEOUT)), 5000)
       );
       return await Promise.race([
         this._hass.callWS({ type, ...data }),
@@ -1962,8 +1968,13 @@ class HomeTasksCard extends HTMLElement {
       ]);
     } catch (err) {
       console.warn(`WS call ${type} failed:`, err.message);
+      if (rethrow) throw err;
       return null;
     }
+  }
+
+  _isWsTimeout(err) {
+    return !!err && err.message === WS_TIMEOUT;
   }
 
   // --- External entity routing helpers ---
@@ -2296,6 +2307,7 @@ class HomeTasksCard extends HTMLElement {
         priority: null, tags: [], reminders: [], assigned_person: autoAssignPerson,
         recurrence_enabled: false, _external: true,
       });
+      const typed = { title, due: cs.newTaskDue, dueTime: cs.newTaskDueTime };
       cs.newTaskTitle = "";
       resetAddDue();
       this._justAddedTaskId = tempId;
@@ -2306,17 +2318,27 @@ class HomeTasksCard extends HTMLElement {
       this._applyFlip(before, colIdx, 0.25);
 
       // Send to API in background, then reload to get the real ID
+      let addError = null;
       try {
         const payload = { entity_id: this._colEntityId(colIdx), title };
         if (autoAssignPerson) payload.assigned_person = autoAssignPerson;
         if (addDue) { payload.due_date = addDue; if (addDueTime) payload.due_time = addDueTime; }
-        result = await this._callWs("home_tasks/create_external_task", payload);
+        result = await this._callWs("home_tasks/create_external_task", payload, { rethrow: true });
       } catch (err) {
-        console.warn("Failed to create external task:", err);
+        addError = err;
       }
-      // _callWs swallows errors and returns null, so the placeholder row
-      // would just disappear on the reload below without a word (issue #59).
-      if (!result) this._showError(this._t("add_failed"));
+      // Refused: say so, take the placeholder row back off and hand the
+      // typed text back, so the next attempt is one keypress and not a
+      // retype (issue #59). A timeout is not a refusal - the provider may
+      // have created the task, and the reload below will show it.
+      if (!result && !this._isWsTimeout(addError)) {
+        cs.tasks = cs.tasks.filter((t) => t.id !== tempId);
+        cs.newTaskTitle = typed.title;
+        cs.newTaskDue = typed.due;
+        cs.newTaskDueTime = typed.dueTime;
+        this._showError(this._t("add_failed"));
+        this._render();
+      }
       this._reloadExternal(colIdx);
       // C12 for external lists: the provider assigns the uid, and the card
       // only sees the real task after the reload above — the row on screen is
@@ -2330,7 +2352,12 @@ class HomeTasksCard extends HTMLElement {
       const payload = { list_id: this._colListId(colIdx), title };
       if (autoAssignPerson) payload.assigned_person = autoAssignPerson;
       if (addDue) { payload.due_date = addDue; if (addDueTime) payload.due_time = addDueTime; }
-      result = await this._callWs("home_tasks/add_task", payload);
+      let addError = null;
+      try {
+        result = await this._callWs("home_tasks/add_task", payload, { rethrow: true });
+      } catch (err) {
+        addError = err;
+      }
       if (result) {
         cs.newTaskTitle = "";
         resetAddDue();
@@ -2345,6 +2372,10 @@ class HomeTasksCard extends HTMLElement {
             && this._config.image_generation?.entity_id) {
           this._generateTaskImage(result, colIdx);
         }
+      } else if (this._isWsTimeout(addError)) {
+        // We stopped waiting, the store may still have it: show what is
+        // there rather than claiming a failure. The typed title stays.
+        await this._loadAllTasks();
       } else {
         this._showError(this._t("add_failed"));
       }
@@ -5026,6 +5057,10 @@ class HomeTasksCard extends HTMLElement {
   _personPictureUrl(entityId) {
     const url = this._hass?.states?.[entityId]?.attributes?.entity_picture;
     if (typeof url !== "string" || !url.startsWith("/")) return null;
+    // Only the size that image_upload itself serves is swapped. A picture
+    // that merely has "512x512" somewhere in its path (a folder named after
+    // a size, say) would turn into a URL that does not exist.
+    if (!url.startsWith("/api/image/serve/")) return url;
     return url.replace("/512x512", "/256x256");
   }
 
@@ -5043,11 +5078,17 @@ class HomeTasksCard extends HTMLElement {
   }
 
   _personInitials(name) {
-    const words = String(name || "").trim().split(/\s+/).filter(Boolean);
-    if (!words.length) return "?";
-    const first = words[0][0] || "";
-    const last = words.length > 1 ? (words[words.length - 1][0] || "") : "";
-    return (first + last).toUpperCase();
+    // The first *letter* of a word: display names are not always plain
+    // first-and-last, and "Unknown (Alice)" must not put a bracket in the
+    // circle. Words without a letter or digit drop out entirely.
+    const letters = String(name || "")
+      .trim()
+      .split(/\s+/)
+      .map((w) => (w.match(/[\p{L}\p{N}]/u) || [""])[0])
+      .filter(Boolean);
+    if (!letters.length) return "?";
+    const last = letters.length > 1 ? letters[letters.length - 1] : "";
+    return (letters[0] + last).toUpperCase();
   }
 
   _personColor(key) {

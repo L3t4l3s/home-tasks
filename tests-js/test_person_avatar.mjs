@@ -22,6 +22,7 @@ const TASKS = [
   TASK({ id: 'T1', title: 'Take out the bins', sort_order: 0, assigned_person: 'person.kevin' }),
   TASK({ id: 'T2', title: 'Water the plants', sort_order: 1, assigned_person: 'person.lisa' }),
   TASK({ id: 'T3', title: 'Sort the recycling', sort_order: 2, assigned_person: 'person.mallory' }),
+  TASK({ id: 'T4', title: 'Mow the lawn', sort_order: 3, assigned_person: 'person.otto' }),
 ];
 
 const STATES = {
@@ -29,6 +30,10 @@ const STATES = {
     attributes: { friendly_name: 'Kevin Schimnick', entity_picture: '/api/image/serve/abc123/512x512' },
   },
   'person.lisa': { attributes: { friendly_name: 'Lisa' } },
+  'person.otto': {
+    // A perfectly valid picture that happens to have a size in its path.
+    attributes: { friendly_name: 'Otto', entity_picture: '/local/people/512x512/otto.jpg' },
+  },
   'person.mallory': {
     // A picture somewhere else on the internet: not ours to show.
     attributes: { friendly_name: 'Mallory', entity_picture: 'https://example.com/m.jpg' },
@@ -252,3 +257,25 @@ describe('configs written before the dropdown', () => {
     assert.equal(card._personMode(0, 'badge'), 'off');
   });
 });
+
+describe('reading the picture and the name (review follow-up)', () => {
+  test('only the serve path Home Assistant owns gets the smaller size', async () => {
+    const card = await mount({ show_person_avatar: true });
+    const img = avatarIn(badge(card, 'person.otto'));
+    assert.equal(img.tagName, 'IMG');
+    assert.equal(img.getAttribute('src'), '/local/people/512x512/otto.jpg',
+      'a folder named after a size is not a size to swap');
+    assert.equal(card._personPictureUrl('person.kevin'), '/api/image/serve/abc123/256x256',
+      'the one HA really serves still gets swapped');
+  });
+
+  test('initials take the first letter of a word, not its first character', async () => {
+    const card = await mount();
+    // A Todoist collaborator with no HA person reads "Unknown (Alice)".
+    assert.equal(card._personInitials('Unknown (Alice)'), 'UA');
+    assert.equal(card._personInitials('(((  )))'), '?');
+    assert.equal(card._personInitials('Kevin Schimnick'), 'KS');
+    assert.equal(card._personInitials('Ben'), 'B');
+  });
+});
+

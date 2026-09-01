@@ -21,7 +21,7 @@ const TASK = (over) => ({
   assigned_person: null, image_url: null, history: [], section_id: null, ...over,
 });
 
-function makeHass({ failAdd = false } = {}) {
+function makeHass({ failAdd = false, timeout = false } = {}) {
   const calls = [];
   return {
     language: 'en',
@@ -38,9 +38,11 @@ function makeHass({ failAdd = false } = {}) {
         case 'home_tasks/get_external_tasks':
           return { tasks: [TASK({ id: 'U1', title: 'Existing', sort_order: 0, _external: true })], sections: [] };
         case 'home_tasks/add_task':
+          if (timeout) throw new Error('timeout');
           if (failAdd) throw new Error('unknown_error');
           return TASK({ id: 'NEW', title: msg.title });
         case 'home_tasks/create_external_task':
+          if (timeout) throw new Error('timeout');
           if (failAdd) throw new Error('unknown_error');
           return { uid: 'UNEW' };
         default: return null;
@@ -142,3 +144,54 @@ describe('adding a task says what happened', () => {
     assert.equal(card.shadowRoot.activeElement, addInput(card));
   });
 });
+
+// ---------------------------------------------------------------------------
+// A refusal and a timeout are not the same thing (review follow-up).
+// ---------------------------------------------------------------------------
+
+describe('what happens to the typed title', () => {
+  test('a refused external add gives the text back and removes the ghost row', async () => {
+    const { card, win } = await mount({ entity_id: 'todo.local_todo' }, { failAdd: true });
+    await type(card, win, 'Bread');
+
+    await clickPlus(card, win);
+
+    assert.ok(toast(card), 'the refusal is visible');
+    assert.equal(card._columns[0].newTaskTitle, 'Bread', 'the text comes back');
+    assert.equal(addInput(card).value, 'Bread', 'and it is back in the field');
+    assert.equal(card._columns[0].tasks.filter((t) => String(t.id).startsWith('_pending_')).length, 0,
+      'the optimistic row is gone rather than lingering until the reload');
+  });
+
+  test('a refused native add keeps the text where it was', async () => {
+    const { card, win } = await mount({ list_id: 'L1' }, { failAdd: true });
+    await type(card, win, 'Bread');
+    await clickPlus(card, win);
+    assert.equal(card._columns[0].newTaskTitle, 'Bread');
+  });
+
+  test('a timeout is not reported as a failure', async () => {
+    // Our own 5s race, not a refusal: the backend may well have created the
+    // task, so claiming it failed would be a lie.
+    const { card, hass, win } = await mount({ list_id: 'L1' }, { timeout: true });
+    await type(card, win, 'Bread');
+    hass.calls.length = 0;
+
+    await clickPlus(card, win);
+
+    assert.equal(toast(card), null, 'no error message');
+    assert.ok(hass.calls.includes('home_tasks/get_tasks'), 'the list is re-read instead');
+  });
+
+  test('an external timeout reloads and says nothing', async () => {
+    const { card, win } = await mount({ entity_id: 'todo.local_todo' }, { timeout: true });
+    await type(card, win, 'Bread');
+
+    await clickPlus(card, win);
+
+    assert.equal(toast(card), null);
+    assert.ok(card._columns[0].tasks.some((t) => t.title === 'Bread'),
+      'the optimistic row stays until the reload decides');
+  });
+});
+
