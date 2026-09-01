@@ -9,6 +9,11 @@ console.info("%c HOME-TASKS-CARD %c v2.2.2 ", "color: white; background: #03a9f4
 
 const _TRANSLATIONS = {
   en: {
+    ed_person_off: "Off",
+    ed_person_name: "Name",
+    ed_person_both: "Both",
+    ed_group_header: "Header",
+    ed_group_tasks: "Tasks",
     ed_show_person_avatar: "Profile picture",
     voice_failed: "Voice input failed",
     voice_input: "Voice input", voice_stop: "Stop recording", img_label: "Image", img_generate: "Generate", img_regenerate: "Regenerate", img_generating: "Generating…", img_from_media: "From media library", img_remove: "Remove image", img_generate_failed: "Image generation failed: ", img_save_failed: "Saving image failed: ", mb_title: "Media library", mb_loading: "Loading…", mb_root: "Media", mb_back: "Back", mb_empty: "No files", mb_error: "Error: ",
@@ -61,7 +66,7 @@ const _TRANSLATIONS = {
     ed_auto_delete: "Delete completed immediately",
     ed_confirm_complete: "Confirm before completing",
     ed_show_add_due: "Due date when adding",
-    ed_max_height: "Max height (px, 0 = unlimited)", ed_badge_priority: "Priority chips", ed_badge_progress: "Progress chips", ed_badge_due: "Due chips", ed_badge_recurrence: "Recurrence chips", ed_badge_person: "Person chips", ed_badge_tags: "Tag chips", ed_badge_reminders: "Reminder chips",
+    ed_max_height: "Max height (px, 0 = unlimited)", ed_badge_priority: "Priority chips", ed_badge_progress: "Progress chips", ed_badge_due: "Due chips", ed_badge_recurrence: "Recurrence chips", ed_badge_person: "Person", ed_badge_tags: "Tag chips", ed_badge_reminders: "Reminder chips",
     ed_sec_defaults: "Defaults",
     ed_sec_images: "Images",
     ed_share_images: "Share images with other lists",
@@ -177,6 +182,11 @@ const _TRANSLATIONS = {
     ed_ai_prompt_prefix_placeholder: "e.g. Minimalist icon of",
   },
   nl: {
+    ed_person_off: "Uit",
+    ed_person_name: "Naam",
+    ed_person_both: "Beide",
+    ed_group_header: "Koptekst",
+    ed_group_tasks: "Taken",
     ed_show_person_avatar: "Profielfoto",
     voice_failed: "Spraakinvoer mislukt",
     confirm_delete_section: "Deze sectie verwijderen? Taken erin worden ongesorteerd.", done_section_header: "Klaar", duplicate_task: "Dupliceren", move_task: "Verplaatsen", move_task_msg: "\u201e{0}\u201d verplaatsen naar:", ed_show_move: "Verplaatsknop", ed_add_section: "+ Sectie toevoegen", ed_ai_image_entity: "AI-entiteit voor beeldgeneratie", ed_ai_image_entity_placeholder: "bijv. ai_task.openai", ed_ai_prompt_prefix: "Prompt-prefix (optioneel)", ed_ai_prompt_prefix_placeholder: "bijv. Minimalistisch icoon van", ed_auto_image: "Afbeelding automatisch genereren", ed_delete_section: "Sectie verwijderen", ed_external_lists: "Extern", ed_loading: "Laden…", ed_move_down: "Omlaag verplaatsen", ed_move_up: "Omhoog verplaatsen", ed_sec_sections: "Secties", ed_section_icon: "Pictogram", ed_section_name: "Naam", ed_section_name_prompt: "Sectienaam:", ed_sections_empty: "Nog geen secties — taken worden plat weergegeven.", ed_sections_select_list_hint: "Selecteer eerst een lijst om de secties te beheren.", ed_show_filters: "Statusfilter", ed_show_images: "Afbeeldingen", ed_show_person_chips: "Persoonfilter", ed_show_tag_chips: "Tagfilter", ed_show_tile_title: "Titel in tegels", ed_show_voice: "Spraakinvoer", ed_task_search: "Taken zoeken", ed_tile_help: "Tegelweergave:\n• Klikken = voltooien\n• Vasthouden = bewerken\n• Slepen = volgorde wijzigen", ed_view_mode: "Weergavemodus", ed_view_mode_list: "Lijst", ed_view_mode_tiles: "Tegels",
@@ -210,7 +220,7 @@ const _TRANSLATIONS = {
     ed_auto_delete: "Voltooide meteen verwijderen", ed_compact: "Compact", ed_show_tags: "Tags",
     ed_confirm_complete: "Bevestigen voor afronden",
     ed_show_add_due: "Vervaldatum bij toevoegen",
-    ed_max_height: "Max. hoogte (px, 0 = onbeperkt)", ed_badge_priority: "Prioriteitschips", ed_badge_progress: "Voortgangschips", ed_badge_due: "Vervaldatumchips", ed_badge_recurrence: "Herhalingschips", ed_badge_person: "Persoonchips", ed_badge_tags: "Tagchips", ed_badge_reminders: "Herinneringschips",
+    ed_max_height: "Max. hoogte (px, 0 = onbeperkt)", ed_badge_priority: "Prioriteitschips", ed_badge_progress: "Voortgangschips", ed_badge_due: "Vervaldatumchips", ed_badge_recurrence: "Herhalingschips", ed_badge_person: "Persoon", ed_badge_tags: "Tagchips", ed_badge_reminders: "Herinneringschips",
     ed_sec_defaults: "Standaardwaarden",
     ed_sec_images: "Afbeeldingen",
     ed_share_images: "Afbeeldingen delen met andere lijsten",
@@ -267,6 +277,11 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} u {1} min geleden", due_ago_minutes: "{0} min geleden", due_ago_seconds: "Zojuist",
   },
   it: {
+    ed_person_off: "Disattivato",
+    ed_person_name: "Nome",
+    ed_person_both: "Entrambi",
+    ed_group_header: "Intestazione",
+    ed_group_tasks: "Attività",
     ed_show_person_avatar: "Foto del profilo",
     voice_failed: "Input vocale non riuscito",
     confirm_delete_section: "Eliminare questa sezione? Le attività al suo interno diventeranno non ordinate.", done_section_header: "Fatto", duplicate_task: "Duplica", move_task: "Sposta", move_task_msg: "Sposta \u201c{0}\u201d in:", ed_show_move: "Pulsante Sposta", ed_add_section: "+ Aggiungi sezione", ed_ai_image_entity: "Entità IA per la generazione di immagini", ed_ai_image_entity_placeholder: "es. ai_task.openai", ed_ai_prompt_prefix: "Prefisso prompt (facoltativo)", ed_ai_prompt_prefix_placeholder: "es. Icona minimalista di", ed_auto_image: "Genera immagine automaticamente", ed_delete_section: "Elimina sezione", ed_external_lists: "Esterna", ed_loading: "Caricamento…", ed_move_down: "Sposta giù", ed_move_up: "Sposta su", ed_sec_sections: "Sezioni", ed_section_icon: "Icona", ed_section_name: "Nome", ed_section_name_prompt: "Nome sezione:", ed_sections_empty: "Nessuna sezione — le attività verranno mostrate senza raggruppamenti.", ed_sections_select_list_hint: "Seleziona prima un elenco per gestirne le sezioni.", ed_show_filters: "Filtro stato", ed_show_images: "Immagini", ed_show_person_chips: "Filtro persone", ed_show_tag_chips: "Filtro tag", ed_show_tile_title: "Titolo nelle caselle", ed_show_voice: "Input vocale", ed_task_search: "Ricerca attività", ed_tile_help: "Vista a caselle:\n• Clic = completa\n• Tieni premuto = modifica\n• Trascina = riordina", ed_view_mode: "Modalità di visualizzazione", ed_view_mode_list: "Elenco", ed_view_mode_tiles: "Caselle",
@@ -300,7 +315,7 @@ const _TRANSLATIONS = {
     ed_auto_delete: "Elimina completate immediatamente", ed_compact: "Compatto", ed_show_tags: "Tag",
     ed_confirm_complete: "Conferma prima di completare",
     ed_show_add_due: "Scadenza alla creazione",
-    ed_max_height: "Altezza max (px, 0 = illimitata)", ed_badge_priority: "Chip priorit\u00e0", ed_badge_progress: "Chip avanzamento", ed_badge_due: "Chip scadenza", ed_badge_recurrence: "Chip ricorrenza", ed_badge_person: "Chip persona", ed_badge_tags: "Chip tag", ed_badge_reminders: "Chip promemoria",
+    ed_max_height: "Altezza max (px, 0 = illimitata)", ed_badge_priority: "Chip priorit\u00e0", ed_badge_progress: "Chip avanzamento", ed_badge_due: "Chip scadenza", ed_badge_recurrence: "Chip ricorrenza", ed_badge_person: "Persona", ed_badge_tags: "Chip tag", ed_badge_reminders: "Chip promemoria",
     ed_sec_defaults: "Predefiniti",
     ed_sec_images: "Immagini",
     ed_share_images: "Condividi le immagini con altri elenchi",
@@ -357,6 +372,11 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} h {1} min fa", due_ago_minutes: "{0} min fa", due_ago_seconds: "Proprio ora",
   },
   pl: {
+    ed_person_off: "Wyłączone",
+    ed_person_name: "Imię",
+    ed_person_both: "Oba",
+    ed_group_header: "Nagłówek",
+    ed_group_tasks: "Zadania",
     ed_show_person_avatar: "Zdjęcie profilowe",
     voice_failed: "Wprowadzanie głosowe nie powiodło się",
     confirm_delete_section: "Usunąć tę sekcję? Zadania w niej staną się nieposortowane.", done_section_header: "Gotowe", duplicate_task: "Duplikuj", move_task: "Przenie\u015b", move_task_msg: "Przenie\u015b \u201e{0}\u201d do:", ed_show_move: "Przycisk przenoszenia", ed_add_section: "+ Dodaj sekcję", ed_ai_image_entity: "Encja AI do generowania obrazów", ed_ai_image_entity_placeholder: "np. ai_task.openai", ed_ai_prompt_prefix: "Prefiks promptu (opcjonalnie)", ed_ai_prompt_prefix_placeholder: "np. Minimalistyczna ikona", ed_auto_image: "Automatycznie generuj obraz", ed_delete_section: "Usuń sekcję", ed_external_lists: "Zewnętrzna", ed_loading: "Ładowanie…", ed_move_down: "Przenieś w dół", ed_move_up: "Przenieś w górę", ed_sec_sections: "Sekcje", ed_section_icon: "Ikona", ed_section_name: "Nazwa", ed_section_name_prompt: "Nazwa sekcji:", ed_sections_empty: "Brak sekcji — zadania będą wyświetlane płasko.", ed_sections_select_list_hint: "Najpierw wybierz listę, aby zarządzać jej sekcjami.", ed_show_filters: "Filtr statusu", ed_show_images: "Obrazy", ed_show_person_chips: "Filtr os\u00f3b", ed_show_tag_chips: "Filtr tag\u00f3w", ed_show_tile_title: "Tytuł na kafelkach", ed_show_voice: "Wprowadzanie głosowe", ed_task_search: "Wyszukiwanie zadań", ed_tile_help: "Widok kafelków:\n• Kliknięcie = ukończ\n• Przytrzymanie = edycja\n• Przeciągnięcie = zmiana kolejności", ed_view_mode: "Tryb widoku", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Kafelki",
@@ -390,7 +410,7 @@ const _TRANSLATIONS = {
     ed_auto_delete: "Natychmiast usu\u0144 uko\u0144czone", ed_compact: "Kompaktowy", ed_show_tags: "Tagi",
     ed_confirm_complete: "Potwierd\u017a przed uko\u0144czeniem",
     ed_show_add_due: "Termin przy dodawaniu",
-    ed_max_height: "Maks. wysoko\u015b\u0107 (px, 0 = bez limitu)", ed_badge_priority: "Znaczniki priorytetu", ed_badge_progress: "Znaczniki post\u0119pu", ed_badge_due: "Znaczniki terminu", ed_badge_recurrence: "Znaczniki powtarzania", ed_badge_person: "Znaczniki osoby", ed_badge_tags: "Znaczniki tag\u00f3w", ed_badge_reminders: "Znaczniki przypomnie\u0144",
+    ed_max_height: "Maks. wysoko\u015b\u0107 (px, 0 = bez limitu)", ed_badge_priority: "Znaczniki priorytetu", ed_badge_progress: "Znaczniki post\u0119pu", ed_badge_due: "Znaczniki terminu", ed_badge_recurrence: "Znaczniki powtarzania", ed_badge_person: "Osoba", ed_badge_tags: "Znaczniki tag\u00f3w", ed_badge_reminders: "Znaczniki przypomnie\u0144",
     ed_sec_defaults: "Domy\u015blne",
     ed_sec_images: "Obrazy",
     ed_share_images: "Współdziel obrazy z innymi listami",
@@ -447,6 +467,11 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} godz. {1} min temu", due_ago_minutes: "{0} min temu", due_ago_seconds: "W\u0142a\u015bnie",
   },
   sv: {
+    ed_person_off: "Av",
+    ed_person_name: "Namn",
+    ed_person_both: "Båda",
+    ed_group_header: "Sidhuvud",
+    ed_group_tasks: "Uppgifter",
     ed_show_person_avatar: "Profilbild",
     voice_failed: "Röstinmatning misslyckades",
     confirm_delete_section: "Ta bort det här avsnittet? Uppgifter i det blir osorterade.", done_section_header: "Klar", duplicate_task: "Duplicera", move_task: "Flytta", move_task_msg: "Flytta \u201d{0}\u201d till:", ed_show_move: "Flytta-knapp", ed_add_section: "+ Lägg till avsnitt", ed_ai_image_entity: "AI-entitet för bildgenerering", ed_ai_image_entity_placeholder: "t.ex. ai_task.openai", ed_ai_prompt_prefix: "Promptprefix (valfritt)", ed_ai_prompt_prefix_placeholder: "t.ex. Minimalistisk ikon av", ed_auto_image: "Generera bild automatiskt", ed_delete_section: "Ta bort avsnitt", ed_external_lists: "Extern", ed_loading: "Läser in…", ed_move_down: "Flytta ned", ed_move_up: "Flytta upp", ed_sec_sections: "Avsnitt", ed_section_icon: "Ikon", ed_section_name: "Namn", ed_section_name_prompt: "Avsnittsnamn:", ed_sections_empty: "Inga avsnitt än — uppgifter visas platt.", ed_sections_select_list_hint: "Välj en lista först för att hantera dess avsnitt.", ed_show_filters: "Statusfilter", ed_show_images: "Bilder", ed_show_person_chips: "Personfilter", ed_show_tag_chips: "Taggfilter", ed_show_tile_title: "Titel i rutor", ed_show_voice: "Röstinmatning", ed_task_search: "Uppgiftssökning", ed_tile_help: "Rutvy:\n• Klick = slutför\n• Håll = redigera\n• Dra = ändra ordning", ed_view_mode: "Visningsläge", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Rutor",
@@ -480,7 +505,7 @@ const _TRANSLATIONS = {
     ed_auto_delete: "Ta bort slutf\u00f6rda omedelbart", ed_compact: "Kompakt", ed_show_tags: "Taggar",
     ed_confirm_complete: "Bekr\u00e4fta innan slutf\u00f6rande",
     ed_show_add_due: "F\u00f6rfallodatum vid till\u00e4gg",
-    ed_max_height: "Maxh\u00f6jd (px, 0 = obegr\u00e4nsad)", ed_badge_priority: "Prioritetschips", ed_badge_progress: "F\u00f6rloppschips", ed_badge_due: "F\u00f6rfallochips", ed_badge_recurrence: "Upprepningschips", ed_badge_person: "Personchips", ed_badge_tags: "Taggchips", ed_badge_reminders: "P\u00e5minnelsechips",
+    ed_max_height: "Maxh\u00f6jd (px, 0 = obegr\u00e4nsad)", ed_badge_priority: "Prioritetschips", ed_badge_progress: "F\u00f6rloppschips", ed_badge_due: "F\u00f6rfallochips", ed_badge_recurrence: "Upprepningschips", ed_badge_person: "Person", ed_badge_tags: "Taggchips", ed_badge_reminders: "P\u00e5minnelsechips",
     ed_sec_defaults: "Standardv\u00e4rden",
     ed_sec_images: "Bilder",
     ed_share_images: "Dela bilder med andra listor",
@@ -537,6 +562,11 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} tim {1} min sedan", due_ago_minutes: "{0} min sedan", due_ago_seconds: "Just nu",
   },
   fr: {
+    ed_person_off: "Désactivé",
+    ed_person_name: "Nom",
+    ed_person_both: "Les deux",
+    ed_group_header: "En-tête",
+    ed_group_tasks: "Tâches",
     ed_show_person_avatar: "Photo de profil",
     voice_failed: "Échec de la saisie vocale",
     confirm_delete_section: "Supprimer cette section ? Les tâches qu'elle contient ne seront plus triées.", done_section_header: "Terminé", duplicate_task: "Dupliquer", move_task: "D\u00e9placer", move_task_msg: "D\u00e9placer \u00ab\u202f{0}\u202f\u00bb vers\u00a0:", ed_show_move: "Bouton D\u00e9placer", ed_add_section: "+ Ajouter une section", ed_ai_image_entity: "Entité IA pour la génération d'images", ed_ai_image_entity_placeholder: "ex. ai_task.openai", ed_ai_prompt_prefix: "Préfixe d'invite (facultatif)", ed_ai_prompt_prefix_placeholder: "ex. Icône minimaliste de", ed_auto_image: "Générer l'image automatiquement", ed_delete_section: "Supprimer la section", ed_external_lists: "Externe", ed_loading: "Chargement…", ed_move_down: "Déplacer vers le bas", ed_move_up: "Déplacer vers le haut", ed_sec_sections: "Sections", ed_section_icon: "Icône", ed_section_name: "Nom", ed_section_name_prompt: "Nom de la section :", ed_sections_empty: "Aucune section pour l'instant — les tâches s'affichent à plat.", ed_sections_select_list_hint: "Sélectionnez d'abord une liste pour gérer ses sections.", ed_show_filters: "Filtre d'\u00e9tat", ed_show_images: "Images", ed_show_person_chips: "Filtre de personnes", ed_show_tag_chips: "Filtre d'\u00e9tiquettes", ed_show_tile_title: "Titre sur les tuiles", ed_show_voice: "Saisie vocale", ed_task_search: "Recherche de tâches", ed_tile_help: "Vue en tuiles :\n• Clic = terminer\n• Maintenir = modifier\n• Glisser = réorganiser", ed_view_mode: "Mode d'affichage", ed_view_mode_list: "Liste", ed_view_mode_tiles: "Tuiles",
@@ -570,7 +600,7 @@ const _TRANSLATIONS = {
     ed_auto_delete: "Supprimer les termin\u00e9es imm\u00e9diatement", ed_compact: "Compact", ed_show_tags: "\u00c9tiquettes",
     ed_confirm_complete: "Confirmer avant de terminer",
     ed_show_add_due: "\u00c9ch\u00e9ance \u00e0 la cr\u00e9ation",
-    ed_max_height: "Hauteur max (px, 0 = illimit\u00e9e)", ed_badge_priority: "Puces priorit\u00e9", ed_badge_progress: "Puces progression", ed_badge_due: "Puces \u00e9ch\u00e9ance", ed_badge_recurrence: "Puces r\u00e9currence", ed_badge_person: "Puces personne", ed_badge_tags: "Puces \u00e9tiquettes", ed_badge_reminders: "Puces rappel",
+    ed_max_height: "Hauteur max (px, 0 = illimit\u00e9e)", ed_badge_priority: "Puces priorit\u00e9", ed_badge_progress: "Puces progression", ed_badge_due: "Puces \u00e9ch\u00e9ance", ed_badge_recurrence: "Puces r\u00e9currence", ed_badge_person: "Personne", ed_badge_tags: "Puces \u00e9tiquettes", ed_badge_reminders: "Puces rappel",
     ed_sec_defaults: "Valeurs par d\u00e9faut",
     ed_sec_images: "Images",
     ed_share_images: "Partager les images avec d'autres listes",
@@ -627,6 +657,11 @@ const _TRANSLATIONS = {
     due_ago_hours: "Il y a {0} h {1} min", due_ago_minutes: "Il y a {0} min", due_ago_seconds: "\u00c0 l'instant",
   },
   pt: {
+    ed_person_off: "Desativado",
+    ed_person_name: "Nome",
+    ed_person_both: "Ambos",
+    ed_group_header: "Cabeçalho",
+    ed_group_tasks: "Tarefas",
     ed_show_person_avatar: "Foto do perfil",
     voice_failed: "Falha na entrada de voz",
     confirm_delete_section: "Excluir esta seção? As tarefas dentro dela ficarão sem ordenação.", done_section_header: "Concluído", duplicate_task: "Duplicar", move_task: "Mover", move_task_msg: "Mover \u201c{0}\u201d para:", ed_show_move: "Bot\u00e3o Mover", ed_add_section: "+ Adicionar seção", ed_ai_image_entity: "Entidade de IA para geração de imagens", ed_ai_image_entity_placeholder: "ex. ai_task.openai", ed_ai_prompt_prefix: "Prefixo do prompt (opcional)", ed_ai_prompt_prefix_placeholder: "ex. Ícone minimalista de", ed_auto_image: "Gerar imagem automaticamente", ed_delete_section: "Excluir seção", ed_external_lists: "Externa", ed_loading: "Carregando…", ed_move_down: "Mover para baixo", ed_move_up: "Mover para cima", ed_sec_sections: "Seções", ed_section_icon: "Ícone", ed_section_name: "Nome", ed_section_name_prompt: "Nome da seção:", ed_sections_empty: "Nenhuma seção ainda — as tarefas serão exibidas sem agrupamento.", ed_sections_select_list_hint: "Selecione uma lista primeiro para gerenciar suas seções.", ed_show_filters: "Filtro de estado", ed_show_images: "Imagens", ed_show_person_chips: "Filtro de pessoas", ed_show_tag_chips: "Filtro de etiquetas", ed_show_tile_title: "Título nos blocos", ed_show_voice: "Entrada de voz", ed_task_search: "Pesquisa de tarefas", ed_tile_help: "Visualização em blocos:\n• Clique = concluir\n• Segurar = editar\n• Arrastar = reordenar", ed_view_mode: "Modo de exibição", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Blocos",
@@ -660,7 +695,7 @@ const _TRANSLATIONS = {
     ed_auto_delete: "Excluir conclu\u00eddas imediatamente", ed_compact: "Compacto", ed_show_tags: "Etiquetas",
     ed_confirm_complete: "Confirmar antes de concluir",
     ed_show_add_due: "Prazo ao adicionar",
-    ed_max_height: "Altura m\u00e1x. (px, 0 = ilimitada)", ed_badge_priority: "Chips de prioridade", ed_badge_progress: "Chips de progresso", ed_badge_due: "Chips de prazo", ed_badge_recurrence: "Chips de recorr\u00eancia", ed_badge_person: "Chips de pessoa", ed_badge_tags: "Chips de etiquetas", ed_badge_reminders: "Chips de lembrete",
+    ed_max_height: "Altura m\u00e1x. (px, 0 = ilimitada)", ed_badge_priority: "Chips de prioridade", ed_badge_progress: "Chips de progresso", ed_badge_due: "Chips de prazo", ed_badge_recurrence: "Chips de recorr\u00eancia", ed_badge_person: "Pessoa", ed_badge_tags: "Chips de etiquetas", ed_badge_reminders: "Chips de lembrete",
     ed_sec_defaults: "Padr\u00f5es",
     ed_sec_images: "Imagens",
     ed_share_images: "Partilhar imagens com outras listas",
@@ -717,6 +752,11 @@ const _TRANSLATIONS = {
     due_ago_hours: "H\u00e1 {0} h {1} min", due_ago_minutes: "H\u00e1 {0} min", due_ago_seconds: "Agora mesmo",
   },
   es: {
+    ed_person_off: "Desactivado",
+    ed_person_name: "Nombre",
+    ed_person_both: "Ambos",
+    ed_group_header: "Encabezado",
+    ed_group_tasks: "Tareas",
     ed_show_person_avatar: "Foto de perfil",
     voice_failed: "Error en la entrada de voz",
     confirm_delete_section: "¿Eliminar esta sección? Las tareas que contiene quedarán sin ordenar.", done_section_header: "Hecho", duplicate_task: "Duplicar", move_task: "Mover", move_task_msg: "Mover \u201c{0}\u201d a:", ed_show_move: "Bot\u00f3n Mover", ed_add_section: "+ Añadir sección", ed_ai_image_entity: "Entidad de IA para la generación de imágenes", ed_ai_image_entity_placeholder: "p. ej. ai_task.openai", ed_ai_prompt_prefix: "Prefijo del prompt (opcional)", ed_ai_prompt_prefix_placeholder: "p. ej. Icono minimalista de", ed_auto_image: "Generar imagen automáticamente", ed_delete_section: "Eliminar sección", ed_external_lists: "Externa", ed_loading: "Cargando…", ed_move_down: "Mover abajo", ed_move_up: "Mover arriba", ed_sec_sections: "Secciones", ed_section_icon: "Icono", ed_section_name: "Nombre", ed_section_name_prompt: "Nombre de la sección:", ed_sections_empty: "Aún no hay secciones: las tareas se mostrarán sin agrupar.", ed_sections_select_list_hint: "Selecciona primero una lista para gestionar sus secciones.", ed_show_filters: "Filtro de estado", ed_show_images: "Imágenes", ed_show_person_chips: "Filtro de personas", ed_show_tag_chips: "Filtro de etiquetas", ed_show_tile_title: "Título en mosaicos", ed_show_voice: "Entrada de voz", ed_task_search: "Búsqueda de tareas", ed_tile_help: "Vista de mosaicos:\n• Clic = completar\n• Mantener = editar\n• Arrastrar = reordenar", ed_view_mode: "Modo de vista", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Mosaicos",
@@ -750,7 +790,7 @@ const _TRANSLATIONS = {
     ed_auto_delete: "Eliminar completadas inmediatamente", ed_compact: "Compacto", ed_show_tags: "Etiquetas",
     ed_confirm_complete: "Confirmar antes de completar",
     ed_show_add_due: "Fecha l\u00edmite al a\u00f1adir",
-    ed_max_height: "Altura m\u00e1x. (px, 0 = ilimitada)", ed_badge_priority: "Chips de prioridad", ed_badge_progress: "Chips de progreso", ed_badge_due: "Chips de vencimiento", ed_badge_recurrence: "Chips de repetici\u00f3n", ed_badge_person: "Chips de persona", ed_badge_tags: "Chips de etiquetas", ed_badge_reminders: "Chips de recordatorio",
+    ed_max_height: "Altura m\u00e1x. (px, 0 = ilimitada)", ed_badge_priority: "Chips de prioridad", ed_badge_progress: "Chips de progreso", ed_badge_due: "Chips de vencimiento", ed_badge_recurrence: "Chips de repetici\u00f3n", ed_badge_person: "Persona", ed_badge_tags: "Chips de etiquetas", ed_badge_reminders: "Chips de recordatorio",
     ed_sec_defaults: "Predeterminados",
     ed_sec_images: "Imágenes",
     ed_share_images: "Compartir imágenes con otras listas",
@@ -807,6 +847,11 @@ const _TRANSLATIONS = {
     due_ago_hours: "Hace {0} h {1} min", due_ago_minutes: "Hace {0} min", due_ago_seconds: "Ahora mismo",
   },
   ru: {
+    ed_person_off: "Выкл.",
+    ed_person_name: "Имя",
+    ed_person_both: "Оба",
+    ed_group_header: "Заголовок",
+    ed_group_tasks: "Задачи",
     ed_show_person_avatar: "Фото профиля",
     voice_failed: "Сбой голосового ввода",
     confirm_delete_section: "Удалить этот раздел? Задачи в нём станут несортированными.", done_section_header: "Готово", duplicate_task: "Дублировать", move_task: "\u041f\u0435\u0440\u0435\u043c\u0435\u0441\u0442\u0438\u0442\u044c", move_task_msg: "\u041f\u0435\u0440\u0435\u043c\u0435\u0441\u0442\u0438\u0442\u044c \u00ab{0}\u00bb \u0432:", ed_show_move: "\u041a\u043d\u043e\u043f\u043a\u0430 \u043f\u0435\u0440\u0435\u043c\u0435\u0449\u0435\u043d\u0438\u044f", ed_add_section: "+ Добавить раздел", ed_ai_image_entity: "ИИ-сущность для генерации изображений", ed_ai_image_entity_placeholder: "напр. ai_task.openai", ed_ai_prompt_prefix: "Префикс запроса (необязательно)", ed_ai_prompt_prefix_placeholder: "напр. Минималистичная иконка", ed_auto_image: "Автоматически генерировать изображение", ed_delete_section: "Удалить раздел", ed_external_lists: "Внешний", ed_loading: "Загрузка…", ed_move_down: "Переместить вниз", ed_move_up: "Переместить вверх", ed_sec_sections: "Разделы", ed_section_icon: "Значок", ed_section_name: "Имя", ed_section_name_prompt: "Название раздела:", ed_sections_empty: "Разделов пока нет — задачи отображаются списком.", ed_sections_select_list_hint: "Сначала выберите список, чтобы управлять его разделами.", ed_show_filters: "\u0424\u0438\u043b\u044c\u0442\u0440 \u0441\u0442\u0430\u0442\u0443\u0441\u0430", ed_show_images: "Изображения", ed_show_person_chips: "\u0424\u0438\u043b\u044c\u0442\u0440 \u043b\u044e\u0434\u0435\u0439", ed_show_tag_chips: "\u0424\u0438\u043b\u044c\u0442\u0440 \u0442\u0435\u0433\u043e\u0432", ed_show_tile_title: "Заголовок на плитках", ed_show_voice: "Голосовой ввод", ed_task_search: "Поиск задач", ed_tile_help: "Режим плиток:\n• Клик = выполнить\n• Удержание = редактировать\n• Перетаскивание = изменить порядок", ed_view_mode: "Режим отображения", ed_view_mode_list: "Список", ed_view_mode_tiles: "Плитки",
@@ -840,7 +885,7 @@ const _TRANSLATIONS = {
     ed_auto_delete: "\u0421\u0440\u0430\u0437\u0443 \u0443\u0434\u0430\u043b\u044f\u0442\u044c \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043d\u044b\u0435", ed_compact: "\u041a\u043e\u043c\u043f\u0430\u043a\u0442\u043d\u044b\u0439", ed_show_tags: "\u0422\u0435\u0433\u0438",
     ed_confirm_complete: "\u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0430\u0442\u044c \u043f\u0435\u0440\u0435\u0434 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u0438\u0435\u043c",
     ed_show_add_due: "\u0421\u0440\u043e\u043a \u043f\u0440\u0438 \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u0438\u0438",
-    ed_max_height: "\u041c\u0430\u043a\u0441. \u0432\u044b\u0441\u043e\u0442\u0430 (px, 0 = \u0431\u0435\u0437 \u043e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d\u0438\u044f)", ed_badge_priority: "\u0427\u0438\u043f\u044b \u043f\u0440\u0438\u043e\u0440\u0438\u0442\u0435\u0442\u0430", ed_badge_progress: "\u0427\u0438\u043f\u044b \u043f\u0440\u043e\u0433\u0440\u0435\u0441\u0441\u0430", ed_badge_due: "\u0427\u0438\u043f\u044b \u0441\u0440\u043e\u043a\u0430", ed_badge_recurrence: "\u0427\u0438\u043f\u044b \u043f\u043e\u0432\u0442\u043e\u0440\u0435\u043d\u0438\u044f", ed_badge_person: "\u0427\u0438\u043f\u044b \u0447\u0435\u043b\u043e\u0432\u0435\u043a\u0430", ed_badge_tags: "\u0427\u0438\u043f\u044b \u0442\u0435\u0433\u043e\u0432", ed_badge_reminders: "\u0427\u0438\u043f\u044b \u043d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u0439",
+    ed_max_height: "\u041c\u0430\u043a\u0441. \u0432\u044b\u0441\u043e\u0442\u0430 (px, 0 = \u0431\u0435\u0437 \u043e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d\u0438\u044f)", ed_badge_priority: "\u0427\u0438\u043f\u044b \u043f\u0440\u0438\u043e\u0440\u0438\u0442\u0435\u0442\u0430", ed_badge_progress: "\u0427\u0438\u043f\u044b \u043f\u0440\u043e\u0433\u0440\u0435\u0441\u0441\u0430", ed_badge_due: "\u0427\u0438\u043f\u044b \u0441\u0440\u043e\u043a\u0430", ed_badge_recurrence: "\u0427\u0438\u043f\u044b \u043f\u043e\u0432\u0442\u043e\u0440\u0435\u043d\u0438\u044f", ed_badge_person: "Человек", ed_badge_tags: "\u0427\u0438\u043f\u044b \u0442\u0435\u0433\u043e\u0432", ed_badge_reminders: "\u0427\u0438\u043f\u044b \u043d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u0439",
     ed_sec_defaults: "\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u044f \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e",
     ed_sec_images: "Изображения",
     ed_share_images: "Делиться изображениями с другими списками",
@@ -897,6 +942,11 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} \u0447 {1} \u043c\u0438\u043d \u043d\u0430\u0437\u0430\u0434", due_ago_minutes: "{0} \u043c\u0438\u043d \u043d\u0430\u0437\u0430\u0434", due_ago_seconds: "\u0422\u043e\u043b\u044c\u043a\u043e \u0447\u0442\u043e",
   },
   cs: {
+    ed_person_off: "Vypnuto",
+    ed_person_name: "Jméno",
+    ed_person_both: "Obojí",
+    ed_group_header: "Záhlaví",
+    ed_group_tasks: "Úkoly",
     ed_show_person_avatar: "Profilová fotka",
     voice_failed: "Hlasový vstup selhal",
     confirm_delete_section: "Odstranit tuto sekci? Úkoly v ní zůstanou neseřazené.", done_section_header: "Hotovo", duplicate_task: "Duplikovat", move_task: "P\u0159esunout", move_task_msg: "P\u0159esunout \u201e{0}\u201c do:", ed_show_move: "Tla\u010d\u00edtko p\u0159esunut\u00ed", ed_add_section: "+ Přidat sekci", ed_ai_image_entity: "Entita AI pro generování obrázků", ed_ai_image_entity_placeholder: "např. ai_task.openai", ed_ai_prompt_prefix: "Předpona promptu (volitelné)", ed_ai_prompt_prefix_placeholder: "např. Minimalistická ikona", ed_auto_image: "Automaticky generovat obrázek", ed_delete_section: "Odstranit sekci", ed_external_lists: "Externí", ed_loading: "Načítání…", ed_move_down: "Posunout dolů", ed_move_up: "Posunout nahoru", ed_sec_sections: "Sekce", ed_section_icon: "Ikona", ed_section_name: "Název", ed_section_name_prompt: "Název sekce:", ed_sections_empty: "Zatím žádné sekce — úkoly se zobrazí bez seskupení.", ed_sections_select_list_hint: "Nejprve vyberte seznam pro správu jeho sekcí.", ed_show_filters: "Filtr stavu", ed_show_images: "Obrázky", ed_show_person_chips: "Filtr osob", ed_show_tag_chips: "Filtr \u0161t\u00edtk\u016f", ed_show_tile_title: "Název na dlaždicích", ed_show_voice: "Hlasový vstup", ed_task_search: "Hledání úkolů", ed_tile_help: "Zobrazení dlaždic:\n• Kliknutí = dokončit\n• Podržení = upravit\n• Přetažení = změnit pořadí", ed_view_mode: "Režim zobrazení", ed_view_mode_list: "Seznam", ed_view_mode_tiles: "Dlaždice",
@@ -930,7 +980,7 @@ const _TRANSLATIONS = {
     ed_auto_delete: "Okam\u017eit\u011b smazat dokon\u010den\u00e9", ed_compact: "Kompaktn\u00ed", ed_show_tags: "\u0160t\u00edtky",
     ed_confirm_complete: "Potvrdit p\u0159ed dokon\u010den\u00edm",
     ed_show_add_due: "Term\u00edn p\u0159i p\u0159id\u00e1n\u00ed",
-    ed_max_height: "Max. v\u00fd\u0161ka (px, 0 = bez limitu)", ed_badge_priority: "\u010cipy priority", ed_badge_progress: "\u010cipy pr\u016fb\u011bhu", ed_badge_due: "\u010cipy term\u00ednu", ed_badge_recurrence: "\u010cipy opakov\u00e1n\u00ed", ed_badge_person: "\u010cipy osoby", ed_badge_tags: "\u010cipy \u0161t\u00edtk\u016f", ed_badge_reminders: "\u010cipy p\u0159ipomenut\u00ed",
+    ed_max_height: "Max. v\u00fd\u0161ka (px, 0 = bez limitu)", ed_badge_priority: "\u010cipy priority", ed_badge_progress: "\u010cipy pr\u016fb\u011bhu", ed_badge_due: "\u010cipy term\u00ednu", ed_badge_recurrence: "\u010cipy opakov\u00e1n\u00ed", ed_badge_person: "Osoba", ed_badge_tags: "\u010cipy \u0161t\u00edtk\u016f", ed_badge_reminders: "\u010cipy p\u0159ipomenut\u00ed",
     ed_sec_defaults: "V\u00fdchoz\u00ed hodnoty",
     ed_sec_images: "Obrázky",
     ed_share_images: "Sdílet obrázky s jinými seznamy",
@@ -987,6 +1037,11 @@ const _TRANSLATIONS = {
     due_ago_hours: "P\u0159ed {0} hod {1} min", due_ago_minutes: "P\u0159ed {0} min", due_ago_seconds: "Pr\u00e1v\u011b te\u010f",
   },
   da: {
+    ed_person_off: "Fra",
+    ed_person_name: "Navn",
+    ed_person_both: "Begge",
+    ed_group_header: "Sidehoved",
+    ed_group_tasks: "Opgaver",
     ed_show_person_avatar: "Profilbillede",
     voice_failed: "Stemmeinput mislykkedes",
     confirm_delete_section: "Slet dette afsnit? Opgaver i det bliver usorterede.", done_section_header: "Færdig", duplicate_task: "Dupliker", move_task: "Flyt", move_task_msg: "Flyt \u201d{0}\u201d til:", ed_show_move: "Flyt-knap", ed_add_section: "+ Tilføj afsnit", ed_ai_image_entity: "AI-entitet til billedgenerering", ed_ai_image_entity_placeholder: "f.eks. ai_task.openai", ed_ai_prompt_prefix: "Prompt-præfiks (valgfrit)", ed_ai_prompt_prefix_placeholder: "f.eks. Minimalistisk ikon af", ed_auto_image: "Generér billede automatisk", ed_delete_section: "Slet afsnit", ed_external_lists: "Ekstern", ed_loading: "Indlæser…", ed_move_down: "Flyt ned", ed_move_up: "Flyt op", ed_sec_sections: "Afsnit", ed_section_icon: "Ikon", ed_section_name: "Navn", ed_section_name_prompt: "Afsnitsnavn:", ed_sections_empty: "Ingen afsnit endnu — opgaver vises fladt.", ed_sections_select_list_hint: "Vælg først en liste for at administrere dens afsnit.", ed_show_filters: "Statusfilter", ed_show_images: "Billeder", ed_show_person_chips: "Personfilter", ed_show_tag_chips: "Tagfilter", ed_show_tile_title: "Titel i fliser", ed_show_voice: "Stemmeinput", ed_task_search: "Opgavesøgning", ed_tile_help: "Flisevisning:\n• Klik = fuldfør\n• Hold = rediger\n• Træk = omarrangér", ed_view_mode: "Visningstilstand", ed_view_mode_list: "Liste", ed_view_mode_tiles: "Fliser",
@@ -1020,7 +1075,7 @@ const _TRANSLATIONS = {
     ed_auto_delete: "Slet f\u00e6rdige \u00f8jeblikkeligt", ed_compact: "Kompakt", ed_show_tags: "Tags",
     ed_confirm_complete: "Bekr\u00e6ft f\u00f8r fuldf\u00f8relse",
     ed_show_add_due: "Forfaldsdato ved tilf\u00f8jelse",
-    ed_max_height: "Maks. h\u00f8jde (px, 0 = ubegr\u00e6nset)", ed_badge_priority: "Prioritetschips", ed_badge_progress: "Fremdriftschips", ed_badge_due: "Forfaldschips", ed_badge_recurrence: "Gentagelseschips", ed_badge_person: "Personchips", ed_badge_tags: "Tagchips", ed_badge_reminders: "P\u00e5mindelseschips",
+    ed_max_height: "Maks. h\u00f8jde (px, 0 = ubegr\u00e6nset)", ed_badge_priority: "Prioritetschips", ed_badge_progress: "Fremdriftschips", ed_badge_due: "Forfaldschips", ed_badge_recurrence: "Gentagelseschips", ed_badge_person: "Person", ed_badge_tags: "Tagchips", ed_badge_reminders: "P\u00e5mindelseschips",
     ed_sec_defaults: "Standarder",
     ed_sec_images: "Billeder",
     ed_share_images: "Del billeder med andre lister",
@@ -1077,6 +1132,11 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} t {1} min siden", due_ago_minutes: "{0} min siden", due_ago_seconds: "Lige nu",
   },
   no: {
+    ed_person_off: "Av",
+    ed_person_name: "Navn",
+    ed_person_both: "Begge",
+    ed_group_header: "Topptekst",
+    ed_group_tasks: "Oppgaver",
     ed_show_person_avatar: "Profilbilde",
     voice_failed: "Taleinndata mislyktes",
     confirm_delete_section: "Slette denne seksjonen? Oppgaver i den blir usorterte.", done_section_header: "Ferdig", duplicate_task: "Dupliser", move_task: "Flytt", move_task_msg: "Flytt \u201d{0}\u201d til:", ed_show_move: "Flytt-knapp", ed_add_section: "+ Legg til seksjon", ed_ai_image_entity: "AI-entitet for bildegenerering", ed_ai_image_entity_placeholder: "f.eks. ai_task.openai", ed_ai_prompt_prefix: "Ledetekst-prefiks (valgfritt)", ed_ai_prompt_prefix_placeholder: "f.eks. Minimalistisk ikon av", ed_auto_image: "Generer bilde automatisk", ed_delete_section: "Slett seksjon", ed_external_lists: "Ekstern", ed_loading: "Laster…", ed_move_down: "Flytt ned", ed_move_up: "Flytt opp", ed_sec_sections: "Seksjoner", ed_section_icon: "Ikon", ed_section_name: "Navn", ed_section_name_prompt: "Seksjonsnavn:", ed_sections_empty: "Ingen seksjoner ennå — oppgaver vises flatt.", ed_sections_select_list_hint: "Velg en liste først for å administrere seksjonene.", ed_show_filters: "Statusfilter", ed_show_images: "Bilder", ed_show_person_chips: "Personfilter", ed_show_tag_chips: "Taggfilter", ed_show_tile_title: "Tittel i fliser", ed_show_voice: "Taleinndata", ed_task_search: "Oppgavesøk", ed_tile_help: "Flisevisning:\n• Klikk = fullfør\n• Hold = rediger\n• Dra = endre rekkefølge", ed_view_mode: "Visningsmodus", ed_view_mode_list: "Liste", ed_view_mode_tiles: "Fliser",
@@ -1110,7 +1170,7 @@ const _TRANSLATIONS = {
     ed_auto_delete: "Slett ferdige umiddelbart", ed_compact: "Kompakt", ed_show_tags: "Tagger",
     ed_confirm_complete: "Bekreft f\u00f8r fullf\u00f8ring",
     ed_show_add_due: "Forfallsdato ved tillegg",
-    ed_max_height: "Maks. h\u00f8yde (px, 0 = ubegrenset)", ed_badge_priority: "Prioritetschips", ed_badge_progress: "Fremdriftschips", ed_badge_due: "Forfallschips", ed_badge_recurrence: "Gjentakelseschips", ed_badge_person: "Personchips", ed_badge_tags: "Taggchips", ed_badge_reminders: "P\u00e5minnelseschips",
+    ed_max_height: "Maks. h\u00f8yde (px, 0 = ubegrenset)", ed_badge_priority: "Prioritetschips", ed_badge_progress: "Fremdriftschips", ed_badge_due: "Forfallschips", ed_badge_recurrence: "Gjentakelseschips", ed_badge_person: "Person", ed_badge_tags: "Taggchips", ed_badge_reminders: "P\u00e5minnelseschips",
     ed_sec_defaults: "Standarder",
     ed_sec_images: "Bilder",
     ed_share_images: "Del bilder med andre lister",
@@ -1167,6 +1227,11 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} t {1} min siden", due_ago_minutes: "{0} min siden", due_ago_seconds: "Akkurat n\u00e5",
   },
   fi: {
+    ed_person_off: "Pois",
+    ed_person_name: "Nimi",
+    ed_person_both: "Molemmat",
+    ed_group_header: "Yläosa",
+    ed_group_tasks: "Tehtävät",
     ed_show_person_avatar: "Profiilikuva",
     voice_failed: "Puhesyöttö epäonnistui",
     confirm_delete_section: "Poistetaanko tämä osio? Sen tehtävät muuttuvat lajittelemattomiksi.", done_section_header: "Valmis", duplicate_task: "Monista", move_task: "Siirr\u00e4", move_task_msg: "Siirr\u00e4 \u201d{0}\u201d kohteeseen:", ed_show_move: "Siirr\u00e4-painike", ed_add_section: "+ Lisää osio", ed_ai_image_entity: "Tekoälyentiteetti kuvien luontiin", ed_ai_image_entity_placeholder: "esim. ai_task.openai", ed_ai_prompt_prefix: "Kehotteen etuliite (valinnainen)", ed_ai_prompt_prefix_placeholder: "esim. Minimalistinen kuvake", ed_auto_image: "Luo kuva automaattisesti", ed_delete_section: "Poista osio", ed_external_lists: "Ulkoinen", ed_loading: "Ladataan…", ed_move_down: "Siirrä alas", ed_move_up: "Siirrä ylös", ed_sec_sections: "Osiot", ed_section_icon: "Kuvake", ed_section_name: "Nimi", ed_section_name_prompt: "Osion nimi:", ed_sections_empty: "Ei vielä osioita — tehtävät näytetään listana.", ed_sections_select_list_hint: "Valitse ensin lista hallitaksesi sen osioita.", ed_show_filters: "Tilasuodatin", ed_show_images: "Kuvat", ed_show_person_chips: "Henkil\u00f6suodatin", ed_show_tag_chips: "Tunnistesuodatin", ed_show_tile_title: "Otsikko ruuduissa", ed_show_voice: "Puhesyöttö", ed_task_search: "Tehtävähaku", ed_tile_help: "Ruutunäkymä:\n• Napsautus = valmis\n• Pidä = muokkaa\n• Vedä = järjestä uudelleen", ed_view_mode: "Näkymätila", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Ruudut",
@@ -1200,7 +1265,7 @@ const _TRANSLATIONS = {
     ed_auto_delete: "Poista valmiit v\u00e4litt\u00f6m\u00e4sti", ed_compact: "Kompakti", ed_show_tags: "Tunnisteet",
     ed_confirm_complete: "Vahvista ennen valmiiksi merkitsemist\u00e4",
     ed_show_add_due: "Er\u00e4p\u00e4iv\u00e4 lis\u00e4tt\u00e4ess\u00e4",
-    ed_max_height: "Enimm\u00e4iskorkeus (px, 0 = rajaton)", ed_badge_priority: "Prioriteettimerkit", ed_badge_progress: "Edistymismerkit", ed_badge_due: "Er\u00e4p\u00e4iv\u00e4merkit", ed_badge_recurrence: "Toistomerkit", ed_badge_person: "Henkil\u00f6merkit", ed_badge_tags: "Tunnistemerkit", ed_badge_reminders: "Muistutusmerkit",
+    ed_max_height: "Enimm\u00e4iskorkeus (px, 0 = rajaton)", ed_badge_priority: "Prioriteettimerkit", ed_badge_progress: "Edistymismerkit", ed_badge_due: "Er\u00e4p\u00e4iv\u00e4merkit", ed_badge_recurrence: "Toistomerkit", ed_badge_person: "Henkilö", ed_badge_tags: "Tunnistemerkit", ed_badge_reminders: "Muistutusmerkit",
     ed_sec_defaults: "Oletukset",
     ed_sec_images: "Kuvat",
     ed_share_images: "Jaa kuvat muiden listojen kanssa",
@@ -1257,6 +1322,11 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} t {1} min sitten", due_ago_minutes: "{0} min sitten", due_ago_seconds: "Juuri nyt",
   },
   hu: {
+    ed_person_off: "Ki",
+    ed_person_name: "Név",
+    ed_person_both: "Mindkettő",
+    ed_group_header: "Fejléc",
+    ed_group_tasks: "Feladatok",
     ed_show_person_avatar: "Profilkép",
     voice_failed: "A hangbevitel sikertelen",
     confirm_delete_section: "Törli ezt a szakaszt? A benne lévő feladatok rendezetlenné válnak.", done_section_header: "Kész", duplicate_task: "Másolat", move_task: "\u00c1thelyez\u00e9s", move_task_msg: "\u201e{0}\u201d \u00e1thelyez\u00e9se ide:", ed_show_move: "\u00c1thelyez\u00e9s gomb", ed_add_section: "+ Szakasz hozzáadása", ed_ai_image_entity: "MI-entitás képgeneráláshoz", ed_ai_image_entity_placeholder: "pl. ai_task.openai", ed_ai_prompt_prefix: "Prompt előtag (opcionális)", ed_ai_prompt_prefix_placeholder: "pl. Minimalista ikon", ed_auto_image: "Kép automatikus generálása", ed_delete_section: "Szakasz törlése", ed_external_lists: "Külső", ed_loading: "Betöltés…", ed_move_down: "Mozgatás le", ed_move_up: "Mozgatás fel", ed_sec_sections: "Szakaszok", ed_section_icon: "Ikon", ed_section_name: "Név", ed_section_name_prompt: "Szakasz neve:", ed_sections_empty: "Még nincsenek szakaszok — a feladatok csoportosítás nélkül jelennek meg.", ed_sections_select_list_hint: "Először válassz egy listát a szakaszok kezeléséhez.", ed_show_filters: "\u00c1llapotsz\u0171r\u0151", ed_show_images: "Képek", ed_show_person_chips: "Szem\u00e9lysz\u0171r\u0151", ed_show_tag_chips: "C\u00edmkesz\u0171r\u0151", ed_show_tile_title: "Cím a csempéken", ed_show_voice: "Hangbevitel", ed_task_search: "Feladatkeresés", ed_tile_help: "Csempenézet:\n• Kattintás = kész\n• Nyomva tartás = szerkesztés\n• Húzás = átrendezés", ed_view_mode: "Nézet mód", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Csempék",
@@ -1290,7 +1360,7 @@ const _TRANSLATIONS = {
     ed_auto_delete: "K\u00e9sz feladatok azonnali t\u00f6rl\u00e9se", ed_compact: "Kompakt", ed_show_tags: "C\u00edmk\u00e9k",
     ed_confirm_complete: "Meger\u0151s\u00edt\u00e9s befejez\u00e9s el\u0151tt",
     ed_show_add_due: "Hat\u00e1rid\u0151 hozz\u00e1ad\u00e1skor",
-    ed_max_height: "Max. magass\u00e1g (px, 0 = korl\u00e1tlan)", ed_badge_priority: "Priorit\u00e1s-c\u00edmk\u00e9k", ed_badge_progress: "Folyamat-c\u00edmk\u00e9k", ed_badge_due: "Hat\u00e1rid\u0151-c\u00edmk\u00e9k", ed_badge_recurrence: "Ism\u00e9tl\u00e9s-c\u00edmk\u00e9k", ed_badge_person: "Szem\u00e9ly-c\u00edmk\u00e9k", ed_badge_tags: "C\u00edmke-chipek", ed_badge_reminders: "Eml\u00e9keztet\u0151-c\u00edmk\u00e9k",
+    ed_max_height: "Max. magass\u00e1g (px, 0 = korl\u00e1tlan)", ed_badge_priority: "Priorit\u00e1s-c\u00edmk\u00e9k", ed_badge_progress: "Folyamat-c\u00edmk\u00e9k", ed_badge_due: "Hat\u00e1rid\u0151-c\u00edmk\u00e9k", ed_badge_recurrence: "Ism\u00e9tl\u00e9s-c\u00edmk\u00e9k", ed_badge_person: "Személy", ed_badge_tags: "C\u00edmke-chipek", ed_badge_reminders: "Eml\u00e9keztet\u0151-c\u00edmk\u00e9k",
     ed_sec_defaults: "Alap\u00e9rtelmez\u00e9sek",
     ed_sec_images: "Képek",
     ed_share_images: "Képek megosztása más listákkal",
@@ -1347,6 +1417,11 @@ const _TRANSLATIONS = {
     due_ago_hours: "{0} \u00f3 {1} perccel ezel\u0151tt", due_ago_minutes: "{0} perccel ezel\u0151tt", due_ago_seconds: "\u00c9pp most",
   },
   de: {
+    ed_person_off: "Aus",
+    ed_person_name: "Name",
+    ed_person_both: "Beides",
+    ed_group_header: "Kopfzeile",
+    ed_group_tasks: "Aufgaben",
     ed_show_person_avatar: "Profilbild",
     voice_failed: "Spracheingabe fehlgeschlagen",
     ed_external_lists: "Extern",
@@ -1401,7 +1476,7 @@ const _TRANSLATIONS = {
     ed_auto_delete: "Erledigte sofort l\u00f6schen",
     ed_confirm_complete: "Vor dem Erledigen nachfragen",
     ed_show_add_due: "F\u00e4lligkeit beim Anlegen",
-    ed_max_height: "Max. H\u00f6he (px, 0 = unbegrenzt)", ed_badge_priority: "Priorit\u00e4ts-Chips", ed_badge_progress: "Fortschritts-Chips", ed_badge_due: "F\u00e4lligkeits-Chips", ed_badge_recurrence: "Wiederholungs-Chips", ed_badge_person: "Personen-Chips", ed_badge_tags: "Tag-Chips", ed_badge_reminders: "Erinnerungs-Chips",
+    ed_max_height: "Max. H\u00f6he (px, 0 = unbegrenzt)", ed_badge_priority: "Priorit\u00e4ts-Chips", ed_badge_progress: "Fortschritts-Chips", ed_badge_due: "F\u00e4lligkeits-Chips", ed_badge_recurrence: "Wiederholungs-Chips", ed_badge_person: "Person", ed_badge_tags: "Tag-Chips", ed_badge_reminders: "Erinnerungs-Chips",
     ed_sec_defaults: "Standardwerte",
     ed_sec_images: "Bilder",
     ed_share_images: "Bilder mit anderen Listen teilen",
@@ -1562,6 +1637,11 @@ const personEntries = (hass) =>
       value: eid,
       label: (hass.states[eid] && hass.states[eid].attributes && hass.states[eid].attributes.friendly_name) || eid,
     }));
+
+// How a person is shown, in the task row and in the filter row above it.
+// Two switches (chip on/off, picture on/off) could say the same four things,
+// but only if you found both of them - they sat nine rows apart in one grid.
+const PERSON_MODES = ["off", "picture", "name", "both"];
 
 // Initials-circle colours, picked by a hash of the person so the same face
 // keeps the same colour on every card and after every reload. Dark enough
@@ -3339,9 +3419,8 @@ class HomeTasksCard extends HTMLElement {
     const addTask = this._buildColumnAddTask(cs, colIdx);
     const sortBtnWrapper = (col.show_sort !== false) ? this._buildColumnSortControl(col, cs, colIdx) : null;
     const tagChips = col.show_tag_chips === false ? null : this._buildColumnTagChips(col, cs, colIdx);
-    // Chips off but pictures on: the faces stay, the pills go (issue #48).
-    const personChipsOff = col.show_person_chips === false && col.show_person_avatar !== true;
-    const personChips = personChipsOff ? null : this._buildColumnPersonChips(col, cs, colIdx);
+    const personChips = this._personMode(colIdx, "filter") === "off"
+      ? null : this._buildColumnPersonChips(col, cs, colIdx);
 
     // Sort button placement: move into first available chips row when filters are hidden
     const sortInTagRow = hideFilters && tagChips !== null && sortBtnWrapper !== null;
@@ -3910,11 +3989,10 @@ class HomeTasksCard extends HTMLElement {
     if (this._hass && this._hass.states && this._hass.states[eid]) {
       name = this._hass.states[eid].attributes?.friendly_name || eid;
     }
-    const col = this._config.columns[colIdx] || {};
-    const withAvatar = col.show_person_avatar === true;
-    // Switching the chips off with the picture on leaves just the face, at
-    // the size the chip was tall.
-    const avatarOnly = withAvatar && col.show_person_chips === false;
+    const mode = this._personMode(colIdx, "filter");
+    const withAvatar = mode === "picture" || mode === "both";
+    // Picture alone: no pill, at the size the pill was tall.
+    const avatarOnly = mode === "picture";
     const chip = this._el("button", {
       className: "person-chip" + (isActive ? " active" : "") + (withAvatar ? " with-avatar" : "")
         + (avatarOnly ? " avatar-only" : ""),
@@ -4848,7 +4926,7 @@ class HomeTasksCard extends HTMLElement {
       if (badge) meta.push(badge);
     }
     if ((task.assigned_person || task.assigned_name) && col.show_assigned_person !== false
-        && (col.badge_person !== false || col.show_person_avatar === true)) {
+        && this._personMode(colIdx, "badge") !== "off") {
       meta.push(this._buildAssignedPersonBadge(task, cs, colIdx));
     }
     if (task.tags && task.tags.length > 0 && col.show_tags !== false && col.badge_tags !== false) {
@@ -4936,6 +5014,19 @@ class HomeTasksCard extends HTMLElement {
     return url.replace("/512x512", "/256x256");
   }
 
+  // `which` is "badge" (in the task row) or "filter" (the row above it).
+  // Configs written before the dropdown existed are read through their old
+  // keys, so an update changes nothing on screen.
+  _personMode(colIdx, which) {
+    const col = this._config.columns[colIdx] || {};
+    const chosen = which === "badge" ? col.person_badge : col.person_filter;
+    if (PERSON_MODES.includes(chosen)) return chosen;
+    const chipOn = which === "badge" ? col.badge_person !== false : col.show_person_chips !== false;
+    const picture = col.show_person_avatar === true;
+    if (!chipOn) return picture ? "picture" : "off";
+    return picture ? "both" : "name";
+  }
+
   _personInitials(name) {
     const words = String(name || "").trim().split(/\s+/).filter(Boolean);
     if (!words.length) return "?";
@@ -4986,9 +5077,9 @@ class HomeTasksCard extends HTMLElement {
       personName = task.assigned_person;
     }
     const isActivePerson = cs.personFilters.has(task.assigned_person);
-    const col = this._config.columns[colIdx] || {};
-    const withAvatar = col.show_person_avatar === true;
-    const avatarOnly = withAvatar && col.badge_person === false;
+    const mode = this._personMode(colIdx, "badge");
+    const withAvatar = mode === "picture" || mode === "both";
+    const avatarOnly = mode === "picture";
     const assignedBadge = this._el("span", {
       className: "assigned-badge" + (isActivePerson ? " active" : "") + (withAvatar ? " with-avatar" : "")
         + (avatarOnly ? " avatar-only" : ""),
@@ -8988,6 +9079,10 @@ class HomeTasksCardEditor extends HTMLElement {
       .icon-btn:disabled { opacity: 0.3; cursor: default; }
       .icon-btn-spacer { flex: 1; }
       .toggle-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
+      .group-label {
+        font-size: 12px; font-weight: 500; color: var(--secondary-text-color, #888);
+        text-transform: uppercase; letter-spacing: 0.04em; margin: 6px 0 -2px;
+      }
       .visual-editor { display: flex; flex-direction: column; gap: 8px; }
       .field { display: flex; flex-direction: column; gap: 6px; }
       details { border: 1px solid var(--divider-color, rgba(255,255,255,0.12)); border-radius: 8px; overflow: hidden; }
@@ -9279,6 +9374,31 @@ class HomeTasksCardEditor extends HTMLElement {
       ]);
     };
 
+    // Off / Profile picture / Name / Both, for the filter row and for the
+    // task row. Both keys are written on every change and the three older
+    // ones dropped, so the two can never disagree about the picture.
+    const personMode = (which) => {
+      const chosen = which === "badge" ? col.person_badge : col.person_filter;
+      if (["off", "picture", "name", "both"].includes(chosen)) return chosen;
+      const chipOn = which === "badge" ? col.badge_person !== false : col.show_person_chips !== false;
+      const picture = col.show_person_avatar === true;
+      if (!chipOn) return picture ? "picture" : "off";
+      return picture ? "both" : "name";
+    };
+    const makePersonSelect = (which) => makeSelect(
+      which === "badge" ? "ed_badge_person" : "ed_show_person_chips",
+      [["off", "ed_person_off"], ["picture", "ed_show_person_avatar"],
+       ["name", "ed_person_name"], ["both", "ed_person_both"]],
+      personMode(which),
+      (val) => updateCol({
+        person_badge: which === "badge" ? val : personMode("badge"),
+        person_filter: which === "filter" ? val : personMode("filter"),
+        badge_person: undefined,
+        show_person_chips: undefined,
+        show_person_avatar: undefined,
+      }),
+    );
+
     // List select — native lists + linked external entities
     const listSelect = document.createElement("select");
     listSelect.className = "editor-native-select";
@@ -9552,32 +9672,40 @@ class HomeTasksCardEditor extends HTMLElement {
         this._el("div", { className: "field" }, [titleInput]),
         this._el("div", { className: "field" }, [iconPicker]),
         this._el("div", { className: "toggle-grid" }, [
+          makeToggle("compact", "ed_compact", "compact", false),
+        ]),
+        // Two dozen switches in one grid meant reading every label to find
+        // the one you wanted, and two of them said "person". They are split
+        // by where their effect shows up.
+        this._el("div", { className: "group-label", textContent: this._t("ed_group_header") }),
+        this._el("div", { className: "toggle-grid" }, [
           makeToggle("show-title", "ed_show_title", "show_title", true),
           makeToggle("show-progress", "ed_show_progress", "show_progress", true),
           makeToggle("show-add-task", "ed_show_add_task", "show_add_task", true),
           // On/off switch for the live search in the add-task field.
           makeToggle("task-search", "ed_task_search", "show_task_search", true),
           makeToggle("show-add-due", "ed_show_add_due", "show_add_due", false),
-          makeToggle("auto-delete", "ed_auto_delete", "auto_delete_completed", false),
-          makeToggle("confirm-complete", "ed_confirm_complete", "confirm_complete", false),
+          makeToggle("show-voice", "ed_show_voice", "show_voice", true),
           makeToggle("show-sort", "ed_show_sort", "show_sort", true),
           makeToggle("show-filters", "ed_show_filters", "show_filters", true),
           makeToggle("show-tag-chips", "ed_show_tag_chips", "show_tag_chips", true),
-          makeToggle("show-person-chips", "ed_show_person_chips", "show_person_chips", true),
-          makeToggle("show-voice", "ed_show_voice", "show_voice", true),
-          makeToggle("compact", "ed_compact", "compact", false),
+        ]),
+        makePersonSelect("filter"),
+        this._el("div", { className: "group-label", textContent: this._t("ed_group_tasks") }),
+        this._el("div", { className: "toggle-grid" }, [
           makeToggle("badge-priority", "ed_badge_priority", "badge_priority", true),
           makeToggle("badge-progress", "ed_badge_progress", "badge_progress", true),
           makeToggle("badge-due", "ed_badge_due", "badge_due", true),
           makeToggle("badge-recurrence", "ed_badge_recurrence", "badge_recurrence", true),
-          makeToggle("badge-person", "ed_badge_person", "badge_person", true),
-          makeToggle("show-person-avatar", "ed_show_person_avatar", "show_person_avatar", false),
           makeToggle("badge-tags", "ed_badge_tags", "badge_tags", true),
           makeToggle("badge-reminders", "ed_badge_reminders", "badge_reminders", true),
+          makeToggle("auto-delete", "ed_auto_delete", "auto_delete_completed", false),
+          makeToggle("confirm-complete", "ed_confirm_complete", "confirm_complete", false),
           ...(col.view_mode === "tiles"
             ? [makeToggle("show-tile-title", "ed_show_tile_title", "show_tile_title", true)]
             : []),
         ]),
+        makePersonSelect("badge"),
         this._el("div", { className: "field" }, [(() => {
           // max_height (px): 0 / empty = unlimited. Caps the task body only.
           // (Editor is its own class — don't reach for HomeTasksCard helpers here.)

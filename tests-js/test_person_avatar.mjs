@@ -185,3 +185,70 @@ describe('the picture can stand in for the chip', () => {
     assert.equal(card._t('ed_show_person_avatar'), 'Profile picture');
   });
 });
+
+// ---------------------------------------------------------------------------
+// One dropdown instead of two switches: Off / Profile picture / Name / Both.
+// ---------------------------------------------------------------------------
+
+const chipOf = (card, eid) => card.shadowRoot.querySelector(`.person-chip[data-eid="${eid}"]`);
+
+describe('person display modes', () => {
+  const shape = (el) => {
+    if (!el) return 'off';
+    const hasPic = !!el.querySelector('.person-avatar');
+    const hasName = el.textContent.trim().length > 0;
+    return hasPic && hasName ? 'both' : hasPic ? 'picture' : hasName ? 'name' : '?';
+  };
+
+  for (const mode of ['off', 'picture', 'name', 'both']) {
+    test(`task row: ${mode}`, async () => {
+      const card = await mount({ person_badge: mode });
+      assert.equal(shape(badge(card, 'person.kevin')), mode);
+    });
+
+    test(`filter row: ${mode}`, async () => {
+      const card = await mount({ person_filter: mode });
+      assert.equal(shape(chipOf(card, 'person.kevin')), mode);
+    });
+  }
+
+  test('the two rows are independent', async () => {
+    const card = await mount({ person_badge: 'picture', person_filter: 'name' });
+    assert.equal(shape(badge(card, 'person.kevin')), 'picture');
+    assert.equal(shape(chipOf(card, 'person.kevin')), 'name');
+  });
+
+  test('the master person switch still wins over both', async () => {
+    const card = await mount({ person_badge: 'both', person_filter: 'both', show_assigned_person: false });
+    assert.equal(badge(card, 'person.kevin'), null);
+    assert.equal(card.shadowRoot.querySelector('.person-chip'), null);
+  });
+});
+
+describe('configs written before the dropdown', () => {
+  // Nothing on screen may change when a card is updated, so the old keys
+  // have to land on the mode that used to draw the same thing.
+  const cases = [
+    [{}, 'name', 'the default: chip with the name'],
+    [{ show_person_avatar: true }, 'both', 'picture switch on'],
+    [{ badge_person: false }, 'off', 'chip off, no picture'],
+    [{ badge_person: false, show_person_avatar: true }, 'picture', 'chip off, picture on'],
+  ];
+  for (const [col, expected, why] of cases) {
+    test(`task row: ${why}`, async () => {
+      const card = await mount(col);
+      assert.equal(card._personMode(0, 'badge'), expected);
+    });
+  }
+
+  test('filter row reads its own old key', async () => {
+    const card = await mount({ show_person_chips: false, show_person_avatar: true });
+    assert.equal(card._personMode(0, 'filter'), 'picture');
+    assert.equal(card._personMode(0, 'badge'), 'both', 'the picture switch was shared');
+  });
+
+  test('an explicit mode beats the old keys', async () => {
+    const card = await mount({ person_badge: 'off', badge_person: true, show_person_avatar: true });
+    assert.equal(card._personMode(0, 'badge'), 'off');
+  });
+});

@@ -295,7 +295,7 @@ Each entry in `columns` accepts the following options.
 | `show_sort` | `true` | Show/hide the sort button |
 | `show_filters` | `true` | Show/hide the All / Open / Done filter buttons |
 | `show_tag_chips` | `true` | Show/hide the tag filter chips in the header |
-| `show_person_chips` | `true` | Show/hide the person filter chips in the header |
+| `person_filter` | `name` | How the person filter row in the header shows people: `off`, `picture` (profile picture only), `name`, `both`. Replaces `show_person_chips` |
 | `show_due_soon_filter` | `false` | Enable the "Due Soon" filter button |
 | `due_soon_days` | `7` | Days ahead for the "Due Soon" filter (0–90, 0 = due today only) |
 | `hide_overdue` | `false` | Hide overdue tasks in the "Due Soon" filter (overdue shown by default) |
@@ -306,14 +306,14 @@ Each entry in `columns` accepts the following options.
 | `show_notes` | `true` | Show/hide the notes field |
 | `show_sub_tasks` | `true` | Show/hide sub-tasks |
 | `show_assigned_person` | `true` | Show/hide person assignment |
-| `show_person_avatar` | `false` | Show the person's Home Assistant profile picture on the badge and filter chips (initials when they have none). With `badge_person` or `show_person_chips` off, the picture replaces the chip |
+| `person_badge` | `name` | How the assigned person is shown on a task row: `off`, `picture`, `name`, `both`. Replaces `badge_person`. The picture is the person entity's Home Assistant profile picture; people without one get their initials |
 | `show_priority` | `true` | Show/hide priority field and badge |
 | `show_tags` | `true` | Show/hide tags, badges, and filter chips |
 | `show_due_date` | `true` | Show/hide due date and time |
 | `show_reminders` | `true` | Show/hide reminders |
 | `show_recurrence` | `true` | Show/hide recurrence settings |
 | `show_history` | `false` | Show/hide the task change history |
-| `badge_priority` / `badge_progress` / `badge_due` / `badge_recurrence` / `badge_person` / `badge_tags` / `badge_reminders` | `true` | Show/hide the corresponding chip on task rows without disabling the feature itself — e.g. keep reminders active but hide their chip (`badge_reminders: false`). The matching `show_*` switch still controls the feature (detail editor + chip) |
+| `badge_priority` / `badge_progress` / `badge_due` / `badge_recurrence` / `badge_tags` / `badge_reminders` | `true` | Show/hide the corresponding chip on task rows without disabling the feature itself — e.g. keep reminders active but hide their chip (`badge_reminders: false`). The matching `show_*` switch still controls the feature (detail editor + chip) |
 | `show_move` | `true` | Show/hide the Move button in the task details (moves a task to another list, next to Duplicate / Delete) |
 
 ### Card-level option reference
