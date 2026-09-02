@@ -317,6 +317,38 @@ async def test_cancelling_a_job_clears_its_placeholder(
     assert store.get_task(task["id"])["image_url"] is None
 
 
+async def test_cancelling_one_job_takes_the_rest_of_that_list_with_it(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store
+) -> None:
+    """Cancelling switches the list off, and a list that is off has no queue.
+
+    Leaving the siblings behind meant the panel kept listing them and their
+    tasks kept the "generating" placeholder until a pass got round to them,
+    up to SCAN_INTERVAL later.
+    """
+    one = await store.async_add_task("One")
+    two = await store.async_add_task("Two")
+    await store.async_set_settings(auto_generate_images=True)
+    q = await _queue(hass)
+    await q.async_scan()
+    assert len(q.queue) == 2
+    assert store.get_task(two["id"])["image_url"] == PENDING_IMAGE_URL
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 547,
+        "type": "home_tasks/cancel_image_queue",
+        "jobs": [{"list_id": mock_config_entry.entry_id, "task_id": one["id"]}],
+    })
+    msg = await client.receive_json()
+
+    assert msg["success"] is True, msg
+    assert store.get_settings()["auto_generate_images"] is False
+    assert q.queue == [], "nothing is left waiting for a list that is switched off"
+    assert store.get_task(two["id"])["image_url"] is None, "and no spinner is left behind"
+    assert msg["result"]["removed"] == 2, "the count says what actually left the queue"
+
+
 # --- durability -------------------------------------------------------------
 
 

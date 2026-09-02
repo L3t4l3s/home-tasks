@@ -265,3 +265,63 @@ async def test_the_library_is_capped_and_evicts_the_oldest(
     entries = library.entries
     assert len(entries) == 3
     assert "/local/home_tasks/0.png" not in entries, "least recently used goes first"
+
+
+async def test_a_forced_regeneration_keeps_its_own_place_in_the_queue(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store
+) -> None:
+    """The single-flight registration belongs to whoever made it.
+
+    A caller that finished used to remove whatever was under its key - which,
+    while a forced regeneration was running, was the forced one's. The next
+    caller then found nothing in flight and paid for a third picture.
+    """
+    import asyncio
+
+    from custom_components.home_tasks import websocket_api as ws
+
+    library = async_get_image_library(hass)
+    await library.async_load()
+
+    calls: list[str] = []
+    gates = [asyncio.Event(), asyncio.Event(), asyncio.Event()]
+
+    async def _gen(call):
+        gate = gates[min(len(calls), len(gates) - 1)]
+        calls.append(call.data.get("instructions", ""))
+        await gate.wait()
+        return {"media_source_id": "media-source://media_source/g.png"}
+
+    hass.services.async_register(
+        "ai_task", "generate_image", _gen, supports_response=SupportsResponse.OPTIONAL
+    )
+    task = await store.async_add_task("Take out the bins")
+    key = (mock_config_entry.entry_id, task["id"])
+
+    def generate(**kw):
+        return asyncio.create_task(ws.async_generate_task_image(
+            hass, None, task_id=task["id"], entry_id=mock_config_entry.entry_id,
+            ai_entity_id="ai_task.test", **kw,
+        ))
+
+    with patch(
+        "custom_components.home_tasks.websocket_api._save_image_to_public_media",
+        new=AsyncMock(return_value="/local/home_tasks/g.png"),
+    ):
+        automatic = generate()
+        await asyncio.sleep(0.05)
+        forced = generate(force=True)          # does not wait, registers its own
+        await asyncio.sleep(0.05)
+
+        gates[0].set()                          # the automatic one finishes...
+        await automatic
+        assert hass.data[ws.DATA_IMAGE_INFLIGHT].get(key) is not None, (
+            "...and must not withdraw the forced one's registration"
+        )
+
+        third = generate()                      # should wait for the forced one
+        await asyncio.sleep(0.05)
+        gates[1].set()
+        await asyncio.gather(forced, third)
+
+    assert len(calls) == 2, f"one automatic and one forced generation, not three: {calls}"

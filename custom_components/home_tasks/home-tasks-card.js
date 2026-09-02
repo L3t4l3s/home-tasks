@@ -8825,9 +8825,11 @@ class HomeTasksCardEditor extends HTMLElement {
     // also outlive the panel, and in tests the process with it).
     let timer = null;
     const stop = () => { if (timer) { clearTimeout(timer); timer = null; } };
-    const load = async () => {
+    const load = async (scheduled = false) => {
       stop();
-      if (!wrap.isConnected && timer !== null) return;
+      // The first call runs before the panel has been appended, so only a
+      // tick that scheduled itself may give up on being disconnected.
+      if (scheduled && !wrap.isConnected) return;
       let current = null;
       let jobs = [];
       try {
@@ -8837,7 +8839,7 @@ class HomeTasksCardEditor extends HTMLElement {
       } catch (e) { /* render the empty state below */ }
       render(current, jobs);
       if ((current || jobs.length) && wrap.isConnected) {
-        timer = setTimeout(load, 3000);
+        timer = setTimeout(() => load(true), 3000);
       }
     };
     load();

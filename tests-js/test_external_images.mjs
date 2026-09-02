@@ -19,7 +19,9 @@ async function externalCard(callWS) {
 }
 
 describe('editor image section', () => {
+  const queuePolls = [];
   async function editor(queueResult, colExtra = {}) {
+    queuePolls.length = 0;
     const { window } = await loadCard({ force: true });
     const Editor = window.customElements.get('home-tasks-card-editor');
     const ed = new Editor();
@@ -29,7 +31,7 @@ describe('editor image section', () => {
           return { lists: [{ id: 'L1', name: 'Household', share_images: true }] };
         }
         if (m.type === 'home_tasks/get_external_lists') return { external_lists: [] };
-        if (m.type === 'home_tasks/get_image_queue') return queueResult;
+        if (m.type === 'home_tasks/get_image_queue') { queuePolls.push(Date.now()); return queueResult; }
         return null;
       },
     });
@@ -427,3 +429,47 @@ describe('external task images', () => {
     assert.equal(card._columns[1].tasks[0].image_url, '/local/gen.png');
   });
 });
+
+describe('the queue panel stops when the editor does', () => {
+  // The guard that was supposed to do this could never fire: stop() had just
+  // set the timer to null, so `timer !== null` was always false.
+  async function editorWithQueue() {
+    const { window } = await loadCard({ force: true });
+    const polls = [];
+    const Editor = window.customElements.get('home-tasks-card-editor');
+    const ed = new Editor();
+    ed.hass = makeMockHass({
+      callWS: async (m) => {
+        if (m.type === 'home_tasks/get_lists') return { lists: [{ id: 'L1', name: 'Household' }] };
+        if (m.type === 'home_tasks/get_external_lists') return { external_lists: [] };
+        if (m.type === 'home_tasks/get_image_queue') {
+          polls.push(1);
+          return { current: null, queue: [{ list_id: 'L1', task_id: 'T1', title: 'Waiting' }] };
+        }
+        return null;
+      },
+    });
+    ed.setConfig({
+      image_generation: { entity_id: 'ai_task.openai' },
+      columns: [{ list_id: 'L1', show_images: true, auto_generate_image: true }],
+    });
+    window.document.body.appendChild(ed);
+    await new Promise((r) => setTimeout(r, 150));
+    return { ed, polls, window };
+  }
+
+  test('it polls while it is on screen', async () => {
+    const { ed, polls } = await editorWithQueue();
+    assert.ok(polls.length >= 1, 'the panel asked at least once');
+    ed.remove();
+  });
+
+  test('and asks nothing more once it is gone', async () => {
+    const { ed, polls } = await editorWithQueue();
+    ed.remove();
+    const before = polls.length;
+    await new Promise((r) => setTimeout(r, 3300));
+    assert.equal(polls.length, before, 'no round trip for a panel nobody can see');
+  });
+});
+

@@ -10,7 +10,6 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
 from .image_library import async_get_image_library
-from .image_library import async_get_image_library
 from .image_queue import PLACEHOLDER_IMAGE_URLS, async_get_image_queue
 from .const import DOMAIN, MAX_IMAGE_URL_LENGTH, MAX_REORDER_IDS, MAX_RECURRENCE_VALUE, MAX_REMINDER_OFFSET_MINUTES, MAX_REMINDERS_PER_TASK, MAX_SUB_TASKS_PER_TASK, MAX_TAGS_PER_TASK, MAX_TITLE_LENGTH, VALID_RECURRENCE_UNITS
 from .overlay_store import ExternalTaskOverlayStore, OVERLAY_FIELDS
@@ -273,6 +272,9 @@ async def ws_cancel_image_queue(hass, connection, msg):
             if store.get_settings()["auto_generate_images"]:
                 await store.async_set_settings(auto_generate_images=False)
                 stopped.append(list_id or entity_id)
+                # The switch is off now, so nothing else queued for this list
+                # should still be waiting - or still wearing the placeholder.
+                removed += await queue.async_drop_for(list_id, entity_id)
         connection.send_result(msg["id"], {"removed": removed, "stopped": stopped})
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -2207,7 +2209,8 @@ async def async_generate_task_image(
             flight.set_result(result)
         return result
     finally:
-        inflight.pop(key, None)
+        if inflight.get(key) is flight:
+            inflight.pop(key, None)
         if not flight.done():
             flight.set_result(None)  # failed: the waiters generate for themselves
 
