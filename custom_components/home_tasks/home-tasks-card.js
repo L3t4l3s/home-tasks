@@ -1762,6 +1762,7 @@ class HomeTasksCard extends HTMLElement {
     this._externalLists = [];
     // Per-column state: [{filter, sortBy, sortOpen, tagFilters, personFilters, tasks, newTaskTitle}]
     this._columns = [];
+    this._sourceDefaults = {};    // { entityId: defaults|null } — for the optimistic row
     this._expandedTasks = new Set();
     this._editingTaskId = null;
     this._editingSubTaskId = null;
@@ -2244,10 +2245,22 @@ class HomeTasksCard extends HTMLElement {
     }, delays[attempt]);
   }
 
+  // What a new task on this list starts with. Only external columns need it:
+  // the native path draws the task the store hands back, while the external
+  // one shows a placeholder for a moment and would otherwise show a task
+  // without the tags and priority it is about to get.
+  async _loadListDefaults(entityId) {
+    if (this._sourceDefaults[entityId] !== undefined) return;
+    this._sourceDefaults[entityId] = null;  // in flight, ask once
+    const r = await this._callWs("home_tasks/get_defaults", { entity_id: entityId });
+    this._sourceDefaults[entityId] = (r && r.defaults) || null;
+  }
+
   async _loadAllTasks() {
     await Promise.all(this._config.columns.map(async (col, i) => {
       if (col.entity_id) {
         // External column — fetch from external entity + overlay
+        this._loadListDefaults(col.entity_id);
         const r = await this._callWs("home_tasks/get_external_tasks", { entity_id: col.entity_id });
         this._columns[i].tasks = r?.tasks ?? [];
         this._columns[i].sections = r?.sections ?? [];
@@ -2361,10 +2374,17 @@ class HomeTasksCard extends HTMLElement {
       // Optimistic: insert a placeholder task immediately so the user
       // sees it appear without waiting for the API round-trip.
       const tempId = "_pending_" + Date.now();
+      // The list's own defaults, so the row that appears is the row that will
+      // be there after the reload rather than a barer version of it.
+      const listDefaults = this._sourceDefaults[this._colEntityId(colIdx)] || {};
       cs.tasks.push({
         id: tempId, title, completed: false, notes: "", due_date: addDue,
         due_time: addDueTime, sort_order: cs.tasks.length, sub_items: [],
-        priority: null, tags: [], reminders: [], assigned_person: autoAssignPerson,
+        priority: listDefaults.priority ?? null,
+        tags: [...(listDefaults.tags || [])],
+        reminders: [...(listDefaults.reminders || [])],
+        section_id: listDefaults.section_id || null,
+        assigned_person: autoAssignPerson || listDefaults.assignee || null,
         recurrence_enabled: false, _external: true,
       });
       const typed = { title, due: cs.newTaskDue, dueTime: cs.newTaskDueTime };

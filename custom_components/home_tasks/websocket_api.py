@@ -192,6 +192,10 @@ async def ws_get_tasks(hass, connection, msg):
         vol.Optional("due_date"): _val_date,
         vol.Optional("due_time"): _val_time,
         vol.Optional("reminders"): _val_reminders,
+        vol.Optional("tags"): vol.All(list, vol.Length(max=MAX_TAGS_PER_TASK)),
+        vol.Optional("priority"): vol.Any(vol.In([1, 2, 3]), None),
+        vol.Optional("section_id"): vol.Any(_val_id, None),
+        vol.Optional("notes"): vol.All(str, vol.Length(max=5000)),
     }
 )
 @websocket_api.async_response
@@ -207,6 +211,10 @@ async def ws_add_task(hass, connection, msg):
             due_date=msg.get("due_date"),
             due_time=msg.get("due_time"),
             reminders=msg.get("reminders"),
+            tags=msg.get("tags"),
+            priority=msg.get("priority"),
+            section_id=msg.get("section_id"),
+            notes=msg.get("notes"),
         )
         connection.send_result(msg["id"], task)
     except Exception as err:
@@ -1543,9 +1551,11 @@ async def ws_create_external_task(hass, connection, msg):
             defaults = overlay_store.get_defaults()
             if fields.get("assigned_person") is None and defaults["assignee"]:
                 fields["assigned_person"] = defaults["assignee"]
-            if not fields.get("reminders") and defaults["reminders"]:
+            # Presence, not truthiness: "reminders": [] is the caller saying
+            # "this one gets none", the same as on a native list.
+            if "reminders" not in fields and defaults["reminders"]:
                 fields["reminders"] = list(defaults["reminders"])
-            if not fields.get("tags") and defaults["tags"]:
+            if "tags" not in fields and defaults["tags"]:
                 fields["tags"] = list(defaults["tags"])
             if fields.get("priority") is None and defaults["priority"]:
                 fields["priority"] = defaults["priority"]
@@ -1756,15 +1766,6 @@ _val_icon = vol.Any(vol.All(str, vol.Length(min=1, max=64)), None)
 _val_section_name = vol.All(str, vol.Length(min=1, max=100))
 
 
-def _get_sections_store(hass, msg):
-    """Return the store (native or overlay) that holds sections for this target."""
-    if "list_id" in msg:
-        return _get_store(hass, msg["list_id"])
-    if "entity_id" in msg:
-        return _get_overlay_store(hass, msg["entity_id"])
-    raise ValueError("Either list_id or entity_id is required")
-
-
 _SECTION_TARGET = _TARGET
 
 
@@ -1778,7 +1779,7 @@ _SECTION_TARGET = _TARGET
 async def ws_get_sections(hass, connection, msg):
     """Return sections for a list."""
     try:
-        store = _get_sections_store(hass, msg)
+        store = _get_target_store(hass, msg)
         connection.send_result(msg["id"], {"sections": store.sections})
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -1796,7 +1797,7 @@ async def ws_get_sections(hass, connection, msg):
 async def ws_add_section(hass, connection, msg):
     """Create a new section."""
     try:
-        store = _get_sections_store(hass, msg)
+        store = _get_target_store(hass, msg)
         section = await store.async_add_section(msg["name"], icon=msg.get("icon"))
         connection.send_result(msg["id"], section)
     except Exception as err:
@@ -1816,7 +1817,7 @@ async def ws_add_section(hass, connection, msg):
 async def ws_update_section(hass, connection, msg):
     """Update a section's name and/or icon."""
     try:
-        store = _get_sections_store(hass, msg)
+        store = _get_target_store(hass, msg)
         kwargs = {}
         if "name" in msg:
             kwargs["name"] = msg["name"]
@@ -1839,7 +1840,7 @@ async def ws_update_section(hass, connection, msg):
 async def ws_delete_section(hass, connection, msg):
     """Delete a section; tasks fall back to section_id=None."""
     try:
-        store = _get_sections_store(hass, msg)
+        store = _get_target_store(hass, msg)
         await store.async_delete_section(msg["section_id"])
         connection.send_result(msg["id"])
     except Exception as err:
@@ -1857,7 +1858,7 @@ async def ws_delete_section(hass, connection, msg):
 async def ws_reorder_sections(hass, connection, msg):
     """Reorder sections."""
     try:
-        store = _get_sections_store(hass, msg)
+        store = _get_target_store(hass, msg)
         await store.async_reorder_sections(msg["section_ids"])
         connection.send_result(msg["id"])
     except Exception as err:

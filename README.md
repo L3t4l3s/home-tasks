@@ -338,9 +338,10 @@ section. They apply to every task created in that list, no matter how it is crea
 card, `home_tasks.add_task`, voice input or `todo.add_item`. On an external list the
 defaults are offered to the provider first, so one that syncs labels or priority stores
 them itself; the section is kept locally, like all sections.
-Explicit values in the creating call always win, including an explicitly empty
-reminders list (`reminders: []` / `""` means "no reminders" — only an omitted field
-falls back to the default).
+Explicit values in the creating call always win, including an explicitly empty list
+(`reminders: []` / `tags: []` means "none" — only an omitted field falls back to the
+default). For the single-value fields (assignee, priority, section) `null` means "not
+provided" and still falls back.
 Explicitly provided values (e.g. the card's auto-assign from an active person filter) win
 over the defaults.
 

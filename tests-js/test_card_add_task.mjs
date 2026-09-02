@@ -31,6 +31,8 @@ function makeHass({ failAdd = false, timeout = false } = {}) {
     callWS: async (msg) => {
       calls.push(msg.type);
       switch (msg.type) {
+        case 'home_tasks/get_defaults':
+          return { defaults: { assignee: 'person.kevin', reminders: [15], tags: ['shopping'], priority: 1, section_id: null } };
         case 'home_tasks/get_lists': return { lists: LISTS };
         case 'home_tasks/get_external_lists': return { external_lists: EXTERNAL };
         case 'home_tasks/get_tasks':
@@ -192,6 +194,35 @@ describe('what happens to the typed title', () => {
     assert.equal(toast(card), null);
     assert.ok(card._columns[0].tasks.some((t) => t.title === 'Bread'),
       'the optimistic row stays until the reload decides');
+  });
+});
+
+describe('the row that appears while the provider thinks about it', () => {
+  test('carries the defaults the task is about to be created with', async () => {
+    // Otherwise the row is drawn bare and grows tags and a priority a second
+    // and a half later, when the reload replaces it.
+    const { card, win } = await mount({ entity_id: 'todo.local_todo' });
+    await type(card, win, 'Bread');
+
+    await clickPlus(card, win);
+
+    const pending = card._columns[0].tasks.find((t) => String(t.id).startsWith('_pending_'));
+    assert.ok(pending, 'the optimistic row is there');
+    assert.deepEqual([...pending.tags], ['shopping']);
+    assert.equal(pending.priority, 1);
+    assert.deepEqual([...pending.reminders], [15]);
+    assert.equal(pending.assigned_person, 'person.kevin');
+  });
+
+  test('an active person filter still wins over the default assignee', async () => {
+    const { card, win } = await mount({ entity_id: 'todo.local_todo' });
+    card._columns[0].personFilters.add('person.lisa');
+    await type(card, win, 'Bread');
+
+    await clickPlus(card, win);
+
+    const pending = card._columns[0].tasks.find((t) => String(t.id).startsWith('_pending_'));
+    assert.equal(pending.assigned_person, 'person.lisa');
   });
 });
 

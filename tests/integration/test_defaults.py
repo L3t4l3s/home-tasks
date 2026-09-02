@@ -282,3 +282,130 @@ async def test_deleting_an_external_section_clears_its_default(
     await overlay.async_delete_section(section["id"])
 
     assert overlay.get_defaults()["section_id"] is None
+
+
+# ---------------------------------------------------------------------------
+# "Explicit beats default" has to hold at every door (review follow-up).
+# ---------------------------------------------------------------------------
+
+async def test_an_explicit_empty_list_wins_on_an_external_list_too(
+    hass: HomeAssistant, hass_ws_client, ext_entry
+) -> None:
+    """[] means "none" here as much as on a native list."""
+    overlay = _overlay(hass, ext_entry)
+    await overlay.async_set_defaults(tags=["chore"], reminders=[15])
+    adapter = _Adapter()
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})[EXT_ENTITY] = adapter
+    client = await hass_ws_client(hass)
+
+    await client.send_json({
+        "id": 50, "type": "home_tasks/create_external_task",
+        "entity_id": EXT_ENTITY, "title": "Nothing on this one",
+        "tags": [], "reminders": [],
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True, msg
+
+    assert adapter.created[0]["tags"] == []
+    assert adapter.created[0]["reminders"] == []
+
+
+async def test_the_service_puts_its_tags_in_at_creation(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """As a follow-up update they arrived after task_created had already gone
+    out carrying the list's default tags, and left an "updated" entry in the
+    history of a task that was one call old.
+    """
+    await store.async_set_defaults(tags=["chore"])
+    events: list[dict] = []
+    hass.bus.async_listen(f"{DOMAIN}_task_created", lambda e: events.append(dict(e.data)))
+
+    await hass.services.async_call(
+        DOMAIN, "add_task",
+        {"entry_id": mock_config_entry.entry_id, "title": "Urgent one", "tags": "urgent"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    task = next(t for t in store.tasks if t["title"] == "Urgent one")
+    assert task["tags"] == ["urgent"]
+    assert [h["action"] for h in task["history"]] == ["created"], "no update on a new task"
+    assert events and events[0].get("tags") == ["urgent"], "the event says what was asked for"
+
+
+async def test_the_service_still_falls_back_to_the_default(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    await store.async_set_defaults(tags=["chore"])
+
+    await hass.services.async_call(
+        DOMAIN, "add_task",
+        {"entry_id": mock_config_entry.entry_id, "title": "Plain one"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert next(t for t in store.tasks if t["title"] == "Plain one")["tags"] == ["chore"]
+
+
+async def test_a_websocket_caller_can_say_no_to_the_defaults(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store
+) -> None:
+    """The card is a WebSocket client: without these fields it could only ever
+    create tasks that carry the list's defaults.
+    """
+    section = await store.async_add_section("Kitchen")
+    await store.async_set_defaults(tags=["chore"], priority=3, section_id=section["id"])
+    client = await hass_ws_client(hass)
+
+    other = await store.async_add_section("Garden")
+    await client.send_json({
+        "id": 60, "type": "home_tasks/add_task",
+        "list_id": mock_config_entry.entry_id, "title": "On its own terms",
+        "tags": [], "priority": 1, "section_id": other["id"],
+    })
+    msg = await client.receive_json()
+
+    assert msg["success"] is True, msg
+    assert msg["result"]["tags"] == [], "an empty list is a decision, not a gap"
+    assert msg["result"]["priority"] == 1
+    assert msg["result"]["section_id"] == other["id"]
+
+
+async def test_null_is_not_a_way_to_say_none(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store
+) -> None:
+    """For the scalar fields, null has always meant "not provided" - that is
+    how the assignee default has worked since it existed. Only the list fields
+    can be emptied explicitly.
+    """
+    await store.async_set_defaults(priority=3, assignee="person.alice")
+    client = await hass_ws_client(hass)
+
+    await client.send_json({
+        "id": 62, "type": "home_tasks/add_task",
+        "list_id": mock_config_entry.entry_id, "title": "Null everywhere",
+        "priority": None, "assigned_person": None,
+    })
+    msg = await client.receive_json()
+
+    assert msg["result"]["priority"] == 3
+    assert msg["result"]["assigned_person"] == "person.alice"
+
+
+async def test_and_gets_them_when_it_stays_quiet(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store
+) -> None:
+    await store.async_set_defaults(tags=["chore"], priority=3)
+    client = await hass_ws_client(hass)
+
+    await client.send_json({
+        "id": 61, "type": "home_tasks/add_task",
+        "list_id": mock_config_entry.entry_id, "title": "Whatever the list says",
+    })
+    msg = await client.receive_json()
+
+    assert msg["result"]["tags"] == ["chore"]
+    assert msg["result"]["priority"] == 3
+

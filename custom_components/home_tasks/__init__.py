@@ -1495,14 +1495,12 @@ def _async_register_services(hass: HomeAssistant) -> None:
             reminders=call.data.get("reminders"),
             notes=call.data.get("notes"),
             priority=call.data.get("priority"),
+            # Comma parsing stays service-side, but the tags themselves go in
+            # at creation: as a follow-up update they arrived after
+            # task_created had already fired with the list's default tags, and
+            # left an "updated tags" entry in the history of a brand-new task.
+            tags=_parse_service_tags(call.data["tags"]) if "tags" in call.data else None,
         )
-        # Only tags remain a follow-up update (comma parsing stays service-
-        # side); everything else goes in at creation so the task_created
-        # event and history carry it.
-        if "tags" in call.data:
-            await store.async_update_task(
-                task["id"], actor=actor, tags=_parse_service_tags(call.data["tags"])
-            )
 
     async def async_handle_update_task(call: ServiceCall) -> None:
         """Update fields of an existing task (issue #42) — find it by task_id
