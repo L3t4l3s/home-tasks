@@ -325,3 +325,47 @@ async def test_a_forced_regeneration_keeps_its_own_place_in_the_queue(
         await asyncio.gather(forced, third)
 
     assert len(calls) == 2, f"one automatic and one forced generation, not three: {calls}"
+
+
+async def test_a_picture_chosen_by_hand_is_remembered_too(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store
+) -> None:
+    """The library used to learn only what it had generated itself, so a
+    picture picked from the media library came back an hour later at the
+    earliest - after the next backfill - and the same title paid for a
+    generation in between.
+    """
+    library = async_get_image_library(hass)
+    await library.async_load()
+    task = await store.async_add_task("Water the plants")
+    client = await hass_ws_client(hass)
+
+    await client.send_json({
+        "id": 800, "type": "home_tasks/update_task",
+        "list_id": mock_config_entry.entry_id, "task_id": task["id"],
+        "image_url": "/local/home_tasks/handpicked.png",
+    })
+    assert (await client.receive_json())["success"] is True
+
+    assert library.find("Water the plants") == "/local/home_tasks/handpicked.png"
+
+
+async def test_a_list_that_keeps_to_itself_does_not_hand_it_over(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store
+) -> None:
+    """Same switch as everywhere else: off means it stays out of the pool."""
+    library = async_get_image_library(hass)
+    await library.async_load()
+    await store.async_set_settings(share_images=False)
+    task = await store.async_add_task("Water the plants")
+    client = await hass_ws_client(hass)
+
+    await client.send_json({
+        "id": 801, "type": "home_tasks/update_task",
+        "list_id": mock_config_entry.entry_id, "task_id": task["id"],
+        "image_url": "/local/home_tasks/private.png",
+    })
+    assert (await client.receive_json())["success"] is True
+
+    assert library.find("Water the plants") is None
+

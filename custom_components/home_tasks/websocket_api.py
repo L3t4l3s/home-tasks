@@ -468,6 +468,14 @@ async def ws_update_task(hass, connection, msg):
         task = await store.async_update_task(msg["task_id"], actor=actor, **kwargs)
         if "image_url" in kwargs:
             await _async_forget_rejected(hass, old_image_url, kwargs.get("image_url"))
+            # A picture picked from the media library is as reusable as a
+            # generated one: without this the library only learns it at the
+            # next backfill, and the same title pays for a generation in
+            # between.
+            await _async_remember_image(
+                hass, task.get("title", ""), kwargs.get("image_url"),
+                store.get_settings()["share_images"],
+            )
             await _cleanup_orphan_image(hass, old_image_url, kwargs.get("image_url"))
         connection.send_result(msg["id"], task)
     except Exception as err:
@@ -1344,6 +1352,20 @@ async def ws_update_external_overlay(hass, connection, msg):
         overlay = await overlay_store.async_set_overlay(msg["task_uid"], **kwargs)
         if "image_url" in kwargs:
             await _async_forget_rejected(hass, old_image_url, kwargs["image_url"])
+            # Same on an external list; the title comes from the merged view,
+            # since the overlay itself does not hold one.
+            title = ""
+            try:
+                tasks, _ = await _async_get_external_tasks(hass, msg["entity_id"])
+                title = next(
+                    (t["title"] for t in tasks if t["id"] == msg["task_uid"]), ""
+                )
+            except Exception:  # noqa: BLE001 - remembering is a nicety
+                title = ""
+            await _async_remember_image(
+                hass, title, kwargs["image_url"],
+                overlay_store.get_settings()["share_images"],
+            )
             await _cleanup_orphan_image(hass, old_image_url, kwargs["image_url"])
         connection.send_result(msg["id"], overlay)
     except Exception as err:

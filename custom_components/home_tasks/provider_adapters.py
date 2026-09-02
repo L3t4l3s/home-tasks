@@ -27,6 +27,12 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+# How hard to look for the UID of a task we just created. A provider whose
+# entity updates synchronously is done on the first read; a slow one (CalDAV
+# on Nextcloud) needs a refresh and a moment.
+_UID_DISCOVERY_ATTEMPTS = 4
+_UID_DISCOVERY_DELAY = 0.6
+
 
 
 # Weekday names used when converting our recurrence weekdays to Todoist strings.
@@ -424,19 +430,39 @@ class GenericAdapter(ProviderAdapter):
             blocking=True,
         )
 
+        # Reading straight back only works for providers whose entity is
+        # already up to date. CalDAV/Nextcloud is not: the new item shows up a
+        # moment later, and giving up on the first look cost the task every
+        # overlay-only field it was created with (tags, priority, reminders,
+        # recurrence, and the list's defaults). Ask the entity to refresh and
+        # look again, a few times, before giving up.
         new_uid: str | None = None
-        try:
-            after_items = await self.async_read_tasks()
-        except Exception:  # noqa: BLE001
-            _LOGGER.warning(
-                "Could not re-read %s after create to discover new UID; "
-                "overlay fields may be lost", self._entity_id,
-            )
-            return None, unsynced
-        new_candidates = [
-            item["uid"] for item in after_items
-            if item["uid"] not in before_uids
-        ]
+        after_items: list[dict] = []
+        new_candidates: list[str] = []
+        for attempt in range(_UID_DISCOVERY_ATTEMPTS):
+            if attempt:
+                await asyncio.sleep(_UID_DISCOVERY_DELAY)
+                try:
+                    await self._hass.services.async_call(
+                        "homeassistant", "update_entity",
+                        {"entity_id": self._entity_id}, blocking=True,
+                    )
+                except Exception:  # noqa: BLE001 - refreshing is an optimisation
+                    _LOGGER.debug("Could not refresh %s before re-reading", self._entity_id)
+            try:
+                after_items = await self.async_read_tasks()
+            except Exception:  # noqa: BLE001
+                _LOGGER.warning(
+                    "Could not re-read %s after create to discover new UID; "
+                    "overlay fields may be lost", self._entity_id,
+                )
+                return None, unsynced
+            new_candidates = [
+                item["uid"] for item in after_items
+                if item["uid"] not in before_uids
+            ]
+            if new_candidates:
+                break
         if len(new_candidates) == 1:
             new_uid = new_candidates[0]
         elif new_candidates:

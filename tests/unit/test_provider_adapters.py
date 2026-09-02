@@ -1230,6 +1230,54 @@ class TestGenericAdapterCreateBitGuards:
         assert unsynced == {"notes": "2 litres"}
 
 
+class TestGenericAdapterSlowProvider:
+    """A provider whose entity lags must not cost the task its overlay data.
+
+    CalDAV on Nextcloud does not show a new item on the read that follows the
+    create, and giving up there dropped every overlay-only field the task was
+    created with - tags, priority, reminders, recurrence, and the list's
+    defaults. Measured on the live system before this: create returned
+    {'uid': None} and the task came back with tags=[] and priority=None.
+    """
+
+    async def test_the_uid_is_found_on_a_later_look(self, monkeypatch):
+        adapter, captured = _make_generic_adapter(FEATURES_SHOPPING_LIST)
+        # First read after the create still shows nothing new; the second does.
+        before = [{"uid": "old", "summary": "existing"}]
+        after = before + [{"uid": "late-uid", "summary": "Cheese"}]
+        reads = iter([before, before, after])
+
+        async def _read_tasks():
+            try:
+                return next(reads)
+            except StopIteration:
+                return after
+
+        adapter.async_read_tasks = _read_tasks  # type: ignore[method-assign]
+        monkeypatch.setattr(
+            "custom_components.home_tasks.provider_adapters._UID_DISCOVERY_DELAY", 0
+        )
+
+        uid, unsynced = await adapter.async_create_task({"title": "Cheese", "tags": ["food"]})
+
+        assert uid == "late-uid", "the second look found it"
+        assert unsynced["tags"] == ["food"]
+        refreshes = [c for c in captured["calls"] if c["service"] == "update_entity"]
+        assert refreshes, "the entity is asked to refresh before looking again"
+
+    async def test_it_gives_up_eventually(self, monkeypatch):
+        """A provider that never shows the item must not hang the create."""
+        adapter, _captured = _make_generic_adapter(FEATURES_SHOPPING_LIST, new_uid=None)
+        monkeypatch.setattr(
+            "custom_components.home_tasks.provider_adapters._UID_DISCOVERY_DELAY", 0
+        )
+
+        uid, unsynced = await adapter.async_create_task({"title": "Cheese", "tags": ["food"]})
+
+        assert uid is None
+        assert unsynced["tags"] == ["food"], "the caller still learns what was left over"
+
+
 class TestGenericAdapterUpdateBitGuards:
     """async_update_task routes fields by supported_features bits."""
 
