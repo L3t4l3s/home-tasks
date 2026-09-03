@@ -13,6 +13,15 @@ add_task:
       description: The config entry ID of the list (alternative to list name).
       selector:
         text:
+    entity_id:
+      name: Linked list entity
+      description: >-
+        The todo entity of a linked external list, when you would rather name
+        it directly than by list name.
+      example: "todo.all_tasks"
+      selector:
+        entity:
+          domain: todo
     title:
       name: Title
       description: The task title.
@@ -75,6 +84,15 @@ update_task:
       description: The config entry ID of the list (alternative to list name).
       selector:
         text:
+    entity_id:
+      name: Linked list entity
+      description: >-
+        The todo entity of a linked external list, when you would rather name
+        it directly than by list name.
+      example: "todo.all_tasks"
+      selector:
+        entity:
+          domain: todo
     task_id:
       name: Task ID
       description: The ID of the task to update.
@@ -196,6 +214,15 @@ complete_task:
       description: The config entry ID of the list (alternative to list name).
       selector:
         text:
+    entity_id:
+      name: Linked list entity
+      description: >-
+        The todo entity of a linked external list, when you would rather name
+        it directly than by list name.
+      example: "todo.all_tasks"
+      selector:
+        entity:
+          domain: todo
     task_title:
       name: Task Title
       description: Title of the task to complete.
@@ -227,6 +254,15 @@ assign_task:
       description: The config entry ID of the list (alternative to list name).
       selector:
         text:
+    entity_id:
+      name: Linked list entity
+      description: >-
+        The todo entity of a linked external list, when you would rather name
+        it directly than by list name.
+      example: "todo.all_tasks"
+      selector:
+        entity:
+          domain: todo
     task_title:
       name: Task Title
       description: Title of the task.
@@ -261,6 +297,15 @@ reopen_task:
       description: The config entry ID of the list (alternative to list name).
       selector:
         text:
+    entity_id:
+      name: Linked list entity
+      description: >-
+        The todo entity of a linked external list, when you would rather name
+        it directly than by list name.
+      example: "todo.all_tasks"
+      selector:
+        entity:
+          domain: todo
     task_title:
       name: Task Title
       description: Title of the task to reopen.

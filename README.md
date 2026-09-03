@@ -330,6 +330,14 @@ These options live at the **root** of the card config, not inside a column.
 
 The old flat format (`list_id` at root level) is still supported and migrated automatically.
 
+### Services and linked lists
+
+Every task service — `add_task`, `update_task`, `complete_task`, `assign_task`,
+`reopen_task` — works on a **linked external list** as well as a native one: name it
+with `list_name` as usual, or point at its todo entity with `entity_id`. The change
+takes the same route as the card, so the provider stores what it can (Todoist labels,
+for example) and the local overlay keeps the rest.
+
 ### List defaults
 
 Every list — native or linked external — can define **defaults for new tasks**

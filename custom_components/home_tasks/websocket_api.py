@@ -1527,6 +1527,80 @@ def _fire_external_task_event(
     hass.bus.async_fire(f"{DOMAIN}_{event_type}", data)
 
 
+async def async_create_external_task(hass, entity_id: str, fields: dict) -> str | None:
+    """Create a task on a linked external list and return its new uid.
+
+    Shared by the WebSocket command and the add_task service (issue #63):
+    the list's defaults, the adapter, the overlay and the created event all
+    belong to creating a task, wherever the call came from.
+    """
+    adapter = _get_adapter(hass, entity_id)
+
+    # List-level defaults, same rule as the native path: fill only what
+    # the caller left out, and do it before the adapter runs so a provider
+    # that syncs labels or priority gets them too.
+    # An unlinked external entity has no overlay store, and no defaults.
+    try:
+        overlay_store = _get_overlay_store(hass, entity_id)
+    except ValueError:
+        overlay_store = None
+    default_section = None
+    if overlay_store is not None:
+        defaults = overlay_store.get_defaults()
+        if fields.get("assigned_person") is None and defaults["assignee"]:
+            fields["assigned_person"] = defaults["assignee"]
+        # Presence, not truthiness: "reminders": [] is the caller saying
+        # "this one gets none", the same as on a native list.
+        if "reminders" not in fields and defaults["reminders"]:
+            fields["reminders"] = list(defaults["reminders"])
+        if "tags" not in fields and defaults["tags"]:
+            fields["tags"] = list(defaults["tags"])
+        if fields.get("priority") is None and defaults["priority"]:
+            fields["priority"] = defaults["priority"]
+        # Sections are ours alone - no provider knows about them, so this
+        # one goes straight into the overlay below.
+        if defaults["section_id"] and any(
+            s["id"] == defaults["section_id"] for s in overlay_store.sections
+        ):
+            default_section = defaults["section_id"]
+
+    if adapter:
+        new_uid, adapter_unsynced = await adapter.async_create_task(fields)
+    else:
+        # Fallback: generic create via todo.add_item
+        generic = GenericAdapter(hass, entity_id, {})
+        new_uid, adapter_unsynced = await generic.async_create_task(fields)
+
+    # Store overlay fields: the adapter's unsynced set (fields the
+    # provider couldn't accept) PLUS the fields that home_tasks keeps
+    # locally regardless of adapter (reminders for non-reminder-syncing
+    # adapters, recurrence bookkeeping).
+    if new_uid and adapter:  # overlay store only exists for registered externals
+        overlay_store = _get_overlay_store(hass, entity_id)
+        overlay_fields: dict = dict(adapter_unsynced) if adapter_unsynced else {}
+        if not adapter.capabilities.can_sync_reminders and fields.get("reminders"):
+            overlay_fields.setdefault("reminders", fields["reminders"])
+        for key in ("recurrence_end_type", "recurrence_max_count", "recurrence_remaining_count"):
+            if key in fields:
+                overlay_fields.setdefault(key, fields[key])
+        if default_section:
+            overlay_fields.setdefault("section_id", default_section)
+        # Only persist keys the overlay store knows about
+        overlay_kwargs = {k: v for k, v in overlay_fields.items() if k in OVERLAY_FIELDS}
+        if overlay_kwargs:
+            await overlay_store.async_set_overlay(new_uid, **overlay_kwargs)
+    elif adapter_unsynced:
+        _LOGGER.warning(
+            "Created external task on %s but could not discover UID; "
+            "overlay fields lost: %s",
+            entity_id, list(adapter_unsynced.keys()),
+        )
+    # Fire created for every provider — even when the generic adapter can't
+    # resolve a UID, the title + entity are still useful to automations.
+    _fire_external_task_event(hass, "task_created", entity_id, new_uid or "", fields)
+    return new_uid
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "home_tasks/create_external_task",
@@ -1557,76 +1631,74 @@ def _fire_external_task_event(
 async def ws_create_external_task(hass, connection, msg):
     """Create a task via the provider adapter."""
     try:
-        entity_id = msg["entity_id"]
-        adapter = _get_adapter(hass, entity_id)
-
         fields = {k: v for k, v in msg.items() if k not in ("id", "type", "entity_id")}
-
-        # List-level defaults, same rule as the native path: fill only what
-        # the caller left out, and do it before the adapter runs so a provider
-        # that syncs labels or priority gets them too.
-        # An unlinked external entity has no overlay store, and no defaults.
-        try:
-            overlay_store = _get_overlay_store(hass, entity_id)
-        except ValueError:
-            overlay_store = None
-        default_section = None
-        if overlay_store is not None:
-            defaults = overlay_store.get_defaults()
-            if fields.get("assigned_person") is None and defaults["assignee"]:
-                fields["assigned_person"] = defaults["assignee"]
-            # Presence, not truthiness: "reminders": [] is the caller saying
-            # "this one gets none", the same as on a native list.
-            if "reminders" not in fields and defaults["reminders"]:
-                fields["reminders"] = list(defaults["reminders"])
-            if "tags" not in fields and defaults["tags"]:
-                fields["tags"] = list(defaults["tags"])
-            if fields.get("priority") is None and defaults["priority"]:
-                fields["priority"] = defaults["priority"]
-            # Sections are ours alone - no provider knows about them, so this
-            # one goes straight into the overlay below.
-            if defaults["section_id"] and any(
-                s["id"] == defaults["section_id"] for s in overlay_store.sections
-            ):
-                default_section = defaults["section_id"]
-
-        if adapter:
-            new_uid, adapter_unsynced = await adapter.async_create_task(fields)
-        else:
-            # Fallback: generic create via todo.add_item
-            generic = GenericAdapter(hass, entity_id, {})
-            new_uid, adapter_unsynced = await generic.async_create_task(fields)
-
-        # Store overlay fields: the adapter's unsynced set (fields the
-        # provider couldn't accept) PLUS the fields that home_tasks keeps
-        # locally regardless of adapter (reminders for non-reminder-syncing
-        # adapters, recurrence bookkeeping).
-        if new_uid and adapter:  # overlay store only exists for registered externals
-            overlay_store = _get_overlay_store(hass, entity_id)
-            overlay_fields: dict = dict(adapter_unsynced) if adapter_unsynced else {}
-            if not adapter.capabilities.can_sync_reminders and fields.get("reminders"):
-                overlay_fields.setdefault("reminders", fields["reminders"])
-            for key in ("recurrence_end_type", "recurrence_max_count", "recurrence_remaining_count"):
-                if key in fields:
-                    overlay_fields.setdefault(key, fields[key])
-            if default_section:
-                overlay_fields.setdefault("section_id", default_section)
-            # Only persist keys the overlay store knows about
-            overlay_kwargs = {k: v for k, v in overlay_fields.items() if k in OVERLAY_FIELDS}
-            if overlay_kwargs:
-                await overlay_store.async_set_overlay(new_uid, **overlay_kwargs)
-        elif adapter_unsynced:
-            _LOGGER.warning(
-                "Created external task on %s but could not discover UID; "
-                "overlay fields lost: %s",
-                entity_id, list(adapter_unsynced.keys()),
-            )
-        # Fire created for every provider — even when the generic adapter can't
-        # resolve a UID, the title + entity are still useful to automations.
-        _fire_external_task_event(hass, "task_created", entity_id, new_uid or "", fields)
+        new_uid = await async_create_external_task(hass, msg["entity_id"], fields)
         connection.send_result(msg["id"], {"uid": new_uid})
     except Exception as err:
         _handle_error(connection, msg["id"], err)
+
+
+async def async_update_external_task(hass, entity_id: str, task_uid: str, fields: dict) -> dict:
+    """Apply an update to a task on a linked external list.
+
+    The provider takes what it can; the rest goes to the overlay, and the
+    native-parity events (and overlay-driven recurrence) are fired here so
+    every caller gets them - the card over WebSocket, and the services
+    (issue #63), which used to refuse external lists outright.
+
+    Returns the fields the provider could not take, so a caller can say what
+    was kept locally.
+    """
+    adapter = _get_adapter(hass, entity_id)
+
+    if adapter:
+        unsynced = await adapter.async_update_task(task_uid, fields)
+    else:
+        generic = GenericAdapter(hass, entity_id, {})
+        unsynced = await generic.async_update_task(task_uid, fields)
+
+    # Store unsynced fields in overlay
+    if unsynced:
+        overlay_store = _get_overlay_store(hass, entity_id)
+        overlay_kwargs = {}
+        for key in OVERLAY_FIELDS:
+            if key in unsynced:
+                overlay_kwargs[key] = unsynced[key]
+        if overlay_kwargs:
+            await overlay_store.async_set_overlay(task_uid, **overlay_kwargs)
+
+    # Fire native-parity events so automations work for external lists too
+    # (issue #27): the adapter path bypasses the store's on_task_* callbacks.
+    if "completed" in fields:
+        merged = None
+        try:
+            ostore = _get_overlay_store(hass, entity_id)
+            merged = next(
+                (t for t in _merge_tasks_with_overlays(_get_external_todo_items(hass, entity_id), ostore)
+                 if str(t.get("id")) == str(task_uid)),
+                None,
+            )
+        except Exception:  # noqa: BLE001
+            merged = None
+        event_type = "task_completed" if fields["completed"] else "task_reopened"
+        _fire_external_task_event(hass, event_type, entity_id, task_uid, fields, task=merged)
+        # Overlay-driven recurrence (issue #27): on completion schedule the
+        # reopen (skipped for providers that own recurrence); on a manual
+        # reopen, cancel any pending reopen timer.
+        from . import _cancel_recurrence, _handle_external_recurrence_completion
+        if fields["completed"]:
+            entry_id = _external_entry_id(hass, entity_id)
+            if entry_id:
+                await _handle_external_recurrence_completion(hass, entry_id, entity_id, task_uid)
+        else:
+            _cancel_recurrence(hass, task_uid)
+            # Clear the recurrence completion stamp so a manually reopened
+            # task isn't seen as still-completed by startup recovery / UI.
+            if merged and merged.get("completed_at"):
+                await _get_overlay_store(hass, entity_id).async_set_overlay(
+                    task_uid, completed_at=None
+                )
+    return unsynced or {}
 
 
 @websocket_api.websocket_command(
@@ -1665,60 +1737,11 @@ async def ws_create_external_task(hass, connection, msg):
 async def ws_update_external_task(hass, connection, msg):
     """Update a task via the provider adapter.  Unsynced fields go to overlay."""
     try:
-        entity_id = msg["entity_id"]
-        task_uid = msg["task_uid"]
-        adapter = _get_adapter(hass, entity_id)
-
         fields = {k: v for k, v in msg.items() if k not in ("id", "type", "entity_id", "task_uid")}
-
-        if adapter:
-            unsynced = await adapter.async_update_task(task_uid, fields)
-        else:
-            generic = GenericAdapter(hass, entity_id, {})
-            unsynced = await generic.async_update_task(task_uid, fields)
-
-        # Store unsynced fields in overlay
-        if unsynced:
-            overlay_store = _get_overlay_store(hass, entity_id)
-            overlay_kwargs = {}
-            for key in OVERLAY_FIELDS:
-                if key in unsynced:
-                    overlay_kwargs[key] = unsynced[key]
-            if overlay_kwargs:
-                await overlay_store.async_set_overlay(task_uid, **overlay_kwargs)
-
-        # Fire native-parity events so automations work for external lists too
-        # (issue #27): the adapter path bypasses the store's on_task_* callbacks.
-        if "completed" in fields:
-            merged = None
-            try:
-                ostore = _get_overlay_store(hass, entity_id)
-                merged = next(
-                    (t for t in _merge_tasks_with_overlays(_get_external_todo_items(hass, entity_id), ostore)
-                     if str(t.get("id")) == str(task_uid)),
-                    None,
-                )
-            except Exception:  # noqa: BLE001
-                merged = None
-            event_type = "task_completed" if fields["completed"] else "task_reopened"
-            _fire_external_task_event(hass, event_type, entity_id, task_uid, fields, task=merged)
-            # Overlay-driven recurrence (issue #27): on completion schedule the
-            # reopen (skipped for providers that own recurrence); on a manual
-            # reopen, cancel any pending reopen timer.
-            from . import _cancel_recurrence, _handle_external_recurrence_completion
-            if fields["completed"]:
-                entry_id = _external_entry_id(hass, entity_id)
-                if entry_id:
-                    await _handle_external_recurrence_completion(hass, entry_id, entity_id, task_uid)
-            else:
-                _cancel_recurrence(hass, task_uid)
-                # Clear the recurrence completion stamp so a manually reopened
-                # task isn't seen as still-completed by startup recovery / UI.
-                if merged and merged.get("completed_at"):
-                    await _get_overlay_store(hass, entity_id).async_set_overlay(
-                        task_uid, completed_at=None
-                    )
-        connection.send_result(msg["id"], {"unsynced": list(unsynced.keys()) if unsynced else []})
+        unsynced = await async_update_external_task(
+            hass, msg["entity_id"], msg["task_uid"], fields
+        )
+        connection.send_result(msg["id"], {"unsynced": list(unsynced.keys())})
     except Exception as err:
         _handle_error(connection, msg["id"], err)
 
