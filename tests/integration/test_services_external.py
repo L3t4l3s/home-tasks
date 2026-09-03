@@ -39,6 +39,7 @@ class _Adapter:
         # its labels - a rich adapter's own fields come from the provider,
         # not from the overlay.
         self.labels: dict[str, list[str]] = {}
+        self.reads = 0  # provider round trips - each one is slow for real
 
     async def async_create_task(self, fields):
         self.created.append(dict(fields))
@@ -53,6 +54,7 @@ class _Adapter:
         # entity the fixture set up.
         from custom_components.home_tasks.provider_adapters import _get_external_todo_items
 
+        self.reads += 1
         items = _get_external_todo_items(self._hass, self._entity_id)
         for item in items:
             if item["uid"] in self.labels:
@@ -236,3 +238,61 @@ async def test_an_entity_that_is_not_linked_says_so(
             entity_id="todo.never_linked", task_title="Wipe bench", tags="y",
         )
     assert "not a linked list" in str(err.value)
+
+# ---------------------------------------------------------------------------
+# Review follow-ups
+# ---------------------------------------------------------------------------
+
+async def test_a_native_list_wins_a_shared_name(
+    hass: HomeAssistant, linked_list, patch_add_extra_js_url
+) -> None:
+    """One name must mean one list, whichever service reads it. A native list
+    has always won a name it shares with a linked one, so the linked-aware
+    resolver follows the same rule as the native-only one."""
+    from custom_components.home_tasks import _resolve_store, _resolve_target
+    from custom_components.home_tasks.store import HomeTasksStore
+
+    native = MockConfigEntry(domain=DOMAIN, data={"name": LIST_NAME}, title=LIST_NAME)
+    native.add_to_hass(hass)
+    await hass.config_entries.async_setup(native.entry_id)
+    await hass.async_block_till_done()
+
+    kind, ident, store = _resolve_target(hass, {"list_name": LIST_NAME})
+    old_ident, old_store = _resolve_store(hass, {"list_name": LIST_NAME})
+
+    assert kind == "native"
+    assert ident == old_ident == native.entry_id, "both resolvers agree"
+    assert isinstance(store, HomeTasksStore) and store is old_store
+
+
+async def test_naming_the_list_twice_is_refused(hass: HomeAssistant, linked_list) -> None:
+    """A leftover entity_id must not quietly outrank the list_name next to it."""
+    with pytest.raises(Exception) as err:
+        await _call(
+            hass, "update_task",
+            list_name=LIST_NAME, entity_id=EXT_ENTITY, task_title="Wipe bench", tags="y",
+        )
+    assert "exactly one" in str(err.value)
+
+
+async def test_bulk_complete_reads_the_list_once(hass: HomeAssistant, linked_list) -> None:
+    """Every task completed used to cost another full read of the provider."""
+    entry, adapter = linked_list
+    adapter.labels["uid-1"] = ["kitchen"]
+    adapter.reads = 0
+
+    await _call(hass, "complete_task", list_name=LIST_NAME, tag="kitchen")
+
+    assert ("uid-1", {"completed": True}) in adapter.updated
+    assert adapter.reads == 1, f"one read to find them, none per task; got {adapter.reads}"
+
+
+async def test_reopen_by_title_reads_the_list_once(hass: HomeAssistant, linked_list) -> None:
+    _entry, adapter = linked_list
+    adapter.reads = 0
+
+    await _call(hass, "reopen_task", list_name=LIST_NAME, task_title="Old thing")
+
+    assert ("uid-2", {"completed": False}) in adapter.updated
+    assert adapter.reads == 1, f"resolved once, then acted on; got {adapter.reads}"
+

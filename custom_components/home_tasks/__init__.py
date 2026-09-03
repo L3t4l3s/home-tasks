@@ -1386,11 +1386,21 @@ def _recover_external_recurrence_timers(hass: HomeAssistant, entry_id: str, enti
 # ---------------------------------------------------------------------------
 
 def _entry_for_name(hass: HomeAssistant, list_name: str):
-    """The config entry whose list is called *list_name*, native or linked."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if (entry.data.get("name", entry.title) or "").lower() == list_name.lower():
+    """The config entry whose list is called *list_name*, native or linked.
+
+    A native list wins a name it shares with a linked one. That is how the
+    name has always resolved, and one name must not mean two different lists
+    depending on which service happens to read it.
+    """
+    matches = [
+        entry for entry in hass.config_entries.async_entries(DOMAIN)
+        if (entry.data.get("name", entry.title) or "").lower() == list_name.lower()
+    ]
+    stores = hass.data.get(DOMAIN, {})
+    for entry in matches:
+        if isinstance(stores.get(entry.entry_id), HomeTasksStore):
             return entry
-    return None
+    return matches[0] if matches else None
 
 
 def _resolve_target(hass: HomeAssistant, data: dict) -> tuple[str, str, object]:
@@ -1406,6 +1416,16 @@ def _resolve_target(hass: HomeAssistant, data: dict) -> tuple[str, str, object]:
     from .overlay_store import ExternalTaskOverlayStore
 
     stores = hass.data.get(DOMAIN, {})
+
+    given = [key for key in ("list_name", "entry_id", "entity_id") if data.get(key)]
+    if len(given) > 1:
+        # Silently letting one win means an automation that still carries an
+        # old entity_id keeps writing to the old list while reading as if it
+        # targets the new one.
+        raise vol.Invalid(
+            "Provide exactly one of list_name, entry_id or entity_id (got: "
+            + ", ".join(given) + ")"
+        )
 
     entity_id = data.get("entity_id")
     if entity_id:
@@ -1480,14 +1500,10 @@ def _resolve_store(hass: HomeAssistant, data: dict) -> tuple[str, HomeTasksStore
         return entry_id, store
 
     if list_name:
-        entries = hass.config_entries.async_entries(DOMAIN)
-        for entry in entries:
-            name = entry.data.get("name", entry.title)
-            if name.lower() == list_name.lower():
-                store = hass.data.get(DOMAIN, {}).get(entry.entry_id)
-                if store and isinstance(store, HomeTasksStore):
-                    return entry.entry_id, store
         entry = _entry_for_name(hass, list_name)
+        store = hass.data.get(DOMAIN, {}).get(entry.entry_id) if entry else None
+        if isinstance(store, HomeTasksStore):
+            return entry.entry_id, store
         if entry is not None:
             raise vol.Invalid(
                 f"{list_name} is a linked external list; this field needs a native one"
@@ -1561,16 +1577,23 @@ async def _resolve_actor(hass: HomeAssistant, call: ServiceCall) -> str | None:
         return None
 
 
-async def _update_external(hass: HomeAssistant, entity_id: str, data: dict, fields: dict) -> None:
+async def _update_external(
+    hass: HomeAssistant, entity_id: str, data: dict, fields: dict, task: dict | None = None
+) -> None:
     """Apply service fields to a task on a linked list.
 
     Routes through the same code the card uses, so the provider takes what it
     can and the overlay keeps the rest — and the completion events and
     recurrence handling come along with it.
+
+    Pass *task* when the caller already has it: resolving it again means
+    reading the whole list off the provider once more, which on a bulk
+    operation is one round trip per task.
     """
     from .websocket_api import async_update_external_task
 
-    task = await _resolve_external_task(hass, entity_id, data)
+    if task is None:
+        task = await _resolve_external_task(hass, entity_id, data)
     await async_update_external_task(hass, entity_id, task["id"], fields)
 
 
@@ -1696,14 +1719,12 @@ def _async_register_services(hass: HomeAssistant) -> None:
                         continue
                     if wanted in (t.lower() for t in task.get("tags", [])):
                         await _update_external(
-                            hass, ident, {"task_id": task["id"]}, {"completed": True}
+                            hass, ident, {}, {"completed": True}, task=task
                         )
                 return
             task = await _resolve_external_task(hass, ident, call.data)
             if not task.get("completed"):
-                await _update_external(
-                    hass, ident, {"task_id": task["id"]}, {"completed": True}
-                )
+                await _update_external(hass, ident, {}, {"completed": True}, task=task)
             return
 
         if tag:
@@ -1750,13 +1771,12 @@ def _async_register_services(hass: HomeAssistant) -> None:
             required_tags = set()
 
         if kind == "external":
-            candidates = await _external_tasks(hass, ident)
             if task_id or task_title:
                 one_task = await _resolve_external_task(hass, ident, call.data)
                 candidates = [one_task] if one_task.get("completed") else []
             elif assigned_person or required_tags:
                 candidates = [
-                    t for t in candidates
+                    t for t in await _external_tasks(hass, ident)
                     if t.get("completed")
                     and (not assigned_person or t.get("assigned_person") == assigned_person)
                     and (not required_tags
@@ -1767,9 +1787,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
                     "Either task_id, task_title, assigned_person, tag, or tags must be provided"
                 )
             for task in candidates:
-                await _update_external(
-                    hass, ident, {"task_id": task["id"]}, {"completed": False}
-                )
+                await _update_external(hass, ident, {}, {"completed": False}, task=task)
             return
 
         if task_id or task_title:
