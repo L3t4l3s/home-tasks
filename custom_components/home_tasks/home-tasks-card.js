@@ -9877,12 +9877,31 @@ class HomeTasksCardEditor extends HTMLElement {
       schema.name === "entity_id" ? this._t("ed_ai_image_entity")
       : schema.name === "prompt_prefix" ? this._t("ed_ai_prompt_prefix")
       : schema.name;
+    // ha-form can emit value-changed on its own: while it settles after
+    // opening, or when a selector normalises a value it does not know yet
+    // (an ai_task entity whose integration is still loading). Such an event
+    // reports the field as empty, and taking it at face value wrote a
+    // dashboard without its AI entity - while the background queue, which
+    // remembers the last entity it was handed, kept generating. Only the
+    // user clears a field: nothing is written before they have touched the
+    // form, and a field the event leaves out or reports unchanged is left
+    // alone.
+    let touched = false;
+    for (const type of ["pointerdown", "keydown", "focusin"]) {
+      form.addEventListener(type, () => { touched = true; });
+    }
     form.addEventListener("value-changed", (e) => {
-      const val = e.detail.value || {};
-      const merged = {};
-      if (val.entity_id) merged.entity_id = val.entity_id;
-      if (val.prompt_prefix) merged.prompt_prefix = val.prompt_prefix;
-      this._config = { ...this._config, image_generation: Object.keys(merged).length ? merged : undefined };
+      if (!touched) return;
+      const val = e.detail?.value;
+      if (!val || typeof val !== "object") return;
+      const current = this._config.image_generation || {};
+      const next = { ...current };
+      for (const key of ["entity_id", "prompt_prefix"]) {
+        if (!(key in val)) continue;
+        if (val[key]) next[key] = val[key]; else delete next[key];
+      }
+      if (JSON.stringify(next) === JSON.stringify(current)) return;
+      this._config = { ...this._config, image_generation: Object.keys(next).length ? next : undefined };
       this._fireChanged();
     });
 
