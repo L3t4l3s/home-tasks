@@ -30,8 +30,6 @@ from .websocket_api import async_move_task_any, async_register_websocket_command
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = ["todo", "sensor", "binary_sensor", "calendar"]
-# External entries only get a calendar entity; their todo/sensor data is owned
-# by the source integration.
 # A linked list gets the same entities as a native one, except the todo
 # entity - that one is the provider's own.
 EXTERNAL_PLATFORMS = ["calendar", "sensor", "binary_sensor"]
@@ -67,6 +65,10 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     return True
 
 
+BACKFILL_RETRIES = 5
+BACKFILL_RETRY_DELAY = 300
+
+
 async def _async_load_image_library(hass: HomeAssistant) -> None:
     """Read the title-to-picture library from disk once, then learn.
 
@@ -78,9 +80,19 @@ async def _async_load_image_library(hass: HomeAssistant) -> None:
         return
     await library.async_load()
 
+    # A linked list whose provider is still loading a minute after boot is
+    # not readable yet; try those again a few times before giving up.
+    tries_left = [BACKFILL_RETRIES]
+
+    async def _run() -> None:
+        await library.async_backfill()
+        if library.unread_lists and tries_left[0] > 0:
+            tries_left[0] -= 1
+            async_call_later(hass, BACKFILL_RETRY_DELAY, _backfill)
+
     @callback
     def _backfill(_now) -> None:
-        hass.async_create_task(library.async_backfill())
+        hass.async_create_task(_run())
 
     async_call_later(hass, 60, _backfill)
 

@@ -11,8 +11,8 @@ from homeassistant.core import HomeAssistant, callback
 
 from .image_library import async_get_image_library
 from .image_queue import PLACEHOLDER_IMAGE_URLS, async_get_image_queue
-from .const import DOMAIN, MAX_IMAGE_URL_LENGTH, MAX_REORDER_IDS, MAX_RECURRENCE_VALUE, MAX_REMINDER_OFFSET_MINUTES, MAX_REMINDERS_PER_TASK, MAX_SUB_TASKS_PER_TASK, MAX_TAGS_PER_TASK, MAX_TITLE_LENGTH, VALID_RECURRENCE_UNITS
-from .overlay_store import ExternalTaskOverlayStore, OVERLAY_FIELDS
+from .const import DOMAIN, MAX_IMAGE_URL_LENGTH, MAX_REORDER_IDS, MAX_RECURRENCE_VALUE, MAX_REMINDER_OFFSET_MINUTES, MAX_REMINDERS_PER_TASK, MAX_SUB_TASKS_PER_TASK, MAX_TAGS_PER_TASK, MAX_TITLE_LENGTH, RECURRENCE_FIELDS, VALID_RECURRENCE_UNITS
+from .overlay_store import ExternalTaskOverlayStore, OVERLAY_FIELDS, _empty_overlay
 from .store import validate_assigned_person
 from .provider_adapters import ProviderAdapter, GenericAdapter, _get_external_todo_items
 
@@ -844,13 +844,7 @@ async def async_move_task_any(
             "assigned_person": task_data.get("assigned_person"),
         }
         if task_data.get("recurrence_enabled"):
-            create_fields["recurrence_enabled"] = True
-            for k in (
-                "recurrence_type", "recurrence_value", "recurrence_unit",
-                "recurrence_weekdays", "recurrence_start_date", "recurrence_time",
-                "recurrence_month_pattern", "recurrence_day_of_month",
-                "recurrence_nth_week", "recurrence_anniversary",
-            ):
+            for k in RECURRENCE_FIELDS:
                 if task_data.get(k) is not None:
                     create_fields[k] = task_data[k]
 
@@ -1529,12 +1523,16 @@ def _fire_external_task_event(
     hass.bus.async_fire(f"{DOMAIN}_{event_type}", data)
 
 
-async def async_create_external_task(hass, entity_id: str, fields: dict) -> str | None:
+async def async_create_external_task(
+    hass, entity_id: str, fields: dict, apply_defaults: bool = True
+) -> str | None:
     """Create a task on a linked external list and return its new uid.
 
     Shared by the WebSocket command and the add_task service (issue #63):
     the list's defaults, the adapter, the overlay and the created event all
-    belong to creating a task, wherever the call came from.
+    belong to creating a task, wherever the call came from. A copy of an
+    existing task passes apply_defaults=False: it is meant to be that task
+    again, not a new one dressed in the list's defaults.
     """
     adapter = _get_adapter(hass, entity_id)
 
@@ -1547,7 +1545,7 @@ async def async_create_external_task(hass, entity_id: str, fields: dict) -> str 
     except ValueError:
         overlay_store = None
     default_section = None
-    if overlay_store is not None:
+    if overlay_store is not None and apply_defaults:
         defaults = overlay_store.get_defaults()
         if fields.get("assigned_person") is None and defaults["assignee"]:
             fields["assigned_person"] = defaults["assignee"]
@@ -1719,30 +1717,33 @@ async def async_duplicate_external_task(
     if source is None:
         raise ValueError(f"Task {task_uid} not found in {entity_id}")
 
+    # The merged view fills every field the task does not set with its
+    # default (recurrence_type "interval" on a task that never recurs, and
+    # so on). Those are not the source's data and must not become the
+    # copy's overlay.
+    blank = _empty_overlay()
     fields: dict = {"title": source.get("title") or ""}
-    for key in ("notes", "due_date", "due_time", "priority", "tags", "reminders"):
+    for key in ("notes", "due_date", "due_time", "priority", "tags", "reminders", *RECURRENCE_FIELDS):
         value = source.get(key)
-        if value not in (None, "", []):
-            fields[key] = list(value) if isinstance(value, list) else value
-    for key in (
-        "recurrence_enabled", "recurrence_type", "recurrence_value", "recurrence_unit",
-        "recurrence_weekdays", "recurrence_start_date", "recurrence_time",
-        "recurrence_end_type", "recurrence_end_date", "recurrence_max_count",
-        "recurrence_month_pattern", "recurrence_day_of_month", "recurrence_nth_week",
-        "recurrence_anniversary",
-    ):
-        value = source.get(key)
-        if value not in (None, "", []):
-            fields[key] = list(value) if isinstance(value, list) else value
-    if source.get("recurrence_max_count") is not None:
+        if value in (None, "", []) or (key in blank and value == blank[key]):
+            continue
+        fields[key] = list(value) if isinstance(value, list) else value
+    if fields.get("recurrence_enabled") and source.get("recurrence_max_count") is not None:
         fields["recurrence_remaining_count"] = source["recurrence_max_count"]
     # The explicit assignee wins, including "nobody" - that is what
     # duplicate-for-someone-else is for.
     fields["assigned_person"] = validate_assigned_person(assigned_person)
 
-    new_uid = await async_create_external_task(hass, entity_id, fields)
+    # No list defaults: a copy is the source again, not a fresh task.
+    new_uid = await async_create_external_task(hass, entity_id, fields, apply_defaults=False)
     if not new_uid:
-        return None
+        # The provider has the bare copy but never told us its id, so the
+        # section, picture and sub-tasks cannot follow. Saying "done" here
+        # would hide that; the caller reloads and sees what did arrive.
+        raise ValueError(
+            f"{entity_id} created the copy but did not report its id; "
+            "section, picture and sub-tasks were not copied"
+        )
 
     # What the create path does not carry: the section and the picture are
     # ours alone, the sub-tasks go wherever this provider keeps them.

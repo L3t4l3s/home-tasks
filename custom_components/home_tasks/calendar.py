@@ -27,7 +27,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .external_view import async_subscribe_external, get_external_tasks_snapshot
+from .external_view import (
+    async_subscribe_external,
+    get_external_tasks_snapshot,
+    provider_available,
+)
 
 # RFC-5545 weekday codes indexed by Python weekday() (Mon=0 .. Sun=6)
 _WEEKDAY_CODES = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"]
@@ -391,6 +395,11 @@ class ExternalHomeTasksCalendarEntity(_BaseHomeTasksCalendar):
     @callback
     def _refresh(self) -> None:
         self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Same answer as the list's sensors: no provider, no calendar."""
+        return provider_available(self.hass, self._source_entity_id)
 
     def _get_tasks(self) -> list[dict]:
         return get_external_tasks_snapshot(self.hass, self._source_entity_id)

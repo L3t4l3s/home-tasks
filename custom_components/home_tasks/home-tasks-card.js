@@ -25,6 +25,7 @@ const _TRANSLATIONS = {
     my_tasks: "My Tasks",
     add_placeholder: "Add new task...",
     add_failed: "Could not add task",
+    duplicate_failed: "Could not duplicate task",
     dialog_cancel: "Cancel", dialog_add: "Add",
     filter_all: "All",
     filter_open: "Open",
@@ -204,6 +205,7 @@ const _TRANSLATIONS = {
     my_tasks: "Mijn taken",
     add_placeholder: "Nieuwe taak toevoegen...",
     add_failed: "Taak kon niet worden toegevoegd",
+    duplicate_failed: "Taak kon niet worden gedupliceerd",
     dialog_cancel: "Annuleren", dialog_add: "Toevoegen",
     filter_all: "Alle", filter_open: "Open", filter_done: "Klaar", filter_due_soon: "Binnenkort",
     ed_show_due_soon_filter: "Binnenkort-filter", ed_due_soon_days: "Dagen vooruit", ed_hide_overdue: "Verlopen verbergen",
@@ -304,6 +306,7 @@ const _TRANSLATIONS = {
     my_tasks: "Le mie attivit\u00e0",
     add_placeholder: "Aggiungi nuova attivit\u00e0...",
     add_failed: "Impossibile aggiungere l'attività",
+    duplicate_failed: "Impossibile duplicare l'attività",
     dialog_cancel: "Annulla", dialog_add: "Aggiungi",
     filter_all: "Tutte", filter_open: "Aperte", filter_done: "Completate", filter_due_soon: "In scadenza",
     ed_show_due_soon_filter: "Filtro in scadenza", ed_due_soon_days: "Giorni avanti", ed_hide_overdue: "Nascondi scadute",
@@ -404,6 +407,7 @@ const _TRANSLATIONS = {
     my_tasks: "Moje zadania",
     add_placeholder: "Dodaj nowe zadanie...",
     add_failed: "Nie udało się dodać zadania",
+    duplicate_failed: "Nie udało się zduplikować zadania",
     dialog_cancel: "Anuluj", dialog_add: "Dodaj",
     filter_all: "Wszystkie", filter_open: "Otwarte", filter_done: "Uko\u0144czone", filter_due_soon: "Wkr\u00f3tce",
     ed_show_due_soon_filter: "Filtr wkr\u00f3tce", ed_due_soon_days: "Dni naprz\u00f3d", ed_hide_overdue: "Ukryj zaleg\u0142e",
@@ -504,6 +508,7 @@ const _TRANSLATIONS = {
     my_tasks: "Mina uppgifter",
     add_placeholder: "L\u00e4gg till ny uppgift...",
     add_failed: "Kunde inte lägga till uppgiften",
+    duplicate_failed: "Kunde inte duplicera uppgiften",
     dialog_cancel: "Avbryt", dialog_add: "L\u00e4gg till",
     filter_all: "Alla", filter_open: "\u00d6ppna", filter_done: "Klara", filter_due_soon: "Snart",
     ed_show_due_soon_filter: "Snart-filter", ed_due_soon_days: "Dagar fram\u00e5t", ed_hide_overdue: "D\u00f6lj f\u00f6rsenade",
@@ -604,6 +609,7 @@ const _TRANSLATIONS = {
     my_tasks: "Mes t\u00e2ches",
     add_placeholder: "Ajouter une nouvelle t\u00e2che...",
     add_failed: "Impossible d'ajouter la tâche",
+    duplicate_failed: "Impossible de dupliquer la tâche",
     dialog_cancel: "Annuler", dialog_add: "Ajouter",
     filter_all: "Toutes", filter_open: "Ouvertes", filter_done: "Termin\u00e9es", filter_due_soon: "Bient\u00f4t",
     ed_show_due_soon_filter: "Filtre bient\u00f4t", ed_due_soon_days: "Jours \u00e0 venir", ed_hide_overdue: "Masquer en retard",
@@ -704,6 +710,7 @@ const _TRANSLATIONS = {
     my_tasks: "Minhas tarefas",
     add_placeholder: "Adicionar nova tarefa...",
     add_failed: "Não foi possível adicionar a tarefa",
+    duplicate_failed: "Não foi possível duplicar a tarefa",
     dialog_cancel: "Cancelar", dialog_add: "Adicionar",
     filter_all: "Todas", filter_open: "Abertas", filter_done: "Conclu\u00eddas", filter_due_soon: "Em breve",
     ed_show_due_soon_filter: "Filtro em breve", ed_due_soon_days: "Dias \u00e0 frente", ed_hide_overdue: "Ocultar atrasadas",
@@ -804,6 +811,7 @@ const _TRANSLATIONS = {
     my_tasks: "Mis tareas",
     add_placeholder: "A\u00f1adir nueva tarea...",
     add_failed: "No se pudo añadir la tarea",
+    duplicate_failed: "No se pudo duplicar la tarea",
     dialog_cancel: "Cancelar", dialog_add: "Agregar",
     filter_all: "Todas", filter_open: "Abiertas", filter_done: "Completadas", filter_due_soon: "Pr\u00f3ximamente",
     ed_show_due_soon_filter: "Filtro pr\u00f3ximo", ed_due_soon_days: "D\u00edas adelante", ed_hide_overdue: "Ocultar vencidas",
@@ -904,6 +912,7 @@ const _TRANSLATIONS = {
     my_tasks: "\u041c\u043e\u0438 \u0437\u0430\u0434\u0430\u0447\u0438",
     add_placeholder: "\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043d\u043e\u0432\u0443\u044e \u0437\u0430\u0434\u0430\u0447\u0443...",
     add_failed: "Не удалось добавить задачу",
+    duplicate_failed: "Не удалось дублировать задачу",
     dialog_cancel: "\u041e\u0442\u043c\u0435\u043d\u0430", dialog_add: "\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c",
     filter_all: "\u0412\u0441\u0435", filter_open: "\u041e\u0442\u043a\u0440\u044b\u0442\u044b\u0435", filter_done: "\u0412\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043d\u044b\u0435", filter_due_soon: "\u0421\u043a\u043e\u0440\u043e",
     ed_show_due_soon_filter: "\u0424\u0438\u043b\u044c\u0442\u0440 \u0441\u043a\u043e\u0440\u043e", ed_due_soon_days: "\u0414\u043d\u0435\u0439 \u0432\u043f\u0435\u0440\u0451\u0434", ed_hide_overdue: "\u0421\u043a\u0440\u044b\u0442\u044c \u043f\u0440\u043e\u0441\u0440\u043e\u0447\u0435\u043d\u043d\u044b\u0435",
@@ -1004,6 +1013,7 @@ const _TRANSLATIONS = {
     my_tasks: "Moje \u00fakoly",
     add_placeholder: "P\u0159idat nov\u00fd \u00fakol...",
     add_failed: "Úkol se nepodařilo přidat",
+    duplicate_failed: "Úkol se nepodařilo duplikovat",
     dialog_cancel: "Zru\u0161it", dialog_add: "P\u0159idat",
     filter_all: "V\u0161e", filter_open: "Otev\u0159en\u00e9", filter_done: "Dokon\u010den\u00e9", filter_due_soon: "Brzy",
     ed_show_due_soon_filter: "Filtr brzy", ed_due_soon_days: "Dn\u016f dop\u0159edu", ed_hide_overdue: "Skr\u00fdt po term\u00ednu",
@@ -1104,6 +1114,7 @@ const _TRANSLATIONS = {
     my_tasks: "Mine opgaver",
     add_placeholder: "Tilf\u00f8j ny opgave...",
     add_failed: "Opgaven kunne ikke tilføjes",
+    duplicate_failed: "Opgaven kunne ikke duplikeres",
     dialog_cancel: "Annull\u00e9r", dialog_add: "Tilf\u00f8j",
     filter_all: "Alle", filter_open: "\u00c5bne", filter_done: "F\u00e6rdige", filter_due_soon: "Snart",
     ed_show_due_soon_filter: "Snart-filter", ed_due_soon_days: "Dage frem", ed_hide_overdue: "Skjul forfaldne",
@@ -1204,6 +1215,7 @@ const _TRANSLATIONS = {
     my_tasks: "Mine oppgaver",
     add_placeholder: "Legg til ny oppgave...",
     add_failed: "Kunne ikke legge til oppgaven",
+    duplicate_failed: "Oppgaven kunne ikke dupliseres",
     dialog_cancel: "Avbryt", dialog_add: "Legg til",
     filter_all: "Alle", filter_open: "\u00c5pne", filter_done: "Ferdige", filter_due_soon: "Snart",
     ed_show_due_soon_filter: "Snart-filter", ed_due_soon_days: "Dager fremover", ed_hide_overdue: "Skjul forfalte",
@@ -1304,6 +1316,7 @@ const _TRANSLATIONS = {
     my_tasks: "Omat teht\u00e4v\u00e4t",
     add_placeholder: "Lis\u00e4\u00e4 uusi teht\u00e4v\u00e4...",
     add_failed: "Tehtävän lisääminen epäonnistui",
+    duplicate_failed: "Tehtävän monistaminen epäonnistui",
     dialog_cancel: "Peruuta", dialog_add: "Lis\u00e4\u00e4",
     filter_all: "Kaikki", filter_open: "Avoimet", filter_done: "Valmiit", filter_due_soon: "Pian",
     ed_show_due_soon_filter: "Pian-suodatin", ed_due_soon_days: "P\u00e4ivi\u00e4 eteenp\u00e4in", ed_hide_overdue: "Piilota my\u00f6h\u00e4ss\u00e4 olevat",
@@ -1404,6 +1417,7 @@ const _TRANSLATIONS = {
     my_tasks: "Feladataim",
     add_placeholder: "\u00daj feladat hozz\u00e1ad\u00e1sa...",
     add_failed: "A feladat hozzáadása nem sikerült",
+    duplicate_failed: "A feladat nem másolható",
     dialog_cancel: "M\u00e9gse", dialog_add: "Hozz\u00e1ad",
     filter_all: "\u00d6sszes", filter_open: "Nyitott", filter_done: "K\u00e9sz", filter_due_soon: "Hamarosan",
     ed_show_due_soon_filter: "Hamarosan sz\u0171r\u0151", ed_due_soon_days: "Napok el\u0151re", ed_hide_overdue: "Lej\u00e1rtak elrejt\u00e9se",
@@ -1504,6 +1518,7 @@ const _TRANSLATIONS = {
     my_tasks: "Meine Aufgaben",
     add_placeholder: "Neue Aufgabe hinzuf\u00fcgen...",
     add_failed: "Aufgabe konnte nicht hinzugefügt werden",
+    duplicate_failed: "Aufgabe konnte nicht dupliziert werden",
     dialog_cancel: "Abbrechen", dialog_add: "Hinzuf\u00fcgen",
     filter_all: "Alle",
     filter_open: "Offen",
@@ -6732,20 +6747,32 @@ class HomeTasksCard extends HTMLElement {
   }
 
   async _duplicateTask(task, colIdx) {
-    let newTask;
     if (this._isExternalCol(colIdx)) {
-      newTask = await this._callWs("home_tasks/duplicate_external_task", {
-        entity_id: this._colEntityId(colIdx),
-        task_uid: task.id,
-        assigned_person: task.assigned_person ?? null,
-      });
-    } else {
-      newTask = await this._callWs("home_tasks/duplicate_task", {
-        list_id: this._colListId(colIdx),
-        task_id: task.id,
-        assigned_person: task.assigned_person ?? null,
-      });
+      // A linked list refuses far more often than a native one (read-only
+      // calendar, provider rate limit), so a failure has to be said out
+      // loud. A timeout is not a refusal: the provider may hold the copy,
+      // and the reload will show it either way.
+      let err = null;
+      try {
+        await this._callWs("home_tasks/duplicate_external_task", {
+          entity_id: this._colEntityId(colIdx),
+          task_uid: task.id,
+          assigned_person: task.assigned_person ?? null,
+        }, { rethrow: true });
+      } catch (e) {
+        err = e;
+      }
+      if (err && !this._isWsTimeout(err)) this._showError(this._t("duplicate_failed"));
+      // The provider decides where the copy lands and when its entity
+      // reflects it - same delayed reload as every other linked-list edit.
+      this._reloadExternal(colIdx);
+      return;
     }
+    const newTask = await this._callWs("home_tasks/duplicate_task", {
+      list_id: this._colListId(colIdx),
+      task_id: task.id,
+      assigned_person: task.assigned_person ?? null,
+    });
     if (!newTask) return;
     // Reload once — the backend placed the copy right after the source and
     // renumbered, so we fetch the authoritative order with a single render

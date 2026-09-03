@@ -15,7 +15,11 @@ from homeassistant.helpers.event import async_track_time_change
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .external_view import async_subscribe_external, get_external_tasks_snapshot
+from .external_view import (
+    async_subscribe_external,
+    get_external_tasks_snapshot,
+    provider_available,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,7 +125,7 @@ class ExternalOverdueBinarySensor(_BaseOverdueBinarySensor):
     @property
     def available(self) -> bool:
         """Unavailable while the provider's entity is not there to read."""
-        return self.hass.states.get(self._source_entity_id) is not None
+        return provider_available(self.hass, self._source_entity_id)
 
     def _get_tasks(self) -> list[dict]:
         return get_external_tasks_snapshot(self.hass, self._source_entity_id)

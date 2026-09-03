@@ -18,6 +18,18 @@ MAX_SECTION_NAME_LENGTH = 100
 
 # --- Recurrence ---
 VALID_RECURRENCE_UNITS = ("hours", "days", "weeks", "months", "years")
+
+# Every user-facing recurrence field, in one place. Copying a task (move,
+# duplicate) walks this list; a new field added here travels everywhere.
+# recurrence_remaining_count is bookkeeping, not configuration, and is
+# derived from recurrence_max_count by whoever creates the task.
+RECURRENCE_FIELDS = (
+    "recurrence_enabled", "recurrence_type", "recurrence_value", "recurrence_unit",
+    "recurrence_weekdays", "recurrence_start_date", "recurrence_time",
+    "recurrence_end_type", "recurrence_end_date", "recurrence_max_count",
+    "recurrence_month_pattern", "recurrence_day_of_month", "recurrence_nth_week",
+    "recurrence_anniversary",
+)
 RECURRENCE_UNIT_SECONDS = {
     "hours": 3600,
     "days": 86400,

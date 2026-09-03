@@ -660,7 +660,7 @@ For each list — native and linked — the integration creates:
 - **Sensor** (`sensor.{list_name}_open_tasks`): Number of open tasks. Attributes: `open_task_titles`, `overdue_count`, `total_tasks`.
 - **Binary Sensor** (`binary_sensor.{list_name}_overdue`): `on` if any open task is past its due date. Attributes: `overdue_tasks` (title, due date, assignee), `overdue_count`. Re-evaluated at midnight, so a task due today turns overdue without anyone touching the list.
 
-On a linked list the sensor and binary sensor read the provider's items together with what Home Tasks keeps for them (assignee, and the due date when the provider cannot hold one), and follow both the provider's entity and edits made in the card. They are `unavailable` until the provider's todo entity exists.
+On a linked list the sensor and binary sensor read the provider's items together with what Home Tasks keeps for them (assignee, and the due date when the provider cannot hold one), and follow both the provider's entity and edits made in the card. They are `unavailable` while the provider's todo entity is missing or itself unavailable, so a provider outage never reads as an empty list.
 
 ### Example Automations
 

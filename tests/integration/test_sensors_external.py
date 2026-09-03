@@ -72,10 +72,12 @@ async def linked(hass: HomeAssistant, freezer, patch_add_extra_js_url):
 
 
 async def _provider_now_holds(hass: HomeAssistant, mock_entity, items: list[TodoItem]) -> None:
-    """The provider's items changed and its entity announced it, as a real one does."""
+    """The provider's items changed and its entity wrote its state, as a real
+    one does: the open-item count, nothing else. When the count is the same
+    HA only *reports* the write, it does not count as a change."""
     mock_entity.todo_items = items
     open_count = sum(1 for i in items if i.status != TodoItemStatus.COMPLETED)
-    hass.states.async_set(EXT_ENTITY, str(open_count), force_update=True)
+    hass.states.async_set(EXT_ENTITY, str(open_count))
     await hass.async_block_till_done()
 
 
@@ -130,6 +132,19 @@ async def test_the_sensor_follows_the_provider(hass: HomeAssistant, linked) -> N
 
     await _provider_now_holds(hass, entity, [_done("u1", "Milk")])
     assert int(hass.states.get(_sensor_id(hass, entry)).state) == 0
+
+
+async def test_an_edit_that_keeps_the_count_still_gets_through(hass: HomeAssistant, linked) -> None:
+    """A rename or a moved due date changes no state on a todo entity - the
+    state is the count - so the sensors listen to the report as well (review)."""
+    entry, _overlay, entity = linked
+    await _provider_now_holds(hass, entity, [_open("u1", "Milk")])
+    assert hass.states.get(_sensor_id(hass, entry)).attributes["open_task_titles"] == ["Milk"]
+
+    await _provider_now_holds(hass, entity, [_open("u1", "Oat milk", due=_today() - timedelta(days=1))])
+
+    assert hass.states.get(_sensor_id(hass, entry)).attributes["open_task_titles"] == ["Oat milk"]
+    assert hass.states.get(_binary_id(hass, entry)).state == "on"
 
 
 # ---------------------------------------------------------------------------
@@ -229,6 +244,30 @@ async def test_unavailable_until_the_provider_entity_shows_up(
 
     assert hass.states.get(_sensor_id(hass, entry)).state == "1"
     assert hass.states.get(_binary_id(hass, entry)).state == "off"
+
+
+async def test_a_provider_that_is_down_takes_the_sensors_down_with_it(
+    hass: HomeAssistant, linked
+) -> None:
+    """HA keeps an 'unavailable' state object for a provider that is not
+    answering (and writes one for every entity at boot). Reading through
+    it yields nothing, and nothing reported with confidence is wrong (review)."""
+    entry, _overlay, entity = linked
+    yesterday = _today() - timedelta(days=1)
+    await _provider_now_holds(hass, entity, [_open("u1", "Late", due=yesterday)])
+    assert hass.states.get(_binary_id(hass, entry)).state == "on"
+    calendar_id = er.async_get(hass).async_get_entity_id("calendar", DOMAIN, f"{entry.entry_id}_calendar")
+
+    hass.states.async_set(EXT_ENTITY, "unavailable")
+    await hass.async_block_till_done()
+
+    assert hass.states.get(_sensor_id(hass, entry)).state == "unavailable"
+    assert hass.states.get(_binary_id(hass, entry)).state == "unavailable"
+    assert hass.states.get(calendar_id).state == "unavailable"
+
+    hass.states.async_set(EXT_ENTITY, "1")
+    await hass.async_block_till_done()
+    assert hass.states.get(_binary_id(hass, entry)).state == "on", "back as it was"
 
 
 async def test_unloading_the_entry_takes_the_sensors_with_it(hass: HomeAssistant, linked) -> None:

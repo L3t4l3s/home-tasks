@@ -41,9 +41,13 @@ class _Adapter(GenericAdapter):
         self.created: list[dict] = []
         self.sub_tasks: list[tuple[str, str]] = []
         self._next = 0
+        # A provider that creates the item but never says which one it is.
+        self.lose_uid = False
 
     async def async_create_task(self, fields):
         self.created.append(dict(fields))
+        if self.lose_uid:
+            return None, {k: v for k, v in fields.items() if k != "title"}
         self._next += 1
         uid = f"uid-copy-{self._next}"
         # The provider now holds the copy, so later reads must see it.
@@ -122,6 +126,70 @@ async def test_a_linked_list_that_keeps_to_itself_stays_out_of_the_backfill(
     await library.async_backfill()
 
     assert library.find("Take out the bins") is None
+
+
+async def test_the_backfill_reads_only_lists_that_have_a_picture_to_learn(
+    hass: HomeAssistant, linked
+) -> None:
+    """A remote provider read costs a network call; a list whose overlay holds
+    no picture has nothing to teach and is not read at all. One that does
+    but cannot be read is remembered for another try (review)."""
+    _entry, overlay, _adapter = linked
+    hass.data["todo"] = None  # every read fails from here on
+    library = async_get_image_library(hass)
+    await library.async_load()
+
+    await library.async_backfill()
+    assert library.unread_lists == set(), "nothing to learn, so nothing was read"
+
+    await overlay.async_set_overlay("uid-1", image_url="/local/home_tasks/bins.png")
+    await library.async_backfill()
+    assert library.unread_lists == {EXT_ENTITY}
+
+
+async def test_the_backfill_tries_again_while_a_list_stays_unread(
+    hass: HomeAssistant, freezer
+) -> None:
+    from datetime import timedelta
+    from unittest.mock import AsyncMock
+
+    from homeassistant.util import dt as dt_util
+    from pytest_homeassistant_custom_component.common import async_fire_time_changed
+
+    from custom_components.home_tasks import (
+        BACKFILL_RETRIES,
+        BACKFILL_RETRY_DELAY,
+        _async_load_image_library,
+    )
+    from custom_components.home_tasks.image_library import async_register_image_library
+
+    async_register_image_library(hass)
+    library = async_get_image_library(hass)
+    library.async_load = AsyncMock()
+    outcomes = iter([{"todo.slow"}, {"todo.slow"}, set()])
+
+    async def _backfill():
+        library.unread_lists = next(outcomes)
+        return 0
+
+    library.async_backfill = AsyncMock(side_effect=_backfill)
+    await _async_load_image_library(hass)
+
+    async def _tick(seconds):
+        target = dt_util.utcnow() + timedelta(seconds=seconds)
+        freezer.move_to(target)
+        async_fire_time_changed(hass, target)
+        await hass.async_block_till_done()
+
+    await _tick(61)
+    assert library.async_backfill.await_count == 1
+    await _tick(BACKFILL_RETRY_DELAY + 1)
+    assert library.async_backfill.await_count == 2, "still unread, so it came back"
+    await _tick(BACKFILL_RETRY_DELAY + 1)
+    assert library.async_backfill.await_count == 3, "the third read succeeded"
+    for _ in range(BACKFILL_RETRIES):
+        await _tick(BACKFILL_RETRY_DELAY + 1)
+    assert library.async_backfill.await_count == 3, "and then it stopped"
 
 
 # ---------------------------------------------------------------------------
@@ -236,6 +304,65 @@ async def test_duplicate_hands_sub_tasks_to_a_provider_that_syncs_them(
     new_uid = msg["result"]["uid"]
     assert adapter.sub_tasks == [(new_uid, "Bring the bin back")]
     assert overlay.get_overlay(new_uid)["sub_items"] == [], "not kept locally as well"
+
+
+async def test_duplicate_is_the_source_again_not_a_new_task_in_defaults(
+    hass: HomeAssistant, hass_ws_client, linked
+) -> None:
+    """A native duplicate copies verbatim; the linked one must not pick up
+    the list's default assignee, tags or section on the way through the
+    create path (review)."""
+    _entry, overlay, adapter = linked
+    section = await overlay.async_add_section("Default corner")
+    await overlay.async_set_defaults(
+        assignee="person.anna", tags=["chore"], priority=3, reminders=[30],
+        section_id=section["id"],
+    )
+    client = await hass_ws_client(hass)
+
+    msg = await _duplicate(hass, client, 904, assigned_person=None)
+
+    assert msg["success"] is True, msg
+    sent = adapter.created[0]
+    assert sent["assigned_person"] is None, "nobody means nobody"
+    assert "tags" not in sent and "priority" not in sent and "reminders" not in sent
+    copy = overlay.get_overlay(msg["result"]["uid"])
+    assert copy["section_id"] is None, "the source had no section, so neither has the copy"
+
+
+async def test_duplicate_of_a_plain_task_carries_no_recurrence_clutter(
+    hass: HomeAssistant, hass_ws_client, linked
+) -> None:
+    """The merged view fills recurrence_type='interval' and friends on every
+    task; those defaults are not the source's data and must not end up in
+    the copy's overlay (review)."""
+    _entry, overlay, adapter = linked
+    client = await hass_ws_client(hass)
+
+    msg = await _duplicate(hass, client, 905)
+
+    sent = adapter.created[0]
+    assert not [k for k in sent if k.startswith("recurrence_")], sent
+    raw = overlay._data["overlays"].get(msg["result"]["uid"], {})
+    assert not [k for k in raw if k.startswith("recurrence_")], raw
+
+
+async def test_duplicate_says_so_when_the_provider_keeps_the_id_to_itself(
+    hass: HomeAssistant, hass_ws_client, linked
+) -> None:
+    """The bare copy exists, but section, picture and sub-tasks could not
+    follow - that is a failure to report, not a success with uid null."""
+    _entry, overlay, adapter = linked
+    section = await overlay.async_add_section("Outdoors")
+    await overlay.async_set_overlay("uid-1", section_id=section["id"])
+    adapter.lose_uid = True
+    client = await hass_ws_client(hass)
+
+    msg = await _duplicate(hass, client, 906)
+
+    assert msg["success"] is False, msg
+    assert "did not report its id" in msg["error"]["message"]
+    assert len(adapter.created) == 1, "the provider was asked exactly once"
 
 
 async def test_duplicating_a_task_that_is_not_there_says_so(

@@ -125,6 +125,8 @@ class ImageLibrary:
         self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
         # url -> {"aliases": [normalised titles], "last_used": iso}
         self._data: dict = {"entries": {}}
+        # Linked lists the last backfill could not read (provider not up yet).
+        self.unread_lists: set[str] = set()
 
     # -- persistence ---------------------------------------------------------
 
@@ -222,6 +224,7 @@ class ImageLibrary:
         from .websocket_api import _async_get_external_tasks, _is_real_image
 
         learned = 0
+        self.unread_lists = set()
         for store in list(self.hass.data.get(DOMAIN, {}).values()):
             if not hasattr(store, "get_settings"):
                 continue
@@ -240,10 +243,18 @@ class ImageLibrary:
                 entity_id = getattr(store, "entity_id", None)
                 if not entity_id:
                     continue
+                # Nothing to learn from a list whose overlay holds no picture,
+                # and for a remote provider the read is a network call.
+                if not any(
+                    _is_real_image(o.get("image_url"))
+                    for o in store.get_all_overlays().values()
+                ):
+                    continue
                 try:
                     tasks, _overlay = await _async_get_external_tasks(self.hass, entity_id)
                 except Exception as err:  # noqa: BLE001
                     _LOGGER.debug("Image library backfill skipped %s: %s", entity_id, err)
+                    self.unread_lists.add(entity_id)
                     continue
             for task in tasks:
                 title, url = task.get("title"), task.get("image_url")

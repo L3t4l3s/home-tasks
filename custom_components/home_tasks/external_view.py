@@ -13,10 +13,26 @@ from __future__ import annotations
 from collections.abc import Callable
 import logging
 
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    async_track_state_change_event,
+    async_track_state_report_event,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def provider_available(hass: HomeAssistant, entity_id: str) -> bool:
+    """Whether the provider's todo entity is there and answering.
+
+    HA writes an 'unavailable' placeholder for every registered entity at
+    start, and an integration that is down keeps one - a state object alone
+    proves nothing. Reading through that yields an empty list, and an empty
+    list reported with confidence is worse than no answer.
+    """
+    state = hass.states.get(entity_id)
+    return state is not None and state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
 
 
 def get_external_tasks_snapshot(hass: HomeAssistant, entity_id: str) -> list[dict]:
@@ -55,8 +71,12 @@ def async_subscribe_external(
         pass  # no overlay yet - the provider's state changes still get through
 
     @callback
-    def _on_state_change(_event) -> None:
+    def _on_provider_event(_event) -> None:
         refresh()
 
-    unsubs.append(async_track_state_change_event(hass, [entity_id], _on_state_change))
+    # A todo entity's state is its open-item count and nothing else, so a
+    # due date moved or a title renamed in the provider's app changes no
+    # state - HA only reports it. Both events are needed.
+    unsubs.append(async_track_state_change_event(hass, [entity_id], _on_provider_event))
+    unsubs.append(async_track_state_report_event(hass, [entity_id], _on_provider_event))
     return unsubs
