@@ -88,15 +88,39 @@ async def test_binary_sensor_overdue_tasks_attribute(
     assert overdue_tasks[0]["due_date"] == "2026-04-01"
 
 
-# ---------------------------------------------------------------------------
-# External entries should not create binary sensor entities
-# ---------------------------------------------------------------------------
-
-
-async def test_binary_sensor_not_created_for_external_entry(
-    hass: HomeAssistant,
+async def test_binary_sensor_notices_midnight(
+    hass: HomeAssistant, freezer, mock_config_entry, store
 ) -> None:
-    """External entries do not create a binary_sensor entity."""
+    """A task due today is overdue tomorrow - without anyone touching the list."""
+    from datetime import timedelta
+
+    from homeassistant.util import dt as dt_util
+    from pytest_homeassistant_custom_component.common import async_fire_time_changed
+
+    task = await store.async_add_task("Due today")
+    await store.async_update_task(task["id"], due_date=dt_util.now().date().isoformat())
+    await hass.async_block_till_done()
+
+    entity_id = _get_binary_sensor_entity_id(hass, f"{mock_config_entry.entry_id}_overdue")
+    assert hass.states.get(entity_id).state == "off"
+
+    next_midnight = dt_util.start_of_local_day(dt_util.now()) + timedelta(days=1, seconds=1)
+    freezer.move_to(next_midnight)
+    async_fire_time_changed(hass, next_midnight)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "on"
+
+
+# ---------------------------------------------------------------------------
+# External entries get one too (the details live in test_sensors_external.py)
+# ---------------------------------------------------------------------------
+
+
+async def test_binary_sensor_created_for_external_entry(
+    hass: HomeAssistant, patch_add_extra_js_url
+) -> None:
+    """A linked list gets an overdue sensor under the same unique id scheme."""
     from pytest_homeassistant_custom_component.common import MockConfigEntry
 
     ext_entry = MockConfigEntry(
@@ -109,4 +133,4 @@ async def test_binary_sensor_not_created_for_external_entry(
     await hass.async_block_till_done()
 
     entity_id = _get_binary_sensor_entity_id(hass, f"{ext_entry.entry_id}_overdue")
-    assert entity_id is None
+    assert entity_id == "binary_sensor.bsensor_ext_overdue"

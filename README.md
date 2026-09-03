@@ -46,7 +46,7 @@ Display tasks from **any HA todo integration** alongside native Home Tasks lists
 - For **Todoist**: full bidirectional sync via direct API access — see [Todoist Deep Integration](#todoist-deep-integration) below
 - The card editor **auto-configures visibility** based on the provider's capabilities when you select an external list
 - You can manually enable overlay fields for external lists if you want them locally
-- **Full feature parity**: all [automation events](#events) fire for external lists too (created, completed, reopened, due, overdue, assigned, reminder), they get a [calendar entity](#entities), and **recurrence runs locally** for providers that don't manage it themselves — completing a recurring task reopens it on schedule (for providers that *do* own recurrence, like Todoist, theirs is used instead)
+- **Full feature parity**: all [automation events](#events) fire for external lists too (created, completed, reopened, due, overdue, assigned, reminder), they get the same [calendar, open-tasks and overdue entities](#entities), and **recurrence runs locally** for providers that don't manage it themselves — completing a recurring task reopens it on schedule (for providers that *do* own recurrence, like Todoist, theirs is used instead)
 
 #### Verified Providers
 
@@ -653,12 +653,14 @@ Target by single task, person, tag, or a combination.
 
 ### Entities
 
-For each native list, the integration creates:
+For each list — native and linked — the integration creates:
 
-- **Todo** (`todo.{list_name}`): Standard HA todo entity — works with the Companion App, Apple Watch, Google Home, and any HA automation that targets `todo.*` entities.
+- **Todo** (`todo.{list_name}`, native lists only — a linked list already has its provider's): Standard HA todo entity — works with the Companion App, Apple Watch, Google Home, and any HA automation that targets `todo.*` entities.
 - **Calendar** (`calendar.{list_name}_calendar`): Tasks with a due date appear as calendar events. Tasks with only a due date show as all-day events; tasks with both due date and due time show as 1-hour timed events with a rich description (notes, priority, assignee, tags, sub-task progress, reminders). **Recurring tasks expand onto every occurrence** in the viewed range (mapped to an RFC-5545 RRULE — daily, weekly on selected weekdays, monthly by day-of-month/Nth-weekday, yearly anniversary). External lists get a calendar entity too. A calendar needs a date to anchor on, so tasks without a due date aren't shown (hourly recurrence has no calendar equivalent and shows as a single event).
-- **Sensor** (`sensor.{list_name}_open_tasks`): Number of open tasks. Attributes: `open_task_titles`, `overdue_count`.
-- **Binary Sensor** (`binary_sensor.{list_name}_overdue`): `on` if any task is past its due date.
+- **Sensor** (`sensor.{list_name}_open_tasks`): Number of open tasks. Attributes: `open_task_titles`, `overdue_count`, `total_tasks`.
+- **Binary Sensor** (`binary_sensor.{list_name}_overdue`): `on` if any open task is past its due date. Attributes: `overdue_tasks` (title, due date, assignee), `overdue_count`. Re-evaluated at midnight, so a task due today turns overdue without anyone touching the list.
+
+On a linked list the sensor and binary sensor read the provider's items together with what Home Tasks keeps for them (assignee, and the due date when the provider cannot hold one), and follow both the provider's entity and edits made in the card. They are `unavailable` until the provider's todo entity exists.
 
 ### Example Automations
 

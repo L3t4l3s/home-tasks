@@ -32,7 +32,9 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["todo", "sensor", "binary_sensor", "calendar"]
 # External entries only get a calendar entity; their todo/sensor data is owned
 # by the source integration.
-EXTERNAL_PLATFORMS = ["calendar"]
+# A linked list gets the same entities as a native one, except the todo
+# entity - that one is the provider's own.
+EXTERNAL_PLATFORMS = ["calendar", "sensor", "binary_sensor"]
 CARD_URL = "/home_tasks/home-tasks-card.js"
 DATA_SETUP_DONE = f"{DOMAIN}_setup_done"
 DATA_RESOURCE_UNSUB = f"{DOMAIN}_resource_unsub"
@@ -1987,9 +1989,9 @@ async def _async_setup_external_entry(hass: HomeAssistant, entry: ConfigEntry) -
         entity_id,
         adapter.provider_type,
     )
-    # External entries don't forward todo/sensor/binary_sensor (those are owned
-    # by the source integration) — but they DO get a calendar entity that
-    # projects their due/recurring tasks (#27).
+    # External entries don't forward the todo platform (the provider owns that
+    # entity) — but they DO get a calendar entity that projects their
+    # due/recurring tasks (#27) and the open-tasks / overdue sensors.
     await hass.config_entries.async_forward_entry_setups(entry, EXTERNAL_PLATFORMS)
 
     _schedule_startup_due_check(hass)

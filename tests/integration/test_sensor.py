@@ -81,14 +81,14 @@ async def test_sensor_overdue_count_attribute(
 
 
 # ---------------------------------------------------------------------------
-# External entries should not create sensor entities
+# External entries get one too (the details live in test_sensors_external.py)
 # ---------------------------------------------------------------------------
 
 
-async def test_sensor_not_created_for_external_entry(
-    hass: HomeAssistant,
+async def test_sensor_created_for_external_entry(
+    hass: HomeAssistant, patch_add_extra_js_url
 ) -> None:
-    """External entries do not create a sensor entity."""
+    """A linked list gets an open-tasks sensor under the same unique id scheme."""
     from pytest_homeassistant_custom_component.common import MockConfigEntry
 
     ext_entry = MockConfigEntry(
@@ -101,4 +101,4 @@ async def test_sensor_not_created_for_external_entry(
     await hass.async_block_till_done()
 
     entity_id = _get_sensor_entity_id(hass, f"{ext_entry.entry_id}_open_tasks")
-    assert entity_id is None
+    assert entity_id == "sensor.sensor_ext_open_tasks"

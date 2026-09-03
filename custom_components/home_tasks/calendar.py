@@ -23,11 +23,11 @@ from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
 
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
+from .external_view import async_subscribe_external, get_external_tasks_snapshot
 
 # RFC-5545 weekday codes indexed by Python weekday() (Mon=0 .. Sun=6)
 _WEEKDAY_CODES = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"]
@@ -383,32 +383,14 @@ class ExternalHomeTasksCalendarEntity(_BaseHomeTasksCalendar):
 
     async def async_added_to_hass(self) -> None:
         """Refresh when the overlay changes or the source entity updates."""
-        try:
-            from .websocket_api import _get_overlay_store
-            overlay_store = _get_overlay_store(self.hass, self._source_entity_id)
-            self.async_on_remove(overlay_store.async_add_listener(self._refresh))
-        except Exception:  # noqa: BLE001
-            pass
-        self.async_on_remove(
-            async_track_state_change_event(
-                self.hass, [self._source_entity_id], self._refresh_event
-            )
-        )
+        for unsub in async_subscribe_external(
+            self.hass, self._source_entity_id, self._refresh
+        ):
+            self.async_on_remove(unsub)
 
     @callback
     def _refresh(self) -> None:
         self.async_write_ha_state()
 
-    @callback
-    def _refresh_event(self, _event) -> None:
-        self.async_write_ha_state()
-
     def _get_tasks(self) -> list[dict]:
-        try:
-            from .provider_adapters import _get_external_todo_items
-            from .websocket_api import _get_overlay_store, _merge_tasks_with_overlays
-            overlay_store = _get_overlay_store(self.hass, self._source_entity_id)
-            items = _get_external_todo_items(self.hass, self._source_entity_id)
-            return _merge_tasks_with_overlays(items, overlay_store)
-        except Exception:  # noqa: BLE001
-            return []
+        return get_external_tasks_snapshot(self.hass, self._source_entity_id)
