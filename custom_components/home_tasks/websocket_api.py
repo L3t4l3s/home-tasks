@@ -13,6 +13,7 @@ from .image_library import async_get_image_library
 from .image_queue import PLACEHOLDER_IMAGE_URLS, async_get_image_queue
 from .const import DOMAIN, MAX_IMAGE_URL_LENGTH, MAX_REORDER_IDS, MAX_RECURRENCE_VALUE, MAX_REMINDER_OFFSET_MINUTES, MAX_REMINDERS_PER_TASK, MAX_SUB_TASKS_PER_TASK, MAX_TAGS_PER_TASK, MAX_TITLE_LENGTH, VALID_RECURRENCE_UNITS
 from .overlay_store import ExternalTaskOverlayStore, OVERLAY_FIELDS
+from .store import validate_assigned_person
 from .provider_adapters import ProviderAdapter, GenericAdapter, _get_external_todo_items
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,6 +73,7 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
     # Adapter-routed external commands
     websocket_api.async_register_command(hass, ws_create_external_task)
     websocket_api.async_register_command(hass, ws_update_external_task)
+    websocket_api.async_register_command(hass, ws_duplicate_external_task)
     websocket_api.async_register_command(hass, ws_reorder_external_tasks)
     # Section commands (work for both native and external lists)
     websocket_api.async_register_command(hass, ws_get_sections)
@@ -1699,6 +1701,88 @@ async def async_update_external_task(hass, entity_id: str, task_uid: str, fields
                     task_uid, completed_at=None
                 )
     return unsynced or {}
+
+
+async def async_duplicate_external_task(
+    hass, entity_id: str, task_uid: str, assigned_person: str | None = None
+) -> str | None:
+    """An independent copy of a task on a linked list, optionally reassigned.
+
+    Mirrors HomeTasksStore.async_duplicate_task: everything the source has
+    comes along - title, notes, due, priority, tags, reminders, recurrence,
+    section, picture, and fresh open copies of the sub-tasks - and the copy
+    starts open. The provider decides where it lands; "right after the
+    source" is not a promise a remote list can keep.
+    """
+    tasks, overlay_store = await _async_get_external_tasks(hass, entity_id)
+    source = next((t for t in tasks if str(t.get("id")) == str(task_uid)), None)
+    if source is None:
+        raise ValueError(f"Task {task_uid} not found in {entity_id}")
+
+    fields: dict = {"title": source.get("title") or ""}
+    for key in ("notes", "due_date", "due_time", "priority", "tags", "reminders"):
+        value = source.get(key)
+        if value not in (None, "", []):
+            fields[key] = list(value) if isinstance(value, list) else value
+    for key in (
+        "recurrence_enabled", "recurrence_type", "recurrence_value", "recurrence_unit",
+        "recurrence_weekdays", "recurrence_start_date", "recurrence_time",
+        "recurrence_end_type", "recurrence_end_date", "recurrence_max_count",
+        "recurrence_month_pattern", "recurrence_day_of_month", "recurrence_nth_week",
+        "recurrence_anniversary",
+    ):
+        value = source.get(key)
+        if value not in (None, "", []):
+            fields[key] = list(value) if isinstance(value, list) else value
+    if source.get("recurrence_max_count") is not None:
+        fields["recurrence_remaining_count"] = source["recurrence_max_count"]
+    # The explicit assignee wins, including "nobody" - that is what
+    # duplicate-for-someone-else is for.
+    fields["assigned_person"] = validate_assigned_person(assigned_person)
+
+    new_uid = await async_create_external_task(hass, entity_id, fields)
+    if not new_uid:
+        return None
+
+    # What the create path does not carry: the section and the picture are
+    # ours alone, the sub-tasks go wherever this provider keeps them.
+    extras: dict = {}
+    if source.get("section_id"):
+        extras["section_id"] = source["section_id"]
+    if _is_real_image(source.get("image_url")):
+        extras["image_url"] = source["image_url"]
+    if extras:
+        await overlay_store.async_set_overlay(new_uid, **extras)
+    adapter = _get_adapter(hass, entity_id)
+    for sub in source.get("sub_items") or []:
+        title = sub.get("title")
+        if not title:
+            continue
+        if adapter and adapter.capabilities.can_sync_sub_items:
+            await adapter.async_add_sub_task(new_uid, title)
+        else:
+            await overlay_store.async_add_sub_task(new_uid, title)
+    return new_uid
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "home_tasks/duplicate_external_task",
+        vol.Required("entity_id"): _val_entity_id,
+        vol.Required("task_uid"): _val_task_uid,
+        vol.Optional("assigned_person"): vol.Any(str, None),
+    }
+)
+@websocket_api.async_response
+async def ws_duplicate_external_task(hass, connection, msg):
+    """Duplicate a task on a linked list, optionally reassigning it."""
+    try:
+        new_uid = await async_duplicate_external_task(
+            hass, msg["entity_id"], msg["task_uid"], msg.get("assigned_person")
+        )
+        connection.send_result(msg["id"], {"uid": new_uid})
+    except Exception as err:
+        _handle_error(connection, msg["id"], err)
 
 
 @websocket_api.websocket_command(

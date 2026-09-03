@@ -219,18 +219,33 @@ class ImageLibrary:
         the next time that title comes up. Only lists that take part in the
         shared pool contribute, same as everywhere else.
         """
-        from .websocket_api import _is_real_image
+        from .websocket_api import _async_get_external_tasks, _is_real_image
 
         learned = 0
         for store in list(self.hass.data.get(DOMAIN, {}).values()):
-            if not hasattr(store, "tasks") or not hasattr(store, "get_settings"):
+            if not hasattr(store, "get_settings"):
                 continue
             try:
                 if not store.get_settings()["share_images"]:
                     continue
             except Exception:  # noqa: BLE001
                 continue
-            for task in store.tasks:
+            if hasattr(store, "tasks"):
+                tasks = list(store.tasks)
+            else:
+                # A linked list: its pictures live in the overlay, and the
+                # titles with the provider - the merged view has both. One
+                # provider being down must not stop the others from being
+                # learned.
+                entity_id = getattr(store, "entity_id", None)
+                if not entity_id:
+                    continue
+                try:
+                    tasks, _overlay = await _async_get_external_tasks(self.hass, entity_id)
+                except Exception as err:  # noqa: BLE001
+                    _LOGGER.debug("Image library backfill skipped %s: %s", entity_id, err)
+                    continue
+            for task in tasks:
                 title, url = task.get("title"), task.get("image_url")
                 if not title or not _is_real_image(url):
                     continue

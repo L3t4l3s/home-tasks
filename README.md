@@ -336,7 +336,9 @@ Every task service — `add_task`, `update_task`, `complete_task`, `assign_task`
 `reopen_task` — works on a **linked external list** as well as a native one: name it
 with `list_name` as usual, or point at its todo entity with `entity_id`. The change
 takes the same route as the card, so the provider stores what it can (Todoist labels,
-for example) and the local overlay keeps the rest.
+for example) and the local overlay keeps the rest. `move_task` names a linked source with
+`source_entity_id` plus either `task_id` or `task_title`. Duplicating a task works on
+linked lists too, from the task's detail view.
 
 ### List defaults
 

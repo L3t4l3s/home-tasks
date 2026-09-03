@@ -6699,8 +6699,9 @@ class HomeTasksCard extends HTMLElement {
     }
 
     // Duplicate: create an identical copy (same assignee, recurrence, tags,
-    // notes, due date — everything). Native lists only.
-    if (!this._isExternalCol(colIdx)) {
+    // notes, due date — everything). Linked lists too: the provider gets the
+    // copy, the overlay keeps what the provider cannot.
+    {
       const dupBtn = this._el("button", {
         className: "duplicate-task-btn",
         textContent: this._t("duplicate_task"),
@@ -6731,12 +6732,20 @@ class HomeTasksCard extends HTMLElement {
   }
 
   async _duplicateTask(task, colIdx) {
-    const listId = this._colListId(colIdx);
-    const newTask = await this._callWs("home_tasks/duplicate_task", {
-      list_id: listId,
-      task_id: task.id,
-      assigned_person: task.assigned_person ?? null,
-    });
+    let newTask;
+    if (this._isExternalCol(colIdx)) {
+      newTask = await this._callWs("home_tasks/duplicate_external_task", {
+        entity_id: this._colEntityId(colIdx),
+        task_uid: task.id,
+        assigned_person: task.assigned_person ?? null,
+      });
+    } else {
+      newTask = await this._callWs("home_tasks/duplicate_task", {
+        list_id: this._colListId(colIdx),
+        task_id: task.id,
+        assigned_person: task.assigned_person ?? null,
+      });
+    }
     if (!newTask) return;
     // Reload once — the backend placed the copy right after the source and
     // renumbered, so we fetch the authoritative order with a single render

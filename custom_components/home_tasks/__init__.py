@@ -1674,9 +1674,15 @@ def _async_register_services(hass: HomeAssistant) -> None:
         if src_entity:
             task_id = call.data.get("task_id")
             if not task_id:
-                raise ServiceValidationError(
-                    "task_id is required when source_entity_id is used"
-                )
+                # By title, like every other service and like a native source.
+                if not call.data.get("task_title"):
+                    raise ServiceValidationError(
+                        "task_id or task_title is required when source_entity_id is used"
+                    )
+                try:
+                    task_id = (await _resolve_external_task(hass, src_entity, call.data))["id"]
+                except ValueError as err:
+                    raise ServiceValidationError(str(err)) from err
             src_list_id = None
         else:
             src_list_id, store = _resolve_store(hass, call.data)
