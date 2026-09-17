@@ -2019,6 +2019,44 @@ async def test_watchdog_leaves_live_timer_alone(
     assert store.get_task(task["id"])["completed"] is True
 
 
+async def test_watchdog_rearms_timer_that_never_fired(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """A timer whose target has passed is torn down and re-armed.
+
+    Presence of a timer is not proof of health: a suspended host, a clock
+    jump or a callback that never ran leaves a live handle aimed at a
+    moment that is already gone, and the task would stay completed forever.
+    """
+    from custom_components.home_tasks import (
+        _async_check_due_dates,
+        DATA_RECURRENCE_TIMERS,
+    )
+    from datetime import date as _date, datetime as _dt, timezone as _tz
+
+    task = await store.async_add_task("Timer present but dead")
+    await store.async_update_task(
+        task["id"],
+        due_date=_date.today().isoformat(),
+        recurrence_enabled=True,
+        recurrence_unit="days",
+        recurrence_value=1,
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+
+    timers = hass.data[DATA_RECURRENCE_TIMERS]
+    cancel, _target = timers[task["id"]]
+    # Same handle, but its target is well past the staleness grace period.
+    timers[task["id"]] = (cancel, _dt.now(_tz.utc) - timedelta(hours=2))
+    stored = store.get_task(task["id"])
+    stored["reopen_at"] = (_dt.now(_tz.utc) - timedelta(hours=2)).isoformat()
+
+    await _async_check_due_dates(hass)
+    await hass.async_block_till_done()
+    assert store.get_task(task["id"])["completed"] is False
+
+
 # ---------------------------------------------------------------------------
 # Pure-function edge cases for full coverage
 # ---------------------------------------------------------------------------
@@ -2423,6 +2461,100 @@ def test_weeks_no_weekdays_value_2() -> None:
         "recurrence_value": 2,
     }
     assert _local_target(task, completed) == (2026, 1, 19)
+
+
+def test_late_completion_does_not_skip_todays_occurrence() -> None:
+    """Ticking an overdue occurrence must not swallow today's.
+
+    A Mon-Fri chore due Tuesday, left undone, ticked Wednesday morning:
+    the completion closes TUESDAY's occurrence, so the next target is
+    Wednesday - today - not Thursday.  The target lies in the past, so the
+    caller reopens the task immediately and Wednesday actually shows up.
+    """
+    task = {
+        "recurrence_type": "interval",
+        "recurrence_unit": "weeks",
+        "recurrence_value": 1,
+        "recurrence_weekdays": [0, 1, 2, 3, 4],  # Mon-Fri
+        "due_date": "2026-01-06",                # Tuesday
+    }
+    completed = _local_dt(2026, 1, 7)            # Wednesday
+    assert _local_target(task, completed) == (2026, 1, 7)
+
+
+def test_on_time_completion_still_advances_past_today() -> None:
+    """The on-time path is unchanged: due today -> next occurrence."""
+    task = {
+        "recurrence_type": "interval",
+        "recurrence_unit": "weeks",
+        "recurrence_value": 1,
+        "recurrence_weekdays": [0, 1, 2, 3, 4],
+        "due_date": "2026-01-07",                # Wednesday = completion day
+    }
+    completed = _local_dt(2026, 1, 7)
+    assert _local_target(task, completed) == (2026, 1, 8)
+
+
+def test_late_completion_catches_up_to_today_in_one_step() -> None:
+    """Weeks of missed occurrences collapse into a single catch-up.
+
+    Without this the task would reopen on a long-past date and stay one
+    occurrence behind reality for every tick.
+    """
+    task = {
+        "recurrence_type": "interval",
+        "recurrence_unit": "weeks",
+        "recurrence_value": 1,
+        "recurrence_weekdays": [0, 1, 2, 3, 4],
+        "due_date": "2025-12-08",                # a month of missed weekdays
+    }
+    completed = _local_dt(2026, 1, 7)            # Wednesday
+    assert _local_target(task, completed) == (2026, 1, 7)
+
+
+def test_late_completion_when_today_is_not_an_occurrence_day() -> None:
+    """Catch-up stops at today, so a weekend tick lands on the next weekday."""
+    task = {
+        "recurrence_type": "interval",
+        "recurrence_unit": "weeks",
+        "recurrence_value": 1,
+        "recurrence_weekdays": [0, 1, 2, 3, 4],
+        "due_date": "2026-01-02",                # Friday
+    }
+    completed = _local_dt(2026, 1, 3)            # Saturday
+    assert _local_target(task, completed) == (2026, 1, 5)  # Monday
+
+
+def test_late_completion_preserves_interval_cadence() -> None:
+    """Catch-up walks the pattern, so an every-2-days chore keeps its rhythm.
+
+    Due Monday, ticked Tuesday: the next occurrence after Monday is
+    Wednesday, which is already >= today, so the alternation is untouched
+    (it must not be pulled back to Tuesday).
+    """
+    task = {
+        "recurrence_type": "interval",
+        "recurrence_unit": "days",
+        "recurrence_value": 2,
+        "due_date": "2026-01-05",                # Monday
+    }
+    completed = _local_dt(2026, 1, 6)            # Tuesday
+    assert _local_target(task, completed) == (2026, 1, 7)  # Wednesday
+
+
+def test_late_completion_respects_end_date() -> None:
+    """Catch-up never outlives the recurrence end date."""
+    task = {
+        "recurrence_type": "interval",
+        "recurrence_unit": "weeks",
+        "recurrence_value": 1,
+        "recurrence_weekdays": [0, 1, 2, 3, 4],
+        "due_date": "2026-01-06",
+        "recurrence_end_type": "date",
+        "recurrence_end_date": "2026-01-06",
+    }
+    completed = _local_dt(2026, 1, 7)
+    assert _local_target(task, completed) is None
 
 
 def test_months_dom_24() -> None:

@@ -43,6 +43,10 @@ DATA_DUE_FIRED = f"{DOMAIN}_due_fired"
 DATA_DUE_STARTUP_DONE = f"{DOMAIN}_due_startup_done"
 
 DUE_CHECK_INTERVAL = timedelta(hours=1)
+# How far past its target an armed reopen timer may sit before the watchdog
+# treats it as dead.  Generous enough to absorb event-loop lag and the reopen
+# task still being queued; far below the hourly watchdog interval.
+_TIMER_STALE_GRACE = timedelta(minutes=5)
 
 
 # ---------------------------------------------------------------------------
@@ -544,10 +548,21 @@ def _watchdog_recurring_reopen(hass: HomeAssistant, entry_id: str, task: dict) -
     """
     if not task.get("completed") or not task.get("recurrence_enabled"):
         return
-    # Cheap O(1) check first: a live timer owns this task — nothing to heal.
-    # (The common steady state; don't pay an ISO parse for it every hour.)
-    if task["id"] in hass.data.get(DATA_RECURRENCE_TIMERS, {}):
-        return
+    # Cheap O(1) check first: a live timer whose target is still ahead owns
+    # this task — nothing to heal.  (The common steady state; don't pay an
+    # ISO parse for it every hour.)  A timer whose target has passed by more
+    # than a grace margin did NOT fire when it should have, so it is torn
+    # down and re-armed below rather than trusted for another hour.
+    entry = hass.data.get(DATA_RECURRENCE_TIMERS, {}).get(task["id"])
+    if entry is not None:
+        target = entry[1] if isinstance(entry, tuple) else None
+        if target is None or target > datetime.now(timezone.utc) - _TIMER_STALE_GRACE:
+            return
+        _LOGGER.warning(
+            "Watchdog: reopen timer for '%s' was due %s but never fired — re-arming",
+            task.get("title", task["id"]), target.isoformat(),
+        )
+        _cancel_recurrence(hass, task["id"])
     if not task.get("completed_at"):
         return
     try:
@@ -782,6 +797,71 @@ def _add_months(year: int, month: int, months: int) -> tuple[int, int]:
     return year + m // 12, m % 12 + 1
 
 
+def _advance_one_occurrence(
+    task: dict, anchor_local: datetime, unit: str, value: int
+) -> datetime | None:
+    """Advance *anchor_local* by exactly one occurrence of a date-based unit.
+
+    Returns a local datetime (time-of-day is applied by the caller), or None
+    when the pattern cannot produce a date.
+    """
+    if unit == "days":
+        return anchor_local + timedelta(days=value)
+
+    if unit == "weeks":
+        weekdays = task.get("recurrence_weekdays") or []
+        if not weekdays:
+            return anchor_local + timedelta(weeks=value)
+        # Each iteration = value calendar weeks (Mon–Sun blocks).  Within the
+        # current iteration, pick the next selected weekday strictly after the
+        # anchor weekday.  If none remain in this iteration, jump to the first
+        # selected weekday of iteration N+value.
+        weekdays_sorted = sorted(set(weekdays))
+        anchor_wd = anchor_local.weekday()
+        in_this_week = [w for w in weekdays_sorted if w > anchor_wd]
+        if in_this_week:
+            delta_days = in_this_week[0] - anchor_wd
+        else:
+            delta_days = max(1, value) * 7 - anchor_wd + weekdays_sorted[0]
+        return anchor_local + timedelta(days=delta_days)
+
+    if unit == "months":
+        return _next_monthly_target(task, anchor_local, value)
+
+    return _next_yearly_target(task, anchor_local, value)
+
+
+# Safety stop for the catch-up walk below: 800 steps covers years of missed
+# daily occurrences, and bounds the loop against a pattern that fails to
+# advance (which would otherwise spin forever).
+_MAX_CATCH_UP_STEPS = 800
+
+
+def _catch_up_target(
+    task: dict, target_local: datetime, today: date, unit: str, value: int
+) -> datetime:
+    """Pull *target_local* forward until it is no earlier than *today*.
+
+    A recurring task that was missed for several occurrences would otherwise
+    reopen on a long-past date and keep lagging one occurrence behind
+    reality.  Walking the pattern forward (rather than jumping straight to
+    today) keeps the rhythm intact: an every-2-days chore stays on its own
+    odd/even cadence, and a Mon–Fri chore lands on a weekday.
+
+    Stops at today, never past it, so the current occurrence is never
+    skipped — the caller's reopen timer then fires immediately for a target
+    that already lies in the past.
+    """
+    steps = 0
+    while target_local.date() < today and steps < _MAX_CATCH_UP_STEPS:
+        nxt = _advance_one_occurrence(task, target_local, unit, value)
+        if nxt is None or nxt <= target_local:
+            break  # pattern cannot advance — keep what we have
+        target_local = nxt
+        steps += 1
+    return target_local
+
+
 def _compute_next_reopen_target(task: dict, completed_at: datetime) -> datetime | None:
     """Compute the target datetime (UTC-aware) when the task should reopen.
 
@@ -828,50 +908,34 @@ def _compute_next_reopen_target(task: dict, completed_at: datetime) -> datetime 
     # "advance the due_date to the next occurrence" — anchored at the existing
     # due_date, NOT at the moment of completion.  This makes early completions
     # (complete today's task at 09:00 when it's due 14:00) advance to tomorrow,
-    # not stay on today.  For late completions (overdue task), we anchor at
-    # local_completed so the next occurrence skips into the future rather than
-    # producing another past date.
+    # not stay on today.
+    #
+    # The same anchor applies to LATE completions: ticking an overdue task
+    # closes the occurrence that was on screen, so the next target is the one
+    # right after THAT occurrence — not the one after today.  Anchoring on
+    # local_completed instead silently swallowed today's occurrence: a
+    # Mon–Fri chore left undone Tuesday and ticked Wednesday morning jumped
+    # straight to Thursday, so Wednesday never appeared at all.
+    # _catch_up_target then pulls a long-neglected task forward to today in
+    # one go, so it reopens now rather than needing one tick per missed day.
     anchor_local = local_completed
     due_date_str = task.get("due_date")
     if due_date_str:
         try:
             due_d = date.fromisoformat(due_date_str)
-            due_anchor = local_completed.replace(
+            anchor_local = local_completed.replace(
                 year=due_d.year, month=due_d.month, day=due_d.day,
                 hour=0, minute=0, second=0, microsecond=0,
             )
-            if due_anchor.date() >= local_completed.date():
-                anchor_local = due_anchor
         except ValueError:
             pass
 
-    if unit == "days":
-        target_local = anchor_local + timedelta(days=value)
-    elif unit == "weeks":
-        weekdays = task.get("recurrence_weekdays") or []
-        if weekdays:
-            # Each iteration = value calendar weeks (Mon–Sun blocks).  Within
-            # the current iteration, pick the next selected weekday strictly
-            # after the anchor weekday.  If none remain in this iteration,
-            # jump to the first selected weekday of iteration N+value.
-            weekdays_sorted = sorted(set(weekdays))
-            anchor_wd = anchor_local.weekday()
-            in_this_week = [w for w in weekdays_sorted if w > anchor_wd]
-            if in_this_week:
-                delta_days = in_this_week[0] - anchor_wd
-            else:
-                delta_days = max(1, value) * 7 - anchor_wd + weekdays_sorted[0]
-            target_local = anchor_local + timedelta(days=delta_days)
-        else:
-            target_local = anchor_local + timedelta(weeks=value)
-    elif unit == "months":
-        target_local = _next_monthly_target(task, anchor_local, value)
-        if target_local is None:
-            return None
-    else:  # years
-        target_local = _next_yearly_target(task, anchor_local, value)
-        if target_local is None:
-            return None
+    target_local = _advance_one_occurrence(task, anchor_local, unit, value)
+    if target_local is None:
+        return None
+    target_local = _catch_up_target(
+        task, target_local, local_completed.date(), unit, value
+    )
 
     target_time = _set_local_time(target_local, t_h, t_m)
     if _check_end_date(task, target_time):
@@ -1008,7 +1072,10 @@ def _schedule_recurrence(
         hass.async_create_task(_async_reopen_task(hass, entry_id, task_id))
 
     cancel = async_call_later(hass, delay, _reopen_task)
-    timers[task_id] = cancel
+    # The target is stored alongside the cancel handle so the hourly watchdog
+    # can tell a healthy timer from one that should already have fired
+    # (suspended host, clock jump, a callback that never ran).
+    timers[task_id] = (cancel, datetime.now(timezone.utc) + timedelta(seconds=delay))
     _LOGGER.debug("Scheduled recurrence for task %s in %.0f seconds", task_id, delay)
 
 
@@ -1049,8 +1116,9 @@ async def _async_reopen_task(hass: HomeAssistant, entry_id: str, task_id: str) -
 def _cancel_recurrence(hass: HomeAssistant, task_id: str) -> None:
     """Cancel a pending recurrence timer."""
     timers = hass.data.get(DATA_RECURRENCE_TIMERS, {})
-    cancel = timers.pop(task_id, None)
-    if cancel:
+    entry = timers.pop(task_id, None)
+    if entry:
+        cancel = entry[0] if isinstance(entry, tuple) else entry
         cancel()
 
 
@@ -1376,8 +1444,14 @@ def _recover_external_recurrence_timers(hass: HomeAssistant, entry_id: str, enti
     for task in merged:
         if not task.get("completed") or not task.get("recurrence_enabled"):
             continue
-        if task["id"] in timers:
-            continue  # live timer owns this task (hourly watchdog re-entry)
+        entry = timers.get(task["id"])
+        if entry is not None:
+            target = entry[1] if isinstance(entry, tuple) else None
+            # Same staleness rule as the native watchdog: only a timer whose
+            # target is still ahead counts as owning the task.
+            if target is None or target > datetime.now(timezone.utc) - _TIMER_STALE_GRACE:
+                continue
+            _cancel_recurrence(hass, task["id"])
         if not task.get("completed_at"):
             continue
         try:
