@@ -2146,6 +2146,123 @@ def test_compute_next_reopen_target_days() -> None:
     assert local.hour == 9
 
 
+def _late_target_date(task: dict, completed_at: datetime) -> str:
+    from custom_components.home_tasks.__init__ import _compute_next_reopen_target
+    target = _compute_next_reopen_target(task, completed_at)
+    assert target is not None
+    return target.astimezone(dt_util.DEFAULT_TIME_ZONE).date().isoformat()
+
+
+def test_late_completion_every_2_days_keeps_rhythm() -> None:
+    """Due Mon, ticked Thu: the series is Mon/Wed/Fri, so the next target is Fri — not Sat."""
+    task = {
+        "recurrence_type": "interval",
+        "recurrence_unit": "days",
+        "recurrence_value": 2,
+        "due_date": "2026-01-05",
+    }
+    completed_at = datetime(2026, 1, 8, 12, 0, 0, tzinfo=timezone.utc)
+    assert _late_target_date(task, completed_at) == "2026-01-09"
+
+
+def test_late_completion_lands_on_today_when_today_is_in_the_series() -> None:
+    """Due Tue, ticked Thu on an every-2-days chore: Thu is an occurrence, so it is due now."""
+    task = {
+        "recurrence_type": "interval",
+        "recurrence_unit": "days",
+        "recurrence_value": 2,
+        "due_date": "2026-01-06",
+    }
+    completed_at = datetime(2026, 1, 8, 12, 0, 0, tzinfo=timezone.utc)
+    assert _late_target_date(task, completed_at) == "2026-01-08"
+
+
+def test_late_completion_keeps_two_alternating_chores_apart() -> None:
+    """Two every-2-days chores offset by one day, both ticked late on the same day, stay offset.
+
+    Anchoring on the completion day gave both the same next date (today + 2).
+    """
+    base = {"recurrence_type": "interval", "recurrence_unit": "days", "recurrence_value": 2}
+    completed_at = datetime(2026, 1, 8, 12, 0, 0, tzinfo=timezone.utc)
+    a = _late_target_date({**base, "due_date": "2026-01-05"}, completed_at)
+    b = _late_target_date({**base, "due_date": "2026-01-06"}, completed_at)
+    assert (a, b) == ("2026-01-09", "2026-01-08")
+
+
+def test_late_completion_weekdays_does_not_swallow_today() -> None:
+    """Mon–Fri chore due Tue, ticked Wed morning: Wed's occurrence is due now, not skipped to Thu."""
+    task = {
+        "recurrence_type": "interval",
+        "recurrence_unit": "weeks",
+        "recurrence_value": 1,
+        "recurrence_weekdays": [0, 1, 2, 3, 4],
+        "due_date": "2026-01-06",
+    }
+    completed_at = datetime(2026, 1, 7, 12, 0, 0, tzinfo=timezone.utc)
+    assert _late_target_date(task, completed_at) == "2026-01-07"
+
+
+def test_late_completion_weekdays_skips_the_weekend() -> None:
+    """Mon–Fri chore due Fri, ticked Sun: next is Mon."""
+    task = {
+        "recurrence_type": "interval",
+        "recurrence_unit": "weeks",
+        "recurrence_value": 1,
+        "recurrence_weekdays": [0, 1, 2, 3, 4],
+        "due_date": "2026-01-09",
+    }
+    completed_at = datetime(2026, 1, 11, 12, 0, 0, tzinfo=timezone.utc)
+    assert _late_target_date(task, completed_at) == "2026-01-12"
+
+
+def test_late_completion_plain_weekly_keeps_its_weekday() -> None:
+    """Weekly (no weekday filter) due Mon 5 Jan, ticked Wed 14 Jan: next is Mon 19 Jan, not Wed 21."""
+    task = {
+        "recurrence_type": "interval",
+        "recurrence_unit": "weeks",
+        "recurrence_value": 1,
+        "due_date": "2026-01-05",
+    }
+    completed_at = datetime(2026, 1, 14, 12, 0, 0, tzinfo=timezone.utc)
+    assert _late_target_date(task, completed_at) == "2026-01-19"
+
+
+def test_late_completion_long_neglected_daily_catches_up_in_one_step() -> None:
+    """A daily task a year overdue reopens for today, not for tomorrow."""
+    task = {
+        "recurrence_type": "interval",
+        "recurrence_unit": "days",
+        "recurrence_value": 1,
+        "due_date": "2025-01-01",
+    }
+    completed_at = datetime(2026, 1, 8, 12, 0, 0, tzinfo=timezone.utc)
+    assert _late_target_date(task, completed_at) == "2026-01-08"
+
+
+def test_early_completion_still_anchors_on_due_date() -> None:
+    """Unchanged: ticking tomorrow's every-2-days chore today advances from its due date."""
+    task = {
+        "recurrence_type": "interval",
+        "recurrence_unit": "days",
+        "recurrence_value": 2,
+        "due_date": "2026-01-09",
+    }
+    completed_at = datetime(2026, 1, 8, 12, 0, 0, tzinfo=timezone.utc)
+    assert _late_target_date(task, completed_at) == "2026-01-11"
+
+
+def test_late_completion_monthly_still_anchors_on_completion() -> None:
+    """Unchanged: months keep the previous late-completion behaviour."""
+    task = {
+        "recurrence_type": "interval",
+        "recurrence_unit": "months",
+        "recurrence_value": 1,
+        "due_date": "2025-12-15",
+    }
+    completed_at = datetime(2026, 1, 8, 12, 0, 0, tzinfo=timezone.utc)
+    assert _late_target_date(task, completed_at) == "2026-02-08"
+
+
 def test_compute_next_reopen_target_returns_none_when_not_configured() -> None:
     """_compute_next_reopen_target returns None for unconfigured recurrence."""
     from custom_components.home_tasks.__init__ import _compute_next_reopen_target

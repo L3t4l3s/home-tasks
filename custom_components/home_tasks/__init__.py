@@ -782,6 +782,44 @@ def _add_months(year: int, month: int, months: int) -> tuple[int, int]:
     return year + m // 12, m % 12 + 1
 
 
+def _advance_days_weeks(task: dict, anchor_local: datetime, unit: str, value: int) -> datetime:
+    """Return the occurrence that follows *anchor_local* for a days/weeks pattern."""
+    if unit == "days":
+        return anchor_local + timedelta(days=value)
+    weekdays = task.get("recurrence_weekdays") or []
+    if not weekdays:
+        return anchor_local + timedelta(weeks=value)
+    # Each iteration = value calendar weeks (Mon–Sun blocks).  Within the
+    # current iteration, pick the next selected weekday strictly after the
+    # anchor weekday.  If none remain in this iteration, jump to the first
+    # selected weekday of iteration N+value.
+    weekdays_sorted = sorted(set(weekdays))
+    anchor_wd = anchor_local.weekday()
+    in_this_week = [w for w in weekdays_sorted if w > anchor_wd]
+    if in_this_week:
+        delta_days = in_this_week[0] - anchor_wd
+    else:
+        delta_days = max(1, value) * 7 - anchor_wd + weekdays_sorted[0]
+    return anchor_local + timedelta(days=delta_days)
+
+
+def _catch_up_anchor(
+    task: dict, due_anchor: datetime, today: date, unit: str, value: int
+) -> datetime:
+    """Walk a days/weeks pattern from an overdue *due_anchor* to the last occurrence before *today*.
+
+    One more _advance_days_weeks step from the result is the first occurrence
+    on or after today.  Used for late completions so the series keeps its
+    rhythm instead of restarting from the completion day.
+    """
+    anchor = due_anchor
+    while True:
+        nxt = _advance_days_weeks(task, anchor, unit, value)
+        if nxt.date() >= today:
+            return anchor
+        anchor = nxt
+
+
 def _compute_next_reopen_target(task: dict, completed_at: datetime) -> datetime | None:
     """Compute the target datetime (UTC-aware) when the task should reopen.
 
@@ -828,9 +866,19 @@ def _compute_next_reopen_target(task: dict, completed_at: datetime) -> datetime 
     # "advance the due_date to the next occurrence" — anchored at the existing
     # due_date, NOT at the moment of completion.  This makes early completions
     # (complete today's task at 09:00 when it's due 14:00) advance to tomorrow,
-    # not stay on today.  For late completions (overdue task), we anchor at
-    # local_completed so the next occurrence skips into the future rather than
-    # producing another past date.
+    # not stay on today.
+    #
+    # Late completions (overdue task) stay anchored on the due_date as well
+    # for days/weeks: the pattern is walked forward from the occurrence the
+    # user just closed to the last one before today, so the normal advance
+    # below lands on the first occurrence on or after today.  That keeps the
+    # rhythm of the series — an every-2-days chore holds its alternation and a
+    # Mon–Fri chore stays on weekdays — and never swallows today's occurrence
+    # (a target that is already due reopens immediately).  Anchoring on the
+    # completion day instead restarted the series from whatever day the user
+    # happened to tick the box, which pushed two chores offset by one day
+    # onto the same date as soon as both were completed late.
+    # Months/years keep anchoring on local_completed for late completions.
     anchor_local = local_completed
     due_date_str = task.get("due_date")
     if due_date_str:
@@ -842,28 +890,15 @@ def _compute_next_reopen_target(task: dict, completed_at: datetime) -> datetime 
             )
             if due_anchor.date() >= local_completed.date():
                 anchor_local = due_anchor
+            elif unit in ("days", "weeks"):
+                anchor_local = _catch_up_anchor(
+                    task, due_anchor, local_completed.date(), unit, value
+                )
         except ValueError:
             pass
 
-    if unit == "days":
-        target_local = anchor_local + timedelta(days=value)
-    elif unit == "weeks":
-        weekdays = task.get("recurrence_weekdays") or []
-        if weekdays:
-            # Each iteration = value calendar weeks (Mon–Sun blocks).  Within
-            # the current iteration, pick the next selected weekday strictly
-            # after the anchor weekday.  If none remain in this iteration,
-            # jump to the first selected weekday of iteration N+value.
-            weekdays_sorted = sorted(set(weekdays))
-            anchor_wd = anchor_local.weekday()
-            in_this_week = [w for w in weekdays_sorted if w > anchor_wd]
-            if in_this_week:
-                delta_days = in_this_week[0] - anchor_wd
-            else:
-                delta_days = max(1, value) * 7 - anchor_wd + weekdays_sorted[0]
-            target_local = anchor_local + timedelta(days=delta_days)
-        else:
-            target_local = anchor_local + timedelta(weeks=value)
+    if unit in ("days", "weeks"):
+        target_local = _advance_days_weeks(task, anchor_local, unit, value)
     elif unit == "months":
         target_local = _next_monthly_target(task, anchor_local, value)
         if target_local is None:
