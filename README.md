@@ -282,6 +282,7 @@ Each entry in `columns` accepts the following options.
 | `view_mode` | `list` | Layout: `list` (detailed rows) or `tiles` (image grid) |
 | `default_filter` | `all` | Initial filter: `all`, `open`, `done`, or `due_soon` |
 | `default_sort` | `manual` | Initial sort: `manual`, `due`, `priority`, `title`, or `person` |
+| `overdue_first` | `false` | Open overdue tasks lead the list — oldest due date first — whatever the sort; completed tasks stay at the bottom. Works within each section. With manual sort, an overdue task stays on top even when dragged; the position you drag it to applies once it's no longer overdue |
 | `compact` | `false` | Compact mode for denser task rows |
 | `auto_delete_completed` | `false` | Automatically delete completed tasks |
 | `confirm_complete` | `false` | Ask for confirmation before marking a task as completed (guards against accidental taps on touch devices) |

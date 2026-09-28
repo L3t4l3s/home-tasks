@@ -113,7 +113,7 @@ const _TRANSLATIONS = {
     ed_task_search: "Task search",
     ed_auto_image: "Auto-generate image",
     ed_show_priority: "Priorities",
-    ed_default_sort: "Default sort",
+    ed_default_sort: "Default sort", ed_overdue_first: "Overdue tasks first",
     reminder: "Reminders",
     rem_add: "+ Add reminder",
     rem_none: "No reminder",
@@ -252,7 +252,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Nieuwe subtaak", remove_reminder: "Herinnering verwijderen",
     sort_label: "Sorteren", sort_manual: "Handmatig", sort_due: "Deadline",
     sort_priority: "Prioriteit", sort_title: "Titel (A\u2013Z)", sort_person: "Toegewezen",
-    ed_show_sort: "Sorteren", ed_default_sort: "Standaard sortering",
+    ed_show_sort: "Sorteren", ed_default_sort: "Standaard sortering", ed_overdue_first: "Verlopen taken eerst",
     reminder: "Herinneringen", rem_add: "+ Herinnering toevoegen", rem_none: "Geen herinnering",
     rem_at_due: "Op vervaldatum", rem_5m: "5 min. eerder", rem_15m: "15 min. eerder",
     rem_30m: "30 min. eerder", rem_1h: "1 uur eerder", rem_2h: "2 uur eerder",
@@ -353,7 +353,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Nuova sotto-attivit\u00e0", remove_reminder: "Rimuovi promemoria",
     sort_label: "Ordina", sort_manual: "Manuale", sort_due: "Scadenza",
     sort_priority: "Priorit\u00e0", sort_title: "Titolo (A\u2013Z)", sort_person: "Assegnato",
-    ed_show_sort: "Ordinamento", ed_default_sort: "Ordinamento predefinito",
+    ed_show_sort: "Ordinamento", ed_default_sort: "Ordinamento predefinito", ed_overdue_first: "Attività scadute per prime",
     reminder: "Promemoria", rem_add: "+ Aggiungi promemoria", rem_none: "Nessun promemoria",
     rem_at_due: "All\u2019ora di scadenza", rem_5m: "5 min. prima", rem_15m: "15 min. prima",
     rem_30m: "30 min. prima", rem_1h: "1 ora prima", rem_2h: "2 ore prima",
@@ -454,7 +454,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Nowe podzadanie", remove_reminder: "Usu\u0144 przypomnienie",
     sort_label: "Sortuj", sort_manual: "R\u0119cznie", sort_due: "Termin",
     sort_priority: "Priorytet", sort_title: "Tytu\u0142 (A\u2013Z)", sort_person: "Przypisany",
-    ed_show_sort: "Sortowanie", ed_default_sort: "Domy\u015blne sortowanie",
+    ed_show_sort: "Sortowanie", ed_default_sort: "Domy\u015blne sortowanie", ed_overdue_first: "Zaległe zadania najpierw",
     reminder: "Przypomnienia", rem_add: "+ Dodaj przypomnienie", rem_none: "Brak przypomnienia",
     rem_at_due: "W czasie terminu", rem_5m: "5 min. wcze\u015bniej", rem_15m: "15 min. wcze\u015bniej",
     rem_30m: "30 min. wcze\u015bniej", rem_1h: "1 godz. wcze\u015bniej", rem_2h: "2 godz. wcze\u015bniej",
@@ -555,7 +555,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Ny deluppgift", remove_reminder: "Ta bort p\u00e5minnelse",
     sort_label: "Sortera", sort_manual: "Manuell", sort_due: "F\u00f6rfallodatum",
     sort_priority: "Prioritet", sort_title: "Titel (A\u2013\u00d6)", sort_person: "Tilldelad",
-    ed_show_sort: "Sortering", ed_default_sort: "Standardsortering",
+    ed_show_sort: "Sortering", ed_default_sort: "Standardsortering", ed_overdue_first: "Försenade uppgifter först",
     reminder: "P\u00e5minnelser", rem_add: "+ L\u00e4gg till p\u00e5minnelse", rem_none: "Ingen p\u00e5minnelse",
     rem_at_due: "Vid f\u00f6rfallotid", rem_5m: "5 min. f\u00f6re", rem_15m: "15 min. f\u00f6re",
     rem_30m: "30 min. f\u00f6re", rem_1h: "1 timme f\u00f6re", rem_2h: "2 timmar f\u00f6re",
@@ -656,7 +656,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Nouvelle sous-t\u00e2che", remove_reminder: "Supprimer le rappel",
     sort_label: "Trier", sort_manual: "Manuel", sort_due: "\u00c9ch\u00e9ance",
     sort_priority: "Priorit\u00e9", sort_title: "Titre (A\u2013Z)", sort_person: "Assign\u00e9",
-    ed_show_sort: "Tri", ed_default_sort: "Tri par d\u00e9faut",
+    ed_show_sort: "Tri", ed_default_sort: "Tri par d\u00e9faut", ed_overdue_first: "Tâches en retard en premier",
     reminder: "Rappels", rem_add: "+ Ajouter un rappel", rem_none: "Aucun rappel",
     rem_at_due: "\u00c0 l\u2019heure d\u2019\u00e9ch\u00e9ance", rem_5m: "5 min. avant", rem_15m: "15 min. avant",
     rem_30m: "30 min. avant", rem_1h: "1 heure avant", rem_2h: "2 heures avant",
@@ -757,7 +757,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Nova subtarefa", remove_reminder: "Remover lembrete",
     sort_label: "Ordenar", sort_manual: "Manual", sort_due: "Prazo",
     sort_priority: "Prioridade", sort_title: "T\u00edtulo (A\u2013Z)", sort_person: "Atribu\u00eddo",
-    ed_show_sort: "Ordena\u00e7\u00e3o", ed_default_sort: "Ordena\u00e7\u00e3o padr\u00e3o",
+    ed_show_sort: "Ordena\u00e7\u00e3o", ed_default_sort: "Ordena\u00e7\u00e3o padr\u00e3o", ed_overdue_first: "Tarefas atrasadas primeiro",
     reminder: "Lembretes", rem_add: "+ Adicionar lembrete", rem_none: "Sem lembrete",
     rem_at_due: "No prazo", rem_5m: "5 min. antes", rem_15m: "15 min. antes",
     rem_30m: "30 min. antes", rem_1h: "1 hora antes", rem_2h: "2 horas antes",
@@ -858,7 +858,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Nueva subtarea", remove_reminder: "Eliminar recordatorio",
     sort_label: "Ordenar", sort_manual: "Manual", sort_due: "Vencimiento",
     sort_priority: "Prioridad", sort_title: "T\u00edtulo (A\u2013Z)", sort_person: "Asignado",
-    ed_show_sort: "Ordenaci\u00f3n", ed_default_sort: "Ordenaci\u00f3n predeterminada",
+    ed_show_sort: "Ordenaci\u00f3n", ed_default_sort: "Ordenaci\u00f3n predeterminada", ed_overdue_first: "Tareas vencidas primero",
     reminder: "Recordatorios", rem_add: "+ A\u00f1adir recordatorio", rem_none: "Sin recordatorio",
     rem_at_due: "A la hora de vencimiento", rem_5m: "5 min. antes", rem_15m: "15 min. antes",
     rem_30m: "30 min. antes", rem_1h: "1 hora antes", rem_2h: "2 horas antes",
@@ -959,7 +959,7 @@ const _TRANSLATIONS = {
     new_sub_item: "\u041d\u043e\u0432\u0430\u044f \u043f\u043e\u0434\u0437\u0430\u0434\u0430\u0447\u0430", remove_reminder: "\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u043d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u0435",
     sort_label: "\u0421\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0430", sort_manual: "\u0412\u0440\u0443\u0447\u043d\u0443\u044e", sort_due: "\u0421\u0440\u043e\u043a",
     sort_priority: "\u041f\u0440\u0438\u043e\u0440\u0438\u0442\u0435\u0442", sort_title: "\u0417\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a (\u0410\u2013\u042f)", sort_person: "\u041d\u0430\u0437\u043d\u0430\u0447\u0435\u043d\u043e",
-    ed_show_sort: "\u0421\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0430", ed_default_sort: "\u0421\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0430 \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e",
+    ed_show_sort: "\u0421\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0430", ed_default_sort: "\u0421\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0430 \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e", ed_overdue_first: "\u041f\u0440\u043e\u0441\u0440\u043e\u0447\u0435\u043d\u043d\u044b\u0435 \u0441\u043d\u0430\u0447\u0430\u043b\u0430",
     reminder: "\u041d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u044f", rem_add: "+ \u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u0435", rem_none: "\u041d\u0435\u0442 \u043d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u044f",
     rem_at_due: "\u0412 \u0441\u0440\u043e\u043a", rem_5m: "\u0417\u0430 5 \u043c\u0438\u043d.", rem_15m: "\u0417\u0430 15 \u043c\u0438\u043d.",
     rem_30m: "\u0417\u0430 30 \u043c\u0438\u043d.", rem_1h: "\u0417\u0430 1 \u0447\u0430\u0441", rem_2h: "\u0417\u0430 2 \u0447\u0430\u0441\u0430",
@@ -1060,7 +1060,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Nov\u00fd pod\u00fakol", remove_reminder: "Odebrat p\u0159ipom\u00ednku",
     sort_label: "\u0158adit", sort_manual: "Ru\u010dn\u011b", sort_due: "Term\u00edn",
     sort_priority: "Priorita", sort_title: "N\u00e1zev (A\u2013Z)", sort_person: "P\u0159i\u0159azeno",
-    ed_show_sort: "\u0158azen\u00ed", ed_default_sort: "V\u00fdchoz\u00ed \u0159azen\u00ed",
+    ed_show_sort: "\u0158azen\u00ed", ed_default_sort: "V\u00fdchoz\u00ed \u0159azen\u00ed", ed_overdue_first: "Úkoly po termínu nahoře",
     reminder: "P\u0159ipom\u00ednky", rem_add: "+ P\u0159idat p\u0159ipom\u00ednku", rem_none: "Bez p\u0159ipom\u00ednky",
     rem_at_due: "V \u010das term\u00ednu", rem_5m: "5 min. p\u0159ed", rem_15m: "15 min. p\u0159ed",
     rem_30m: "30 min. p\u0159ed", rem_1h: "1 hod. p\u0159ed", rem_2h: "2 hod. p\u0159ed",
@@ -1161,7 +1161,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Ny delopgave", remove_reminder: "Fjern p\u00e5mindelse",
     sort_label: "Sorter", sort_manual: "Manuel", sort_due: "Forfald",
     sort_priority: "Prioritet", sort_title: "Titel (A\u2013Z)", sort_person: "Tildelt",
-    ed_show_sort: "Sortering", ed_default_sort: "Standardsortering",
+    ed_show_sort: "Sortering", ed_default_sort: "Standardsortering", ed_overdue_first: "Forfaldne opgaver først",
     reminder: "P\u00e5mindelser", rem_add: "+ Tilf\u00f8j p\u00e5mindelse", rem_none: "Ingen p\u00e5mindelse",
     rem_at_due: "Ved forfaldstid", rem_5m: "5 min. f\u00f8r", rem_15m: "15 min. f\u00f8r",
     rem_30m: "30 min. f\u00f8r", rem_1h: "1 time f\u00f8r", rem_2h: "2 timer f\u00f8r",
@@ -1262,7 +1262,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Ny deloppgave", remove_reminder: "Fjern p\u00e5minnelse",
     sort_label: "Sorter", sort_manual: "Manuell", sort_due: "Frist",
     sort_priority: "Prioritet", sort_title: "Tittel (A\u2013Z)", sort_person: "Tildelt",
-    ed_show_sort: "Sortering", ed_default_sort: "Standardsortering",
+    ed_show_sort: "Sortering", ed_default_sort: "Standardsortering", ed_overdue_first: "Forfalte oppgaver først",
     reminder: "P\u00e5minnelser", rem_add: "+ Legg til p\u00e5minnelse", rem_none: "Ingen p\u00e5minnelse",
     rem_at_due: "Ved fristen", rem_5m: "5 min. f\u00f8r", rem_15m: "15 min. f\u00f8r",
     rem_30m: "30 min. f\u00f8r", rem_1h: "1 time f\u00f8r", rem_2h: "2 timer f\u00f8r",
@@ -1363,7 +1363,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Uusi aliteht\u00e4v\u00e4", remove_reminder: "Poista muistutus",
     sort_label: "Lajittele", sort_manual: "Manuaalinen", sort_due: "Er\u00e4p\u00e4iv\u00e4",
     sort_priority: "Prioriteetti", sort_title: "Otsikko (A\u2013\u00d6)", sort_person: "M\u00e4\u00e4ritetty",
-    ed_show_sort: "Lajittelu", ed_default_sort: "Oletuslajittelu",
+    ed_show_sort: "Lajittelu", ed_default_sort: "Oletuslajittelu", ed_overdue_first: "Myöhässä olevat ensin",
     reminder: "Muistutukset", rem_add: "+ Lis\u00e4\u00e4 muistutus", rem_none: "Ei muistutusta",
     rem_at_due: "Er\u00e4ajalla", rem_5m: "5 min. ennen", rem_15m: "15 min. ennen",
     rem_30m: "30 min. ennen", rem_1h: "1 tunti ennen", rem_2h: "2 tuntia ennen",
@@ -1464,7 +1464,7 @@ const _TRANSLATIONS = {
     new_sub_item: "\u00daj alfeladat", remove_reminder: "Eml\u00e9keztet\u0151 elt\u00e1vol\u00edt\u00e1sa",
     sort_label: "Rendez\u00e9s", sort_manual: "Manu\u00e1lis", sort_due: "Hat\u00e1rid\u0151",
     sort_priority: "Priorit\u00e1s", sort_title: "C\u00edm (A\u2013Z)", sort_person: "Hozz\u00e1rendelve",
-    ed_show_sort: "Rendez\u00e9s", ed_default_sort: "Alap\u00e9rtelmezett rendez\u00e9s",
+    ed_show_sort: "Rendez\u00e9s", ed_default_sort: "Alap\u00e9rtelmezett rendez\u00e9s", ed_overdue_first: "Lejárt feladatok elöl",
     reminder: "Eml\u00e9keztet\u0151k", rem_add: "+ Eml\u00e9keztet\u0151 hozz\u00e1ad\u00e1sa", rem_none: "Nincs eml\u00e9keztet\u0151",
     rem_at_due: "A hat\u00e1rid\u0151kor", rem_5m: "5 perccel el\u0151tte", rem_15m: "15 perccel el\u0151tte",
     rem_30m: "30 perccel el\u0151tte", rem_1h: "1 \u00f3r\u00e1val el\u0151tte", rem_2h: "2 \u00f3r\u00e1val el\u0151tte",
@@ -1605,7 +1605,7 @@ const _TRANSLATIONS = {
     ed_show_voice: "Spracheingabe",
     ed_task_search: "Aufgaben-Suche",
     ed_auto_image: "Bild automatisch generieren",
-    ed_default_sort: "Standard-Sortierung",
+    ed_default_sort: "Standard-Sortierung", ed_overdue_first: "Überfällige Aufgaben zuerst",
     reminder: "Erinnerungen",
     rem_add: "+ Erinnerung hinzuf\u00fcgen",
     rem_none: "Keine Erinnerung",
@@ -2778,7 +2778,7 @@ class HomeTasksCard extends HTMLElement {
   // during the drag, then persist the new order. Tasks dropped under the
   // global Done header keep their original section_id so reactivation
   // returns them to the right bucket.
-  async _applySectionChangesAndReorder(colIdx, sectionedOrder) {
+  async _applySectionChangesAndReorder(colIdx, sectionedOrder, draggedId = null) {
     const cs = this._columns[colIdx];
     const tasksById = new Map((cs.tasks || []).map((t) => [t.id, t]));
     const knownSectionIds = new Set((cs.sections || []).map((s) => s.id));
@@ -2814,7 +2814,7 @@ class HomeTasksCard extends HTMLElement {
       }
     }
     const visibleOrder = sectionedOrder.map((p) => p.taskId);
-    const fullOrder = this._mergeHiddenTasks(colIdx, visibleOrder);
+    const fullOrder = this._mergeHiddenTasks(colIdx, visibleOrder, draggedId);
     await this._reorderTasks(fullOrder, colIdx);
   }
 
@@ -2945,8 +2945,21 @@ class HomeTasksCard extends HTMLElement {
       tasks = tasks.filter((t) => cs.personFilters.has(t.assigned_person));
     }
     const cmp = this._buildSortComparator(colIdx);
+    // overdue_first (issue #57): open overdue tasks lead, oldest due date
+    // first, whatever the chosen sort — the counterpart of completed tasks
+    // sinking to the bottom.  "Overdue" is the card's usual meaning (due
+    // date before today, like the red badge and the overdue sensor).
+    const overdueFirst = this._config?.columns?.[colIdx]?.overdue_first === true;
+    const overdue = (t) => overdueFirst && !t.completed && this._isDueDateOverdue(t.due_date);
     return tasks.slice().sort((a, b) => {
       if (a.completed !== b.completed) return a.completed ? 1 : -1;
+      const oa = overdue(a), ob = overdue(b);
+      if (oa !== ob) return oa ? -1 : 1;
+      if (oa) {
+        const da = a.due_date + "T" + (a.due_time || "00:00");
+        const db = b.due_date + "T" + (b.due_time || "00:00");
+        if (da !== db) return da < db ? -1 : 1;
+      }
       return cmp(a, b);
     });
   }
@@ -4579,7 +4592,7 @@ class HomeTasksCard extends HTMLElement {
     // Merge back tasks hidden by a filter (person/tag chips) so they keep their
     // relative position — otherwise reorder_tasks renumbers only the visible
     // subset and the hidden tasks' sort_order collides (same as the list path).
-    if (order.length > 1) this._reorderTasks(this._mergeHiddenTasks(colIdx, order), colIdx);
+    if (order.length > 1) this._reorderTasks(this._mergeHiddenTasks(colIdx, order, draggedId), colIdx);
   }
 
   // Cancel a pending tile long-press (detail) timer. Centralised so a re-render
@@ -7680,8 +7693,21 @@ class HomeTasksCard extends HTMLElement {
     return result;
   }
 
-  _mergeHiddenTasks(colIdx, visibleOrder) {
+  _mergeHiddenTasks(colIdx, visibleOrder, draggedId = null) {
     const cs = this._columns[colIdx];
+    // With overdue_first the overdue tasks are drawn on top, not where their
+    // manual order puts them; saving the drawn order would store every one
+    // of them first for good.  Treat them like filtered-out tasks: they go
+    // back after their original predecessor.  The task actually dragged
+    // keeps the place it was dropped at.
+    if (this._config?.columns?.[colIdx]?.overdue_first === true) {
+      const pinned = new Set(
+        (cs.tasks || [])
+          .filter((t) => !t.completed && this._isDueDateOverdue(t.due_date) && String(t.id) !== String(draggedId))
+          .map((t) => t.id),
+      );
+      visibleOrder = visibleOrder.filter((id) => !pinned.has(id));
+    }
     const filteredIds = new Set(visibleOrder);
     const hiddenIds = cs.tasks.map((t) => t.id).filter((id) => !filteredIds.has(id));
     const fullOrder = [...visibleOrder];
@@ -7819,7 +7845,7 @@ class HomeTasksCard extends HTMLElement {
       const idx = srcColIdx ?? 0;
       const sectionedOrder = this._getOrderWithSectionFromDom(idx);
       if (sectionedOrder.length > 0) {
-        this._applySectionChangesAndReorder(idx, sectionedOrder);
+        this._applySectionChangesAndReorder(idx, sectionedOrder, draggedId);
       }
     }
 
@@ -10221,6 +10247,7 @@ class HomeTasksCardEditor extends HTMLElement {
       ]),
       makeSection("defaults", "mdi:account-check-outline", "ed_sec_defaults", [
         sortField,
+        makeToggle("overdue-first", "ed_overdue_first", "overdue_first", false),
         // Defaults live with the list, native or external, so they apply
         // however the task is created - card, voice, service or todo entity.
         this._buildDefaultsEditor(col),
