@@ -69,6 +69,52 @@ add_task:
       selector:
         text:
 
+add_task_from_text:
+  name: Add Task From Text
+  description: >-
+    Create a task from a spoken-style sentence. Clauses at the end of the text
+    fill the task's fields — a person ("for Anna"), a priority ("with high
+    priority"), a due date ("due Friday", "tomorrow", "on 5 October", "in 3
+    days") and a time ("at 5 pm") — in any order; everything else is the
+    title. Words are understood in English and German. Returns what was
+    created, including a short spoken summary in "details".
+  fields:
+    list_name:
+      name: List Name
+      description: The name of the task list.
+      example: "Household"
+      selector:
+        text:
+    entry_id:
+      name: Entry ID
+      description: The config entry ID of the list (alternative to list name).
+      selector:
+        text:
+    entity_id:
+      name: Linked list entity
+      description: >-
+        The todo entity of a linked external list, when you would rather name
+        it directly than by list name.
+      example: "todo.all_tasks"
+      selector:
+        entity:
+          domain: todo
+    text:
+      name: Text
+      description: The sentence, without the command in front of it.
+      required: true
+      example: "pay the bill for Anna with high priority due Friday at 5 pm"
+      selector:
+        text:
+    language:
+      name: Language
+      description: >-
+        Language of the text ("en", "de"). Defaults to the Home Assistant
+        language; languages without their own word list are read as English.
+      example: "de"
+      selector:
+        text:
+
 update_task:
   name: Update Task
   description: Update fields of an existing task (found by ID or title).

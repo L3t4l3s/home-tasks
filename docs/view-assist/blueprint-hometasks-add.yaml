@@ -1,0 +1,167 @@
+blueprint:
+  name: Home Tasks - Add a task by voice
+  description: >-
+    Say "add task pay the bill for Anna with high priority due Friday at 5 pm"
+    and Home Tasks creates "Pay the bill", assigned to Anna, high priority,
+    due Friday at 17:00 — then says what it added.
+
+    The command only catches the sentence; the fields are read by the
+    home_tasks.add_task_from_text action. It understands, at the end of the
+    sentence and in any order: a person ("for Anna" — only people that exist
+    in Home Assistant), a priority ("with high priority"), a due date
+    ("today", "tomorrow", "due Friday", "next Monday", "on 5 October",
+    "in 3 days") and a time ("at 5 pm", "at 17:30"). Whatever it does not
+    recognise stays in the title. English and German words are built in.
+
+    Works with any Assist device. With View Assist, it can also open the
+    Home Tasks view on the satellite afterwards
+    (https://github.com/L3t4l3s/home-tasks/tree/main/docs/view-assist).
+
+    Home Tasks add-by-voice blueprint v1.0.0
+  domain: automation
+  homeassistant:
+    min_version: "2024.10.0"
+  input:
+    command_add1:
+      name: Command text 1
+      description: >-
+        First phrase for adding a task. {task} is everything after it. Keep a
+        word like "task" in it — a bare "add {task}" would also catch "add milk
+        to my shopping list" and take it away from the built-in list intents.
+      default: (add | create) [a] [new] task {task}
+    command_add2:
+      name: Command text 2
+      description: Second phrase for adding a task
+      default: new task {task}
+    todo_entity:
+      name: Task list
+      description: The Home Tasks list — native or linked — that new tasks go to.
+      selector:
+        entity:
+          filter:
+            - domain: todo
+    language:
+      name: Language
+      description: >-
+        Language of the spoken fields ("en", "de"). Empty = the Home Assistant
+        language.
+      default: ""
+      selector:
+        text:
+    list_name_override:
+      name: List name override
+      description: Spoken name of the list. Empty = the list's own name.
+      default: ""
+      selector:
+        text:
+    response_added:
+      name: Response - added
+      description: "Placeholders: {title}, {list_name}"
+      default: "Added {title} to your {list_name}"
+      selector:
+        text:
+    response_added_details:
+      name: Response - added, with fields
+      description: >-
+        Used when a person, priority or date was understood. Placeholders:
+        {title}, {list_name}, {details} (e.g. "for Anna, high priority, due
+        Friday 2 October at 17:00", in the list's language).
+      default: "Added {title} to your {list_name}, {details}"
+      selector:
+        text:
+    response_failed:
+      name: Response - failed
+      description: "Placeholders: {text}"
+      default: "Sorry, I couldn't make a task out of {text}"
+      selector:
+        text:
+    show_list:
+      name: Show the list on View Assist
+      description: >-
+        Open the Home Tasks view on the View Assist satellite that heard the
+        command. Needs View Assist; leave off otherwise.
+      default: false
+      selector:
+        boolean:
+    view:
+      name: Dashboard view
+      description: The View Assist dashboard view to open
+      default: /view-assist/hometasks
+      selector:
+        text:
+
+mode: queued
+
+triggers:
+  - trigger: conversation
+    command:
+      - !input command_add1
+      - !input command_add2
+
+actions:
+  - variables:
+      todo_entity: !input todo_entity
+      language: !input language
+      list_name_override: !input list_name_override
+      response_added: !input response_added
+      response_added_details: !input response_added_details
+      response_failed: !input response_failed
+      show_list: !input show_list
+      view: !input view
+      spoken_text: "{{ trigger.slots.task }}"
+      list_entry_id: "{{ config_entry_id(todo_entity) }}"
+      # A native Home Tasks list is addressed by its config entry; a linked
+      # list's todo entity belongs to its provider, so it goes by entity id.
+      is_native: "{{ list_entry_id is string and config_entry_attr(list_entry_id, 'domain') == 'home_tasks' }}"
+      service_data: >-
+        {% set d = {'text': spoken_text} %}
+        {% if language %}{% set d = dict(d, language=language) %}{% endif %}
+        {% if is_native %}{{ dict(d, entry_id=list_entry_id) }}{% else %}{{ dict(d, entity_id=todo_entity) }}{% endif %}
+
+  - action: home_tasks.add_task_from_text
+    data: "{{ service_data }}"
+    response_variable: added
+    # A sentence without a title left in it is a ServiceValidationError —
+    # answer it instead of failing silently.
+    continue_on_error: true
+
+  - variables:
+      list_name: >-
+        {% if list_name_override %}{{ list_name_override }}
+        {% elif added is defined and added.list_name %}{{ added.list_name }}
+        {% else %}{{ state_attr(todo_entity, 'friendly_name') }}{% endif %}
+      conversation_response: >-
+        {% if added is not defined or not added.title %}
+          {{ response_failed.replace('{text}', spoken_text) }}
+        {% elif added.details %}
+          {{ response_added_details.replace('{title}', added.title).replace('{list_name}', list_name | trim).replace('{details}', added.details) }}
+        {% else %}
+          {{ response_added.replace('{title}', added.title).replace('{list_name}', list_name | trim) }}
+        {% endif %}
+
+  - set_conversation_response: "{{ conversation_response }}"
+
+  - if:
+      - condition: template
+        value_template: "{{ show_list and trigger.device_id is not none and added is defined }}"
+    then:
+      - variables:
+          target_satellite_device: "{{ view_assist_entity(trigger.device_id) }}"
+      - if:
+          - condition: template
+            value_template: >-
+              {{ target_satellite_device not in (none, '')
+                 and state_attr(target_satellite_device, 'type') != 'audio_only' }}
+        then:
+          - action: view_assist.set_state
+            target:
+              entity_id: "{{ target_satellite_device }}"
+            data:
+              last_said: "{{ conversation_response }}"
+              home_tasks_list: "{{ list_entry_id if is_native else '' }}"
+              list: "{{ todo_entity }}"
+              title: "{{ list_name | trim }}"
+          - action: view_assist.navigate
+            data:
+              device: "{{ target_satellite_device }}"
+              path: "{{ view }}"

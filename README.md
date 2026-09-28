@@ -579,6 +579,35 @@ The `home_tasks_task_reminder` event additionally includes `reminder_offset_minu
 | `tags` | no | Comma-separated tags (e.g. `"kitchen,daily"`) |
 | `reminders` | no | Minute offsets before the due moment, comma-separated or list (e.g. `"60, 0"`; `0` = at due time). An explicitly empty value creates the task without reminders even when the list has default reminders |
 
+#### `home_tasks.add_task_from_text`
+
+Create a task from a spoken-style sentence — made for voice (see the
+[add-by-voice blueprint](docs/view-assist/README.md#4-add-tasks-by-voice-optional)).
+Clauses at the end of the text fill the fields, in any order; everything else
+is the title. A clause only counts when it really parses, so "look for the
+keys" stays a title.
+
+| Clause | Examples (English / German) |
+|--------|-----------------------------|
+| Person — only people that exist, full or unique first name | `for Anna` / `für Anna` |
+| Priority | `with high priority`, `low priority`, `priority high` / `mit hoher Priorität`, `Priorität hoch` |
+| Due date | `today`, `tomorrow`, `the day after tomorrow`, `due Friday`, `next Monday`, `in 3 days`, `on 5 October` / `heute`, `morgen`, `übermorgen`, `am Freitag`, `nächsten Montag`, `in drei Tagen`, `am 5. Oktober`, `bis zum 5.10.` |
+| Time (a time alone means today, or tomorrow if already past) | `at 5 pm`, `at 17:30`, `at noon` / `um 17 Uhr`, `um 9:30` |
+
+A weekday on its own ("due Friday", "am Freitag") is the next one, today
+included; "next Friday" is never today.
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `list_name` / `entry_id` / `entity_id` | * | The list, as for `add_task` |
+| `text` | yes | The sentence, without the command in front of it |
+| `language` | no | `en` or `de`; defaults to the Home Assistant language (other languages are read with the English words) |
+
+Returns (with `response_variable`) `task_id`, `list_name`, `title`,
+`assigned_person`, `person_name`, `priority`, `due_date`, `due_time`,
+`language` and `details` — the understood fields as a phrase for a spoken
+answer, e.g. `for Anna, high priority, due Friday 2 October at 17:00`.
+
 #### `home_tasks.update_task`
 
 Update any field of an existing task, found by `task_id` or `task_title`. Only the provided fields change.
@@ -723,6 +752,7 @@ ships the pieces to put a Home Tasks list on one:
 
 - **A view** — the full Home Tasks card as a View Assist panel view at `/view-assist/hometasks`, with satellite-friendly defaults (compact rows, confirm-before-complete, open tasks only, sorted by due date). A second variant picks the list per satellite at runtime.
 - **A blueprint** — "show me my task list" makes the satellite say how many tasks are open and open the view. Sentences and spoken responses are configurable.
+- **An add-by-voice blueprint** — "add task pay the bill for Anna with high priority due Friday at 5 pm" creates the task with all those fields and says what it added. Works on any Assist device, View Assist optional; English and German built in.
 
 Both are copy-and-install files, so a Home Tasks update never overwrites your
 customised view. Installation, how to pin a specific list, and how to tune the

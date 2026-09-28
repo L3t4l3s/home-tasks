@@ -1,5 +1,9 @@
 pytest-homeassistant-custom-component==0.13.323
 freezegun==1.5.2
+# The conversation integration's requirements (sentence triggers in the View
+# Assist blueprints); pytest-homeassistant-custom-component doesn't pull them.
+hassil==3.5.0
+home-assistant-intents==2026.3.24
 
 # Live tests + deploy script
 paramiko>=3.0          # SSH transport used by scripts/deploy.py and live test infra

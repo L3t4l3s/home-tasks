@@ -11,7 +11,7 @@ from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
+from homeassistant.core import HassJob, HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
@@ -1793,42 +1793,95 @@ def _async_register_services(hass: HomeAssistant) -> None:
     if hass.services.has_service(DOMAIN, "add_task"):
         return
 
-    async def async_handle_add_task(call: ServiceCall) -> None:
+    async def _async_add_task(call: ServiceCall, data: dict) -> tuple[str, str, str | None]:
+        """Create a task from service fields.
+
+        Returns ``(kind, list ident, task id)`` — the id is None when a
+        linked list did not report one.
+        """
         kind, ident, store = _resolve_target(hass, call.data)
         actor = await _resolve_actor(hass, call)
         if kind == "external":
             from .websocket_api import async_create_external_task
 
-            fields = {"title": call.data["title"]}
+            fields = {"title": data["title"]}
             for key in ("assigned_person", "due_date", "due_time", "notes", "priority"):
-                if key in call.data:
-                    fields[key] = call.data[key]
-            if "reminders" in call.data:
-                fields["reminders"] = call.data["reminders"]
-            if "tags" in call.data:
-                fields["tags"] = _parse_service_tags(call.data["tags"])
-            await async_create_external_task(hass, ident, fields)
-            return
+                if key in data:
+                    fields[key] = data[key]
+            if "reminders" in data:
+                fields["reminders"] = data["reminders"]
+            if "tags" in data:
+                fields["tags"] = _parse_service_tags(data["tags"])
+            return kind, ident, await async_create_external_task(hass, ident, fields)
         # Everything goes in at creation (one task_created event, one
         # 'created' history entry, no intermediate bare state); the store
         # fires task_assigned itself for tasks born with an assignee, so the
         # old follow-up-update workaround is no longer needed — and no longer
         # correct, since the list default assignee is applied at creation.
         task = await store.async_add_task(
-            call.data["title"],
+            data["title"],
             actor=actor,
-            assigned_person=call.data.get("assigned_person"),
-            due_date=call.data.get("due_date"),
-            due_time=call.data.get("due_time"),
-            reminders=call.data.get("reminders"),
-            notes=call.data.get("notes"),
-            priority=call.data.get("priority"),
+            assigned_person=data.get("assigned_person"),
+            due_date=data.get("due_date"),
+            due_time=data.get("due_time"),
+            reminders=data.get("reminders"),
+            notes=data.get("notes"),
+            priority=data.get("priority"),
             # Comma parsing stays service-side, but the tags themselves go in
             # at creation: as a follow-up update they arrived after
             # task_created had already fired with the list's default tags, and
             # left an "updated tags" entry in the history of a brand-new task.
-            tags=_parse_service_tags(call.data["tags"]) if "tags" in call.data else None,
+            tags=_parse_service_tags(data["tags"]) if "tags" in data else None,
         )
+        return kind, ident, task["id"]
+
+    async def async_handle_add_task(call: ServiceCall) -> None:
+        await _async_add_task(call, call.data)
+
+    async def async_handle_add_task_from_text(call: ServiceCall) -> ServiceResponse:
+        """A spoken sentence → a task with the fields it names (issue #18)."""
+        from .task_text_parser import describe_task, parse_task_text, supported_language
+
+        language = call.data.get("language") or hass.config.language
+        persons = [
+            (state.entity_id, state.attributes.get("friendly_name") or state.name)
+            for state in hass.states.async_all("person")
+        ]
+        now = dt_util.now()
+        try:
+            parsed = parse_task_text(call.data["text"], language, persons, now)
+        except ValueError as err:
+            raise ServiceValidationError(f"Could not read a task from {call.data['text']!r}: {err}") from err
+
+        data: dict = {"title": parsed.title}
+        if parsed.person:
+            data["assigned_person"] = parsed.person
+        if parsed.priority:
+            data["priority"] = parsed.priority
+        if parsed.due_date:
+            data["due_date"] = parsed.due_date.isoformat()
+        if parsed.due_time:
+            data["due_time"] = parsed.due_time
+        kind, ident, task_id = await _async_add_task(call, data)
+
+        if kind == "native":
+            entry = hass.config_entries.async_get_entry(ident)
+            list_name = (entry.data.get("name") or entry.title) if entry else ident
+        else:
+            state = hass.states.get(ident)
+            list_name = state.name if state else ident
+        return {
+            "task_id": task_id,
+            "list_name": list_name,
+            "title": parsed.title,
+            "assigned_person": parsed.person,
+            "person_name": parsed.person_name,
+            "priority": parsed.priority,
+            "due_date": data.get("due_date"),
+            "due_time": parsed.due_time,
+            "language": supported_language(language),
+            "details": describe_task(parsed, language, now.date()),
+        }
 
     async def async_handle_update_task(call: ServiceCall) -> None:
         """Update fields of an existing task (issue #42) — find it by task_id
@@ -2025,6 +2078,17 @@ def _async_register_services(hass: HomeAssistant) -> None:
             vol.Optional("tags"): cv.string,
             vol.Optional("reminders"): _validate_service_reminders,
         }),
+    )
+    hass.services.async_register(
+        DOMAIN, "add_task_from_text", async_handle_add_task_from_text,
+        schema=vol.Schema({
+            vol.Optional("entry_id"): cv.string,
+            vol.Optional("list_name"): cv.string,
+            vol.Optional("entity_id"): cv.string,
+            vol.Required("text"): vol.All(cv.string, vol.Length(min=1, max=500)),
+            vol.Optional("language"): cv.string,
+        }),
+        supports_response=SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(
         DOMAIN, "update_task", async_handle_update_task,

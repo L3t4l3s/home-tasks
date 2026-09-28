@@ -9,6 +9,7 @@ put a Home Tasks list on one of those screens:
 | [`hometasks.yaml`](hometasks.yaml) | The view. Shows a Home Tasks list with the full card — priorities, tags, sub-tasks, due dates, reminders, images, voice input. **Start here.** |
 | [`hometasks-dynamic.yaml`](hometasks-dynamic.yaml) | Same card, but the list is picked per satellite at runtime, wrapped in View Assist's own chrome. Needs `custom:button-card` and `card-mod`. |
 | [`blueprint-hometasks.yaml`](blueprint-hometasks.yaml) | "Show me my tasks" → the satellite speaks how many tasks are open and opens the view. |
+| [`blueprint-hometasks-add.yaml`](blueprint-hometasks-add.yaml) | "Add task pay the bill for Anna with high priority due Friday" → the task is created with those fields and the satellite says so. Works on any Assist device. |
 
 Nothing here changes the integration — these are copy-and-install assets, so a
 Home Tasks update never overwrites your customised view.
@@ -107,6 +108,57 @@ language).
 The blueprint asks for the list's **todo entity**, not for a config entry id —
 it derives the id itself with `config_entry_id()` and hands it to the view.
 
+## 4. Add tasks by voice (optional)
+
+[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2FL3t4l3s%2Fhome-tasks%2Fblob%2Fmain%2Fdocs%2Fview-assist%2Fblueprint-hometasks-add.yaml)
+
+Create an automation from it and pick the list new tasks go to — native or
+linked. Then:
+
+> — "Add task pay the bill for Anna with high priority due Friday at 5 pm."
+> — "Added Pay the bill to your Household, for Anna, high priority, due Friday 2 October at 17:00"
+
+The sentence only has to catch the task text; the fields are read by the
+[`home_tasks.add_task_from_text`](../../README.md#home_tasksadd_task_from_text)
+action. It picks up, at the end of the sentence and in any order:
+
+- a **person** — `for Anna` (only people that exist in Home Assistant, by full
+  or unique first name),
+- a **priority** — `with high priority`, `low priority`,
+- a **due date** — `today`, `tomorrow`, `due Friday`, `next Monday`,
+  `in 3 days`, `on 5 October`,
+- a **time** — `at 5 pm`, `at 17:30`.
+
+What it doesn't recognise stays in the title, so "add task look for the keys"
+gives you *Look for the keys*, not a task for someone called "the keys".
+
+The default commands are `(add | create) [a] [new] task {task}` and
+`new task {task}`. Keep a word like "task" in yours: sentence triggers are
+checked before Home Assistant's own intents, so a bare `add {task}` would also
+swallow "add milk to my shopping list".
+
+**German** — the words are built in; set the blueprint inputs to:
+
+| Input | Value |
+|-------|-------|
+| Command text 1 | `[neue] aufgabe {task}` |
+| Command text 2 | `füge [die] aufgabe {task} hinzu` |
+| Language | `de` (or leave empty if Home Assistant runs in German) |
+| Response - added | `{title} zu {list_name} hinzugefügt` |
+| Response - added, with fields | `{title} zu {list_name} hinzugefügt, {details}` |
+| Response - failed | `Daraus konnte ich keine Aufgabe machen: {text}` |
+
+> — „Neue Aufgabe Rechnung bezahlen für Anna mit hoher Priorität fällig am Freitag um 17 Uhr.“
+
+Other languages work for the title, but their dates and priorities are read
+with the English words — say on
+[issue #18](https://github.com/L3t4l3s/home-tasks/issues/18) if you'd like
+your language added.
+
+With **Show the list on View Assist** switched on, the satellite that heard the
+command also opens the Home Tasks view afterwards (a linked list opens the
+view's default list).
+
 ## Tuning for the screen
 
 Measured with the shipped view at the two common satellite resolutions:
@@ -136,17 +188,17 @@ off, which is worth having on a screen that gets walked past.
 
 ## What this does not do (yet)
 
-Adding a task **with Home Tasks fields** by voice ("add pay the bill for Anna
-with high priority, due Friday") needs its own sentence blueprint on top of
-`home_tasks.add_task`; the same goes for having reminder and overdue
-[events](../../README.md#events) push a task onto the nearest satellite. Both
-are on the list for [issue #18](https://github.com/L3t4l3s/home-tasks/issues/18)
-— say so on the issue if you'd use them.
+Having reminder and overdue [events](../../README.md#events) push a task onto
+the nearest satellite is still on the list for
+[issue #18](https://github.com/L3t4l3s/home-tasks/issues/18) — say so on the
+issue if you'd use it.
 
 ## Status
 
-The views, the blueprint and the fallback behaviour are covered by the test
-suite, and the card was checked in a browser at 800×480 and 1280×800. They have
+The views, both blueprints and the fallback behaviour are covered by the test
+suite — the add-by-voice blueprint runs end to end through Assist there, in
+English and German — and the card was checked in a browser at 800×480 and
+1280×800. They have
 **not** been run on physical View Assist hardware yet — if you try them,
 feedback on [issue #18](https://github.com/L3t4l3s/home-tasks/issues/18) is very
 welcome.
