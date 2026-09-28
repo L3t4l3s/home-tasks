@@ -181,6 +181,20 @@ describe('notes view', () => {
     assert.equal(section.querySelector('.notes-view').textContent, 'reloaded');
   });
 
+  test('typing into empty notes survives the re-render after the auto-save', async () => {
+    const { card } = await makeCard();
+    const task = { id: 'T1', title: 'X', notes: '' };
+    const section = mount(card, task);
+    const ta = section.querySelector('textarea');
+    ta.focus();
+    ta.value = 'first words';
+    task.notes = 'first words';          // what the optimistic save does
+    section.remove();                    // the card rebuilds its DOM
+    await tick();
+    const rebuilt = mount(card, task);
+    assert.ok(rebuilt.querySelector('textarea'), 'still the textarea, not the read view');
+  });
+
   test('clearing the notes keeps the textarea', async () => {
     const { card } = await makeCard();
     const section = mount(card, { id: 'T1', title: 'X', notes: 'old' });

@@ -5599,6 +5599,11 @@ class HomeTasksCard extends HTMLElement {
         debounceTimer = null;
         this._updateTaskNotes(task.id, notesInput.value, colIdx);
       };
+      // Focus is what marks the notes as being edited — also when they start
+      // out empty, where no click on the view came first; otherwise the
+      // re-render after the first auto-save would swap in the read view
+      // mid-typing.
+      notesInput.addEventListener("focus", () => this._notesEditing.add(task.id));
       notesInput.addEventListener("input", () => {
         this._autoGrowTextarea(notesInput);
         clearTimeout(debounceTimer);
