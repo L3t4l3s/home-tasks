@@ -11,7 +11,7 @@ from homeassistant.core import Context, HomeAssistant, callback
 
 from .image_library import async_get_image_library
 from .image_queue import PLACEHOLDER_IMAGE_URLS, async_get_image_queue
-from .const import DOMAIN, MAX_IMAGE_URL_LENGTH, MAX_REORDER_IDS, MAX_RECURRENCE_VALUE, MAX_REMINDER_OFFSET_MINUTES, MAX_REMINDERS_PER_TASK, MAX_SUB_TASKS_PER_TASK, MAX_TAGS_PER_TASK, MAX_TITLE_LENGTH, RECURRENCE_FIELDS, VALID_RECURRENCE_ANCHORS, VALID_RECURRENCE_UNITS
+from .const import DOMAIN, MAX_IMAGE_URL_LENGTH, MAX_REORDER_IDS, MAX_RECURRENCE_VALUE, MAX_REMINDER_OFFSET_MINUTES, MAX_REMINDERS_PER_TASK, MAX_SUB_TASKS_PER_TASK, MAX_TAG_CATALOG, MAX_TAGS_PER_TASK, MAX_TITLE_LENGTH, RECURRENCE_FIELDS, VALID_RECURRENCE_ANCHORS, VALID_RECURRENCE_UNITS
 from .overlay_store import ExternalTaskOverlayStore, OVERLAY_FIELDS, _empty_overlay
 from .store import validate_assigned_person
 from .provider_adapters import ProviderAdapter, GenericAdapter, _get_external_todo_items
@@ -92,7 +92,7 @@ _TARGET = {
     vol.Exclusive("entity_id", "target"): _val_entity_id,
 }
 
-DEFAULT_FIELDS = ("assignee", "reminders", "tags", "priority", "section_id")
+DEFAULT_FIELDS = ("assignee", "reminders", "tags", "priority", "section_id", "tag_catalog")
 
 
 def _get_target_store(hass, msg):
@@ -179,7 +179,10 @@ async def ws_get_tasks(hass, connection, msg):
     """Get all tasks for a list."""
     try:
         store = _get_store(hass, msg["list_id"])
-        connection.send_result(msg["id"], {"tasks": store.tasks, "sections": store.sections})
+        connection.send_result(msg["id"], {
+            "tasks": store.tasks, "sections": store.sections,
+            "tag_catalog": store.get_defaults()["tag_catalog"],
+        })
     except Exception as err:
         _handle_error(connection, msg["id"], err)
 
@@ -376,6 +379,7 @@ async def ws_get_defaults(hass, connection, msg):
         vol.Optional("tags"): vol.All(list, vol.Length(max=MAX_TAGS_PER_TASK)),
         vol.Optional("priority"): vol.Any(vol.In([1, 2, 3]), None),
         vol.Optional("section_id"): vol.Any(_val_id, None),
+        vol.Optional("tag_catalog"): vol.All(list, vol.Length(max=MAX_TAG_CATALOG)),
         **_TARGET,
     }
 )
@@ -1300,7 +1304,10 @@ async def ws_get_external_tasks(hass, connection, msg):
     try:
         tasks, overlay_store = await _async_get_external_tasks(hass, msg["entity_id"])
 
-        connection.send_result(msg["id"], {"tasks": tasks, "sections": overlay_store.sections})
+        connection.send_result(msg["id"], {
+            "tasks": tasks, "sections": overlay_store.sections,
+            "tag_catalog": overlay_store.get_defaults()["tag_catalog"],
+        })
     except Exception as err:
         _handle_error(connection, msg["id"], err)
 

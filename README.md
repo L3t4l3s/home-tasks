@@ -357,6 +357,13 @@ provided" and still falls back.
 Explicitly provided values (e.g. the card's auto-assign from an active person filter) win
 over the defaults.
 
+The same section holds the list's **fixed tags**: a set of tags that the tag input
+always suggests — first, whether or not any task carries them right now — in every card
+that shows the list. Free text still works for one-offs, but typing a new tag that is one
+or two letters off a fixed one (`kitchn` for `kitchen`) offers the fixed tag instead, so a
+typo doesn't quietly split a category in two. Fixed tags aren't added to new tasks; that's
+what the default tags are for.
+
 ### Styling
 
 **card-mod** works on this card — a plain `style:` string is applied inside the card's shadow DOM, so you can target its classes directly:
@@ -624,7 +631,7 @@ with `response_variable`.
 | `tag` | no | Only tasks with this tag (case-insensitive) |
 | `due` | no | `today`, `overdue` or `today_or_overdue` |
 
-Returns `list_name` and `tasks`, in the card's order; each task has `id`,
+Returns `list_name`, the list's fixed tags as `tag_catalog`, and `tasks`, in the card's order; each task has `id`,
 `title`, `completed`, `completed_at`, `due_date`, `due_time`,
 `assigned_person`, `tags`, `priority`, `notes`, `section_id`, `sub_items`
 (`title`, `completed`) and `recurrence_enabled`.

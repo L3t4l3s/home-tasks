@@ -1963,6 +1963,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
 
         return {
             "list_name": list_name,
+            "tag_catalog": store.get_defaults()["tag_catalog"],
             "tasks": [
                 {
                     "id": t["id"],

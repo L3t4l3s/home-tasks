@@ -23,6 +23,7 @@ from .const import (
     MAX_SECTION_NAME_LENGTH,
     MAX_SECTIONS_PER_LIST,
     MAX_SUB_TASKS_PER_TASK,
+    MAX_TAG_CATALOG,
     MAX_TAG_LENGTH,
     MAX_TAGS_PER_TASK,
     MAX_TASKS_PER_LIST,
@@ -255,6 +256,27 @@ def validate_assigned_person(value):
     if value is not None and (not isinstance(value, str) or len(value) > MAX_TITLE_LENGTH):
         raise ValueError("assigned_person must be a string entity_id or null")
     return value
+
+
+def validate_tag_catalog(value):
+    """A list's fixed tags (issue #61): normalised like a task's tags — lower
+    case, no leading '#', no duplicates — up to MAX_TAG_CATALOG of them."""
+    if not isinstance(value, list):
+        raise ValueError("tag_catalog must be a list")
+    if len(value) > MAX_TAG_CATALOG:
+        raise ValueError(f"Maximum of {MAX_TAG_CATALOG} fixed tags allowed")
+    cleaned: list[str] = []
+    for tag in value:
+        if not isinstance(tag, str):
+            raise ValueError("Each tag must be a string")
+        tag = tag.strip().lstrip("#").strip().lower()
+        if not tag:
+            continue
+        if len(tag) > MAX_TAG_LENGTH:
+            raise ValueError(f"Tag exceeds maximum length of {MAX_TAG_LENGTH}")
+        if tag not in cleaned:
+            cleaned.append(tag)
+    return cleaned
 
 
 def validate_tags(value):
@@ -509,6 +531,10 @@ class HomeTasksStore:
             "tags": list(d.get("tags") or []),
             "priority": d.get("priority"),
             "section_id": d.get("section_id") or None,
+            # Not applied to new tasks: the tags always offered when tagging
+            # one (issue #61). Lives here so it's edited, stored and synced
+            # with the other per-list settings.
+            "tag_catalog": list(d.get("tag_catalog") or []),
         }
 
     async def async_set_defaults(
@@ -518,6 +544,7 @@ class HomeTasksStore:
         tags: object = _UNSET,
         priority: object = _UNSET,
         section_id: object = _UNSET,
+        tag_catalog: object = _UNSET,
     ) -> dict:
         """Update the list-level defaults.
 
@@ -549,19 +576,28 @@ class HomeTasksStore:
             section_id = current["section_id"]
         elif section_id:
             self._validate_section_id(section_id)
+        if tag_catalog is _UNSET:
+            tag_catalog = current["tag_catalog"]
+        else:
+            tag_catalog = validate_tag_catalog(tag_catalog) if tag_catalog else []
         self._data["defaults"] = {
             "assignee": assignee or None,
             "reminders": reminders,
             "tags": tags,
             "priority": priority,
             "section_id": section_id or None,
+            "tag_catalog": tag_catalog,
         }
         # Immediate save (not async_delay_save): a pending delayed write of an
         # unloaded store instance could clobber newer disk state after a
         # config-entry reload, and the WS ack must mean "persisted".  Client-
         # side write coalescing already keeps the frequency low; only the
-        # entity listener fanout is skipped here.
-        await self._store.async_save(self._data)
+        # entity listener fanout is skipped here — except when the fixed tags
+        # changed: cards show those, and reload on the listener's sensor update.
+        if self.get_defaults()["tag_catalog"] != current["tag_catalog"]:
+            await self._async_save()
+        else:
+            await self._store.async_save(self._data)
         return self.get_defaults()
 
     async def async_add_task(

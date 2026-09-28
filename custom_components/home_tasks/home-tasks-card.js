@@ -113,7 +113,7 @@ const _TRANSLATIONS = {
     ed_task_search: "Task search",
     ed_auto_image: "Auto-generate image",
     ed_show_priority: "Priorities",
-    ed_default_sort: "Default sort", ed_overdue_first: "Overdue tasks first",
+    ed_default_sort: "Default sort", ed_tag_catalog: "Fixed tags", ed_tag_catalog_hint: "Always suggested when tagging a task in this list — free text still works.", tag_did_you_mean: "Did you mean {0}?", ed_overdue_first: "Overdue tasks first",
     reminder: "Reminders",
     rem_add: "+ Add reminder",
     rem_none: "No reminder",
@@ -252,7 +252,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Nieuwe subtaak", remove_reminder: "Herinnering verwijderen",
     sort_label: "Sorteren", sort_manual: "Handmatig", sort_due: "Deadline",
     sort_priority: "Prioriteit", sort_title: "Titel (A\u2013Z)", sort_person: "Toegewezen",
-    ed_show_sort: "Sorteren", ed_default_sort: "Standaard sortering", ed_overdue_first: "Verlopen taken eerst",
+    ed_show_sort: "Sorteren", ed_default_sort: "Standaard sortering", ed_tag_catalog: "Vaste tags", ed_tag_catalog_hint: "Altijd voorgesteld bij het taggen in deze lijst — vrije tekst blijft mogelijk.", tag_did_you_mean: "Bedoel je {0}?", ed_overdue_first: "Verlopen taken eerst",
     reminder: "Herinneringen", rem_add: "+ Herinnering toevoegen", rem_none: "Geen herinnering",
     rem_at_due: "Op vervaldatum", rem_5m: "5 min. eerder", rem_15m: "15 min. eerder",
     rem_30m: "30 min. eerder", rem_1h: "1 uur eerder", rem_2h: "2 uur eerder",
@@ -353,7 +353,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Nuova sotto-attivit\u00e0", remove_reminder: "Rimuovi promemoria",
     sort_label: "Ordina", sort_manual: "Manuale", sort_due: "Scadenza",
     sort_priority: "Priorit\u00e0", sort_title: "Titolo (A\u2013Z)", sort_person: "Assegnato",
-    ed_show_sort: "Ordinamento", ed_default_sort: "Ordinamento predefinito", ed_overdue_first: "Attività scadute per prime",
+    ed_show_sort: "Ordinamento", ed_default_sort: "Ordinamento predefinito", ed_tag_catalog: "Tag fissi", ed_tag_catalog_hint: "Sempre suggeriti quando assegni tag in questo elenco — il testo libero resta possibile.", tag_did_you_mean: "Intendevi {0}?", ed_overdue_first: "Attività scadute per prime",
     reminder: "Promemoria", rem_add: "+ Aggiungi promemoria", rem_none: "Nessun promemoria",
     rem_at_due: "All\u2019ora di scadenza", rem_5m: "5 min. prima", rem_15m: "15 min. prima",
     rem_30m: "30 min. prima", rem_1h: "1 ora prima", rem_2h: "2 ore prima",
@@ -454,7 +454,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Nowe podzadanie", remove_reminder: "Usu\u0144 przypomnienie",
     sort_label: "Sortuj", sort_manual: "R\u0119cznie", sort_due: "Termin",
     sort_priority: "Priorytet", sort_title: "Tytu\u0142 (A\u2013Z)", sort_person: "Przypisany",
-    ed_show_sort: "Sortowanie", ed_default_sort: "Domy\u015blne sortowanie", ed_overdue_first: "Zaległe zadania najpierw",
+    ed_show_sort: "Sortowanie", ed_default_sort: "Domy\u015blne sortowanie", ed_tag_catalog: "Stałe tagi", ed_tag_catalog_hint: "Zawsze podpowiadane przy tagowaniu w tej liście — dowolny tekst nadal działa.", tag_did_you_mean: "Czy chodziło o {0}?", ed_overdue_first: "Zaległe zadania najpierw",
     reminder: "Przypomnienia", rem_add: "+ Dodaj przypomnienie", rem_none: "Brak przypomnienia",
     rem_at_due: "W czasie terminu", rem_5m: "5 min. wcze\u015bniej", rem_15m: "15 min. wcze\u015bniej",
     rem_30m: "30 min. wcze\u015bniej", rem_1h: "1 godz. wcze\u015bniej", rem_2h: "2 godz. wcze\u015bniej",
@@ -555,7 +555,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Ny deluppgift", remove_reminder: "Ta bort p\u00e5minnelse",
     sort_label: "Sortera", sort_manual: "Manuell", sort_due: "F\u00f6rfallodatum",
     sort_priority: "Prioritet", sort_title: "Titel (A\u2013\u00d6)", sort_person: "Tilldelad",
-    ed_show_sort: "Sortering", ed_default_sort: "Standardsortering", ed_overdue_first: "Försenade uppgifter först",
+    ed_show_sort: "Sortering", ed_default_sort: "Standardsortering", ed_tag_catalog: "Fasta taggar", ed_tag_catalog_hint: "Föreslås alltid när du taggar i den här listan — fritext fungerar fortfarande.", tag_did_you_mean: "Menade du {0}?", ed_overdue_first: "Försenade uppgifter först",
     reminder: "P\u00e5minnelser", rem_add: "+ L\u00e4gg till p\u00e5minnelse", rem_none: "Ingen p\u00e5minnelse",
     rem_at_due: "Vid f\u00f6rfallotid", rem_5m: "5 min. f\u00f6re", rem_15m: "15 min. f\u00f6re",
     rem_30m: "30 min. f\u00f6re", rem_1h: "1 timme f\u00f6re", rem_2h: "2 timmar f\u00f6re",
@@ -656,7 +656,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Nouvelle sous-t\u00e2che", remove_reminder: "Supprimer le rappel",
     sort_label: "Trier", sort_manual: "Manuel", sort_due: "\u00c9ch\u00e9ance",
     sort_priority: "Priorit\u00e9", sort_title: "Titre (A\u2013Z)", sort_person: "Assign\u00e9",
-    ed_show_sort: "Tri", ed_default_sort: "Tri par d\u00e9faut", ed_overdue_first: "Tâches en retard en premier",
+    ed_show_sort: "Tri", ed_default_sort: "Tri par d\u00e9faut", ed_tag_catalog: "Étiquettes fixes", ed_tag_catalog_hint: "Toujours proposées lors de l'étiquetage dans cette liste — le texte libre reste possible.", tag_did_you_mean: "Vouliez-vous dire {0} ?", ed_overdue_first: "Tâches en retard en premier",
     reminder: "Rappels", rem_add: "+ Ajouter un rappel", rem_none: "Aucun rappel",
     rem_at_due: "\u00c0 l\u2019heure d\u2019\u00e9ch\u00e9ance", rem_5m: "5 min. avant", rem_15m: "15 min. avant",
     rem_30m: "30 min. avant", rem_1h: "1 heure avant", rem_2h: "2 heures avant",
@@ -757,7 +757,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Nova subtarefa", remove_reminder: "Remover lembrete",
     sort_label: "Ordenar", sort_manual: "Manual", sort_due: "Prazo",
     sort_priority: "Prioridade", sort_title: "T\u00edtulo (A\u2013Z)", sort_person: "Atribu\u00eddo",
-    ed_show_sort: "Ordena\u00e7\u00e3o", ed_default_sort: "Ordena\u00e7\u00e3o padr\u00e3o", ed_overdue_first: "Tarefas atrasadas primeiro",
+    ed_show_sort: "Ordena\u00e7\u00e3o", ed_default_sort: "Ordena\u00e7\u00e3o padr\u00e3o", ed_tag_catalog: "Tags fixas", ed_tag_catalog_hint: "Sempre sugeridas ao etiquetar nesta lista — texto livre continua possível.", tag_did_you_mean: "Queria dizer {0}?", ed_overdue_first: "Tarefas atrasadas primeiro",
     reminder: "Lembretes", rem_add: "+ Adicionar lembrete", rem_none: "Sem lembrete",
     rem_at_due: "No prazo", rem_5m: "5 min. antes", rem_15m: "15 min. antes",
     rem_30m: "30 min. antes", rem_1h: "1 hora antes", rem_2h: "2 horas antes",
@@ -858,7 +858,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Nueva subtarea", remove_reminder: "Eliminar recordatorio",
     sort_label: "Ordenar", sort_manual: "Manual", sort_due: "Vencimiento",
     sort_priority: "Prioridad", sort_title: "T\u00edtulo (A\u2013Z)", sort_person: "Asignado",
-    ed_show_sort: "Ordenaci\u00f3n", ed_default_sort: "Ordenaci\u00f3n predeterminada", ed_overdue_first: "Tareas vencidas primero",
+    ed_show_sort: "Ordenaci\u00f3n", ed_default_sort: "Ordenaci\u00f3n predeterminada", ed_tag_catalog: "Etiquetas fijas", ed_tag_catalog_hint: "Siempre sugeridas al etiquetar en esta lista; el texto libre sigue funcionando.", tag_did_you_mean: "¿Quisiste decir {0}?", ed_overdue_first: "Tareas vencidas primero",
     reminder: "Recordatorios", rem_add: "+ A\u00f1adir recordatorio", rem_none: "Sin recordatorio",
     rem_at_due: "A la hora de vencimiento", rem_5m: "5 min. antes", rem_15m: "15 min. antes",
     rem_30m: "30 min. antes", rem_1h: "1 hora antes", rem_2h: "2 horas antes",
@@ -959,7 +959,7 @@ const _TRANSLATIONS = {
     new_sub_item: "\u041d\u043e\u0432\u0430\u044f \u043f\u043e\u0434\u0437\u0430\u0434\u0430\u0447\u0430", remove_reminder: "\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u043d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u0435",
     sort_label: "\u0421\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0430", sort_manual: "\u0412\u0440\u0443\u0447\u043d\u0443\u044e", sort_due: "\u0421\u0440\u043e\u043a",
     sort_priority: "\u041f\u0440\u0438\u043e\u0440\u0438\u0442\u0435\u0442", sort_title: "\u0417\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a (\u0410\u2013\u042f)", sort_person: "\u041d\u0430\u0437\u043d\u0430\u0447\u0435\u043d\u043e",
-    ed_show_sort: "\u0421\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0430", ed_default_sort: "\u0421\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0430 \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e", ed_overdue_first: "\u041f\u0440\u043e\u0441\u0440\u043e\u0447\u0435\u043d\u043d\u044b\u0435 \u0441\u043d\u0430\u0447\u0430\u043b\u0430",
+    ed_show_sort: "\u0421\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0430", ed_default_sort: "\u0421\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0430 \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e", ed_tag_catalog: "\u041f\u043e\u0441\u0442\u043e\u044f\u043d\u043d\u044b\u0435 \u0442\u0435\u0433\u0438", ed_tag_catalog_hint: "\u0412\u0441\u0435\u0433\u0434\u0430 \u043f\u0440\u0435\u0434\u043b\u0430\u0433\u0430\u044e\u0442\u0441\u044f \u043f\u0440\u0438 \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u0438\u0438 \u0442\u0435\u0433\u0430 \u2014 \u0441\u0432\u043e\u0431\u043e\u0434\u043d\u044b\u0439 \u0442\u0435\u043a\u0441\u0442 \u0442\u043e\u0436\u0435 \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442.", tag_did_you_mean: "\u0412\u044b \u0438\u043c\u0435\u043b\u0438 \u0432 \u0432\u0438\u0434\u0443 {0}?", ed_overdue_first: "\u041f\u0440\u043e\u0441\u0440\u043e\u0447\u0435\u043d\u043d\u044b\u0435 \u0441\u043d\u0430\u0447\u0430\u043b\u0430",
     reminder: "\u041d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u044f", rem_add: "+ \u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u0435", rem_none: "\u041d\u0435\u0442 \u043d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u044f",
     rem_at_due: "\u0412 \u0441\u0440\u043e\u043a", rem_5m: "\u0417\u0430 5 \u043c\u0438\u043d.", rem_15m: "\u0417\u0430 15 \u043c\u0438\u043d.",
     rem_30m: "\u0417\u0430 30 \u043c\u0438\u043d.", rem_1h: "\u0417\u0430 1 \u0447\u0430\u0441", rem_2h: "\u0417\u0430 2 \u0447\u0430\u0441\u0430",
@@ -1060,7 +1060,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Nov\u00fd pod\u00fakol", remove_reminder: "Odebrat p\u0159ipom\u00ednku",
     sort_label: "\u0158adit", sort_manual: "Ru\u010dn\u011b", sort_due: "Term\u00edn",
     sort_priority: "Priorita", sort_title: "N\u00e1zev (A\u2013Z)", sort_person: "P\u0159i\u0159azeno",
-    ed_show_sort: "\u0158azen\u00ed", ed_default_sort: "V\u00fdchoz\u00ed \u0159azen\u00ed", ed_overdue_first: "Úkoly po termínu nahoře",
+    ed_show_sort: "\u0158azen\u00ed", ed_default_sort: "V\u00fdchoz\u00ed \u0159azen\u00ed", ed_tag_catalog: "Pevné štítky", ed_tag_catalog_hint: "Vždy nabízeny při štítkování v tomto seznamu — volný text stále funguje.", tag_did_you_mean: "Mysleli jste {0}?", ed_overdue_first: "Úkoly po termínu nahoře",
     reminder: "P\u0159ipom\u00ednky", rem_add: "+ P\u0159idat p\u0159ipom\u00ednku", rem_none: "Bez p\u0159ipom\u00ednky",
     rem_at_due: "V \u010das term\u00ednu", rem_5m: "5 min. p\u0159ed", rem_15m: "15 min. p\u0159ed",
     rem_30m: "30 min. p\u0159ed", rem_1h: "1 hod. p\u0159ed", rem_2h: "2 hod. p\u0159ed",
@@ -1161,7 +1161,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Ny delopgave", remove_reminder: "Fjern p\u00e5mindelse",
     sort_label: "Sorter", sort_manual: "Manuel", sort_due: "Forfald",
     sort_priority: "Prioritet", sort_title: "Titel (A\u2013Z)", sort_person: "Tildelt",
-    ed_show_sort: "Sortering", ed_default_sort: "Standardsortering", ed_overdue_first: "Forfaldne opgaver først",
+    ed_show_sort: "Sortering", ed_default_sort: "Standardsortering", ed_tag_catalog: "Faste tags", ed_tag_catalog_hint: "Foreslås altid, når du tagger i denne liste — fri tekst virker stadig.", tag_did_you_mean: "Mente du {0}?", ed_overdue_first: "Forfaldne opgaver først",
     reminder: "P\u00e5mindelser", rem_add: "+ Tilf\u00f8j p\u00e5mindelse", rem_none: "Ingen p\u00e5mindelse",
     rem_at_due: "Ved forfaldstid", rem_5m: "5 min. f\u00f8r", rem_15m: "15 min. f\u00f8r",
     rem_30m: "30 min. f\u00f8r", rem_1h: "1 time f\u00f8r", rem_2h: "2 timer f\u00f8r",
@@ -1262,7 +1262,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Ny deloppgave", remove_reminder: "Fjern p\u00e5minnelse",
     sort_label: "Sorter", sort_manual: "Manuell", sort_due: "Frist",
     sort_priority: "Prioritet", sort_title: "Tittel (A\u2013Z)", sort_person: "Tildelt",
-    ed_show_sort: "Sortering", ed_default_sort: "Standardsortering", ed_overdue_first: "Forfalte oppgaver først",
+    ed_show_sort: "Sortering", ed_default_sort: "Standardsortering", ed_tag_catalog: "Faste tagger", ed_tag_catalog_hint: "Foreslås alltid når du tagger i denne listen — fritekst fungerer fortsatt.", tag_did_you_mean: "Mente du {0}?", ed_overdue_first: "Forfalte oppgaver først",
     reminder: "P\u00e5minnelser", rem_add: "+ Legg til p\u00e5minnelse", rem_none: "Ingen p\u00e5minnelse",
     rem_at_due: "Ved fristen", rem_5m: "5 min. f\u00f8r", rem_15m: "15 min. f\u00f8r",
     rem_30m: "30 min. f\u00f8r", rem_1h: "1 time f\u00f8r", rem_2h: "2 timer f\u00f8r",
@@ -1363,7 +1363,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Uusi aliteht\u00e4v\u00e4", remove_reminder: "Poista muistutus",
     sort_label: "Lajittele", sort_manual: "Manuaalinen", sort_due: "Er\u00e4p\u00e4iv\u00e4",
     sort_priority: "Prioriteetti", sort_title: "Otsikko (A\u2013\u00d6)", sort_person: "M\u00e4\u00e4ritetty",
-    ed_show_sort: "Lajittelu", ed_default_sort: "Oletuslajittelu", ed_overdue_first: "Myöhässä olevat ensin",
+    ed_show_sort: "Lajittelu", ed_default_sort: "Oletuslajittelu", ed_tag_catalog: "Kiinteät tagit", ed_tag_catalog_hint: "Ehdotetaan aina tagattaessa tässä listassa — vapaa teksti toimii edelleen.", tag_did_you_mean: "Tarkoititko {0}?", ed_overdue_first: "Myöhässä olevat ensin",
     reminder: "Muistutukset", rem_add: "+ Lis\u00e4\u00e4 muistutus", rem_none: "Ei muistutusta",
     rem_at_due: "Er\u00e4ajalla", rem_5m: "5 min. ennen", rem_15m: "15 min. ennen",
     rem_30m: "30 min. ennen", rem_1h: "1 tunti ennen", rem_2h: "2 tuntia ennen",
@@ -1464,7 +1464,7 @@ const _TRANSLATIONS = {
     new_sub_item: "\u00daj alfeladat", remove_reminder: "Eml\u00e9keztet\u0151 elt\u00e1vol\u00edt\u00e1sa",
     sort_label: "Rendez\u00e9s", sort_manual: "Manu\u00e1lis", sort_due: "Hat\u00e1rid\u0151",
     sort_priority: "Priorit\u00e1s", sort_title: "C\u00edm (A\u2013Z)", sort_person: "Hozz\u00e1rendelve",
-    ed_show_sort: "Rendez\u00e9s", ed_default_sort: "Alap\u00e9rtelmezett rendez\u00e9s", ed_overdue_first: "Lejárt feladatok elöl",
+    ed_show_sort: "Rendez\u00e9s", ed_default_sort: "Alap\u00e9rtelmezett rendez\u00e9s", ed_tag_catalog: "Rögzített címkék", ed_tag_catalog_hint: "Mindig felajánlva címkézéskor ebben a listában — szabad szöveg továbbra is működik.", tag_did_you_mean: "Erre gondoltál: {0}?", ed_overdue_first: "Lejárt feladatok elöl",
     reminder: "Eml\u00e9keztet\u0151k", rem_add: "+ Eml\u00e9keztet\u0151 hozz\u00e1ad\u00e1sa", rem_none: "Nincs eml\u00e9keztet\u0151",
     rem_at_due: "A hat\u00e1rid\u0151kor", rem_5m: "5 perccel el\u0151tte", rem_15m: "15 perccel el\u0151tte",
     rem_30m: "30 perccel el\u0151tte", rem_1h: "1 \u00f3r\u00e1val el\u0151tte", rem_2h: "2 \u00f3r\u00e1val el\u0151tte",
@@ -1605,7 +1605,7 @@ const _TRANSLATIONS = {
     ed_show_voice: "Spracheingabe",
     ed_task_search: "Aufgaben-Suche",
     ed_auto_image: "Bild automatisch generieren",
-    ed_default_sort: "Standard-Sortierung", ed_overdue_first: "Überfällige Aufgaben zuerst",
+    ed_default_sort: "Standard-Sortierung", ed_tag_catalog: "Feste Tags", ed_tag_catalog_hint: "Werden beim Taggen in dieser Liste immer vorgeschlagen — freier Text bleibt möglich.", tag_did_you_mean: "Meintest du {0}?", ed_overdue_first: "Überfällige Aufgaben zuerst",
     reminder: "Erinnerungen",
     rem_add: "+ Erinnerung hinzuf\u00fcgen",
     rem_none: "Keine Erinnerung",
@@ -2279,11 +2279,13 @@ class HomeTasksCard extends HTMLElement {
         const r = await this._callWs("home_tasks/get_external_tasks", { entity_id: col.entity_id });
         this._columns[i].tasks = r?.tasks ?? [];
         this._columns[i].sections = r?.sections ?? [];
+        this._columns[i].tagCatalog = r?.tag_catalog ?? [];
       } else if (col.list_id) {
         // Native column
         const r = await this._callWs("home_tasks/get_tasks", { list_id: col.list_id });
         this._columns[i].tasks = r?.tasks ?? [];
         this._columns[i].sections = r?.sections ?? [];
+        this._columns[i].tagCatalog = r?.tag_catalog ?? [];
       } else {
         this._columns[i].tasks = [];
         this._columns[i].sections = [];
@@ -6747,14 +6749,36 @@ class HomeTasksCard extends HTMLElement {
     };
 
     const refresh = () => {
-      const q = tagInput.value.trim().toLowerCase();
-      const known = this._collectAllKnownTags();
+      const q = tagInput.value.trim().replace(/^#/, "").toLowerCase();
+      // The list's fixed tags (issue #61) come first and are always offered;
+      // then whatever else is in use on the loaded tasks.
+      const catalog = this._columns[colIdx]?.tagCatalog || [];
+      const known = [...new Set([...catalog, ...this._collectAllKnownTags()])];
       const taken = new Set(task.tags || []);
       const suggestions = known.filter(t => !taken.has(t) && (q === "" || t.startsWith(q)));
+      // A new tag one or two letters away from a fixed one is most likely a
+      // typo that would split the category in two — offer the fixed one.
+      const typoFixes = (q && !catalog.includes(q))
+        ? catalog.filter(t => !taken.has(t) && !suggestions.includes(t) && this._isNearMiss(q, t))
+        : [];
       dropdown.innerHTML = "";
       state.items = [];
       state.activeIndex = -1;
-      if (suggestions.length === 0) {
+      for (const tag of typoFixes) {
+        const item = this._el("div", {
+          className: "tag-autocomplete-item did-you-mean",
+          role: "option",
+          "data-tag": tag,
+          textContent: this._t("tag_did_you_mean", "#" + tag),
+        });
+        item.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          this._addTagFromSuggestion(task, colIdx, tagInput, tag);
+        });
+        dropdown.appendChild(item);
+        state.items.push(item);
+      }
+      if (suggestions.length === 0 && typoFixes.length === 0) {
         dropdown.appendChild(this._el("div", {
           className: "tag-autocomplete-empty",
           textContent: this._t("tag_no_matches"),
@@ -6763,7 +6787,7 @@ class HomeTasksCard extends HTMLElement {
       }
       for (const tag of suggestions) {
         const item = this._el("div", {
-          className: "tag-autocomplete-item",
+          className: "tag-autocomplete-item" + (catalog.includes(tag) ? " catalog" : ""),
           role: "option",
           "data-tag": tag,
           textContent: "#" + tag,
@@ -6837,6 +6861,27 @@ class HomeTasksCard extends HTMLElement {
     ]);
     tagSectionChildren.push(anchor);
     return this._el("div", { className: "detail-section" }, tagSectionChildren);
+  }
+
+  // Damerau-free edit distance ≤ 1 (short tags) or ≤ 2, early-exit: good
+  // enough to catch "kitchn" / "kichen" for "kitchen" without flagging
+  // unrelated short words.
+  _isNearMiss(a, b) {
+    if (a === b) return false;
+    const max = Math.min(a.length, b.length) <= 4 ? 1 : 2;
+    if (Math.abs(a.length - b.length) > max) return false;
+    let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+    for (let i = 1; i <= a.length; i++) {
+      const cur = [i];
+      let rowMin = i;
+      for (let j = 1; j <= b.length; j++) {
+        cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+        rowMin = Math.min(rowMin, cur[j]);
+      }
+      if (rowMin > max) return false;
+      prev = cur;
+    }
+    return prev[b.length] <= max;
   }
 
   _collectAllKnownTags() {
@@ -8332,6 +8377,7 @@ class HomeTasksCard extends HTMLElement {
         padding: 8px 14px; cursor: pointer; font-size: 13px;
         color: var(--todo-text); user-select: none;
       }
+      .tag-autocomplete-item.did-you-mean { font-style: italic; color: var(--primary-color, #03a9f4); }
       .tag-autocomplete-item:hover,
       .tag-autocomplete-item.highlighted {
         background: rgba(76, 175, 80, 0.15); color: var(--success-color, #4caf50);
@@ -8996,6 +9042,7 @@ class HomeTasksCardEditor extends HTMLElement {
           tags: [...(d.tags || [])],
           priority: d.priority ?? null,
           section_id: d.section_id || null,
+          tag_catalog: [...(d.tag_catalog || [])],
         };
         this._renderDefaultsInto(container, col, this._listDefaults[key]);
       })
@@ -9177,16 +9224,19 @@ class HomeTasksCardEditor extends HTMLElement {
             const d = (r && r.defaults) || {};
             const norm = d.reminders || [];
             const normTags = d.tags || [];
+            const normCatalog = d.tag_catalog || [];
             const changed = (d.assignee || null) !== defaults.assignee ||
               (d.priority ?? null) !== defaults.priority ||
               (d.section_id || null) !== defaults.section_id ||
               JSON.stringify(norm) !== JSON.stringify(defaults.reminders) ||
-              JSON.stringify(normTags) !== JSON.stringify(defaults.tags);
+              JSON.stringify(normTags) !== JSON.stringify(defaults.tags) ||
+              JSON.stringify(normCatalog) !== JSON.stringify(defaults.tag_catalog || []);
             defaults.assignee = d.assignee || null;
             defaults.priority = d.priority ?? null;
             defaults.section_id = d.section_id || null;
             defaults.reminders.splice(0, defaults.reminders.length, ...norm);
             defaults.tags.splice(0, defaults.tags.length, ...normTags);
+            defaults.tag_catalog = [...normCatalog];
             if (changed) renderInto();
           }
           savedFlash.classList.remove("err");
@@ -9257,6 +9307,20 @@ class HomeTasksCardEditor extends HTMLElement {
       // Suggestions come from the tags already in use on this list; the
       // multi-select takes free text too, same as the preset filters.
       const known = (key && this._listMeta[key]) || { tags: [] };
+      // Fixed tags (issue #61) — not applied to new tasks like the fields
+      // around them, but a per-list setting all the same: always offered
+      // when tagging a task, in every card that shows the list.
+      if (!defaults.tag_catalog) defaults.tag_catalog = [];
+      kids.push(this._buildMultiSelect(
+        this._t("ed_tag_catalog"),
+        defaults.tag_catalog,
+        known.tags,
+        (vals) => {
+          defaults.tag_catalog = vals.map((v) => String(v).trim().replace(/^#/, "").toLowerCase()).filter(Boolean);
+          save({ tag_catalog: [...defaults.tag_catalog] });
+        },
+      ));
+      kids.push(this._el("span", { className: "hint", textContent: this._t("ed_tag_catalog_hint") }));
       kids.push(this._buildMultiSelect(
         this._t("ed_default_tags"),
         defaults.tags,

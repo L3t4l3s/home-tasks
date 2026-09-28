@@ -35,6 +35,7 @@ from .store import (
     validate_date,
     validate_priority,
     validate_reminders,
+    validate_tag_catalog,
     validate_tags,
     validate_text,
     validate_time,
@@ -395,6 +396,10 @@ class ExternalTaskOverlayStore:
             "tags": list(d.get("tags") or []),
             "priority": d.get("priority"),
             "section_id": d.get("section_id") or None,
+            # Not applied to new tasks: the tags always offered when tagging
+            # one (issue #61). Lives here so it's edited, stored and synced
+            # with the other per-list settings.
+            "tag_catalog": list(d.get("tag_catalog") or []),
         }
 
     async def async_set_defaults(
@@ -404,6 +409,7 @@ class ExternalTaskOverlayStore:
         tags: object = _UNSET,
         priority: object = _UNSET,
         section_id: object = _UNSET,
+        tag_catalog: object = _UNSET,
     ) -> dict:
         """Update the defaults; omitted fields keep their current value."""
         current = self.get_defaults()
@@ -427,12 +433,17 @@ class ExternalTaskOverlayStore:
             section_id = current["section_id"]
         elif section_id:
             self._validate_section_id(section_id)
+        if tag_catalog is _UNSET:
+            tag_catalog = current["tag_catalog"]
+        else:
+            tag_catalog = validate_tag_catalog(tag_catalog) if tag_catalog else []
         self._data["defaults"] = {
             "assignee": assignee or None,
             "reminders": reminders,
             "tags": tags,
             "priority": priority,
             "section_id": section_id or None,
+            "tag_catalog": tag_catalog,
         }
         await self._async_save()
         return self.get_defaults()

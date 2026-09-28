@@ -70,6 +70,7 @@ async def test_setting_one_default_leaves_the_others_alone(hass: HomeAssistant, 
     assert after == {
         "assignee": "person.alice", "reminders": [],
         "tags": ["chore"], "priority": 1, "section_id": None,
+        "tag_catalog": [],
     }
 
 
@@ -140,6 +141,7 @@ async def test_the_websocket_round_trip_carries_the_new_fields(
     assert msg["result"]["defaults"] == {
         "assignee": None, "reminders": [],
         "tags": ["chore"], "priority": 2, "section_id": section["id"],
+        "tag_catalog": [],
     }
 
 

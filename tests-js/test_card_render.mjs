@@ -1540,6 +1540,26 @@ describe('editor Defaults section (issues #44 / #46)', () => {
     ed.remove();
   });
 
+  test('fixed tags: shown from the stored defaults, added via set_defaults (issue #61)', async () => {
+    const { ed, calls, root } = await makeEditor({ list_id: 'L1' }, {
+      get_defaults: { defaults: { assignee: null, reminders: [], tags: [], tag_catalog: ['kitchen'] } },
+    });
+    const container = root.querySelector('.defaults-editor');
+    assert.ok(container.textContent.includes('Fixed tags'));
+    // The first multi-select is the fixed-tags one (it comes before default tags).
+    const box = container.querySelector('.ms-chips');
+    assert.ok(box.textContent.includes('kitchen'));
+    const input = box.querySelector('.ms-input');
+    input.value = '#Garden';
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await new Promise(r => setTimeout(r, 10));
+    const save = calls.find(c => c.type === 'home_tasks/set_defaults' && 'tag_catalog' in c);
+    assert.ok(save, 'set_defaults carries tag_catalog');
+    assert.equal(JSON.stringify(save.tag_catalog), JSON.stringify(['kitchen', 'garden']));
+    assert.equal('tags' in save, false, 'only the touched field is sent');
+    ed.remove();
+  });
+
   test('changing the assignee saves via set_defaults', async () => {
     const { ed, calls, root } = await makeEditor({ list_id: 'L1' });
     const personSel = root.querySelector('.defaults-editor select');
