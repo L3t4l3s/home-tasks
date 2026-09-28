@@ -1917,6 +1917,75 @@ def _async_register_services(hass: HomeAssistant) -> None:
             "details": describe_task(parsed, language, now.date()),
         }
 
+    async def async_handle_get_tasks(call: ServiceCall) -> ServiceResponse:
+        """A list's tasks with every Home Tasks field (issue #67).
+
+        todo.get_items is bound to HA's TodoItem (no assignee, no tags); this
+        is the same read with them, for automations and template sensors.
+        """
+        kind, ident, store = _resolve_target(hass, call.data)
+        if kind == "native":
+            tasks = sorted(store.tasks, key=lambda t: t.get("sort_order", 0))
+            entry = hass.config_entries.async_get_entry(ident)
+            list_name = (entry.data.get("name") or entry.title) if entry else ident
+        else:
+            # The overlay's sort_order is the card's order where the provider
+            # can't reorder (shopping_list and other generic lists).
+            tasks = sorted(await _external_tasks(hass, ident), key=lambda t: t.get("sort_order", 0))
+            state = hass.states.get(ident)
+            list_name = state.name if state else ident
+
+        status = call.data.get("status", "open")
+        person = call.data.get("assigned_person")
+        tag = (call.data.get("tag") or "").strip().lower()
+        due = call.data.get("due")
+        today = dt_util.now().date().isoformat()
+
+        def wanted(task: dict) -> bool:
+            done = bool(task.get("completed"))
+            if (status == "open" and done) or (status == "completed" and not done):
+                return False
+            if person and task.get("assigned_person") != person:
+                return False
+            if tag and tag not in (t.lower() for t in task.get("tags") or []):
+                return False
+            if due:
+                d = task.get("due_date")
+                if not d:
+                    return False
+                if due == "today" and d != today:
+                    return False
+                if due == "overdue" and d >= today:
+                    return False
+                if due == "today_or_overdue" and d > today:
+                    return False
+            return True
+
+        return {
+            "list_name": list_name,
+            "tasks": [
+                {
+                    "id": t["id"],
+                    "title": t.get("title", ""),
+                    "completed": bool(t.get("completed")),
+                    "completed_at": t.get("completed_at"),
+                    "due_date": t.get("due_date"),
+                    "due_time": t.get("due_time"),
+                    "assigned_person": t.get("assigned_person"),
+                    "tags": list(t.get("tags") or []),
+                    "priority": t.get("priority"),
+                    "notes": t.get("notes") or "",
+                    "section_id": t.get("section_id"),
+                    "sub_items": [
+                        {"title": sub.get("title", ""), "completed": bool(sub.get("completed"))}
+                        for sub in t.get("sub_items") or []
+                    ],
+                    "recurrence_enabled": bool(t.get("recurrence_enabled")),
+                }
+                for t in tasks if wanted(t)
+            ],
+        }
+
     async def async_handle_update_task(call: ServiceCall) -> None:
         """Update fields of an existing task (issue #42) — find it by task_id
         or task_title, then apply whatever fields the call provides."""
@@ -2131,6 +2200,19 @@ def _async_register_services(hass: HomeAssistant) -> None:
             vol.Optional("language"): cv.string,
         }),
         supports_response=SupportsResponse.OPTIONAL,
+    )
+    hass.services.async_register(
+        DOMAIN, "get_tasks", async_handle_get_tasks,
+        schema=vol.Schema({
+            vol.Optional("entry_id"): cv.string,
+            vol.Optional("list_name"): cv.string,
+            vol.Optional("entity_id"): cv.string,
+            vol.Optional("status", default="open"): vol.In(["open", "completed", "all"]),
+            vol.Optional("assigned_person"): cv.string,
+            vol.Optional("tag"): cv.string,
+            vol.Optional("due"): vol.In(["today", "overdue", "today_or_overdue"]),
+        }),
+        supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN, "update_task", async_handle_update_task,

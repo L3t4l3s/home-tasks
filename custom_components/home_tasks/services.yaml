@@ -115,6 +115,62 @@ add_task_from_text:
       selector:
         text:
 
+get_tasks:
+  name: Get Tasks
+  description: >-
+    Return a list's tasks with every Home Tasks field — assignee, tags,
+    priority, sub-tasks — which todo.get_items can't carry. Use it with
+    response_variable in automations and trigger-based template sensors.
+  fields:
+    list_name:
+      name: List Name
+      description: The name of the task list.
+      example: "Household"
+      selector:
+        text:
+    entry_id:
+      name: Entry ID
+      description: The config entry ID of the list (alternative to list name).
+      selector:
+        text:
+    entity_id:
+      name: Linked list entity
+      description: The todo entity of a linked external list.
+      example: "todo.all_tasks"
+      selector:
+        entity:
+          domain: todo
+    status:
+      name: Status
+      description: Which tasks to return.
+      default: open
+      selector:
+        select:
+          options:
+            - open
+            - completed
+            - all
+    assigned_person:
+      name: Assigned person
+      description: Only tasks assigned to this person.
+      selector:
+        entity:
+          domain: person
+    tag:
+      name: Tag
+      description: Only tasks with this tag.
+      selector:
+        text:
+    due:
+      name: Due
+      description: Only tasks due today, overdue, or either.
+      selector:
+        select:
+          options:
+            - today
+            - overdue
+            - today_or_overdue
+
 update_task:
   name: Update Task
   description: Update fields of an existing task (found by ID or title).

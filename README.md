@@ -208,7 +208,7 @@ since otherwise the next scan would queue the task straight back.
 ### Home Assistant Integration
 
 - **7 automation events**: created, completed, reopened, due, overdue, assigned, reminder
-- **Services**: add (also straight from a spoken sentence, fields included), update, move, complete, reopen, and assign tasks from automations
+- **Services**: add (also straight from a spoken sentence, fields included), update, move, complete, reopen, and assign tasks from automations — and read a list's tasks with assignee and tags (`get_tasks`)
 - **Sensors**: open task count + overdue binary sensor per list
 - **Calendar**: every list — native **and external** — gets a `calendar.*` entity. Tasks with due dates appear as all-day or timed events, and **recurring tasks are projected onto every occurrence** (each week, month, etc.) via standard RRULE, usable in any HA calendar card or automation
 - **Todo entity**: each native list is exposed as a standard `todo.*` entity with full HA todo platform support (Companion App, Apple Watch, etc.)
@@ -333,8 +333,8 @@ The old flat format (`list_id` at root level) is still supported and migrated au
 
 ### Services and linked lists
 
-Every task service — `add_task`, `add_task_from_text`, `update_task`, `complete_task`,
-`assign_task`, `reopen_task` — works on a **linked external list** as well as a native one: name it
+Every task service — `add_task`, `add_task_from_text`, `get_tasks`, `update_task`,
+`complete_task`, `assign_task`, `reopen_task` — works on a **linked external list** as well as a native one: name it
 with `list_name` as usual, or point at its todo entity with `entity_id`. The change
 takes the same route as the card, so the provider stores what it can (Todoist labels,
 for example) and the local overlay keeps the rest. `move_task` names a linked source with
@@ -608,6 +608,46 @@ Returns (with `response_variable`) `task_id`, `list_name`, `title`,
 `assigned_person`, `person_name`, `priority`, `due_date`, `due_time`,
 `language` and `details` — the understood fields as a phrase for a spoken
 answer, e.g. `for Anna, high priority, due Friday 2 October at 17:00`.
+
+#### `home_tasks.get_tasks`
+
+Read a list's tasks with every Home Tasks field — what `todo.get_items` can't
+return, since Home Assistant's todo items have no assignee or tags. Call it
+with `response_variable`.
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `list_name` / `entry_id` / `entity_id` | * | The list, as for `add_task` |
+| `status` | no | `open` (default), `completed` or `all` |
+| `assigned_person` | no | Only tasks assigned to this person (e.g. `person.anna`) |
+| `tag` | no | Only tasks with this tag (case-insensitive) |
+| `due` | no | `today`, `overdue` or `today_or_overdue` |
+
+Returns `list_name` and `tasks`, in the card's order; each task has `id`,
+`title`, `completed`, `completed_at`, `due_date`, `due_time`,
+`assigned_person`, `tags`, `priority`, `notes`, `section_id`, `sub_items`
+(`title`, `completed`) and `recurrence_enabled`.
+
+A badge count of *my* tasks due today, as a trigger-based template sensor:
+
+```yaml
+template:
+  - trigger:
+      - trigger: time_pattern
+        minutes: /5
+      - trigger: event
+        event_type: home_tasks_task_completed
+    action:
+      - action: home_tasks.get_tasks
+        data:
+          list_name: Household
+          due: today
+          assigned_person: person.anna
+        response_variable: mine
+    sensor:
+      - name: Anna due today
+        state: "{{ mine.tasks | count }}"
+```
 
 #### `home_tasks.update_task`
 
