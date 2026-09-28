@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 
 from .image_library import async_get_image_library
 from .image_queue import PLACEHOLDER_IMAGE_URLS, async_get_image_queue
-from .const import DOMAIN, MAX_IMAGE_URL_LENGTH, MAX_REORDER_IDS, MAX_RECURRENCE_VALUE, MAX_REMINDER_OFFSET_MINUTES, MAX_REMINDERS_PER_TASK, MAX_SUB_TASKS_PER_TASK, MAX_TAGS_PER_TASK, MAX_TITLE_LENGTH, RECURRENCE_FIELDS, VALID_RECURRENCE_UNITS
+from .const import DOMAIN, MAX_IMAGE_URL_LENGTH, MAX_REORDER_IDS, MAX_RECURRENCE_VALUE, MAX_REMINDER_OFFSET_MINUTES, MAX_REMINDERS_PER_TASK, MAX_SUB_TASKS_PER_TASK, MAX_TAGS_PER_TASK, MAX_TITLE_LENGTH, RECURRENCE_FIELDS, VALID_RECURRENCE_ANCHORS, VALID_RECURRENCE_UNITS
 from .overlay_store import ExternalTaskOverlayStore, OVERLAY_FIELDS, _empty_overlay
 from .store import validate_assigned_person
 from .provider_adapters import ProviderAdapter, GenericAdapter, _get_external_todo_items
@@ -424,6 +424,7 @@ async def ws_set_defaults(hass, connection, msg):
         vol.Optional("recurrence_day_of_month"): vol.Any(vol.All(int, vol.Range(min=1, max=31)), "last", None),
         vol.Optional("recurrence_nth_week"): vol.Any(vol.All(int, vol.Range(min=1, max=4)), "last", None),
         vol.Optional("recurrence_anniversary"): _val_anniversary,
+        vol.Optional("recurrence_anchor"): vol.In(list(VALID_RECURRENCE_ANCHORS)),
         vol.Optional("assigned_person"): vol.Any(str, None),
         vol.Optional("tags"): vol.All(list, vol.Length(max=MAX_TAGS_PER_TASK)),
         vol.Optional("section_id"): vol.Any(_val_id, None),
@@ -444,7 +445,7 @@ async def ws_update_task(hass, connection, msg):
             "recurrence_end_type", "recurrence_end_date", "recurrence_max_count",
             "recurrence_remaining_count", "recurrence_month_pattern",
             "recurrence_day_of_month", "recurrence_nth_week", "recurrence_anniversary",
-            "assigned_person", "tags", "section_id", "image_url",
+            "recurrence_anchor", "assigned_person", "tags", "section_id", "image_url",
         ):
             if key in msg:
                 kwargs[key] = msg[key]
@@ -742,6 +743,7 @@ async def async_move_task_any(
                 "recurrence_day_of_month": item.get("recurrence_day_of_month"),
                 "recurrence_nth_week": item.get("recurrence_nth_week"),
                 "recurrence_anniversary": item.get("recurrence_anniversary"),
+                "recurrence_anchor": item.get("recurrence_anchor", "completion"),
                 "completed_at": item.get("completed_at"),
                 "history": item.get("history", []),
                 "image_url": item.get("image_url"),
@@ -778,6 +780,7 @@ async def async_move_task_any(
                 "recurrence_day_of_month": overlay.get("recurrence_day_of_month"),
                 "recurrence_nth_week": overlay.get("recurrence_nth_week"),
                 "recurrence_anniversary": overlay.get("recurrence_anniversary"),
+                "recurrence_anchor": overlay.get("recurrence_anchor", "completion"),
                 "completed_at": overlay.get("completed_at"),
                 "history": overlay.get("history", []),
                 "image_url": overlay.get("image_url"),
@@ -814,6 +817,7 @@ async def async_move_task_any(
             "recurrence_day_of_month": task_data.get("recurrence_day_of_month"),
             "recurrence_nth_week": task_data.get("recurrence_nth_week"),
             "recurrence_anniversary": task_data.get("recurrence_anniversary"),
+            "recurrence_anchor": task_data.get("recurrence_anchor", "completion"),
             "completed_at": task_data.get("completed_at"),
             "assigned_person": task_data.get("assigned_person"),
             "tags": task_data.get("tags", []),
@@ -1028,6 +1032,7 @@ def _merge_tasks_with_overlays(
             "recurrence_day_of_month": overlay.get("recurrence_day_of_month"),
             "recurrence_nth_week": overlay.get("recurrence_nth_week"),
             "recurrence_anniversary": overlay.get("recurrence_anniversary"),
+            "recurrence_anchor": overlay.get("recurrence_anchor", "completion"),
             "completed_at": overlay.get("completed_at"),
             "assigned_person": overlay.get("assigned_person"),
             "tags": overlay.get("tags", []),
@@ -1115,6 +1120,7 @@ def _merge_tasks_with_adapter_data(
             "recurrence_day_of_month": item.get("recurrence_day_of_month", overlay.get("recurrence_day_of_month")),
             "recurrence_nth_week": item.get("recurrence_nth_week", overlay.get("recurrence_nth_week")),
             "recurrence_anniversary": item.get("recurrence_anniversary", overlay.get("recurrence_anniversary")),
+            "recurrence_anchor": overlay.get("recurrence_anchor", "completion"),
             # Reminders — adapter reads them, overlay as fallback
             "reminders": item.get("reminders", overlay.get("reminders", [])),
             # History & completed_at always from overlay
@@ -1322,6 +1328,7 @@ async def ws_get_external_tasks(hass, connection, msg):
         vol.Optional("recurrence_day_of_month"): vol.Any(vol.All(int, vol.Range(min=1, max=31)), "last", None),
         vol.Optional("recurrence_nth_week"): vol.Any(vol.All(int, vol.Range(min=1, max=4)), "last", None),
         vol.Optional("recurrence_anniversary"): _val_anniversary,
+        vol.Optional("recurrence_anchor"): vol.In(list(VALID_RECURRENCE_ANCHORS)),
         vol.Optional("section_id"): vol.Any(_val_id, None),
         vol.Optional("image_url"): vol.Any(
             vol.All(str, vol.Length(max=MAX_IMAGE_URL_LENGTH)), None
@@ -1625,6 +1632,7 @@ async def async_create_external_task(
         vol.Optional("recurrence_day_of_month"): vol.Any(vol.All(int, vol.Range(min=1, max=31)), "last", None),
         vol.Optional("recurrence_nth_week"): vol.Any(vol.All(int, vol.Range(min=1, max=4)), "last", None),
         vol.Optional("recurrence_anniversary"): _val_anniversary,
+        vol.Optional("recurrence_anchor"): vol.In(list(VALID_RECURRENCE_ANCHORS)),
     }
 )
 @websocket_api.async_response
@@ -1816,6 +1824,7 @@ async def ws_duplicate_external_task(hass, connection, msg):
         vol.Optional("recurrence_day_of_month"): vol.Any(vol.All(int, vol.Range(min=1, max=31)), "last", None),
         vol.Optional("recurrence_nth_week"): vol.Any(vol.All(int, vol.Range(min=1, max=4)), "last", None),
         vol.Optional("recurrence_anniversary"): _val_anniversary,
+        vol.Optional("recurrence_anchor"): vol.In(list(VALID_RECURRENCE_ANCHORS)),
     }
 )
 @websocket_api.async_response

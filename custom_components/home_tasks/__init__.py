@@ -20,7 +20,7 @@ from .image_library import async_get_image_library, async_register_image_library
 from .image_queue import async_register_image_queue
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, RECURRENCE_UNIT_SECONDS
+from .const import DOMAIN, RECURRENCE_UNIT_SECONDS, VALID_MONTH_PATTERNS
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 from .overlay_store import ExternalTaskOverlayStore
@@ -366,16 +366,21 @@ def _on_task_completed(hass: HomeAssistant, entry_id: str, task: dict) -> None:
     if target is not None and task.get("due_date"):
         local_target = target.astimezone(dt_util.DEFAULT_TIME_ZONE)
         old_due_date = task.get("due_date")
+        old_due_time = task.get("due_time")
         task["due_date"] = local_target.date().isoformat()
         # due_time belongs to the user.  We advance the DATE to the next
         # occurrence; the time-of-day — if the user set one — is kept,
         # and if the user didn't set one we don't invent one.  The
         # recurrence_time field is only used by the scheduler to place
         # the reopen timer, not to rewrite the task's due_time.
+        # Exception: an hourly series on the due grid IS its due moment,
+        # so the time moves with it (the next completion anchors on it).
+        if task.get("recurrence_unit") == "hours" and _is_due_anchored(task, "hours"):
+            task["due_time"] = local_target.strftime("%H:%M")
         _record_auto_advance_history(
             task,
             old_due_date, task["due_date"],
-            task.get("due_time"), task.get("due_time"),
+            old_due_time, task.get("due_time"),
         )
 
     # Pass the already-computed target into the scheduler so it doesn't
@@ -440,7 +445,14 @@ def _on_task_schedule_changed(hass: HomeAssistant, entry_id: str, task: dict) ->
         return
 
     completed_at = _parse_completed_at(task)
-    if task.get("recurrence_unit") == "hours" or not task.get("due_date"):
+    unit = task.get("recurrence_unit")
+    if unit == "hours" and task.get("due_date") and _is_due_anchored(task, unit):
+        # Hourly on the due grid: completion already moved due_date/due_time
+        # to the next slot, which is the reopen moment itself.
+        target = _due_moment(task)
+        if target is not None:
+            target = _apply_start_date(task, target)
+    elif unit == "hours" or not task.get("due_date"):
         target = _compute_next_reopen_target(task, completed_at)
     else:
         target = _due_date_reopen_target(task)
@@ -782,15 +794,136 @@ def _add_months(year: int, month: int, months: int) -> tuple[int, int]:
     return year + m // 12, m % 12 + 1
 
 
+def _is_due_anchored(task: dict, unit: str | None) -> bool:
+    """True when the series follows the due date rather than the completion.
+
+    "Ab Fälligkeit" (recurrence_anchor == "due") asks for it explicitly.  A
+    fixed calendar pattern — weekdays, day of month, nth weekday or an
+    anniversary — is a schedule by definition, so it follows the due date as
+    well: ticking Tuesday's Mon–Fri chore on Wednesday must not swallow
+    Wednesday.  Everything else ("Ab Erledigung") restarts from the moment
+    the task was ticked off.
+    """
+    return task.get("recurrence_anchor") == "due" or _has_calendar_pattern(task, unit)
+
+
+def _has_calendar_pattern(task: dict, unit: str | None) -> bool:
+    """True when a weekday, month or anniversary pattern drives the series."""
+    if unit == "weeks":
+        return bool(task.get("recurrence_weekdays"))
+    if unit == "months":
+        return task.get("recurrence_month_pattern") in VALID_MONTH_PATTERNS
+    if unit == "years":
+        ann = task.get("recurrence_anniversary")
+        return bool(ann and len(ann) == 5 and ann[2] == "-")
+    return False
+
+
+def _due_moment(task: dict) -> datetime | None:
+    """The task's due_date at due_time (local midnight when unset), in UTC."""
+    due_date_str = task.get("due_date")
+    if not due_date_str:
+        return None
+    try:
+        due_d = date.fromisoformat(due_date_str)
+    except (ValueError, TypeError):
+        return None
+    h, m = 0, 0
+    due_time = task.get("due_time")
+    if due_time:
+        try:
+            h, m = (int(x) for x in due_time.split(":")[:2])
+        except ValueError:
+            h, m = 0, 0
+    local_midnight = datetime(due_d.year, due_d.month, due_d.day, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+    return _set_local_time(local_midnight, h, m).astimezone(timezone.utc)
+
+
+def _advance_one_occurrence(
+    task: dict, anchor_local: datetime, unit: str, value: int
+) -> datetime | None:
+    """The occurrence that follows *anchor_local* for a date-based unit.
+
+    Returns a local datetime (time-of-day is applied by the caller), or None
+    when the pattern cannot produce a date.
+    """
+    if unit == "days":
+        return anchor_local + timedelta(days=value)
+    if unit == "weeks":
+        weekdays = task.get("recurrence_weekdays") or []
+        if not weekdays:
+            return anchor_local + timedelta(weeks=value)
+        # Each iteration = value calendar weeks (Mon–Sun blocks).  Within
+        # the current iteration, pick the next selected weekday strictly
+        # after the anchor weekday.  If none remain in this iteration,
+        # jump to the first selected weekday of iteration N+value.
+        weekdays_sorted = sorted(set(weekdays))
+        anchor_wd = anchor_local.weekday()
+        in_this_week = [w for w in weekdays_sorted if w > anchor_wd]
+        if in_this_week:
+            delta_days = in_this_week[0] - anchor_wd
+        else:
+            delta_days = max(1, value) * 7 - anchor_wd + weekdays_sorted[0]
+        return anchor_local + timedelta(days=delta_days)
+    if unit == "months":
+        return _next_monthly_target(task, anchor_local, value)
+    return _next_yearly_target(task, anchor_local, value)
+
+
+def _catch_up_occurrence(
+    task: dict, due_anchor: datetime, today: date, unit: str, value: int
+) -> datetime | None:
+    """First occurrence after an overdue *due_anchor* that is on or after *today*.
+
+    Used for due-anchored series completed late: the tick closes the
+    occurrence on screen, missed ones in between collapse into one, and the
+    series keeps its rhythm — an every-2-days chore stays on its own days, a
+    Mon–Fri chore on weekdays.  Today's occurrence is never skipped; a target
+    that already lies in the past reopens the task immediately.
+    """
+    patterned = _has_calendar_pattern(task, unit)
+    if unit == "days" or (unit == "weeks" and not patterned):
+        step = value * (7 if unit == "weeks" else 1)
+        gap = (today - due_anchor.date()).days
+        k = max(1, -(-gap // step))
+        return due_anchor + timedelta(days=k * step)
+
+    if not patterned:
+        # Plain months/years: count whole intervals from the due date instead
+        # of stepping, so a task due on the 31st keeps the 31st after passing
+        # a short month.
+        months = value * (12 if unit == "years" else 1)
+        k = 1
+        while True:
+            year, month = _add_months(due_anchor.year, due_anchor.month, k * months)
+            day = min(due_anchor.day, monthrange(year, month)[1])
+            candidate = due_anchor.replace(year=year, month=month, day=day)
+            if candidate.date() >= today:
+                return candidate
+            k += 1
+
+    # Calendar pattern: walk the pattern itself.
+    current = due_anchor
+    while True:
+        nxt = _advance_one_occurrence(task, current, unit, value)
+        if nxt is None or nxt.date() >= today or nxt <= current:
+            return nxt
+        current = nxt
+
+
 def _compute_next_reopen_target(task: dict, completed_at: datetime) -> datetime | None:
     """Compute the target datetime (UTC-aware) when the task should reopen.
 
-    - hours: exact elapsed-based interval (e.g. every 3 h → reopen 3 h after completion)
+    - hours: exact elapsed-based interval (e.g. every 3 h → reopen 3 h after
+      completion), or on the due moment's grid when due-anchored
     - days / weeks / months / years: recurrence_time (or midnight) of the target day
       with optional sub-patterns:
         * weeks  + recurrence_weekdays      → next matching weekday in N-week window
         * months + recurrence_month_pattern → day-of-month or nth-weekday-of-month
         * years  + recurrence_anniversary   → fixed MM-DD anchor
+    recurrence_anchor picks what a late completion counts from: "completion"
+    (default, "Ab Erledigung") or "due" ("Ab Fälligkeit") — see
+    _is_due_anchored.
     Returns None if recurrence is not configured or end conditions are met.
     """
     rec_type = task.get("recurrence_type", "interval")
@@ -817,21 +950,38 @@ def _compute_next_reopen_target(task: dict, completed_at: datetime) -> datetime 
         return None
 
     if unit == "hours":
-        reopen_at = completed_at + timedelta(seconds=RECURRENCE_UNIT_SECONDS["hours"] * value)
+        step = timedelta(seconds=RECURRENCE_UNIT_SECONDS["hours"] * value)
+        due_at = _due_moment(task) if _is_due_anchored(task, unit) else None
+        if due_at is not None:
+            # On the due moment's grid: the next slot after the one closed,
+            # skipping slots that passed while the task sat open.  UTC
+            # arithmetic so a DST switch doesn't bend the interval.
+            k = 1
+            if due_at + step <= completed_at:
+                k = int((completed_at - due_at) // step) + 1
+            reopen_at = due_at + k * step
+        else:
+            reopen_at = completed_at + step
         if _check_end_date(task, reopen_at):
             return None
         return _apply_start_date(task, reopen_at)
 
     local_completed = completed_at.astimezone(dt_util.DEFAULT_TIME_ZONE)
+    today = local_completed.date()
 
     # For date-based intervals (days/weeks/months/years), the user's intent is
     # "advance the due_date to the next occurrence" — anchored at the existing
     # due_date, NOT at the moment of completion.  This makes early completions
     # (complete today's task at 09:00 when it's due 14:00) advance to tomorrow,
-    # not stay on today.  For late completions (overdue task), we anchor at
-    # local_completed so the next occurrence skips into the future rather than
-    # producing another past date.
-    anchor_local = local_completed
+    # not stay on today.
+    #
+    # Late completions (overdue task) depend on the anchor:
+    #   * "Ab Erledigung": anchor at local_completed, so the next occurrence
+    #     counts from the day the task was actually done.
+    #   * "Ab Fälligkeit" and fixed calendar patterns: the series stays on
+    #     its due-date grid; _catch_up_occurrence lands on the first
+    #     occurrence on or after today.
+    due_anchor = None
     due_date_str = task.get("due_date")
     if due_date_str:
         try:
@@ -840,38 +990,17 @@ def _compute_next_reopen_target(task: dict, completed_at: datetime) -> datetime 
                 year=due_d.year, month=due_d.month, day=due_d.day,
                 hour=0, minute=0, second=0, microsecond=0,
             )
-            if due_anchor.date() >= local_completed.date():
-                anchor_local = due_anchor
         except ValueError:
             pass
 
-    if unit == "days":
-        target_local = anchor_local + timedelta(days=value)
-    elif unit == "weeks":
-        weekdays = task.get("recurrence_weekdays") or []
-        if weekdays:
-            # Each iteration = value calendar weeks (Mon–Sun blocks).  Within
-            # the current iteration, pick the next selected weekday strictly
-            # after the anchor weekday.  If none remain in this iteration,
-            # jump to the first selected weekday of iteration N+value.
-            weekdays_sorted = sorted(set(weekdays))
-            anchor_wd = anchor_local.weekday()
-            in_this_week = [w for w in weekdays_sorted if w > anchor_wd]
-            if in_this_week:
-                delta_days = in_this_week[0] - anchor_wd
-            else:
-                delta_days = max(1, value) * 7 - anchor_wd + weekdays_sorted[0]
-            target_local = anchor_local + timedelta(days=delta_days)
-        else:
-            target_local = anchor_local + timedelta(weeks=value)
-    elif unit == "months":
-        target_local = _next_monthly_target(task, anchor_local, value)
-        if target_local is None:
-            return None
-    else:  # years
-        target_local = _next_yearly_target(task, anchor_local, value)
-        if target_local is None:
-            return None
+    if due_anchor is not None and due_anchor.date() >= today:
+        target_local = _advance_one_occurrence(task, due_anchor, unit, value)
+    elif due_anchor is not None and _is_due_anchored(task, unit):
+        target_local = _catch_up_occurrence(task, due_anchor, today, unit, value)
+    else:
+        target_local = _advance_one_occurrence(task, local_completed, unit, value)
+    if target_local is None:
+        return None
 
     target_time = _set_local_time(target_local, t_h, t_m)
     if _check_end_date(task, target_time):
@@ -1335,18 +1464,40 @@ async def _async_reopen_external_task(
     from .provider_adapters import GenericAdapter
     from .websocket_api import _get_adapter, _get_overlay_store
     adapter = _get_adapter(hass, entity_id) or GenericAdapter(hass, entity_id, {})
+    # A linked list's due date is not advanced at completion (the provider
+    # owns it).  A due-anchored series needs it to move, though — the next
+    # completion counts from it — so it reopens on the occurrence it
+    # reopens for.
+    fields: dict = {"completed": False}
+    unit = task.get("recurrence_unit")
+    if task.get("due_date") and _is_due_anchored(task, unit):
+        target = _compute_next_reopen_target(task, _parse_completed_at(task))
+        if target is not None:
+            local_target = target.astimezone(dt_util.DEFAULT_TIME_ZONE)
+            new_due_date = local_target.date().isoformat()
+            new_due_time = (
+                local_target.strftime("%H:%M") if unit == "hours" else task.get("due_time")
+            )
+            if (new_due_date, new_due_time) != (task.get("due_date"), task.get("due_time")):
+                fields["due_date"] = new_due_date
+                if new_due_time:
+                    fields["due_time"] = new_due_time
     try:
-        await adapter.async_update_task(task_uid, {"completed": False})
+        unsynced = await adapter.async_update_task(task_uid, fields)
     except Exception as err:  # noqa: BLE001
         _LOGGER.warning("Could not reopen external recurring task %s: %s", task_uid, err)
         return
     overlay_kwargs: dict = {"completed_at": None}
+    for key in ("due_date", "due_time"):
+        if unsynced and key in unsynced:
+            overlay_kwargs[key] = unsynced[key]
     subs = task.get("sub_items") or []
     if subs:
         overlay_kwargs["sub_items"] = [{**s, "completed": False} for s in subs]
     await _get_overlay_store(hass, entity_id).async_set_overlay(task_uid, **overlay_kwargs)
     task["completed"] = False
     task["completed_at"] = None
+    task.update({k: fields[k] for k in ("due_date", "due_time") if k in fields})
     hass.bus.async_fire(f"{DOMAIN}_task_reopened", _build_event_data(hass, entry_id, task))
     _schedule_reminders(hass, entry_id, task)
     _LOGGER.info("Recurring external task '%s' reopened", task.get("title", task_uid))

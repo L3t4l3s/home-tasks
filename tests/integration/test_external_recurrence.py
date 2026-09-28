@@ -202,6 +202,37 @@ async def test_reopen_flips_item_clears_completed_at_and_fires(hass: HomeAssista
     assert events[0].data["task_title"] == "Recurring"
 
 
+async def test_reopen_from_due_moves_the_due_date_to_the_reopened_occurrence(
+    hass: HomeAssistant, ext_entry
+) -> None:
+    """A linked list's due date is not advanced at completion, so a due-anchored
+    series moves it on reopen — otherwise the next tick would count from the
+    stale date and bring the task straight back."""
+    from homeassistant.util import dt as dt_util
+
+    today = dt_util.now().date()
+    _register_todo_items(hass, [
+        TodoItem(uid="t1", summary="Recurring", status=TodoItemStatus.COMPLETED),
+    ])
+    await _overlay(hass, ext_entry).async_set_overlay(
+        "t1", recurrence_enabled=True, recurrence_unit="days", recurrence_value=1,
+        recurrence_anchor="due", due_date=(today - timedelta(days=3)).isoformat(),
+        completed_at=datetime.now(timezone.utc).isoformat(),
+    )
+
+    async def _fake_update(call):
+        pass
+
+    hass.services.async_register("todo", "update_item", _fake_update)
+
+    await _async_reopen_external_task(hass, ext_entry.entry_id, ENTITY, "t1")
+    await hass.async_block_till_done()
+
+    ov = _overlay(hass, ext_entry).get_all_overlays()["t1"]
+    assert ov["due_date"] == today.isoformat()
+    assert ov["completed_at"] is None
+
+
 async def test_reopen_noop_when_recurrence_disabled(hass: HomeAssistant, ext_entry) -> None:
     _register_todo_items(hass, [
         TodoItem(uid="t1", summary="Plain", status=TodoItemStatus.COMPLETED),

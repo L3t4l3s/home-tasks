@@ -30,6 +30,7 @@ from .const import (
     STORAGE_VERSION,
     VALID_MONTH_PATTERNS,
     VALID_NTH_WEEK,
+    VALID_RECURRENCE_ANCHORS,
     VALID_RECURRENCE_UNITS,
 )
 
@@ -51,7 +52,7 @@ _SCHEDULE_FIELDS = (
     "recurrence_time", "recurrence_start_date", "recurrence_end_date",
     "recurrence_end_type", "recurrence_month_pattern",
     "recurrence_day_of_month", "recurrence_nth_week",
-    "recurrence_anniversary", "recurrence_max_count",
+    "recurrence_anniversary", "recurrence_anchor", "recurrence_max_count",
     "recurrence_remaining_count",
 )
 
@@ -216,6 +217,14 @@ def validate_recurrence_anniversary(value):
     return value
 
 
+def validate_recurrence_anchor(value):
+    if value not in VALID_RECURRENCE_ANCHORS:
+        raise ValueError(
+            f"recurrence_anchor must be one of {VALID_RECURRENCE_ANCHORS}"
+        )
+    return value
+
+
 def validate_recurrence_weekdays(value):
     if not isinstance(value, list):
         raise ValueError("recurrence_weekdays must be a list")
@@ -307,6 +316,7 @@ _FIELD_VALIDATORS = {
     "recurrence_day_of_month": validate_recurrence_day_of_month,
     "recurrence_nth_week": validate_recurrence_nth_week,
     "recurrence_anniversary": validate_recurrence_anniversary,
+    "recurrence_anchor": validate_recurrence_anchor,
     "recurrence_end_type": validate_recurrence_end_type,
     "recurrence_max_count": validate_recurrence_max_count,
     "recurrence_remaining_count": validate_recurrence_remaining_count,
@@ -430,6 +440,7 @@ class HomeTasksStore:
             task.setdefault("recurrence_day_of_month", None)
             task.setdefault("recurrence_nth_week", None)
             task.setdefault("recurrence_anniversary", None)
+            task.setdefault("recurrence_anchor", "completion")
             task.setdefault("completed_at", None)
             task.setdefault("assigned_person", None)
             task.setdefault("tags", [])
@@ -649,6 +660,7 @@ class HomeTasksStore:
             "recurrence_day_of_month": None,
             "recurrence_nth_week": None,
             "recurrence_anniversary": None,
+            "recurrence_anchor": "completion",
             "completed_at": None,
             "reopen_at": None,
             "assigned_person": assigned_person,
@@ -684,7 +696,7 @@ class HomeTasksStore:
         "recurrence_time", "recurrence_end_type", "recurrence_end_date",
         "recurrence_max_count", "recurrence_remaining_count",
         "recurrence_month_pattern", "recurrence_day_of_month",
-        "recurrence_nth_week", "recurrence_anniversary",
+        "recurrence_nth_week", "recurrence_anniversary", "recurrence_anchor",
         "assigned_person", "tags", "section_id", "image_url",
     )
 

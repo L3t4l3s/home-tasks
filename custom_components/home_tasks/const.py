@@ -28,7 +28,7 @@ RECURRENCE_FIELDS = (
     "recurrence_weekdays", "recurrence_start_date", "recurrence_time",
     "recurrence_end_type", "recurrence_end_date", "recurrence_max_count",
     "recurrence_month_pattern", "recurrence_day_of_month", "recurrence_nth_week",
-    "recurrence_anniversary",
+    "recurrence_anniversary", "recurrence_anchor",
 )
 RECURRENCE_UNIT_SECONDS = {
     "hours": 3600,
@@ -41,6 +41,9 @@ MAX_RECURRENCE_VALUE = 365
 
 VALID_MONTH_PATTERNS = ("day_of_month", "nth_weekday")
 VALID_NTH_WEEK = (1, 2, 3, 4, "last")
+# What a late completion counts the next occurrence from: the moment the task
+# was ticked off ("Ab Erledigung", default) or its due date ("Ab Fälligkeit").
+VALID_RECURRENCE_ANCHORS = ("completion", "due")
 
 # --- Reminders ---
 MAX_REMINDERS_PER_TASK = 5

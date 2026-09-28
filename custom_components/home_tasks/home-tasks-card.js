@@ -144,7 +144,7 @@ const _TRANSLATIONS = {
     rec_mode_lbl: "Mode",
     rec_time: "Time", rec_end: "End", rec_end_never: "Never", rec_end_date: "Until", rec_end_count: "X times",
     rec_end_date_lbl: "Until", rec_max_count_lbl: "Count", rec_remaining: "{0} left", rec_start_date_lbl: "From",
-    rec_pattern_dom: "Day of month", rec_pattern_nth: "Nth weekday", rec_pattern_none: "From completion",
+    rec_pattern_dom: "Day of month", rec_pattern_nth: "Nth weekday", rec_pattern_none: "From completion", rec_pattern_due: "From due date",
     rec_dom_lbl: "Day", rec_dom_last: "Last day",
     rec_nth_lbl: "On the", rec_nth_1: "1st", rec_nth_2: "2nd", rec_nth_3: "3rd", rec_nth_4: "4th", rec_nth_last: "Last",
     rec_anniversary_lbl: "On",
@@ -271,7 +271,7 @@ const _TRANSLATIONS = {
     due_time_lbl: "Tijd", due_date_lbl: "Datum", rec_mode_lbl: "Modus",
     rec_time: "Tijdstip", rec_end: "Einde", rec_end_never: "Nooit", rec_end_date: "Tot", rec_end_count: "X keer",
     rec_end_date_lbl: "Tot", rec_max_count_lbl: "Aantal", rec_remaining: "nog {0}", rec_start_date_lbl: "Vanaf",
-    rec_pattern_dom: "Dag van de maand", rec_pattern_nth: "Nde weekdag", rec_pattern_none: "Vanaf voltooiing",
+    rec_pattern_dom: "Dag van de maand", rec_pattern_nth: "Nde weekdag", rec_pattern_none: "Vanaf voltooiing", rec_pattern_due: "Vanaf vervaldatum",
     rec_dom_lbl: "Dag", rec_dom_last: "Laatste dag",
     rec_nth_lbl: "Op", rec_nth_1: "1e", rec_nth_2: "2e", rec_nth_3: "3e", rec_nth_4: "4e", rec_nth_last: "Laatste",
     rec_anniversary_lbl: "Op", rec_dd: "Dag", rec_mm: "Maand",
@@ -372,7 +372,7 @@ const _TRANSLATIONS = {
     due_time_lbl: "Ora", due_date_lbl: "Data", rec_mode_lbl: "Modalit\u00e0",
     rec_time: "Orario", rec_end: "Fine", rec_end_never: "Mai", rec_end_date: "Fino al", rec_end_count: "X volte",
     rec_end_date_lbl: "Fino al", rec_max_count_lbl: "Numero", rec_remaining: "ancora {0}", rec_start_date_lbl: "Dal",
-    rec_pattern_dom: "Giorno del mese", rec_pattern_nth: "N\u00ba giorno", rec_pattern_none: "Dal completamento",
+    rec_pattern_dom: "Giorno del mese", rec_pattern_nth: "N\u00ba giorno", rec_pattern_none: "Dal completamento", rec_pattern_due: "Dalla scadenza",
     rec_dom_lbl: "Giorno", rec_dom_last: "Ultimo giorno",
     rec_nth_lbl: "Il", rec_nth_1: "1\u00ba", rec_nth_2: "2\u00ba", rec_nth_3: "3\u00ba", rec_nth_4: "4\u00ba", rec_nth_last: "Ultimo",
     rec_anniversary_lbl: "Il", rec_dd: "Giorno", rec_mm: "Mese",
@@ -473,7 +473,7 @@ const _TRANSLATIONS = {
     due_time_lbl: "Czas", due_date_lbl: "Data", rec_mode_lbl: "Tryb",
     rec_time: "Godzina", rec_end: "Koniec", rec_end_never: "Nigdy", rec_end_date: "Do", rec_end_count: "X razy",
     rec_end_date_lbl: "Do", rec_max_count_lbl: "Liczba", rec_remaining: "jeszcze {0}", rec_start_date_lbl: "Od",
-    rec_pattern_dom: "Dzie\u0144 miesi\u0105ca", rec_pattern_nth: "N-ty dzie\u0144", rec_pattern_none: "Od wykonania",
+    rec_pattern_dom: "Dzie\u0144 miesi\u0105ca", rec_pattern_nth: "N-ty dzie\u0144", rec_pattern_none: "Od wykonania", rec_pattern_due: "Od terminu",
     rec_dom_lbl: "Dzie\u0144", rec_dom_last: "Ostatni dzie\u0144",
     rec_nth_lbl: "W", rec_nth_1: "1.", rec_nth_2: "2.", rec_nth_3: "3.", rec_nth_4: "4.", rec_nth_last: "Ostatni",
     rec_anniversary_lbl: "W", rec_dd: "Dzie\u0144", rec_mm: "Miesi\u0105c",
@@ -574,7 +574,7 @@ const _TRANSLATIONS = {
     due_time_lbl: "Tid", due_date_lbl: "Datum", rec_mode_lbl: "L\u00e4ge",
     rec_time: "Tid", rec_end: "Slut", rec_end_never: "Aldrig", rec_end_date: "Till", rec_end_count: "X g\u00e5nger",
     rec_end_date_lbl: "Till", rec_max_count_lbl: "Antal", rec_remaining: "{0} kvar", rec_start_date_lbl: "Fr\u00e5n",
-    rec_pattern_dom: "Dag i m\u00e5naden", rec_pattern_nth: "Nte veckodag", rec_pattern_none: "Fr\u00e5n slutf\u00f6rande",
+    rec_pattern_dom: "Dag i m\u00e5naden", rec_pattern_nth: "Nte veckodag", rec_pattern_none: "Fr\u00e5n slutf\u00f6rande", rec_pattern_due: "Fr\u00e5n f\u00f6rfallodatum",
     rec_dom_lbl: "Dag", rec_dom_last: "Sista dagen",
     rec_nth_lbl: "P\u00e5", rec_nth_1: "1:a", rec_nth_2: "2:a", rec_nth_3: "3:e", rec_nth_4: "4:e", rec_nth_last: "Sista",
     rec_anniversary_lbl: "Den", rec_dd: "Dag", rec_mm: "M\u00e5nad",
@@ -675,7 +675,7 @@ const _TRANSLATIONS = {
     due_time_lbl: "Heure", due_date_lbl: "Date", rec_mode_lbl: "Mode",
     rec_time: "Heure", rec_end: "Fin", rec_end_never: "Jamais", rec_end_date: "Jusqu'au", rec_end_count: "X fois",
     rec_end_date_lbl: "Jusqu'au", rec_max_count_lbl: "Nombre", rec_remaining: "encore {0}", rec_start_date_lbl: "\u00c0 partir du",
-    rec_pattern_dom: "Jour du mois", rec_pattern_nth: "Ni\u00e8me jour", rec_pattern_none: "Depuis l'ach\u00e8vement",
+    rec_pattern_dom: "Jour du mois", rec_pattern_nth: "Ni\u00e8me jour", rec_pattern_none: "Depuis l'ach\u00e8vement", rec_pattern_due: "Depuis l'\u00e9ch\u00e9ance",
     rec_dom_lbl: "Jour", rec_dom_last: "Dernier jour",
     rec_nth_lbl: "Le", rec_nth_1: "1er", rec_nth_2: "2e", rec_nth_3: "3e", rec_nth_4: "4e", rec_nth_last: "Dernier",
     rec_anniversary_lbl: "Le", rec_dd: "Jour", rec_mm: "Mois",
@@ -776,7 +776,7 @@ const _TRANSLATIONS = {
     due_time_lbl: "Hora", due_date_lbl: "Data", rec_mode_lbl: "Modo",
     rec_time: "Hora", rec_end: "Fim", rec_end_never: "Nunca", rec_end_date: "At\u00e9", rec_end_count: "X vezes",
     rec_end_date_lbl: "At\u00e9", rec_max_count_lbl: "Quantidade", rec_remaining: "ainda {0}", rec_start_date_lbl: "De",
-    rec_pattern_dom: "Dia do m\u00eas", rec_pattern_nth: "N\u00ba dia", rec_pattern_none: "Desde a conclus\u00e3o",
+    rec_pattern_dom: "Dia do m\u00eas", rec_pattern_nth: "N\u00ba dia", rec_pattern_none: "Desde a conclus\u00e3o", rec_pattern_due: "Desde o vencimento",
     rec_dom_lbl: "Dia", rec_dom_last: "\u00daltimo dia",
     rec_nth_lbl: "No", rec_nth_1: "1\u00ba", rec_nth_2: "2\u00ba", rec_nth_3: "3\u00ba", rec_nth_4: "4\u00ba", rec_nth_last: "\u00daltimo",
     rec_anniversary_lbl: "No", rec_dd: "Dia", rec_mm: "M\u00eas",
@@ -877,7 +877,7 @@ const _TRANSLATIONS = {
     due_time_lbl: "Hora", due_date_lbl: "Fecha", rec_mode_lbl: "Modo",
     rec_time: "Hora", rec_end: "Fin", rec_end_never: "Nunca", rec_end_date: "Hasta", rec_end_count: "X veces",
     rec_end_date_lbl: "Hasta", rec_max_count_lbl: "Cantidad", rec_remaining: "a\u00fan {0}", rec_start_date_lbl: "Desde",
-    rec_pattern_dom: "D\u00eda del mes", rec_pattern_nth: "D\u00eda N\u00ba", rec_pattern_none: "Desde la finalizaci\u00f3n",
+    rec_pattern_dom: "D\u00eda del mes", rec_pattern_nth: "D\u00eda N\u00ba", rec_pattern_none: "Desde la finalizaci\u00f3n", rec_pattern_due: "Desde el vencimiento",
     rec_dom_lbl: "D\u00eda", rec_dom_last: "\u00daltimo d\u00eda",
     rec_nth_lbl: "El", rec_nth_1: "1\u00ba", rec_nth_2: "2\u00ba", rec_nth_3: "3\u00ba", rec_nth_4: "4\u00ba", rec_nth_last: "\u00daltimo",
     rec_anniversary_lbl: "El", rec_dd: "D\u00eda", rec_mm: "Mes",
@@ -978,7 +978,7 @@ const _TRANSLATIONS = {
     due_time_lbl: "\u0412\u0440\u0435\u043c\u044f", due_date_lbl: "\u0414\u0430\u0442\u0430", rec_mode_lbl: "\u0420\u0435\u0436\u0438\u043c",
     rec_time: "\u0412\u0440\u0435\u043c\u044f", rec_end: "\u041e\u043a\u043e\u043d\u0447\u0430\u043d\u0438\u0435", rec_end_never: "\u041d\u0438\u043a\u043e\u0433\u0434\u0430", rec_end_date: "\u0414\u043e", rec_end_count: "X \u0440\u0430\u0437",
     rec_end_date_lbl: "\u0414\u043e", rec_max_count_lbl: "\u041a\u043e\u043b\u0438\u0447\u0435\u0441\u0442\u0432\u043e", rec_remaining: "\u0435\u0449\u0451 {0}", rec_start_date_lbl: "\u0421",
-    rec_pattern_dom: "\u0414\u0435\u043d\u044c \u043c\u0435\u0441\u044f\u0446\u0430", rec_pattern_nth: "N-\u0439 \u0434\u0435\u043d\u044c", rec_pattern_none: "\u041e\u0442 \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u044f",
+    rec_pattern_dom: "\u0414\u0435\u043d\u044c \u043c\u0435\u0441\u044f\u0446\u0430", rec_pattern_nth: "N-\u0439 \u0434\u0435\u043d\u044c", rec_pattern_none: "\u041e\u0442 \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u044f", rec_pattern_due: "\u041e\u0442 \u0441\u0440\u043e\u043a\u0430",
     rec_dom_lbl: "\u0414\u0435\u043d\u044c", rec_dom_last: "\u041f\u043e\u0441\u043b\u0435\u0434\u043d\u0438\u0439 \u0434\u0435\u043d\u044c",
     rec_nth_lbl: "\u0412", rec_nth_1: "1-\u0439", rec_nth_2: "2-\u0439", rec_nth_3: "3-\u0439", rec_nth_4: "4-\u0439", rec_nth_last: "\u041f\u043e\u0441\u043b\u0435\u0434\u043d\u0438\u0439",
     rec_anniversary_lbl: "\u0412", rec_dd: "\u0414\u0435\u043d\u044c", rec_mm: "\u041c\u0435\u0441\u044f\u0446",
@@ -1079,7 +1079,7 @@ const _TRANSLATIONS = {
     due_time_lbl: "\u010cas", due_date_lbl: "Datum", rec_mode_lbl: "Re\u017eim",
     rec_time: "\u010cas", rec_end: "Konec", rec_end_never: "Nikdy", rec_end_date: "Do", rec_end_count: "X kr\u00e1t",
     rec_end_date_lbl: "Do", rec_max_count_lbl: "Po\u010det", rec_remaining: "je\u0161t\u011b {0}", rec_start_date_lbl: "Od",
-    rec_pattern_dom: "Den v m\u011bs\u00edci", rec_pattern_nth: "N-t\u00fd den", rec_pattern_none: "Od dokon\u010den\u00ed",
+    rec_pattern_dom: "Den v m\u011bs\u00edci", rec_pattern_nth: "N-t\u00fd den", rec_pattern_none: "Od dokon\u010den\u00ed", rec_pattern_due: "Od term\u00ednu",
     rec_dom_lbl: "Den", rec_dom_last: "Posledn\u00ed den",
     rec_nth_lbl: "V", rec_nth_1: "1.", rec_nth_2: "2.", rec_nth_3: "3.", rec_nth_4: "4.", rec_nth_last: "Posledn\u00ed",
     rec_anniversary_lbl: "V", rec_dd: "Den", rec_mm: "M\u011bs\u00edc",
@@ -1180,7 +1180,7 @@ const _TRANSLATIONS = {
     due_time_lbl: "Tid", due_date_lbl: "Dato", rec_mode_lbl: "Tilstand",
     rec_time: "Tidspunkt", rec_end: "Slut", rec_end_never: "Aldrig", rec_end_date: "Til", rec_end_count: "X gange",
     rec_end_date_lbl: "Til", rec_max_count_lbl: "Antal", rec_remaining: "{0} tilbage", rec_start_date_lbl: "Fra",
-    rec_pattern_dom: "Dag i m\u00e5neden", rec_pattern_nth: "Nte ugedag", rec_pattern_none: "Fra fuldf\u00f8relse",
+    rec_pattern_dom: "Dag i m\u00e5neden", rec_pattern_nth: "Nte ugedag", rec_pattern_none: "Fra fuldf\u00f8relse", rec_pattern_due: "Fra forfaldsdato",
     rec_dom_lbl: "Dag", rec_dom_last: "Sidste dag",
     rec_nth_lbl: "Den", rec_nth_1: "1.", rec_nth_2: "2.", rec_nth_3: "3.", rec_nth_4: "4.", rec_nth_last: "Sidste",
     rec_anniversary_lbl: "Den", rec_dd: "Dag", rec_mm: "M\u00e5ned",
@@ -1281,7 +1281,7 @@ const _TRANSLATIONS = {
     due_time_lbl: "Tid", due_date_lbl: "Dato", rec_mode_lbl: "Modus",
     rec_time: "Klokkeslett", rec_end: "Slutt", rec_end_never: "Aldri", rec_end_date: "Til", rec_end_count: "X ganger",
     rec_end_date_lbl: "Til", rec_max_count_lbl: "Antall", rec_remaining: "{0} igjen", rec_start_date_lbl: "Fra",
-    rec_pattern_dom: "Dag i m\u00e5neden", rec_pattern_nth: "Nte ukedag", rec_pattern_none: "Fra fullf\u00f8ring",
+    rec_pattern_dom: "Dag i m\u00e5neden", rec_pattern_nth: "Nte ukedag", rec_pattern_none: "Fra fullf\u00f8ring", rec_pattern_due: "Fra forfallsdato",
     rec_dom_lbl: "Dag", rec_dom_last: "Siste dag",
     rec_nth_lbl: "Den", rec_nth_1: "1.", rec_nth_2: "2.", rec_nth_3: "3.", rec_nth_4: "4.", rec_nth_last: "Siste",
     rec_anniversary_lbl: "Den", rec_dd: "Dag", rec_mm: "M\u00e5ned",
@@ -1382,7 +1382,7 @@ const _TRANSLATIONS = {
     due_time_lbl: "Aika", due_date_lbl: "P\u00e4iv\u00e4m\u00e4\u00e4r\u00e4", rec_mode_lbl: "Tila",
     rec_time: "Aika", rec_end: "Loppu", rec_end_never: "Ei koskaan", rec_end_date: "Asti", rec_end_count: "X kertaa",
     rec_end_date_lbl: "Asti", rec_max_count_lbl: "M\u00e4\u00e4r\u00e4", rec_remaining: "{0} j\u00e4ljell\u00e4", rec_start_date_lbl: "Alkaen",
-    rec_pattern_dom: "Kuukauden p\u00e4iv\u00e4", rec_pattern_nth: "N. viikonp\u00e4iv\u00e4", rec_pattern_none: "Valmistumisesta",
+    rec_pattern_dom: "Kuukauden p\u00e4iv\u00e4", rec_pattern_nth: "N. viikonp\u00e4iv\u00e4", rec_pattern_none: "Valmistumisesta", rec_pattern_due: "Er\u00e4p\u00e4iv\u00e4st\u00e4",
     rec_dom_lbl: "P\u00e4iv\u00e4", rec_dom_last: "Viimeinen p\u00e4iv\u00e4",
     rec_nth_lbl: "Numero", rec_nth_1: "1.", rec_nth_2: "2.", rec_nth_3: "3.", rec_nth_4: "4.", rec_nth_last: "Viimeinen",
     rec_anniversary_lbl: "Pvm", rec_dd: "P\u00e4iv\u00e4", rec_mm: "Kuukausi",
@@ -1483,7 +1483,7 @@ const _TRANSLATIONS = {
     due_time_lbl: "Id\u0151pont", due_date_lbl: "D\u00e1tum", rec_mode_lbl: "M\u00f3d",
     rec_time: "Id\u0151pont", rec_end: "V\u00e9ge", rec_end_never: "Soha", rec_end_date: "Eddig", rec_end_count: "X alkalom",
     rec_end_date_lbl: "Eddig", rec_max_count_lbl: "Darabsz\u00e1m", rec_remaining: "m\u00e9g {0}", rec_start_date_lbl: "Ett\u0151l",
-    rec_pattern_dom: "H\u00f3nap napja", rec_pattern_nth: "N-edik nap", rec_pattern_none: "Befejez\u00e9st\u0151l",
+    rec_pattern_dom: "H\u00f3nap napja", rec_pattern_nth: "N-edik nap", rec_pattern_none: "Befejez\u00e9st\u0151l", rec_pattern_due: "Hat\u00e1rid\u0151t\u0151l",
     rec_dom_lbl: "Nap", rec_dom_last: "Utols\u00f3 nap",
     rec_nth_lbl: "Sorsz\u00e1m", rec_nth_1: "1.", rec_nth_2: "2.", rec_nth_3: "3.", rec_nth_4: "4.", rec_nth_last: "Utols\u00f3",
     rec_anniversary_lbl: "D\u00e1tum", rec_dd: "Nap", rec_mm: "H\u00f3nap",
@@ -1636,7 +1636,7 @@ const _TRANSLATIONS = {
     rec_mode_lbl: "Modus",
     rec_time: "Uhrzeit", rec_end: "Ende", rec_end_never: "Nie", rec_end_date: "Bis", rec_end_count: "X mal",
     rec_end_date_lbl: "Bis", rec_max_count_lbl: "Anzahl", rec_remaining: "noch {0}", rec_start_date_lbl: "Ab",
-    rec_pattern_dom: "Tag im Monat", rec_pattern_nth: "N-ter Wochentag", rec_pattern_none: "Ab Erledigung",
+    rec_pattern_dom: "Tag im Monat", rec_pattern_nth: "N-ter Wochentag", rec_pattern_none: "Ab Erledigung", rec_pattern_due: "Ab F\u00e4lligkeit",
     rec_dom_lbl: "Tag", rec_dom_last: "letzten Tag",
     rec_nth_lbl: "Am", rec_nth_1: "1.", rec_nth_2: "2.", rec_nth_3: "3.", rec_nth_4: "4.", rec_nth_last: "letzten",
     rec_anniversary_lbl: "Am",
@@ -5581,6 +5581,11 @@ class HomeTasksCard extends HTMLElement {
     const recurrenceDayOfMonth = task.recurrence_day_of_month;
     const recurrenceNthWeek = task.recurrence_nth_week;
     const recurrenceAnniversary = task.recurrence_anniversary || "";
+    // What a late completion counts from: "completion" ("Ab Erledigung",
+    // default) or "due" ("Ab Fälligkeit").  A calendar pattern (weekdays,
+    // day of month, …) always follows the due date, so this only matters
+    // while no pattern is picked.
+    const recurrenceAnchor = task.recurrence_anchor === "due" ? "due" : "completion";
 
     const recSwitch = document.createElement("ha-switch");
     recSwitch.checked = recurrenceEnabled;
@@ -5634,6 +5639,24 @@ class HomeTasksCard extends HTMLElement {
     ]);
     const recurrenceIntervalRow = this._el("div", { className: "recurrence-input-row" }, [recValueWrap, recUnitWrap]);
 
+    // ---- Hourly/daily sub-section (radios: Ab Erledigung / Ab Fälligkeit) -
+    const _basicPatName = `rec_basic_pattern_${task.id}`;
+    const _mkBasicRadio = (val) => {
+      const r = this._el("input", { type: "radio", name: _basicPatName, value: val });
+      if (recurrenceAnchor === val) r.checked = true;
+      return r;
+    };
+    const basicPatNoneRadio = _mkBasicRadio("completion");
+    const basicPatDueRadio = _mkBasicRadio("due");
+    const recurrenceBasicRadioRow = this._el("div", { className: "recurrence-radio-row" }, [
+      this._el("label", { className: "weekday-label" }, [
+        basicPatNoneRadio, this._el("span", { textContent: this._t("rec_pattern_none") }),
+      ]),
+      this._el("label", { className: "weekday-label" }, [
+        basicPatDueRadio, this._el("span", { textContent: this._t("rec_pattern_due") }),
+      ]),
+    ]);
+
     // ---- Weekly sub-section (radios: Ab Erledigung / Am + weekday filter) -
     const _weekPatName = `rec_week_pattern_${task.id}`;
     const weekHasFilter = (recurrenceWeekdays && recurrenceWeekdays.length > 0)
@@ -5643,16 +5666,20 @@ class HomeTasksCard extends HTMLElement {
       if (checked) r.checked = true;
       return r;
     };
-    const weekPatNoneRadio = _mkWeekRadio("none", !weekHasFilter);
+    const weekPatNoneRadio = _mkWeekRadio("none", !weekHasFilter && recurrenceAnchor !== "due");
+    const weekPatDueRadio = _mkWeekRadio("due", !weekHasFilter && recurrenceAnchor === "due");
     const weekPatOnRadio = _mkWeekRadio("on", weekHasFilter);
     const weekPatNoneLabel = this._el("label", { className: "weekday-label" }, [
       weekPatNoneRadio, this._el("span", { textContent: this._t("rec_pattern_none") }),
+    ]);
+    const weekPatDueLabel = this._el("label", { className: "weekday-label" }, [
+      weekPatDueRadio, this._el("span", { textContent: this._t("rec_pattern_due") }),
     ]);
     const weekPatOnLabel = this._el("label", { className: "weekday-label" }, [
       weekPatOnRadio, this._el("span", { textContent: this._t("rec_anniversary_lbl") }),
     ]);
     const recurrenceWeekRadioRow = this._el("div", { className: "recurrence-radio-row" }, [
-      weekPatNoneLabel, weekPatOnLabel,
+      weekPatNoneLabel, weekPatDueLabel, weekPatOnLabel,
     ]);
     const weekdayCheckboxes = [];
     const recurrenceWeekdayCheckboxRow = this._el("div", { className: "recurrence-weekday-row" });
@@ -5673,12 +5700,16 @@ class HomeTasksCard extends HTMLElement {
     // Radios use the same .weekday-label pill styling as the weekday picker
     // so both rows feel like one consistent control.
     const _patternName = `rec_month_pattern_${task.id}`;
+    const _monthChecked = recurrenceMonthPattern !== "none"
+      ? recurrenceMonthPattern
+      : (recurrenceAnchor === "due" ? "due" : "none");
     const _mkPatternRadio = (val) => {
       const r = this._el("input", { type: "radio", name: _patternName, value: val });
-      if (recurrenceMonthPattern === val) r.checked = true;
+      if (_monthChecked === val) r.checked = true;
       return r;
     };
     const monthPatNoneRadio = _mkPatternRadio("none");
+    const monthPatDueRadio = _mkPatternRadio("due");
     const monthPatDomRadio = _mkPatternRadio("day_of_month");
     const monthPatNthRadio = _mkPatternRadio("nth_weekday");
 
@@ -5737,6 +5768,9 @@ class HomeTasksCard extends HTMLElement {
     const monthPatNoneLabel = this._el("label", { className: "weekday-label" }, [
       monthPatNoneRadio, this._el("span", { textContent: this._t("rec_pattern_none") }),
     ]);
+    const monthPatDueLabel = this._el("label", { className: "weekday-label" }, [
+      monthPatDueRadio, this._el("span", { textContent: this._t("rec_pattern_due") }),
+    ]);
     const monthPatDomLabel = this._el("label", { className: "weekday-label" }, [
       monthPatDomRadio, this._el("span", { textContent: this._t("rec_pattern_dom") }),
     ]);
@@ -5744,7 +5778,7 @@ class HomeTasksCard extends HTMLElement {
       monthPatNthRadio, this._el("span", { textContent: this._t("rec_pattern_nth") }),
     ]);
     const recurrenceMonthRadioRow = this._el("div", { className: "recurrence-radio-row" }, [
-      monthPatNoneLabel, monthPatDomLabel, monthPatNthLabel,
+      monthPatNoneLabel, monthPatDueLabel, monthPatDomLabel, monthPatNthLabel,
     ]);
     // The selects appear under the radios — only one set is visible at a time.
     const recurrenceMonthDomRow = this._el("div", { className: "recurrence-sub-row" }, [
@@ -5772,16 +5806,20 @@ class HomeTasksCard extends HTMLElement {
       if (checked) r.checked = true;
       return r;
     };
-    const yearPatNoneRadio = _mkYearRadio("none", !yearHasAnchor);
+    const yearPatNoneRadio = _mkYearRadio("none", !yearHasAnchor && recurrenceAnchor !== "due");
+    const yearPatDueRadio = _mkYearRadio("due", !yearHasAnchor && recurrenceAnchor === "due");
     const yearPatOnRadio = _mkYearRadio("on", yearHasAnchor);
     const yearPatNoneLabel = this._el("label", { className: "weekday-label" }, [
       yearPatNoneRadio, this._el("span", { textContent: this._t("rec_pattern_none") }),
+    ]);
+    const yearPatDueLabel = this._el("label", { className: "weekday-label" }, [
+      yearPatDueRadio, this._el("span", { textContent: this._t("rec_pattern_due") }),
     ]);
     const yearPatOnLabel = this._el("label", { className: "weekday-label" }, [
       yearPatOnRadio, this._el("span", { textContent: this._t("rec_anniversary_lbl") }),
     ]);
     const recurrenceYearRadioRow = this._el("div", { className: "recurrence-radio-row" }, [
-      yearPatNoneLabel, yearPatOnLabel,
+      yearPatNoneLabel, yearPatDueLabel, yearPatOnLabel,
     ]);
 
     // TT input: same custom spin-btn pattern as the value/anzahl fields so
@@ -6025,6 +6063,14 @@ class HomeTasksCard extends HTMLElement {
 
     const applyRowVisibility = (unit, value) => {
       recurrenceIntervalRow.style.display = "";
+      // Hours/days: only the anchor choice.  A provider that runs the
+      // recurrence itself (Todoist) decides that on its own, so the
+      // "Ab Fälligkeit" option is ours to offer only on other lists.
+      recurrenceBasicRadioRow.style.display =
+        ((unit === "hours" || unit === "days") && !providerSyncsRecurrence) ? "" : "none";
+      for (const lbl of [weekPatDueLabel, monthPatDueLabel, yearPatDueLabel]) {
+        lbl.style.display = providerSyncsRecurrence ? "none" : "";
+      }
       // Weekly: radios always visible when unit=weeks; the checkbox row only
       // when "Am" is selected.
       recurrenceWeekSection.style.display = unit === "weeks" ? "" : "none";
@@ -6082,12 +6128,17 @@ class HomeTasksCard extends HTMLElement {
       recurrenceUnitSelect.disabled = !enabled;
       spinUp.disabled = !enabled;
       spinDown.disabled = !enabled;
+      basicPatNoneRadio.disabled = !enabled;
+      basicPatDueRadio.disabled = !enabled;
       weekPatNoneRadio.disabled = !enabled;
+      weekPatDueRadio.disabled = !enabled;
       weekPatOnRadio.disabled = !enabled;
       monthPatNoneRadio.disabled = !enabled;
+      monthPatDueRadio.disabled = !enabled;
       monthPatDomRadio.disabled = !enabled;
       monthPatNthRadio.disabled = !enabled;
       yearPatNoneRadio.disabled = !enabled;
+      yearPatDueRadio.disabled = !enabled;
       yearPatOnRadio.disabled = !enabled;
       recurrenceStartDateInput.disabled = !enabled;
       recurrenceTimeInput.disabled = !enabled;
@@ -6165,6 +6216,39 @@ class HomeTasksCard extends HTMLElement {
       return [];
     };
 
+    // The anchor is one setting shown in every unit's radio row.  Picking it
+    // in one row mirrors it into the others, so switching the unit keeps it
+    // (a row whose calendar pattern is picked keeps showing the pattern).
+    let currentAnchor = recurrenceAnchor;
+    const syncAnchorRadios = () => {
+      const due = currentAnchor === "due";
+      basicPatDueRadio.checked = due;
+      basicPatNoneRadio.checked = !due;
+      if (!weekPatOnRadio.checked) {
+        weekPatDueRadio.checked = due;
+        weekPatNoneRadio.checked = !due;
+      }
+      if (!monthPatDomRadio.checked && !monthPatNthRadio.checked) {
+        monthPatDueRadio.checked = due;
+        monthPatNoneRadio.checked = !due;
+      }
+      if (!yearPatOnRadio.checked) {
+        yearPatDueRadio.checked = due;
+        yearPatNoneRadio.checked = !due;
+      }
+    };
+    const _setAnchor = (dueChecked) => {
+      currentAnchor = dueChecked ? "due" : "completion";
+      syncAnchorRadios();
+      return currentAnchor;
+    };
+
+    const saveBasicPattern = () => {
+      _saveAndReload(this._updateTaskRouted(colIdx, task.id, {
+        recurrence_anchor: _setAnchor(basicPatDueRadio.checked),
+      }));
+    };
+
     const saveWeekdays = () => {
       // If the user toggled a checkbox while "Ab Erledigung" was selected,
       // auto-flip to "Am" so the picker stays consistent (unlikely path —
@@ -6188,6 +6272,9 @@ class HomeTasksCard extends HTMLElement {
       applyMonthPatternState();
       const monthly = _collectMonthlyFields();
       const fields = { ...monthly };
+      if (monthPatNoneRadio.checked || monthPatDueRadio.checked) {
+        fields.recurrence_anchor = _setAnchor(monthPatDueRadio.checked);
+      }
       // Keep recurrence_weekdays in sync with the nth-weekday picker.
       if (recurrenceUnitSelect.value === "months") {
         fields.recurrence_weekdays = _activeWeekdaysForUnit("months");
@@ -6207,11 +6294,13 @@ class HomeTasksCard extends HTMLElement {
       applyRowVisibility(recurrenceUnitSelect.value, parseInt(recurrenceValueInput.value) || 1);
       applyWeekPatternState();
       if (!weekPatOnRadio.checked) {
-        // Picked "Ab Erledigung" — clear weekdays AND drop the override
-        // so a future reload renders the radio purely from data.
+        // Picked "Ab Erledigung" / "Ab Fälligkeit" — clear weekdays AND
+        // drop the override so a future reload renders the radio purely
+        // from data.
         this._weekPatternOverride.delete(task.id);
         _saveAndReload(this._updateTaskRouted(colIdx, task.id, {
           recurrence_weekdays: [],
+          recurrence_anchor: _setAnchor(weekPatDueRadio.checked),
         }));
       } else {
         // Picked "Am" without any checkboxes yet — remember the choice
@@ -6226,10 +6315,11 @@ class HomeTasksCard extends HTMLElement {
     const saveYearPattern = () => {
       applyRowVisibility(recurrenceUnitSelect.value, parseInt(recurrenceValueInput.value) || 1);
       applyYearPatternState();
-      if (yearPatNoneRadio.checked) {
+      if (!yearPatOnRadio.checked) {
         this._yearPatternOverride.delete(task.id);
         _saveAndReload(this._updateTaskRouted(colIdx, task.id, {
           recurrence_anniversary: null,
+          recurrence_anchor: _setAnchor(yearPatDueRadio.checked),
         }));
       } else {
         // Same sticky-UI rule as the weekly radio.
@@ -6253,6 +6343,7 @@ class HomeTasksCard extends HTMLElement {
       // session.  Same idea for Year ↔ Month transitions.
       if (newUnit !== "weeks") this._weekPatternOverride.delete(task.id);
       if (newUnit !== "years") this._yearPatternOverride.delete(task.id);
+      syncAnchorRadios();
       applyRowVisibility(newUnit, val);
       // Update end-date min; auto-clear if it became invalid
       const oldEndVal = recurrenceEndDateInput.value;
@@ -6365,6 +6456,7 @@ class HomeTasksCard extends HTMLElement {
         recurrence_end_type: endType,
         recurrence_end_date: endType === "date" ? (recurrenceEndDateInput.value || null) : null,
         recurrence_max_count: endType === "count" ? (parseInt(recurrenceMaxCountInput.value) || null) : null,
+        recurrence_anchor: currentAnchor,
         // Include current reminders — Todoist deletes them when due changes,
         // so the backend needs to re-create them after the update.
         reminders: task.reminders || [],
@@ -6392,7 +6484,9 @@ class HomeTasksCard extends HTMLElement {
     recurrenceUnitSelect.addEventListener("change", saveInterval);
     _blurAfterChange(recurrenceUnitSelect);
     weekdayCheckboxes.forEach(cb => cb.addEventListener("change", saveWeekdays));
-    [monthPatNoneRadio, monthPatDomRadio, monthPatNthRadio].forEach(r =>
+    [basicPatNoneRadio, basicPatDueRadio].forEach(r =>
+      r.addEventListener("change", saveBasicPattern));
+    [monthPatNoneRadio, monthPatDueRadio, monthPatDomRadio, monthPatNthRadio].forEach(r =>
       r.addEventListener("change", saveMonthlyPattern));
     monthDomSelect.addEventListener("change", saveMonthlyPattern);
     monthNthSelect.addEventListener("change", saveMonthlyPattern);
@@ -6404,9 +6498,9 @@ class HomeTasksCard extends HTMLElement {
     annDayInput.addEventListener("keydown", (e) => { if (e.key === "Enter") annDayInput.blur(); });
     annMonthSelect.addEventListener("change", saveAnniversary);
     _blurAfterChange(annMonthSelect);
-    [weekPatNoneRadio, weekPatOnRadio].forEach(r =>
+    [weekPatNoneRadio, weekPatDueRadio, weekPatOnRadio].forEach(r =>
       r.addEventListener("change", saveWeekPattern));
-    [yearPatNoneRadio, yearPatOnRadio].forEach(r =>
+    [yearPatNoneRadio, yearPatDueRadio, yearPatOnRadio].forEach(r =>
       r.addEventListener("change", saveYearPattern));
     [endDateRadio, endCountRadio].forEach(r =>
       r.addEventListener("change", saveEndCondition));
@@ -6428,6 +6522,7 @@ class HomeTasksCard extends HTMLElement {
     return this._el("div", { className: "detail-section" }, [
       recurrenceToggleRow,
       recurrenceIntervalRow,
+      recurrenceBasicRadioRow,
       recurrenceWeekSection,
       recurrenceMonthSection,
       recurrenceYearRow,

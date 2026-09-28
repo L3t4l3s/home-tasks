@@ -2425,6 +2425,199 @@ def test_weeks_no_weekdays_value_2() -> None:
     assert _local_target(task, completed) == (2026, 1, 19)
 
 
+# ---------------------------------------------------------------------------
+# recurrence_anchor: "Ab Erledigung" (completion) vs "Ab Fälligkeit" (due)
+# ---------------------------------------------------------------------------
+
+def _every(unit: str, value: int = 1, **extra) -> dict:
+    return {"recurrence_type": "interval", "recurrence_unit": unit,
+            "recurrence_value": value, **extra}
+
+
+def test_late_completion_from_completion_is_the_default() -> None:
+    """Without an anchor a late tick counts from the completion day: Mon + tick Thu -> Sat."""
+    task = _every("days", 2, due_date="2026-01-05")
+    assert _local_target(task, _local_dt(2026, 1, 8)) == (2026, 1, 10)
+    task["recurrence_anchor"] = "completion"
+    assert _local_target(task, _local_dt(2026, 1, 8)) == (2026, 1, 10)
+
+
+def test_from_due_every_2_days_keeps_its_rhythm() -> None:
+    """Due Mon, ticked Thu: the series is Mon/Wed/Fri, so the next one is Fri."""
+    task = _every("days", 2, due_date="2026-01-05", recurrence_anchor="due")
+    assert _local_target(task, _local_dt(2026, 1, 8)) == (2026, 1, 9)
+
+
+def test_from_due_lands_on_today_when_today_is_in_the_series() -> None:
+    """Due Tue, ticked Thu: Thu is an occurrence, so it is due right away."""
+    task = _every("days", 2, due_date="2026-01-06", recurrence_anchor="due")
+    assert _local_target(task, _local_dt(2026, 1, 8)) == (2026, 1, 8)
+
+
+def test_from_due_keeps_two_alternating_chores_apart() -> None:
+    """Two every-2-days chores offset by a day, both ticked late on one day, stay offset."""
+    completed = _local_dt(2026, 1, 8)
+    a = _local_target(_every("days", 2, due_date="2026-01-05", recurrence_anchor="due"), completed)
+    b = _local_target(_every("days", 2, due_date="2026-01-06", recurrence_anchor="due"), completed)
+    assert (a, b) == ((2026, 1, 9), (2026, 1, 8))
+
+
+def test_from_due_long_neglected_daily_catches_up_in_one_step() -> None:
+    task = _every("days", 1, due_date="2025-01-01", recurrence_anchor="due")
+    assert _local_target(task, _local_dt(2026, 1, 8)) == (2026, 1, 8)
+
+
+def test_from_due_plain_weekly_keeps_its_weekday() -> None:
+    """Weekly due Mon 5 Jan, ticked Wed 14 Jan: next is Mon 19 Jan, not Wed 21."""
+    task = _every("weeks", 1, due_date="2026-01-05", recurrence_anchor="due")
+    assert _local_target(task, _local_dt(2026, 1, 14)) == (2026, 1, 19)
+
+
+def test_from_due_early_completion_is_unchanged() -> None:
+    """Ticking tomorrow's every-2-days chore today advances from its due date."""
+    task = _every("days", 2, due_date="2026-01-09", recurrence_anchor="due")
+    assert _local_target(task, _local_dt(2026, 1, 8)) == (2026, 1, 11)
+
+
+def test_from_due_monthly_keeps_the_31st_through_short_months() -> None:
+    """Due 31 Jan, ticked 2 Apr: Feb and Mar are gone, next is 30 Apr (not the 28th)."""
+    task = _every("months", 1, due_date="2026-01-31", recurrence_anchor="due")
+    assert _local_target(task, _local_dt(2026, 4, 2)) == (2026, 4, 30)
+    # ... and 31 Mar when ticked in March.
+    assert _local_target(task, _local_dt(2026, 3, 5)) == (2026, 3, 31)
+
+
+def test_from_completion_monthly_is_unchanged() -> None:
+    task = _every("months", 1, due_date="2025-12-15")
+    assert _local_target(task, _local_dt(2026, 1, 8)) == (2026, 2, 8)
+
+
+def test_from_due_yearly_counts_from_the_due_date() -> None:
+    task = _every("years", 1, due_date="2024-03-10", recurrence_anchor="due")
+    assert _local_target(task, _local_dt(2026, 1, 8)) == (2026, 3, 10)
+
+
+def test_weekday_pattern_does_not_swallow_today() -> None:
+    """Mon-Fri chore due Tue, ticked Wed: Wednesday is due now, not skipped to Thu.
+
+    A calendar pattern is a schedule, so it follows the due date without
+    any anchor setting.
+    """
+    task = _every("weeks", 1, due_date="2026-01-06", recurrence_weekdays=[0, 1, 2, 3, 4])
+    assert _local_target(task, _local_dt(2026, 1, 7)) == (2026, 1, 7)
+
+
+def test_weekday_pattern_on_time_still_advances() -> None:
+    task = _every("weeks", 1, due_date="2026-01-07", recurrence_weekdays=[0, 1, 2, 3, 4])
+    assert _local_target(task, _local_dt(2026, 1, 7)) == (2026, 1, 8)
+
+
+def test_weekday_pattern_late_tick_on_the_weekend_lands_on_monday() -> None:
+    task = _every("weeks", 1, due_date="2026-01-09", recurrence_weekdays=[0, 1, 2, 3, 4])
+    assert _local_target(task, _local_dt(2026, 1, 11)) == (2026, 1, 12)
+
+
+def test_weekday_pattern_every_2_weeks_keeps_its_week_parity() -> None:
+    """Every 2 weeks on Mon, due Mon 5 Jan, ticked Tue 13 Jan: next is Mon 19 Jan.
+
+    Counting from the completion would restart the two-week block and
+    give Mon 26 Jan.
+    """
+    task = _every("weeks", 2, due_date="2026-01-05", recurrence_weekdays=[0])
+    assert _local_target(task, _local_dt(2026, 1, 13)) == (2026, 1, 19)
+
+
+def test_day_of_month_pattern_does_not_swallow_today() -> None:
+    """Monthly on the 15th, due 15 Dec, ticked 15 Jan: January's occurrence is today."""
+    task = _every("months", 1, due_date="2025-12-15",
+                  recurrence_month_pattern="day_of_month", recurrence_day_of_month=15)
+    assert _local_target(task, _local_dt(2026, 1, 15)) == (2026, 1, 15)
+
+
+def test_from_due_respects_end_date() -> None:
+    task = _every("days", 1, due_date="2026-01-05", recurrence_anchor="due",
+                  recurrence_end_type="date", recurrence_end_date="2026-01-06")
+    assert _local_target(task, _local_dt(2026, 1, 8)) is None
+
+
+def test_hours_from_completion_is_elapsed_based() -> None:
+    from custom_components.home_tasks.__init__ import _compute_next_reopen_target
+    tz = dt_util.DEFAULT_TIME_ZONE
+    task = _every("hours", 3, due_date="2026-01-08", due_time="09:00")
+    completed = datetime(2026, 1, 8, 13, 20, tzinfo=tz)
+    assert _compute_next_reopen_target(task, completed) == completed + timedelta(hours=3)
+
+
+def test_hours_from_due_stays_on_the_due_grid() -> None:
+    """Every 3 h from 09:00, ticked 13:20: 12:00 has passed, next slot is 15:00."""
+    from custom_components.home_tasks.__init__ import _compute_next_reopen_target
+    tz = dt_util.DEFAULT_TIME_ZONE
+    task = _every("hours", 3, due_date="2026-01-08", due_time="09:00", recurrence_anchor="due")
+    target = _compute_next_reopen_target(task, datetime(2026, 1, 8, 13, 20, tzinfo=tz))
+    assert target.astimezone(tz).replace(tzinfo=None) == datetime(2026, 1, 8, 15, 0)
+    # Early tick: the slot after the due one.
+    target = _compute_next_reopen_target(task, datetime(2026, 1, 8, 8, 0, tzinfo=tz))
+    assert target.astimezone(tz).replace(tzinfo=None) == datetime(2026, 1, 8, 12, 0)
+
+
+def test_hours_from_due_without_due_date_falls_back_to_completion() -> None:
+    from custom_components.home_tasks.__init__ import _compute_next_reopen_target
+    tz = dt_util.DEFAULT_TIME_ZONE
+    task = _every("hours", 2, recurrence_anchor="due")
+    completed = datetime(2026, 1, 8, 13, 20, tzinfo=tz)
+    assert _compute_next_reopen_target(task, completed) == completed + timedelta(hours=2)
+
+
+async def test_from_due_late_completion_reopens_today_immediately(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """End to end: a daily chore due yesterday, ticked today, comes straight back for today."""
+    from datetime import date as _date
+
+    today = dt_util.now().date()
+    task = await store.async_add_task("Set the table")
+    await store.async_update_task(
+        task["id"],
+        due_date=(today - timedelta(days=1)).isoformat(),
+        recurrence_enabled=True,
+        recurrence_unit="days",
+        recurrence_value=1,
+        recurrence_anchor="due",
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+
+    stored = store.get_task(task["id"])
+    assert stored["completed"] is False
+    assert _date.fromisoformat(stored["due_date"]) == today
+
+
+async def test_hours_from_due_completion_moves_due_time(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """An hourly series on the due grid carries its time forward with the date."""
+    now = dt_util.now()
+    due = (now + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+    task = await store.async_add_task("Feed the cat")
+    await store.async_update_task(
+        task["id"],
+        due_date=due.date().isoformat(),
+        due_time=due.strftime("%H:%M"),
+        recurrence_enabled=True,
+        recurrence_unit="hours",
+        recurrence_value=4,
+        recurrence_anchor="due",
+    )
+    await store.async_update_task(task["id"], completed=True)
+    stored = store.get_task(task["id"])
+    nxt = due + timedelta(hours=4)
+    assert (stored["due_date"], stored["due_time"]) == (
+        nxt.date().isoformat(), nxt.strftime("%H:%M")
+    )
+
+
 def test_months_dom_24() -> None:
     """alle 1 Monat am 24."""
     completed = _local_dt(2026, 1, 5)

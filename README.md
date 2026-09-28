@@ -30,6 +30,7 @@ Every task can carry over 20 individual attributes:
 - **Recurring (weekly)** — every N weeks on selected weekdays (Mon – Sun, any combination)
 - **Recurring (monthly)** — every N months on a specific day (1–31 or "last") **or** an Nth weekday (1st – 4th + last × Mon – Sun) — e.g. "every 24th", "every last day", "every 2nd Saturday", "every last Wednesday every 2 months"
 - **Recurring (yearly)** — every N years on a specific TT.MM anniversary (e.g. "every 24.12.")
+- **From completion or from due date** — without a fixed pattern, pick what a *late* tick counts from: **From completion** (default — every 2 days means 2 days after you actually did it) or **From due date** (the series keeps its own days; missed occurrences collapse into the next one on or after today, which may reopen the task straight away). Weekday, day-of-month, Nth-weekday and anniversary patterns always follow the due date, so ticking Tuesday's Mon–Fri chore on Wednesday brings Wednesday's back instead of skipping it
 - **Recurrence start date** ("Beginn")
 - **Recurrence end date**
 - **Maximum repetitions**

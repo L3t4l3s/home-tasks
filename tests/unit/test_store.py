@@ -876,6 +876,17 @@ async def test_recurrence_anniversary_rejects_invalid(hass: HomeAssistant, store
             await store.async_update_task(task["id"], recurrence_anniversary=bad)
 
 
+async def test_recurrence_anchor_defaults_to_completion_and_validates(hass: HomeAssistant, store) -> None:
+    """recurrence_anchor starts at "completion", accepts "due", rejects anything else."""
+    task = await store.async_add_task("Anchor task")
+    assert task["recurrence_anchor"] == "completion"
+    await store.async_update_task(task["id"], recurrence_anchor="due")
+    assert store.get_task(task["id"])["recurrence_anchor"] == "due"
+    for bad in ("completed", None, "", 1):
+        with pytest.raises(ValueError):
+            await store.async_update_task(task["id"], recurrence_anchor=bad)
+
+
 async def test_new_task_has_new_recurrence_fields(hass: HomeAssistant, store) -> None:
     """A freshly created task has the four new sub-pattern fields defaulted to None."""
     task = await store.async_add_task("New defaults")
