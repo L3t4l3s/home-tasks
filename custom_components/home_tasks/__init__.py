@@ -43,6 +43,13 @@ DATA_DUE_FIRED = f"{DOMAIN}_due_fired"
 DATA_DUE_STARTUP_DONE = f"{DOMAIN}_due_startup_done"
 
 DUE_CHECK_INTERVAL = timedelta(hours=1)
+# How far past its wall-clock target an armed reopen timer may be before the
+# watchdog stops trusting it.  HA timers run on the event loop's monotonic
+# clock, which stands still while the host is suspended and ignores wall-clock
+# jumps (e.g. NTP catching up on a board without RTC), so a live handle can
+# sit far behind its target.  Generous enough for loop lag, far below the
+# hourly watchdog interval.
+TIMER_STALE_GRACE = timedelta(minutes=5)
 
 
 # ---------------------------------------------------------------------------
@@ -560,21 +567,28 @@ def _watchdog_recurring_reopen(hass: HomeAssistant, entry_id: str, task: dict) -
     """
     if not task.get("completed") or not task.get("recurrence_enabled"):
         return
-    # Cheap O(1) check first: a live timer owns this task — nothing to heal.
-    # (The common steady state; don't pay an ISO parse for it every hour.)
-    if task["id"] in hass.data.get(DATA_RECURRENCE_TIMERS, {}):
-        return
     if not task.get("completed_at"):
         return
     try:
         datetime.fromisoformat(task["completed_at"])
     except (ValueError, TypeError):
         return
+    reason = "had no reopen timer"
+    if task["id"] in hass.data.get(DATA_RECURRENCE_TIMERS, {}):
+        # A live timer is not proof of health: it runs on the loop's
+        # monotonic clock, so after a host suspend or a wall-clock jump it
+        # can sit far behind its target.  Trust it only while the target is
+        # still ahead (within a grace margin).
+        target = _recovery_reopen_target(task, _parse_completed_at(task))
+        if target is None or target > datetime.now(timezone.utc) - TIMER_STALE_GRACE:
+            return
+        _cancel_recurrence(hass, task["id"])
+        reason = f"had a reopen timer that missed its target {target.isoformat()}"
     action = _rearm_or_reopen(hass, entry_id, task)
     if action:
         _LOGGER.warning(
-            "Watchdog: completed recurring task '%s' had no reopen timer — %s",
-            task.get("title", task["id"]), action,
+            "Watchdog: completed recurring task '%s' %s — %s",
+            task.get("title", task["id"]), reason, action,
         )
 
 
@@ -1531,8 +1545,6 @@ def _recover_external_recurrence_timers(hass: HomeAssistant, entry_id: str, enti
     for task in merged:
         if not task.get("completed") or not task.get("recurrence_enabled"):
             continue
-        if task["id"] in timers:
-            continue  # live timer owns this task (hourly watchdog re-entry)
         if not task.get("completed_at"):
             continue
         try:
@@ -1543,6 +1555,16 @@ def _recover_external_recurrence_timers(hass: HomeAssistant, entry_id: str, enti
         delay = _compute_reopen_delay(task, completed_at)
         if delay is None:
             continue
+        if task["id"] in timers:
+            # A live timer owns this task (hourly watchdog re-entry) — unless
+            # it missed its wall-clock target, see _watchdog_recurring_reopen.
+            if delay > -TIMER_STALE_GRACE.total_seconds():
+                continue
+            _LOGGER.warning(
+                "Watchdog: reopen timer for external task '%s' missed its target — reopening",
+                task.get("title", task["id"]),
+            )
+            _cancel_recurrence(hass, task["id"])
         task["_entity_id"] = entity_id
         if delay <= 0:
             hass.async_create_task(_async_reopen_task(hass, entry_id, task["id"]))

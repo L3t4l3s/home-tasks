@@ -298,6 +298,37 @@ async def test_recover_rerun_skips_live_timer(hass: HomeAssistant, ext_entry) ->
     assert hass.data[DATA_RECURRENCE_TIMERS]["t1"] is original
 
 
+async def test_recover_rerun_replaces_timer_that_missed_its_target(
+    hass: HomeAssistant, ext_entry, freezer
+) -> None:
+    """A live timer whose wall-clock target passed (host suspended, clock
+    jumped: the loop clock is monotonic) is torn down and the task reopened."""
+    freezer.move_to(datetime(2026, 1, 8, 12, 0, tzinfo=timezone.utc))
+    _register_todo_items(hass, [
+        TodoItem(uid="t1", summary="Recurring", status=TodoItemStatus.COMPLETED),
+    ])
+    await _overlay(hass, ext_entry).async_set_overlay(
+        "t1", recurrence_enabled=True, recurrence_unit="days", recurrence_value=1,
+        completed_at=datetime.now(timezone.utc).isoformat(),
+    )
+    _recover_external_recurrence_timers(hass, ext_entry.entry_id, ENTITY)
+    assert "t1" in hass.data[DATA_RECURRENCE_TIMERS]
+
+    reopened = []
+
+    async def _fake_update(call):
+        reopened.append(call.data.get("status"))
+
+    hass.services.async_register("todo", "update_item", _fake_update)
+    # Two days on the wall clock; the armed handle never got to run.
+    freezer.move_to(datetime(2026, 1, 10, 12, 0, tzinfo=timezone.utc))
+    _recover_external_recurrence_timers(hass, ext_entry.entry_id, ENTITY)
+    await hass.async_block_till_done()
+
+    assert "needs_action" in reopened
+    assert _overlay(hass, ext_entry).get_all_overlays()["t1"]["completed_at"] is None
+
+
 async def test_recover_skipped_when_provider_owns(hass: HomeAssistant, ext_entry) -> None:
     _set_adapter_owns_recurrence(hass, True)
     _register_todo_items(hass, [

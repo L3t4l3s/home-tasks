@@ -1989,6 +1989,57 @@ async def test_watchdog_rearms_missing_timer(
     assert store.get_task(task["id"])["completed"] is True
 
 
+async def test_watchdog_reopens_when_live_timer_missed_its_target(
+    hass: HomeAssistant, mock_config_entry, store, freezer
+) -> None:
+    """A live timer is not proof of health.
+
+    HA timers run on the loop's monotonic clock, which stands still while the
+    host is suspended and ignores wall-clock jumps.  The handle then sits far
+    behind its target and the task stayed completed until it finally ran.
+    """
+    from custom_components.home_tasks import _async_check_due_dates, DATA_RECURRENCE_TIMERS
+
+    tz = dt_util.DEFAULT_TIME_ZONE
+    freezer.move_to(datetime(2026, 1, 8, 10, 0, tzinfo=tz))
+    task = await store.async_add_task("Timer present but late")
+    await store.async_update_task(
+        task["id"], due_date="2026-01-08", recurrence_enabled=True,
+        recurrence_unit="days", recurrence_value=1,
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+    assert task["id"] in hass.data[DATA_RECURRENCE_TIMERS]
+
+    # Host suspended for two days: the wall clock moved, the handle did not run.
+    freezer.move_to(datetime(2026, 1, 10, 10, 0, tzinfo=tz))
+    await _async_check_due_dates(hass)
+    await hass.async_block_till_done()
+    assert store.get_task(task["id"])["completed"] is False
+
+
+async def test_watchdog_trusts_live_timer_within_grace(
+    hass: HomeAssistant, mock_config_entry, store, freezer
+) -> None:
+    """A timer a moment past its target (loop lag) is left to fire on its own."""
+    from custom_components.home_tasks import _async_check_due_dates, DATA_RECURRENCE_TIMERS
+
+    tz = dt_util.DEFAULT_TIME_ZONE
+    freezer.move_to(datetime(2026, 1, 8, 10, 0, tzinfo=tz))
+    task = await store.async_add_task("Timer slightly late")
+    await store.async_update_task(
+        task["id"], due_date="2026-01-08", recurrence_enabled=True,
+        recurrence_unit="days", recurrence_value=1,
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+    original = hass.data[DATA_RECURRENCE_TIMERS][task["id"]]
+
+    freezer.move_to(datetime(2026, 1, 9, 0, 1, tzinfo=tz))  # target was 00:00
+    await _async_check_due_dates(hass)
+    assert hass.data[DATA_RECURRENCE_TIMERS].get(task["id"]) is original
+
+
 async def test_watchdog_leaves_live_timer_alone(
     hass: HomeAssistant, mock_config_entry, store
 ) -> None:
