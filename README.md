@@ -752,6 +752,7 @@ ships the pieces to put a Home Tasks list on one:
 
 - **A view** — the full Home Tasks card as a View Assist panel view at `/view-assist/hometasks`, with satellite-friendly defaults (compact rows, confirm-before-complete, open tasks only, sorted by due date). A second variant picks the list per satellite at runtime.
 - **A blueprint** — "show me my task list" makes the satellite say how many tasks are open and open the view. Sentences and spoken responses are configurable.
+- **A reminders blueprint** — reminders and overdue tasks are announced on the satellites, open the view and leave a status-bar icon until the task is done. Satellites are chosen like in View Assist's own blueprints (all, specific, or a template — e.g. by assigned person or the satellite used last), with quiet hours and do-not-disturb respected.
 - **An add-by-voice blueprint** — "add task pay the bill for Anna with high priority due Friday at 5 pm" creates the task with all those fields and says what it added. Works on any Assist device, View Assist optional; English and German built in.
 
 Both are copy-and-install files, so a Home Tasks update never overwrites your

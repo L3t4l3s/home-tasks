@@ -9,6 +9,7 @@ put a Home Tasks list on one of those screens:
 | [`hometasks.yaml`](hometasks.yaml) | The view. Shows a Home Tasks list with the full card — priorities, tags, sub-tasks, due dates, reminders, images, voice input. **Start here.** |
 | [`hometasks-dynamic.yaml`](hometasks-dynamic.yaml) | Same card, but the list is picked per satellite at runtime, wrapped in View Assist's own chrome. Needs `custom:button-card` and `card-mod`. |
 | [`blueprint-hometasks.yaml`](blueprint-hometasks.yaml) | "Show me my tasks" → the satellite speaks how many tasks are open and opens the view. |
+| [`blueprint-hometasks-reminders.yaml`](blueprint-hometasks-reminders.yaml) | Reminders and overdue tasks → the chosen satellites announce them, show the view and put an icon in the status bar until the task is done. |
 | [`blueprint-hometasks-add.yaml`](blueprint-hometasks-add.yaml) | "Add task pay the bill for Anna with high priority due Friday" → the task is created with those fields and the satellite says so. Works on any Assist device. |
 
 Nothing here changes the integration — these are copy-and-install assets, so a
@@ -159,6 +160,73 @@ With **Show the list on View Assist** switched on, the satellite that heard the
 command also opens the Home Tasks view afterwards (a linked list opens the
 view's default list).
 
+## 5. Reminders on the satellites (optional)
+
+[![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2FL3t4l3s%2Fhome-tasks%2Fblob%2Fmain%2Fdocs%2Fview-assist%2Fblueprint-hometasks-reminders.yaml)
+
+When a Home Tasks [reminder](../../README.md#events) fires — or a task is due
+today or overdue, if you pick those events — the satellite
+
+- **announces** it ("Reminder: Pay the bill, due at 17:00"),
+- **opens the Home Tasks view** for a while, then goes back,
+- **puts an icon in its status bar** — one per task; tapping it opens the view,
+  and it disappears when the task is done.
+
+Each of the three can be switched off, and the messages are configurable
+(placeholders `{title}`, `{list_name}`, `{person}`, `{due_time}`).
+
+**Which satellite.** View Assist has no idea where people are, so the
+blueprint chooses satellites the way View Assist's own *Device Alerts*
+blueprint does — the first of these you fill in wins:
+
+1. **All satellites**
+2. **Specific satellites**
+3. **Dynamic satellites** — a template returning a list. This is where
+   "the nearest one" goes. The template can use `assigned_person`,
+   `task_title`, `list_name`, `task_id` and `trigger.event.data`.
+
+*By assigned person* — Anna's tasks go to the kids' room, everything else to
+the kitchen:
+
+```jinja
+{{ {'person.anna': ['sensor.viewassist_kids_room']}.get(assigned_person, ['sensor.viewassist_kitchen']) }}
+```
+
+*The satellite that last heard a voice command:*
+
+```jinja
+{% set ns = namespace(best=none, t=none) %}
+{% for s in integration_entities('view_assist') if s.startswith('sensor.') %}
+  {% set m = state_attr(s, 'mic_device') %}
+  {% if m and states[m] is defined and (ns.t is none or states[m].last_changed > ns.t) %}
+    {% set ns.best = s %}{% set ns.t = states[m].last_changed %}
+  {% endif %}
+{% endfor %}
+{{ [ns.best] if ns.best else [] }}
+```
+
+If you have room presence (Bermuda, mmWave sensors, …), map that to
+satellites in the same way.
+
+**Quiet times.** Satellites in do-not-disturb mode get the icon and the view
+but no announcement — the View Assist convention. Outside the
+*announcement hours* (default 07:00–21:00):
+
+- a **reminder** only sets the icon — it is about that moment, and saying it
+  hours later would be wrong;
+- **due today** and **overdue**, which Home Tasks fires in its first hourly
+  check after midnight, set the icon right away and are announced when the
+  announcement hours begin — unless the task was done in the meantime.
+
+**The icon** disappears when the task is done in Home Tasks, and after
+12 hours at the latest (configurable). The timeout catches what Home Tasks
+can't see: a deleted task, or one ticked off in a linked provider's own app.
+
+The announcement uses `assist_satellite.announce` on the satellites' mic
+devices — one call for all of them, so they speak at the same time — and
+needs Assist satellites that support announcements (Home Assistant
+2024.12+). A satellite that is offline doesn't stop the others.
+
 ## Tuning for the screen
 
 Measured with the shipped view at the two common satellite resolutions:
@@ -186,18 +254,12 @@ README.
 `confirm_complete: true` is on by default here — it asks before ticking a task
 off, which is worth having on a screen that gets walked past.
 
-## What this does not do (yet)
-
-Having reminder and overdue [events](../../README.md#events) push a task onto
-the nearest satellite is still on the list for
-[issue #18](https://github.com/L3t4l3s/home-tasks/issues/18) — say so on the
-issue if you'd use it.
-
 ## Status
 
-The views, both blueprints and the fallback behaviour are covered by the test
+The views, the blueprints and the fallback behaviour are covered by the test
 suite — the add-by-voice blueprint runs end to end through Assist there, in
-English and German — and the card was checked in a browser at 800×480 and
+English and German, and the reminders blueprint against Home Tasks' real
+events, with View Assist's actions checked against its own schemas — and the card was checked in a browser at 800×480 and
 1280×800. They have
 **not** been run on physical View Assist hardware yet — if you try them,
 feedback on [issue #18](https://github.com/L3t4l3s/home-tasks/issues/18) is very

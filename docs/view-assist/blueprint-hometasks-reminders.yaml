@@ -1,0 +1,379 @@
+blueprint:
+  name: View Assist - Home Tasks reminders
+  description: >-
+    Brings Home Tasks reminders and overdue tasks to your View Assist
+    satellites: the satellite says it, shows the Home Tasks view and puts an
+    icon in its status bar. The icon goes away when the task is done.
+
+    Satellites are chosen like in View Assist's own Device Alerts blueprint:
+    all of them, specific ones, or a template — which is where "the nearest
+    one" goes: the template sees the task, so it can pick by assigned person,
+    by the satellite used last, or by your room-presence sensors. Examples:
+    https://github.com/L3t4l3s/home-tasks/tree/main/docs/view-assist#5-reminders-on-the-satellites-optional
+
+    Satellites in do-not-disturb mode get the icon but no announcement
+    (the View Assist convention). Outside the announcement hours a reminder
+    only sets the icon; "due today" and "overdue" — which Home Tasks fires
+    shortly after midnight — set the icon at once and are announced when the
+    announcement hours begin, if the task is still open by then.
+
+    Home Tasks View Assist reminders blueprint v1.0.0
+  domain: automation
+  homeassistant:
+    min_version: "2024.12.0"
+  input:
+    events:
+      name: Events
+      input:
+        event_types:
+          name: Which events
+          description: >-
+            Reminder = at the reminder offsets set on the task. Due today and
+            overdue fire once a day, from Home Tasks' hourly check.
+          default: [reminder, overdue]
+          selector:
+            select:
+              multiple: true
+              options:
+                - label: Reminder
+                  value: reminder
+                - label: Due today
+                  value: due
+                - label: Overdue
+                  value: overdue
+        todo_entities:
+          name: Only these lists
+          description: Home Tasks lists (native or linked) to react to. Empty = all lists.
+          default: []
+          selector:
+            entity:
+              multiple: true
+              filter:
+                - domain: todo
+    satellite_definitions:
+      name: Satellite selections
+      description: >-
+        Evaluated in the order 1, 2, 3 — the first one you have set is used.
+      input:
+        satellite_use_all:
+          name: (1) Use all satellites
+          default: false
+          selector:
+            boolean: {}
+        satellites:
+          name: (2) Specific satellites
+          default: []
+          selector:
+            entity:
+              multiple: true
+              filter:
+                - integration: view_assist
+                  domain: sensor
+        satellites_by_template:
+          name: (3) Dynamic satellites
+          description: >-
+            A template that returns a list of View Assist satellites. It can
+            use assigned_person, task_title, list_name, task_id and
+            trigger.event.data.
+          default: ""
+          selector:
+            template: {}
+    actions_definitions:
+      name: What the satellite does
+      input:
+        announce:
+          name: Announce
+          description: Say the message on the satellite (needs an Assist satellite that supports announcements).
+          default: true
+          selector:
+            boolean: {}
+        preannounce:
+          name: Play the chime before the announcement
+          default: true
+          selector:
+            boolean: {}
+        show_view:
+          name: Show the Home Tasks view
+          default: true
+          selector:
+            boolean: {}
+        view:
+          name: Dashboard view
+          default: /view-assist/hometasks
+          selector:
+            text:
+        revert_timeout:
+          name: Return to the previous view after (seconds)
+          default: 30
+          selector:
+            number:
+              min: 0
+              max: 120
+              step: 1
+        status_icon:
+          name: Status bar icon
+          description: >-
+            Material Design icon name without "mdi:". Tapping it opens the
+            view. Empty = no icon.
+          default: clipboard-alert
+          selector:
+            text:
+        status_icon_timeout:
+          name: Remove the icon after (minutes)
+          description: >-
+            It also goes when the task is done in Home Tasks. The timeout
+            catches the rest — a deleted task, or one ticked off in a linked
+            provider's own app. 0 = only when the task is done.
+          default: 720
+          selector:
+            number:
+              min: 0
+              max: 1440
+              step: 5
+        announce_from:
+          name: Announcements from
+          default: "07:00:00"
+          selector:
+            time: {}
+        announce_until:
+          name: Announcements until
+          default: "21:00:00"
+          selector:
+            time: {}
+    messages:
+      name: Messages
+      description: >-
+        Placeholders: {title}, {list_name}, {person} (assignee's name, empty
+        when nobody), {due_time}.
+      input:
+        message_reminder:
+          name: Reminder
+          default: "Reminder: {title}"
+          selector:
+            text:
+        message_reminder_time:
+          name: Reminder, task has a due time
+          default: "Reminder: {title}, due at {due_time}"
+          selector:
+            text:
+        message_due:
+          name: Due today
+          default: "{title} is due today"
+          selector:
+            text:
+        message_overdue:
+          name: Overdue
+          default: "{title} is overdue"
+          selector:
+            text:
+
+# parallel: a "due today" run may wait for the morning; completions and
+# other reminders must not queue behind it.
+mode: parallel
+max: 50
+
+triggers:
+  - trigger: event
+    event_type: home_tasks_task_reminder
+    id: reminder
+  - trigger: event
+    event_type: home_tasks_task_due
+    id: due
+  - trigger: event
+    event_type: home_tasks_task_overdue
+    id: overdue
+  - trigger: event
+    event_type: home_tasks_task_completed
+    id: completed
+
+variables:
+  event_types: !input event_types
+  todo_entities: !input todo_entities
+  event_data: "{{ trigger.event.data }}"
+  task_id: "{{ event_data.task_id }}"
+  task_title: "{{ event_data.task_title }}"
+  list_name: "{{ event_data.list_name }}"
+  assigned_person: "{{ event_data.assigned_person | default(none) }}"
+  # A linked list's events carry its todo entity; a native list's todo
+  # entity belongs to the list's config entry.
+  is_native: "{{ event_data.entity_id is not defined }}"
+  wanted_list: >-
+    {% if todo_entities | count == 0 %}true
+    {% elif not is_native %}{{ event_data.entity_id in todo_entities }}
+    {% else %}
+      {% set ns = namespace(hit=false) %}
+      {% for e in todo_entities %}{% if config_entry_id(e) == event_data.entry_id %}{% set ns.hit = true %}{% endif %}{% endfor %}
+      {{ ns.hit }}
+    {% endif %}
+  view: !input view
+  status_icon: !input status_icon
+  # One icon per task, so completing it removes exactly that one.
+  status_item: "view:{{ view }}?task={{ task_id }}|{{ status_icon }}"
+
+conditions:
+  - condition: template
+    value_template: "{{ wanted_list and (trigger.id == 'completed' or trigger.id in event_types) }}"
+
+actions:
+  - variables:
+      all_satellites: >-
+        {{ integration_entities('view_assist') | select('match', 'sensor[.]') | list }}
+
+  - if:
+      - condition: trigger
+        id: completed
+    then:
+      - if:
+          - condition: template
+            value_template: "{{ status_icon != '' }}"
+        then:
+          - repeat:
+              for_each: "{{ all_satellites }}"
+              sequence:
+                - action: view_assist.remove_status_item
+                  continue_on_error: true
+                  data:
+                    entity_id: "{{ repeat.item }}"
+                    status_item: "{{ status_item }}"
+                    menu: false
+      - stop: Task done — icon removed
+
+  - variables:
+      satellite_use_all: !input satellite_use_all
+      satellites: !input satellites
+      satellites_by_template: !input satellites_by_template
+      targets: >-
+        {% if satellite_use_all %}
+          {{ all_satellites }}
+        {% elif satellites | count > 0 %}
+          {{ satellites }}
+        {% else %}
+          {% set t = satellites_by_template %}
+          {{ ([t] if t is string else (t or [])) | reject('in', ['', none]) | list }}
+        {% endif %}
+      announce: !input announce
+      preannounce: !input preannounce
+      show_view: !input show_view
+      revert_timeout: !input revert_timeout
+      status_icon_timeout: !input status_icon_timeout
+      announce_from: !input announce_from
+      announce_until: !input announce_until
+      now_time: "{{ now().strftime('%H:%M:%S') }}"
+      in_hours: >-
+        {% if announce_from <= announce_until %}
+          {{ announce_from <= now_time < announce_until }}
+        {% else %}
+          {{ now_time >= announce_from or now_time < announce_until }}
+        {% endif %}
+      person_name: >-
+        {{ state_attr(assigned_person, 'friendly_name') if assigned_person else '' }}
+      due_time: "{{ event_data.due_time | default('') }}"
+      message_reminder: !input message_reminder
+      message_reminder_time: !input message_reminder_time
+      message_due: !input message_due
+      message_overdue: !input message_overdue
+      message_template: >-
+        {% if trigger.id == 'reminder' %}
+          {% if due_time %}{{ message_reminder_time }}{% else %}{{ message_reminder }}{% endif %}
+        {% elif trigger.id == 'due' %}{{ message_due }}
+        {% else %}{{ message_overdue }}{% endif %}
+
+  - variables:
+      message: >-
+        {{ message_template | trim
+           | replace('{title}', task_title) | replace('{list_name}', list_name)
+           | replace('{person}', person_name) | replace('{due_time}', due_time) }}
+
+  # The icon comes first and always — it is silent.
+  - if:
+      - condition: template
+        value_template: "{{ status_icon != '' }}"
+    then:
+      - repeat:
+          for_each: "{{ targets }}"
+          sequence:
+            - action: view_assist.add_status_item
+              # One satellite that is offline must not cost the others theirs.
+              continue_on_error: true
+              data: >-
+                {% set d = {'entity_id': repeat.item, 'status_item': status_item, 'menu': false} %}
+                {% if status_icon_timeout | int > 0 %}{{ dict(d, timeout=status_icon_timeout | int * 60) }}{% else %}{{ d }}{% endif %}
+
+  # "Due today" and "overdue" arrive shortly after midnight. Rather than never
+  # saying them, wait for the announcement hours — if the task is still open.
+  - if:
+      - condition: template
+        value_template: "{{ not in_hours and trigger.id in ['due', 'overdue'] and (announce or show_view) }}"
+    then:
+      - wait_for_trigger:
+          - trigger: time
+            at: !input announce_from
+        timeout: "24:00:00"
+        continue_on_timeout: false
+      - variables:
+          list_todo: >-
+            {% if not is_native %}{{ event_data.entity_id }}
+            {% else %}
+              {% set ns = namespace(hit='') %}
+              {% for e in integration_entities('home_tasks') if e.startswith('todo.') and config_entry_id(e) == event_data.entry_id %}{% set ns.hit = e %}{% endfor %}
+              {{ ns.hit }}
+            {% endif %}
+      - action: todo.get_items
+        target:
+          entity_id: "{{ list_todo }}"
+        data:
+          status: needs_action
+        response_variable: open_items
+        continue_on_error: true
+      - condition: template
+        value_template: >-
+          {{ open_items is defined and list_todo in open_items
+             and task_id in (open_items[list_todo]['items'] | map(attribute='uid') | list) }}
+      - variables:
+          in_hours: true
+
+  - condition: template
+    value_template: "{{ in_hours and (announce or show_view) }}"
+
+  - if:
+      - condition: template
+        value_template: "{{ show_view }}"
+    then:
+      - repeat:
+          for_each: "{{ targets | reject('is_state_attr', 'type', 'audio_only') | list }}"
+          sequence:
+            - action: view_assist.set_state
+              continue_on_error: true
+              target:
+                entity_id: "{{ repeat.item }}"
+              data:
+                last_said: "{{ message }}"
+                title: "{{ list_name }}"
+                home_tasks_list: "{{ event_data.entry_id if is_native else '' }}"
+            - action: view_assist.navigate
+              continue_on_error: true
+              data:
+                device: "{{ repeat.item }}"
+                path: "{{ view }}"
+                revert_timeout: "{{ revert_timeout | int }}"
+
+  # One call for all satellites, so they speak together instead of in turn.
+  - variables:
+      announce_to: >-
+        {% set ns = namespace(mics=[]) %}
+        {% for sat in targets if not is_state_attr(sat, 'do_not_disturb', 'on') %}
+          {% set m = state_attr(sat, 'mic_device') or '' %}
+          {% if m.startswith('assist_satellite.') %}{% set ns.mics = ns.mics + [m] %}{% endif %}
+        {% endfor %}
+        {{ ns.mics }}
+  - if:
+      - condition: template
+        value_template: "{{ announce and announce_to | count > 0 }}"
+    then:
+      - action: assist_satellite.announce
+        continue_on_error: true
+        target:
+          entity_id: "{{ announce_to }}"
+        data:
+          message: "{{ message }}"
+          preannounce: "{{ preannounce }}"
