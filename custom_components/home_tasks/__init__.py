@@ -11,7 +11,7 @@ from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import HassJob, HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse, callback
+from homeassistant.core import Context, HassJob, HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
@@ -297,6 +297,29 @@ def _build_event_data(hass: HomeAssistant, entry_id: str, task: dict) -> dict:
     return data
 
 
+def completed_by_data(hass: HomeAssistant, actor: str | None, user_id: str | None) -> dict:
+    """Who completed a task, for the task_completed event (issue #65).
+
+    completed_by is the name the task history records, completed_by_user_id
+    the HA user, completed_by_person the person entity linked to that user.
+    Empty when nobody is known (an automation, the recurrence, a provider's
+    own app).
+    """
+    data: dict = {}
+    if actor:
+        data["completed_by"] = actor
+    if user_id:
+        data["completed_by_user_id"] = user_id
+        person = next(
+            (s.entity_id for s in hass.states.async_all("person")
+             if s.attributes.get("user_id") == user_id),
+            None,
+        )
+        if person:
+            data["completed_by_person"] = person
+    return data
+
+
 def _parse_completed_at(task: dict) -> datetime:
     """Parse task['completed_at'] to a timezone-aware UTC datetime, or fall back to now()."""
     raw = task.get("completed_at")
@@ -334,7 +357,10 @@ def _record_auto_advance_history(task: dict, old_due_date, new_due_date, old_due
         })
 
 
-def _on_task_completed(hass: HomeAssistant, entry_id: str, task: dict) -> None:
+def _on_task_completed(
+    hass: HomeAssistant, entry_id: str, task: dict,
+    actor: str | None = None, user_id: str | None = None,
+) -> None:
     """Handle task completion: fire event, advance due_date, schedule reminders + recurrence.
 
     For a recurring task with a due_date we advance due_date/due_time on the
@@ -354,7 +380,12 @@ def _on_task_completed(hass: HomeAssistant, entry_id: str, task: dict) -> None:
     _async_save() (which is triggered by the same update_task call that
     invoked this callback).
     """
-    hass.bus.async_fire(f"{DOMAIN}_task_completed", _build_event_data(hass, entry_id, task))
+    # In the completing user's context, so the logbook names them too.
+    hass.bus.async_fire(
+        f"{DOMAIN}_task_completed",
+        {**_build_event_data(hass, entry_id, task), **completed_by_data(hass, actor, user_id)},
+        context=Context(user_id=user_id) if user_id else None,
+    )
 
     completed_at = _parse_completed_at(task)
 
@@ -1769,7 +1800,8 @@ async def _resolve_actor(hass: HomeAssistant, call: ServiceCall) -> str | None:
 
 
 async def _update_external(
-    hass: HomeAssistant, entity_id: str, data: dict, fields: dict, task: dict | None = None
+    hass: HomeAssistant, entity_id: str, data: dict, fields: dict, task: dict | None = None,
+    actor: str | None = None, actor_user_id: str | None = None,
 ) -> None:
     """Apply service fields to a task on a linked list.
 
@@ -1785,7 +1817,9 @@ async def _update_external(
 
     if task is None:
         task = await _resolve_external_task(hass, entity_id, data)
-    await async_update_external_task(hass, entity_id, task["id"], fields)
+    await async_update_external_task(
+        hass, entity_id, task["id"], fields, actor=actor, actor_user_id=actor_user_id
+    )
 
 
 def _async_register_services(hass: HomeAssistant) -> None:
@@ -1969,12 +2003,16 @@ def _async_register_services(hass: HomeAssistant) -> None:
                         continue
                     if wanted in (t.lower() for t in task.get("tags", [])):
                         await _update_external(
-                            hass, ident, {}, {"completed": True}, task=task
+                            hass, ident, {}, {"completed": True}, task=task,
+                            actor=actor, actor_user_id=call.context.user_id,
                         )
                 return
             task = await _resolve_external_task(hass, ident, call.data)
             if not task.get("completed"):
-                await _update_external(hass, ident, {}, {"completed": True}, task=task)
+                await _update_external(
+                    hass, ident, {}, {"completed": True}, task=task,
+                    actor=actor, actor_user_id=call.context.user_id,
+                )
             return
 
         if tag:
@@ -1984,11 +2022,15 @@ def _async_register_services(hass: HomeAssistant) -> None:
                     not task.get("completed")
                     and tag in (t.lower() for t in task.get("tags", []))
                 ):
-                    await store.async_update_task(task["id"], actor=actor, completed=True)
+                    await store.async_update_task(
+                        task["id"], actor=actor, actor_user_id=call.context.user_id, completed=True
+                    )
         else:
             task = _resolve_task(store, call.data)
             if not task.get("completed"):
-                await store.async_update_task(task["id"], actor=actor, completed=True)
+                await store.async_update_task(
+                    task["id"], actor=actor, actor_user_id=call.context.user_id, completed=True
+                )
 
     async def async_handle_assign_task(call: ServiceCall) -> None:
         kind, ident, store = _resolve_target(hass, call.data)
@@ -2182,7 +2224,7 @@ async def _async_setup_native_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = store
 
     # Wire up callbacks
-    store.on_task_completed = lambda task: _on_task_completed(hass, entry.entry_id, task)
+    store.on_task_completed = lambda task, **who: _on_task_completed(hass, entry.entry_id, task, **who)
     store.on_task_created = lambda task: _on_task_created(hass, entry.entry_id, task)
     store.on_task_deleted = lambda task_id: _on_task_deleted(hass, task_id)
     store.on_task_restored = lambda task: _rearm_task_timers(hass, entry.entry_id, task)

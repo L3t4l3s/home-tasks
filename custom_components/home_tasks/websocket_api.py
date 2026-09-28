@@ -7,7 +7,7 @@ import time
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Context, HomeAssistant, callback
 
 from .image_library import async_get_image_library
 from .image_queue import PLACEHOLDER_IMAGE_URLS, async_get_image_queue
@@ -468,7 +468,10 @@ async def ws_update_task(hass, connection, msg):
                 old_image_url = None
         if iu:
             kwargs["image_url"] = await _async_publish_image_url(hass, connection, iu)
-        task = await store.async_update_task(msg["task_id"], actor=actor, **kwargs)
+        task = await store.async_update_task(
+            msg["task_id"], actor=actor,
+            actor_user_id=connection.user.id if connection.user else None, **kwargs,
+        )
         if "image_url" in kwargs:
             await _async_forget_rejected(hass, old_image_url, kwargs.get("image_url"))
             # A picture picked from the media library is as reusable as a
@@ -1501,7 +1504,8 @@ def _external_entry_id(hass, entity_id: str) -> str | None:
 
 
 def _fire_external_task_event(
-    hass, event_type: str, entity_id: str, task_uid: str, fields: dict, *, task: dict | None = None
+    hass, event_type: str, entity_id: str, task_uid: str, fields: dict, *, task: dict | None = None,
+    actor: str | None = None, actor_user_id: str | None = None,
 ) -> None:
     """Fire a home_tasks_<event_type> event for an external-list task.
 
@@ -1527,7 +1531,13 @@ def _fire_external_task_event(
         data["tags"] = src["tags"]
     if src.get("assigned_person"):
         data["assigned_person"] = src["assigned_person"]
-    hass.bus.async_fire(f"{DOMAIN}_{event_type}", data)
+    context = None
+    if event_type == "task_completed":
+        from . import completed_by_data
+        data.update(completed_by_data(hass, actor, actor_user_id))
+        if actor_user_id:
+            context = Context(user_id=actor_user_id)
+    hass.bus.async_fire(f"{DOMAIN}_{event_type}", data, context=context)
 
 
 async def async_create_external_task(
@@ -1646,7 +1656,10 @@ async def ws_create_external_task(hass, connection, msg):
         _handle_error(connection, msg["id"], err)
 
 
-async def async_update_external_task(hass, entity_id: str, task_uid: str, fields: dict) -> dict:
+async def async_update_external_task(
+    hass, entity_id: str, task_uid: str, fields: dict,
+    actor: str | None = None, actor_user_id: str | None = None,
+) -> dict:
     """Apply an update to a task on a linked external list.
 
     The provider takes what it can; the rest goes to the overlay, and the
@@ -1689,7 +1702,10 @@ async def async_update_external_task(hass, entity_id: str, task_uid: str, fields
         except Exception:  # noqa: BLE001
             merged = None
         event_type = "task_completed" if fields["completed"] else "task_reopened"
-        _fire_external_task_event(hass, event_type, entity_id, task_uid, fields, task=merged)
+        _fire_external_task_event(
+            hass, event_type, entity_id, task_uid, fields, task=merged,
+            actor=actor, actor_user_id=actor_user_id,
+        )
         # Overlay-driven recurrence (issue #27): on completion schedule the
         # reopen (skipped for providers that own recurrence); on a manual
         # reopen, cancel any pending reopen timer.
@@ -1833,7 +1849,9 @@ async def ws_update_external_task(hass, connection, msg):
     try:
         fields = {k: v for k, v in msg.items() if k not in ("id", "type", "entity_id", "task_uid")}
         unsynced = await async_update_external_task(
-            hass, msg["entity_id"], msg["task_uid"], fields
+            hass, msg["entity_id"], msg["task_uid"], fields,
+            actor=connection.user.name if connection.user else None,
+            actor_user_id=connection.user.id if connection.user else None,
         )
         connection.send_result(msg["id"], {"unsynced": list(unsynced.keys())})
     except Exception as err:

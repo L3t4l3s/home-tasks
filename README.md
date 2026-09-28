@@ -561,6 +561,7 @@ grid_options:
 All events include: `entry_id`, `task_id`, `task_title`, `list_name`, and (if set) `assigned_person`, `due_date`, `due_time`, `priority`, `notes` (truncated to 255 chars), `tags`.
 Events for external lists additionally include `entity_id` (the external todo entity).
 The `home_tasks_task_reminder` event additionally includes `reminder_offset_minutes`.
+The `home_tasks_task_completed` event additionally includes who ticked the task off, when a user did — from the card, the HA todo entity's actions (Companion App, `todo.update_item`) or a service called by a user: `completed_by` (the user's name, as in the task history), `completed_by_user_id`, and `completed_by_person` (the `person.*` linked to that user). The event runs in that user's context, so the logbook names them too. Completions by automations, by the recurrence, in a provider's own app or by an Assist voice command (Home Assistant's todo intents don't pass on who spoke) carry none of these fields.
 
 ### Services
 
@@ -693,6 +694,25 @@ For each list — native and linked — the integration creates:
 On a linked list the sensor and binary sensor read the provider's items together with what Home Tasks keeps for them (assignee, and the due date when the provider cannot hold one), and follow both the provider's entity and edits made in the card. They are `unavailable` while the provider's todo entity is missing or itself unavailable, so a provider outage never reads as an empty list.
 
 ### Example Automations
+
+Count who gets things done — one [counter](https://www.home-assistant.io/integrations/counter/) helper per person (`counter.done_kevin`, `counter.done_anna`, …), bumped on every completion:
+
+```yaml
+automation:
+  - alias: "Home Tasks: count completions per person"
+    trigger:
+      - platform: event
+        event_type: home_tasks_task_completed
+    condition:
+      - "{{ trigger.event.data.completed_by_person is defined }}"
+    action:
+      - service: counter.increment
+        target:
+          entity_id: "counter.done_{{ trigger.event.data.completed_by_person.split('.')[1] }}"
+```
+
+Reset the counters weekly, feed them into a statistics card, or skip the
+counters and chart the events straight from the logbook.
 
 Send a notification when a reminder fires:
 

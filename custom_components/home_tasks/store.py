@@ -355,7 +355,9 @@ class HomeTasksStore:
         self._store = Store(hass, STORAGE_VERSION, f"home_tasks_{entry_id}")
         self._data: dict | None = None
         self._listeners: list[Callable[[], None]] = []
-        self.on_task_completed: Callable[[dict], None] | None = None
+        # Called as on_task_completed(task, actor=<name>, user_id=<HA user id>)
+        # — the completing user, when one is known (issue #65).
+        self.on_task_completed: Callable[..., None] | None = None
         self.on_task_created: Callable[[dict], None] | None = None
         self.on_task_deleted: Callable[[str], None] | None = None
         self.on_task_assigned: Callable[[dict, str | None], None] | None = None
@@ -700,15 +702,22 @@ class HomeTasksStore:
         "assigned_person", "tags", "section_id", "image_url",
     )
 
-    async def async_update_task(self, task_id: str, actor: str | None = None, **kwargs) -> dict:
-        """Update a task's fields."""
+    async def async_update_task(
+        self, task_id: str, actor: str | None = None, actor_user_id: str | None = None, **kwargs
+    ) -> dict:
+        """Update a task's fields.
+
+        *actor* is the name the history records; *actor_user_id* the HA user
+        behind it, handed to the completion event so automations can tell
+        who ticked the task off.
+        """
         task = self.get_task(task_id)
         self._validate_update_kwargs(kwargs)
         if "section_id" in kwargs:
             self._validate_section_id(kwargs["section_id"])
         snapshot = self._snapshot_task(task)
         self._apply_field_updates(task, kwargs)
-        self._handle_completion_transition(task, snapshot, kwargs)
+        self._handle_completion_transition(task, snapshot, kwargs, actor, actor_user_id)
         # Completed before AND after this update (transitions are handled by
         # on_task_completed / on_task_reopened above): a due/recurrence edit
         # invalidates the reopen schedule armed at completion time.
@@ -759,7 +768,10 @@ class HomeTasksStore:
         if "recurrence_max_count" in kwargs and "recurrence_remaining_count" not in kwargs:
             task["recurrence_remaining_count"] = task.get("recurrence_max_count")
 
-    def _handle_completion_transition(self, task: dict, snapshot: dict, kwargs: dict) -> None:
+    def _handle_completion_transition(
+        self, task: dict, snapshot: dict, kwargs: dict,
+        actor: str | None = None, actor_user_id: str | None = None,
+    ) -> None:
         """Update completed_at, decrement remaining recurrence count, fire callbacks."""
         was_completed = snapshot["completed"]
         is_completed = task.get("completed", False)
@@ -773,7 +785,7 @@ class HomeTasksStore:
                     task["recurrence_enabled"] = False
             # Notify: fires event + schedules recurrence (no-op if recurrence not configured)
             if self.on_task_completed:
-                self.on_task_completed(task)
+                self.on_task_completed(task, actor=actor, user_id=actor_user_id)
         elif not is_completed and was_completed:
             task["completed_at"] = None
             task["reopen_at"] = None  # manual reopen — pending schedule is void

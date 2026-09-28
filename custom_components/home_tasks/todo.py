@@ -1,6 +1,7 @@
 """Todo platform for Home Tasks integration."""
 
 from datetime import date, datetime, timezone
+import time
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -9,7 +10,8 @@ from homeassistant.components.todo import (
     TodoListEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.helpers.entity import CONTEXT_RECENT_TIME_SECONDS
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -104,6 +106,38 @@ class HomeTasksEntity(TodoListEntity):
             )
         return items
 
+    # State is pushed by the store listener; polling did nothing but make HA
+    # hand the entity a service call's context again *after* the call, where
+    # it would be credited to the next one.
+    _attr_should_poll = False
+
+    # The context of the service call that is about to reach this entity —
+    # set by HA right before it calls us, used once (issue #65).
+    _actor_context: Context | None = None
+    _actor_context_at: float = 0.0
+
+    @callback
+    def async_set_context(self, context: Context) -> None:
+        """HA hands every entity action's context over here first."""
+        super().async_set_context(context)
+        self._actor_context = context
+        self._actor_context_at = time.time()
+
+    async def _async_actor(self) -> tuple[str | None, str | None]:
+        """(name, user id) of the user behind the current todo action.
+
+        The context HA set for this call is taken and cleared, so it can't be
+        credited to a later call that brought none — Assist's todo intents
+        call the entity directly, without a context, and must name nobody
+        rather than whoever used a todo action a moment before.
+        """
+        ctx, at = self._actor_context, self._actor_context_at
+        self._actor_context = None
+        if not ctx or not ctx.user_id or time.time() - at > CONTEXT_RECENT_TIME_SECONDS:
+            return None, None
+        user = await self.hass.auth.async_get_user(ctx.user_id)
+        return (user.name if user else None), ctx.user_id
+
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Create a new todo item."""
         # Due goes in at creation (single 'created' history entry, task_created
@@ -115,8 +149,9 @@ class HomeTasksEntity(TodoListEntity):
                 due_time = item.due.strftime("%H:%M")
             else:
                 due_date = item.due.isoformat()
+        actor, user_id = await self._async_actor()
         task = await self._store.async_add_task(
-            item.summary or "", due_date=due_date, due_time=due_time
+            item.summary or "", actor=actor, due_date=due_date, due_time=due_time
         )
         # Apply optional fields
         kwargs = {}
@@ -125,7 +160,9 @@ class HomeTasksEntity(TodoListEntity):
         if item.status == TodoItemStatus.COMPLETED:
             kwargs["completed"] = True
         if kwargs:
-            await self._store.async_update_task(task["id"], **kwargs)
+            await self._store.async_update_task(
+                task["id"], actor=actor, actor_user_id=user_id, **kwargs
+            )
         self.async_write_ha_state()
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
@@ -153,11 +190,15 @@ class HomeTasksEntity(TodoListEntity):
         if item.description is not None:
             kwargs["notes"] = item.description
         if kwargs:
-            await self._store.async_update_task(item.uid, **kwargs)
+            actor, user_id = await self._async_actor()
+            await self._store.async_update_task(
+                item.uid, actor=actor, actor_user_id=user_id, **kwargs
+            )
         self.async_write_ha_state()
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete todo items."""
+        self._actor_context = None
         for uid in uids:
             await self._store.async_delete_task(uid)
         self.async_write_ha_state()
@@ -166,6 +207,7 @@ class HomeTasksEntity(TodoListEntity):
         self, uid: str, previous_uid: str | None = None
     ) -> None:
         """Re-order a todo item by placing it after previous_uid (or first if None)."""
+        self._actor_context = None
         current_ids = [t["id"] for t in sorted(
             self._store.tasks, key=lambda t: t.get("sort_order", 0)
         )]
