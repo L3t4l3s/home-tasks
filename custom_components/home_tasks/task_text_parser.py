@@ -247,7 +247,7 @@ def _match_date(text: str, words: dict, lang: str, today: date):
         r"(?P<iso>\d{4}-\d{2}-\d{2})",
         r"(?:the\s+)?" + day + r"\s+(?:of\s+)?" + month_word + year,   # 5th of October, 5. Oktober
         month_word + r"\s+(?:the\s+)?" + day + year,                   # October 5th
-        r"(?:dem\s+|den\s+)?(?P<nday>\d{1,2})\.(?P<nmonth>\d{1,2})\.(?P<nyear>\d{4}|\d{2})?",  # 5.10.
+        r"(?:dem\s+|den\s+)?(?P<nday>\d{1,2})\.(?P<nmonth>\d{1,2})(?:\.(?P<nyear>\d{4}|\d{2})?)?",  # 5.10.
     ):
         m = _at_end(lead + r"(?:the\s+|dem\s+|den\s+)?" + pattern, text)
         if not m:
@@ -343,7 +343,8 @@ def parse_task_text(
             else:
                 result.due_time = value
             result.matched.append(kind)
-            rest = rest[:start].rstrip(" ,.;")
+            # Keep dots: the clause before may end in one ("am 5.10.").
+            rest = rest[:start].rstrip(" ,;")
             found = True
             break
 

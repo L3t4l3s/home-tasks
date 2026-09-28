@@ -175,6 +175,15 @@ def test_german_priority(spoken, level) -> None:
     assert parse(f"Steuer machen {spoken}", "de").priority == level
 
 
+def test_german_numeric_date_before_another_clause() -> None:
+    parsed = parse("Rechnung bezahlen am 5.10. um 17 Uhr", "de")
+    assert fields(parsed)[::3] == ("Rechnung bezahlen", date(2026, 10, 5))
+    assert parsed.due_time == "17:00"
+    parsed = parse("Müll rausbringen bis zum 5.10. für Ben", "de")
+    assert (parsed.title, parsed.due_date, parsed.person) == ("Müll rausbringen", date(2026, 10, 5), "person.ben")
+    assert parse("Müll rausbringen am 5.10", "de").due_date == date(2026, 10, 5)
+
+
 def test_german_time() -> None:
     assert parse("Arzt anrufen morgen um 9:30", "de").due_time == "09:30"
     assert parse("Arzt anrufen morgen um 9.30 Uhr", "de").due_time == "09:30"
