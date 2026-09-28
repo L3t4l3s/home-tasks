@@ -303,6 +303,28 @@ async def test_overdue_done_before_the_morning_stays_quiet(
     assert satellites["announce"] == [] and satellites["navigate"] == []
 
 
+async def test_due_event_in_the_evening_does_not_wait_for_tomorrow(
+    hass: HomeAssistant, mock_config_entry, store, satellites, freezer
+) -> None:
+    """Added at 22:00 and due today: icon now, nothing next morning — by then
+    it is overdue, and that has its own event."""
+    from custom_components.home_tasks import _async_check_due_dates
+
+    await _automation(hass, satellites=[KITCHEN], event_types=["due"])
+    _at(freezer, 22, 0)
+    task = await store.async_add_task("Late one")
+    await store.async_update_task(task["id"], due_date="2026-09-28")
+    await _async_check_due_dates(hass)
+    await _settle(hass)
+    assert len(satellites["add"]) == 1
+
+    moment = datetime(2026, 9, 29, 7, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE)
+    freezer.move_to(moment)
+    async_fire_time_changed(hass, moment)
+    await _settle(hass)
+    assert satellites["announce"] == [] and satellites["navigate"] == []
+
+
 async def test_reminder_at_night_is_icon_only(
     hass: HomeAssistant, mock_config_entry, store, satellites, freezer
 ) -> None:

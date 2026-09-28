@@ -20,7 +20,9 @@ blueprint:
     Home Tasks View Assist reminders blueprint v1.0.0
   domain: automation
   homeassistant:
-    min_version: "2024.12.0"
+    # 2025.4: a variables action inside if/then updates the outer variable,
+    # which the morning announcement relies on.
+    min_version: "2025.4.0"
   input:
     events:
       name: Events
@@ -301,9 +303,14 @@ actions:
 
   # "Due today" and "overdue" arrive shortly after midnight. Rather than never
   # saying them, wait for the announcement hours — if the task is still open.
+  # Only before the hours begin: one that arrives in the evening (a task
+  # added late, a restart) would otherwise be said next morning next to
+  # that day's own overdue event.
   - if:
       - condition: template
-        value_template: "{{ not in_hours and trigger.id in ['due', 'overdue'] and (announce or show_view) }}"
+        value_template: >-
+          {{ not in_hours and now_time < announce_from
+             and trigger.id in ['due', 'overdue'] and (announce or show_view) }}
     then:
       - wait_for_trigger:
           - trigger: time

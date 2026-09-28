@@ -216,7 +216,9 @@ but no announcement — the View Assist convention. Outside the
   hours later would be wrong;
 - **due today** and **overdue**, which Home Tasks fires in its first hourly
   check after midnight, set the icon right away and are announced when the
-  announcement hours begin — unless the task was done in the meantime.
+  announcement hours begin — unless the task was done in the meantime. One
+  that arrives in the evening (a task added late) only sets the icon; next
+  morning it is overdue and says so itself.
 
 **The icon** disappears when the task is done in Home Tasks, and after
 12 hours at the latest (configurable). The timeout catches what Home Tasks
@@ -224,8 +226,8 @@ can't see: a deleted task, or one ticked off in a linked provider's own app.
 
 The announcement uses `assist_satellite.announce` on the satellites' mic
 devices — one call for all of them, so they speak at the same time — and
-needs Assist satellites that support announcements (Home Assistant
-2024.12+). A satellite that is offline doesn't stop the others.
+needs Assist satellites that support announcements. The blueprint needs
+Home Assistant 2025.4 or newer. A satellite that is offline doesn't stop the others.
 
 ## Tuning for the screen
 
