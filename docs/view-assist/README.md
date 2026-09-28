@@ -2,7 +2,8 @@
 
 [View Assist](https://dinki.github.io/View-Assist/) turns tablets and old smart
 displays into voice satellites with a screen. This folder holds the pieces that
-put a Home Tasks list on one of those screens:
+put Home Tasks on those screens — the list itself, adding tasks by voice, and
+reminders on the satellites:
 
 | File | What it is |
 |------|------------|
@@ -21,9 +22,10 @@ Home Tasks update never overwrites your customised view.
 
 ## Requirements
 
-- Home Assistant 2024.10 or newer
+- Home Assistant 2024.10 or newer — 2025.4 or newer for the reminders blueprint
 - [View Assist](https://dinki.github.io/View-Assist/) integration, set up with at least one satellite
-- Home Tasks with at least one native list
+  (the add-by-voice blueprint also works without it, on any Assist device)
+- Home Tasks with at least one list
 - For `hometasks-dynamic.yaml` only: `custom:button-card` and `card-mod` (both are View Assist requirements anyway)
 
 ## 1. Install the view

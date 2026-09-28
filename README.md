@@ -208,12 +208,12 @@ since otherwise the next scan would queue the task straight back.
 ### Home Assistant Integration
 
 - **7 automation events**: created, completed, reopened, due, overdue, assigned, reminder
-- **Services**: add, complete, reopen, and assign tasks from automations
+- **Services**: add (also straight from a spoken sentence, fields included), update, move, complete, reopen, and assign tasks from automations
 - **Sensors**: open task count + overdue binary sensor per list
 - **Calendar**: every list — native **and external** — gets a `calendar.*` entity. Tasks with due dates appear as all-day or timed events, and **recurring tasks are projected onto every occurrence** (each week, month, etc.) via standard RRULE, usable in any HA calendar card or automation
 - **Todo entity**: each native list is exposed as a standard `todo.*` entity with full HA todo platform support (Companion App, Apple Watch, etc.)
 - **Multiple lists** via separate integration config entries
-- **[View Assist](#view-assist)**: a ready-made view and a voice blueprint for View Assist satellites
+- **[View Assist](#view-assist)**: a ready-made view and blueprints for View Assist satellites — show the list, add tasks by voice, reminders on the nearest satellite
 
 ### Languages
 
@@ -333,8 +333,8 @@ The old flat format (`list_id` at root level) is still supported and migrated au
 
 ### Services and linked lists
 
-Every task service — `add_task`, `update_task`, `complete_task`, `assign_task`,
-`reopen_task` — works on a **linked external list** as well as a native one: name it
+Every task service — `add_task`, `add_task_from_text`, `update_task`, `complete_task`,
+`assign_task`, `reopen_task` — works on a **linked external list** as well as a native one: name it
 with `list_name` as usual, or point at its todo entity with `entity_id`. The change
 takes the same route as the card, so the provider stores what it can (Todoist labels,
 for example) and the local overlay keeps the rest. `move_task` names a linked source with
@@ -755,9 +755,10 @@ ships the pieces to put a Home Tasks list on one:
 - **A reminders blueprint** — reminders and overdue tasks are announced on the satellites, open the view and leave a status-bar icon until the task is done. Satellites are chosen like in View Assist's own blueprints (all, specific, or a template — e.g. by assigned person or the satellite used last), with quiet hours and do-not-disturb respected.
 - **An add-by-voice blueprint** — "add task pay the bill for Anna with high priority due Friday at 5 pm" creates the task with all those fields and says what it added. Works on any Assist device, View Assist optional; English and German built in.
 
-Both are copy-and-install files, so a Home Tasks update never overwrites your
-customised view. Installation, how to pin a specific list, and how to tune the
-view for 800×480 screens: **[docs/view-assist/README.md](docs/view-assist/README.md)**.
+All of them are copy-and-install files, so a Home Tasks update never overwrites
+your customised view or blueprints. Installation, how to pin a specific list,
+choosing satellites for reminders, German sentences for the voice blueprint and
+tuning the view for 800×480 screens: **[docs/view-assist/README.md](docs/view-assist/README.md)**.
 
 Home Tasks lists are ordinary `todo.*` entities, so View Assist's built-in
 **list** view and its **List Management** blueprint work with them out of the
