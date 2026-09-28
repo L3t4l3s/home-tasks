@@ -39,7 +39,7 @@ const _TRANSLATIONS = {
     drag_handle: "Drag to reorder",
     due_date: "Due",
     notes: "Notes",
-    notes_placeholder: "Add notes here",
+    notes_placeholder: "Add notes here", notes_edit_hint: "Click to edit",
     sub_items: "Sub-tasks",
     add_sub_item: "+ Add sub-task",
     recurrence: "Recurrence",
@@ -212,7 +212,7 @@ const _TRANSLATIONS = {
     progress: "{0} van {1} klaar",
     empty: "Geen taken",
     drag_handle: "Slepen om te herordenen",
-    due_date: "Deadline", notes: "Notities", notes_placeholder: "Voeg notities toe",
+    due_date: "Deadline", notes: "Notities", notes_placeholder: "Voeg notities toe", notes_edit_hint: "Klik om te bewerken",
     sub_items: "Subtaken", add_sub_item: "+ Subtaak toevoegen",
     recurrence: "Herhaling", recurrence_enabled: "Ingeschakeld", recurrence_every: "Elke",
     rec_hours: "Uren", rec_days: "Dagen", rec_weeks: "Weken", rec_months: "Maanden", rec_years: "Jaren",
@@ -313,7 +313,7 @@ const _TRANSLATIONS = {
     progress: "{0} di {1} completate",
     empty: "Nessuna attivit\u00e0",
     drag_handle: "Trascina per riordinare",
-    due_date: "Scadenza", notes: "Note", notes_placeholder: "Aggiungi note qui",
+    due_date: "Scadenza", notes: "Note", notes_placeholder: "Aggiungi note qui", notes_edit_hint: "Clicca per modificare",
     sub_items: "Sotto-attivit\u00e0", add_sub_item: "+ Aggiungi sotto-attivit\u00e0",
     recurrence: "Ricorrenza", recurrence_enabled: "Attivata", recurrence_every: "Ogni",
     rec_hours: "Ore", rec_days: "Giorni", rec_weeks: "Settimane", rec_months: "Mesi", rec_years: "Anni",
@@ -414,7 +414,7 @@ const _TRANSLATIONS = {
     progress: "{0} z {1} uko\u0144czono",
     empty: "Brak zada\u0144",
     drag_handle: "Przeci\u0105gnij, aby zmieni\u0107 kolejno\u015b\u0107",
-    due_date: "Termin", notes: "Notatki", notes_placeholder: "Dodaj notatki tutaj",
+    due_date: "Termin", notes: "Notatki", notes_placeholder: "Dodaj notatki tutaj", notes_edit_hint: "Kliknij, aby edytować",
     sub_items: "Podzadania", add_sub_item: "+ Dodaj podzadanie",
     recurrence: "Powtarzanie", recurrence_enabled: "W\u0142\u0105czone", recurrence_every: "Co",
     rec_hours: "Godziny", rec_days: "Dni", rec_weeks: "Tygodnie", rec_months: "Miesi\u0105ce", rec_years: "Lata",
@@ -515,7 +515,7 @@ const _TRANSLATIONS = {
     progress: "{0} av {1} klara",
     empty: "Inga uppgifter",
     drag_handle: "Dra f\u00f6r att \u00e4ndra ordning",
-    due_date: "F\u00f6rfallodatum", notes: "Anteckningar", notes_placeholder: "L\u00e4gg till anteckningar h\u00e4r",
+    due_date: "F\u00f6rfallodatum", notes: "Anteckningar", notes_placeholder: "L\u00e4gg till anteckningar h\u00e4r", notes_edit_hint: "Klicka för att redigera",
     sub_items: "Deluppgifter", add_sub_item: "+ L\u00e4gg till deluppgift",
     recurrence: "Upprepning", recurrence_enabled: "Aktiverad", recurrence_every: "Var",
     rec_hours: "Timmar", rec_days: "Dagar", rec_weeks: "Veckor", rec_months: "M\u00e5nader", rec_years: "\u00c5r",
@@ -616,7 +616,7 @@ const _TRANSLATIONS = {
     progress: "{0} sur {1} termin\u00e9es",
     empty: "Aucune t\u00e2che",
     drag_handle: "Glisser pour r\u00e9organiser",
-    due_date: "\u00c9ch\u00e9ance", notes: "Notes", notes_placeholder: "Ajouter des notes ici",
+    due_date: "\u00c9ch\u00e9ance", notes: "Notes", notes_placeholder: "Ajouter des notes ici", notes_edit_hint: "Cliquer pour modifier",
     sub_items: "Sous-t\u00e2ches", add_sub_item: "+ Ajouter une sous-t\u00e2che",
     recurrence: "R\u00e9currence", recurrence_enabled: "Activ\u00e9e", recurrence_every: "Tous les",
     rec_hours: "Heures", rec_days: "Jours", rec_weeks: "Semaines", rec_months: "Mois", rec_years: "Ann\u00e9es",
@@ -717,7 +717,7 @@ const _TRANSLATIONS = {
     progress: "{0} de {1} conclu\u00eddas",
     empty: "Nenhuma tarefa",
     drag_handle: "Arrastar para reordenar",
-    due_date: "Prazo", notes: "Notas", notes_placeholder: "Adicionar notas aqui",
+    due_date: "Prazo", notes: "Notas", notes_placeholder: "Adicionar notas aqui", notes_edit_hint: "Clique para editar",
     sub_items: "Subtarefas", add_sub_item: "+ Adicionar subtarefa",
     recurrence: "Recorr\u00eancia", recurrence_enabled: "Ativada", recurrence_every: "A cada",
     rec_hours: "Horas", rec_days: "Dias", rec_weeks: "Semanas", rec_months: "Meses", rec_years: "Anos",
@@ -818,7 +818,7 @@ const _TRANSLATIONS = {
     progress: "{0} de {1} completadas",
     empty: "Sin tareas",
     drag_handle: "Arrastrar para reordenar",
-    due_date: "Vencimiento", notes: "Notas", notes_placeholder: "A\u00f1adir notas aqu\u00ed",
+    due_date: "Vencimiento", notes: "Notas", notes_placeholder: "A\u00f1adir notas aqu\u00ed", notes_edit_hint: "Haz clic para editar",
     sub_items: "Subtareas", add_sub_item: "+ A\u00f1adir subtarea",
     recurrence: "Recurrencia", recurrence_enabled: "Activada", recurrence_every: "Cada",
     rec_hours: "Horas", rec_days: "D\u00edas", rec_weeks: "Semanas", rec_months: "Meses", rec_years: "A\u00f1os",
@@ -919,7 +919,7 @@ const _TRANSLATIONS = {
     progress: "{0} \u0438\u0437 {1} \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043e",
     empty: "\u041d\u0435\u0442 \u0437\u0430\u0434\u0430\u0447",
     drag_handle: "\u041f\u0435\u0440\u0435\u0442\u0430\u0449\u0438\u0442\u044c \u0434\u043b\u044f \u0438\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u044f \u043f\u043e\u0440\u044f\u0434\u043a\u0430",
-    due_date: "\u0421\u0440\u043e\u043a", notes: "\u0417\u0430\u043c\u0435\u0442\u043a\u0438", notes_placeholder: "\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0437\u0430\u043c\u0435\u0442\u043a\u0438 \u0437\u0434\u0435\u0441\u044c",
+    due_date: "\u0421\u0440\u043e\u043a", notes: "\u0417\u0430\u043c\u0435\u0442\u043a\u0438", notes_placeholder: "\u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u0437\u0430\u043c\u0435\u0442\u043a\u0438 \u0437\u0434\u0435\u0441\u044c", notes_edit_hint: "\u041d\u0430\u0436\u043c\u0438\u0442\u0435 \u0434\u043b\u044f \u0440\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f",
     sub_items: "\u041f\u043e\u0434\u0437\u0430\u0434\u0430\u0447\u0438", add_sub_item: "+ \u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043f\u043e\u0434\u0437\u0430\u0434\u0430\u0447\u0443",
     recurrence: "\u041f\u043e\u0432\u0442\u043e\u0440\u0435\u043d\u0438\u0435", recurrence_enabled: "\u0412\u043a\u043b\u044e\u0447\u0435\u043d\u043e", recurrence_every: "\u041a\u0430\u0436\u0434\u044b\u0435",
     rec_hours: "\u0427\u0430\u0441\u044b", rec_days: "\u0414\u043d\u0438", rec_weeks: "\u041d\u0435\u0434\u0435\u043b\u0438", rec_months: "\u041c\u0435\u0441\u044f\u0446\u044b", rec_years: "Годы",
@@ -1020,7 +1020,7 @@ const _TRANSLATIONS = {
     progress: "{0} z {1} dokon\u010deno",
     empty: "\u017d\u00e1dn\u00e9 \u00fakoly",
     drag_handle: "P\u0159et\u00e1hnout pro zm\u011bnu po\u0159ad\u00ed",
-    due_date: "Term\u00edn", notes: "Pozn\u00e1mky", notes_placeholder: "P\u0159idat pozn\u00e1mky zde",
+    due_date: "Term\u00edn", notes: "Pozn\u00e1mky", notes_placeholder: "P\u0159idat pozn\u00e1mky zde", notes_edit_hint: "Klikněte pro úpravu",
     sub_items: "Pod\u00fakoly", add_sub_item: "+ P\u0159idat pod\u00fakol",
     recurrence: "Opakov\u00e1n\u00ed", recurrence_enabled: "Povoleno", recurrence_every: "Ka\u017ed\u00fd",
     rec_hours: "Hodiny", rec_days: "Dny", rec_weeks: "T\u00fddny", rec_months: "M\u011bs\u00edce", rec_years: "Roky",
@@ -1121,7 +1121,7 @@ const _TRANSLATIONS = {
     progress: "{0} af {1} f\u00e6rdige",
     empty: "Ingen opgaver",
     drag_handle: "Tr\u00e6k for at sortere",
-    due_date: "Forfald", notes: "Noter", notes_placeholder: "Tilf\u00f8j noter her",
+    due_date: "Forfald", notes: "Noter", notes_placeholder: "Tilf\u00f8j noter her", notes_edit_hint: "Klik for at redigere",
     sub_items: "Delopgaver", add_sub_item: "+ Tilf\u00f8j delopgave",
     recurrence: "Gentagelse", recurrence_enabled: "Aktiveret", recurrence_every: "Hver",
     rec_hours: "Timer", rec_days: "Dage", rec_weeks: "Uger", rec_months: "M\u00e5neder", rec_years: "År",
@@ -1222,7 +1222,7 @@ const _TRANSLATIONS = {
     progress: "{0} av {1} ferdige",
     empty: "Ingen oppgaver",
     drag_handle: "Dra for \u00e5 endre rekkefl\u00f8lge",
-    due_date: "Frist", notes: "Notater", notes_placeholder: "Legg til notater her",
+    due_date: "Frist", notes: "Notater", notes_placeholder: "Legg til notater her", notes_edit_hint: "Klikk for å redigere",
     sub_items: "Deloppgaver", add_sub_item: "+ Legg til deloppgave",
     recurrence: "Gjentakelse", recurrence_enabled: "Aktivert", recurrence_every: "Hver",
     rec_hours: "Timer", rec_days: "Dager", rec_weeks: "Uker", rec_months: "M\u00e5neder", rec_years: "År",
@@ -1323,7 +1323,7 @@ const _TRANSLATIONS = {
     progress: "{0} / {1} valmis",
     empty: "Ei teht\u00e4vi\u00e4",
     drag_handle: "Vet\u00e4\u00e4 j\u00e4rjest\u00e4\u00e4ksesi",
-    due_date: "Er\u00e4p\u00e4iv\u00e4", notes: "Muistiinpanot", notes_placeholder: "Lis\u00e4\u00e4 muistiinpanoja t\u00e4h\u00e4n",
+    due_date: "Er\u00e4p\u00e4iv\u00e4", notes: "Muistiinpanot", notes_placeholder: "Lis\u00e4\u00e4 muistiinpanoja t\u00e4h\u00e4n", notes_edit_hint: "Muokkaa napsauttamalla",
     sub_items: "Aliteht\u00e4v\u00e4t", add_sub_item: "+ Lis\u00e4\u00e4 aliteht\u00e4v\u00e4",
     recurrence: "Toistuvuus", recurrence_enabled: "K\u00e4yt\u00f6ss\u00e4", recurrence_every: "Joka",
     rec_hours: "Tunnit", rec_days: "P\u00e4iv\u00e4t", rec_weeks: "Viikot", rec_months: "Kuukaudet", rec_years: "Vuodet",
@@ -1424,7 +1424,7 @@ const _TRANSLATIONS = {
     progress: "{0} / {1} k\u00e9sz",
     empty: "Nincsenek feladatok",
     drag_handle: "H\u00fazza az \u00e1trendez\u00e9shez",
-    due_date: "Hat\u00e1rid\u0151", notes: "Megjegyz\u00e9sek", notes_placeholder: "Megjegyz\u00e9sek hozz\u00e1ad\u00e1sa",
+    due_date: "Hat\u00e1rid\u0151", notes: "Megjegyz\u00e9sek", notes_placeholder: "Megjegyz\u00e9sek hozz\u00e1ad\u00e1sa", notes_edit_hint: "Kattints a szerkesztéshez",
     sub_items: "Alfeladatok", add_sub_item: "+ Alfeladat hozz\u00e1ad\u00e1sa",
     recurrence: "Ism\u00e9tl\u00e9s", recurrence_enabled: "Enged\u00e9lyezve", recurrence_every: "Minden",
     rec_hours: "\u00d3ra", rec_days: "Nap", rec_weeks: "H\u00e9t", rec_months: "H\u00f3nap", rec_years: "Év",
@@ -1532,7 +1532,7 @@ const _TRANSLATIONS = {
     drag_handle: "Verschieben",
     due_date: "F\u00e4lligkeit",
     notes: "Notizen",
-    notes_placeholder: "Hier kannst du Notizen hinzuf\u00fcgen",
+    notes_placeholder: "Hier kannst du Notizen hinzuf\u00fcgen", notes_edit_hint: "Zum Bearbeiten klicken",
     sub_items: "Unteraufgaben",
     add_sub_item: "+ Unteraufgabe hinzuf\u00fcgen",
     recurrence: "Wiederholung",
@@ -5493,32 +5493,141 @@ class HomeTasksCard extends HTMLElement {
     ]);
   }
 
+  // http(s) URLs in *text*, as [start, end) ranges.  Trailing punctuation
+  // that closes the sentence ("see https://x.y/z.") is not part of the link,
+  // and a closing bracket only is when the URL opened one ("(…/wiki/Foo_(bar))").
+  _findUrls(text) {
+    const found = [];
+    const re = /\bhttps?:\/\/[^\s<>"'`]+/gi;
+    let m;
+    while ((m = re.exec(text || "")) !== null) {
+      let url = m[0];
+      for (;;) {
+        const last = url.slice(-1);
+        if (/[.,;:!?'"]/.test(last)) { url = url.slice(0, -1); continue; }
+        const opener = { ")": "(", "]": "[", "}": "{" }[last];
+        const count = (ch) => url.split(ch).length - 1;
+        if (opener && count(last) > count(opener)) { url = url.slice(0, -1); continue; }
+        break;
+      }
+      if (url.length > "https://".length) found.push({ start: m.index, end: m.index + url.length, url });
+    }
+    return found;
+  }
+
+  // Fill *container* with *text* as text nodes and <a> elements for its
+  // URLs.  Only text nodes and hrefs from _findUrls — notes can come from
+  // anywhere (services, synced providers), so no markup is ever parsed.
+  _renderLinkified(container, text) {
+    let pos = 0;
+    for (const { start, end, url } of this._findUrls(text)) {
+      if (start > pos) container.appendChild(document.createTextNode(text.slice(pos, start)));
+      const a = this._el("a", { href: url, textContent: url, target: "_blank", rel: "noopener noreferrer" });
+      container.appendChild(a);
+      pos = end;
+    }
+    if (pos < text.length) container.appendChild(document.createTextNode(text.slice(pos)));
+  }
+
   _buildNotesSection(task, colIdx) {
-    const notesInput = this._el("textarea", {
-      placeholder: this._t("notes_placeholder"),
-      rows: 2,
-      value: task.notes || "",
-      "data-focus-key": "notes",
-    });
-    let debounceTimer;
-    const saveNotes = () => {
-      clearTimeout(debounceTimer);
-      debounceTimer = null;
-      this._updateTaskNotes(task.id, notesInput.value, colIdx);
-    };
-    notesInput.addEventListener("input", () => {
-      this._autoGrowTextarea(notesInput);
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(saveNotes, 500);
-    });
-    // Fit to content once attached (scrollHeight is 0 while detached).
-    requestAnimationFrame(() => this._autoGrowTextarea(notesInput));
-    notesInput.addEventListener("blur", saveNotes);
-    const notesWrap = this._el("div", { className: "field-wrap no-label" }, [notesInput]);
-    return this._el("div", { className: "detail-section" }, [
+    // Notes are shown as text with clickable links; a click (or Enter)
+    // switches to the textarea.  Empty notes go straight to the textarea so
+    // they can be typed into.  The editing state lives on the card, not the
+    // DOM, so a re-render while typing brings the textarea (and, through
+    // data-focus-key, the caret) back instead of the read view.
+    if (!this._notesEditing) this._notesEditing = new Set();
+    // The tile detail sheet outlives re-renders while a reload replaces the
+    // task objects, so always read the notes from the current one.
+    const currentNotes = () =>
+      (this._columns[colIdx]?.tasks?.find(t => t.id === task.id) || task).notes || "";
+    const notesWrap = this._el("div", { className: "field-wrap no-label" });
+    const section = this._el("div", { className: "detail-section" }, [
       this._el("label", { className: "detail-label", textContent: this._t("notes") }),
       notesWrap,
     ]);
+
+    const showView = () => {
+      const text = currentNotes();
+      const view = this._el("div", {
+        className: "notes-view",
+        tabIndex: 0,
+        role: "button",
+        title: this._t("notes_edit_hint"),
+      });
+      this._renderLinkified(view, text);
+      // Selecting text to copy it is not a request to edit it: the pointer
+      // moved between press and release, or a selection sits in the view.
+      // (Inside a shadow root, window.getSelection() reports the host in
+      // Chrome/Safari — ask the shadow root where it can answer.)
+      let downAt = null;
+      view.addEventListener("pointerdown", (e) => { downAt = { x: e.clientX, y: e.clientY }; });
+      const selecting = (e) => {
+        if (downAt && e && e.clientX != null &&
+            Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 4) return true;
+        const root = this.shadowRoot;
+        const sel = (root && typeof root.getSelection === "function" && root.getSelection())
+          || (window.getSelection && window.getSelection());
+        return !!(sel && !sel.isCollapsed && sel.anchorNode && view.contains(sel.anchorNode));
+      };
+      const edit = () => {
+        this._notesEditing.add(task.id);
+        showEditor(true);
+      };
+      view.addEventListener("click", (e) => {
+        if (e.target.closest && e.target.closest("a")) return;  // a link opens, it doesn't edit
+        const skip = selecting(e);
+        downAt = null;
+        if (!skip) edit();
+      });
+      view.addEventListener("keydown", (e) => {
+        if (e.target !== view) return;  // Enter on a focused link opens the link
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); edit(); }
+      });
+      notesWrap.replaceChildren(view);
+    };
+
+    const showEditor = (focus) => {
+      const notesInput = this._el("textarea", {
+        placeholder: this._t("notes_placeholder"),
+        rows: 2,
+        value: currentNotes(),
+        "data-focus-key": "notes",
+      });
+      let debounceTimer;
+      const saveNotes = () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = null;
+        this._updateTaskNotes(task.id, notesInput.value, colIdx);
+      };
+      notesInput.addEventListener("input", () => {
+        this._autoGrowTextarea(notesInput);
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(saveNotes, 500);
+      });
+      notesInput.addEventListener("blur", () => {
+        saveNotes();
+        // A blur from the card tearing its DOM down for a re-render is not
+        // the user leaving the field — stay in editing, the rebuild restores
+        // the textarea.  Only a real blur (still attached) goes back to the view.
+        setTimeout(() => {
+          if (!notesInput.isConnected) return;
+          this._notesEditing.delete(task.id);
+          if ((notesInput.value || "").trim()) showView();
+        }, 0);
+      });
+      notesWrap.replaceChildren(notesInput);
+      // Fit to content once attached (scrollHeight is 0 while detached).
+      requestAnimationFrame(() => this._autoGrowTextarea(notesInput));
+      if (focus) {
+        notesInput.focus();
+        const end = notesInput.value.length;
+        try { notesInput.setSelectionRange(end, end); } catch { /* noop */ }
+      }
+    };
+
+    if (currentNotes().trim() && !this._notesEditing.has(task.id)) showView();
+    else showEditor(false);
+    return section;
   }
 
   _buildSubTasksSection(task, colIdx) {
@@ -7404,7 +7513,10 @@ class HomeTasksCard extends HTMLElement {
     if (!el) return false;
     const tag = el.tagName;
     return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT"
-        || el.isContentEditable === true;
+        || el.isContentEditable === true
+        // The notes read view: selecting its text or tapping a link in it
+        // must not start dragging the task.
+        || (typeof el.closest === "function" && !!el.closest(".notes-view"));
   }
 
   _buildSubTask(taskId, sub, colIdx) {
@@ -8302,6 +8414,9 @@ class HomeTasksCard extends HTMLElement {
       .field-wrap input:focus, .field-wrap textarea:focus { border: 2px solid var(--primary-color); padding: 19px 11px 5px; }
       .field-wrap input:disabled, .field-wrap textarea:disabled { opacity: 0.4; }
       .field-wrap textarea { resize: vertical; min-height: 60px; }
+      .notes-view { box-sizing: border-box; width: 100%; min-height: 40px; padding: 10px 12px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; color: var(--primary-text-color); font-size: 0.875rem; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; cursor: text; }
+      .notes-view:focus-visible { outline: none; border: 2px solid var(--primary-color); padding: 9px 11px; }
+      .notes-view a { color: var(--primary-color, #03a9f4); text-decoration: underline; cursor: pointer; }
       .field-wrap > span { position: absolute; top: 6px; left: 12px; font-size: 11px; font-weight: 400; color: var(--secondary-text-color); text-transform: none; letter-spacing: 0; pointer-events: none; }
       .field-with-clear { display: flex; align-items: center; gap: 4px; }
       .field-with-clear .field-wrap { flex: 1; min-width: 0; }

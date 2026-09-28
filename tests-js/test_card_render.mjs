@@ -392,7 +392,9 @@ describe('REGRESSION: input fields inside expanded tasks accept text selection',
       'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'Test' }] },
       'home_tasks/get_tasks': {
         tasks: [{
-          id: 'T1', title: 'Has notes', notes: 'existing notes',
+          // No notes: the notes section then shows its textarea right away
+          // (with notes it shows the read view — tested below).
+          id: 'T1', title: 'Has notes', notes: '',
           sort_order: 0, sub_items: [], tags: [], reminders: [],
         }],
       },
@@ -423,6 +425,38 @@ describe('REGRESSION: input fields inside expanded tasks accept text selection',
     ));
     assert.equal(bubbled, false,
       'mousedown on the notes textarea must be stopped before reaching the draggable .task');
+  });
+
+  test('mousedown and touchstart on the notes read view do not reach the draggable task', async () => {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'Test' }] },
+      'home_tasks/get_tasks': {
+        tasks: [{ id: 'T1', title: 'X', notes: 'see https://a.example', sort_order: 0, sub_items: [], tags: [], reminders: [] }],
+      },
+    });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{ list_id: 'L1' }] });
+    card.hass = hass;
+    await flush(card);
+    card._expandedTasks.add('T1');
+    card._render();
+
+    const view = card.shadowRoot.querySelector('.task-details .notes-view');
+    assert.ok(view, 'notes read view must exist');
+    const taskEl = card.shadowRoot.querySelector('.task[data-task-id="T1"]');
+    let bubbled = false;
+    taskEl.addEventListener('mousedown', () => { bubbled = true; });
+    const win = card.shadowRoot.ownerDocument.defaultView;
+    view.querySelector('a').dispatchEvent(new win.MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    view.dispatchEvent(new win.MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    assert.equal(bubbled, false);
+
+    card._touchStartTimer = null;
+    const touch = new win.Event('touchstart', { bubbles: true, cancelable: true });
+    touch.touches = [{ clientX: 0, clientY: 0 }];
+    view.dispatchEvent(touch);
+    assert.equal(card._touchStartTimer, null, 'no drag timer armed from the notes view');
   });
 
   test('mousedown on the tag input is intercepted', async () => {
