@@ -2618,6 +2618,33 @@ async def test_hours_from_due_completion_moves_due_time(
     )
 
 
+async def test_hours_switched_to_due_while_completed_does_not_reopen_at_once(
+    hass: HomeAssistant, mock_config_entry, store, freezer
+) -> None:
+    """Completed under "Ab Erledigung", then switched to "Ab Fälligkeit": the
+    stale due (today 00:00, never moved) only fixes the grid — the reopen goes
+    to the first slot after the completion, not to the past due moment."""
+    from custom_components.home_tasks import DATA_RECURRENCE_TIMERS
+
+    tz = dt_util.DEFAULT_TIME_ZONE
+    freezer.move_to(datetime(2026, 1, 8, 10, 0, tzinfo=tz))
+    task = await store.async_add_task("Water plants")
+    await store.async_update_task(
+        task["id"], due_date="2026-01-08", recurrence_enabled=True,
+        recurrence_unit="hours", recurrence_value=3,
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await store.async_update_task(task["id"], recurrence_anchor="due")
+    await hass.async_block_till_done()
+
+    stored = store.get_task(task["id"])
+    assert stored["completed"] is True
+    reopen_at = datetime.fromisoformat(stored["reopen_at"]).astimezone(tz)
+    # Grid from 00:00 every 3 h: the first slot after 10:00 is 12:00.
+    assert reopen_at.replace(tzinfo=None) == datetime(2026, 1, 8, 12, 0)
+    assert task["id"] in hass.data[DATA_RECURRENCE_TIMERS]
+
+
 def test_months_dom_24() -> None:
     """alle 1 Monat am 24."""
     completed = _local_dt(2026, 1, 5)

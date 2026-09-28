@@ -446,12 +446,16 @@ def _on_task_schedule_changed(hass: HomeAssistant, entry_id: str, task: dict) ->
 
     completed_at = _parse_completed_at(task)
     unit = task.get("recurrence_unit")
-    if unit == "hours" and task.get("due_date") and _is_due_anchored(task, unit):
-        # Hourly on the due grid: completion already moved due_date/due_time
-        # to the next slot, which is the reopen moment itself.
-        target = _due_moment(task)
-        if target is not None:
-            target = _apply_start_date(task, target)
+    due_at = _due_moment(task) if unit == "hours" and _is_due_anchored(task, unit) else None
+    if due_at is not None:
+        # Hourly on the due grid: the first slot after the completion.  When
+        # completion already moved due_date/due_time to the next slot, that
+        # is the stored due moment itself; when the task was completed under
+        # another setting (anchor or unit just switched), the stored due is
+        # stale and only fixes the grid — reopening at it could fire at once.
+        step = timedelta(seconds=RECURRENCE_UNIT_SECONDS["hours"] * task.get("recurrence_value", 1))
+        target = due_at + ((completed_at - due_at) // step + 1) * step
+        target = None if _check_end_date(task, target) else _apply_start_date(task, target)
     elif unit == "hours" or not task.get("due_date"):
         target = _compute_next_reopen_target(task, completed_at)
     else:

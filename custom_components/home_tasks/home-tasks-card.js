@@ -5585,7 +5585,11 @@ class HomeTasksCard extends HTMLElement {
     // default) or "due" ("Ab Fälligkeit").  A calendar pattern (weekdays,
     // day of month, …) always follows the due date, so this only matters
     // while no pattern is picked.
-    const recurrenceAnchor = task.recurrence_anchor === "due" ? "due" : "completion";
+    // A provider that runs the recurrence itself (Todoist) gets no anchor
+    // choice, so a stray "due" there must not leave its row unselected.
+    const _anchorCaps = this._colCapabilities(colIdx);
+    const recurrenceAnchor = (task.recurrence_anchor === "due" && !(_anchorCaps && _anchorCaps.can_sync_recurrence))
+      ? "due" : "completion";
 
     const recSwitch = document.createElement("ha-switch");
     recSwitch.checked = recurrenceEnabled;
