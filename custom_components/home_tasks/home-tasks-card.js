@@ -2165,33 +2165,48 @@ class HomeTasksCard extends HTMLElement {
 
   // A card is the only place auto_generate_image and the ai_task entity are
   // configured, but the background queue has to work without one being open.
-  // Whenever a card with the option loads, it hands both to the backend.
+  // Whenever a card with the option loads, it hands both to the backend:
+  // once card-wide as the fallback, and to every list it shows as that
+  // list's own - so a task is always drawn with the prefix of its list,
+  // and a second dashboard with another style cannot overwrite it.
+  _imageSettingsForLists() {
+    const imgCfg = this._config?.image_generation || {};
+    if (!imgCfg.entity_id) return null;
+    return { ai_task_entity_id: imgCfg.entity_id, prompt_prefix: imgCfg.prompt_prefix || "" };
+  }
+
+  _listInfo(col) {
+    return col.entity_id
+      ? (this._externalLists || []).find(l => l.entity_id === col.entity_id)
+      : (this._lists || []).find(l => l.id === col.list_id);
+  }
+
   async _syncImageGenerationConfig() {
     if (!this._hass || !this._config) return;
     const wanted = (this._config.columns || []).filter(
       c => c.auto_generate_image === true && c.show_images === true && (c.list_id || c.entity_id)
     );
     if (!wanted.length) return;
-    const imgCfg = this._config.image_generation || {};
+    const own = this._imageSettingsForLists();
     try {
-      if (imgCfg.entity_id) {
-        await this._hass.callWS({
-          type: "home_tasks/sync_image_config",
-          ai_task_entity_id: imgCfg.entity_id,
-          prompt_prefix: imgCfg.prompt_prefix || "",
-        });
+      if (own) {
+        await this._hass.callWS({ type: "home_tasks/sync_image_config", ...own });
       }
       for (const col of wanted) {
-        const info = col.entity_id
-          ? (this._externalLists || []).find(l => l.entity_id === col.entity_id)
-          : (this._lists || []).find(l => l.id === col.list_id);
-        if (info && info.auto_generate_images === true) continue;  // already on
+        const info = this._listInfo(col);
+        const change = {};
+        if (!(info && info.auto_generate_images === true)) change.auto_generate_images = true;
+        if (own && !(info && info.ai_task_entity_id === own.ai_task_entity_id
+                     && info.prompt_prefix === own.prompt_prefix)) {
+          Object.assign(change, own);
+        }
+        if (!Object.keys(change).length) continue;  // the list already knows all this
         await this._hass.callWS({
           type: "home_tasks/set_list_settings",
           ...(col.entity_id ? { entity_id: col.entity_id } : { list_id: col.list_id }),
-          auto_generate_images: true,
+          ...change,
         });
-        if (info) info.auto_generate_images = true;
+        if (info) Object.assign(info, change);
       }
     } catch (e) {
       console.warn("Could not sync automatic image generation:", e);
@@ -9070,21 +9085,14 @@ class HomeTasksCardEditor extends HTMLElement {
     const target = col.entity_id ? { entity_id: col.entity_id } : { list_id: col.list_id };
     if (!target.entity_id && !target.list_id) return;
     try {
-      const imgCfg = this._config?.image_generation || {};
-      if (on && imgCfg.entity_id) {
-        await this._hass.callWS({
-          type: "home_tasks/sync_image_config",
-          ai_task_entity_id: imgCfg.entity_id,
-          prompt_prefix: imgCfg.prompt_prefix || "",
-        });
+      const own = on ? this._imageSettingsForLists() : null;
+      if (own) {
+        await this._hass.callWS({ type: "home_tasks/sync_image_config", ...own });
       }
-      await this._hass.callWS({
-        type: "home_tasks/set_list_settings", ...target, auto_generate_images: on,
-      });
-      const info = col.entity_id
-        ? (this._externalLists || []).find(l => l.entity_id === col.entity_id)
-        : (this._lists || []).find(l => l.id === col.list_id);
-      if (info) info.auto_generate_images = on;
+      const change = { auto_generate_images: on, ...(own || {}) };
+      await this._hass.callWS({ type: "home_tasks/set_list_settings", ...target, ...change });
+      const info = this._listInfo(col);
+      if (info) Object.assign(info, change);
     } catch (e) {
       console.warn("Could not sync automatic image generation:", e);
     }

@@ -495,15 +495,29 @@ class HomeTasksStore:
         auto_generate_images: whether the background queue generates images
         for open tasks in this list. Default False — it spends money at the
         AI provider, so it has to be asked for.
+
+        ai_task_entity_id / prompt_prefix: which AI entity draws this list's
+        pictures and what goes in front of the title. The card that shows
+        the list hands them over, so two dashboards with different styles
+        no longer fight over one global value. None means "never told" —
+        the queue then falls back to the card-wide config it was last
+        given; an empty prefix is a real answer and stays "".
         """
         s = self._data.get("settings") or {}
+        prefix = s.get("prompt_prefix")
         return {
             "share_images": s.get("share_images", True) is not False,
             "auto_generate_images": s.get("auto_generate_images", False) is True,
+            "ai_task_entity_id": s.get("ai_task_entity_id") or None,
+            "prompt_prefix": prefix if isinstance(prefix, str) else None,
         }
 
     async def async_set_settings(
-        self, share_images: object = _UNSET, auto_generate_images: object = _UNSET
+        self,
+        share_images: object = _UNSET,
+        auto_generate_images: object = _UNSET,
+        ai_task_entity_id: object = _UNSET,
+        prompt_prefix: object = _UNSET,
     ) -> dict:
         """Update per-list settings. Omitted fields keep their value."""
         current = self.get_settings()
@@ -511,9 +525,15 @@ class HomeTasksStore:
             share_images = current["share_images"]
         if auto_generate_images is _UNSET:
             auto_generate_images = current["auto_generate_images"]
+        if ai_task_entity_id is _UNSET:
+            ai_task_entity_id = current["ai_task_entity_id"]
+        if prompt_prefix is _UNSET:
+            prompt_prefix = current["prompt_prefix"]
         self._data["settings"] = {
             "share_images": bool(share_images),
             "auto_generate_images": bool(auto_generate_images),
+            "ai_task_entity_id": ai_task_entity_id or None,
+            "prompt_prefix": prompt_prefix if isinstance(prompt_prefix, str) else None,
         }
         # Same reasoning as async_set_defaults: persist immediately, skip the
         # entity listener fanout (no entity state depends on this).

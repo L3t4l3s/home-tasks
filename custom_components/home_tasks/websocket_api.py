@@ -319,6 +319,8 @@ async def ws_sync_image_config(hass, connection, msg):
         vol.Optional("entity_id"): _val_entity_id,
         vol.Optional("share_images"): bool,
         vol.Optional("auto_generate_images"): bool,
+        vol.Optional("ai_task_entity_id"): vol.Any(_val_entity_id, None),
+        vol.Optional("prompt_prefix"): vol.All(str, vol.Length(max=200)),
     }
 )
 @websocket_api.async_response
@@ -330,7 +332,11 @@ async def ws_set_list_settings(hass, connection, msg):
         if bool(list_id) == bool(entity_id):
             raise ValueError("Provide exactly one of list_id or entity_id")
         store = _get_store(hass, list_id) if list_id else _get_overlay_store(hass, entity_id)
-        kwargs = {k: msg[k] for k in ("share_images", "auto_generate_images") if k in msg}
+        kwargs = {
+            k: msg[k]
+            for k in ("share_images", "auto_generate_images", "ai_task_entity_id", "prompt_prefix")
+            if k in msg
+        }
         if not kwargs:
             raise ValueError("No settings given")
         was_on = store.get_settings()["auto_generate_images"]

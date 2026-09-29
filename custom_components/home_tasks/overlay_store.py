@@ -200,18 +200,34 @@ class ExternalTaskOverlayStore:
     def get_settings(self) -> dict:
         """Per-list policy settings — mirrors HomeTasksStore.get_settings."""
         s = self._data.get("settings") or {}
+        prefix = s.get("prompt_prefix")
         return {
             "share_images": s.get("share_images", True) is not False,
             "auto_generate_images": s.get("auto_generate_images", False) is True,
+            "ai_task_entity_id": s.get("ai_task_entity_id") or None,
+            "prompt_prefix": prefix if isinstance(prefix, str) else None,
         }
 
     async def async_set_settings(
-        self, share_images: object = None, auto_generate_images: object = None
+        self,
+        share_images: object = None,
+        auto_generate_images: object = None,
+        ai_task_entity_id: object = _UNSET,
+        prompt_prefix: object = _UNSET,
     ) -> dict:
-        """Update per-list settings. None keeps the current value."""
-        if share_images is None and auto_generate_images is None:
+        """Update per-list settings. None (or, for the image settings, an
+        omitted argument) keeps the current value - there None is a value:
+        "no entity of its own"."""
+        if (
+            share_images is None and auto_generate_images is None
+            and ai_task_entity_id is _UNSET and prompt_prefix is _UNSET
+        ):
             return self.get_settings()
         current = self.get_settings()
+        if ai_task_entity_id is _UNSET:
+            ai_task_entity_id = current["ai_task_entity_id"]
+        if prompt_prefix is _UNSET:
+            prompt_prefix = current["prompt_prefix"]
         self._data["settings"] = {
             "share_images": bool(
                 current["share_images"] if share_images is None else share_images
@@ -221,6 +237,8 @@ class ExternalTaskOverlayStore:
                 if auto_generate_images is None
                 else auto_generate_images
             ),
+            "ai_task_entity_id": ai_task_entity_id or None,
+            "prompt_prefix": prompt_prefix if isinstance(prompt_prefix, str) else None,
         }
         await self._async_save()
         return self.get_settings()

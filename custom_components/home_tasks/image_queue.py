@@ -309,8 +309,8 @@ class ImageQueue:
         finally:
             self._running = False
 
-    def _wants_images(self, entry: dict) -> bool:
-        """Whether the entry's list still asks for automatic generation."""
+    def _store_for(self, entry: dict):
+        """The list an entry belongs to, or None when it is gone."""
         from .websocket_api import _get_overlay_store
 
         try:
@@ -318,17 +318,39 @@ class ImageQueue:
                 store = _get_overlay_store(self.hass, entry["entity_id"])
             else:
                 store = self.hass.data.get(DOMAIN, {}).get(entry.get("list_id"))
-            if store is None or not hasattr(store, "get_settings"):
-                return False
-            return bool(store.get_settings()["auto_generate_images"])
         except Exception:  # noqa: BLE001
-            return False
+            return None
+        return store if hasattr(store, "get_settings") else None
+
+    def _wants_images(self, entry: dict) -> bool:
+        """Whether the entry's list still asks for automatic generation."""
+        store = self._store_for(entry)
+        return bool(store is not None and store.get_settings()["auto_generate_images"])
+
+    def _config_for(self, entry: dict) -> dict:
+        """Which AI entity and prefix to use for this entry's list.
+
+        Every task is drawn with the prefix of its own list: the card that
+        shows a list hands it the entity and prefix it is configured with.
+        A list that was never told anything falls back to the card-wide
+        config the queue was last given (the pre-2.3.1 behaviour).
+        """
+        cfg = self.config
+        store = self._store_for(entry)
+        if store is None:
+            return cfg
+        settings = store.get_settings()
+        if settings.get("ai_task_entity_id"):
+            cfg["ai_task_entity_id"] = settings["ai_task_entity_id"]
+        if settings.get("prompt_prefix") is not None:
+            cfg["prompt_prefix"] = settings["prompt_prefix"]
+        return cfg
 
     async def _async_generate(self, entry: dict) -> None:
         """Generate one image. A failure is marked, never retried."""
         from .websocket_api import async_generate_task_image
 
-        cfg = self.config
+        cfg = self._config_for(entry)
         try:
             await async_generate_task_image(
                 self.hass,

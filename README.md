@@ -177,7 +177,10 @@ it on and off repeatedly costs nothing — a task is only ever queued once.
 
 Everything image-related lives in one place: the card editor's **Images**
 section holds the two switches, the `ai_task` entity and prompt prefix, the
-per-list sharing switch, and the queue. The queue shows what is being
+per-list sharing switch, and the queue. The entity and prefix are remembered
+**per list**: every list takes them from the card that shows it, and the
+background queue draws each task with its own list's prefix — so two
+dashboards with different styles never overwrite each other. The queue shows what is being
 generated right now and numbers what comes next, and single jobs can be
 cancelled — cancelling also switches that list's automatic generation off,
 since otherwise the next scan would queue the task straight back.

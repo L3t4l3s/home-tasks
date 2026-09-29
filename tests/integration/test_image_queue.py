@@ -426,6 +426,98 @@ async def test_websocket_syncs_the_cards_generation_settings(
     assert cfg["prompt_prefix"] == "Minimalist icon of"
 
 
+async def test_a_task_is_drawn_with_its_own_lists_entity_and_prefix(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """The card-wide config is only the fallback: a second dashboard with
+    another style must not change what this list's pictures look like."""
+    await store.async_add_task("Cook dinner")
+    await store.async_set_settings(
+        auto_generate_images=True,
+        ai_task_entity_id="ai_task.mine", prompt_prefix="Neon cyberpunk scene of ",
+    )
+    q = await _queue(hass, ai_task_entity_id="ai_task.other_card", prompt_prefix="Watercolour of ")
+
+    with _generation(store=store) as gen:
+        await q.async_run()
+
+    kwargs = gen.await_args.kwargs
+    assert kwargs["ai_entity_id"] == "ai_task.mine"
+    assert kwargs["prompt_prefix"] == "Neon cyberpunk scene of "
+
+
+async def test_a_list_never_told_anything_uses_the_card_wide_config(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    await store.async_add_task("Cook dinner")
+    await store.async_set_settings(auto_generate_images=True)
+    q = await _queue(hass, ai_task_entity_id="ai_task.from_card", prompt_prefix="Minimalist icon of ")
+
+    with _generation(store=store) as gen:
+        await q.async_run()
+
+    kwargs = gen.await_args.kwargs
+    assert kwargs["ai_entity_id"] == "ai_task.from_card"
+    assert kwargs["prompt_prefix"] == "Minimalist icon of "
+
+
+async def test_an_empty_prefix_on_the_list_is_an_answer_not_a_gap(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """A list whose card has no prefix gets plain titles, not the other
+    dashboard's style."""
+    await store.async_add_task("Cook dinner")
+    await store.async_set_settings(
+        auto_generate_images=True, ai_task_entity_id="ai_task.mine", prompt_prefix="",
+    )
+    q = await _queue(hass, ai_task_entity_id="ai_task.mine", prompt_prefix="Watercolour of ")
+
+    with _generation(store=store) as gen:
+        await q.async_run()
+
+    assert gen.await_args.kwargs["prompt_prefix"] == ""
+
+
+async def test_websocket_stores_the_image_settings_on_the_list(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store
+) -> None:
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 530, "type": "home_tasks/set_list_settings",
+        "list_id": mock_config_entry.entry_id,
+        "ai_task_entity_id": "ai_task.mine", "prompt_prefix": "Neon ",
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True, msg
+    assert msg["result"]["settings"]["ai_task_entity_id"] == "ai_task.mine"
+    assert msg["result"]["settings"]["prompt_prefix"] == "Neon "
+
+    # Later toggles leave them alone.
+    await store.async_set_settings(auto_generate_images=True)
+    assert store.get_settings()["prompt_prefix"] == "Neon "
+
+    # And the card can read them back, to know when there is nothing to send.
+    await client.send_json({"id": 531, "type": "home_tasks/get_lists"})
+    lists = (await client.receive_json())["result"]["lists"]
+    mine = next(l for l in lists if l["id"] == mock_config_entry.entry_id)
+    assert mine["ai_task_entity_id"] == "ai_task.mine" and mine["prompt_prefix"] == "Neon "
+
+
+async def test_a_linked_list_keeps_its_own_image_settings_too(hass: HomeAssistant) -> None:
+    from custom_components.home_tasks.overlay_store import ExternalTaskOverlayStore
+
+    overlay = ExternalTaskOverlayStore(hass, "todo.linked_prefix")
+    await overlay.async_load()
+    assert overlay.get_settings()["prompt_prefix"] is None, "never told"
+
+    await overlay.async_set_settings(ai_task_entity_id="ai_task.mine", prompt_prefix="")
+    assert overlay.get_settings()["ai_task_entity_id"] == "ai_task.mine"
+    assert overlay.get_settings()["prompt_prefix"] == "", "told: no prefix"
+
+    await overlay.async_set_settings(share_images=False)
+    assert overlay.get_settings()["prompt_prefix"] == "", "a toggle does not forget it"
+
+
 # --- placeholders are not pictures ------------------------------------------
 
 
