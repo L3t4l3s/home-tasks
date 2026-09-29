@@ -1751,6 +1751,20 @@ const TODO_FEATURE = { SET_DUE_DATE: 16, SET_DUE_DATETIME: 32, SET_DESCRIPTION: 
 // entry of the get_external_lists result ({supported_features, capabilities}).
 // One definition shared by the card (add row, detail panel) and the editor so
 // the three places can't drift apart.
+// The ai_task entity and prefix a card hands to every list it shows, or
+// null when it has no entity. Shared by the card and its editor.
+function imageSettingsForLists(host) {
+  const imgCfg = host._config?.image_generation || {};
+  if (!imgCfg.entity_id) return null;
+  return { ai_task_entity_id: imgCfg.entity_id, prompt_prefix: imgCfg.prompt_prefix || "" };
+}
+
+function listInfoFor(host, col) {
+  return col.entity_id
+    ? (host._externalLists || []).find(l => l.entity_id === col.entity_id)
+    : (host._lists || []).find(l => l.id === col.list_id);
+}
+
 function listSupportsDue(info) {
   const features = (info && info.supported_features) || 0;
   const caps = (info && info.capabilities) || {};
@@ -2169,31 +2183,19 @@ class HomeTasksCard extends HTMLElement {
   // once card-wide as the fallback, and to every list it shows as that
   // list's own - so a task is always drawn with the prefix of its list,
   // and a second dashboard with another style cannot overwrite it.
-  _imageSettingsForLists() {
-    const imgCfg = this._config?.image_generation || {};
-    if (!imgCfg.entity_id) return null;
-    return { ai_task_entity_id: imgCfg.entity_id, prompt_prefix: imgCfg.prompt_prefix || "" };
-  }
-
-  _listInfo(col) {
-    return col.entity_id
-      ? (this._externalLists || []).find(l => l.entity_id === col.entity_id)
-      : (this._lists || []).find(l => l.id === col.list_id);
-  }
-
   async _syncImageGenerationConfig() {
     if (!this._hass || !this._config) return;
     const wanted = (this._config.columns || []).filter(
       c => c.auto_generate_image === true && c.show_images === true && (c.list_id || c.entity_id)
     );
     if (!wanted.length) return;
-    const own = this._imageSettingsForLists();
+    const own = imageSettingsForLists(this);
     try {
       if (own) {
         await this._hass.callWS({ type: "home_tasks/sync_image_config", ...own });
       }
       for (const col of wanted) {
-        const info = this._listInfo(col);
+        const info = listInfoFor(this, col);
         const change = {};
         if (!(info && info.auto_generate_images === true)) change.auto_generate_images = true;
         if (own && !(info && info.ai_task_entity_id === own.ai_task_entity_id
@@ -9085,13 +9087,13 @@ class HomeTasksCardEditor extends HTMLElement {
     const target = col.entity_id ? { entity_id: col.entity_id } : { list_id: col.list_id };
     if (!target.entity_id && !target.list_id) return;
     try {
-      const own = on ? this._imageSettingsForLists() : null;
+      const own = on ? imageSettingsForLists(this) : null;
       if (own) {
         await this._hass.callWS({ type: "home_tasks/sync_image_config", ...own });
       }
       const change = { auto_generate_images: on, ...(own || {}) };
       await this._hass.callWS({ type: "home_tasks/set_list_settings", ...target, ...change });
-      const info = this._listInfo(col);
+      const info = listInfoFor(this, col);
       if (info) Object.assign(info, change);
     } catch (e) {
       console.warn("Could not sync automatic image generation:", e);

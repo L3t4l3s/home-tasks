@@ -40,10 +40,11 @@ async function mount({ listInfo = {}, imageGeneration } = {}) {
     columns: [{ list_id: 'L1', auto_generate_image: true, show_images: true }],
     image_generation: imageGeneration,
   });
+  // Loading the lists runs the sync and updates the card's copy of them, so
+  // the calls it makes on the way are the ones under test - a second,
+  // explicit sync would find nothing left to do.
   card.hass = hass;
   await flush();
-  hass.calls.length = 0;
-  await card._syncImageGenerationConfig();
   return { card, hass };
 }
 
@@ -112,15 +113,25 @@ describe('handing the image settings to the lists', () => {
   });
 
   test('switching automatic generation on in the editor hands the settings over too', async () => {
-    const { card, hass } = await mount({
-      listInfo: { auto_generate_images: false, ai_task_entity_id: null, prompt_prefix: null },
-      imageGeneration: { entity_id: OWN.ai_task_entity_id, prompt_prefix: OWN.prompt_prefix },
-    });
-    hass.calls.length = 0;
+    // The toggle lives on the editor, not the card - it once called helpers
+    // only the card had, and the TypeError was swallowed as a warning.
+    const { window } = await loadCard({ force: true });
+    const Editor = window.customElements.get('home-tasks-card-editor');
+    const ed = new Editor();
+    const hass = makeHass({});
+    ed._hass = hass;
+    ed._config = {
+      columns: [{ list_id: 'L1' }],
+      image_generation: { entity_id: OWN.ai_task_entity_id, prompt_prefix: OWN.prompt_prefix },
+    };
+    const info = { id: 'L1', auto_generate_images: false, ai_task_entity_id: null, prompt_prefix: null };
+    ed._lists = [info];
 
-    await card._syncAutoGenerate({ list_id: 'L1' }, true);
+    await ed._syncAutoGenerate({ list_id: 'L1' }, true);
 
     const [call] = settingsCalls(hass);
+    assert.ok(call, 'the list is written');
+    assert.equal(info.prompt_prefix, OWN.prompt_prefix, 'and the local copy follows');
     assert.equal(call.auto_generate_images, true);
     assert.equal(call.ai_task_entity_id, OWN.ai_task_entity_id);
     assert.equal(call.prompt_prefix, OWN.prompt_prefix);
