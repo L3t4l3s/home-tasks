@@ -1780,11 +1780,35 @@ class HomeTasksCard extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" });
     this.shadowRoot.addEventListener("focusout", () => {
-      // After focus leaves all inputs, flush any deferred render
-      requestAnimationFrame(() => {
-        if (this._pendingRender && !this.shadowRoot.activeElement) this._render();
-      });
+      // After focus leaves all inputs, flush any deferred render — unless a
+      // press is still held: then its release flushes (after the click).
+      // The timeout lets the field's own blur handling go first (the notes
+      // switch back to their read view in one).
+      requestAnimationFrame(() => setTimeout(() => {
+        if (!this._pendingRender || this.shadowRoot.activeElement) return;
+        if (this._pointerIsDown) this._flushOnRelease = true;
+        else this._render();
+      }, 0));
     });
+    // Whether a press inside the card is still held (see _deferRenderUntilBlur).
+    this._pointerIsDown = false;
+    this.shadowRoot.addEventListener("pointerdown", () => {
+      this._pointerIsDown = true;
+      const release = () => {
+        this._pointerIsDown = false;
+        window.removeEventListener("pointerup", release, true);
+        window.removeEventListener("pointercancel", release, true);
+        if (this._flushOnRelease) {
+          this._flushOnRelease = false;
+          // After the click that follows this release.
+          setTimeout(() => {
+            if (this._pendingRender && !this.shadowRoot.activeElement) this._render();
+          }, 0);
+        }
+      };
+      window.addEventListener("pointerup", release, true);
+      window.addEventListener("pointercancel", release, true);
+    }, true);
     this._config = { columns: [{}] };
     this._hass = null;
     this._lists = [];
@@ -3394,6 +3418,44 @@ class HomeTasksCard extends HTMLElement {
 
   // --- Render ---
 
+  // Hold a render back until the focused field is left, then run it —
+  // as a background render again when it was one (`background`).
+  _deferRenderUntilBlur(el, background) {
+    this._pendingRender = true;
+    // Rebind when the field changed: a rebuild can replace the focused field
+    // with a fresh copy, and not every browser fires blur on the removed one
+    // — a listener left on it would never flush.
+    if (this._deferredRenderBoundBlur === el) return;
+    this._deferredRenderBoundBlur = el;
+    el.addEventListener("blur", () => {
+      if (this._deferredRenderBoundBlur === el) this._deferredRenderBoundBlur = null;
+      const flush = () => {
+        window.removeEventListener("pointerup", flush, true);
+        window.removeEventListener("pointercancel", flush, true);
+        setTimeout(run, 0);
+      };
+      const run = () => {
+        if (!this._pendingRender) return;
+        // A held-back background update stays one: if focus went straight
+        // into another field that defers, it waits for that one too. The
+        // user's own change (date, select) goes through right away.
+        if (!background) { this._render(); return; }
+        this._bgUpdates = (this._bgUpdates || 0) + 1;
+        try { this._render(); } finally { this._bgUpdates = Math.max(0, this._bgUpdates - 1); }
+      };
+      // The timeout lets the field's own blur handling go first (the notes
+      // switch back to their read view in one). If the blur came from
+      // pressing a button, wait for the release as well — rebuilding
+      // between press and release would drop the click.
+      if (this._pointerIsDown) {
+        window.addEventListener("pointerup", flush, true);
+        window.addEventListener("pointercancel", flush, true);
+      } else {
+        flush();
+      }
+    }, { once: true });
+  }
+
   _render() {
     // Don't tear down DOM while the user is interacting — but only for
     // background updates (polling, state changes). User-initiated renders
@@ -3421,15 +3483,16 @@ class HomeTasksCard extends HTMLElement {
           ["date", "time", "datetime-local", "month", "week"].includes(active.type)) ||
         active.tagName === "SELECT"
       );
-      if (activeStateful) {
-        this._pendingRender = true;
-        if (!this._deferredRenderBoundBlur) {
-          this._deferredRenderBoundBlur = active;
-          active.addEventListener("blur", () => {
-            this._deferredRenderBoundBlur = null;
-            if (this._pendingRender) this._render();
-          }, { once: true });
-        }
+      // The notes are typed into while their own auto-save fires store
+      // events. Rebuilding under them restores the caret, but on iOS the
+      // blur + refocus closes and reopens the keyboard on every save — so
+      // wait until the user leaves the field. (Only the notes: other task
+      // fields save on Enter/change, not while typing, and some — the tag
+      // input — hold the task object the reload is about to replace.)
+      const activeNotes = active && active.tagName === "TEXTAREA"
+        && active.dataset?.focusKey === "notes";
+      if (activeStateful || activeNotes) {
+        this._deferRenderUntilBlur(active, true);
         return;
       }
     }
@@ -3453,14 +3516,7 @@ class HomeTasksCard extends HTMLElement {
       activeNow.tagName === "SELECT"
     );
     if (isStatefulInput) {
-      this._pendingRender = true;
-      if (!this._deferredRenderBoundBlur) {
-        this._deferredRenderBoundBlur = activeNow;
-        activeNow.addEventListener("blur", () => {
-          this._deferredRenderBoundBlur = null;
-          if (this._pendingRender) this._render();
-        }, { once: true });
-      }
+      this._deferRenderUntilBlur(activeNow, false);
       return;
     }
     this._pendingRender = false;
