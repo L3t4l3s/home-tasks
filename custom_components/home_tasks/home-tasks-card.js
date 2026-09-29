@@ -18,7 +18,7 @@ const _TRANSLATIONS = {
     ed_person_name: "Name",
     ed_person_both: "Picture and name",
     ed_group_header: "Header",
-    ed_group_tasks: "Tasks",
+    ed_group_tasks: "Tasks", ed_group_new_tasks: "New tasks",
     ed_show_person_avatar: "Profile picture",
     voice_failed: "Voice input failed",
     voice_input: "Voice input", voice_stop: "Stop recording", img_label: "Image", img_generate: "Generate", img_regenerate: "Regenerate", img_generating: "Generating…", img_from_media: "From media library", img_remove: "Remove image", img_generate_failed: "Image generation failed: ", img_save_failed: "Saving image failed: ", mb_title: "Media library", mb_loading: "Loading…", mb_root: "Media", mb_back: "Back", mb_empty: "No files", mb_error: "Error: ",
@@ -113,7 +113,7 @@ const _TRANSLATIONS = {
     ed_task_search: "Task search",
     ed_auto_image: "Auto-generate image",
     ed_show_priority: "Priorities",
-    ed_default_sort: "Default sort", ed_tag_catalog: "Fixed tags", ed_tag_catalog_hint: "Always suggested when tagging a task in this list — free text still works.", tag_did_you_mean: "Did you mean {0}?", ed_overdue_first: "Overdue tasks first",
+    ed_default_sort: "Default sort", ed_tag_catalog: "Fixed tags", ed_tag_catalog_hint: "Always suggested when tagging a task in this list — other tags can still be added on the task.", tag_did_you_mean: "Did you mean {0}?", ed_overdue_first: "Overdue tasks first",
     reminder: "Reminders",
     rem_add: "+ Add reminder",
     rem_none: "No reminder",
@@ -197,7 +197,7 @@ const _TRANSLATIONS = {
     ed_person_name: "Naam",
     ed_person_both: "Foto en naam",
     ed_group_header: "Koptekst",
-    ed_group_tasks: "Taken",
+    ed_group_tasks: "Taken", ed_group_new_tasks: "Nieuwe taken",
     ed_show_person_avatar: "Profielfoto",
     voice_failed: "Spraakinvoer mislukt",
     confirm_delete_section: "Deze sectie verwijderen? Taken erin worden ongesorteerd.", done_section_header: "Klaar", duplicate_task: "Dupliceren", move_task: "Verplaatsen", move_task_msg: "\u201e{0}\u201d verplaatsen naar:", ed_show_move: "Verplaatsknop", ed_add_section: "+ Sectie toevoegen", ed_ai_image_entity: "AI-entiteit voor beeldgeneratie", ed_ai_image_entity_placeholder: "bijv. ai_task.openai", ed_ai_prompt_prefix: "Prompt-prefix (optioneel)", ed_ai_prompt_prefix_placeholder: "bijv. Minimalistisch icoon van", ed_auto_image: "Afbeelding automatisch genereren", ed_delete_section: "Sectie verwijderen", ed_external_lists: "Extern", ed_loading: "Laden…", ed_move_down: "Omlaag verplaatsen", ed_move_up: "Omhoog verplaatsen", ed_sec_sections: "Secties", ed_section_icon: "Pictogram", ed_section_name: "Naam", ed_section_name_prompt: "Sectienaam:", ed_sections_empty: "Nog geen secties — taken worden plat weergegeven.", ed_sections_select_list_hint: "Selecteer eerst een lijst om de secties te beheren.", ed_show_filters: "Statusfilter", ed_show_images: "Afbeeldingen", ed_show_person_chips: "Persoonfilter", ed_show_tag_chips: "Tagfilter", ed_show_tile_title: "Titel in tegels", ed_show_voice: "Spraakinvoer", ed_task_search: "Taken zoeken", ed_tile_help: "Tegelweergave:\n• Klikken = voltooien\n• Vasthouden = bewerken\n• Slepen = volgorde wijzigen", ed_view_mode: "Weergavemodus", ed_view_mode_list: "Lijst", ed_view_mode_tiles: "Tegels",
@@ -252,7 +252,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Nieuwe subtaak", remove_reminder: "Herinnering verwijderen",
     sort_label: "Sorteren", sort_manual: "Handmatig", sort_due: "Deadline",
     sort_priority: "Prioriteit", sort_title: "Titel (A\u2013Z)", sort_person: "Toegewezen",
-    ed_show_sort: "Sorteren", ed_default_sort: "Standaard sortering", ed_tag_catalog: "Vaste tags", ed_tag_catalog_hint: "Altijd voorgesteld bij het taggen in deze lijst — vrije tekst blijft mogelijk.", tag_did_you_mean: "Bedoel je {0}?", ed_overdue_first: "Verlopen taken eerst",
+    ed_show_sort: "Sorteren", ed_default_sort: "Standaard sortering", ed_tag_catalog: "Vaste tags", ed_tag_catalog_hint: "Altijd voorgesteld bij het taggen in deze lijst — andere tags kun je bij de taak nog toevoegen.", tag_did_you_mean: "Bedoel je {0}?", ed_overdue_first: "Verlopen taken eerst",
     reminder: "Herinneringen", rem_add: "+ Herinnering toevoegen", rem_none: "Geen herinnering",
     rem_at_due: "Op vervaldatum", rem_5m: "5 min. eerder", rem_15m: "15 min. eerder",
     rem_30m: "30 min. eerder", rem_1h: "1 uur eerder", rem_2h: "2 uur eerder",
@@ -298,7 +298,7 @@ const _TRANSLATIONS = {
     ed_person_name: "Nome",
     ed_person_both: "Foto e nome",
     ed_group_header: "Intestazione",
-    ed_group_tasks: "Attività",
+    ed_group_tasks: "Attività", ed_group_new_tasks: "Nuove attività",
     ed_show_person_avatar: "Foto del profilo",
     voice_failed: "Input vocale non riuscito",
     confirm_delete_section: "Eliminare questa sezione? Le attività al suo interno diventeranno non ordinate.", done_section_header: "Fatto", duplicate_task: "Duplica", move_task: "Sposta", move_task_msg: "Sposta \u201c{0}\u201d in:", ed_show_move: "Pulsante Sposta", ed_add_section: "+ Aggiungi sezione", ed_ai_image_entity: "Entità IA per la generazione di immagini", ed_ai_image_entity_placeholder: "es. ai_task.openai", ed_ai_prompt_prefix: "Prefisso prompt (facoltativo)", ed_ai_prompt_prefix_placeholder: "es. Icona minimalista di", ed_auto_image: "Genera immagine automaticamente", ed_delete_section: "Elimina sezione", ed_external_lists: "Esterna", ed_loading: "Caricamento…", ed_move_down: "Sposta giù", ed_move_up: "Sposta su", ed_sec_sections: "Sezioni", ed_section_icon: "Icona", ed_section_name: "Nome", ed_section_name_prompt: "Nome sezione:", ed_sections_empty: "Nessuna sezione — le attività verranno mostrate senza raggruppamenti.", ed_sections_select_list_hint: "Seleziona prima un elenco per gestirne le sezioni.", ed_show_filters: "Filtro stato", ed_show_images: "Immagini", ed_show_person_chips: "Filtro persone", ed_show_tag_chips: "Filtro tag", ed_show_tile_title: "Titolo nelle caselle", ed_show_voice: "Input vocale", ed_task_search: "Ricerca attività", ed_tile_help: "Vista a caselle:\n• Clic = completa\n• Tieni premuto = modifica\n• Trascina = riordina", ed_view_mode: "Modalità di visualizzazione", ed_view_mode_list: "Elenco", ed_view_mode_tiles: "Caselle",
@@ -353,7 +353,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Nuova sotto-attivit\u00e0", remove_reminder: "Rimuovi promemoria",
     sort_label: "Ordina", sort_manual: "Manuale", sort_due: "Scadenza",
     sort_priority: "Priorit\u00e0", sort_title: "Titolo (A\u2013Z)", sort_person: "Assegnato",
-    ed_show_sort: "Ordinamento", ed_default_sort: "Ordinamento predefinito", ed_tag_catalog: "Tag fissi", ed_tag_catalog_hint: "Sempre suggeriti quando assegni tag in questo elenco — il testo libero resta possibile.", tag_did_you_mean: "Intendevi {0}?", ed_overdue_first: "Attività scadute per prime",
+    ed_show_sort: "Ordinamento", ed_default_sort: "Ordinamento predefinito", ed_tag_catalog: "Tag fissi", ed_tag_catalog_hint: "Sempre suggeriti quando assegni tag in questo elenco — altri tag si possono aggiungere nell'attività.", tag_did_you_mean: "Intendevi {0}?", ed_overdue_first: "Attività scadute per prime",
     reminder: "Promemoria", rem_add: "+ Aggiungi promemoria", rem_none: "Nessun promemoria",
     rem_at_due: "All\u2019ora di scadenza", rem_5m: "5 min. prima", rem_15m: "15 min. prima",
     rem_30m: "30 min. prima", rem_1h: "1 ora prima", rem_2h: "2 ore prima",
@@ -399,7 +399,7 @@ const _TRANSLATIONS = {
     ed_person_name: "Imię",
     ed_person_both: "Zdjęcie i imię",
     ed_group_header: "Nagłówek",
-    ed_group_tasks: "Zadania",
+    ed_group_tasks: "Zadania", ed_group_new_tasks: "Nowe zadania",
     ed_show_person_avatar: "Zdjęcie profilowe",
     voice_failed: "Wprowadzanie głosowe nie powiodło się",
     confirm_delete_section: "Usunąć tę sekcję? Zadania w niej staną się nieposortowane.", done_section_header: "Gotowe", duplicate_task: "Duplikuj", move_task: "Przenie\u015b", move_task_msg: "Przenie\u015b \u201e{0}\u201d do:", ed_show_move: "Przycisk przenoszenia", ed_add_section: "+ Dodaj sekcję", ed_ai_image_entity: "Encja AI do generowania obrazów", ed_ai_image_entity_placeholder: "np. ai_task.openai", ed_ai_prompt_prefix: "Prefiks promptu (opcjonalnie)", ed_ai_prompt_prefix_placeholder: "np. Minimalistyczna ikona", ed_auto_image: "Automatycznie generuj obraz", ed_delete_section: "Usuń sekcję", ed_external_lists: "Zewnętrzna", ed_loading: "Ładowanie…", ed_move_down: "Przenieś w dół", ed_move_up: "Przenieś w górę", ed_sec_sections: "Sekcje", ed_section_icon: "Ikona", ed_section_name: "Nazwa", ed_section_name_prompt: "Nazwa sekcji:", ed_sections_empty: "Brak sekcji — zadania będą wyświetlane płasko.", ed_sections_select_list_hint: "Najpierw wybierz listę, aby zarządzać jej sekcjami.", ed_show_filters: "Filtr statusu", ed_show_images: "Obrazy", ed_show_person_chips: "Filtr os\u00f3b", ed_show_tag_chips: "Filtr tag\u00f3w", ed_show_tile_title: "Tytuł na kafelkach", ed_show_voice: "Wprowadzanie głosowe", ed_task_search: "Wyszukiwanie zadań", ed_tile_help: "Widok kafelków:\n• Kliknięcie = ukończ\n• Przytrzymanie = edycja\n• Przeciągnięcie = zmiana kolejności", ed_view_mode: "Tryb widoku", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Kafelki",
@@ -454,7 +454,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Nowe podzadanie", remove_reminder: "Usu\u0144 przypomnienie",
     sort_label: "Sortuj", sort_manual: "R\u0119cznie", sort_due: "Termin",
     sort_priority: "Priorytet", sort_title: "Tytu\u0142 (A\u2013Z)", sort_person: "Przypisany",
-    ed_show_sort: "Sortowanie", ed_default_sort: "Domy\u015blne sortowanie", ed_tag_catalog: "Stałe tagi", ed_tag_catalog_hint: "Zawsze podpowiadane przy tagowaniu w tej liście — dowolny tekst nadal działa.", tag_did_you_mean: "Czy chodziło o {0}?", ed_overdue_first: "Zaległe zadania najpierw",
+    ed_show_sort: "Sortowanie", ed_default_sort: "Domy\u015blne sortowanie", ed_tag_catalog: "Stałe tagi", ed_tag_catalog_hint: "Zawsze podpowiadane przy tagowaniu w tej liście — inne tagi można dodać w zadaniu.", tag_did_you_mean: "Czy chodziło o {0}?", ed_overdue_first: "Zaległe zadania najpierw",
     reminder: "Przypomnienia", rem_add: "+ Dodaj przypomnienie", rem_none: "Brak przypomnienia",
     rem_at_due: "W czasie terminu", rem_5m: "5 min. wcze\u015bniej", rem_15m: "15 min. wcze\u015bniej",
     rem_30m: "30 min. wcze\u015bniej", rem_1h: "1 godz. wcze\u015bniej", rem_2h: "2 godz. wcze\u015bniej",
@@ -500,7 +500,7 @@ const _TRANSLATIONS = {
     ed_person_name: "Namn",
     ed_person_both: "Bild och namn",
     ed_group_header: "Sidhuvud",
-    ed_group_tasks: "Uppgifter",
+    ed_group_tasks: "Uppgifter", ed_group_new_tasks: "Nya uppgifter",
     ed_show_person_avatar: "Profilbild",
     voice_failed: "Röstinmatning misslyckades",
     confirm_delete_section: "Ta bort det här avsnittet? Uppgifter i det blir osorterade.", done_section_header: "Klar", duplicate_task: "Duplicera", move_task: "Flytta", move_task_msg: "Flytta \u201d{0}\u201d till:", ed_show_move: "Flytta-knapp", ed_add_section: "+ Lägg till avsnitt", ed_ai_image_entity: "AI-entitet för bildgenerering", ed_ai_image_entity_placeholder: "t.ex. ai_task.openai", ed_ai_prompt_prefix: "Promptprefix (valfritt)", ed_ai_prompt_prefix_placeholder: "t.ex. Minimalistisk ikon av", ed_auto_image: "Generera bild automatiskt", ed_delete_section: "Ta bort avsnitt", ed_external_lists: "Extern", ed_loading: "Läser in…", ed_move_down: "Flytta ned", ed_move_up: "Flytta upp", ed_sec_sections: "Avsnitt", ed_section_icon: "Ikon", ed_section_name: "Namn", ed_section_name_prompt: "Avsnittsnamn:", ed_sections_empty: "Inga avsnitt än — uppgifter visas platt.", ed_sections_select_list_hint: "Välj en lista först för att hantera dess avsnitt.", ed_show_filters: "Statusfilter", ed_show_images: "Bilder", ed_show_person_chips: "Personfilter", ed_show_tag_chips: "Taggfilter", ed_show_tile_title: "Titel i rutor", ed_show_voice: "Röstinmatning", ed_task_search: "Uppgiftssökning", ed_tile_help: "Rutvy:\n• Klick = slutför\n• Håll = redigera\n• Dra = ändra ordning", ed_view_mode: "Visningsläge", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Rutor",
@@ -555,7 +555,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Ny deluppgift", remove_reminder: "Ta bort p\u00e5minnelse",
     sort_label: "Sortera", sort_manual: "Manuell", sort_due: "F\u00f6rfallodatum",
     sort_priority: "Prioritet", sort_title: "Titel (A\u2013\u00d6)", sort_person: "Tilldelad",
-    ed_show_sort: "Sortering", ed_default_sort: "Standardsortering", ed_tag_catalog: "Fasta taggar", ed_tag_catalog_hint: "Föreslås alltid när du taggar i den här listan — fritext fungerar fortfarande.", tag_did_you_mean: "Menade du {0}?", ed_overdue_first: "Försenade uppgifter först",
+    ed_show_sort: "Sortering", ed_default_sort: "Standardsortering", ed_tag_catalog: "Fasta taggar", ed_tag_catalog_hint: "Föreslås alltid när du taggar i den här listan — andra taggar kan läggas till på uppgiften.", tag_did_you_mean: "Menade du {0}?", ed_overdue_first: "Försenade uppgifter först",
     reminder: "P\u00e5minnelser", rem_add: "+ L\u00e4gg till p\u00e5minnelse", rem_none: "Ingen p\u00e5minnelse",
     rem_at_due: "Vid f\u00f6rfallotid", rem_5m: "5 min. f\u00f6re", rem_15m: "15 min. f\u00f6re",
     rem_30m: "30 min. f\u00f6re", rem_1h: "1 timme f\u00f6re", rem_2h: "2 timmar f\u00f6re",
@@ -601,7 +601,7 @@ const _TRANSLATIONS = {
     ed_person_name: "Nom",
     ed_person_both: "Photo et nom",
     ed_group_header: "En-tête",
-    ed_group_tasks: "Tâches",
+    ed_group_tasks: "Tâches", ed_group_new_tasks: "Nouvelles tâches",
     ed_show_person_avatar: "Photo de profil",
     voice_failed: "Échec de la saisie vocale",
     confirm_delete_section: "Supprimer cette section ? Les tâches qu'elle contient ne seront plus triées.", done_section_header: "Terminé", duplicate_task: "Dupliquer", move_task: "D\u00e9placer", move_task_msg: "D\u00e9placer \u00ab\u202f{0}\u202f\u00bb vers\u00a0:", ed_show_move: "Bouton D\u00e9placer", ed_add_section: "+ Ajouter une section", ed_ai_image_entity: "Entité IA pour la génération d'images", ed_ai_image_entity_placeholder: "ex. ai_task.openai", ed_ai_prompt_prefix: "Préfixe d'invite (facultatif)", ed_ai_prompt_prefix_placeholder: "ex. Icône minimaliste de", ed_auto_image: "Générer l'image automatiquement", ed_delete_section: "Supprimer la section", ed_external_lists: "Externe", ed_loading: "Chargement…", ed_move_down: "Déplacer vers le bas", ed_move_up: "Déplacer vers le haut", ed_sec_sections: "Sections", ed_section_icon: "Icône", ed_section_name: "Nom", ed_section_name_prompt: "Nom de la section :", ed_sections_empty: "Aucune section pour l'instant — les tâches s'affichent à plat.", ed_sections_select_list_hint: "Sélectionnez d'abord une liste pour gérer ses sections.", ed_show_filters: "Filtre d'\u00e9tat", ed_show_images: "Images", ed_show_person_chips: "Filtre de personnes", ed_show_tag_chips: "Filtre d'\u00e9tiquettes", ed_show_tile_title: "Titre sur les tuiles", ed_show_voice: "Saisie vocale", ed_task_search: "Recherche de tâches", ed_tile_help: "Vue en tuiles :\n• Clic = terminer\n• Maintenir = modifier\n• Glisser = réorganiser", ed_view_mode: "Mode d'affichage", ed_view_mode_list: "Liste", ed_view_mode_tiles: "Tuiles",
@@ -656,7 +656,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Nouvelle sous-t\u00e2che", remove_reminder: "Supprimer le rappel",
     sort_label: "Trier", sort_manual: "Manuel", sort_due: "\u00c9ch\u00e9ance",
     sort_priority: "Priorit\u00e9", sort_title: "Titre (A\u2013Z)", sort_person: "Assign\u00e9",
-    ed_show_sort: "Tri", ed_default_sort: "Tri par d\u00e9faut", ed_tag_catalog: "Étiquettes fixes", ed_tag_catalog_hint: "Toujours proposées lors de l'étiquetage dans cette liste — le texte libre reste possible.", tag_did_you_mean: "Vouliez-vous dire {0} ?", ed_overdue_first: "Tâches en retard en premier",
+    ed_show_sort: "Tri", ed_default_sort: "Tri par d\u00e9faut", ed_tag_catalog: "Étiquettes fixes", ed_tag_catalog_hint: "Toujours proposées lors de l'étiquetage dans cette liste — d'autres étiquettes peuvent être ajoutées dans la tâche.", tag_did_you_mean: "Vouliez-vous dire {0} ?", ed_overdue_first: "Tâches en retard en premier",
     reminder: "Rappels", rem_add: "+ Ajouter un rappel", rem_none: "Aucun rappel",
     rem_at_due: "\u00c0 l\u2019heure d\u2019\u00e9ch\u00e9ance", rem_5m: "5 min. avant", rem_15m: "15 min. avant",
     rem_30m: "30 min. avant", rem_1h: "1 heure avant", rem_2h: "2 heures avant",
@@ -702,7 +702,7 @@ const _TRANSLATIONS = {
     ed_person_name: "Nome",
     ed_person_both: "Foto e nome",
     ed_group_header: "Cabeçalho",
-    ed_group_tasks: "Tarefas",
+    ed_group_tasks: "Tarefas", ed_group_new_tasks: "Novas tarefas",
     ed_show_person_avatar: "Foto do perfil",
     voice_failed: "Falha na entrada de voz",
     confirm_delete_section: "Excluir esta seção? As tarefas dentro dela ficarão sem ordenação.", done_section_header: "Concluído", duplicate_task: "Duplicar", move_task: "Mover", move_task_msg: "Mover \u201c{0}\u201d para:", ed_show_move: "Bot\u00e3o Mover", ed_add_section: "+ Adicionar seção", ed_ai_image_entity: "Entidade de IA para geração de imagens", ed_ai_image_entity_placeholder: "ex. ai_task.openai", ed_ai_prompt_prefix: "Prefixo do prompt (opcional)", ed_ai_prompt_prefix_placeholder: "ex. Ícone minimalista de", ed_auto_image: "Gerar imagem automaticamente", ed_delete_section: "Excluir seção", ed_external_lists: "Externa", ed_loading: "Carregando…", ed_move_down: "Mover para baixo", ed_move_up: "Mover para cima", ed_sec_sections: "Seções", ed_section_icon: "Ícone", ed_section_name: "Nome", ed_section_name_prompt: "Nome da seção:", ed_sections_empty: "Nenhuma seção ainda — as tarefas serão exibidas sem agrupamento.", ed_sections_select_list_hint: "Selecione uma lista primeiro para gerenciar suas seções.", ed_show_filters: "Filtro de estado", ed_show_images: "Imagens", ed_show_person_chips: "Filtro de pessoas", ed_show_tag_chips: "Filtro de etiquetas", ed_show_tile_title: "Título nos blocos", ed_show_voice: "Entrada de voz", ed_task_search: "Pesquisa de tarefas", ed_tile_help: "Visualização em blocos:\n• Clique = concluir\n• Segurar = editar\n• Arrastar = reordenar", ed_view_mode: "Modo de exibição", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Blocos",
@@ -757,7 +757,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Nova subtarefa", remove_reminder: "Remover lembrete",
     sort_label: "Ordenar", sort_manual: "Manual", sort_due: "Prazo",
     sort_priority: "Prioridade", sort_title: "T\u00edtulo (A\u2013Z)", sort_person: "Atribu\u00eddo",
-    ed_show_sort: "Ordena\u00e7\u00e3o", ed_default_sort: "Ordena\u00e7\u00e3o padr\u00e3o", ed_tag_catalog: "Tags fixas", ed_tag_catalog_hint: "Sempre sugeridas ao etiquetar nesta lista — texto livre continua possível.", tag_did_you_mean: "Queria dizer {0}?", ed_overdue_first: "Tarefas atrasadas primeiro",
+    ed_show_sort: "Ordena\u00e7\u00e3o", ed_default_sort: "Ordena\u00e7\u00e3o padr\u00e3o", ed_tag_catalog: "Tags fixas", ed_tag_catalog_hint: "Sempre sugeridas ao etiquetar nesta lista — outras tags podem ser adicionadas na tarefa.", tag_did_you_mean: "Queria dizer {0}?", ed_overdue_first: "Tarefas atrasadas primeiro",
     reminder: "Lembretes", rem_add: "+ Adicionar lembrete", rem_none: "Sem lembrete",
     rem_at_due: "No prazo", rem_5m: "5 min. antes", rem_15m: "15 min. antes",
     rem_30m: "30 min. antes", rem_1h: "1 hora antes", rem_2h: "2 horas antes",
@@ -803,7 +803,7 @@ const _TRANSLATIONS = {
     ed_person_name: "Nombre",
     ed_person_both: "Foto y nombre",
     ed_group_header: "Encabezado",
-    ed_group_tasks: "Tareas",
+    ed_group_tasks: "Tareas", ed_group_new_tasks: "Tareas nuevas",
     ed_show_person_avatar: "Foto de perfil",
     voice_failed: "Error en la entrada de voz",
     confirm_delete_section: "¿Eliminar esta sección? Las tareas que contiene quedarán sin ordenar.", done_section_header: "Hecho", duplicate_task: "Duplicar", move_task: "Mover", move_task_msg: "Mover \u201c{0}\u201d a:", ed_show_move: "Bot\u00f3n Mover", ed_add_section: "+ Añadir sección", ed_ai_image_entity: "Entidad de IA para la generación de imágenes", ed_ai_image_entity_placeholder: "p. ej. ai_task.openai", ed_ai_prompt_prefix: "Prefijo del prompt (opcional)", ed_ai_prompt_prefix_placeholder: "p. ej. Icono minimalista de", ed_auto_image: "Generar imagen automáticamente", ed_delete_section: "Eliminar sección", ed_external_lists: "Externa", ed_loading: "Cargando…", ed_move_down: "Mover abajo", ed_move_up: "Mover arriba", ed_sec_sections: "Secciones", ed_section_icon: "Icono", ed_section_name: "Nombre", ed_section_name_prompt: "Nombre de la sección:", ed_sections_empty: "Aún no hay secciones: las tareas se mostrarán sin agrupar.", ed_sections_select_list_hint: "Selecciona primero una lista para gestionar sus secciones.", ed_show_filters: "Filtro de estado", ed_show_images: "Imágenes", ed_show_person_chips: "Filtro de personas", ed_show_tag_chips: "Filtro de etiquetas", ed_show_tile_title: "Título en mosaicos", ed_show_voice: "Entrada de voz", ed_task_search: "Búsqueda de tareas", ed_tile_help: "Vista de mosaicos:\n• Clic = completar\n• Mantener = editar\n• Arrastrar = reordenar", ed_view_mode: "Modo de vista", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Mosaicos",
@@ -858,7 +858,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Nueva subtarea", remove_reminder: "Eliminar recordatorio",
     sort_label: "Ordenar", sort_manual: "Manual", sort_due: "Vencimiento",
     sort_priority: "Prioridad", sort_title: "T\u00edtulo (A\u2013Z)", sort_person: "Asignado",
-    ed_show_sort: "Ordenaci\u00f3n", ed_default_sort: "Ordenaci\u00f3n predeterminada", ed_tag_catalog: "Etiquetas fijas", ed_tag_catalog_hint: "Siempre sugeridas al etiquetar en esta lista; el texto libre sigue funcionando.", tag_did_you_mean: "¿Quisiste decir {0}?", ed_overdue_first: "Tareas vencidas primero",
+    ed_show_sort: "Ordenaci\u00f3n", ed_default_sort: "Ordenaci\u00f3n predeterminada", ed_tag_catalog: "Etiquetas fijas", ed_tag_catalog_hint: "Siempre sugeridas al etiquetar en esta lista; se pueden añadir otras etiquetas en la tarea.", tag_did_you_mean: "¿Quisiste decir {0}?", ed_overdue_first: "Tareas vencidas primero",
     reminder: "Recordatorios", rem_add: "+ A\u00f1adir recordatorio", rem_none: "Sin recordatorio",
     rem_at_due: "A la hora de vencimiento", rem_5m: "5 min. antes", rem_15m: "15 min. antes",
     rem_30m: "30 min. antes", rem_1h: "1 hora antes", rem_2h: "2 horas antes",
@@ -904,7 +904,7 @@ const _TRANSLATIONS = {
     ed_person_name: "Имя",
     ed_person_both: "Фото и имя",
     ed_group_header: "Заголовок",
-    ed_group_tasks: "Задачи",
+    ed_group_tasks: "Задачи", ed_group_new_tasks: "Новые задачи",
     ed_show_person_avatar: "Фото профиля",
     voice_failed: "Сбой голосового ввода",
     confirm_delete_section: "Удалить этот раздел? Задачи в нём станут несортированными.", done_section_header: "Готово", duplicate_task: "Дублировать", move_task: "\u041f\u0435\u0440\u0435\u043c\u0435\u0441\u0442\u0438\u0442\u044c", move_task_msg: "\u041f\u0435\u0440\u0435\u043c\u0435\u0441\u0442\u0438\u0442\u044c \u00ab{0}\u00bb \u0432:", ed_show_move: "\u041a\u043d\u043e\u043f\u043a\u0430 \u043f\u0435\u0440\u0435\u043c\u0435\u0449\u0435\u043d\u0438\u044f", ed_add_section: "+ Добавить раздел", ed_ai_image_entity: "ИИ-сущность для генерации изображений", ed_ai_image_entity_placeholder: "напр. ai_task.openai", ed_ai_prompt_prefix: "Префикс запроса (необязательно)", ed_ai_prompt_prefix_placeholder: "напр. Минималистичная иконка", ed_auto_image: "Автоматически генерировать изображение", ed_delete_section: "Удалить раздел", ed_external_lists: "Внешний", ed_loading: "Загрузка…", ed_move_down: "Переместить вниз", ed_move_up: "Переместить вверх", ed_sec_sections: "Разделы", ed_section_icon: "Значок", ed_section_name: "Имя", ed_section_name_prompt: "Название раздела:", ed_sections_empty: "Разделов пока нет — задачи отображаются списком.", ed_sections_select_list_hint: "Сначала выберите список, чтобы управлять его разделами.", ed_show_filters: "\u0424\u0438\u043b\u044c\u0442\u0440 \u0441\u0442\u0430\u0442\u0443\u0441\u0430", ed_show_images: "Изображения", ed_show_person_chips: "\u0424\u0438\u043b\u044c\u0442\u0440 \u043b\u044e\u0434\u0435\u0439", ed_show_tag_chips: "\u0424\u0438\u043b\u044c\u0442\u0440 \u0442\u0435\u0433\u043e\u0432", ed_show_tile_title: "Заголовок на плитках", ed_show_voice: "Голосовой ввод", ed_task_search: "Поиск задач", ed_tile_help: "Режим плиток:\n• Клик = выполнить\n• Удержание = редактировать\n• Перетаскивание = изменить порядок", ed_view_mode: "Режим отображения", ed_view_mode_list: "Список", ed_view_mode_tiles: "Плитки",
@@ -959,7 +959,7 @@ const _TRANSLATIONS = {
     new_sub_item: "\u041d\u043e\u0432\u0430\u044f \u043f\u043e\u0434\u0437\u0430\u0434\u0430\u0447\u0430", remove_reminder: "\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u043d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u0435",
     sort_label: "\u0421\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0430", sort_manual: "\u0412\u0440\u0443\u0447\u043d\u0443\u044e", sort_due: "\u0421\u0440\u043e\u043a",
     sort_priority: "\u041f\u0440\u0438\u043e\u0440\u0438\u0442\u0435\u0442", sort_title: "\u0417\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a (\u0410\u2013\u042f)", sort_person: "\u041d\u0430\u0437\u043d\u0430\u0447\u0435\u043d\u043e",
-    ed_show_sort: "\u0421\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0430", ed_default_sort: "\u0421\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0430 \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e", ed_tag_catalog: "\u041f\u043e\u0441\u0442\u043e\u044f\u043d\u043d\u044b\u0435 \u0442\u0435\u0433\u0438", ed_tag_catalog_hint: "\u0412\u0441\u0435\u0433\u0434\u0430 \u043f\u0440\u0435\u0434\u043b\u0430\u0433\u0430\u044e\u0442\u0441\u044f \u043f\u0440\u0438 \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u0438\u0438 \u0442\u0435\u0433\u0430 \u2014 \u0441\u0432\u043e\u0431\u043e\u0434\u043d\u044b\u0439 \u0442\u0435\u043a\u0441\u0442 \u0442\u043e\u0436\u0435 \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442.", tag_did_you_mean: "\u0412\u044b \u0438\u043c\u0435\u043b\u0438 \u0432 \u0432\u0438\u0434\u0443 {0}?", ed_overdue_first: "\u041f\u0440\u043e\u0441\u0440\u043e\u0447\u0435\u043d\u043d\u044b\u0435 \u0441\u043d\u0430\u0447\u0430\u043b\u0430",
+    ed_show_sort: "\u0421\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0430", ed_default_sort: "\u0421\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0430 \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e", ed_tag_catalog: "\u041f\u043e\u0441\u0442\u043e\u044f\u043d\u043d\u044b\u0435 \u0442\u0435\u0433\u0438", ed_tag_catalog_hint: "Всегда предлагаются при добавлении тега в этом списке — другие теги можно добавить в самой задаче.", tag_did_you_mean: "\u0412\u044b \u0438\u043c\u0435\u043b\u0438 \u0432 \u0432\u0438\u0434\u0443 {0}?", ed_overdue_first: "\u041f\u0440\u043e\u0441\u0440\u043e\u0447\u0435\u043d\u043d\u044b\u0435 \u0441\u043d\u0430\u0447\u0430\u043b\u0430",
     reminder: "\u041d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u044f", rem_add: "+ \u0414\u043e\u0431\u0430\u0432\u0438\u0442\u044c \u043d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u0435", rem_none: "\u041d\u0435\u0442 \u043d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u044f",
     rem_at_due: "\u0412 \u0441\u0440\u043e\u043a", rem_5m: "\u0417\u0430 5 \u043c\u0438\u043d.", rem_15m: "\u0417\u0430 15 \u043c\u0438\u043d.",
     rem_30m: "\u0417\u0430 30 \u043c\u0438\u043d.", rem_1h: "\u0417\u0430 1 \u0447\u0430\u0441", rem_2h: "\u0417\u0430 2 \u0447\u0430\u0441\u0430",
@@ -1005,7 +1005,7 @@ const _TRANSLATIONS = {
     ed_person_name: "Jméno",
     ed_person_both: "Fotka a jméno",
     ed_group_header: "Záhlaví",
-    ed_group_tasks: "Úkoly",
+    ed_group_tasks: "Úkoly", ed_group_new_tasks: "Nové úkoly",
     ed_show_person_avatar: "Profilová fotka",
     voice_failed: "Hlasový vstup selhal",
     confirm_delete_section: "Odstranit tuto sekci? Úkoly v ní zůstanou neseřazené.", done_section_header: "Hotovo", duplicate_task: "Duplikovat", move_task: "P\u0159esunout", move_task_msg: "P\u0159esunout \u201e{0}\u201c do:", ed_show_move: "Tla\u010d\u00edtko p\u0159esunut\u00ed", ed_add_section: "+ Přidat sekci", ed_ai_image_entity: "Entita AI pro generování obrázků", ed_ai_image_entity_placeholder: "např. ai_task.openai", ed_ai_prompt_prefix: "Předpona promptu (volitelné)", ed_ai_prompt_prefix_placeholder: "např. Minimalistická ikona", ed_auto_image: "Automaticky generovat obrázek", ed_delete_section: "Odstranit sekci", ed_external_lists: "Externí", ed_loading: "Načítání…", ed_move_down: "Posunout dolů", ed_move_up: "Posunout nahoru", ed_sec_sections: "Sekce", ed_section_icon: "Ikona", ed_section_name: "Název", ed_section_name_prompt: "Název sekce:", ed_sections_empty: "Zatím žádné sekce — úkoly se zobrazí bez seskupení.", ed_sections_select_list_hint: "Nejprve vyberte seznam pro správu jeho sekcí.", ed_show_filters: "Filtr stavu", ed_show_images: "Obrázky", ed_show_person_chips: "Filtr osob", ed_show_tag_chips: "Filtr \u0161t\u00edtk\u016f", ed_show_tile_title: "Název na dlaždicích", ed_show_voice: "Hlasový vstup", ed_task_search: "Hledání úkolů", ed_tile_help: "Zobrazení dlaždic:\n• Kliknutí = dokončit\n• Podržení = upravit\n• Přetažení = změnit pořadí", ed_view_mode: "Režim zobrazení", ed_view_mode_list: "Seznam", ed_view_mode_tiles: "Dlaždice",
@@ -1060,7 +1060,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Nov\u00fd pod\u00fakol", remove_reminder: "Odebrat p\u0159ipom\u00ednku",
     sort_label: "\u0158adit", sort_manual: "Ru\u010dn\u011b", sort_due: "Term\u00edn",
     sort_priority: "Priorita", sort_title: "N\u00e1zev (A\u2013Z)", sort_person: "P\u0159i\u0159azeno",
-    ed_show_sort: "\u0158azen\u00ed", ed_default_sort: "V\u00fdchoz\u00ed \u0159azen\u00ed", ed_tag_catalog: "Pevné štítky", ed_tag_catalog_hint: "Vždy nabízeny při štítkování v tomto seznamu — volný text stále funguje.", tag_did_you_mean: "Mysleli jste {0}?", ed_overdue_first: "Úkoly po termínu nahoře",
+    ed_show_sort: "\u0158azen\u00ed", ed_default_sort: "V\u00fdchoz\u00ed \u0159azen\u00ed", ed_tag_catalog: "Pevné štítky", ed_tag_catalog_hint: "Vždy nabízeny při štítkování v tomto seznamu — další štítky lze přidat přímo v úkolu.", tag_did_you_mean: "Mysleli jste {0}?", ed_overdue_first: "Úkoly po termínu nahoře",
     reminder: "P\u0159ipom\u00ednky", rem_add: "+ P\u0159idat p\u0159ipom\u00ednku", rem_none: "Bez p\u0159ipom\u00ednky",
     rem_at_due: "V \u010das term\u00ednu", rem_5m: "5 min. p\u0159ed", rem_15m: "15 min. p\u0159ed",
     rem_30m: "30 min. p\u0159ed", rem_1h: "1 hod. p\u0159ed", rem_2h: "2 hod. p\u0159ed",
@@ -1106,7 +1106,7 @@ const _TRANSLATIONS = {
     ed_person_name: "Navn",
     ed_person_both: "Billede og navn",
     ed_group_header: "Sidehoved",
-    ed_group_tasks: "Opgaver",
+    ed_group_tasks: "Opgaver", ed_group_new_tasks: "Nye opgaver",
     ed_show_person_avatar: "Profilbillede",
     voice_failed: "Stemmeinput mislykkedes",
     confirm_delete_section: "Slet dette afsnit? Opgaver i det bliver usorterede.", done_section_header: "Færdig", duplicate_task: "Dupliker", move_task: "Flyt", move_task_msg: "Flyt \u201d{0}\u201d til:", ed_show_move: "Flyt-knap", ed_add_section: "+ Tilføj afsnit", ed_ai_image_entity: "AI-entitet til billedgenerering", ed_ai_image_entity_placeholder: "f.eks. ai_task.openai", ed_ai_prompt_prefix: "Prompt-præfiks (valgfrit)", ed_ai_prompt_prefix_placeholder: "f.eks. Minimalistisk ikon af", ed_auto_image: "Generér billede automatisk", ed_delete_section: "Slet afsnit", ed_external_lists: "Ekstern", ed_loading: "Indlæser…", ed_move_down: "Flyt ned", ed_move_up: "Flyt op", ed_sec_sections: "Afsnit", ed_section_icon: "Ikon", ed_section_name: "Navn", ed_section_name_prompt: "Afsnitsnavn:", ed_sections_empty: "Ingen afsnit endnu — opgaver vises fladt.", ed_sections_select_list_hint: "Vælg først en liste for at administrere dens afsnit.", ed_show_filters: "Statusfilter", ed_show_images: "Billeder", ed_show_person_chips: "Personfilter", ed_show_tag_chips: "Tagfilter", ed_show_tile_title: "Titel i fliser", ed_show_voice: "Stemmeinput", ed_task_search: "Opgavesøgning", ed_tile_help: "Flisevisning:\n• Klik = fuldfør\n• Hold = rediger\n• Træk = omarrangér", ed_view_mode: "Visningstilstand", ed_view_mode_list: "Liste", ed_view_mode_tiles: "Fliser",
@@ -1161,7 +1161,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Ny delopgave", remove_reminder: "Fjern p\u00e5mindelse",
     sort_label: "Sorter", sort_manual: "Manuel", sort_due: "Forfald",
     sort_priority: "Prioritet", sort_title: "Titel (A\u2013Z)", sort_person: "Tildelt",
-    ed_show_sort: "Sortering", ed_default_sort: "Standardsortering", ed_tag_catalog: "Faste tags", ed_tag_catalog_hint: "Foreslås altid, når du tagger i denne liste — fri tekst virker stadig.", tag_did_you_mean: "Mente du {0}?", ed_overdue_first: "Forfaldne opgaver først",
+    ed_show_sort: "Sortering", ed_default_sort: "Standardsortering", ed_tag_catalog: "Faste tags", ed_tag_catalog_hint: "Foreslås altid, når du tagger i denne liste — andre tags kan tilføjes på opgaven.", tag_did_you_mean: "Mente du {0}?", ed_overdue_first: "Forfaldne opgaver først",
     reminder: "P\u00e5mindelser", rem_add: "+ Tilf\u00f8j p\u00e5mindelse", rem_none: "Ingen p\u00e5mindelse",
     rem_at_due: "Ved forfaldstid", rem_5m: "5 min. f\u00f8r", rem_15m: "15 min. f\u00f8r",
     rem_30m: "30 min. f\u00f8r", rem_1h: "1 time f\u00f8r", rem_2h: "2 timer f\u00f8r",
@@ -1207,7 +1207,7 @@ const _TRANSLATIONS = {
     ed_person_name: "Navn",
     ed_person_both: "Bilde og navn",
     ed_group_header: "Topptekst",
-    ed_group_tasks: "Oppgaver",
+    ed_group_tasks: "Oppgaver", ed_group_new_tasks: "Nye oppgaver",
     ed_show_person_avatar: "Profilbilde",
     voice_failed: "Taleinndata mislyktes",
     confirm_delete_section: "Slette denne seksjonen? Oppgaver i den blir usorterte.", done_section_header: "Ferdig", duplicate_task: "Dupliser", move_task: "Flytt", move_task_msg: "Flytt \u201d{0}\u201d til:", ed_show_move: "Flytt-knapp", ed_add_section: "+ Legg til seksjon", ed_ai_image_entity: "AI-entitet for bildegenerering", ed_ai_image_entity_placeholder: "f.eks. ai_task.openai", ed_ai_prompt_prefix: "Ledetekst-prefiks (valgfritt)", ed_ai_prompt_prefix_placeholder: "f.eks. Minimalistisk ikon av", ed_auto_image: "Generer bilde automatisk", ed_delete_section: "Slett seksjon", ed_external_lists: "Ekstern", ed_loading: "Laster…", ed_move_down: "Flytt ned", ed_move_up: "Flytt opp", ed_sec_sections: "Seksjoner", ed_section_icon: "Ikon", ed_section_name: "Navn", ed_section_name_prompt: "Seksjonsnavn:", ed_sections_empty: "Ingen seksjoner ennå — oppgaver vises flatt.", ed_sections_select_list_hint: "Velg en liste først for å administrere seksjonene.", ed_show_filters: "Statusfilter", ed_show_images: "Bilder", ed_show_person_chips: "Personfilter", ed_show_tag_chips: "Taggfilter", ed_show_tile_title: "Tittel i fliser", ed_show_voice: "Taleinndata", ed_task_search: "Oppgavesøk", ed_tile_help: "Flisevisning:\n• Klikk = fullfør\n• Hold = rediger\n• Dra = endre rekkefølge", ed_view_mode: "Visningsmodus", ed_view_mode_list: "Liste", ed_view_mode_tiles: "Fliser",
@@ -1262,7 +1262,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Ny deloppgave", remove_reminder: "Fjern p\u00e5minnelse",
     sort_label: "Sorter", sort_manual: "Manuell", sort_due: "Frist",
     sort_priority: "Prioritet", sort_title: "Tittel (A\u2013Z)", sort_person: "Tildelt",
-    ed_show_sort: "Sortering", ed_default_sort: "Standardsortering", ed_tag_catalog: "Faste tagger", ed_tag_catalog_hint: "Foreslås alltid når du tagger i denne listen — fritekst fungerer fortsatt.", tag_did_you_mean: "Mente du {0}?", ed_overdue_first: "Forfalte oppgaver først",
+    ed_show_sort: "Sortering", ed_default_sort: "Standardsortering", ed_tag_catalog: "Faste tagger", ed_tag_catalog_hint: "Foreslås alltid når du tagger i denne listen — andre tagger kan legges til på oppgaven.", tag_did_you_mean: "Mente du {0}?", ed_overdue_first: "Forfalte oppgaver først",
     reminder: "P\u00e5minnelser", rem_add: "+ Legg til p\u00e5minnelse", rem_none: "Ingen p\u00e5minnelse",
     rem_at_due: "Ved fristen", rem_5m: "5 min. f\u00f8r", rem_15m: "15 min. f\u00f8r",
     rem_30m: "30 min. f\u00f8r", rem_1h: "1 time f\u00f8r", rem_2h: "2 timer f\u00f8r",
@@ -1308,7 +1308,7 @@ const _TRANSLATIONS = {
     ed_person_name: "Nimi",
     ed_person_both: "Kuva ja nimi",
     ed_group_header: "Yläosa",
-    ed_group_tasks: "Tehtävät",
+    ed_group_tasks: "Tehtävät", ed_group_new_tasks: "Uudet tehtävät",
     ed_show_person_avatar: "Profiilikuva",
     voice_failed: "Puhesyöttö epäonnistui",
     confirm_delete_section: "Poistetaanko tämä osio? Sen tehtävät muuttuvat lajittelemattomiksi.", done_section_header: "Valmis", duplicate_task: "Monista", move_task: "Siirr\u00e4", move_task_msg: "Siirr\u00e4 \u201d{0}\u201d kohteeseen:", ed_show_move: "Siirr\u00e4-painike", ed_add_section: "+ Lisää osio", ed_ai_image_entity: "Tekoälyentiteetti kuvien luontiin", ed_ai_image_entity_placeholder: "esim. ai_task.openai", ed_ai_prompt_prefix: "Kehotteen etuliite (valinnainen)", ed_ai_prompt_prefix_placeholder: "esim. Minimalistinen kuvake", ed_auto_image: "Luo kuva automaattisesti", ed_delete_section: "Poista osio", ed_external_lists: "Ulkoinen", ed_loading: "Ladataan…", ed_move_down: "Siirrä alas", ed_move_up: "Siirrä ylös", ed_sec_sections: "Osiot", ed_section_icon: "Kuvake", ed_section_name: "Nimi", ed_section_name_prompt: "Osion nimi:", ed_sections_empty: "Ei vielä osioita — tehtävät näytetään listana.", ed_sections_select_list_hint: "Valitse ensin lista hallitaksesi sen osioita.", ed_show_filters: "Tilasuodatin", ed_show_images: "Kuvat", ed_show_person_chips: "Henkil\u00f6suodatin", ed_show_tag_chips: "Tunnistesuodatin", ed_show_tile_title: "Otsikko ruuduissa", ed_show_voice: "Puhesyöttö", ed_task_search: "Tehtävähaku", ed_tile_help: "Ruutunäkymä:\n• Napsautus = valmis\n• Pidä = muokkaa\n• Vedä = järjestä uudelleen", ed_view_mode: "Näkymätila", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Ruudut",
@@ -1363,7 +1363,7 @@ const _TRANSLATIONS = {
     new_sub_item: "Uusi aliteht\u00e4v\u00e4", remove_reminder: "Poista muistutus",
     sort_label: "Lajittele", sort_manual: "Manuaalinen", sort_due: "Er\u00e4p\u00e4iv\u00e4",
     sort_priority: "Prioriteetti", sort_title: "Otsikko (A\u2013\u00d6)", sort_person: "M\u00e4\u00e4ritetty",
-    ed_show_sort: "Lajittelu", ed_default_sort: "Oletuslajittelu", ed_tag_catalog: "Kiinteät tagit", ed_tag_catalog_hint: "Ehdotetaan aina tagattaessa tässä listassa — vapaa teksti toimii edelleen.", tag_did_you_mean: "Tarkoititko {0}?", ed_overdue_first: "Myöhässä olevat ensin",
+    ed_show_sort: "Lajittelu", ed_default_sort: "Oletuslajittelu", ed_tag_catalog: "Kiinteät tagit", ed_tag_catalog_hint: "Ehdotetaan aina tagattaessa tässä listassa — muita tageja voi lisätä tehtävässä.", tag_did_you_mean: "Tarkoititko {0}?", ed_overdue_first: "Myöhässä olevat ensin",
     reminder: "Muistutukset", rem_add: "+ Lis\u00e4\u00e4 muistutus", rem_none: "Ei muistutusta",
     rem_at_due: "Er\u00e4ajalla", rem_5m: "5 min. ennen", rem_15m: "15 min. ennen",
     rem_30m: "30 min. ennen", rem_1h: "1 tunti ennen", rem_2h: "2 tuntia ennen",
@@ -1409,7 +1409,7 @@ const _TRANSLATIONS = {
     ed_person_name: "Név",
     ed_person_both: "Kép és név",
     ed_group_header: "Fejléc",
-    ed_group_tasks: "Feladatok",
+    ed_group_tasks: "Feladatok", ed_group_new_tasks: "Új feladatok",
     ed_show_person_avatar: "Profilkép",
     voice_failed: "A hangbevitel sikertelen",
     confirm_delete_section: "Törli ezt a szakaszt? A benne lévő feladatok rendezetlenné válnak.", done_section_header: "Kész", duplicate_task: "Másolat", move_task: "\u00c1thelyez\u00e9s", move_task_msg: "\u201e{0}\u201d \u00e1thelyez\u00e9se ide:", ed_show_move: "\u00c1thelyez\u00e9s gomb", ed_add_section: "+ Szakasz hozzáadása", ed_ai_image_entity: "MI-entitás képgeneráláshoz", ed_ai_image_entity_placeholder: "pl. ai_task.openai", ed_ai_prompt_prefix: "Prompt előtag (opcionális)", ed_ai_prompt_prefix_placeholder: "pl. Minimalista ikon", ed_auto_image: "Kép automatikus generálása", ed_delete_section: "Szakasz törlése", ed_external_lists: "Külső", ed_loading: "Betöltés…", ed_move_down: "Mozgatás le", ed_move_up: "Mozgatás fel", ed_sec_sections: "Szakaszok", ed_section_icon: "Ikon", ed_section_name: "Név", ed_section_name_prompt: "Szakasz neve:", ed_sections_empty: "Még nincsenek szakaszok — a feladatok csoportosítás nélkül jelennek meg.", ed_sections_select_list_hint: "Először válassz egy listát a szakaszok kezeléséhez.", ed_show_filters: "\u00c1llapotsz\u0171r\u0151", ed_show_images: "Képek", ed_show_person_chips: "Szem\u00e9lysz\u0171r\u0151", ed_show_tag_chips: "C\u00edmkesz\u0171r\u0151", ed_show_tile_title: "Cím a csempéken", ed_show_voice: "Hangbevitel", ed_task_search: "Feladatkeresés", ed_tile_help: "Csempenézet:\n• Kattintás = kész\n• Nyomva tartás = szerkesztés\n• Húzás = átrendezés", ed_view_mode: "Nézet mód", ed_view_mode_list: "Lista", ed_view_mode_tiles: "Csempék",
@@ -1464,7 +1464,7 @@ const _TRANSLATIONS = {
     new_sub_item: "\u00daj alfeladat", remove_reminder: "Eml\u00e9keztet\u0151 elt\u00e1vol\u00edt\u00e1sa",
     sort_label: "Rendez\u00e9s", sort_manual: "Manu\u00e1lis", sort_due: "Hat\u00e1rid\u0151",
     sort_priority: "Priorit\u00e1s", sort_title: "C\u00edm (A\u2013Z)", sort_person: "Hozz\u00e1rendelve",
-    ed_show_sort: "Rendez\u00e9s", ed_default_sort: "Alap\u00e9rtelmezett rendez\u00e9s", ed_tag_catalog: "Rögzített címkék", ed_tag_catalog_hint: "Mindig felajánlva címkézéskor ebben a listában — szabad szöveg továbbra is működik.", tag_did_you_mean: "Erre gondoltál: {0}?", ed_overdue_first: "Lejárt feladatok elöl",
+    ed_show_sort: "Rendez\u00e9s", ed_default_sort: "Alap\u00e9rtelmezett rendez\u00e9s", ed_tag_catalog: "Rögzített címkék", ed_tag_catalog_hint: "Mindig felajánlva címkézéskor ebben a listában — további címkék a feladatnál adhatók hozzá.", tag_did_you_mean: "Erre gondoltál: {0}?", ed_overdue_first: "Lejárt feladatok elöl",
     reminder: "Eml\u00e9keztet\u0151k", rem_add: "+ Eml\u00e9keztet\u0151 hozz\u00e1ad\u00e1sa", rem_none: "Nincs eml\u00e9keztet\u0151",
     rem_at_due: "A hat\u00e1rid\u0151kor", rem_5m: "5 perccel el\u0151tte", rem_15m: "15 perccel el\u0151tte",
     rem_30m: "30 perccel el\u0151tte", rem_1h: "1 \u00f3r\u00e1val el\u0151tte", rem_2h: "2 \u00f3r\u00e1val el\u0151tte",
@@ -1510,7 +1510,7 @@ const _TRANSLATIONS = {
     ed_person_name: "Name",
     ed_person_both: "Bild und Name",
     ed_group_header: "Kopfzeile",
-    ed_group_tasks: "Aufgaben",
+    ed_group_tasks: "Aufgaben", ed_group_new_tasks: "Neue Aufgaben",
     ed_show_person_avatar: "Profilbild",
     voice_failed: "Spracheingabe fehlgeschlagen",
     ed_external_lists: "Extern",
@@ -1605,7 +1605,7 @@ const _TRANSLATIONS = {
     ed_show_voice: "Spracheingabe",
     ed_task_search: "Aufgaben-Suche",
     ed_auto_image: "Bild automatisch generieren",
-    ed_default_sort: "Standard-Sortierung", ed_tag_catalog: "Feste Tags", ed_tag_catalog_hint: "Werden beim Taggen in dieser Liste immer vorgeschlagen — freier Text bleibt möglich.", tag_did_you_mean: "Meintest du {0}?", ed_overdue_first: "Überfällige Aufgaben zuerst",
+    ed_default_sort: "Standard-Sortierung", ed_tag_catalog: "Feste Tags", ed_tag_catalog_hint: "Werden beim Taggen in dieser Liste immer vorgeschlagen — weitere Tags können in der Aufgabe ergänzt werden.", tag_did_you_mean: "Meintest du {0}?", ed_overdue_first: "Überfällige Aufgaben zuerst",
     reminder: "Erinnerungen",
     rem_add: "+ Erinnerung hinzuf\u00fcgen",
     rem_none: "Keine Erinnerung",
@@ -9301,10 +9301,32 @@ class HomeTasksCardEditor extends HTMLElement {
     };
     const persons = personEntries(this._hass);
     renderInto = () => {
-      const kids = [
+      // Fixed tags sit with the section's other settings; the values every
+      // new task gets follow under their own heading, so the intro reads as
+      // being about those alone.
+      const known = (key && this._listMeta[key]) || { tags: [] };
+      const kids = [];
+      // Fixed tags (issue #61) — not applied to new tasks like the defaults
+      // below, but a per-list setting all the same: always offered when
+      // tagging a task, in every card that shows the list.
+      if (!defaults.tag_catalog) defaults.tag_catalog = [];
+      kids.push(this._buildMultiSelect(
+        this._t("ed_tag_catalog"),
+        defaults.tag_catalog,
+        known.tags,
+        (vals) => {
+          defaults.tag_catalog = vals.map((v) => String(v).trim().replace(/^#/, "").toLowerCase()).filter(Boolean);
+          save({ tag_catalog: [...defaults.tag_catalog] });
+        },
+      ));
+      kids.push(this._el("span", { className: "hint", textContent: this._t("ed_tag_catalog_hint") }));
+      kids.push(
+        this._el("div", { className: "group-label" }, [
+          this._el("span", { textContent: this._t("ed_group_new_tasks") }),
+          savedFlash,
+        ]),
         this._el("span", { className: "hint", textContent: this._t("ed_defaults_hint") }),
-        savedFlash,
-      ];
+      );
       const personSelect = this._el("select", { className: "editor-native-select" });
       const noneOpt = this._el("option", { value: "", textContent: this._t("nobody") });
       if (!defaults.assignee) noneOpt.selected = true;
@@ -9342,21 +9364,6 @@ class HomeTasksCardEditor extends HTMLElement {
 
       // Suggestions come from the tags already in use on this list; the
       // multi-select takes free text too, same as the preset filters.
-      const known = (key && this._listMeta[key]) || { tags: [] };
-      // Fixed tags (issue #61) — not applied to new tasks like the fields
-      // around them, but a per-list setting all the same: always offered
-      // when tagging a task, in every card that shows the list.
-      if (!defaults.tag_catalog) defaults.tag_catalog = [];
-      kids.push(this._buildMultiSelect(
-        this._t("ed_tag_catalog"),
-        defaults.tag_catalog,
-        known.tags,
-        (vals) => {
-          defaults.tag_catalog = vals.map((v) => String(v).trim().replace(/^#/, "").toLowerCase()).filter(Boolean);
-          save({ tag_catalog: [...defaults.tag_catalog] });
-        },
-      ));
-      kids.push(this._el("span", { className: "hint", textContent: this._t("ed_tag_catalog_hint") }));
       kids.push(this._buildMultiSelect(
         this._t("ed_default_tags"),
         defaults.tags,
@@ -9694,6 +9701,10 @@ class HomeTasksCardEditor extends HTMLElement {
       select.editor-native-select:focus { outline: none; border-color: var(--primary-color, #03a9f4); border-width: 2px; padding: 9px 11px; }
       select.editor-native-select option { background-color: var(--card-background-color, var(--ha-card-background, #fff)); color: var(--primary-text-color, #212121); }
       .hint { font-size: 12px; color: var(--secondary-text-color); font-style: italic; margin-top: 2px; }
+      /* A hint belongs to what stands right above it (a field, or a group
+         heading it introduces): pull it up to that instead of floating
+         halfway to the next setting. */
+      .section-content > * + .hint, .defaults-editor > * + .hint { margin-top: -12px; }
       .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; min-height: 40px; }
       .toggle-label { font-size: 14px; color: var(--primary-text-color); }
       .queue-panel { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
@@ -9743,6 +9754,9 @@ class HomeTasksCardEditor extends HTMLElement {
       .def-saved-flash { opacity: 0; transition: opacity 0.3s; color: var(--primary-color, #03a9f4); font-size: 12px; font-weight: 500; }
       .def-saved-flash.show { opacity: 1; }
       .def-saved-flash.err { color: var(--error-color, #db4437); }
+      /* In the heading, take up room only while shown — else the empty flash
+         shortens the line after the heading text. */
+      .group-label .def-saved-flash:not(.show) { display: none; }
       .field-wrap select { width: 100%; box-sizing: border-box; padding: 20px 12px 6px; height: 48px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; background: var(--mdc-text-field-fill-color, var(--input-fill-color, transparent)); color: var(--primary-text-color); font-size: 0.875rem; font-family: inherit; outline: none; cursor: pointer; }
       .field-wrap select:focus { border: 2px solid var(--primary-color); padding: 19px 11px 5px; }
       .field-wrap select:focus ~ span { color: var(--primary-color); }

@@ -31,8 +31,11 @@ const personSelects = (ed) =>
   [...ed.shadowRoot.querySelectorAll('select')].filter(
     (s) => [...s.options].some((o) => o.value === 'off'));
 
+// The Display section only — other sections have group headings of their own.
+const displaySection = (ed) => [...ed.shadowRoot.querySelectorAll('details')].find(
+  (d) => (d.querySelector('summary')?.textContent || '').includes('Display'));
 const groupLabels = (ed) =>
-  [...ed.shadowRoot.querySelectorAll('.group-label')].map((e) => e.textContent.trim());
+  [...displaySection(ed).querySelectorAll('.group-label')].map((e) => e.textContent.trim());
 
 describe('person dropdowns', () => {
   test('there are two, each with the same four options', async () => {
@@ -98,7 +101,7 @@ describe('the Display section is split into groups', () => {
 
   test('the person dropdowns sit one per group, filter first', async () => {
     const { ed } = await editor();
-    const labels = [...ed.shadowRoot.querySelectorAll('.group-label, .field-wrap')]
+    const labels = [...displaySection(ed).querySelectorAll('.group-label, .field-wrap')]
       .filter((e) => e.classList.contains('group-label') || e.querySelector('select option[value="off"]'))
       .map((e) => e.classList.contains('group-label') ? e.textContent.trim() : 'person-select');
     assert.deepEqual(labels, ['Card', 'Header', 'person-select', 'Tasks', 'person-select']);

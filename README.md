@@ -363,7 +363,7 @@ over the defaults.
 
 The same section holds the list's **fixed tags**: a set of tags that the tag input
 always suggests — first, whether or not any task carries them right now — in every card
-that shows the list. Free text still works for one-offs, but typing a new tag that is one
+that shows the list. Other tags can still be added to a task, but typing a new tag that is one
 or two letters off a fixed one (`kitchn` for `kitchen`) offers the fixed tag instead, so a
 typo doesn't quietly split a category in two. Fixed tags aren't added to new tasks; that's
 what the default tags are for.
