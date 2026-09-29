@@ -8590,7 +8590,7 @@ class HomeTasksCard extends HTMLElement {
       .field-wrap input:focus, .field-wrap textarea:focus { border: 2px solid var(--primary-color); padding: 19px 11px 5px; }
       .field-wrap input:disabled, .field-wrap textarea:disabled { opacity: 0.4; }
       .field-wrap textarea { resize: vertical; min-height: 60px; }
-      .notes-view { box-sizing: border-box; width: 100%; min-height: 40px; padding: 10px 12px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; color: var(--primary-text-color); font-size: 0.875rem; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; cursor: text; }
+      .notes-view { box-sizing: border-box; width: 100%; min-height: 40px; padding: 10px 12px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; background: var(--mdc-text-field-fill-color, var(--input-fill-color, transparent)); color: var(--primary-text-color); font-size: 0.875rem; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; cursor: text; }
       .notes-view:focus-visible { outline: none; border: 2px solid var(--primary-color); padding: 9px 11px; }
       .notes-view a { color: var(--primary-color, #03a9f4); text-decoration: underline; cursor: pointer; }
       .field-wrap > span { position: absolute; top: 6px; left: 12px; font-size: 11px; font-weight: 400; color: var(--secondary-text-color); text-transform: none; letter-spacing: 0; pointer-events: none; }
