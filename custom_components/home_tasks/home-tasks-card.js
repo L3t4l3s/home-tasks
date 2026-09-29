@@ -70,7 +70,7 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Sub-tasks",
     ed_show_person: "Assignees",
     ed_auto_delete: "Delete completed immediately",
-    ed_confirm_complete: "Confirm before completing",
+    ed_confirm_complete: "Confirm before completing", ed_tap_to_complete: "Tap row to complete",
     ed_show_add_due: "Due date when adding",
     ed_max_height: "Max height (px, 0 = unlimited)", ed_badge_priority: "Priority chips", ed_badge_progress: "Progress chips", ed_badge_due: "Due chips", ed_badge_recurrence: "Recurrence chips", ed_badge_person: "Person", ed_badge_tags: "Tag chips", ed_badge_reminders: "Reminder chips",
     ed_sec_defaults: "Defaults",
@@ -230,7 +230,7 @@ const _TRANSLATIONS = {
     ed_show_due_date: "Deadlines", ed_show_notes: "Notities", ed_show_recurrence: "Herhalingen",
     ed_show_sub_items: "Subtaken", ed_show_person: "Personen",
     ed_auto_delete: "Voltooide meteen verwijderen", ed_compact: "Compact", ed_show_tags: "Tags",
-    ed_confirm_complete: "Bevestigen voor afronden",
+    ed_confirm_complete: "Bevestigen voor afronden", ed_tap_to_complete: "Tik op rij om af te ronden",
     ed_show_add_due: "Vervaldatum bij toevoegen",
     ed_max_height: "Max. hoogte (px, 0 = onbeperkt)", ed_badge_priority: "Prioriteitschips", ed_badge_progress: "Voortgangschips", ed_badge_due: "Vervaldatumchips", ed_badge_recurrence: "Herhalingschips", ed_badge_person: "Persoon", ed_badge_tags: "Tagchips", ed_badge_reminders: "Herinneringschips",
     ed_sec_defaults: "Standaardwaarden",
@@ -331,7 +331,7 @@ const _TRANSLATIONS = {
     ed_show_due_date: "Scadenze", ed_show_notes: "Note", ed_show_recurrence: "Ricorrenze",
     ed_show_sub_items: "Sotto-attivit\u00e0", ed_show_person: "Persone",
     ed_auto_delete: "Elimina completate immediatamente", ed_compact: "Compatto", ed_show_tags: "Tag",
-    ed_confirm_complete: "Conferma prima di completare",
+    ed_confirm_complete: "Conferma prima di completare", ed_tap_to_complete: "Tocca la riga per completare",
     ed_show_add_due: "Scadenza alla creazione",
     ed_max_height: "Altezza max (px, 0 = illimitata)", ed_badge_priority: "Chip priorit\u00e0", ed_badge_progress: "Chip avanzamento", ed_badge_due: "Chip scadenza", ed_badge_recurrence: "Chip ricorrenza", ed_badge_person: "Persona", ed_badge_tags: "Chip tag", ed_badge_reminders: "Chip promemoria",
     ed_sec_defaults: "Predefiniti",
@@ -432,7 +432,7 @@ const _TRANSLATIONS = {
     ed_show_due_date: "Terminy", ed_show_notes: "Notatki", ed_show_recurrence: "Powtórzenia",
     ed_show_sub_items: "Podzadania", ed_show_person: "Osoby",
     ed_auto_delete: "Natychmiast usu\u0144 uko\u0144czone", ed_compact: "Kompaktowy", ed_show_tags: "Tagi",
-    ed_confirm_complete: "Potwierd\u017a przed uko\u0144czeniem",
+    ed_confirm_complete: "Potwierd\u017a przed uko\u0144czeniem", ed_tap_to_complete: "Dotknij wiersz, aby ukończyć",
     ed_show_add_due: "Termin przy dodawaniu",
     ed_max_height: "Maks. wysoko\u015b\u0107 (px, 0 = bez limitu)", ed_badge_priority: "Znaczniki priorytetu", ed_badge_progress: "Znaczniki post\u0119pu", ed_badge_due: "Znaczniki terminu", ed_badge_recurrence: "Znaczniki powtarzania", ed_badge_person: "Osoba", ed_badge_tags: "Znaczniki tag\u00f3w", ed_badge_reminders: "Znaczniki przypomnie\u0144",
     ed_sec_defaults: "Domy\u015blne",
@@ -533,7 +533,7 @@ const _TRANSLATIONS = {
     ed_show_due_date: "F\u00f6rfallodatum", ed_show_notes: "Anteckningar", ed_show_recurrence: "Upprepningar",
     ed_show_sub_items: "Deluppgifter", ed_show_person: "Personer",
     ed_auto_delete: "Ta bort slutf\u00f6rda omedelbart", ed_compact: "Kompakt", ed_show_tags: "Taggar",
-    ed_confirm_complete: "Bekr\u00e4fta innan slutf\u00f6rande",
+    ed_confirm_complete: "Bekr\u00e4fta innan slutf\u00f6rande", ed_tap_to_complete: "Tryck på raden för att slutföra",
     ed_show_add_due: "F\u00f6rfallodatum vid till\u00e4gg",
     ed_max_height: "Maxh\u00f6jd (px, 0 = obegr\u00e4nsad)", ed_badge_priority: "Prioritetschips", ed_badge_progress: "F\u00f6rloppschips", ed_badge_due: "F\u00f6rfallochips", ed_badge_recurrence: "Upprepningschips", ed_badge_person: "Person", ed_badge_tags: "Taggchips", ed_badge_reminders: "P\u00e5minnelsechips",
     ed_sec_defaults: "Standardv\u00e4rden",
@@ -634,7 +634,7 @@ const _TRANSLATIONS = {
     ed_show_due_date: "\u00c9ch\u00e9ances", ed_show_notes: "Notes", ed_show_recurrence: "R\u00e9currences",
     ed_show_sub_items: "Sous-t\u00e2ches", ed_show_person: "Personnes",
     ed_auto_delete: "Supprimer les termin\u00e9es imm\u00e9diatement", ed_compact: "Compact", ed_show_tags: "\u00c9tiquettes",
-    ed_confirm_complete: "Confirmer avant de terminer",
+    ed_confirm_complete: "Confirmer avant de terminer", ed_tap_to_complete: "Toucher la ligne pour terminer",
     ed_show_add_due: "\u00c9ch\u00e9ance \u00e0 la cr\u00e9ation",
     ed_max_height: "Hauteur max (px, 0 = illimit\u00e9e)", ed_badge_priority: "Puces priorit\u00e9", ed_badge_progress: "Puces progression", ed_badge_due: "Puces \u00e9ch\u00e9ance", ed_badge_recurrence: "Puces r\u00e9currence", ed_badge_person: "Personne", ed_badge_tags: "Puces \u00e9tiquettes", ed_badge_reminders: "Puces rappel",
     ed_sec_defaults: "Valeurs par d\u00e9faut",
@@ -735,7 +735,7 @@ const _TRANSLATIONS = {
     ed_show_due_date: "Prazos", ed_show_notes: "Notas", ed_show_recurrence: "Recorr\u00eancias",
     ed_show_sub_items: "Subtarefas", ed_show_person: "Pessoas",
     ed_auto_delete: "Excluir conclu\u00eddas imediatamente", ed_compact: "Compacto", ed_show_tags: "Etiquetas",
-    ed_confirm_complete: "Confirmar antes de concluir",
+    ed_confirm_complete: "Confirmar antes de concluir", ed_tap_to_complete: "Toque na linha para concluir",
     ed_show_add_due: "Prazo ao adicionar",
     ed_max_height: "Altura m\u00e1x. (px, 0 = ilimitada)", ed_badge_priority: "Chips de prioridade", ed_badge_progress: "Chips de progresso", ed_badge_due: "Chips de prazo", ed_badge_recurrence: "Chips de recorr\u00eancia", ed_badge_person: "Pessoa", ed_badge_tags: "Chips de etiquetas", ed_badge_reminders: "Chips de lembrete",
     ed_sec_defaults: "Padr\u00f5es",
@@ -836,7 +836,7 @@ const _TRANSLATIONS = {
     ed_show_due_date: "Vencimientos", ed_show_notes: "Notas", ed_show_recurrence: "Recurrencias",
     ed_show_sub_items: "Subtareas", ed_show_person: "Personas",
     ed_auto_delete: "Eliminar completadas inmediatamente", ed_compact: "Compacto", ed_show_tags: "Etiquetas",
-    ed_confirm_complete: "Confirmar antes de completar",
+    ed_confirm_complete: "Confirmar antes de completar", ed_tap_to_complete: "Toca la fila para completar",
     ed_show_add_due: "Fecha l\u00edmite al a\u00f1adir",
     ed_max_height: "Altura m\u00e1x. (px, 0 = ilimitada)", ed_badge_priority: "Chips de prioridad", ed_badge_progress: "Chips de progreso", ed_badge_due: "Chips de vencimiento", ed_badge_recurrence: "Chips de repetici\u00f3n", ed_badge_person: "Persona", ed_badge_tags: "Chips de etiquetas", ed_badge_reminders: "Chips de recordatorio",
     ed_sec_defaults: "Predeterminados",
@@ -937,7 +937,7 @@ const _TRANSLATIONS = {
     ed_show_due_date: "\u0421\u0440\u043e\u043a\u0438", ed_show_notes: "\u0417\u0430\u043c\u0435\u0442\u043a\u0438", ed_show_recurrence: "\u041f\u043e\u0432\u0442\u043e\u0440\u0435\u043d\u0438\u044f",
     ed_show_sub_items: "\u041f\u043e\u0434\u0437\u0430\u0434\u0430\u0447\u0438", ed_show_person: "\u0418\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u0438",
     ed_auto_delete: "\u0421\u0440\u0430\u0437\u0443 \u0443\u0434\u0430\u043b\u044f\u0442\u044c \u0432\u044b\u043f\u043e\u043b\u043d\u0435\u043d\u043d\u044b\u0435", ed_compact: "\u041a\u043e\u043c\u043f\u0430\u043a\u0442\u043d\u044b\u0439", ed_show_tags: "\u0422\u0435\u0433\u0438",
-    ed_confirm_complete: "\u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0430\u0442\u044c \u043f\u0435\u0440\u0435\u0434 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u0438\u0435\u043c",
+    ed_confirm_complete: "\u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0430\u0442\u044c \u043f\u0435\u0440\u0435\u0434 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d\u0438\u0435\u043c", ed_tap_to_complete: "\u041d\u0430\u0436\u0430\u0442\u0438\u0435 \u043d\u0430 \u0441\u0442\u0440\u043e\u043a\u0443 \u0437\u0430\u0432\u0435\u0440\u0448\u0430\u0435\u0442",
     ed_show_add_due: "\u0421\u0440\u043e\u043a \u043f\u0440\u0438 \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u0438\u0438",
     ed_max_height: "\u041c\u0430\u043a\u0441. \u0432\u044b\u0441\u043e\u0442\u0430 (px, 0 = \u0431\u0435\u0437 \u043e\u0433\u0440\u0430\u043d\u0438\u0447\u0435\u043d\u0438\u044f)", ed_badge_priority: "\u0427\u0438\u043f\u044b \u043f\u0440\u0438\u043e\u0440\u0438\u0442\u0435\u0442\u0430", ed_badge_progress: "\u0427\u0438\u043f\u044b \u043f\u0440\u043e\u0433\u0440\u0435\u0441\u0441\u0430", ed_badge_due: "\u0427\u0438\u043f\u044b \u0441\u0440\u043e\u043a\u0430", ed_badge_recurrence: "\u0427\u0438\u043f\u044b \u043f\u043e\u0432\u0442\u043e\u0440\u0435\u043d\u0438\u044f", ed_badge_person: "Человек", ed_badge_tags: "\u0427\u0438\u043f\u044b \u0442\u0435\u0433\u043e\u0432", ed_badge_reminders: "\u0427\u0438\u043f\u044b \u043d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u0439",
     ed_sec_defaults: "\u0417\u043d\u0430\u0447\u0435\u043d\u0438\u044f \u043f\u043e \u0443\u043c\u043e\u043b\u0447\u0430\u043d\u0438\u044e",
@@ -1038,7 +1038,7 @@ const _TRANSLATIONS = {
     ed_show_due_date: "Term\u00edny", ed_show_notes: "Pozn\u00e1mky", ed_show_recurrence: "Opakov\u00e1n\u00ed",
     ed_show_sub_items: "Pod\u00fakoly", ed_show_person: "Osoby",
     ed_auto_delete: "Okam\u017eit\u011b smazat dokon\u010den\u00e9", ed_compact: "Kompaktn\u00ed", ed_show_tags: "\u0160t\u00edtky",
-    ed_confirm_complete: "Potvrdit p\u0159ed dokon\u010den\u00edm",
+    ed_confirm_complete: "Potvrdit p\u0159ed dokon\u010den\u00edm", ed_tap_to_complete: "Klepnutím na řádek dokončit",
     ed_show_add_due: "Term\u00edn p\u0159i p\u0159id\u00e1n\u00ed",
     ed_max_height: "Max. v\u00fd\u0161ka (px, 0 = bez limitu)", ed_badge_priority: "\u010cipy priority", ed_badge_progress: "\u010cipy pr\u016fb\u011bhu", ed_badge_due: "\u010cipy term\u00ednu", ed_badge_recurrence: "\u010cipy opakov\u00e1n\u00ed", ed_badge_person: "Osoba", ed_badge_tags: "\u010cipy \u0161t\u00edtk\u016f", ed_badge_reminders: "\u010cipy p\u0159ipomenut\u00ed",
     ed_sec_defaults: "V\u00fdchoz\u00ed hodnoty",
@@ -1139,7 +1139,7 @@ const _TRANSLATIONS = {
     ed_show_due_date: "Forfaldsdatoer", ed_show_notes: "Noter", ed_show_recurrence: "Gentagelser",
     ed_show_sub_items: "Delopgaver", ed_show_person: "Personer",
     ed_auto_delete: "Slet f\u00e6rdige \u00f8jeblikkeligt", ed_compact: "Kompakt", ed_show_tags: "Tags",
-    ed_confirm_complete: "Bekr\u00e6ft f\u00f8r fuldf\u00f8relse",
+    ed_confirm_complete: "Bekr\u00e6ft f\u00f8r fuldf\u00f8relse", ed_tap_to_complete: "Tryk på rækken for at fuldføre",
     ed_show_add_due: "Forfaldsdato ved tilf\u00f8jelse",
     ed_max_height: "Maks. h\u00f8jde (px, 0 = ubegr\u00e6nset)", ed_badge_priority: "Prioritetschips", ed_badge_progress: "Fremdriftschips", ed_badge_due: "Forfaldschips", ed_badge_recurrence: "Gentagelseschips", ed_badge_person: "Person", ed_badge_tags: "Tagchips", ed_badge_reminders: "P\u00e5mindelseschips",
     ed_sec_defaults: "Standarder",
@@ -1240,7 +1240,7 @@ const _TRANSLATIONS = {
     ed_show_due_date: "Frister", ed_show_notes: "Notater", ed_show_recurrence: "Gjentakelser",
     ed_show_sub_items: "Deloppgaver", ed_show_person: "Personer",
     ed_auto_delete: "Slett ferdige umiddelbart", ed_compact: "Kompakt", ed_show_tags: "Tagger",
-    ed_confirm_complete: "Bekreft f\u00f8r fullf\u00f8ring",
+    ed_confirm_complete: "Bekreft f\u00f8r fullf\u00f8ring", ed_tap_to_complete: "Trykk på raden for å fullføre",
     ed_show_add_due: "Forfallsdato ved tillegg",
     ed_max_height: "Maks. h\u00f8yde (px, 0 = ubegrenset)", ed_badge_priority: "Prioritetschips", ed_badge_progress: "Fremdriftschips", ed_badge_due: "Forfallschips", ed_badge_recurrence: "Gjentakelseschips", ed_badge_person: "Person", ed_badge_tags: "Taggchips", ed_badge_reminders: "P\u00e5minnelseschips",
     ed_sec_defaults: "Standarder",
@@ -1341,7 +1341,7 @@ const _TRANSLATIONS = {
     ed_show_due_date: "Er\u00e4p\u00e4iv\u00e4t", ed_show_notes: "Muistiinpanot", ed_show_recurrence: "Toistot",
     ed_show_sub_items: "Aliteht\u00e4v\u00e4t", ed_show_person: "Henkil\u00f6t",
     ed_auto_delete: "Poista valmiit v\u00e4litt\u00f6m\u00e4sti", ed_compact: "Kompakti", ed_show_tags: "Tunnisteet",
-    ed_confirm_complete: "Vahvista ennen valmiiksi merkitsemist\u00e4",
+    ed_confirm_complete: "Vahvista ennen valmiiksi merkitsemist\u00e4", ed_tap_to_complete: "Merkitse valmiiksi napauttamalla riviä",
     ed_show_add_due: "Er\u00e4p\u00e4iv\u00e4 lis\u00e4tt\u00e4ess\u00e4",
     ed_max_height: "Enimm\u00e4iskorkeus (px, 0 = rajaton)", ed_badge_priority: "Prioriteettimerkit", ed_badge_progress: "Edistymismerkit", ed_badge_due: "Er\u00e4p\u00e4iv\u00e4merkit", ed_badge_recurrence: "Toistomerkit", ed_badge_person: "Henkilö", ed_badge_tags: "Tunnistemerkit", ed_badge_reminders: "Muistutusmerkit",
     ed_sec_defaults: "Oletukset",
@@ -1442,7 +1442,7 @@ const _TRANSLATIONS = {
     ed_show_due_date: "Hat\u00e1rid\u0151k", ed_show_notes: "Megjegyz\u00e9sek", ed_show_recurrence: "Ism\u00e9tl\u00e9sek",
     ed_show_sub_items: "Alfeladatok", ed_show_person: "Szem\u00e9lyek",
     ed_auto_delete: "K\u00e9sz feladatok azonnali t\u00f6rl\u00e9se", ed_compact: "Kompakt", ed_show_tags: "C\u00edmk\u00e9k",
-    ed_confirm_complete: "Meger\u0151s\u00edt\u00e9s befejez\u00e9s el\u0151tt",
+    ed_confirm_complete: "Meger\u0151s\u00edt\u00e9s befejez\u00e9s el\u0151tt", ed_tap_to_complete: "Koppintás a sorra befejezi",
     ed_show_add_due: "Hat\u00e1rid\u0151 hozz\u00e1ad\u00e1skor",
     ed_max_height: "Max. magass\u00e1g (px, 0 = korl\u00e1tlan)", ed_badge_priority: "Priorit\u00e1s-c\u00edmk\u00e9k", ed_badge_progress: "Folyamat-c\u00edmk\u00e9k", ed_badge_due: "Hat\u00e1rid\u0151-c\u00edmk\u00e9k", ed_badge_recurrence: "Ism\u00e9tl\u00e9s-c\u00edmk\u00e9k", ed_badge_person: "Személy", ed_badge_tags: "C\u00edmke-chipek", ed_badge_reminders: "Eml\u00e9keztet\u0151-c\u00edmk\u00e9k",
     ed_sec_defaults: "Alap\u00e9rtelmez\u00e9sek",
@@ -1564,7 +1564,7 @@ const _TRANSLATIONS = {
     ed_show_sub_items: "Unteraufgaben",
     ed_show_person: "Personen",
     ed_auto_delete: "Erledigte sofort l\u00f6schen",
-    ed_confirm_complete: "Vor dem Erledigen nachfragen",
+    ed_confirm_complete: "Vor dem Erledigen nachfragen", ed_tap_to_complete: "Zeile antippen zum Erledigen",
     ed_show_add_due: "F\u00e4lligkeit beim Anlegen",
     ed_max_height: "Max. H\u00f6he (px, 0 = unbegrenzt)", ed_badge_priority: "Priorit\u00e4ts-Chips", ed_badge_progress: "Fortschritts-Chips", ed_badge_due: "F\u00e4lligkeits-Chips", ed_badge_recurrence: "Wiederholungs-Chips", ed_badge_person: "Person", ed_badge_tags: "Tag-Chips", ed_badge_reminders: "Erinnerungs-Chips",
     ed_sec_defaults: "Standardwerte",
@@ -5002,7 +5002,7 @@ class HomeTasksCard extends HTMLElement {
     mainRowChildren.push(expandBtn);
 
     const mainRow = this._el("div", { className: "task-main" }, mainRowChildren);
-    this._attachTaskExpandClickHandler(mainRow, task, taskEl);
+    this._attachTaskExpandClickHandler(mainRow, task, taskEl, colIdx);
     taskEl.appendChild(mainRow);
 
     // --- expanded details + open/close animation ---
@@ -5020,6 +5020,11 @@ class HomeTasksCard extends HTMLElement {
 
   _buildTaskCheckbox(task, colIdx) {
     const checkbox = this._el("input", { type: "checkbox", checked: task.completed });
+    // A touch drag released on the checkbox still ends in a click — cancel it
+    // so the drag doesn't tick the task off.
+    checkbox.addEventListener("click", (e) => {
+      if (Date.now() < (this._suppressRowTapUntil || 0)) e.preventDefault();
+    });
     checkbox.addEventListener("change", () => this._toggleTask(task.id, task.completed, colIdx));
     const checkmark = this._el("span", { className: "checkmark" });
     return this._el("label", { className: "checkbox-container" }, [checkbox, checkmark]);
@@ -5059,7 +5064,9 @@ class HomeTasksCard extends HTMLElement {
       if (isEditing) setTimeout(() => { editInput.focus(); editInput.select(); }, 0);
     } else {
       const titleSpan = this._el("span", { className: "task-title", textContent: task.title });
-      titleSpan.addEventListener("dblclick", (e) => {
+      // With tap_to_complete the first click of a double-click already ticks
+      // the task off; the title is edited from the expanded details instead.
+      if (this._config?.columns?.[colIdx]?.tap_to_complete !== true) titleSpan.addEventListener("dblclick", (e) => {
         e.stopPropagation();
         this._expandedTasks.add(task.id);
         this._editingTaskId = task.id;
@@ -5333,13 +5340,22 @@ class HomeTasksCard extends HTMLElement {
     return this._el("span", { className: "reminder-badge", textContent: remText });
   }
 
-  _attachTaskExpandClickHandler(mainRow, task, taskEl) {
+  _attachTaskExpandClickHandler(mainRow, task, taskEl, colIdx) {
+    const tapToComplete = this._config?.columns?.[colIdx]?.tap_to_complete === true;
     mainRow.addEventListener("click", (e) => {
       if (e.detail > 1) return;
       if (e.target.closest(".checkbox-container")) return;
       if (e.target.closest(".tag-badge")) return;
       if (e.target.closest(".assigned-badge")) return;
       if (e.target.closest(".edit-title-input")) return;
+      // tap_to_complete (issue #69): the whole row ticks the task off, like
+      // a tile; only the chevron opens the details.  confirm_complete still
+      // asks first — _toggleTask handles that.
+      if (tapToComplete && !e.target.closest(".expand-btn")) {
+        if (Date.now() < (this._suppressRowTapUntil || 0)) return;  // end of a drag
+        this._toggleTask(task.id, task.completed, colIdx);
+        return;
+      }
 
       // If an animation is in progress, skip animation and just toggle + render
       if (this._animatingTaskIds?.has(task.id)) {
@@ -7993,6 +8009,8 @@ class HomeTasksCard extends HTMLElement {
       this._touchStartTimer = setTimeout(() => {
         this._draggedTaskId = taskId;
         this._draggedColIdx = colIdx;
+        this._touchDragStartedAt = Date.now();
+        this._touchDragMoved = false;
         // Collapse all expanded tasks for a cleaner drag experience
         this._collapseAllForDrag();
         taskEl = this.shadowRoot.querySelector(`.task[data-task-id="${CSS.escape(String(taskId))}"]`);
@@ -8030,6 +8048,7 @@ class HomeTasksCard extends HTMLElement {
         return;
       }
       e.preventDefault();
+      this._touchDragMoved = true;
       const touch = e.touches[0];
 
       if (this._touchClone) {
@@ -8060,6 +8079,13 @@ class HomeTasksCard extends HTMLElement {
         this._touchStartTimer = null;
       }
       if (this._draggedTaskId) {
+        // The browser still sends a click for a hold released in place. After
+        // a real drag (moved, or held on purpose) neither the checkbox nor
+        // (tap_to_complete) the row may tick the task off; a tap that merely
+        // ran past the 150 ms drag threshold still counts as a tap.
+        if (this._touchDragMoved || Date.now() - (this._touchDragStartedAt || 0) >= 300) {
+          this._suppressRowTapUntil = Date.now() + 500;
+        }
         this._finishDrag();
       }
     };
@@ -10334,7 +10360,8 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("confirm-complete", "ed_confirm_complete", "confirm_complete", false),
           ...(col.view_mode === "tiles"
             ? [makeToggle("show-tile-title", "ed_show_tile_title", "show_tile_title", true)]
-            : []),
+            // Tiles already complete on a tap; the list needs the switch.
+            : [makeToggle("tap-to-complete", "ed_tap_to_complete", "tap_to_complete", false)]),
         ]),
         makePersonSelect("badge"),
       ]),

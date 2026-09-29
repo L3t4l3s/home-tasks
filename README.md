@@ -289,6 +289,7 @@ Each entry in `columns` accepts the following options.
 | `compact` | `false` | Compact mode for denser task rows |
 | `auto_delete_completed` | `false` | Automatically delete completed tasks |
 | `confirm_complete` | `false` | Ask for confirmation before marking a task as completed (guards against accidental taps on touch devices) |
+| `tap_to_complete` | `false` | List view: tapping anywhere on a task row completes it (or reopens a done one), like a tile; the chevron on the right opens the details, where the title is edited. Works together with `confirm_complete`. Tiles always behave this way |
 | `max_height` | — | Maximum height of the task list in px; the list scrolls internally while title, add-task row and filters stay fixed (e.g. `max_height: 350`). Unset/0 = grows with content. In a *sections* dashboard prefer the card's **Layout** tab: a fixed number of rows makes the card fill exactly that height and scroll its list the same way |
 | **Header / chrome** | | |
 | `show_title` | `true` | Show/hide the column title |
