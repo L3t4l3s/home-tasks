@@ -36,6 +36,23 @@ from .external_view import (
 # RFC-5545 weekday codes indexed by Python weekday() (Mon=0 .. Sun=6)
 _WEEKDAY_CODES = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"]
 
+# Event descriptions are backend-generated text, not frontend translations.
+# Keep English as the fallback for languages without a calendar translation.
+_DESCRIPTION_TRANSLATIONS = {
+    "en": {
+        "priority": "Priority", "low": "Low", "medium": "Medium", "high": "High",
+        "sub_tasks": "Sub-tasks", "at_due": "at due time",
+        "minutes_before": "{value} min before", "hours_before": "{value}h before",
+        "days_before": "{value}d before",
+    },
+    "pt": {
+        "priority": "Prioridade", "low": "Baixa", "medium": "Média", "high": "Alta",
+        "sub_tasks": "Subtarefas", "at_due": "no horário de vencimento",
+        "minutes_before": "{value} min antes", "hours_before": "{value}h antes",
+        "days_before": "{value}d antes",
+    },
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -124,7 +141,8 @@ def _task_to_rrule(task: dict) -> str | None:
 
 
 def _expand_task_events(
-    task: dict, range_start: datetime, range_end: datetime
+    task: dict, range_start: datetime, range_end: datetime,
+    hass: HomeAssistant | None = None,
 ) -> list[CalendarEvent]:
     """Return the task's calendar event(s) overlapping [range_start, range_end].
 
@@ -132,7 +150,7 @@ def _expand_task_events(
     recurring task yields one event per occurrence in the range, each carrying
     the rrule string and a per-occurrence recurrence_id.
     """
-    base = HomeTasksCalendarEntity._task_to_event(task)
+    base = HomeTasksCalendarEntity._task_to_event(task, hass)
     if base is None:
         return []
 
@@ -235,9 +253,9 @@ class _BaseHomeTasksCalendar(CalendarEntity):
             if not _included_in_state(task):
                 continue
             if _task_to_rrule(task):
-                candidates = _expand_task_events(task, now, horizon)
+                candidates = _expand_task_events(task, now, horizon, self.hass)
             else:
-                base = HomeTasksCalendarEntity._task_to_event(task)
+                base = HomeTasksCalendarEntity._task_to_event(task, self.hass)
                 candidates = [base] if base is not None else []
             for evt in candidates:
                 if isinstance(evt.end, datetime):
@@ -260,7 +278,7 @@ class _BaseHomeTasksCalendar(CalendarEntity):
         for task in self._get_tasks():
             if not _included_in_state(task):
                 continue
-            events.extend(_expand_task_events(task, start_date, end_date))
+            events.extend(_expand_task_events(task, start_date, end_date, hass))
         return events
 
 
@@ -287,7 +305,9 @@ class HomeTasksCalendarEntity(_BaseHomeTasksCalendar):
         return list(self._store.tasks)
 
     @staticmethod
-    def _task_to_event(task: dict) -> CalendarEvent | None:
+    def _task_to_event(
+        task: dict, hass: HomeAssistant | None = None
+    ) -> CalendarEvent | None:
         """Convert a task dict to a single (base) CalendarEvent."""
         due_date_str = task.get("due_date")
         if not due_date_str:
@@ -299,7 +319,7 @@ class HomeTasksCalendarEntity(_BaseHomeTasksCalendar):
 
         due_time_str = task.get("due_time")
         summary = task.get("title", "")
-        description = HomeTasksCalendarEntity._build_description(task)
+        description = HomeTasksCalendarEntity._build_description(task, hass)
         uid = task.get("id")
 
         if due_time_str:
@@ -324,8 +344,15 @@ class HomeTasksCalendarEntity(_BaseHomeTasksCalendar):
         )
 
     @staticmethod
-    def _build_description(task: dict) -> str | None:
+    def _build_description(
+        task: dict, hass: HomeAssistant | None = None
+    ) -> str | None:
         """Build a rich description from notes + task metadata."""
+        # Calendar descriptions are shared backend data, so use the instance
+        # language rather than the language of any one frontend user.
+        language = hass.config.language if hass is not None else "en"
+        language = (language or "en").replace("_", "-").split("-")[0].lower()
+        text = _DESCRIPTION_TRANSLATIONS.get(language, _DESCRIPTION_TRANSLATIONS["en"])
         parts: list[str] = []
 
         # Notes first (the primary content)
@@ -336,11 +363,13 @@ class HomeTasksCalendarEntity(_BaseHomeTasksCalendar):
         meta: list[str] = []
         pri = task.get("priority")
         if pri:
-            label = {1: "Low", 2: "Medium", 3: "High"}.get(pri, str(pri))
-            meta.append(f"⚡ Priority: {label}")
+            label = {1: text["low"], 2: text["medium"], 3: text["high"]}.get(pri, str(pri))
+            meta.append(f"⚡ {text['priority']}: {label}")
 
         person = task.get("assigned_person")
         if person:
+            state = hass.states.get(person) if hass is not None else None
+            person = (state.attributes.get("friendly_name") if state else None) or person
             meta.append(f"👤 {person}")
 
         tags = task.get("tags")
@@ -350,22 +379,22 @@ class HomeTasksCalendarEntity(_BaseHomeTasksCalendar):
         subs = task.get("sub_items") or []
         if subs:
             done = sum(1 for s in subs if s.get("completed"))
-            meta.append(f"☑ Sub-tasks: {done}/{len(subs)}")
+            meta.append(f"☑ {text['sub_tasks']}: {done}/{len(subs)}")
 
         reminders = task.get("reminders") or []
         if reminders:
             labels = []
             for r in reminders:
                 if r == 0:
-                    labels.append("at due time")
+                    labels.append(text["at_due"])
                 elif r < 60:
-                    labels.append(f"{r} min before")
+                    labels.append(text["minutes_before"].format(value=r))
                 elif r == 60:
-                    labels.append("1h before")
+                    labels.append(text["hours_before"].format(value=1))
                 elif r < 1440:
-                    labels.append(f"{r // 60}h before")
+                    labels.append(text["hours_before"].format(value=r // 60))
                 else:
-                    labels.append(f"{r // 1440}d before")
+                    labels.append(text["days_before"].format(value=r // 1440))
             meta.append(f"⏰ {', '.join(labels)}")
 
         if not parts and not meta:
