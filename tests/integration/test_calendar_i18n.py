@@ -1,6 +1,9 @@
 """Calendar descriptions use the instance language and person display names."""
 from datetime import date, datetime, timezone
 
+import json
+from pathlib import Path
+
 import pytest
 from homeassistant.core import HomeAssistant
 
@@ -9,7 +12,15 @@ from custom_components.home_tasks.calendar import (
     _expand_task_events,
 )
 
+from custom_components.home_tasks.ui_translations import load_ui_translations
+
 pytestmark = pytest.mark.integration
+
+
+@pytest.fixture(autouse=True)
+async def preload_translations(hass):
+    await hass.async_add_executor_job(load_ui_translations)
+
 
 
 @pytest.mark.parametrize("language", ["pt-BR", "pt", "pt-PT"])
@@ -25,7 +36,7 @@ async def test_portuguese_calendar_metadata(hass: HomeAssistant, language: str):
     }
     assert HomeTasksCalendarEntity._build_description(task, hass) == (
         "Fresh vegetables\n\n⚡ Prioridade: Alta\n👤 Júlia\n#compras\n"
-        "☑ Subtarefas: 1/2\n⏰ no horário de vencimento, 15 min antes, "
+        f"☑ Subtarefas: 1/2\n⏰ {'No horário de vencimento' if language == 'pt-BR' else 'No prazo'}, 15 min antes, "
         "1h antes, 2h antes, 1d antes"
     )
 
@@ -36,13 +47,13 @@ async def test_priority_labels(hass: HomeAssistant, priority: int, label: str):
     assert HomeTasksCalendarEntity._build_description({"priority": priority}, hass) == f"⚡ Prioridade: {label}"
 
 
-@pytest.mark.parametrize("language", ["en", "fr", ""])
+@pytest.mark.parametrize("language", ["en", "zz", ""])
 async def test_english_fallback(hass: HomeAssistant, language: str):
     hass.config.language = language
     task = {"priority": 3, "assigned_person": "person.missing", "reminders": [0, 5, 60, 120, 2880]}
     assert HomeTasksCalendarEntity._build_description(task, hass) == (
         "⚡ Priority: High\n👤 person.missing\n"
-        "⏰ at due time, 5 min before, 1h before, 2h before, 2d before"
+        "⏰ At due time, 5 min before, 1h before, 2h before, 2d before"
     )
 
 
@@ -101,3 +112,27 @@ async def test_registered_native_calendar_uses_instance_language(
     )
     assert len(events) == 1
     assert events[0].description == entity.event.description
+
+
+_TRANSLATIONS_PATH = Path(__file__).parents[2] / "custom_components/home_tasks/ui_translations.json"
+_SHARED_TEXT = json.loads(_TRANSLATIONS_PATH.read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize("language", list(_SHARED_TEXT))
+async def test_calendar_reuses_frontend_strings_in_every_language(hass, language):
+    hass.config.language = language
+    text = _SHARED_TEXT[language]
+    task = {"priority": 2, "sub_items": [{"completed": True}], "reminders": [0, 15, 120, 2880]}
+    description = HomeTasksCalendarEntity._build_description(task, hass)
+    assert f"{text['priority']}: {text['pri_medium']}" in description
+    assert f"{text['sub_items']}: 1/1" in description
+    assert text["rem_at_due"] in description
+    for key, value in [("calendar_minutes_before", 15), ("calendar_hours_before", 2), ("calendar_days_before", 2)]:
+        assert text[key].format(value=value) in description
+
+
+@pytest.mark.parametrize("language,target", [("pt-br", "pt-BR"), ("pt_BR", "pt-BR"), ("en-GB", "en"), ("nb", "no"), ("nn-NO", "no")])
+async def test_calendar_locale_aliases(hass, language, target):
+    hass.config.language = language
+    text = _SHARED_TEXT[target]
+    assert HomeTasksCalendarEntity._build_description({"priority": 1}, hass) == f"⚡ {text['priority']}: {text['pri_low']}"

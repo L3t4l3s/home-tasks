@@ -27,6 +27,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
+from .ui_translations import get_ui_translation
 from .external_view import (
     async_subscribe_external,
     get_external_tasks_snapshot,
@@ -36,22 +37,6 @@ from .external_view import (
 # RFC-5545 weekday codes indexed by Python weekday() (Mon=0 .. Sun=6)
 _WEEKDAY_CODES = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"]
 
-# Event descriptions are backend-generated text, not frontend translations.
-# Keep English as the fallback for languages without a calendar translation.
-_DESCRIPTION_TRANSLATIONS = {
-    "en": {
-        "priority": "Priority", "low": "Low", "medium": "Medium", "high": "High",
-        "sub_tasks": "Sub-tasks", "at_due": "at due time",
-        "minutes_before": "{value} min before", "hours_before": "{value}h before",
-        "days_before": "{value}d before",
-    },
-    "pt": {
-        "priority": "Prioridade", "low": "Baixa", "medium": "Média", "high": "Alta",
-        "sub_tasks": "Subtarefas", "at_due": "no horário de vencimento",
-        "minutes_before": "{value} min antes", "hours_before": "{value}h antes",
-        "days_before": "{value}d antes",
-    },
-}
 
 
 async def async_setup_entry(
@@ -351,8 +336,7 @@ class HomeTasksCalendarEntity(_BaseHomeTasksCalendar):
         # Calendar descriptions are shared backend data, so use the instance
         # language rather than the language of any one frontend user.
         language = hass.config.language if hass is not None else "en"
-        language = (language or "en").replace("_", "-").split("-")[0].lower()
-        text = _DESCRIPTION_TRANSLATIONS.get(language, _DESCRIPTION_TRANSLATIONS["en"])
+        text = get_ui_translation(language)
         parts: list[str] = []
 
         # Notes first (the primary content)
@@ -363,7 +347,7 @@ class HomeTasksCalendarEntity(_BaseHomeTasksCalendar):
         meta: list[str] = []
         pri = task.get("priority")
         if pri:
-            label = {1: text["low"], 2: text["medium"], 3: text["high"]}.get(pri, str(pri))
+            label = {1: text["pri_low"], 2: text["pri_medium"], 3: text["pri_high"]}.get(pri, str(pri))
             meta.append(f"⚡ {text['priority']}: {label}")
 
         person = task.get("assigned_person")
@@ -379,22 +363,22 @@ class HomeTasksCalendarEntity(_BaseHomeTasksCalendar):
         subs = task.get("sub_items") or []
         if subs:
             done = sum(1 for s in subs if s.get("completed"))
-            meta.append(f"☑ {text['sub_tasks']}: {done}/{len(subs)}")
+            meta.append(f"☑ {text['sub_items']}: {done}/{len(subs)}")
 
         reminders = task.get("reminders") or []
         if reminders:
             labels = []
             for r in reminders:
                 if r == 0:
-                    labels.append(text["at_due"])
+                    labels.append(text["rem_at_due"])
                 elif r < 60:
-                    labels.append(text["minutes_before"].format(value=r))
+                    labels.append(text["calendar_minutes_before"].format(value=r))
                 elif r == 60:
-                    labels.append(text["hours_before"].format(value=1))
+                    labels.append(text["calendar_hours_before"].format(value=1))
                 elif r < 1440:
-                    labels.append(text["hours_before"].format(value=r // 60))
+                    labels.append(text["calendar_hours_before"].format(value=r // 60))
                 else:
-                    labels.append(text["days_before"].format(value=r // 1440))
+                    labels.append(text["calendar_days_before"].format(value=r // 1440))
             meta.append(f"⏰ {', '.join(labels)}")
 
         if not parts and not meta:

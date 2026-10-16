@@ -20,6 +20,7 @@ from .image_library import async_get_image_library, async_register_image_library
 from .image_queue import async_register_image_queue
 from homeassistant.util import dt as dt_util
 
+from .ui_translations import load_ui_translations
 from .const import DOMAIN, RECURRENCE_UNIT_SECONDS, VALID_MONTH_PATTERNS
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -110,6 +111,7 @@ async def _async_register_card(hass: HomeAssistant) -> None:
         return
     hass.data[DATA_SETUP_DONE] = True
 
+    await hass.async_add_executor_job(load_ui_translations)
     async_register_websocket_commands(hass)
 
     comp_path = hass.config.path(f"custom_components/{DOMAIN}")
