@@ -224,6 +224,13 @@ Available in 16 languages and regional variants — follows your HA language set
 
 English · German · French · Spanish · Portuguese · Brazilian Portuguese · Italian · Dutch · Polish · Swedish · Danish · Norwegian · Finnish · Czech · Russian · Hungarian
 
+Calendar event descriptions use the Home Assistant **instance language**, since
+the same event is shared by all users. Priority, sub-task progress, and reminder
+offsets are translated into Portuguese for `pt` and `pt-BR`; other languages
+retain the existing English descriptions. Assigned people are shown by their
+entity's friendly name, falling back to the entity ID when no name is available.
+Task titles, notes, and tags are kept exactly as entered.
+
 ---
 
 ## Installation
