@@ -16,13 +16,16 @@ function loadTranslations() {
   assert.ok(m, "could not locate _TRANSLATIONS object");
   // The literal is pure data (identifier keys + string values) from our own
   // source file — safe to evaluate to get the exact object.
-  return new Function("return " + m[1])();
+  const embedded = new Function("return " + m[1])();
+  const shared = JSON.parse(readFileSync(join(dirname(CARD), "ui_translations.json"), "utf8"));
+  assert.deepEqual(embedded, shared, "Run npm run build:i18n after editing shared translations");
+  return shared;
 }
 
 test("Brazilian Portuguese preserves interpolation placeholders", () => {
   const t = loadTranslations();
   assert.ok(t["pt-BR"], "Brazilian Portuguese block missing");
-  const placeholders = (value) => (value.match(/\{\d+\}|%s/g) || []).sort();
+  const placeholders = (value) => (value.match(/\{(?:\d+|value)\}|%s/g) || []).sort();
   for (const [key, value] of Object.entries(t.en)) {
     assert.deepEqual(placeholders(t["pt-BR"][key]), placeholders(value), key);
   }

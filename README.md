@@ -226,8 +226,8 @@ English · German · French · Spanish · Portuguese · Brazilian Portuguese · 
 
 Calendar event descriptions use the Home Assistant **instance language**, since
 the same event is shared by all users. Priority, sub-task progress, and reminder
-offsets are translated into Portuguese for `pt` and `pt-BR`; other languages
-retain the existing English descriptions. Assigned people are shown by their
+offsets reuse the card translations in every supported language. Unknown locales
+fall back to English. Assigned people are shown by their
 entity's friendly name, falling back to the entity ID when no name is available.
 Task titles, notes, and tags are kept exactly as entered.
 
@@ -854,3 +854,13 @@ If Home Tasks is useful to you, consider supporting the project — it keeps the
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+### Maintaining translations
+
+`custom_components/home_tasks/ui_translations.json` is the shared source for card,
+editor, and calendar description text. After changing it, run `npm run build:i18n`
+and commit the generated `home-tasks-card.js` too. The distributed card embeds
+these strings so it does not need a separate network request. The backend loads
+the same JSON once in an executor during setup. Translation tests check that the
+embedded card data and JSON remain identical. HA integration setup translations
+stay in `translations/`, following Home Assistant's config-flow schema.
