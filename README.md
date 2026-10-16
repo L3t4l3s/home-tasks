@@ -220,9 +220,9 @@ since otherwise the next scan would queue the task straight back.
 
 ### Languages
 
-Available in 15 languages — follows your HA language setting automatically:
+Available in 16 languages and regional variants — follows your HA language setting automatically:
 
-English · German · French · Spanish · Portuguese · Italian · Dutch · Polish · Swedish · Danish · Norwegian · Finnish · Czech · Russian · Hungarian
+English · German · French · Spanish · Portuguese · Brazilian Portuguese · Italian · Dutch · Polish · Swedish · Danish · Norwegian · Finnish · Czech · Russian · Hungarian
 
 ---
 

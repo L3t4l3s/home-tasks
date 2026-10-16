@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Home Tasks",
+        "description": "Escolha o que deseja configurar.",
+        "menu_options": {
+          "native": "Criar uma nova lista de tarefas",
+          "external": "Vincular uma lista de tarefas externa"
+        }
+      },
+      "native": {
+        "title": "Criar lista de tarefas",
+        "description": "Digite um nome para a nova lista de tarefas.",
+        "data": {
+          "name": "Nome da lista"
+        }
+      },
+      "external": {
+        "title": "Vincular lista de tarefas externa",
+        "description": "Selecione uma entidade de tarefas externa para adicionar os recursos do Home Tasks (prioridade, etiquetas, subtarefas etc.).",
+        "data": {
+          "entity_id": "Entidade de tarefas"
+        }
+      }
+    },
+    "error": {
+      "empty_name": "O nome não pode ficar vazio.",
+      "name_too_long": "O nome é muito longo (máximo de 100 caracteres).",
+      "duplicate_name": "Já existe uma lista com esse nome.",
+      "empty_entity": "Selecione uma entidade.",
+      "already_linked": "Esta entidade já está vinculada."
+    },
+    "abort": {
+      "already_configured": "Esta lista já está configurada.",
+      "no_external_entities": "Nenhuma entidade de tarefas externa encontrada. Configure primeiro uma integração CalDAV, Google Tasks ou Todoist.",
+      "max_lists_reached": "O número máximo de listas (50) foi atingido."
+    }
+  }
+}
