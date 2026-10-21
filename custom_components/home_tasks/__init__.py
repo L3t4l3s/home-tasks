@@ -390,8 +390,13 @@ def _on_task_completed(
     completed_at = _parse_completed_at(task)
 
     target = None
+    reopen_target = None
     if task.get("recurrence_enabled"):
         target = _compute_next_reopen_target(task, completed_at)
+        # reopen_lead_days pulls the REOPEN moment earlier than the due target,
+        # so the task shows as "upcoming" ahead of its due date. The due_date
+        # advance below still uses the un-shifted target.
+        reopen_target = _apply_reopen_lead(task, target, completed_at)
         # Persist the reopen moment on the task.  The in-memory timer dies
         # with HA; after a restart this field is the *authoritative* target
         # (see _recovery_reopen_target) — recomputing against the advanced
@@ -399,7 +404,9 @@ def _on_task_completed(
         # Explicit None (recurrence end reached) is meaningful too: it tells
         # recovery there is nothing to re-arm.
         task["reopen_at"] = (
-            target.astimezone(timezone.utc).isoformat() if target is not None else None
+            reopen_target.astimezone(timezone.utc).isoformat()
+            if reopen_target is not None
+            else None
         )
     if target is not None and task.get("due_date"):
         local_target = target.astimezone(dt_util.DEFAULT_TIME_ZONE)
@@ -421,9 +428,10 @@ def _on_task_completed(
             old_due_time, task.get("due_time"),
         )
 
-    # Pass the already-computed target into the scheduler so it doesn't
-    # recompute against the just-advanced due_date and double-advance.
-    _schedule_recurrence(hass, entry_id, task, completed_at=completed_at, precomputed_target=target)
+    # Pass the lead-shifted reopen target into the scheduler so the reopen
+    # timer fires ahead of the due date; the due_date advance above used the
+    # un-shifted target.
+    _schedule_recurrence(hass, entry_id, task, completed_at=completed_at, precomputed_target=reopen_target)
     # _schedule_reminders cancels old timers first, then (for recurring tasks)
     # reschedules against the newly-advanced due_date.
     _schedule_reminders(hass, entry_id, task)
@@ -500,13 +508,17 @@ def _on_task_schedule_changed(hass: HomeAssistant, entry_id: str, task: dict) ->
         target = _due_date_reopen_target(task)
         if target is not None:
             target = _apply_start_date(task, target)
+    # Same reopen-lead shift as completion: reopen ahead of the due target.
+    reopen_target = _apply_reopen_lead(task, target, completed_at)
     task["reopen_at"] = (
-        target.astimezone(timezone.utc).isoformat() if target is not None else None
+        reopen_target.astimezone(timezone.utc).isoformat()
+        if reopen_target is not None
+        else None
     )
-    if target is None:
+    if reopen_target is None:
         return
     _schedule_recurrence(
-        hass, entry_id, task, completed_at=completed_at, precomputed_target=target
+        hass, entry_id, task, completed_at=completed_at, precomputed_target=reopen_target
     )
 
 
@@ -808,6 +820,37 @@ def _apply_start_date(task: dict, target: datetime) -> datetime:
     except ValueError:
         pass
     return target
+
+
+def _apply_reopen_lead(
+    task: dict, due_target: datetime | None, completed_at: datetime
+) -> datetime | None:
+    """Shift the reopen moment `reopen_lead_days` days before the due target.
+
+    A recurring task normally reopens (completed -> False) exactly at its next
+    due moment, so it stays hidden as "Done" for the whole interval. With a
+    lead > 0 it reopens that many days earlier — at the recurrence time of day
+    — so it shows as an upcoming to-do ahead of its due date. The *due target
+    itself is untouched*; only when the task becomes visible again moves.
+
+    Clamped so it never reopens before completion: if the lead is wider than
+    the gap to the due target, the window has already begun and the task
+    reopens as soon as it was completed rather than at a moment in the past.
+    """
+    if due_target is None:
+        return None
+    try:
+        lead = int(task.get("reopen_lead_days") or 0)
+    except (TypeError, ValueError):
+        lead = 0
+    if lead <= 0:
+        return due_target
+    t_h, t_m = _parse_rec_time(task)
+    local_due = due_target.astimezone(dt_util.DEFAULT_TIME_ZONE)
+    reopen = _set_local_time(local_due - timedelta(days=lead), t_h, t_m).astimezone(
+        timezone.utc
+    )
+    return reopen if reopen > completed_at else completed_at
 
 
 def _resolve_dom(year: int, month: int, dom) -> int:

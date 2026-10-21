@@ -18,6 +18,7 @@ from .const import (
     MAX_IMAGE_URL_LENGTH,
     MAX_NOTES_LENGTH,
     MAX_RECURRENCE_VALUE,
+    MAX_REOPEN_LEAD_DAYS,
     MAX_REMINDER_OFFSET_MINUTES,
     MAX_REMINDERS_PER_TASK,
     MAX_SECTION_NAME_LENGTH,
@@ -54,7 +55,7 @@ _SCHEDULE_FIELDS = (
     "recurrence_end_type", "recurrence_month_pattern",
     "recurrence_day_of_month", "recurrence_nth_week",
     "recurrence_anniversary", "recurrence_anchor", "recurrence_max_count",
-    "recurrence_remaining_count",
+    "recurrence_remaining_count", "reopen_lead_days",
 )
 
 
@@ -147,6 +148,12 @@ def validate_recurrence_unit(value):
 def validate_recurrence_value(value):
     if not isinstance(value, int) or value < 1 or value > MAX_RECURRENCE_VALUE:
         raise ValueError(f"recurrence_value must be an integer between 1 and {MAX_RECURRENCE_VALUE}")
+    return value
+
+
+def validate_reopen_lead_days(value):
+    if not isinstance(value, int) or value < 0 or value > MAX_REOPEN_LEAD_DAYS:
+        raise ValueError(f"reopen_lead_days must be an integer between 0 and {MAX_REOPEN_LEAD_DAYS}")
     return value
 
 
@@ -331,6 +338,7 @@ _FIELD_VALIDATORS = {
     "completed": validate_completed,
     "recurrence_unit": validate_recurrence_unit,
     "recurrence_value": validate_recurrence_value,
+    "reopen_lead_days": validate_reopen_lead_days,
     "recurrence_enabled": validate_recurrence_enabled,
     "recurrence_type": validate_recurrence_type,
     "recurrence_weekdays": validate_recurrence_weekdays,
@@ -755,6 +763,7 @@ class HomeTasksStore:
         "recurrence_max_count", "recurrence_remaining_count",
         "recurrence_month_pattern", "recurrence_day_of_month",
         "recurrence_nth_week", "recurrence_anniversary", "recurrence_anchor",
+        "reopen_lead_days",
         "assigned_person", "tags", "section_id", "image_url",
     )
 
