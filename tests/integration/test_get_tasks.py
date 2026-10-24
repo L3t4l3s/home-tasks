@@ -79,10 +79,11 @@ async def test_tag_filter_ignores_case(hass: HomeAssistant, household) -> None:
 
 
 async def test_sub_items_and_priority(hass: HomeAssistant, household, store) -> None:
-    await store.async_add_sub_task(household["Taxes"], "Find receipts")
+    sub = await store.async_add_sub_task(household["Taxes"], "Find receipts")
     (taxes,) = (await _get(hass, list_name="Test List", due="overdue"))["tasks"]
     assert taxes["priority"] == 3
-    assert taxes["sub_items"] == [{"title": "Find receipts", "completed": False}]
+    # The id is what update_sub_task / remove_sub_task take (issue #70).
+    assert taxes["sub_items"] == [{"id": sub["id"], "title": "Find receipts", "completed": False}]
 
 
 async def test_needs_a_response_variable(hass: HomeAssistant, household) -> None:

@@ -12,7 +12,7 @@ from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Context, HassJob, HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
@@ -20,7 +20,7 @@ from .image_library import async_get_image_library, async_register_image_library
 from .image_queue import async_register_image_queue
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, RECURRENCE_UNIT_SECONDS, VALID_MONTH_PATTERNS
+from .const import DOMAIN, MAX_SUB_TASKS_PER_TASK, RECURRENCE_UNIT_SECONDS, VALID_MONTH_PATTERNS
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 from .overlay_store import ExternalTaskOverlayStore
@@ -1787,6 +1787,34 @@ def _resolve_task(store: HomeTasksStore, data: dict) -> dict:
     raise ValueError("Either task_id or task_title must be provided")
 
 
+def _resolve_sub_task(task: dict, data: dict, completed: bool | None = None) -> dict:
+    """Find a task's sub-task by sub_task_id or sub_task_title (issue #70).
+
+    Two sub-tasks may share a title; when the call sets *completed*, the one
+    not already in that state wins, so "check off 'milk'" twice ticks both.
+    """
+    subs = task.get("sub_items") or []
+    sub_id = data.get("sub_task_id")
+    if sub_id:
+        for sub in subs:
+            if str(sub.get("id")) == str(sub_id):
+                return sub
+        raise ServiceValidationError(f"No sub-task found with id: {sub_id}")
+    sub_title = data.get("sub_task_title")
+    if sub_title:
+        matches = [s for s in subs if (s.get("title") or "").lower() == sub_title.lower()]
+        if not matches:
+            raise ServiceValidationError(
+                f"{task.get('title')!r} has no sub-task with title: {sub_title}"
+            )
+        if completed is not None:
+            pending = [s for s in matches if bool(s.get("completed")) != completed]
+            if pending:
+                return pending[0]
+        return matches[0]
+    raise ServiceValidationError("Either sub_task_id or sub_task_title must be provided")
+
+
 async def _resolve_actor(hass: HomeAssistant, call: ServiceCall) -> str | None:
     """Resolve the actor name from a service call context (user or automation)."""
     user_id = call.context.user_id
@@ -1836,7 +1864,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
         kind, ident, store = _resolve_target(hass, call.data)
         actor = await _resolve_actor(hass, call)
         if kind == "external":
-            from .websocket_api import async_create_external_task
+            from .websocket_api import async_add_external_sub_task, async_create_external_task
 
             fields = {"title": data["title"]}
             for key in ("assigned_person", "due_date", "due_time", "notes", "priority"):
@@ -1846,7 +1874,16 @@ def _async_register_services(hass: HomeAssistant) -> None:
                 fields["reminders"] = data["reminders"]
             if "tags" in data:
                 fields["tags"] = _parse_service_tags(data["tags"])
-            return kind, ident, await async_create_external_task(hass, ident, fields)
+            new_uid = await async_create_external_task(hass, ident, fields)
+            sub_titles = data.get("sub_tasks") or []
+            if sub_titles and not new_uid:
+                raise HomeAssistantError(
+                    f"{ident} created the task but did not report its id; "
+                    "its sub-tasks were not added"
+                )
+            for title in sub_titles:
+                await async_add_external_sub_task(hass, ident, new_uid, title)
+            return kind, ident, new_uid
         # Everything goes in at creation (one task_created event, one
         # 'created' history entry, no intermediate bare state); the store
         # fires task_assigned itself for tasks born with an assignee, so the
@@ -1866,6 +1903,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
             # task_created had already fired with the list's default tags, and
             # left an "updated tags" entry in the history of a brand-new task.
             tags=_parse_service_tags(data["tags"]) if "tags" in data else None,
+            sub_tasks=data.get("sub_tasks"),
         )
         return kind, ident, task["id"]
 
@@ -1978,7 +2016,11 @@ def _async_register_services(hass: HomeAssistant) -> None:
                     "notes": t.get("notes") or "",
                     "section_id": t.get("section_id"),
                     "sub_items": [
-                        {"title": sub.get("title", ""), "completed": bool(sub.get("completed"))}
+                        {
+                            "id": sub.get("id"),
+                            "title": sub.get("title", ""),
+                            "completed": bool(sub.get("completed")),
+                        }
                         for sub in t.get("sub_items") or []
                     ],
                     "recurrence_enabled": bool(t.get("recurrence_enabled")),
@@ -2007,6 +2049,49 @@ def _async_register_services(hass: HomeAssistant) -> None:
             return
         task = _resolve_task(store, call.data)
         await store.async_update_task(task["id"], actor=actor, **kwargs)
+
+    async def _resolve_any_task(call: ServiceCall) -> tuple[str, str, object, dict]:
+        """The list and the task a call names, native or linked."""
+        kind, ident, store = _resolve_target(hass, call.data)
+        if kind == "external":
+            return kind, ident, store, await _resolve_external_task(hass, ident, call.data)
+        return kind, ident, store, _resolve_task(store, call.data)
+
+    async def async_handle_add_sub_task(call: ServiceCall) -> ServiceResponse:
+        """Add a sub-task to a task (issue #70) - the card's "+ sub-task"."""
+        from .websocket_api import async_add_external_sub_task
+
+        kind, ident, store, task = await _resolve_any_task(call)
+        if kind == "external":
+            sub = await async_add_external_sub_task(hass, ident, task["id"], call.data["title"])
+        else:
+            sub = await store.async_add_sub_task(task["id"], call.data["title"])
+        return {"task_id": task["id"], "sub_task_id": sub.get("id")}
+
+    async def async_handle_update_sub_task(call: ServiceCall) -> None:
+        """Rename a sub-task or check it off (issue #70)."""
+        from .websocket_api import async_update_external_sub_task
+
+        fields = {key: call.data[key] for key in ("title", "completed") if key in call.data}
+        if not fields:
+            return
+        kind, ident, store, task = await _resolve_any_task(call)
+        sub = _resolve_sub_task(task, call.data, fields.get("completed"))
+        if kind == "external":
+            await async_update_external_sub_task(hass, ident, task["id"], sub["id"], **fields)
+        else:
+            await store.async_update_sub_task(task["id"], sub["id"], **fields)
+
+    async def async_handle_remove_sub_task(call: ServiceCall) -> None:
+        """Delete a sub-task (issue #70)."""
+        from .websocket_api import async_delete_external_sub_task
+
+        kind, ident, store, task = await _resolve_any_task(call)
+        sub = _resolve_sub_task(task, call.data)
+        if kind == "external":
+            await async_delete_external_sub_task(hass, ident, task["id"], sub["id"])
+        else:
+            await store.async_delete_sub_task(task["id"], sub["id"])
 
     async def async_handle_move_task(call: ServiceCall) -> None:
         """Move a task to another list — parity with the card's Move button.
@@ -2189,6 +2274,9 @@ def _async_register_services(hass: HomeAssistant) -> None:
             vol.Optional("priority"): vol.Any(vol.All(vol.Coerce(int), vol.In([1, 2, 3])), None),
             vol.Optional("tags"): cv.string,
             vol.Optional("reminders"): _validate_service_reminders,
+            vol.Optional("sub_tasks"): vol.All(
+                cv.ensure_list, [cv.string], vol.Length(max=MAX_SUB_TASKS_PER_TASK)
+            ),
         }),
     )
     hass.services.async_register(
@@ -2231,6 +2319,36 @@ def _async_register_services(hass: HomeAssistant) -> None:
             vol.Optional("priority"): vol.Any(vol.All(vol.Coerce(int), vol.In([1, 2, 3])), None),
             vol.Optional("tags"): cv.string,
             vol.Optional("reminders"): _validate_service_reminders,
+        }),
+    )
+    sub_task_target = {
+        vol.Optional("entry_id"): cv.string,
+        vol.Optional("list_name"): cv.string,
+        vol.Optional("entity_id"): cv.string,
+        vol.Optional("task_id"): cv.string,
+        vol.Optional("task_title"): cv.string,
+    }
+    hass.services.async_register(
+        DOMAIN, "add_sub_task", async_handle_add_sub_task,
+        schema=vol.Schema({**sub_task_target, vol.Required("title"): cv.string}),
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+    hass.services.async_register(
+        DOMAIN, "update_sub_task", async_handle_update_sub_task,
+        schema=vol.Schema({
+            **sub_task_target,
+            vol.Optional("sub_task_id"): cv.string,
+            vol.Optional("sub_task_title"): cv.string,
+            vol.Optional("title"): cv.string,
+            vol.Optional("completed"): cv.boolean,
+        }),
+    )
+    hass.services.async_register(
+        DOMAIN, "remove_sub_task", async_handle_remove_sub_task,
+        schema=vol.Schema({
+            **sub_task_target,
+            vol.Optional("sub_task_id"): cv.string,
+            vol.Optional("sub_task_title"): cv.string,
         }),
     )
     hass.services.async_register(

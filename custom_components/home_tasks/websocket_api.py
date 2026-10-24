@@ -1391,6 +1391,43 @@ async def ws_update_external_overlay(hass, connection, msg):
         _handle_error(connection, msg["id"], err)
 
 
+async def async_add_external_sub_task(hass, entity_id: str, task_uid: str, title: str) -> dict:
+    """Add a sub-task on a linked list — the provider's own where it has
+    them (Todoist), the overlay otherwise.
+
+    Shared by the card and the services (issue #70).
+    """
+    adapter = _get_adapter(hass, entity_id)
+    if adapter and adapter.capabilities.can_sync_sub_items:
+        new_uid = await adapter.async_add_sub_task(task_uid, title)
+        return {"id": new_uid, "title": title, "completed": False}
+    return await _get_overlay_store(hass, entity_id).async_add_sub_task(task_uid, title)
+
+
+async def async_update_external_sub_task(
+    hass, entity_id: str, task_uid: str, sub_task_id: str, **kwargs
+) -> dict:
+    """Change a sub-task's title or completed state on a linked list."""
+    adapter = _get_adapter(hass, entity_id)
+    if adapter and adapter.capabilities.can_sync_sub_items:
+        await adapter.async_update_sub_task(sub_task_id, **kwargs)
+        return {"id": sub_task_id, **kwargs}
+    return await _get_overlay_store(hass, entity_id).async_update_sub_task(
+        task_uid, sub_task_id, **kwargs
+    )
+
+
+async def async_delete_external_sub_task(
+    hass, entity_id: str, task_uid: str, sub_task_id: str
+) -> None:
+    """Remove a sub-task from a task on a linked list."""
+    adapter = _get_adapter(hass, entity_id)
+    if adapter and adapter.capabilities.can_sync_sub_items:
+        await adapter.async_delete_sub_task(sub_task_id)
+    else:
+        await _get_overlay_store(hass, entity_id).async_delete_sub_task(task_uid, sub_task_id)
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "home_tasks/add_external_sub_task",
@@ -1403,16 +1440,9 @@ async def ws_update_external_overlay(hass, connection, msg):
 async def ws_add_external_sub_task(hass, connection, msg):
     """Add a sub-task to an external task — via adapter or overlay."""
     try:
-        entity_id = msg["entity_id"]
-        adapter = _get_adapter(hass, entity_id)
-
-        if adapter and adapter.capabilities.can_sync_sub_items:
-            new_uid = await adapter.async_add_sub_task(msg["task_uid"], msg["title"])
-            sub = {"id": new_uid, "title": msg["title"], "completed": False}
-        else:
-            overlay_store = _get_overlay_store(hass, entity_id)
-            sub = await overlay_store.async_add_sub_task(msg["task_uid"], msg["title"])
-
+        sub = await async_add_external_sub_task(
+            hass, msg["entity_id"], msg["task_uid"], msg["title"]
+        )
         connection.send_result(msg["id"], sub)
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -1432,20 +1462,10 @@ async def ws_add_external_sub_task(hass, connection, msg):
 async def ws_update_external_sub_task(hass, connection, msg):
     """Update a sub-task — via adapter or overlay."""
     try:
-        entity_id = msg["entity_id"]
-        adapter = _get_adapter(hass, entity_id)
-        kwargs = {}
-        for key in ("title", "completed"):
-            if key in msg:
-                kwargs[key] = msg[key]
-
-        if adapter and adapter.capabilities.can_sync_sub_items:
-            await adapter.async_update_sub_task(msg["sub_task_id"], **kwargs)
-            sub = {"id": msg["sub_task_id"], **kwargs}
-        else:
-            overlay_store = _get_overlay_store(hass, entity_id)
-            sub = await overlay_store.async_update_sub_task(msg["task_uid"], msg["sub_task_id"], **kwargs)
-
+        kwargs = {key: msg[key] for key in ("title", "completed") if key in msg}
+        sub = await async_update_external_sub_task(
+            hass, msg["entity_id"], msg["task_uid"], msg["sub_task_id"], **kwargs
+        )
         connection.send_result(msg["id"], sub)
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -1463,15 +1483,9 @@ async def ws_update_external_sub_task(hass, connection, msg):
 async def ws_delete_external_sub_task(hass, connection, msg):
     """Delete a sub-task — via adapter or overlay."""
     try:
-        entity_id = msg["entity_id"]
-        adapter = _get_adapter(hass, entity_id)
-
-        if adapter and adapter.capabilities.can_sync_sub_items:
-            await adapter.async_delete_sub_task(msg["sub_task_id"])
-        else:
-            overlay_store = _get_overlay_store(hass, entity_id)
-            await overlay_store.async_delete_sub_task(msg["task_uid"], msg["sub_task_id"])
-
+        await async_delete_external_sub_task(
+            hass, msg["entity_id"], msg["task_uid"], msg["sub_task_id"]
+        )
         connection.send_result(msg["id"])
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -1791,15 +1805,9 @@ async def async_duplicate_external_task(
         extras["image_url"] = source["image_url"]
     if extras:
         await overlay_store.async_set_overlay(new_uid, **extras)
-    adapter = _get_adapter(hass, entity_id)
     for sub in source.get("sub_items") or []:
-        title = sub.get("title")
-        if not title:
-            continue
-        if adapter and adapter.capabilities.can_sync_sub_items:
-            await adapter.async_add_sub_task(new_uid, title)
-        else:
-            await overlay_store.async_add_sub_task(new_uid, title)
+        if sub.get("title"):
+            await async_add_external_sub_task(hass, entity_id, new_uid, sub["title"])
     return new_uid
 
 

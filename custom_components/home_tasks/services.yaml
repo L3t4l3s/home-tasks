@@ -68,6 +68,15 @@ add_task:
       description: Comma-separated minute offsets before the due moment (0 = at due time), e.g. "0,60,1440".
       selector:
         text:
+    sub_tasks:
+      name: Sub-tasks
+      description: >-
+        Titles of sub-tasks to create with the task, as a list. They start
+        unchecked.
+      example: '["Milk", "Bread"]'
+      selector:
+        text:
+          multiple: true
 
 add_task_from_text:
   name: Add Task From Text
@@ -440,5 +449,150 @@ reopen_task:
         are reopened (AND-logic). Supersedes the single `tag` field when both
         are provided. Can be combined with assigned_person.
         Example: "fussball_mittag, ferien_ja"
+      selector:
+        text:
+
+add_sub_task:
+  name: Add Sub-task
+  description: >-
+    Add a sub-task to a task. Works on Home Tasks lists and linked lists (on
+    Todoist as a real sub-task, elsewhere kept by Home Tasks). Returns the new
+    sub-task's id.
+  fields:
+    list_name:
+      name: List Name
+      description: The name of the task list.
+      selector:
+        text:
+    entry_id:
+      name: Entry ID
+      description: The config entry ID of the list (alternative to list name).
+      selector:
+        text:
+    entity_id:
+      name: Linked list entity
+      description: >-
+        The todo entity of a linked external list, when you would rather name
+        it directly than by list name.
+      example: "todo.all_tasks"
+      selector:
+        entity:
+          domain: todo
+    task_title:
+      name: Task Title
+      description: Title of the task the sub-task belongs to.
+      selector:
+        text:
+    task_id:
+      name: Task ID
+      description: ID of the task (alternative to task title).
+      selector:
+        text:
+    title:
+      name: Title
+      description: The sub-task's title.
+      required: true
+      example: "Milk"
+      selector:
+        text:
+
+update_sub_task:
+  name: Update Sub-task
+  description: >-
+    Rename a sub-task or check it off. Find it by sub_task_title or
+    sub_task_id; when two share a title, the one not yet in the requested
+    state is changed.
+  fields:
+    list_name:
+      name: List Name
+      description: The name of the task list.
+      selector:
+        text:
+    entry_id:
+      name: Entry ID
+      description: The config entry ID of the list (alternative to list name).
+      selector:
+        text:
+    entity_id:
+      name: Linked list entity
+      description: >-
+        The todo entity of a linked external list, when you would rather name
+        it directly than by list name.
+      example: "todo.all_tasks"
+      selector:
+        entity:
+          domain: todo
+    task_title:
+      name: Task Title
+      description: Title of the task the sub-task belongs to.
+      selector:
+        text:
+    task_id:
+      name: Task ID
+      description: ID of the task (alternative to task title).
+      selector:
+        text:
+    sub_task_title:
+      name: Sub-task Title
+      description: Current title of the sub-task (case-insensitive).
+      selector:
+        text:
+    sub_task_id:
+      name: Sub-task ID
+      description: ID of the sub-task, as get_tasks returns it (alternative to sub-task title).
+      selector:
+        text:
+    title:
+      name: New Title
+      description: The sub-task's new title.
+      selector:
+        text:
+    completed:
+      name: Completed
+      description: Check the sub-task off (true) or uncheck it (false).
+      selector:
+        boolean:
+
+remove_sub_task:
+  name: Remove Sub-task
+  description: Delete a sub-task from a task.
+  fields:
+    list_name:
+      name: List Name
+      description: The name of the task list.
+      selector:
+        text:
+    entry_id:
+      name: Entry ID
+      description: The config entry ID of the list (alternative to list name).
+      selector:
+        text:
+    entity_id:
+      name: Linked list entity
+      description: >-
+        The todo entity of a linked external list, when you would rather name
+        it directly than by list name.
+      example: "todo.all_tasks"
+      selector:
+        entity:
+          domain: todo
+    task_title:
+      name: Task Title
+      description: Title of the task the sub-task belongs to.
+      selector:
+        text:
+    task_id:
+      name: Task ID
+      description: ID of the task (alternative to task title).
+      selector:
+        text:
+    sub_task_title:
+      name: Sub-task Title
+      description: Current title of the sub-task (case-insensitive).
+      selector:
+        text:
+    sub_task_id:
+      name: Sub-task ID
+      description: ID of the sub-task, as get_tasks returns it (alternative to sub-task title).
       selector:
         text:

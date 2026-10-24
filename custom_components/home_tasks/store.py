@@ -632,9 +632,10 @@ class HomeTasksStore:
         priority: int | None = None,
         tags: list | None = None,
         section_id: str | None = None,
+        sub_tasks: list[str] | None = None,
     ) -> dict:
         """Add a task, optionally with an initial due date/time (issue #38),
-        reminders (issue #43), notes and priority.
+        reminders (issue #43), notes, priority and sub-tasks (issue #70).
 
         Creating with these set (instead of add + update) keeps a single
         history entry / task_created event and no intermediate bare state.
@@ -671,6 +672,9 @@ class HomeTasksStore:
         tags = validate_tags(tags) if tags else []
         if section_id is not None:
             self._validate_section_id(section_id)
+        sub_titles = [validate_text(t, MAX_TITLE_LENGTH, "Sub-task title") for t in sub_tasks or []]
+        if len(sub_titles) > MAX_SUB_TASKS_PER_TASK:
+            raise ValueError(f"Maximum number of sub-tasks ({MAX_SUB_TASKS_PER_TASK}) reached")
         if len(self._data["tasks"]) >= MAX_TASKS_PER_LIST:
             raise ValueError(f"Maximum number of tasks ({MAX_TASKS_PER_LIST}) reached")
         max_order = max((t["sort_order"] for t in self._data["tasks"]), default=-1)
@@ -699,7 +703,9 @@ class HomeTasksStore:
             "notes": notes,
             "due_date": due_date,
             "sort_order": max_order + 1,
-            "sub_items": [],
+            "sub_items": [
+                {"id": str(uuid.uuid4()), "title": t, "completed": False} for t in sub_titles
+            ],
             "priority": priority,
             "due_time": due_time,
             "reminders": reminders,

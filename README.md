@@ -591,6 +591,7 @@ The `home_tasks_task_completed` event additionally includes who ticked the task 
 | `priority` | no | `1` (low) – `3` (high) |
 | `tags` | no | Comma-separated tags (e.g. `"kitchen,daily"`) |
 | `reminders` | no | Minute offsets before the due moment, comma-separated or list (e.g. `"60, 0"`; `0` = at due time). An explicitly empty value creates the task without reminders even when the list has default reminders |
+| `sub_tasks` | no | Sub-task titles as a list (e.g. `["Milk", "Bread"]`), created unchecked |
 
 #### `home_tasks.add_task_from_text`
 
@@ -640,7 +641,7 @@ with `response_variable`.
 Returns `list_name`, the list's fixed tags as `tag_catalog`, and `tasks`, in the card's order; each task has `id`,
 `title`, `completed`, `completed_at`, `due_date`, `due_time`,
 `assigned_person`, `tags`, `priority`, `notes`, `section_id`, `sub_items`
-(`title`, `completed`) and `recurrence_enabled`.
+(`id`, `title`, `completed`) and `recurrence_enabled`.
 
 A badge count of *my* tasks due today, as a trigger-based template sensor:
 
@@ -733,6 +734,35 @@ Target by single task, person, tag, or a combination.
 | `task_title` | ** | Title of the task |
 | `task_id` | ** | UUID of the task |
 | `person` | yes | Person entity ID |
+
+#### `home_tasks.add_sub_task` / `update_sub_task` / `remove_sub_task`
+
+Manage a task's sub-tasks, the same as the card does. On a linked Todoist
+list they are Todoist's own sub-tasks; on other linked lists Home Tasks keeps
+them. `add_sub_task` returns (with `response_variable`) `task_id` and the new
+`sub_task_id`.
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `list_name` / `entry_id` / `entity_id` | * | The list, as for `add_task` |
+| `task_title` | ** | Title of the task |
+| `task_id` | ** | ID of the task |
+| `title` | add: yes, update: no | The sub-task's title; for `update_sub_task` its new title |
+| `sub_task_title` | update/remove | Current title of the sub-task (case-insensitive) |
+| `sub_task_id` | update/remove | ID of the sub-task, as `get_tasks` returns it (alternative to `sub_task_title`) |
+| `completed` | no | `update_sub_task` only: `true` checks it off, `false` unchecks it |
+
+When two sub-tasks share a title, `update_sub_task` changes the one not yet in
+the requested state — ticking "Milk" twice ticks both.
+
+```yaml
+- action: home_tasks.update_sub_task
+  data:
+    list_name: Household
+    task_title: Groceries
+    sub_task_title: Milk
+    completed: true
+```
 
 *\* Either `list_name` or `entry_id`. \*\* See individual service descriptions for required combinations.*
 
