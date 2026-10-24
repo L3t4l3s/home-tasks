@@ -95,6 +95,41 @@ def test_due_dates(spoken, expected) -> None:
     assert (parsed.title, parsed.due_date) == ("Renew the passport", expected)
 
 
+@pytest.mark.parametrize("spoken,expected", [
+    # issue #73
+    ("in 2 months", date(2026, 11, 28)),
+    ("in one month", date(2026, 10, 28)),
+    ("in a month", date(2026, 10, 28)),
+    ("in 60 days", date(2026, 11, 27)),
+    ("in sixty days", date(2026, 11, 27)),
+    ("in a year", date(2027, 9, 28)),
+    ("in 2 years", date(2028, 9, 28)),
+    ("in twelve days", date(2026, 10, 10)),
+    ("in twenty-one days", date(2026, 10, 19)),
+    ("in twenty one days", date(2026, 10, 19)),
+    ("in a hundred days", date(2027, 1, 6)),
+    ("in three hundred and sixty-five days", date(2027, 9, 28)),
+    ("in eighteen months", date(2028, 3, 28)),
+])
+def test_relative_dates(spoken, expected) -> None:
+    parsed = parse(f"Remind me to eat breakfast {spoken}")
+    assert (parsed.title, parsed.due_date) == ("Remind me to eat breakfast", expected)
+
+
+def test_months_keep_the_day_or_take_the_last_one() -> None:
+    jan_31 = datetime(2027, 1, 31, 10, 0)
+    assert parse("pay rent in a month", now=jan_31).due_date == date(2027, 2, 28)
+    assert parse("pay rent in 13 months", now=jan_31).due_date == date(2028, 2, 29)
+    assert parse("pay rent in a year", now=datetime(2028, 2, 29, 10, 0)).due_date == date(2029, 2, 28)
+
+
+def test_impossible_relative_dates_stay_in_the_title() -> None:
+    assert parse("plant a tree in 99999999 days").title == "Plant a tree in 99999999 days"
+    assert parse("plant a tree in 9999 years").due_date is None
+    assert parse("plant a tree in thousand days").due_date is None
+    assert parse("plant a tree in sixty twelve days").due_date is None
+
+
 def test_weekday_and_number_without_a_lead_in_stay_in_the_title() -> None:
     """Only today/tomorrow work bare; a weekday or a date needs "due", "on", …"""
     assert fields(parse("buy black friday deals"))[3] is None
@@ -162,6 +197,13 @@ def test_german_example() -> None:
     ("am Freitag", date(2026, 10, 2)), ("bis Freitag", date(2026, 10, 2)),
     ("nächsten Montag", date(2026, 10, 5)), ("in drei Tagen", date(2026, 10, 1)),
     ("in einer Woche", date(2026, 10, 5)), ("bis zum 5.10.", date(2026, 10, 5)),
+    ("in einem Monat", date(2026, 10, 28)), ("in zwei Monaten", date(2026, 11, 28)),
+    ("in einem Jahr", date(2027, 9, 28)), ("in zwei Jahren", date(2028, 9, 28)),
+    ("in zwölf Tagen", date(2026, 10, 10)), ("in einundzwanzig Tagen", date(2026, 10, 19)),
+    ("in sechzig Tagen", date(2026, 11, 27)), ("in dreißig Tagen", date(2026, 10, 28)),
+    ("in hundert Tagen", date(2027, 1, 6)), ("in einhundertelf Tagen", date(2027, 1, 17)),
+    ("in dreihundertfünfundsechzig Tagen", date(2027, 9, 28)),
+    ("in Achtzehn Monaten", date(2028, 3, 28)),
     ("am 24. Dezember", date(2026, 12, 24)), ("am 5. März", date(2027, 3, 5)),
 ])
 def test_german_dates(spoken, expected) -> None:

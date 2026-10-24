@@ -10,7 +10,7 @@ blueprint:
     sentence and in any order: a person ("for Anna" — only people that exist
     in Home Assistant), a priority ("with high priority"), a due date
     ("today", "tomorrow", "due Friday", "next Monday", "on 5 October",
-    "in 3 days") and a time ("at 5 pm", "at 17:30"). Whatever it does not
+    "in 3 days", "in 2 months") and a time ("at 5 pm", "at 17:30"). Whatever it does not
     recognise stays in the title. English and German words are built in.
 
     Works with any Assist device. With View Assist, it can also open the

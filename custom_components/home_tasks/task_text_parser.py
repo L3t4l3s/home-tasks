@@ -14,6 +14,7 @@ in the persons and the current local time.
 """
 from __future__ import annotations
 
+import calendar
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 import re
@@ -36,10 +37,22 @@ class ParsedTask:
 # Words per language.  Everything is matched case-insensitively.
 # ---------------------------------------------------------------------------
 
-_NUMBERS_EN = {"a": 1, "an": 1, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
-               "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10}
-_NUMBERS_DE = {"einem": 1, "einer": 1, "ein": 1, "eine": 1, "eins": 1, "zwei": 2, "drei": 3,
-               "vier": 4, "fünf": 5, "sechs": 6, "sieben": 7, "acht": 8, "neun": 9, "zehn": 10}
+# Spoken numbers up to 999.  "units" are the digits as they appear inside a
+# compound ("ein" in "einundzwanzig"), "small" what can stand alone below 20.
+_UNITS_EN = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+             "six": 6, "seven": 7, "eight": 8, "nine": 9}
+_SMALL_EN = {**_UNITS_EN, "a": 1, "an": 1, "ten": 10, "eleven": 11, "twelve": 12,
+             "thirteen": 13, "fourteen": 14, "fifteen": 15, "sixteen": 16,
+             "seventeen": 17, "eighteen": 18, "nineteen": 19}
+_TENS_EN = {"twenty": 20, "thirty": 30, "forty": 40, "fifty": 50,
+            "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90}
+_UNITS_DE = {"ein": 1, "zwei": 2, "drei": 3, "vier": 4, "fünf": 5,
+             "sechs": 6, "sieben": 7, "acht": 8, "neun": 9}
+_SMALL_DE = {**_UNITS_DE, "eins": 1, "eine": 1, "einem": 1, "einer": 1,
+             "zehn": 10, "elf": 11, "zwölf": 12, "dreizehn": 13, "vierzehn": 14,
+             "fünfzehn": 15, "sechzehn": 16, "siebzehn": 17, "achtzehn": 18, "neunzehn": 19}
+_TENS_DE = {"zwanzig": 20, "dreißig": 30, "dreissig": 30, "vierzig": 40, "fünfzig": 50,
+            "sechzig": 60, "siebzig": 70, "achtzig": 80, "neunzig": 90}
 
 _LANG = {
     "en": {
@@ -59,8 +72,9 @@ _LANG = {
         "next": r"next",
         "this": r"this|coming",
         "in": r"in",
-        "days": r"days?", "weeks": r"weeks?",
-        "numbers": _NUMBERS_EN,
+        "days": r"days?", "weeks": r"weeks?", "month_unit": r"months?", "year_unit": r"years?",
+        "units": _UNITS_EN, "small": _SMALL_EN, "tens": _TENS_EN,
+        "hundred": "hundred", "and": "and",
         "weekdays": ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"),
         "months": ("january", "february", "march", "april", "may", "june", "july",
                    "august", "september", "october", "november", "december"),
@@ -84,8 +98,9 @@ _LANG = {
         "next": r"nächsten|nächster|nächste|kommenden|kommender|kommende",
         "this": r"diesen|dieser|diese",
         "in": r"in",
-        "days": r"tag(?:en)?", "weeks": r"wochen?",
-        "numbers": _NUMBERS_DE,
+        "days": r"tag(?:en)?", "weeks": r"wochen?", "month_unit": r"monat(?:en)?", "year_unit": r"jahr(?:en|e)?",
+        "units": _UNITS_DE, "small": _SMALL_DE, "tens": _TENS_DE,
+        "hundred": "hundert", "and": "und",
         "weekdays": ("montag", "dienstag", "mittwoch", "donnerstag", "freitag", "samstag", "sonntag"),
         "months": ("januar", "februar", "märz", "april", "mai", "juni", "juli",
                    "august", "september", "oktober", "november", "dezember"),
@@ -118,6 +133,29 @@ def supported_language(language: str | None) -> str:
 
 def _alts(words) -> str:
     return "|".join(re.escape(w) for w in sorted(words, key=len, reverse=True))
+
+
+def _number_pattern(lang: str) -> str:
+    """A spoken number from 1 to 999, as a regex without groups.
+
+    English writes it in words ("three hundred and sixty-five"), German in
+    one word with the units before the tens ("dreihundertfünfundsechzig").
+    """
+    w = _LANG[lang]
+    units = _alts(w["units"])
+    small, tens = _alts(w["small"]), _alts(w["tens"])
+    if lang == "de":
+        below_100 = r"(?:(?:" + units + r")und)?(?:" + tens + r")|" + small
+        return r"(?:(?:" + units + r")?hundert(?:und)?(?:" + below_100 + r")?|" + below_100 + r")"
+    below_100 = r"(?:" + tens + r")(?:[\s-]+(?:" + units + r"))?|" + small
+    return (r"(?:(?:(?:" + units + r"|a|an)\s+)?hundred(?:\s+(?:and\s+)?(?:" + below_100 + r"))?|"
+            + below_100 + r")")
+
+
+for _lang, _words in _LANG.items():
+    _words["number_re"] = _number_pattern(_lang)
+    _words["number_values"] = {**_words["small"], **_words["tens"], _words["hundred"]: 100}
+    _words["number_token_re"] = _alts([*_words["number_values"], _words["and"]])
 
 
 # ---------------------------------------------------------------------------
@@ -170,9 +208,30 @@ def _match_priority(text: str, words: dict):
 
 
 def _number(token: str, words: dict) -> int | None:
+    """Digits, or a spoken number up to 999 ("sixty-five", "einundzwanzig")."""
     if token.isdigit():
         return int(token)
-    return words["numbers"].get(token.lower())
+    token = token.lower()
+    if not re.fullmatch(words["number_re"], token):
+        return None
+    # The shape is checked above, so the parts just add up — except
+    # "hundred", which multiplies what came before it.
+    total = 0
+    for part in re.findall(words["number_token_re"], token):
+        if part == words["and"]:
+            continue
+        if part == words["hundred"]:
+            total = (total or 1) * 100
+        else:
+            total += words["number_values"][part]
+    return total
+
+
+def _add_months(day: date, months: int) -> date:
+    """Calendar months later; a day the target month lacks becomes its last."""
+    year, month = divmod(day.month - 1 + months, 12)
+    year += day.year
+    return date(year, month + 1, min(day.day, calendar.monthrange(year, month + 1)[1]))
 
 
 def _month_number(token: str, words: dict, lang: str) -> int | None:
@@ -230,14 +289,20 @@ def _match_date(text: str, words: dict, lang: str, today: date):
     if m:
         return m.start(), weekday_after(words["weekdays"].index(m.group("wd").lower()), False)
 
-    # "in 3 days" / "in a week" / "in zwei Wochen"
-    num = r"(?P<n>\d+|" + _alts(words["numbers"]) + r")"
-    m = _at_end(lead + r"?(?:" + words["in"] + r")\s+" + num + r"\s+(?P<unit>" + words["days"] + "|" + words["weeks"] + ")", text)
-    if m:
-        n = _number(m.group("n"), words)
-        if n is not None:
-            weeks = re.fullmatch(words["weeks"], m.group("unit"), re.IGNORECASE)
-            return m.start(), today + timedelta(days=n * (7 if weeks else 1))
+    # "in 3 days" / "in a week" / "in two months" / "in zwei Jahren"
+    num = r"(?P<n>\d+|" + words["number_re"] + r")"
+    unit_keys = ("days", "weeks", "month_unit", "year_unit")
+    units = "|".join(r"(?P<" + key + r">" + words[key] + r")" for key in unit_keys)
+    m = _at_end(lead + r"?(?:" + words["in"] + r")\s+" + num + r"\s+(?:" + units + r")", text)
+    n = _number(m.group("n"), words) if m else None
+    if n is not None:
+        try:
+            if m.group("month_unit") or m.group("year_unit"):
+                return m.start(), _add_months(today, n * (12 if m.group("year_unit") else 1))
+            else:
+                return m.start(), today + timedelta(days=n * (7 if m.group("weeks") else 1))
+        except (OverflowError, ValueError):
+            pass  # beyond year 9999 — not a date, stays in the title
 
     # Calendar dates — always behind a lead-in, so a number in a title stays put.
     month_word = r"(?P<month>[^\W\d_]{3,}\.?)"

@@ -129,7 +129,7 @@ action. It picks up, at the end of the sentence and in any order:
   or unique first name),
 - a **priority** — `with high priority`, `low priority`,
 - a **due date** — `today`, `tomorrow`, `due Friday`, `next Monday`,
-  `in 3 days`, `on 5 October`,
+  `in 3 days`, `in 2 months`, `in a year`, `on 5 October`,
 - a **time** — `at 5 pm`, `at 17:30`.
 
 What it doesn't recognise stays in the title, so "add task look for the keys"

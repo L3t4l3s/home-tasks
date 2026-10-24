@@ -604,11 +604,13 @@ keys" stays a title.
 |--------|-----------------------------|
 | Person — only people that exist, full or unique first name | `for Anna` / `für Anna` |
 | Priority | `with high priority`, `low priority`, `priority high` / `mit hoher Priorität`, `Priorität hoch` |
-| Due date | `today`, `tomorrow`, `the day after tomorrow`, `due Friday`, `next Monday`, `in 3 days`, `on 5 October` / `heute`, `morgen`, `übermorgen`, `am Freitag`, `nächsten Montag`, `in drei Tagen`, `am 5. Oktober`, `bis zum 5.10.` |
+| Due date | `today`, `tomorrow`, `the day after tomorrow`, `due Friday`, `next Monday`, `in 3 days`, `in two weeks`, `in a month`, `in a year`, `on 5 October` / `heute`, `morgen`, `übermorgen`, `am Freitag`, `nächsten Montag`, `in drei Tagen`, `in zwei Monaten`, `in einem Jahr`, `am 5. Oktober`, `bis zum 5.10.` |
 | Time (a time alone means today, or tomorrow if already past) | `at 5 pm`, `at 17:30`, `at noon` / `um 17 Uhr`, `um 9:30` |
 
 A weekday on its own ("due Friday", "am Freitag") is the next one, today
-included; "next Friday" is never today.
+included; "next Friday" is never today. Numbers can be digits or words up
+to 999 ("in sixty days", "in einundzwanzig Tagen"); "in a month" keeps the
+day of the month, or takes the month's last day when it has fewer.
 
 | Field | Required | Description |
 |-------|----------|-------------|
