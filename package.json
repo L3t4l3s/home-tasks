@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build:i18n": "node scripts/build-i18n.mjs",
     "test": "node --test --experimental-test-coverage tests-js/test_*.mjs",
     "test:nocov": "node --test tests-js/test_*.mjs"
   },

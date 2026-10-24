@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { loadCard, makeMockHass } from "./setup.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CARD = join(__dirname, "..", "custom_components", "home_tasks", "home-tasks-card.js");
@@ -15,8 +16,55 @@ function loadTranslations() {
   assert.ok(m, "could not locate _TRANSLATIONS object");
   // The literal is pure data (identifier keys + string values) from our own
   // source file — safe to evaluate to get the exact object.
-  return new Function("return " + m[1])();
+  const embedded = new Function("return " + m[1])();
+  const shared = JSON.parse(readFileSync(join(dirname(CARD), "ui_translations.json"), "utf8"));
+  assert.deepEqual(embedded, shared, "Run npm run build:i18n after editing shared translations");
+  return shared;
 }
+
+test("Brazilian Portuguese preserves interpolation placeholders", () => {
+  const t = loadTranslations();
+  assert.ok(t["pt-BR"], "Brazilian Portuguese block missing");
+  const placeholders = (value) => (value.match(/\{(?:\d+|value)\}|%s/g) || []).sort();
+  for (const [key, value] of Object.entries(t.en)) {
+    assert.deepEqual(placeholders(t["pt-BR"][key]), placeholders(value), key);
+  }
+});
+
+test("Brazilian Portuguese integration translation covers the English config flow", () => {
+  const folder = join(__dirname, "..", "custom_components", "home_tasks", "translations");
+  const english = JSON.parse(readFileSync(join(folder, "en.json"), "utf8"));
+  const portuguese = JSON.parse(readFileSync(join(folder, "pt-BR.json"), "utf8"));
+  function check(source, translated, path = "") {
+    assert.deepEqual(Object.keys(translated).sort(), Object.keys(source).sort(), path);
+    for (const [key, value] of Object.entries(source)) {
+      if (typeof value === "object") check(value, translated[key], `${path}.${key}`);
+      else assert.ok(typeof translated[key] === "string" && translated[key].trim(), `${path}.${key}`);
+    }
+  }
+  check(english, portuguese);
+});
+
+test("card and editor resolve pt-BR from the HA profile and retain other languages", async () => {
+  const { HomeTasksCard, window } = await loadCard({ force: true });
+  const card = new HomeTasksCard();
+  const Editor = window.customElements.get("home-tasks-card-editor");
+  const editor = new Editor();
+  for (const element of [card, editor]) {
+    // Avoid a data load: only the real locale/translation methods are exercised.
+    element._hass = makeMockHass({ language: "en", locale: { language: "pt-BR" } });
+    assert.equal(element._t("ed_defaults_saved"), "Salvo");
+    assert.equal(element._t("ed_share_images"), "Compartilhar imagens com outras listas");
+    assert.equal(element._t("hist_by_user"), "Usuário");
+    assert.equal(element._t("progress", 2, 5), "2 de 5 concluídas");
+    element._hass = makeMockHass({ language: "pt-BR" });
+    assert.equal(element._t("my_tasks"), "Minhas tarefas");
+    element._hass = makeMockHass({ language: "pt" });
+    assert.equal(element._t("ed_defaults_saved"), "Guardado");
+    element._hass = makeMockHass({ language: "en" });
+    assert.equal(element._t("my_tasks"), "My Tasks");
+  }
+});
 
 test("every language defines the same keys as English (no silent fallback)", () => {
   const t = loadTranslations();
