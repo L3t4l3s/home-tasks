@@ -449,6 +449,12 @@ def _on_task_completed(
         # so the time moves with it (the next completion anchors on it).
         if task.get("recurrence_unit") == "hours" and _is_due_anchored(task, "hours"):
             task["due_time"] = local_target.strftime("%H:%M")
+        # Remember the occurrence we advanced FROM so a manual un-tick can undo
+        # it: completing accidentally then reopening must not leave the task
+        # stuck a cycle ahead (see Store._rollback_advanced_due). Cleared by the
+        # scheduled recurrence reopen, which makes this advance the real one.
+        task["pre_advance_due_date"] = old_due_date
+        task["pre_advance_due_time"] = old_due_time
         _record_auto_advance_history(
             task,
             old_due_date, task["due_date"],
@@ -1311,6 +1317,7 @@ async def _async_reopen_task(hass: HomeAssistant, entry_id: str, task_id: str) -
         task_id,
         new_due_date=None,           # leave due_date as-is
         new_due_time=_REOPEN_UNCHANGED,  # and due_time too
+        scheduled=True,
     )
     _LOGGER.info("Recurring task '%s' reopened", task.get("title", task_id))
 

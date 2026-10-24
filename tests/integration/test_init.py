@@ -121,6 +121,101 @@ async def test_recurrence_timer_reopens_task(hass: HomeAssistant, mock_config_en
     assert store.get_task(task["id"])["completed"] is False
 
 
+async def test_manual_reopen_rolls_back_completion_due_advance(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """A manual un-tick undoes the due_date advance completion made, so an
+    accidental complete-then-reopen is a no-op on the due date."""
+    task = await store.async_add_task("Weekly shop")
+    await store.async_update_task(
+        task["id"],
+        due_date="2026-10-24",
+        recurrence_enabled=True,
+        recurrence_unit="weeks",
+        recurrence_value=1,
+        recurrence_weekdays=[5],  # Saturday
+    )
+    original_due = store.get_task(task["id"])["due_date"]
+
+    # Completing advances the due date to the next occurrence and stashes the one
+    # it advanced from.
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+    advanced = store.get_task(task["id"])
+    assert advanced["completed"] is True
+    assert advanced["due_date"] != original_due
+    assert advanced["pre_advance_due_date"] == original_due
+
+    # A manual reopen (named actor) rolls the due date back and clears the stash.
+    await store.async_update_task(task["id"], completed=False, actor="tester")
+    await hass.async_block_till_done()
+    reopened = store.get_task(task["id"])
+    assert reopened["completed"] is False
+    assert reopened["due_date"] == original_due
+    assert "pre_advance_due_date" not in reopened
+
+
+async def test_scheduled_reopen_keeps_completion_due_advance(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """The recurrence scheduler's own reopen keeps the advanced due date — only
+    a manual un-tick rolls it back."""
+    task = await store.async_add_task("Weekly shop")
+    await store.async_update_task(
+        task["id"],
+        due_date="2026-10-24",
+        recurrence_enabled=True,
+        recurrence_unit="weeks",
+        recurrence_value=1,
+        recurrence_weekdays=[5],
+    )
+    original_due = store.get_task(task["id"])["due_date"]
+
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+    advanced_due = store.get_task(task["id"])["due_date"]
+    assert advanced_due != original_due
+
+    # Scheduler reopen keeps the advance, just drops the stash.
+    await store.async_reopen_task(task["id"], scheduled=True)
+    reopened = store.get_task(task["id"])
+    assert reopened["completed"] is False
+    assert reopened["due_date"] == advanced_due
+    assert "pre_advance_due_date" not in reopened
+
+
+async def test_reopen_without_user_rolls_back_completion_due_advance(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """An automation's reopen_task call carries no user (actor=None) but is
+    still a manual reopen, so it rolls the due date back too."""
+    task = await store.async_add_task("Weekly shop")
+    await store.async_update_task(
+        task["id"],
+        due_date="2026-10-24",
+        recurrence_enabled=True,
+        recurrence_unit="weeks",
+        recurrence_value=1,
+        recurrence_weekdays=[5],
+    )
+    original_due = store.get_task(task["id"])["due_date"]
+
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+    assert store.get_task(task["id"])["due_date"] != original_due
+
+    await hass.services.async_call(
+        DOMAIN,
+        "reopen_task",
+        {"list_name": "Test List", "task_id": task["id"]},
+        blocking=True,
+    )
+    reopened = store.get_task(task["id"])
+    assert reopened["completed"] is False
+    assert reopened["due_date"] == original_due
+    assert "pre_advance_due_date" not in reopened
+
+
 async def test_unload_entry_cleans_up(hass: HomeAssistant, mock_config_entry) -> None:
     """Unloading a config entry removes the store from hass.data."""
     entry_id = mock_config_entry.entry_id
