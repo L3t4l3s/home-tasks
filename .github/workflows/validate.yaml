@@ -23,3 +23,21 @@ jobs:
       - uses: actions/checkout@v5
       - name: Hassfest Validation
         uses: home-assistant/actions/hassfest@master
+
+  test-card:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm install --no-audit --no-fund
+      # The card embeds a copy of ui_translations.json; a forgotten build
+      # would ship the card with the old strings.
+      - name: Card translations match ui_translations.json
+        run: |
+          npm run build:i18n
+          git diff --exit-code -- custom_components/home_tasks/home-tasks-card.js \
+            || { echo "::error::Run npm run build:i18n and commit the card"; exit 1; }
+      - name: Card tests
+        run: npm run test:nocov
