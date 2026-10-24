@@ -858,6 +858,10 @@ class HomeTasksStore:
             and any(k in kwargs for k in _SCHEDULE_FIELDS)
             and self.on_task_schedule_changed
         ):
+            # A deliberate due/recurrence edit while completed takes ownership of
+            # the dates, so a later reopen must not roll them back to the
+            # pre-completion occurrence.
+            self._clear_advance_stash(task)
             self.on_task_schedule_changed(task)
         if any(k in kwargs for k in _HISTORY_FIELDS) or "completed" in kwargs:
             self._record_history(task, snapshot, kwargs, actor)
@@ -910,6 +914,42 @@ class HomeTasksStore:
         if "recurrence_max_count" in kwargs and "recurrence_remaining_count" not in kwargs:
             task["recurrence_remaining_count"] = task.get("recurrence_max_count")
 
+    @staticmethod
+    def _clear_advance_stash(task: dict) -> None:
+        """Drop the pre-completion due-date stash without restoring it.
+
+        Used by the scheduled recurrence reopen, where the advance made at
+        completion time IS the task's real next occurrence."""
+        task.pop("pre_advance_due_date", None)
+        task.pop("pre_advance_due_time", None)
+
+    @staticmethod
+    def _rollback_advanced_due(task: dict) -> None:
+        """Undo a completion's due-date advance when that completion is manually
+        reopened.
+
+        Completing a recurring task rolls due_date/due_time forward to the next
+        occurrence (see _on_task_completed). A manual un-tick means the
+        completion was undone, so the forward roll must be undone too —
+        otherwise an accidental tick-then-untick leaves the task stuck a cycle
+        ahead. A no-op when there is nothing stashed (non-recurring tasks, or a
+        reopen not following an auto-advance)."""
+        if "pre_advance_due_date" not in task:
+            return
+        old_date = task.pop("pre_advance_due_date")
+        old_time = task.pop("pre_advance_due_time", None)
+        now = datetime.now(timezone.utc).isoformat()
+        hist = task.setdefault("history", [])
+        if task.get("due_date") != old_date:
+            hist.append({"ts": now, "action": "updated", "field": "due_date",
+                         "from": task.get("due_date"), "to": old_date, "by": "recurrence"})
+        if task.get("due_time") != old_time:
+            hist.append({"ts": now, "action": "updated", "field": "due_time",
+                         "from": task.get("due_time"), "to": old_time, "by": "recurrence"})
+        _trim_history(hist)
+        task["due_date"] = old_date
+        task["due_time"] = old_time
+
     def _handle_completion_transition(
         self, task: dict, snapshot: dict, kwargs: dict,
         actor: str | None = None, actor_user_id: str | None = None,
@@ -931,6 +971,10 @@ class HomeTasksStore:
         elif not is_completed and was_completed:
             task["completed_at"] = None
             task["reopen_at"] = None  # manual reopen — pending schedule is void
+            # update_task is only ever user/automation driven (the recurrence
+            # timer reopens via async_reopen_task(scheduled=True)), so this
+            # reopen always undoes the completion's due-date advance.
+            self._rollback_advanced_due(task)
             if self.on_task_reopened:
                 self.on_task_reopened(task)
 
@@ -1005,13 +1049,15 @@ class HomeTasksStore:
         actor: str | None = None,
         new_due_date: str | None = None,
         new_due_time: object = _REOPEN_UNCHANGED,
+        scheduled: bool = False,
     ) -> dict:
         """Reopen a completed task and reset its sub-tasks.
 
-        actor=None means triggered by the recurrence scheduler.
-        actor="name" means triggered by a user or automation.
+        actor=None means triggered by the recurrence scheduler or by an
+        automation without a user; actor="name" means triggered by a user.
         new_due_date: if set, update the task's due_date.
         new_due_time: if not _REOPEN_UNCHANGED, update the task's due_time.
+        scheduled: True when the recurrence timer reopens the task.
         """
         task = self.get_task(task_id)
         if not task.get("completed"):
@@ -1020,6 +1066,14 @@ class HomeTasksStore:
         task["completed"] = False
         task["completed_at"] = None
         task["reopen_at"] = None  # consumed — the completed→reopen window is over
+        # The recurrence timer reopens the task for its real next occurrence,
+        # so the completion's advance stands; any other reopen undoes the
+        # completion, advance included. An explicit new_due_date below still
+        # wins over either.
+        if scheduled:
+            self._clear_advance_stash(task)
+        else:
+            self._rollback_advanced_due(task)
         if new_due_date is not None:
             task["due_date"] = new_due_date
         if new_due_time is not _REOPEN_UNCHANGED:
