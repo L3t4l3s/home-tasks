@@ -10,8 +10,13 @@ def load_ui_translations() -> dict[str, dict[str, str]]:
     return json.loads(Path(__file__).with_name("ui_translations.json").read_text(encoding="utf-8"))
 
 
+@lru_cache(maxsize=32)
 def get_ui_translation(language: str | None) -> dict[str, str]:
-    """Resolve regional locales and Norwegian aliases, then fall back to English."""
+    """Resolve regional locales and Norwegian aliases, then fall back to English.
+
+    Cached per language: the calendar asks once per event, and a month of an
+    hourly series is hundreds of them.  Callers only read the result.
+    """
     translations = load_ui_translations()
     language = (language or "en").replace("_", "-").casefold()
     locales = {key.casefold(): value for key, value in translations.items()}

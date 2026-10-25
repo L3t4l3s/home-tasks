@@ -21,11 +21,11 @@ from .image_queue import async_register_image_queue
 from homeassistant.util import dt as dt_util
 
 from .ui_translations import load_ui_translations
-from .const import DOMAIN, MAX_SUB_TASKS_PER_TASK, RECURRENCE_UNIT_SECONDS, VALID_MONTH_PATTERNS
+from .const import DOMAIN, MAX_SUB_TASKS_PER_TASK, MAX_TITLE_LENGTH, RECURRENCE_UNIT_SECONDS, VALID_MONTH_PATTERNS
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 from .overlay_store import ExternalTaskOverlayStore
-from .store import HomeTasksStore, _REOPEN_UNCHANGED, validate_reminders
+from .store import HomeTasksStore, _REOPEN_UNCHANGED, validate_reminders, validate_text
 from .websocket_api import async_move_task_any, async_register_websocket_commands
 
 _LOGGER = logging.getLogger(__name__)
@@ -833,17 +833,20 @@ def _recurrence_interval_minutes(task: dict) -> int | None:
     """
     unit = task.get("recurrence_unit")
     value = task.get("recurrence_value") or 1
+    if task.get("recurrence_type") == "weekdays":
+        # Legacy weekdays mode (unmigrated): weekly on the listed days, and
+        # it may carry no unit at all.
+        unit, value = "weeks", 1
     days = {"days": 1, "weeks": 7, "months": 28, "years": 365}
     if unit == "hours":
         return value * 60
     if unit not in days:
         return None
-    if unit == "weeks" or task.get("recurrence_type") == "weekdays":
-        weekdays = sorted(set(task.get("recurrence_weekdays") or []))
-        if len(weekdays) > 1:
-            gaps = [b - a for a, b in zip(weekdays, weekdays[1:])]
-            gaps.append(weekdays[0] + 7 - weekdays[-1])
-            return min(gaps) * 1440
+    weekdays = sorted(set(task.get("recurrence_weekdays") or []))
+    if unit == "weeks" and len(weekdays) > 1:
+        gaps = [b - a for a, b in zip(weekdays, weekdays[1:])]
+        gaps.append(weekdays[0] + 7 - weekdays[-1])
+        return min(gaps) * 1440
     return value * days[unit] * 1440
 
 
@@ -1942,15 +1945,32 @@ def _async_register_services(hass: HomeAssistant) -> None:
                 fields["reminders"] = data["reminders"]
             if "tags" in data:
                 fields["tags"] = _parse_service_tags(data["tags"])
+            # Checked before anything is created: the provider gets the task
+            # first and the sub-tasks one by one after it, so a bad title
+            # found halfway would leave a half-built task behind.
+            try:
+                sub_titles = [
+                    validate_text(t, MAX_TITLE_LENGTH, "Sub-task title")
+                    for t in data.get("sub_tasks") or []
+                ]
+            except ValueError as err:
+                raise ServiceValidationError(str(err)) from err
             new_uid = await async_create_external_task(hass, ident, fields)
-            sub_titles = data.get("sub_tasks") or []
             if sub_titles and not new_uid:
                 raise HomeAssistantError(
                     f"{ident} created the task but did not report its id; "
                     "its sub-tasks were not added"
                 )
-            for title in sub_titles:
-                await async_add_external_sub_task(hass, ident, new_uid, title)
+            for done, title in enumerate(sub_titles):
+                try:
+                    await async_add_external_sub_task(hass, ident, new_uid, title)
+                except Exception as err:
+                    # The provider can still fail (network, quota): say what
+                    # exists, so a retry doesn't create the task twice.
+                    raise HomeAssistantError(
+                        f"Created {data['title']!r} on {ident}, but only {done} of "
+                        f"{len(sub_titles)} sub-tasks: {err}"
+                    ) from err
             return kind, ident, new_uid
         # Everything goes in at creation (one task_created event, one
         # 'created' history entry, no intermediate bare state); the store
@@ -2119,11 +2139,18 @@ def _async_register_services(hass: HomeAssistant) -> None:
         await store.async_update_task(task["id"], actor=actor, **kwargs)
 
     async def _resolve_any_task(call: ServiceCall) -> tuple[str, str, object, dict]:
-        """The list and the task a call names, native or linked."""
+        """The list and the task a call names, native or linked.
+
+        A task that isn't there is a mistake in the call, reported like a
+        sub-task that isn't there — not as an unexpected error.
+        """
         kind, ident, store = _resolve_target(hass, call.data)
-        if kind == "external":
-            return kind, ident, store, await _resolve_external_task(hass, ident, call.data)
-        return kind, ident, store, _resolve_task(store, call.data)
+        try:
+            if kind == "external":
+                return kind, ident, store, await _resolve_external_task(hass, ident, call.data)
+            return kind, ident, store, _resolve_task(store, call.data)
+        except ValueError as err:
+            raise ServiceValidationError(str(err)) from err
 
     async def async_handle_add_sub_task(call: ServiceCall) -> ServiceResponse:
         """Add a sub-task to a task (issue #70) - the card's "+ sub-task"."""
@@ -2142,7 +2169,9 @@ def _async_register_services(hass: HomeAssistant) -> None:
 
         fields = {key: call.data[key] for key in ("title", "completed") if key in call.data}
         if not fields:
-            return
+            # Returning quietly would let a call with a wrong task or a
+            # template that rendered empty look like it worked.
+            raise ServiceValidationError("update_sub_task needs title and/or completed")
         kind, ident, store, task = await _resolve_any_task(call)
         sub = _resolve_sub_task(task, call.data, fields.get("completed"))
         if kind == "external":

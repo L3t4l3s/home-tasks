@@ -11,13 +11,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 import voluptuous as vol
 
-from tests.integration.test_services_external import (  # noqa: F401 — fixture
+from tests.integration.linked_list_helpers import (
     EXT_ENTITY,
     LIST_NAME,
-    _Adapter,
-    _call,
-    _overlay,
-    linked_list,
+    LinkedListAdapter,
+    call as _call,
+    overlay as _overlay,
 )
 
 pytestmark = pytest.mark.integration
@@ -156,7 +155,7 @@ async def test_add_task_with_sub_tasks_on_a_linked_list(hass: HomeAssistant, lin
 # Linked lists whose provider has sub-tasks of its own (Todoist)
 # ---------------------------------------------------------------------------
 
-class _SubTaskAdapter(_Adapter):
+class _SubTaskAdapter(LinkedListAdapter):
     def __init__(self, hass, entity_id: str) -> None:
         super().__init__(hass, entity_id)
         self.capabilities.can_sync_sub_items = True
@@ -205,3 +204,52 @@ async def test_a_provider_with_sub_tasks_gets_them(hass: HomeAssistant, linked_l
         ("add", "uid-new", "Milk"),
     ]
     assert not _overlay(hass, entry).get_overlay("uid-1").get("sub_items")
+
+
+# ---------------------------------------------------------------------------
+# Mistakes in the call (review of #70)
+# ---------------------------------------------------------------------------
+
+async def test_a_bad_sub_task_title_creates_nothing_on_a_linked_list(
+    hass: HomeAssistant, linked_list
+) -> None:
+    _entry, adapter = linked_list
+    with pytest.raises(ServiceValidationError, match="Sub-task title"):
+        await _call(hass, "add_task", list_name=LIST_NAME, title="Groceries", sub_tasks=["Milk", "x" * 300])
+    assert adapter.created == []
+
+
+async def test_a_provider_failing_halfway_says_what_exists(hass: HomeAssistant, linked_list) -> None:
+    from homeassistant.exceptions import HomeAssistantError
+
+    adapter = _SubTaskAdapter(hass, EXT_ENTITY)
+    hass.data[f"{DOMAIN}_adapters"][EXT_ENTITY] = adapter
+
+    async def flaky(task_uid, title):
+        if title == "Bread":
+            raise RuntimeError("quota exceeded")
+        adapter.sub_calls.append(("add", task_uid, title))
+        return "s-x"
+
+    adapter.async_add_sub_task = flaky
+    with pytest.raises(HomeAssistantError, match="only 1 of 2 sub-tasks: quota exceeded"):
+        await _call(hass, "add_task", list_name=LIST_NAME, title="Groceries", sub_tasks=["Milk", "Bread"])
+    assert adapter.sub_calls == [("add", "uid-new", "Milk")]
+
+
+async def test_update_sub_task_needs_something_to_change(hass: HomeAssistant, store) -> None:
+    await store.async_add_task("Groceries", sub_tasks=["Milk"])
+    with pytest.raises(ServiceValidationError, match="title and/or completed"):
+        await _call(hass, "update_sub_task", list_name=NATIVE, task_title="Grocries", sub_task_title="Milk")
+
+
+@pytest.mark.parametrize("service,extra", [
+    ("add_sub_task", {"title": "Eggs"}),
+    ("update_sub_task", {"sub_task_title": "Milk", "completed": True}),
+    ("remove_sub_task", {"sub_task_title": "Milk"}),
+])
+async def test_a_task_that_is_not_there_is_a_validation_error(
+    hass: HomeAssistant, store, service, extra
+) -> None:
+    with pytest.raises(ServiceValidationError, match="No task found with title: Nowhere"):
+        await _call(hass, service, list_name=NATIVE, task_title="Nowhere", **extra)

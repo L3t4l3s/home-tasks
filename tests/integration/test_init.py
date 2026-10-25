@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+import json
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -1660,21 +1662,30 @@ async def test_editing_the_lead_while_completed_rewrites_reopen_at(
     assert datetime.fromisoformat(store.get_task(stored["id"])["reopen_at"]) == _local(2026, 8, 10, 0, 0)
 
 
-@pytest.mark.parametrize("task,minutes", [
-    ({"recurrence_unit": "hours", "recurrence_value": 6}, 360),
-    ({"recurrence_unit": "days", "recurrence_value": 2}, 2 * 1440),
-    ({"recurrence_unit": "weeks", "recurrence_value": 2}, 14 * 1440),
-    # every week on Mon and Thu: the closest pair is Mon→Thu, three days
-    ({"recurrence_unit": "weeks", "recurrence_value": 1, "recurrence_weekdays": [3, 0]}, 3 * 1440),
-    ({"recurrence_unit": "weeks", "recurrence_value": 1, "recurrence_weekdays": [4]}, 7 * 1440),
-    ({"recurrence_unit": "months", "recurrence_value": 1}, 28 * 1440),
-    ({"recurrence_unit": "years", "recurrence_value": 1}, 365 * 1440),
-    ({"recurrence_unit": None}, None),
-])
-def test_recurrence_interval_minutes(task, minutes) -> None:
+# Shared with tests-js/test_recurrence_lead.mjs: the card caps the lead with
+# its own copy of this calculation, and both must agree.
+_INTERVAL_CASES = json.loads(
+    (Path(__file__).parents[1] / "fixtures" / "recurrence_interval_cases.json").read_text()
+)
+
+
+@pytest.mark.parametrize("case", _INTERVAL_CASES, ids=lambda c: f"{c['unit']}x{c['value']}{c['weekdays']}")
+def test_recurrence_interval_minutes(case) -> None:
     from custom_components.home_tasks import _recurrence_interval_minutes
 
-    assert _recurrence_interval_minutes(task) == minutes
+    task = {
+        "recurrence_unit": case["unit"], "recurrence_value": case["value"],
+        "recurrence_weekdays": case["weekdays"],
+    }
+    assert _recurrence_interval_minutes(task) == case["minutes"]
+
+
+def test_recurrence_interval_minutes_of_a_legacy_weekdays_task() -> None:
+    """Unmigrated weekdays mode carries no unit — still weekly on its days."""
+    from custom_components.home_tasks import _recurrence_interval_minutes
+
+    task = {"recurrence_type": "weekdays", "recurrence_unit": None, "recurrence_weekdays": [0, 3]}
+    assert _recurrence_interval_minutes(task) == 3 * 1440
 
 
 @pytest.mark.parametrize("bad", [-1, 1.5, True, "60", 365 * 1440 + 1])

@@ -1,0 +1,13 @@
+[
+  {"unit": "hours", "value": 6, "weekdays": [], "minutes": 360},
+  {"unit": "days", "value": 1, "weekdays": [], "minutes": 1440},
+  {"unit": "days", "value": 2, "weekdays": [], "minutes": 2880},
+  {"unit": "weeks", "value": 2, "weekdays": [], "minutes": 20160},
+  {"unit": "weeks", "value": 1, "weekdays": [3, 0], "minutes": 4320},
+  {"unit": "weeks", "value": 1, "weekdays": [4], "minutes": 10080},
+  {"unit": "weeks", "value": 1, "weekdays": [0, 1, 2, 3, 4], "minutes": 1440},
+  {"unit": "months", "value": 1, "weekdays": [], "minutes": 40320},
+  {"unit": "months", "value": 3, "weekdays": [2], "minutes": 120960},
+  {"unit": "years", "value": 1, "weekdays": [], "minutes": 525600},
+  {"unit": null, "value": 1, "weekdays": [], "minutes": null}
+]

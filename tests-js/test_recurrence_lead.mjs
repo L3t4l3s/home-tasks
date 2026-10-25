@@ -7,6 +7,7 @@
  */
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { loadCard } from './setup.mjs';
 
 async function makeCard(column = { list_id: 'L1' }) {
@@ -54,11 +55,30 @@ const tick = () => new Promise(r => setTimeout(r, 0));
 const leadSaves = (calls) => calls.filter(c => c.type === 'home_tasks/update_task' && 'recurrence_reopen_lead' in c);
 
 describe('reopen early', () => {
+  test('the interval matches the backend', async () => {
+    // Same cases as test_recurrence_interval_minutes in tests/integration/test_init.py.
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const cases = JSON.parse(readFileSync(new URL('../tests/fixtures/recurrence_interval_cases.json', import.meta.url), 'utf8'));
+    for (const c of cases) {
+      assert.equal(HomeTasksCard.recurrenceIntervalMinutes(c.unit, c.value, c.weekdays), c.minutes, JSON.stringify(c));
+    }
+  });
+
   test('the units fit the interval', async () => {
     const { card } = await makeCard();
-    assert.deepEqual(lead(card._buildRecurrenceSection(baseTask({ recurrence_unit: 'hours', recurrence_value: 6 }), 0)).units, ['minutes', 'hours']);
-    assert.deepEqual(lead(card._buildRecurrenceSection(baseTask({ recurrence_unit: 'days' }), 0)).units, ['hours', 'days']);
-    assert.deepEqual(lead(card._buildRecurrenceSection(baseTask({ recurrence_unit: 'months' }), 0)).units, ['hours', 'days']);
+    const units = (extra) => lead(card._buildRecurrenceSection(baseTask(extra), 0)).units;
+    assert.deepEqual(units({ recurrence_unit: 'hours', recurrence_value: 6 }), ['minutes', 'hours']);
+    assert.deepEqual(units({ recurrence_unit: 'days', recurrence_value: 2 }), ['hours', 'days']);
+    assert.deepEqual(units({ recurrence_unit: 'months' }), ['hours', 'days']);
+  });
+
+  test('a unit that could only hold 0 is not offered', async () => {
+    const { card } = await makeCard();
+    const units = (extra) => lead(card._buildRecurrenceSection(baseTask(extra), 0)).units;
+    assert.deepEqual(units({ recurrence_unit: 'days', recurrence_value: 1 }), ['hours']);
+    assert.deepEqual(units({ recurrence_unit: 'hours', recurrence_value: 1 }), ['minutes']);
+    // weekly on Mon..Fri: one day apart, so hours only
+    assert.deepEqual(units({ recurrence_weekdays: [0, 1, 2, 3, 4] }), ['hours']);
   });
 
   test('a stored lead shows in the largest unit that fits', async () => {

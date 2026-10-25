@@ -152,10 +152,15 @@ def _number_pattern(lang: str) -> str:
             + below_100 + r")")
 
 
-for _lang, _words in _LANG.items():
-    _words["number_re"] = _number_pattern(_lang)
-    _words["number_values"] = {**_words["small"], **_words["tens"], _words["hundred"]: 100}
-    _words["number_token_re"] = _alts([*_words["number_values"], _words["and"]])
+def _add_number_words() -> None:
+    """Derive each language's number regexes from its word lists, once."""
+    for lang, words in _LANG.items():
+        words["number_re"] = _number_pattern(lang)
+        words["number_values"] = {**words["small"], **words["tens"], words["hundred"]: 100}
+        words["number_token_re"] = _alts([*words["number_values"], words["and"]])
+
+
+_add_number_words()
 
 
 # ---------------------------------------------------------------------------

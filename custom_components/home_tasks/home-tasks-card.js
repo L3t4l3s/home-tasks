@@ -4601,6 +4601,25 @@ function listSupportsDueTime(info) {
 }
 
 class HomeTasksCard extends HTMLElement {
+  // The shortest gap between two occurrences, in minutes — what a reopen
+  // lead must stay below.  Must match _recurrence_interval_minutes in
+  // __init__.py; tests/fixtures/recurrence_interval_cases.json is checked
+  // against both.  A month counts as 28 days, a year as 365, and "weekly on
+  // Mon + Thu" as the 3 days from Mon to Thu.
+  static recurrenceIntervalMinutes(unit, value, weekdays = []) {
+    const n = Math.max(1, value || 1);
+    if (unit === "hours") return n * 60;
+    const days = { days: 1, weeks: 7, months: 28, years: 365 }[unit];
+    if (!days) return null;
+    const wd = [...new Set(weekdays)].sort((a, b) => a - b);
+    if (unit === "weeks" && wd.length > 1) {
+      const gaps = wd.slice(1).map((d, i) => d - wd[i]);
+      gaps.push(wd[0] + 7 - wd[wd.length - 1]);
+      return Math.min(...gaps) * 1440;
+    }
+    return n * days * 1440;
+  }
+
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -9105,21 +9124,15 @@ class HomeTasksCard extends HTMLElement {
     const leadSupported = !this._isExternalCol(colIdx);
     const LEAD_FACTORS = { minutes: 1, hours: 60, days: 1440 };
     let leadMinutes = Number.isInteger(task.recurrence_reopen_lead) ? task.recurrence_reopen_lead : 0;
-    // Mirrors _recurrence_interval_minutes in __init__.py: a month counts as
-    // 28 days, and "weekly on Mon + Thu" as the 3 days from Mon to Thu.
     const _intervalMinutes = () => {
       const unit = recurrenceUnitSelect.value || "days";
-      const val = Math.max(1, parseInt(recurrenceValueInput.value) || 1);
-      if (unit === "hours") return val * 60;
-      if (unit === "weeks" && weekPatOnRadio.checked) {
-        const wd = weekdayCheckboxes.map((cb, i) => cb.checked ? i : -1).filter(i => i >= 0);
-        if (wd.length > 1) {
-          const gaps = wd.slice(1).map((d, i) => d - wd[i]);
-          gaps.push(wd[0] + 7 - wd[wd.length - 1]);
-          return Math.min(...gaps) * 1440;
-        }
-      }
-      return val * ({ days: 1, weeks: 7, months: 28, years: 365 }[unit] || 1) * 1440;
+      // Weekdays only count while "On" is picked — otherwise they aren't saved.
+      const weekdays = (unit === "weeks" && weekPatOnRadio.checked)
+        ? weekdayCheckboxes.map((cb, i) => cb.checked ? i : -1).filter(i => i >= 0)
+        : [];
+      return HomeTasksCard.recurrenceIntervalMinutes(
+        unit, parseInt(recurrenceValueInput.value) || 1, weekdays,
+      ) || 1440;
     };
     const _leadMaxIn = (unit) => Math.floor((_intervalMinutes() - 1) / LEAD_FACTORS[unit]);
 
@@ -9131,7 +9144,10 @@ class HomeTasksCard extends HTMLElement {
     const leadSpinUp = this._el("button", { className: "spin-btn spin-up", textContent: "\u25b4", type: "button" });
     const leadSpinDown = this._el("button", { className: "spin-btn spin-down", textContent: "\u25be", type: "button" });
     const _fillLeadUnits = () => {
-      const units = recurrenceUnitSelect.value === "hours" ? ["minutes", "hours"] : ["hours", "days"];
+      const base = recurrenceUnitSelect.value === "hours" ? ["minutes", "hours"] : ["hours", "days"];
+      // Only units that can hold at least 1 below the interval: "days" on a
+      // daily task (or "hours" on an hourly one) could only ever be 0.
+      const units = base.filter((u, i) => i === 0 || _leadMaxIn(u) >= 1);
       // A stored lead only minutes can express (90 min on a daily task)
       // keeps its unit rather than being shown rounded.
       if (leadMinutes % LEAD_FACTORS[units[0]] !== 0) units.unshift("minutes");
