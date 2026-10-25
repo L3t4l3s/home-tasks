@@ -30,7 +30,7 @@ RECURRENCE_FIELDS = (
     "recurrence_weekdays", "recurrence_start_date", "recurrence_time",
     "recurrence_end_type", "recurrence_end_date", "recurrence_max_count",
     "recurrence_month_pattern", "recurrence_day_of_month", "recurrence_nth_week",
-    "recurrence_anniversary", "recurrence_anchor",
+    "recurrence_anniversary", "recurrence_anchor", "reopen_lead_days",
 )
 RECURRENCE_UNIT_SECONDS = {
     "hours": 3600,
@@ -40,6 +40,8 @@ RECURRENCE_UNIT_SECONDS = {
     "years": 31536000,  # 365 days
 }
 MAX_RECURRENCE_VALUE = 365
+# How many days before its due date a recurring task may reopen as "upcoming".
+MAX_REOPEN_LEAD_DAYS = 365
 
 VALID_MONTH_PATTERNS = ("day_of_month", "nth_weekday")
 VALID_NTH_WEEK = (1, 2, 3, 4, "last")
