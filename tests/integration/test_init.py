@@ -1,7 +1,7 @@
 """Tests for integration setup, services, events, and timer mechanics."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 import pytest
@@ -1571,64 +1571,118 @@ async def test_completion_persists_reopen_at(
         assert store.get_task(task["id"])["reopen_at"] is None
 
 
+async def _complete_with_lead(hass, store, lead: int, done_at: str, **recurrence) -> dict:
+    """A recurring task completed at *done_at* (UTC) with a reopen lead."""
+    from freezegun import freeze_time
+
+    fields = {
+        "due_date": "2026-08-05", "recurrence_enabled": True,
+        "recurrence_unit": "weeks", "recurrence_value": 1,
+        "recurrence_reopen_lead": lead, **recurrence,
+    }
+    with freeze_time(done_at):
+        task = await store.async_add_task("Food shop")
+        await store.async_update_task(task["id"], **fields)
+        await store.async_update_task(task["id"], completed=True)
+        await hass.async_block_till_done()
+        return dict(store.get_task(task["id"]))
+
+
+def _local(*args) -> datetime:
+    return datetime(*args, tzinfo=dt_util.DEFAULT_TIME_ZONE).astimezone(timezone.utc)
+
+
 async def test_reopen_lead_opens_before_due(
     hass: HomeAssistant, mock_config_entry, store
 ) -> None:
-    """reopen_lead_days pulls the reopen moment earlier than the due date so a
-    recurring task shows as 'upcoming' for the window, while due_date still
-    advances a full interval."""
-    from freezegun import freeze_time
-    from datetime import datetime as _dt, timezone as _tz
-
-    # 2026-08-05 is the due date; weekly recurrence advances it a full 7 days.
-    with freeze_time("2026-08-05 18:00:00+00:00"):
-        task = await store.async_add_task("Food shop")
-        await store.async_update_task(
-            task["id"],
-            due_date="2026-08-05",
-            recurrence_enabled=True,
-            recurrence_unit="weeks",
-            recurrence_value=1,
-            reopen_lead_days=6,
-        )
-        await store.async_update_task(task["id"], completed=True)
-        await hass.async_block_till_done()
-
-        stored = store.get_task(task["id"])
-        # due_date advances the full interval (unchanged by the lead)
-        assert stored["due_date"] == "2026-08-12"
-        # but it reopens 6 days earlier — the day after completion — not next week
-        reopen_at = _dt.fromisoformat(stored["reopen_at"])
-        expected = _dt(2026, 8, 6, 0, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE)
-        assert reopen_at == expected.astimezone(_tz.utc)
+    """recurrence_reopen_lead (minutes) pulls the reopen moment ahead of the
+    due date so a recurring task shows as 'upcoming' for the window, while
+    due_date still advances a full interval (PR #74)."""
+    stored = await _complete_with_lead(hass, store, 6 * 1440, "2026-08-05 18:00:00+00:00")
+    # due_date advances the full interval (unchanged by the lead) ...
+    assert stored["due_date"] == "2026-08-12"
+    # ... but it reopens 6 days earlier — the day after completion, not next week
+    assert datetime.fromisoformat(stored["reopen_at"]) == _local(2026, 8, 6, 0, 0)
 
 
-async def test_reopen_lead_clamped_to_completion(
+async def test_reopen_lead_in_minutes_on_an_hourly_series(
     hass: HomeAssistant, mock_config_entry, store
 ) -> None:
-    """A lead wider than the interval can't reopen in the past — it clamps to
-    the completion moment so the task is simply visible again right away."""
+    stored = await _complete_with_lead(
+        hass, store, 90, "2026-08-05 18:00:00+00:00", recurrence_unit="hours", recurrence_value=6,
+    )
+    # Next slot six hours after completion, visible again 90 minutes before it.
+    assert datetime.fromisoformat(stored["reopen_at"]) == datetime(2026, 8, 5, 22, 30, tzinfo=timezone.utc)
+
+
+@pytest.mark.parametrize("lead,unit,value", [
+    (7 * 1440, "weeks", 1),     # a week ahead of a weekly task
+    (30 * 1440, "weeks", 1),    # far wider than the interval
+    (6 * 60, "hours", 6),       # six hours ahead of a six-hourly task
+])
+async def test_reopen_lead_as_long_as_the_interval_is_ignored(
+    hass: HomeAssistant, mock_config_entry, store, lead, unit, value
+) -> None:
+    """Otherwise the task would reopen the moment it is ticked off — every
+    time — and could never be done."""
+    plain = await _complete_with_lead(
+        hass, store, 0, "2026-08-05 18:00:00+00:00", recurrence_unit=unit, recurrence_value=value,
+    )
+    led = await _complete_with_lead(
+        hass, store, lead, "2026-08-05 18:00:00+00:00", recurrence_unit=unit, recurrence_value=value,
+    )
+    assert led["reopen_at"] == plain["reopen_at"]
+    assert led["due_date"] == plain["due_date"]
+
+
+async def test_reopen_lead_after_a_late_completion_reopens_at_once(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Due-anchored weekly task done five days late: the next due date is two
+    days away, inside the six-day lead, so it is 'upcoming' right away."""
+    stored = await _complete_with_lead(
+        hass, store, 6 * 1440, "2026-08-10 18:00:00+00:00", recurrence_anchor="due",
+    )
+    assert stored["due_date"] == "2026-08-12"
+    assert datetime.fromisoformat(stored["reopen_at"]) == datetime(2026, 8, 10, 18, 0, tzinfo=timezone.utc)
+
+
+async def test_editing_the_lead_while_completed_rewrites_reopen_at(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
     from freezegun import freeze_time
-    from datetime import datetime as _dt
 
-    with freeze_time("2026-08-05 18:00:00+00:00"):
-        task = await store.async_add_task("Food shop")
-        await store.async_update_task(
-            task["id"],
-            due_date="2026-08-05",
-            recurrence_enabled=True,
-            recurrence_unit="weeks",
-            recurrence_value=1,
-            reopen_lead_days=30,  # far wider than the 7-day interval
-        )
-        await store.async_update_task(task["id"], completed=True)
+    stored = await _complete_with_lead(hass, store, 0, "2026-08-05 18:00:00+00:00")
+    assert datetime.fromisoformat(stored["reopen_at"]) == _local(2026, 8, 12, 0, 0)
+    with freeze_time("2026-08-06 09:00:00+00:00"):
+        await store.async_update_task(stored["id"], recurrence_reopen_lead=2 * 1440)
         await hass.async_block_till_done()
+    assert datetime.fromisoformat(store.get_task(stored["id"])["reopen_at"]) == _local(2026, 8, 10, 0, 0)
 
-        stored = store.get_task(task["id"])
-        assert stored["due_date"] == "2026-08-12"
-        # due-30d is well in the past, so reopen clamps to completion time
-        reopen_at = _dt.fromisoformat(stored["reopen_at"])
-        assert reopen_at == _dt.fromisoformat("2026-08-05 18:00:00+00:00")
+
+@pytest.mark.parametrize("task,minutes", [
+    ({"recurrence_unit": "hours", "recurrence_value": 6}, 360),
+    ({"recurrence_unit": "days", "recurrence_value": 2}, 2 * 1440),
+    ({"recurrence_unit": "weeks", "recurrence_value": 2}, 14 * 1440),
+    # every week on Mon and Thu: the closest pair is Mon→Thu, three days
+    ({"recurrence_unit": "weeks", "recurrence_value": 1, "recurrence_weekdays": [3, 0]}, 3 * 1440),
+    ({"recurrence_unit": "weeks", "recurrence_value": 1, "recurrence_weekdays": [4]}, 7 * 1440),
+    ({"recurrence_unit": "months", "recurrence_value": 1}, 28 * 1440),
+    ({"recurrence_unit": "years", "recurrence_value": 1}, 365 * 1440),
+    ({"recurrence_unit": None}, None),
+])
+def test_recurrence_interval_minutes(task, minutes) -> None:
+    from custom_components.home_tasks import _recurrence_interval_minutes
+
+    assert _recurrence_interval_minutes(task) == minutes
+
+
+@pytest.mark.parametrize("bad", [-1, 1.5, True, "60", 365 * 1440 + 1])
+async def test_reopen_lead_is_validated(hass: HomeAssistant, mock_config_entry, store, bad) -> None:
+    task = await store.async_add_task("Food shop")
+    assert task["recurrence_reopen_lead"] == 0
+    with pytest.raises(ValueError, match="recurrence_reopen_lead"):
+        await store.async_update_task(task["id"], recurrence_reopen_lead=bad)
 
 
 async def test_recover_daily_after_restart_no_double_advance(

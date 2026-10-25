@@ -63,6 +63,7 @@ const _TRANSLATIONS = {
     "recurrence": "Recurrence",
     "recurrence_enabled": "Enabled",
     "recurrence_every": "Every",
+    "rec_minutes": "Minutes",
     "rec_hours": "Hours",
     "rec_days": "Days",
     "rec_weeks": "Weeks",
@@ -229,6 +230,8 @@ const _TRANSLATIONS = {
     "rec_unit_lbl": "Unit",
     "rec_wd_lbl": "Weekday",
     "rec_at_lbl": "At",
+    "rec_lead_lbl": "Reopen early",
+    "rec_lead_hint": "Reopens the task this long before it is due again, so it shows as upcoming. 0 = when it is due.",
     "rec_todoist_pattern_unsupported": "Sub-patterns aren't supported when the interval is greater than 1.",
     "history": "History",
     "history_created": "Created",
@@ -375,6 +378,7 @@ const _TRANSLATIONS = {
     "recurrence": "Herhaling",
     "recurrence_enabled": "Ingeschakeld",
     "recurrence_every": "Elke",
+    "rec_minutes": "Minuten",
     "rec_hours": "Uren",
     "rec_days": "Dagen",
     "rec_weeks": "Weken",
@@ -533,6 +537,8 @@ const _TRANSLATIONS = {
     "rec_unit_lbl": "Eenheid",
     "rec_wd_lbl": "Weekdag",
     "rec_at_lbl": "Om",
+    "rec_lead_lbl": "Eerder heropenen",
+    "rec_lead_hint": "De taak wordt al zo lang voor de nieuwe deadline weer geopend, zodat hij als ‘binnenkort’ wordt weergegeven. 0 = op de deadline zelf.",
     "rec_todoist_pattern_unsupported": "Subpatronen werken niet als het interval groter is dan 1.",
     "history": "Geschiedenis",
     "history_created": "Aangemaakt",
@@ -653,6 +659,7 @@ const _TRANSLATIONS = {
     "recurrence": "Ricorrenza",
     "recurrence_enabled": "Attivata",
     "recurrence_every": "Ogni",
+    "rec_minutes": "Minuti",
     "rec_hours": "Ore",
     "rec_days": "Giorni",
     "rec_weeks": "Settimane",
@@ -811,6 +818,8 @@ const _TRANSLATIONS = {
     "rec_unit_lbl": "Unità",
     "rec_wd_lbl": "Giorno",
     "rec_at_lbl": "Alle",
+    "rec_lead_lbl": "Riapri in anticipo",
+    "rec_lead_hint": "Riapre l'attività con questo anticipo rispetto alla nuova scadenza, così viene visualizzata come \"in arrivo\". 0 = alla scadenza.",
     "rec_todoist_pattern_unsupported": "I sottoschemi non sono supportati con intervallo maggiore di 1.",
     "history": "Cronologia",
     "history_created": "Creato",
@@ -931,6 +940,7 @@ const _TRANSLATIONS = {
     "recurrence": "Powtarzanie",
     "recurrence_enabled": "Włączone",
     "recurrence_every": "Co",
+    "rec_minutes": "Minuty",
     "rec_hours": "Godziny",
     "rec_days": "Dni",
     "rec_weeks": "Tygodnie",
@@ -1089,6 +1099,8 @@ const _TRANSLATIONS = {
     "rec_unit_lbl": "Jednostka",
     "rec_wd_lbl": "Dzień tygodnia",
     "rec_at_lbl": "O",
+    "rec_lead_lbl": "Otwórz wcześniej",
+    "rec_lead_hint": "Ponownie otwiera zadanie na tyle wcześnie przed kolejnym terminem, że pojawia się ono jako „nadchodzące”. 0 = w momencie terminu.",
     "rec_todoist_pattern_unsupported": "Podwzorce nie są obsługiwane, gdy interwał jest większy niż 1.",
     "history": "Historia",
     "history_created": "Utworzono",
@@ -1209,6 +1221,7 @@ const _TRANSLATIONS = {
     "recurrence": "Upprepning",
     "recurrence_enabled": "Aktiverad",
     "recurrence_every": "Var",
+    "rec_minutes": "Minuter",
     "rec_hours": "Timmar",
     "rec_days": "Dagar",
     "rec_weeks": "Veckor",
@@ -1367,6 +1380,8 @@ const _TRANSLATIONS = {
     "rec_unit_lbl": "Enhet",
     "rec_wd_lbl": "Veckodag",
     "rec_at_lbl": "Kl.",
+    "rec_lead_lbl": "Öppna igen tidigt",
+    "rec_lead_hint": "Öppnar uppgiften på nytt så här långt innan den förfaller igen, så att den visas som kommande. 0 = när den förfaller.",
     "rec_todoist_pattern_unsupported": "Undermönster stöds inte när intervallet är större än 1.",
     "history": "Historik",
     "history_created": "Skapad",
@@ -1487,6 +1502,7 @@ const _TRANSLATIONS = {
     "recurrence": "Récurrence",
     "recurrence_enabled": "Activée",
     "recurrence_every": "Tous les",
+    "rec_minutes": "Minutes",
     "rec_hours": "Heures",
     "rec_days": "Jours",
     "rec_weeks": "Semaines",
@@ -1645,6 +1661,8 @@ const _TRANSLATIONS = {
     "rec_unit_lbl": "Unité",
     "rec_wd_lbl": "Jour",
     "rec_at_lbl": "À",
+    "rec_lead_lbl": "Réouverture anticipée",
+    "rec_lead_hint": "Rouvre la tâche ce délai avant sa prochaine échéance, pour qu'elle apparaisse « à venir ». 0 = à l'échéance.",
     "rec_todoist_pattern_unsupported": "Les sous-modèles ne sont pas pris en charge si l'intervalle est supérieur à 1.",
     "history": "Historique",
     "history_created": "Créé",
@@ -1765,6 +1783,7 @@ const _TRANSLATIONS = {
     "recurrence": "Recorrência",
     "recurrence_enabled": "Ativada",
     "recurrence_every": "A cada",
+    "rec_minutes": "Minutos",
     "rec_hours": "Horas",
     "rec_days": "Dias",
     "rec_weeks": "Semanas",
@@ -1923,6 +1942,8 @@ const _TRANSLATIONS = {
     "rec_unit_lbl": "Unidade",
     "rec_wd_lbl": "Dia da semana",
     "rec_at_lbl": "Às",
+    "rec_lead_lbl": "Reabrir mais cedo",
+    "rec_lead_hint": "Reabre a tarefa com esta antecedência em relação à data de vencimento, para que apareça como «em breve». 0 = na data de vencimento.",
     "rec_todoist_pattern_unsupported": "Subpadrões não são suportados quando o intervalo é maior que 1.",
     "history": "Histórico",
     "history_created": "Criado",
@@ -2043,6 +2064,7 @@ const _TRANSLATIONS = {
     "recurrence": "Recorrência",
     "recurrence_enabled": "Ativada",
     "recurrence_every": "A cada",
+    "rec_minutes": "Minutos",
     "rec_hours": "Horas",
     "rec_days": "Dias",
     "rec_weeks": "Semanas",
@@ -2201,6 +2223,8 @@ const _TRANSLATIONS = {
     "rec_unit_lbl": "Unidade",
     "rec_wd_lbl": "Dia da semana",
     "rec_at_lbl": "Às",
+    "rec_lead_lbl": "Reabrir mais cedo",
+    "rec_lead_hint": "Reabre a tarefa com essa antecedência em relação ao novo prazo, de modo que ela apareça como “em breve”. 0 = quando for o prazo.",
     "rec_todoist_pattern_unsupported": "Subpadrões não são suportados quando o intervalo é maior que 1.",
     "history": "Histórico",
     "history_created": "Criado",
@@ -2321,6 +2345,7 @@ const _TRANSLATIONS = {
     "recurrence": "Recurrencia",
     "recurrence_enabled": "Activada",
     "recurrence_every": "Cada",
+    "rec_minutes": "Minutos",
     "rec_hours": "Horas",
     "rec_days": "Días",
     "rec_weeks": "Semanas",
@@ -2479,6 +2504,8 @@ const _TRANSLATIONS = {
     "rec_unit_lbl": "Unidad",
     "rec_wd_lbl": "Día",
     "rec_at_lbl": "A las",
+    "rec_lead_lbl": "Reabrir antes",
+    "rec_lead_hint": "Vuelve a abrir la tarea con esta antelación respecto a la nueva fecha de vencimiento, para que aparezca como «próxima». 0 = cuando vence.",
     "rec_todoist_pattern_unsupported": "Los subpatrones no son compatibles cuando el intervalo es mayor que 1.",
     "history": "Historial",
     "history_created": "Creado",
@@ -2599,6 +2626,7 @@ const _TRANSLATIONS = {
     "recurrence": "Повторение",
     "recurrence_enabled": "Включено",
     "recurrence_every": "Каждые",
+    "rec_minutes": "Минуты",
     "rec_hours": "Часы",
     "rec_days": "Дни",
     "rec_weeks": "Недели",
@@ -2757,6 +2785,8 @@ const _TRANSLATIONS = {
     "rec_unit_lbl": "Единица",
     "rec_wd_lbl": "День недели",
     "rec_at_lbl": "В",
+    "rec_lead_lbl": "Открыть заранее",
+    "rec_lead_hint": "Снова открывает задачу за указанное время до срока, чтобы она отображалась как «предстоящая». 0 = в момент срока.",
     "rec_todoist_pattern_unsupported": "Субшаблоны не поддерживаются при интервале больше 1.",
     "history": "История",
     "history_created": "Создано",
@@ -2877,6 +2907,7 @@ const _TRANSLATIONS = {
     "recurrence": "Opakování",
     "recurrence_enabled": "Povoleno",
     "recurrence_every": "Každý",
+    "rec_minutes": "Minuty",
     "rec_hours": "Hodiny",
     "rec_days": "Dny",
     "rec_weeks": "Týdny",
@@ -3035,6 +3066,8 @@ const _TRANSLATIONS = {
     "rec_unit_lbl": "Jednotka",
     "rec_wd_lbl": "Den v týdnu",
     "rec_at_lbl": "V",
+    "rec_lead_lbl": "Otevřít dříve",
+    "rec_lead_hint": "Úkol se znovu otevře s tímto časovým předstihem před novým termínem splnění, takže se zobrazí jako nadcházející. 0 = v termínu splnění.",
     "rec_todoist_pattern_unsupported": "Podvzory nejsou podporovány, pokud je interval větší než 1.",
     "history": "Historie",
     "history_created": "Vytvořeno",
@@ -3155,6 +3188,7 @@ const _TRANSLATIONS = {
     "recurrence": "Gentagelse",
     "recurrence_enabled": "Aktiveret",
     "recurrence_every": "Hver",
+    "rec_minutes": "Minutter",
     "rec_hours": "Timer",
     "rec_days": "Dage",
     "rec_weeks": "Uger",
@@ -3313,6 +3347,8 @@ const _TRANSLATIONS = {
     "rec_unit_lbl": "Enhed",
     "rec_wd_lbl": "Ugedag",
     "rec_at_lbl": "Kl.",
+    "rec_lead_lbl": "Genåbn tidligt",
+    "rec_lead_hint": "Genåbner opgaven så længe før den forfalder igen, at den vises som »kommende«. 0 = når den forfalder.",
     "rec_todoist_pattern_unsupported": "Undermønstre understøttes ikke, når intervallet er større end 1.",
     "history": "Historik",
     "history_created": "Oprettet",
@@ -3433,6 +3469,7 @@ const _TRANSLATIONS = {
     "recurrence": "Gjentakelse",
     "recurrence_enabled": "Aktivert",
     "recurrence_every": "Hver",
+    "rec_minutes": "Minutter",
     "rec_hours": "Timer",
     "rec_days": "Dager",
     "rec_weeks": "Uker",
@@ -3591,6 +3628,8 @@ const _TRANSLATIONS = {
     "rec_unit_lbl": "Enhet",
     "rec_wd_lbl": "Ukedag",
     "rec_at_lbl": "Kl.",
+    "rec_lead_lbl": "Åpne igjen tidlig",
+    "rec_lead_hint": "Åpner oppgaven på nytt så lenge før den forfaller igjen, slik at den vises som «kommende». 0 = når den forfaller.",
     "rec_todoist_pattern_unsupported": "Undermønstre støttes ikke når intervallet er større enn 1.",
     "history": "Historikk",
     "history_created": "Opprettet",
@@ -3711,6 +3750,7 @@ const _TRANSLATIONS = {
     "recurrence": "Toistuvuus",
     "recurrence_enabled": "Käytössä",
     "recurrence_every": "Joka",
+    "rec_minutes": "Minuutit",
     "rec_hours": "Tunnit",
     "rec_days": "Päivät",
     "rec_weeks": "Viikot",
@@ -3869,6 +3909,8 @@ const _TRANSLATIONS = {
     "rec_unit_lbl": "Yksikkö",
     "rec_wd_lbl": "Viikonpäivä",
     "rec_at_lbl": "Klo",
+    "rec_lead_lbl": "Avaa uudelleen aikaisemmin",
+    "rec_lead_hint": "Avaa tehtävän uudelleen näin kauan ennen sen uutta määräaikaa, jolloin se näkyy tulevana. 0 = kun se erääntyy.",
     "rec_todoist_pattern_unsupported": "Alikaavat eivät ole tuettuja, kun aikaväli on suurempi kuin 1.",
     "history": "Historia",
     "history_created": "Luotu",
@@ -3989,6 +4031,7 @@ const _TRANSLATIONS = {
     "recurrence": "Ismétlés",
     "recurrence_enabled": "Engedélyezve",
     "recurrence_every": "Minden",
+    "rec_minutes": "Perc",
     "rec_hours": "Óra",
     "rec_days": "Nap",
     "rec_weeks": "Hét",
@@ -4147,6 +4190,8 @@ const _TRANSLATIONS = {
     "rec_unit_lbl": "Egység",
     "rec_wd_lbl": "Hét napja",
     "rec_at_lbl": "Időpont",
+    "rec_lead_lbl": "Korábbi újranyitás",
+    "rec_lead_hint": "Ennyivel a következő esedékesség előtt újra megnyitja a feladatot, így az hamarosan esedékesként jelenik meg. 0 = az esedékesség időpontjában.",
     "rec_todoist_pattern_unsupported": "Az almintázatok nem támogatottak, ha az időköz nagyobb mint 1.",
     "history": "Előzmények",
     "history_created": "Létrehozva",
@@ -4234,6 +4279,7 @@ const _TRANSLATIONS = {
     "recurrence": "Wiederholung",
     "recurrence_enabled": "Aktiviert",
     "recurrence_every": "Alle",
+    "rec_minutes": "Minuten",
     "rec_hours": "Stunden",
     "rec_days": "Tage",
     "rec_weeks": "Wochen",
@@ -4399,6 +4445,8 @@ const _TRANSLATIONS = {
     "rec_unit_lbl": "Einheit",
     "rec_wd_lbl": "Wochentag",
     "rec_at_lbl": "Um",
+    "rec_lead_lbl": "Früher öffnen",
+    "rec_lead_hint": "Öffnet die Aufgabe um diese Zeit vor der nächsten Fälligkeit wieder, damit sie als anstehend erscheint. 0 = erst bei Fälligkeit.",
     "rec_todoist_pattern_unsupported": "Untermuster sind nicht möglich, wenn das Intervall größer als 1 ist.",
     "history": "Verlauf",
     "history_created": "Erstellt",
@@ -9048,6 +9096,99 @@ class HomeTasksCard extends HTMLElement {
     const recMaxCountWithClear = this._el("div", { className: "field-with-clear" }, [recMaxCountWrap, recMaxCountClearBtn]);
     const recurrenceCountRow = this._el("div", { className: "recurrence-input-row" }, [recMaxCountWithClear, recRemainingSpan]);
 
+    // ---- Reopen ahead (PR #74) --------------------------------------------
+    // Show the task as open this long before its next due moment, as an
+    // upcoming to-do.  Stored in minutes; the unit picker offers what fits the
+    // interval (minutes/hours for hourly, hours/days otherwise).  A lead as
+    // long as the interval is never offered — the backend would ignore it.
+    // Native lists only: a linked list's reopen runs without it.
+    const leadSupported = !this._isExternalCol(colIdx);
+    const LEAD_FACTORS = { minutes: 1, hours: 60, days: 1440 };
+    let leadMinutes = Number.isInteger(task.recurrence_reopen_lead) ? task.recurrence_reopen_lead : 0;
+    // Mirrors _recurrence_interval_minutes in __init__.py: a month counts as
+    // 28 days, and "weekly on Mon + Thu" as the 3 days from Mon to Thu.
+    const _intervalMinutes = () => {
+      const unit = recurrenceUnitSelect.value || "days";
+      const val = Math.max(1, parseInt(recurrenceValueInput.value) || 1);
+      if (unit === "hours") return val * 60;
+      if (unit === "weeks" && weekPatOnRadio.checked) {
+        const wd = weekdayCheckboxes.map((cb, i) => cb.checked ? i : -1).filter(i => i >= 0);
+        if (wd.length > 1) {
+          const gaps = wd.slice(1).map((d, i) => d - wd[i]);
+          gaps.push(wd[0] + 7 - wd[wd.length - 1]);
+          return Math.min(...gaps) * 1440;
+        }
+      }
+      return val * ({ days: 1, weeks: 7, months: 28, years: 365 }[unit] || 1) * 1440;
+    };
+    const _leadMaxIn = (unit) => Math.floor((_intervalMinutes() - 1) / LEAD_FACTORS[unit]);
+
+    const leadInput = this._el("input", {
+      type: "number", "data-focus-key": "recurrence_reopen_lead",
+    });
+    leadInput.min = 0;
+    const leadUnitSelect = this._el("select", {});
+    const leadSpinUp = this._el("button", { className: "spin-btn spin-up", textContent: "\u25b4", type: "button" });
+    const leadSpinDown = this._el("button", { className: "spin-btn spin-down", textContent: "\u25be", type: "button" });
+    const _fillLeadUnits = () => {
+      const units = recurrenceUnitSelect.value === "hours" ? ["minutes", "hours"] : ["hours", "days"];
+      // A stored lead only minutes can express (90 min on a daily task)
+      // keeps its unit rather than being shown rounded.
+      if (leadMinutes % LEAD_FACTORS[units[0]] !== 0) units.unshift("minutes");
+      const pick = [...units].reverse().find(u => leadMinutes % LEAD_FACTORS[u] === 0) || units[0];
+      leadUnitSelect.replaceChildren(...units.map(u => {
+        const opt = this._el("option", { value: u, textContent: this._t(`rec_${u}`) });
+        if (u === pick) opt.selected = true;
+        return opt;
+      }));
+      leadInput.value = String(leadMinutes / LEAD_FACTORS[pick]);
+      leadInput.max = String(_leadMaxIn(pick));
+    };
+    const saveLead = () => {
+      const unit = leadUnitSelect.value;
+      const n = Math.min(Math.max(0, parseInt(leadInput.value) || 0), _leadMaxIn(unit));
+      leadInput.value = String(n);
+      leadInput.max = String(_leadMaxIn(unit));
+      if (n * LEAD_FACTORS[unit] === leadMinutes) return;
+      leadMinutes = n * LEAD_FACTORS[unit];
+      _saveAndReload(this._updateTaskRouted(colIdx, task.id, { recurrence_reopen_lead: leadMinutes }));
+    };
+    // A shorter interval can leave the lead as long as the interval itself;
+    // drop it with the same save rather than keep a value that does nothing.
+    const _leadFieldsAfterIntervalChange = () => {
+      if (!leadSupported) return {};
+      _fillLeadUnits();
+      if (leadMinutes > 0 && leadMinutes >= _intervalMinutes()) {
+        leadMinutes = 0;
+        _fillLeadUnits();
+        return { recurrence_reopen_lead: 0 };
+      }
+      return {};
+    };
+    leadSpinUp.addEventListener("click", () => {
+      leadInput.value = Math.min(_leadMaxIn(leadUnitSelect.value), (parseInt(leadInput.value) || 0) + 1);
+      leadInput.dispatchEvent(new Event("change"));
+    });
+    leadSpinDown.addEventListener("click", () => {
+      leadInput.value = Math.max(0, (parseInt(leadInput.value) || 0) - 1);
+      leadInput.dispatchEvent(new Event("change"));
+    });
+    const recurrenceLeadSection = this._el("div", { className: "recurrence-lead-section" }, [
+      this._el("div", { className: "recurrence-input-row" }, [
+        this._el("div", { className: "field-wrap inline" }, [
+          leadInput,
+          this._el("span", { textContent: this._t("rec_lead_lbl") }),
+          this._el("div", { className: "spin-btns" }, [leadSpinUp, leadSpinDown]),
+        ]),
+        this._el("div", { className: "sel-wrap inline" }, [
+          leadUnitSelect,
+          this._el("span", { textContent: this._t("rec_unit_lbl") }),
+        ]),
+      ]),
+      this._el("div", { className: "recurrence-note", textContent: this._t("rec_lead_hint") }),
+    ]);
+    if (!leadSupported) recurrenceLeadSection.style.display = "none";
+
     // For Todoist: hide start date + recurrence time row entirely —
     // the due date/time fields already control when the recurrence starts.
     const providerSyncsRecurrence = caps && caps.can_sync_recurrence;
@@ -9093,6 +9234,7 @@ class HomeTasksCard extends HTMLElement {
       recurrenceTimeRow.style.display = hideTime ? "none" : "";
       // Start date: hidden for Todoist (due_date drives the anchor).
       recurrenceStartDateRow.style.display = providerSyncsRecurrence ? "none" : "";
+      if (leadSupported) _fillLeadUnits();
     };
     applyRowVisibility(recurrenceUnit, recurrenceValue);
 
@@ -9147,6 +9289,10 @@ class HomeTasksCard extends HTMLElement {
       recurrenceMaxCountInput.disabled = !enabled;
       spinUp2.disabled = !enabled;
       spinDown2.disabled = !enabled;
+      leadInput.disabled = !enabled;
+      leadUnitSelect.disabled = !enabled;
+      leadSpinUp.disabled = !enabled;
+      leadSpinDown.disabled = !enabled;
       applyMonthPatternState();
       applyWeekPatternState();
       applyYearPatternState();
@@ -9263,6 +9409,7 @@ class HomeTasksCard extends HTMLElement {
       }
       _saveAndReload(this._updateTaskRouted(colIdx, task.id, {
         recurrence_weekdays: _activeWeekdaysForUnit(recurrenceUnitSelect.value),
+        ..._leadFieldsAfterIntervalChange(),
       }));
     };
 
@@ -9376,6 +9523,7 @@ class HomeTasksCard extends HTMLElement {
         fields.recurrence_end_date = null;
         fields.recurrence_end_type = "none";
       }
+      Object.assign(fields, _leadFieldsAfterIntervalChange());
       _saveAndReload(this._updateTaskRouted(colIdx, task.id, fields));
     };
 
@@ -9517,6 +9665,10 @@ class HomeTasksCard extends HTMLElement {
     recurrenceEndDateInput.addEventListener("keydown", (e) => { if (e.key === "Enter") recurrenceEndDateInput.blur(); });
     recurrenceMaxCountInput.addEventListener("change", saveEndCondition);
     recurrenceMaxCountInput.addEventListener("keydown", (e) => { if (e.key === "Enter") recurrenceMaxCountInput.blur(); });
+    leadInput.addEventListener("change", saveLead);
+    leadInput.addEventListener("keydown", (e) => { if (e.key === "Enter") leadInput.blur(); });
+    leadUnitSelect.addEventListener("change", saveLead);
+    _blurAfterChange(leadUnitSelect);
 
     return this._el("div", { className: "detail-section" }, [
       recurrenceToggleRow,
@@ -9527,6 +9679,7 @@ class HomeTasksCard extends HTMLElement {
       recurrenceYearRow,
       recurrenceTimeRow,
       recurrenceStartDateRow,
+      recurrenceLeadSection,
       recurrenceEndRow,
       recurrenceEndDateWrap,
       recurrenceCountRow,
@@ -11316,7 +11469,7 @@ class HomeTasksCard extends HTMLElement {
         pointer-events: none;
       }
       .field-wrap.year-day:not(.has-value)::after { display: none; }
-      .recurrence-todoist-note {
+      .recurrence-todoist-note, .recurrence-note {
         font-size: 11px; color: var(--secondary-text-color);
         font-style: italic; margin-top: 4px;
       }

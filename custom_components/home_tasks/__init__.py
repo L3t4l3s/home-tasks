@@ -395,9 +395,9 @@ def _on_task_completed(
     reopen_target = None
     if task.get("recurrence_enabled"):
         target = _compute_next_reopen_target(task, completed_at)
-        # reopen_lead_days pulls the REOPEN moment earlier than the due target,
-        # so the task shows as "upcoming" ahead of its due date. The due_date
-        # advance below still uses the un-shifted target.
+        # recurrence_reopen_lead pulls the REOPEN moment earlier than the due
+        # target, so the task shows as "upcoming" ahead of its due date. The
+        # due_date advance below still uses the un-shifted target.
         reopen_target = _apply_reopen_lead(task, target, completed_at)
         # Persist the reopen moment on the task.  The in-memory timer dies
         # with HA; after a restart this field is the *authoritative* target
@@ -824,34 +824,57 @@ def _apply_start_date(task: dict, target: datetime) -> datetime:
     return target
 
 
+def _recurrence_interval_minutes(task: dict) -> int | None:
+    """The shortest gap between two occurrences, in minutes.
+
+    Nominal, not calendar-exact: a month counts as 28 days, a year as 365,
+    and "every week on Mon and Thu" as the 3 days from Mon to Thu.  It only
+    has to tell whether a reopen lead fits inside the interval.
+    """
+    unit = task.get("recurrence_unit")
+    value = task.get("recurrence_value") or 1
+    days = {"days": 1, "weeks": 7, "months": 28, "years": 365}
+    if unit == "hours":
+        return value * 60
+    if unit not in days:
+        return None
+    if unit == "weeks" or task.get("recurrence_type") == "weekdays":
+        weekdays = sorted(set(task.get("recurrence_weekdays") or []))
+        if len(weekdays) > 1:
+            gaps = [b - a for a, b in zip(weekdays, weekdays[1:])]
+            gaps.append(weekdays[0] + 7 - weekdays[-1])
+            return min(gaps) * 1440
+    return value * days[unit] * 1440
+
+
 def _apply_reopen_lead(
     task: dict, due_target: datetime | None, completed_at: datetime
 ) -> datetime | None:
-    """Shift the reopen moment `reopen_lead_days` days before the due target.
+    """Move the reopen moment `recurrence_reopen_lead` minutes before the due target.
 
     A recurring task normally reopens (completed -> False) exactly at its next
     due moment, so it stays hidden as "Done" for the whole interval. With a
-    lead > 0 it reopens that many days earlier — at the recurrence time of day
-    — so it shows as an upcoming to-do ahead of its due date. The *due target
-    itself is untouched*; only when the task becomes visible again moves.
+    lead it reopens that much earlier and shows as an upcoming to-do ahead of
+    its due date. The *due target itself is untouched*; only when the task
+    becomes visible again moves.
 
-    Clamped so it never reopens before completion: if the lead is wider than
-    the gap to the due target, the window has already begun and the task
-    reopens as soon as it was completed rather than at a moment in the past.
+    A lead as long as the interval or longer is ignored: the task would
+    reopen the moment it is ticked off, every time, and could never be done.
+    A shorter lead that still reaches back before this completion (it was
+    done late) reopens it right away — the "upcoming" window has begun.
     """
     if due_target is None:
         return None
-    try:
-        lead = int(task.get("reopen_lead_days") or 0)
-    except (TypeError, ValueError):
-        lead = 0
-    if lead <= 0:
+    lead = task.get("recurrence_reopen_lead") or 0
+    if not isinstance(lead, int) or lead <= 0:
         return due_target
-    t_h, t_m = _parse_rec_time(task)
+    interval = _recurrence_interval_minutes(task)
+    if interval is not None and lead >= interval:
+        return due_target
+    # Wall-clock arithmetic in local time: "1 day before Sunday 20:00" is
+    # Saturday 20:00 also across a DST switch.
     local_due = due_target.astimezone(dt_util.DEFAULT_TIME_ZONE)
-    reopen = _set_local_time(local_due - timedelta(days=lead), t_h, t_m).astimezone(
-        timezone.utc
-    )
+    reopen = (local_due - timedelta(minutes=lead)).astimezone(timezone.utc)
     return reopen if reopen > completed_at else completed_at
 
 
