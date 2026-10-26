@@ -236,7 +236,17 @@ Task titles, notes, and tags are kept exactly as entered.
 
 ## Installation
 
-### HACS (recommended)
+### Marketplace (Home Assistant 2026.11 and newer, recommended)
+
+Home Tasks is in the catalog of the Marketplace that is built into Home Assistant.
+
+1. Go to **Settings** → **Marketplace** and search for **Home Tasks**
+2. Click **Download**
+3. Set it up as described under [Setup](#setup) — a first install needs no restart; after an update, Home Assistant offers the restart as a repair
+
+An existing HACS installation carries over when you update to 2026.11: Home Tasks stays installed and keeps getting its updates through the Marketplace.
+
+### HACS (Home Assistant before 2026.11)
 
 Home Tasks is available in the HACS default repository.
 
