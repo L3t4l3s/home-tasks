@@ -291,7 +291,7 @@ const _TRANSLATIONS = {
     "calendar_days_before": "{value}d before",
     "section_label": "Section",
     "ed_show_section": "Section field",
-    "ed_list_columns": "Columns",
+    "ed_list_columns": "Task columns",
     "ed_tile_size": "Tile size",
     "ed_tile_size_default": "Default",
     "ed_tile_size_small": "Small",
@@ -581,7 +581,7 @@ const _TRANSLATIONS = {
     "calendar_days_before": "{value} dagen van tevoren",
     "ed_show_section": "Sectieveld",
     "section_label": "Sectie",
-    "ed_list_columns": "Kolommen",
+    "ed_list_columns": "Takenkolommen",
     "ed_tile_size": "Tegelgrootte",
     "ed_tile_size_default": "Standaard",
     "ed_tile_size_small": "Klein",
@@ -871,7 +871,7 @@ const _TRANSLATIONS = {
     "calendar_days_before": "{value} giorni prima",
     "ed_show_section": "Campo sezione",
     "section_label": "Sezione",
-    "ed_list_columns": "Colonne",
+    "ed_list_columns": "Colonne di attività",
     "ed_tile_size": "Dimensione caselle",
     "ed_tile_size_default": "Predefinita",
     "ed_tile_size_small": "Piccola",
@@ -1161,7 +1161,7 @@ const _TRANSLATIONS = {
     "calendar_days_before": "{value} dni przed",
     "ed_show_section": "Pole sekcji",
     "section_label": "Sekcja",
-    "ed_list_columns": "Kolumny",
+    "ed_list_columns": "Kolumny zadań",
     "ed_tile_size": "Rozmiar kafelków",
     "ed_tile_size_default": "Domyślny",
     "ed_tile_size_small": "Mały",
@@ -1451,7 +1451,7 @@ const _TRANSLATIONS = {
     "calendar_days_before": "{value} dagar innan",
     "ed_show_section": "Avsnittsfält",
     "section_label": "Avsnitt",
-    "ed_list_columns": "Kolumner",
+    "ed_list_columns": "Uppgiftskolumner",
     "ed_tile_size": "Rutstorlek",
     "ed_tile_size_default": "Standard",
     "ed_tile_size_small": "Liten",
@@ -1741,7 +1741,7 @@ const _TRANSLATIONS = {
     "calendar_days_before": "{value} j avant",
     "ed_show_section": "Champ de section",
     "section_label": "Section",
-    "ed_list_columns": "Colonnes",
+    "ed_list_columns": "Colonnes de tâches",
     "ed_tile_size": "Taille des tuiles",
     "ed_tile_size_default": "Par défaut",
     "ed_tile_size_small": "Petite",
@@ -2031,7 +2031,7 @@ const _TRANSLATIONS = {
     "calendar_days_before": "{value}d antes",
     "ed_show_section": "Campo de seção",
     "section_label": "Seção",
-    "ed_list_columns": "Colunas",
+    "ed_list_columns": "Colunas de tarefas",
     "ed_tile_size": "Tamanho dos blocos",
     "ed_tile_size_default": "Padrão",
     "ed_tile_size_small": "Pequeno",
@@ -2321,7 +2321,7 @@ const _TRANSLATIONS = {
     "calendar_days_before": "{value}d antes",
     "ed_show_section": "Campo de seção",
     "section_label": "Seção",
-    "ed_list_columns": "Colunas",
+    "ed_list_columns": "Colunas de tarefas",
     "ed_tile_size": "Tamanho dos blocos",
     "ed_tile_size_default": "Padrão",
     "ed_tile_size_small": "Pequeno",
@@ -2611,7 +2611,7 @@ const _TRANSLATIONS = {
     "calendar_days_before": "{value} d antes",
     "ed_show_section": "Campo de sección",
     "section_label": "Sección",
-    "ed_list_columns": "Columnas",
+    "ed_list_columns": "Columnas de tareas",
     "ed_tile_size": "Tamaño de mosaicos",
     "ed_tile_size_default": "Predeterminado",
     "ed_tile_size_small": "Pequeño",
@@ -2901,7 +2901,7 @@ const _TRANSLATIONS = {
     "calendar_days_before": "за {value} дн.",
     "ed_show_section": "Поле раздела",
     "section_label": "Раздел",
-    "ed_list_columns": "Колонки",
+    "ed_list_columns": "Колонки задач",
     "ed_tile_size": "Размер плиток",
     "ed_tile_size_default": "По умолчанию",
     "ed_tile_size_small": "Маленький",
@@ -3191,7 +3191,7 @@ const _TRANSLATIONS = {
     "calendar_days_before": "{value} d předem",
     "ed_show_section": "Pole sekce",
     "section_label": "Sekce",
-    "ed_list_columns": "Sloupce",
+    "ed_list_columns": "Sloupce úkolů",
     "ed_tile_size": "Velikost dlaždic",
     "ed_tile_size_default": "Výchozí",
     "ed_tile_size_small": "Malá",
@@ -3481,7 +3481,7 @@ const _TRANSLATIONS = {
     "calendar_days_before": "{value} dage før",
     "ed_show_section": "Afsnitsfelt",
     "section_label": "Afsnit",
-    "ed_list_columns": "Kolonner",
+    "ed_list_columns": "Opgavekolonner",
     "ed_tile_size": "Flisestørrelse",
     "ed_tile_size_default": "Standard",
     "ed_tile_size_small": "Lille",
@@ -3771,7 +3771,7 @@ const _TRANSLATIONS = {
     "calendar_days_before": "{value} dager før",
     "ed_show_section": "Seksjonsfelt",
     "section_label": "Seksjon",
-    "ed_list_columns": "Kolonner",
+    "ed_list_columns": "Oppgavekolonner",
     "ed_tile_size": "Flisestørrelse",
     "ed_tile_size_default": "Standard",
     "ed_tile_size_small": "Liten",
@@ -4061,7 +4061,7 @@ const _TRANSLATIONS = {
     "calendar_days_before": "{value} pv ennen",
     "ed_show_section": "Osiokenttä",
     "section_label": "Osio",
-    "ed_list_columns": "Sarakkeet",
+    "ed_list_columns": "Tehtäväsarakkeet",
     "ed_tile_size": "Ruutujen koko",
     "ed_tile_size_default": "Oletus",
     "ed_tile_size_small": "Pieni",
@@ -4351,7 +4351,7 @@ const _TRANSLATIONS = {
     "calendar_days_before": "{value} nappal előtte",
     "ed_show_section": "Szakasz mező",
     "section_label": "Szakasz",
-    "ed_list_columns": "Oszlopok",
+    "ed_list_columns": "Feladatoszlopok",
     "ed_tile_size": "Csempeméret",
     "ed_tile_size_default": "Alapértelmezett",
     "ed_tile_size_small": "Kicsi",
@@ -4641,7 +4641,7 @@ const _TRANSLATIONS = {
     "calendar_days_before": "{value} Tage vorher",
     "ed_show_section": "Bereichsfeld",
     "section_label": "Bereich",
-    "ed_list_columns": "Spalten",
+    "ed_list_columns": "Aufgabenspalten",
     "ed_tile_size": "Kachelgröße",
     "ed_tile_size_default": "Standard",
     "ed_tile_size_small": "Klein",
@@ -6698,7 +6698,7 @@ class HomeTasksCard extends HTMLElement {
 
     const listCols = _listColumns(col);
     const className = "card-column" + (col.compact === true ? " compact" : "") + (isTiles ? " tiles-mode" : "")
-      + (listCols > 1 ? " multi-col" : "");
+      + (listCols > 1 ? " list-cols" : "");
     const columnEl = this._el("div", { className }, children);
     if (listCols > 1) {
       columnEl.style.setProperty("--ht-list-cols", String(listCols));
@@ -11050,16 +11050,24 @@ class HomeTasksCard extends HTMLElement {
     return fullOrder;
   }
 
-  _liveMoveTask(draggedEl, targetEl, clientY) {
+  _liveMoveTask(draggedEl, targetEl, clientX, clientY) {
     if (!draggedEl || !targetEl || draggedEl === targetEl) return;
     const targetList = targetEl.parentNode;
     if (!targetList) return;
 
     const siblings = [...targetList.querySelectorAll(".task:not(.dragging), .section-header")];
-    const before = new Map(siblings.map(el => [el, el.getBoundingClientRect().top]));
+    const before = new Map(siblings.map(el => [el, el.getBoundingClientRect()]));
 
+    // One column: the upper half of the target means "before it". Side by
+    // side (list_columns) the reading order runs across, so the left half
+    // does - otherwise a task dragged onto its right-hand neighbour only
+    // moves once the pointer drops into that neighbour's lower half.
     const targetRect = targetEl.getBoundingClientRect();
-    if (clientY < targetRect.top + targetRect.height / 2) {
+    const sideBySide = getComputedStyle(targetList).display === "grid";
+    const inFirstHalf = sideBySide
+      ? clientX < targetRect.left + targetRect.width / 2
+      : clientY < targetRect.top + targetRect.height / 2;
+    if (inFirstHalf) {
       targetList.insertBefore(draggedEl, targetEl);
     } else {
       targetList.insertBefore(draggedEl, targetEl.nextSibling);
@@ -11067,10 +11075,13 @@ class HomeTasksCard extends HTMLElement {
 
     // FLIP: animate siblings from their previous position to the new one
     siblings.forEach(el => {
-      const dy = (before.get(el) ?? el.getBoundingClientRect().top) - el.getBoundingClientRect().top;
-      if (Math.abs(dy) < 1) return;
+      const was = before.get(el);
+      const now = el.getBoundingClientRect();
+      const dx = was ? was.left - now.left : 0;
+      const dy = was ? was.top - now.top : 0;
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
       el.style.transition = "none";
-      el.style.transform = `translateY(${dy}px)`;
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
       requestAnimationFrame(() => {
         el.style.transition = "transform 0.18s ease";
         el.style.transform = "";
@@ -11227,7 +11238,7 @@ class HomeTasksCard extends HTMLElement {
       e.dataTransfer.dropEffect = "move";
       if (!this._draggedTaskId || this._draggedTaskId === taskId) return;
       const draggedEl = this.shadowRoot.querySelector(`.task[data-task-id="${CSS.escape(String(this._draggedTaskId))}"]`);
-      this._liveMoveTask(draggedEl, taskEl, e.clientY);
+      this._liveMoveTask(draggedEl, taskEl, e.clientX, e.clientY);
       // Visual feedback for cross-column target
       const tgtList = taskEl.closest(".task-list");
       const tgtColIdx = tgtList ? parseInt(tgtList.dataset.colIdx) : colIdx;
@@ -11310,7 +11321,7 @@ class HomeTasksCard extends HTMLElement {
       const sectionHeader = shadowEl ? shadowEl.closest(".section-header") : null;
       if (target && target.dataset.taskId && target.dataset.taskId !== this._draggedTaskId && !target.classList.contains("drag-clone")) {
         const draggedEl = this.shadowRoot.querySelector(`.task[data-task-id="${CSS.escape(String(this._draggedTaskId))}"]`);
-        this._liveMoveTask(draggedEl, target, touch.clientY);
+        this._liveMoveTask(draggedEl, target, touch.clientX, touch.clientY);
       } else if (sectionHeader && sectionHeader.dataset.sectionId !== "__done__") {
         const draggedEl = this.shadowRoot.querySelector(`.task[data-task-id="${CSS.escape(String(this._draggedTaskId))}"]`);
         const body = sectionHeader.nextElementSibling;
@@ -11507,8 +11518,8 @@ class HomeTasksCard extends HTMLElement {
       /* list_columns: tasks flow into N columns (sections keep full-width
          headers). Each column is at least --ht-list-min-width (160px) wide, so a
          narrow card falls back to fewer columns instead of squashing. */
-      .multi-col .task-list,
-      .multi-col .section-body:not(.collapsed):not(.expanding):not(:empty) {
+      .list-cols .task-list,
+      .list-cols .section-body:not(.collapsed):not(.expanding):not(:empty) {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(
           max(var(--ht-list-min-width, 160px), calc((100% - (var(--ht-list-cols, 1) - 1) * 8px) / var(--ht-list-cols, 1))),
@@ -11516,9 +11527,9 @@ class HomeTasksCard extends HTMLElement {
         column-gap: 8px;
         align-items: start;
       }
-      .multi-col .task-list > :not(.task) { grid-column: 1 / -1; }
-      .multi-col .task.is-expanded { grid-column: 1 / -1; }
-      .multi-col .task { min-width: 0; }
+      .list-cols .task-list > :not(.task) { grid-column: 1 / -1; }
+      .list-cols .task.is-expanded { grid-column: 1 / -1; }
+      .list-cols .task { min-width: 0; }
       .task {
         border: 1px solid var(--todo-divider); border-radius: var(--todo-radius);
         background: rgba(var(--rgb-primary-text-color, 33, 33, 33), 0.06);
@@ -13652,9 +13663,15 @@ class HomeTasksCardEditor extends HTMLElement {
         col.view_mode === "tiles"
           ? makeSelect(
             "ed_tile_size",
-            [["", "ed_tile_size_default"], ["small", "ed_tile_size_small"], ["medium", "ed_tile_size_medium"], ["large", "ed_tile_size_large"]],
-            typeof col.tile_size === "string" ? col.tile_size : "",
-            (val) => updateCol({ tile_size: val || undefined })
+            [
+              ["", "ed_tile_size_default"], ["small", "ed_tile_size_small"],
+              ["medium", "ed_tile_size_medium"], ["large", "ed_tile_size_large"],
+              // A width in px set in YAML: shown as itself, kept unless changed.
+              ...(_tileMinWidth(col) && !_TILE_SIZES[col.tile_size]
+                ? [[String(col.tile_size), `${_tileMinWidth(col)} px`]] : []),
+            ],
+            col.tile_size == null ? "" : String(col.tile_size),
+            (val) => updateCol({ tile_size: val === "" ? undefined : (_TILE_SIZES[val] ? val : parseInt(val, 10)) })
           )
           : makeSelect(
             "ed_list_columns",
