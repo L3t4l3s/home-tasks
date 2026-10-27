@@ -290,7 +290,13 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value}h before",
     "calendar_days_before": "{value}d before",
     "section_label": "Section",
-    "ed_show_section": "Section field"
+    "ed_show_section": "Section field",
+    "ed_list_columns": "Columns",
+    "ed_tile_size": "Tile size",
+    "ed_tile_size_default": "Default",
+    "ed_tile_size_small": "Small",
+    "ed_tile_size_medium": "Medium",
+    "ed_tile_size_large": "Large"
   },
   "nl": {
     "ed_default_priority": "Standaardprioriteit",
@@ -574,7 +580,13 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} uur van tevoren",
     "calendar_days_before": "{value} dagen van tevoren",
     "ed_show_section": "Sectieveld",
-    "section_label": "Sectie"
+    "section_label": "Sectie",
+    "ed_list_columns": "Kolommen",
+    "ed_tile_size": "Tegelgrootte",
+    "ed_tile_size_default": "Standaard",
+    "ed_tile_size_small": "Klein",
+    "ed_tile_size_medium": "Middel",
+    "ed_tile_size_large": "Groot"
   },
   "it": {
     "ed_default_priority": "Priorità predefinita",
@@ -858,7 +870,13 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} ore prima",
     "calendar_days_before": "{value} giorni prima",
     "ed_show_section": "Campo sezione",
-    "section_label": "Sezione"
+    "section_label": "Sezione",
+    "ed_list_columns": "Colonne",
+    "ed_tile_size": "Dimensione caselle",
+    "ed_tile_size_default": "Predefinita",
+    "ed_tile_size_small": "Piccola",
+    "ed_tile_size_medium": "Media",
+    "ed_tile_size_large": "Grande"
   },
   "pl": {
     "ed_default_priority": "Domyślny priorytet",
@@ -1142,7 +1160,13 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} godz. przed",
     "calendar_days_before": "{value} dni przed",
     "ed_show_section": "Pole sekcji",
-    "section_label": "Sekcja"
+    "section_label": "Sekcja",
+    "ed_list_columns": "Kolumny",
+    "ed_tile_size": "Rozmiar kafelków",
+    "ed_tile_size_default": "Domyślny",
+    "ed_tile_size_small": "Mały",
+    "ed_tile_size_medium": "Średni",
+    "ed_tile_size_large": "Duży"
   },
   "sv": {
     "ed_default_priority": "Standardprioritet",
@@ -1426,7 +1450,13 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} tim innan",
     "calendar_days_before": "{value} dagar innan",
     "ed_show_section": "Avsnittsfält",
-    "section_label": "Avsnitt"
+    "section_label": "Avsnitt",
+    "ed_list_columns": "Kolumner",
+    "ed_tile_size": "Rutstorlek",
+    "ed_tile_size_default": "Standard",
+    "ed_tile_size_small": "Liten",
+    "ed_tile_size_medium": "Mellan",
+    "ed_tile_size_large": "Stor"
   },
   "fr": {
     "ed_default_priority": "Priorité par défaut",
@@ -1710,7 +1740,13 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} h avant",
     "calendar_days_before": "{value} j avant",
     "ed_show_section": "Champ de section",
-    "section_label": "Section"
+    "section_label": "Section",
+    "ed_list_columns": "Colonnes",
+    "ed_tile_size": "Taille des tuiles",
+    "ed_tile_size_default": "Par défaut",
+    "ed_tile_size_small": "Petite",
+    "ed_tile_size_medium": "Moyenne",
+    "ed_tile_size_large": "Grande"
   },
   "pt": {
     "ed_default_priority": "Prioridade padrão",
@@ -1994,7 +2030,13 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value}h antes",
     "calendar_days_before": "{value}d antes",
     "ed_show_section": "Campo de seção",
-    "section_label": "Seção"
+    "section_label": "Seção",
+    "ed_list_columns": "Colunas",
+    "ed_tile_size": "Tamanho dos blocos",
+    "ed_tile_size_default": "Padrão",
+    "ed_tile_size_small": "Pequeno",
+    "ed_tile_size_medium": "Médio",
+    "ed_tile_size_large": "Grande"
   },
   "pt-BR": {
     "ed_default_priority": "Prioridade padrão",
@@ -2278,7 +2320,13 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value}h antes",
     "calendar_days_before": "{value}d antes",
     "ed_show_section": "Campo de seção",
-    "section_label": "Seção"
+    "section_label": "Seção",
+    "ed_list_columns": "Colunas",
+    "ed_tile_size": "Tamanho dos blocos",
+    "ed_tile_size_default": "Padrão",
+    "ed_tile_size_small": "Pequeno",
+    "ed_tile_size_medium": "Médio",
+    "ed_tile_size_large": "Grande"
   },
   "es": {
     "ed_default_priority": "Prioridad predeterminada",
@@ -2562,7 +2610,13 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} h antes",
     "calendar_days_before": "{value} d antes",
     "ed_show_section": "Campo de sección",
-    "section_label": "Sección"
+    "section_label": "Sección",
+    "ed_list_columns": "Columnas",
+    "ed_tile_size": "Tamaño de mosaicos",
+    "ed_tile_size_default": "Predeterminado",
+    "ed_tile_size_small": "Pequeño",
+    "ed_tile_size_medium": "Mediano",
+    "ed_tile_size_large": "Grande"
   },
   "ru": {
     "ed_default_priority": "Приоритет по умолчанию",
@@ -2846,7 +2900,13 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "за {value} ч",
     "calendar_days_before": "за {value} дн.",
     "ed_show_section": "Поле раздела",
-    "section_label": "Раздел"
+    "section_label": "Раздел",
+    "ed_list_columns": "Колонки",
+    "ed_tile_size": "Размер плиток",
+    "ed_tile_size_default": "По умолчанию",
+    "ed_tile_size_small": "Маленький",
+    "ed_tile_size_medium": "Средний",
+    "ed_tile_size_large": "Большой"
   },
   "cs": {
     "ed_default_priority": "Výchozí priorita",
@@ -3130,7 +3190,13 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} h předem",
     "calendar_days_before": "{value} d předem",
     "ed_show_section": "Pole sekce",
-    "section_label": "Sekce"
+    "section_label": "Sekce",
+    "ed_list_columns": "Sloupce",
+    "ed_tile_size": "Velikost dlaždic",
+    "ed_tile_size_default": "Výchozí",
+    "ed_tile_size_small": "Malá",
+    "ed_tile_size_medium": "Střední",
+    "ed_tile_size_large": "Velká"
   },
   "da": {
     "ed_default_priority": "Standardprioritet",
@@ -3414,7 +3480,13 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} timer før",
     "calendar_days_before": "{value} dage før",
     "ed_show_section": "Afsnitsfelt",
-    "section_label": "Afsnit"
+    "section_label": "Afsnit",
+    "ed_list_columns": "Kolonner",
+    "ed_tile_size": "Flisestørrelse",
+    "ed_tile_size_default": "Standard",
+    "ed_tile_size_small": "Lille",
+    "ed_tile_size_medium": "Mellem",
+    "ed_tile_size_large": "Stor"
   },
   "no": {
     "ed_default_priority": "Standardprioritet",
@@ -3698,7 +3770,13 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} timer før",
     "calendar_days_before": "{value} dager før",
     "ed_show_section": "Seksjonsfelt",
-    "section_label": "Seksjon"
+    "section_label": "Seksjon",
+    "ed_list_columns": "Kolonner",
+    "ed_tile_size": "Flisestørrelse",
+    "ed_tile_size_default": "Standard",
+    "ed_tile_size_small": "Liten",
+    "ed_tile_size_medium": "Middels",
+    "ed_tile_size_large": "Stor"
   },
   "fi": {
     "ed_default_priority": "Oletusprioriteetti",
@@ -3982,7 +4060,13 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} h ennen",
     "calendar_days_before": "{value} pv ennen",
     "ed_show_section": "Osiokenttä",
-    "section_label": "Osio"
+    "section_label": "Osio",
+    "ed_list_columns": "Sarakkeet",
+    "ed_tile_size": "Ruutujen koko",
+    "ed_tile_size_default": "Oletus",
+    "ed_tile_size_small": "Pieni",
+    "ed_tile_size_medium": "Keskikoko",
+    "ed_tile_size_large": "Suuri"
   },
   "hu": {
     "ed_default_priority": "Alapértelmezett prioritás",
@@ -4266,7 +4350,13 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} órával előtte",
     "calendar_days_before": "{value} nappal előtte",
     "ed_show_section": "Szakasz mező",
-    "section_label": "Szakasz"
+    "section_label": "Szakasz",
+    "ed_list_columns": "Oszlopok",
+    "ed_tile_size": "Csempeméret",
+    "ed_tile_size_default": "Alapértelmezett",
+    "ed_tile_size_small": "Kicsi",
+    "ed_tile_size_medium": "Közepes",
+    "ed_tile_size_large": "Nagy"
   },
   "de": {
     "ed_default_priority": "Standard-Priorität",
@@ -4550,7 +4640,13 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} Std. vorher",
     "calendar_days_before": "{value} Tage vorher",
     "ed_show_section": "Bereichsfeld",
-    "section_label": "Bereich"
+    "section_label": "Bereich",
+    "ed_list_columns": "Spalten",
+    "ed_tile_size": "Kachelgröße",
+    "ed_tile_size_default": "Standard",
+    "ed_tile_size_small": "Klein",
+    "ed_tile_size_medium": "Mittel",
+    "ed_tile_size_large": "Groß"
   }
 };
 
@@ -4648,6 +4744,30 @@ function listSupportsDue(info) {
 function listSupportsDueTime(info) {
   const features = (info && info.supported_features) || 0;
   return !!(features & TODO_FEATURE.SET_DUE_DATETIME);
+}
+
+// list_columns: 1-4 columns of tasks in list view (default 1).
+function _listColumns(col) {
+  const n = parseInt(col && col.list_columns, 10);
+  return Number.isFinite(n) ? Math.max(1, Math.min(4, n)) : 1;
+}
+
+// list_column_min_width: px a list column must keep before the card drops
+// to fewer columns (80-600, default 160 - two columns fit on a phone).
+function _listMinWidth(col) {
+  const n = parseInt(col && col.list_column_min_width, 10);
+  return Number.isFinite(n) ? Math.max(80, Math.min(600, n)) : null;
+}
+
+// tile_size: "small" | "medium" | "large", or a minimum tile width in px
+// (60-400). Unset keeps the built-in size (140px, 100px in compact mode).
+const _TILE_SIZES = { small: 80, medium: 140, large: 200 };
+function _tileMinWidth(col) {
+  const v = col && col.tile_size;
+  if (v == null || v === "") return null;
+  if (typeof v === "string" && _TILE_SIZES[v]) return _TILE_SIZES[v];
+  const n = parseInt(v, 10);
+  return Number.isFinite(n) ? Math.max(60, Math.min(400, n)) : null;
 }
 
 class HomeTasksCard extends HTMLElement {
@@ -6576,8 +6696,18 @@ class HomeTasksCard extends HTMLElement {
     if (personChipsEl) children.push(personChipsEl);
     children.push(taskList);
 
-    const className = "card-column" + (col.compact === true ? " compact" : "") + (isTiles ? " tiles-mode" : "");
-    return this._el("div", { className }, children);
+    const listCols = _listColumns(col);
+    const className = "card-column" + (col.compact === true ? " compact" : "") + (isTiles ? " tiles-mode" : "")
+      + (listCols > 1 ? " multi-col" : "");
+    const columnEl = this._el("div", { className }, children);
+    if (listCols > 1) {
+      columnEl.style.setProperty("--ht-list-cols", String(listCols));
+      const minW = _listMinWidth(col);
+      if (minW) columnEl.style.setProperty("--ht-list-min-width", `${minW}px`);
+    }
+    const tileMin = _tileMinWidth(col);
+    if (tileMin) columnEl.style.setProperty("--ht-tile-min", `${tileMin}px`);
+    return columnEl;
   }
 
   _buildColumnHeader(col, colIdx, completedCount, totalCount) {
@@ -7914,6 +8044,7 @@ class HomeTasksCard extends HTMLElement {
 
     let className = "task";
     if (task.completed) className += " completed";
+    if (isExpanded) className += " is-expanded";
 
     // draggable=false while editing OR while expanded:
     //   - editing: the title input must accept text selection
@@ -11373,6 +11504,21 @@ class HomeTasksCard extends HTMLElement {
       .section-body.collapsed,
       .section-body.expanding { max-height: 0; opacity: 0; overflow: hidden; pointer-events: none; }
       .section-body:empty { display: none; }
+      /* list_columns: tasks flow into N columns (sections keep full-width
+         headers). Each column is at least --ht-list-min-width (160px) wide, so a
+         narrow card falls back to fewer columns instead of squashing. */
+      .multi-col .task-list,
+      .multi-col .section-body:not(.collapsed):not(.expanding):not(:empty) {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(
+          max(var(--ht-list-min-width, 160px), calc((100% - (var(--ht-list-cols, 1) - 1) * 8px) / var(--ht-list-cols, 1))),
+          1fr));
+        column-gap: 8px;
+        align-items: start;
+      }
+      .multi-col .task-list > :not(.task) { grid-column: 1 / -1; }
+      .multi-col .task.is-expanded { grid-column: 1 / -1; }
+      .multi-col .task { min-width: 0; }
       .task {
         border: 1px solid var(--todo-divider); border-radius: var(--todo-radius);
         background: rgba(var(--rgb-primary-text-color, 33, 33, 33), 0.06);
@@ -11834,7 +11980,7 @@ class HomeTasksCard extends HTMLElement {
       .tile-grid-wrap { display: flex; flex-direction: column; gap: 12px; padding: 4px 0; }
       .tile-grid-inner {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(var(--ht-tile-min, 140px), 1fr));
         gap: 10px;
       }
       .task-tile {
@@ -12025,7 +12171,7 @@ class HomeTasksCard extends HTMLElement {
       }
 
       /* Compact tile variant */
-      .compact .tile-grid-inner { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 7px; }
+      .compact .tile-grid-inner { grid-template-columns: repeat(auto-fill, minmax(var(--ht-tile-min, 100px), 1fr)); gap: 7px; }
       .compact .task-tile { border-radius: 10px; }
       .compact .tile-title { font-size: 11px; }
 
@@ -13503,6 +13649,19 @@ class HomeTasksCardEditor extends HTMLElement {
         ...(col.view_mode === "tiles"
           ? [this._el("div", { className: "hint", textContent: this._t("ed_tile_help"), style: "white-space:pre-line" })]
           : []),
+        col.view_mode === "tiles"
+          ? makeSelect(
+            "ed_tile_size",
+            [["", "ed_tile_size_default"], ["small", "ed_tile_size_small"], ["medium", "ed_tile_size_medium"], ["large", "ed_tile_size_large"]],
+            typeof col.tile_size === "string" ? col.tile_size : "",
+            (val) => updateCol({ tile_size: val || undefined })
+          )
+          : makeSelect(
+            "ed_list_columns",
+            [["1", "1"], ["2", "2"], ["3", "3"], ["4", "4"]],
+            String(col.list_columns || 1),
+            (val) => updateCol({ list_columns: val === "1" ? undefined : parseInt(val, 10) })
+          ),
         this._el("div", { className: "toggle-grid" }, [
           makeToggle("compact", "ed_compact", "compact", false),
         ]),

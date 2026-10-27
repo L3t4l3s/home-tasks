@@ -281,7 +281,13 @@
     "calendar_hours_before": "{value}h before",
     "calendar_days_before": "{value}d before",
     "section_label": "Section",
-    "ed_show_section": "Section field"
+    "ed_show_section": "Section field",
+    "ed_list_columns": "Columns",
+    "ed_tile_size": "Tile size",
+    "ed_tile_size_default": "Default",
+    "ed_tile_size_small": "Small",
+    "ed_tile_size_medium": "Medium",
+    "ed_tile_size_large": "Large"
   },
   "nl": {
     "ed_default_priority": "Standaardprioriteit",
@@ -565,7 +571,13 @@
     "calendar_hours_before": "{value} uur van tevoren",
     "calendar_days_before": "{value} dagen van tevoren",
     "ed_show_section": "Sectieveld",
-    "section_label": "Sectie"
+    "section_label": "Sectie",
+    "ed_list_columns": "Kolommen",
+    "ed_tile_size": "Tegelgrootte",
+    "ed_tile_size_default": "Standaard",
+    "ed_tile_size_small": "Klein",
+    "ed_tile_size_medium": "Middel",
+    "ed_tile_size_large": "Groot"
   },
   "it": {
     "ed_default_priority": "Priorità predefinita",
@@ -849,7 +861,13 @@
     "calendar_hours_before": "{value} ore prima",
     "calendar_days_before": "{value} giorni prima",
     "ed_show_section": "Campo sezione",
-    "section_label": "Sezione"
+    "section_label": "Sezione",
+    "ed_list_columns": "Colonne",
+    "ed_tile_size": "Dimensione caselle",
+    "ed_tile_size_default": "Predefinita",
+    "ed_tile_size_small": "Piccola",
+    "ed_tile_size_medium": "Media",
+    "ed_tile_size_large": "Grande"
   },
   "pl": {
     "ed_default_priority": "Domyślny priorytet",
@@ -1133,7 +1151,13 @@
     "calendar_hours_before": "{value} godz. przed",
     "calendar_days_before": "{value} dni przed",
     "ed_show_section": "Pole sekcji",
-    "section_label": "Sekcja"
+    "section_label": "Sekcja",
+    "ed_list_columns": "Kolumny",
+    "ed_tile_size": "Rozmiar kafelków",
+    "ed_tile_size_default": "Domyślny",
+    "ed_tile_size_small": "Mały",
+    "ed_tile_size_medium": "Średni",
+    "ed_tile_size_large": "Duży"
   },
   "sv": {
     "ed_default_priority": "Standardprioritet",
@@ -1417,7 +1441,13 @@
     "calendar_hours_before": "{value} tim innan",
     "calendar_days_before": "{value} dagar innan",
     "ed_show_section": "Avsnittsfält",
-    "section_label": "Avsnitt"
+    "section_label": "Avsnitt",
+    "ed_list_columns": "Kolumner",
+    "ed_tile_size": "Rutstorlek",
+    "ed_tile_size_default": "Standard",
+    "ed_tile_size_small": "Liten",
+    "ed_tile_size_medium": "Mellan",
+    "ed_tile_size_large": "Stor"
   },
   "fr": {
     "ed_default_priority": "Priorité par défaut",
@@ -1701,7 +1731,13 @@
     "calendar_hours_before": "{value} h avant",
     "calendar_days_before": "{value} j avant",
     "ed_show_section": "Champ de section",
-    "section_label": "Section"
+    "section_label": "Section",
+    "ed_list_columns": "Colonnes",
+    "ed_tile_size": "Taille des tuiles",
+    "ed_tile_size_default": "Par défaut",
+    "ed_tile_size_small": "Petite",
+    "ed_tile_size_medium": "Moyenne",
+    "ed_tile_size_large": "Grande"
   },
   "pt": {
     "ed_default_priority": "Prioridade padrão",
@@ -1985,7 +2021,13 @@
     "calendar_hours_before": "{value}h antes",
     "calendar_days_before": "{value}d antes",
     "ed_show_section": "Campo de seção",
-    "section_label": "Seção"
+    "section_label": "Seção",
+    "ed_list_columns": "Colunas",
+    "ed_tile_size": "Tamanho dos blocos",
+    "ed_tile_size_default": "Padrão",
+    "ed_tile_size_small": "Pequeno",
+    "ed_tile_size_medium": "Médio",
+    "ed_tile_size_large": "Grande"
   },
   "pt-BR": {
     "ed_default_priority": "Prioridade padrão",
@@ -2269,7 +2311,13 @@
     "calendar_hours_before": "{value}h antes",
     "calendar_days_before": "{value}d antes",
     "ed_show_section": "Campo de seção",
-    "section_label": "Seção"
+    "section_label": "Seção",
+    "ed_list_columns": "Colunas",
+    "ed_tile_size": "Tamanho dos blocos",
+    "ed_tile_size_default": "Padrão",
+    "ed_tile_size_small": "Pequeno",
+    "ed_tile_size_medium": "Médio",
+    "ed_tile_size_large": "Grande"
   },
   "es": {
     "ed_default_priority": "Prioridad predeterminada",
@@ -2553,7 +2601,13 @@
     "calendar_hours_before": "{value} h antes",
     "calendar_days_before": "{value} d antes",
     "ed_show_section": "Campo de sección",
-    "section_label": "Sección"
+    "section_label": "Sección",
+    "ed_list_columns": "Columnas",
+    "ed_tile_size": "Tamaño de mosaicos",
+    "ed_tile_size_default": "Predeterminado",
+    "ed_tile_size_small": "Pequeño",
+    "ed_tile_size_medium": "Mediano",
+    "ed_tile_size_large": "Grande"
   },
   "ru": {
     "ed_default_priority": "Приоритет по умолчанию",
@@ -2837,7 +2891,13 @@
     "calendar_hours_before": "за {value} ч",
     "calendar_days_before": "за {value} дн.",
     "ed_show_section": "Поле раздела",
-    "section_label": "Раздел"
+    "section_label": "Раздел",
+    "ed_list_columns": "Колонки",
+    "ed_tile_size": "Размер плиток",
+    "ed_tile_size_default": "По умолчанию",
+    "ed_tile_size_small": "Маленький",
+    "ed_tile_size_medium": "Средний",
+    "ed_tile_size_large": "Большой"
   },
   "cs": {
     "ed_default_priority": "Výchozí priorita",
@@ -3121,7 +3181,13 @@
     "calendar_hours_before": "{value} h předem",
     "calendar_days_before": "{value} d předem",
     "ed_show_section": "Pole sekce",
-    "section_label": "Sekce"
+    "section_label": "Sekce",
+    "ed_list_columns": "Sloupce",
+    "ed_tile_size": "Velikost dlaždic",
+    "ed_tile_size_default": "Výchozí",
+    "ed_tile_size_small": "Malá",
+    "ed_tile_size_medium": "Střední",
+    "ed_tile_size_large": "Velká"
   },
   "da": {
     "ed_default_priority": "Standardprioritet",
@@ -3405,7 +3471,13 @@
     "calendar_hours_before": "{value} timer før",
     "calendar_days_before": "{value} dage før",
     "ed_show_section": "Afsnitsfelt",
-    "section_label": "Afsnit"
+    "section_label": "Afsnit",
+    "ed_list_columns": "Kolonner",
+    "ed_tile_size": "Flisestørrelse",
+    "ed_tile_size_default": "Standard",
+    "ed_tile_size_small": "Lille",
+    "ed_tile_size_medium": "Mellem",
+    "ed_tile_size_large": "Stor"
   },
   "no": {
     "ed_default_priority": "Standardprioritet",
@@ -3689,7 +3761,13 @@
     "calendar_hours_before": "{value} timer før",
     "calendar_days_before": "{value} dager før",
     "ed_show_section": "Seksjonsfelt",
-    "section_label": "Seksjon"
+    "section_label": "Seksjon",
+    "ed_list_columns": "Kolonner",
+    "ed_tile_size": "Flisestørrelse",
+    "ed_tile_size_default": "Standard",
+    "ed_tile_size_small": "Liten",
+    "ed_tile_size_medium": "Middels",
+    "ed_tile_size_large": "Stor"
   },
   "fi": {
     "ed_default_priority": "Oletusprioriteetti",
@@ -3973,7 +4051,13 @@
     "calendar_hours_before": "{value} h ennen",
     "calendar_days_before": "{value} pv ennen",
     "ed_show_section": "Osiokenttä",
-    "section_label": "Osio"
+    "section_label": "Osio",
+    "ed_list_columns": "Sarakkeet",
+    "ed_tile_size": "Ruutujen koko",
+    "ed_tile_size_default": "Oletus",
+    "ed_tile_size_small": "Pieni",
+    "ed_tile_size_medium": "Keskikoko",
+    "ed_tile_size_large": "Suuri"
   },
   "hu": {
     "ed_default_priority": "Alapértelmezett prioritás",
@@ -4257,7 +4341,13 @@
     "calendar_hours_before": "{value} órával előtte",
     "calendar_days_before": "{value} nappal előtte",
     "ed_show_section": "Szakasz mező",
-    "section_label": "Szakasz"
+    "section_label": "Szakasz",
+    "ed_list_columns": "Oszlopok",
+    "ed_tile_size": "Csempeméret",
+    "ed_tile_size_default": "Alapértelmezett",
+    "ed_tile_size_small": "Kicsi",
+    "ed_tile_size_medium": "Közepes",
+    "ed_tile_size_large": "Nagy"
   },
   "de": {
     "ed_default_priority": "Standard-Priorität",
@@ -4541,6 +4631,12 @@
     "calendar_hours_before": "{value} Std. vorher",
     "calendar_days_before": "{value} Tage vorher",
     "ed_show_section": "Bereichsfeld",
-    "section_label": "Bereich"
+    "section_label": "Bereich",
+    "ed_list_columns": "Spalten",
+    "ed_tile_size": "Kachelgröße",
+    "ed_tile_size_default": "Standard",
+    "ed_tile_size_small": "Klein",
+    "ed_tile_size_medium": "Mittel",
+    "ed_tile_size_large": "Groß"
   }
 }
