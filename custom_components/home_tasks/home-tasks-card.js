@@ -4549,8 +4549,8 @@ const _TRANSLATIONS = {
     "calendar_minutes_before": "{value} Min. vorher",
     "calendar_hours_before": "{value} Std. vorher",
     "calendar_days_before": "{value} Tage vorher",
-    "ed_show_section": "Abschnittsfeld",
-    "section_label": "Abschnitt"
+    "ed_show_section": "Bereichsfeld",
+    "section_label": "Bereich"
   }
 };
 
@@ -5734,19 +5734,7 @@ class HomeTasksCard extends HTMLElement {
     }
     for (const u of updates) {
       try {
-        if (isExternal) {
-          await this._callWs("home_tasks/update_external_overlay", {
-            entity_id: this._colEntityId(colIdx),
-            task_uid: u.taskId,
-            section_id: u.section_id,
-          });
-        } else {
-          await this._callWs("home_tasks/update_task", {
-            list_id: this._colListId(colIdx),
-            task_id: u.taskId,
-            section_id: u.section_id,
-          });
-        }
+        await this._saveSectionId(colIdx, u.taskId, u.section_id);
       } catch (err) {
         this._showError(`Section update failed: ${err.message || err}`);
       }
@@ -5754,6 +5742,24 @@ class HomeTasksCard extends HTMLElement {
     const visibleOrder = sectionedOrder.map((p) => p.taskId);
     const fullOrder = this._mergeHiddenTasks(colIdx, visibleOrder, draggedId);
     await this._reorderTasks(fullOrder, colIdx);
+  }
+
+  // A task's section: ours alone, so on a linked list it lives in the
+  // overlay, never at the provider.
+  async _saveSectionId(colIdx, taskId, sectionId) {
+    if (this._isExternalCol(colIdx)) {
+      await this._callWs("home_tasks/update_external_overlay", {
+        entity_id: this._colEntityId(colIdx),
+        task_uid: taskId,
+        section_id: sectionId,
+      });
+    } else {
+      await this._callWs("home_tasks/update_task", {
+        list_id: this._colListId(colIdx),
+        task_id: taskId,
+        section_id: sectionId,
+      });
+    }
   }
 
   async _reorderTasks(taskIds, colIdx) {
@@ -9817,21 +9823,12 @@ class HomeTasksCard extends HTMLElement {
       task.section_id = sectionId;
       this._render();
       try {
-        if (this._isExternalCol(colIdx)) {
-          await this._callWs("home_tasks/update_external_overlay", {
-            entity_id: this._colEntityId(colIdx),
-            task_uid: task.id,
-            section_id: sectionId,
-          });
-        } else {
-          await this._callWs("home_tasks/update_task", {
-            list_id: this._colListId(colIdx),
-            task_id: task.id,
-            section_id: sectionId,
-          });
-        }
+        await this._saveSectionId(colIdx, task.id, sectionId);
       } catch (err) {
         this._showError(`Section update failed: ${err.message || err}`);
+        // Put the task back where the server still has it.
+        if (this._isExternalCol(colIdx)) await this._reloadExternal();
+        else await this._loadAllTasks();
       }
     });
     this._blurSelectOnChange(sectionSelect);

@@ -4540,7 +4540,7 @@
     "calendar_minutes_before": "{value} Min. vorher",
     "calendar_hours_before": "{value} Std. vorher",
     "calendar_days_before": "{value} Tage vorher",
-    "ed_show_section": "Abschnittsfeld",
-    "section_label": "Abschnitt"
+    "ed_show_section": "Bereichsfeld",
+    "section_label": "Bereich"
   }
 }

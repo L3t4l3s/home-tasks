@@ -66,4 +66,21 @@ describe('section picker', () => {
     assert.equal(call.section_id, null);
     assert.equal(call.entity_id, 'todo.shopping_list');
   });
+
+  test('a failed save reloads, so the task shows where the server has it', async () => {
+    const { card } = await makeCard();
+    card._callWs = async () => { throw new Error('nope'); };
+    const errors = [];
+    card._showError = (m) => errors.push(m);
+    let reloaded = 0;
+    card._loadAllTasks = async () => { reloaded += 1; };
+    const sel = card._buildSectionPickerSection(task(), 0).querySelector('select');
+    await new Promise((r) => setTimeout(r, 0));
+    reloaded = 0; // only what the failed save does
+    sel.value = 'S1';
+    sel.dispatchEvent(new window.Event('change'));
+    await new Promise((r) => setTimeout(r, 0));
+    assert.equal(errors.length, 1);
+    assert.equal(reloaded, 1);
+  });
 });
