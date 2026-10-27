@@ -287,7 +287,10 @@ const _TRANSLATIONS = {
     "ed_ai_prompt_prefix_placeholder": "e.g. Minimalist icon of",
     "calendar_minutes_before": "{value} min before",
     "calendar_hours_before": "{value}h before",
-    "calendar_days_before": "{value}d before"
+    "calendar_days_before": "{value}d before",
+    "add_with_details": "Add and edit details",
+    "add_clear": "Clear",
+    "ed_show_add_details": "Add with details button"
   },
   "nl": {
     "ed_default_priority": "Standaardprioriteit",
@@ -568,7 +571,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Zojuist",
     "calendar_minutes_before": "{value} min van tevoren",
     "calendar_hours_before": "{value} uur van tevoren",
-    "calendar_days_before": "{value} dagen van tevoren"
+    "calendar_days_before": "{value} dagen van tevoren",
+    "ed_show_add_details": "Knop toevoegen met details",
+    "add_with_details": "Toevoegen en details bewerken",
+    "add_clear": "Wissen"
   },
   "it": {
     "ed_default_priority": "Priorità predefinita",
@@ -849,7 +855,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Proprio ora",
     "calendar_minutes_before": "{value} min prima",
     "calendar_hours_before": "{value} ore prima",
-    "calendar_days_before": "{value} giorni prima"
+    "calendar_days_before": "{value} giorni prima",
+    "ed_show_add_details": "Pulsante aggiungi con dettagli",
+    "add_with_details": "Aggiungi e modifica dettagli",
+    "add_clear": "Cancella"
   },
   "pl": {
     "ed_default_priority": "Domyślny priorytet",
@@ -1130,7 +1139,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Właśnie",
     "calendar_minutes_before": "{value} min przed",
     "calendar_hours_before": "{value} godz. przed",
-    "calendar_days_before": "{value} dni przed"
+    "calendar_days_before": "{value} dni przed",
+    "ed_show_add_details": "Przycisk dodawania ze szczegółami",
+    "add_with_details": "Dodaj i edytuj szczegóły",
+    "add_clear": "Wyczyść"
   },
   "sv": {
     "ed_default_priority": "Standardprioritet",
@@ -1411,7 +1423,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Just nu",
     "calendar_minutes_before": "{value} min innan",
     "calendar_hours_before": "{value} tim innan",
-    "calendar_days_before": "{value} dagar innan"
+    "calendar_days_before": "{value} dagar innan",
+    "ed_show_add_details": "Knapp lägg till med detaljer",
+    "add_with_details": "Lägg till och redigera detaljer",
+    "add_clear": "Rensa"
   },
   "fr": {
     "ed_default_priority": "Priorité par défaut",
@@ -1692,7 +1707,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "À l'instant",
     "calendar_minutes_before": "{value} min avant",
     "calendar_hours_before": "{value} h avant",
-    "calendar_days_before": "{value} j avant"
+    "calendar_days_before": "{value} j avant",
+    "ed_show_add_details": "Bouton ajouter avec détails",
+    "add_with_details": "Ajouter et modifier les détails",
+    "add_clear": "Effacer"
   },
   "pt": {
     "ed_default_priority": "Prioridade padrão",
@@ -1973,7 +1991,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Agora mesmo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value}h antes",
-    "calendar_days_before": "{value}d antes"
+    "calendar_days_before": "{value}d antes",
+    "ed_show_add_details": "Botão adicionar com detalhes",
+    "add_with_details": "Adicionar e editar detalhes",
+    "add_clear": "Limpar"
   },
   "pt-BR": {
     "ed_default_priority": "Prioridade padrão",
@@ -2254,7 +2275,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Agora mesmo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value}h antes",
-    "calendar_days_before": "{value}d antes"
+    "calendar_days_before": "{value}d antes",
+    "ed_show_add_details": "Botão adicionar com detalhes",
+    "add_with_details": "Adicionar e editar detalhes",
+    "add_clear": "Limpar"
   },
   "es": {
     "ed_default_priority": "Prioridad predeterminada",
@@ -2535,7 +2559,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Ahora mismo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value} h antes",
-    "calendar_days_before": "{value} d antes"
+    "calendar_days_before": "{value} d antes",
+    "ed_show_add_details": "Botón añadir con detalles",
+    "add_with_details": "Añadir y editar detalles",
+    "add_clear": "Borrar"
   },
   "ru": {
     "ed_default_priority": "Приоритет по умолчанию",
@@ -2816,7 +2843,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Только что",
     "calendar_minutes_before": "за {value} мин",
     "calendar_hours_before": "за {value} ч",
-    "calendar_days_before": "за {value} дн."
+    "calendar_days_before": "за {value} дн.",
+    "ed_show_add_details": "Кнопка добавления с деталями",
+    "add_with_details": "Добавить и изменить детали",
+    "add_clear": "Очистить"
   },
   "cs": {
     "ed_default_priority": "Výchozí priorita",
@@ -3097,7 +3127,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Právě teď",
     "calendar_minutes_before": "{value} min předem",
     "calendar_hours_before": "{value} h předem",
-    "calendar_days_before": "{value} d předem"
+    "calendar_days_before": "{value} d předem",
+    "ed_show_add_details": "Tlačítko přidat s podrobnostmi",
+    "add_with_details": "Přidat a upravit podrobnosti",
+    "add_clear": "Vymazat"
   },
   "da": {
     "ed_default_priority": "Standardprioritet",
@@ -3378,7 +3411,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Lige nu",
     "calendar_minutes_before": "{value} min før",
     "calendar_hours_before": "{value} timer før",
-    "calendar_days_before": "{value} dage før"
+    "calendar_days_before": "{value} dage før",
+    "ed_show_add_details": "Knap tilføj med detaljer",
+    "add_with_details": "Tilføj og rediger detaljer",
+    "add_clear": "Ryd"
   },
   "no": {
     "ed_default_priority": "Standardprioritet",
@@ -3659,7 +3695,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Akkurat nå",
     "calendar_minutes_before": "{value} min før",
     "calendar_hours_before": "{value} timer før",
-    "calendar_days_before": "{value} dager før"
+    "calendar_days_before": "{value} dager før",
+    "ed_show_add_details": "Knapp legg til med detaljer",
+    "add_with_details": "Legg til og rediger detaljer",
+    "add_clear": "Tøm"
   },
   "fi": {
     "ed_default_priority": "Oletusprioriteetti",
@@ -3940,7 +3979,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Juuri nyt",
     "calendar_minutes_before": "{value} min ennen",
     "calendar_hours_before": "{value} h ennen",
-    "calendar_days_before": "{value} pv ennen"
+    "calendar_days_before": "{value} pv ennen",
+    "ed_show_add_details": "Lisää tietojen kanssa -painike",
+    "add_with_details": "Lisää ja muokkaa tietoja",
+    "add_clear": "Tyhjennä"
   },
   "hu": {
     "ed_default_priority": "Alapértelmezett prioritás",
@@ -4221,7 +4263,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Épp most",
     "calendar_minutes_before": "{value} perccel előtte",
     "calendar_hours_before": "{value} órával előtte",
-    "calendar_days_before": "{value} nappal előtte"
+    "calendar_days_before": "{value} nappal előtte",
+    "ed_show_add_details": "Hozzáadás részletekkel gomb",
+    "add_with_details": "Hozzáadás és részletek szerkesztése",
+    "add_clear": "Törlés"
   },
   "de": {
     "ed_default_priority": "Standard-Priorität",
@@ -4502,7 +4547,10 @@ const _TRANSLATIONS = {
     "ed_ai_prompt_prefix_placeholder": "z.B. Minimalistisches Icon von",
     "calendar_minutes_before": "{value} Min. vorher",
     "calendar_hours_before": "{value} Std. vorher",
-    "calendar_days_before": "{value} Tage vorher"
+    "calendar_days_before": "{value} Tage vorher",
+    "add_with_details": "Hinzufügen und Details bearbeiten",
+    "add_clear": "Leeren",
+    "ed_show_add_details": "Button Hinzufügen mit Details"
   }
 };
 
@@ -4696,7 +4744,7 @@ class HomeTasksCard extends HTMLElement {
   _defaultColState() {
     // taskSearchQuery holds the text currently typed into the add-task
     // field (see _buildColumnAddTask / _buildColumnTaskList).
-    return { filter: "all", sortBy: "manual", sortOpen: false, tagFilters: new Set(), personFilters: new Set(), tasks: [], sections: [], newTaskTitle: "", newTaskDue: "", newTaskDueTime: "", taskSearchQuery: "" };
+    return { filter: "all", sortBy: "manual", sortOpen: false, tagFilters: new Set(), personFilters: new Set(), tasks: [], sections: [], newTaskTitle: "", newTaskDue: "", newTaskDueTime: "", taskSearchQuery: "", draft: null };
   }
 
   _t(key, ...args) {
@@ -4995,6 +5043,14 @@ class HomeTasksCard extends HTMLElement {
    * provider-specific sync + overlay for unsynced fields).
    */
   async _updateTaskRouted(colIdx, taskId, fields) {
+    // A draft (show_add_details) isn't created yet: edits stay on it until Add.
+    const draft = this._columns[colIdx]?.draft;
+    if (draft && taskId === draft.id) {
+      Object.assign(draft, fields);
+      if (Array.isArray(fields.assigned_persons)) draft.assigned_person = fields.assigned_persons[0] || null;
+      this._render();
+      return;
+    }
     if (!this._isExternalCol(colIdx)) {
       return this._callWs("home_tasks/update_task", {
         list_id: this._colListId(colIdx),
@@ -5232,6 +5288,104 @@ class HomeTasksCard extends HTMLElement {
     void el.offsetWidth;  // restart the animation if it is already running
     el.classList.add("nudge");
     setTimeout(() => el.classList.remove("nudge"), 700);
+  }
+
+  // show_add_details: a new task is drafted under the add row with the same
+  // detail fields as an existing one, and only created on Add.
+  async _openDraft(colIdx) {
+    const cs = this._columns[colIdx];
+    const title = (cs.newTaskTitle || "").trim();
+    if (!title) { this._nudgeAddInput(colIdx); return; }
+    const col = this._config.columns[colIdx];
+    const isExt = this._isExternalCol(colIdx);
+    // The list's defaults, so the draft shows what the task will get.
+    let defaults = isExt ? (this._sourceDefaults[this._colEntityId(colIdx)] || {}) : {};
+    if (!isExt) {
+      const r = await this._callWs("home_tasks/get_defaults", { list_id: this._colListId(colIdx) });
+      defaults = (r && r.defaults) || {};
+    }
+    let person = defaults.assignee || null;
+    if (cs.personFilters.size === 1) person = [...cs.personFilters][0];
+    else if (cs.personFilters.size === 0 && col.filters?.assignees?.length === 1) person = col.filters.assignees[0];
+    cs.draft = {
+      id: `__draft__${colIdx}`, _draft: true, title, completed: false, notes: "", sub_items: [],
+      due_date: null, due_time: null, priority: defaults.priority ?? null,
+      tags: [...(defaults.tags || [])], reminders: [...(defaults.reminders || [])],
+      section_id: defaults.section_id || null, assigned_person: person,
+      assigned_persons: person ? [person] : [],
+      recurrence_enabled: false, recurrence_value: 1, recurrence_unit: null, recurrence_type: "interval",
+      recurrence_weekdays: [],
+    };
+    cs.newTaskTitle = "";
+    cs.taskSearchQuery = "";
+    this._render();
+  }
+
+  _buildDraftPanel(cs, colIdx) {
+    const draft = cs.draft;
+    const titleInput = this._el("input", {
+      type: "text", className: "add-input draft-title", value: draft.title,
+      "data-focus-key": `draft_title_col_${colIdx}`, autocomplete: "off",
+    });
+    titleInput.addEventListener("input", () => { draft.title = titleInput.value; });
+    titleInput.addEventListener("keydown", (e) => { if (e.key === "Enter") this._saveDraft(colIdx); });
+    const addBtn = this._el("button", { className: "add-btn", textContent: this._t("dialog_add") });
+    addBtn.addEventListener("click", () => this._saveDraft(colIdx));
+    const cancelBtn = this._el("button", { className: "draft-cancel-btn", textContent: this._t("dialog_cancel") });
+    cancelBtn.addEventListener("click", () => {
+      cs.newTaskTitle = draft.title || "";
+      cs.draft = null;
+      this._render();
+    });
+    return this._el("div", { className: "task-draft" }, [
+      titleInput,
+      this._buildTaskDetails(draft, colIdx, { draft: true }),
+      this._el("div", { className: "draft-actions" }, [cancelBtn, addBtn]),
+    ]);
+  }
+
+  async _saveDraft(colIdx) {
+    const cs = this._columns[colIdx];
+    const draft = cs.draft;
+    if (!draft) return;
+    const title = (draft.title || "").trim();
+    if (!title) return;
+    const base = {};
+    for (const k of ["due_date", "due_time", "notes", "priority", "tags", "reminders", "assigned_person"]) {
+      const v = draft[k];
+      if (v !== null && v !== undefined && v !== "" && !(Array.isArray(v) && !v.length)) base[k] = v;
+    }
+    if (!base.due_date) delete base.due_time;
+    if (Array.isArray(draft.assigned_persons) && draft.assigned_persons.length > 1) base.assigned_persons = draft.assigned_persons;
+    const recurrence = {};
+    if (draft.recurrence_enabled) {
+      for (const [k, v] of Object.entries(draft)) if (k.startsWith("recurrence_")) recurrence[k] = v;
+    }
+    try {
+      if (this._isExternalCol(colIdx)) {
+        const res = await this._callWs("home_tasks/create_external_task",
+          { entity_id: this._colEntityId(colIdx), title, ...base, ...recurrence }, { rethrow: true });
+        if (draft.section_id && res?.uid) {
+          await this._callWs("home_tasks/update_external_overlay",
+            { entity_id: this._colEntityId(colIdx), task_uid: res.uid, section_id: draft.section_id });
+        }
+      } else {
+        const listId = this._colListId(colIdx);
+        const payload = { list_id: listId, title, ...base };
+        if (draft.section_id) payload.section_id = draft.section_id;
+        const res = await this._callWs("home_tasks/add_task", payload, { rethrow: true });
+        if (res?.id && Object.keys(recurrence).length) {
+          await this._callWs("home_tasks/update_task", { list_id: listId, task_id: res.id, ...recurrence });
+        }
+      }
+    } catch (err) {
+      this._showError(this._t("add_failed"));
+      return;
+    }
+    cs.draft = null;
+    if (this._isExternalCol(colIdx)) this._reloadExternal(colIdx);
+    else await this._loadAllTasks();
+    this._render();
   }
 
   async _addTask(colIdx) {
@@ -6514,6 +6668,7 @@ class HomeTasksCard extends HTMLElement {
     const children = [];
     if (header) children.push(header);
     if (col.show_add_task !== false) children.push(addTask);
+    if (cs.draft) children.push(this._buildDraftPanel(cs, colIdx));
     if (filters) children.push(filters);
     if (tagChipsEl) children.push(tagChipsEl);
     if (personChipsEl) children.push(personChipsEl);
@@ -6890,7 +7045,28 @@ class HomeTasksCard extends HTMLElement {
     const addBtn = this._el("button", { className: "add-btn", textContent: "+" });
     addBtn.addEventListener("click", () => this._addTask(colIdx));
 
-    const children = [addInput];
+    // Clear (x) inside the field, shown while there is text: empties the
+    // title and any search it was driving, and keeps the cursor there.
+    const clearBtn = this._el("button", {
+      className: "add-clear-btn", textContent: "\u00D7", title: this._t("add_clear"),
+    });
+    clearBtn.type = "button";
+    clearBtn.setAttribute("aria-label", this._t("add_clear"));
+    if (!cs.newTaskTitle) clearBtn.style.display = "none";
+    addInput.addEventListener("input", () => { clearBtn.style.display = addInput.value ? "" : "none"; });
+    clearBtn.addEventListener("click", () => {
+      addInput.value = "";
+      cs.newTaskTitle = "";
+      clearBtn.style.display = "none";
+      if (cs.taskSearchQuery) {
+        cs.taskSearchQuery = "";
+        this._refreshTaskListDOM(colIdx);
+      }
+      try { addInput.focus(); } catch (_) { /* best-effort */ }
+    });
+    const inputWrap = this._el("div", { className: "add-input-wrap" }, [addInput, clearBtn]);
+
+    const children = [inputWrap];
     if (col.show_voice !== false && this._voiceSupported()) {
       const isRecording = this._voiceActive.has(colIdx);
       const micBtn = this._el("button", {
@@ -6939,6 +7115,16 @@ class HomeTasksCard extends HTMLElement {
         rowChildren.push(timeInput);
       }
       dueRow = this._el("div", { className: "add-due-row" }, rowChildren);
+    }
+    // show_add_details: a second button that creates the task and opens
+    // its details straight away, for filling in date, people etc. at once.
+    if (col.show_add_details === true) {
+      const detailsBtn = this._el("button", {
+        className: "add-btn add-details-btn", textContent: "\u270E", title: this._t("add_with_details"),
+      });
+      detailsBtn.setAttribute("aria-label", this._t("add_with_details"));
+      detailsBtn.addEventListener("click", () => this._openDraft(colIdx));
+      children.push(detailsBtn);
     }
     children.push(addBtn);
     const row = this._el("div", { className: "add-task" }, children);
@@ -8347,7 +8533,7 @@ class HomeTasksCard extends HTMLElement {
     }
   }
 
-  _buildTaskDetails(task, colIdx) {
+  _buildTaskDetails(task, colIdx, { draft = false } = {}) {
     const col = this._config.columns[colIdx];
 
     const details = [];
@@ -8361,7 +8547,7 @@ class HomeTasksCard extends HTMLElement {
     if (col.show_recurrence !== false) details.push(this._buildRecurrenceSection(task, colIdx));
     if (col.show_history) details.push(this._buildHistorySection(task));
     if (col.show_images === true) details.push(this._buildImageSection(task, colIdx));
-    details.push(this._buildActionsSection(task, colIdx));
+    if (!draft) details.push(this._buildActionsSection(task, colIdx));
 
     const inner = this._el("div", { className: "task-details-inner" }, details);
     const wrapper = this._el("div", { className: "task-details" }, [inner]);
@@ -11161,6 +11347,27 @@ class HomeTasksCard extends HTMLElement {
         font-weight: 500; cursor: pointer; white-space: nowrap; font-family: inherit;
       }
       .add-btn:hover { opacity: 0.9; }
+      .add-details-btn { padding: 10px 14px; }
+      .task-draft {
+        border: 1px solid var(--todo-primary); border-radius: var(--todo-radius);
+        padding: 10px; margin: -8px 0 16px; display: flex; flex-direction: column; gap: 8px;
+      }
+      .task-draft .draft-title { width: 100%; box-sizing: border-box; }
+      /* the details normally open via a height animation on the task row */
+      .task-draft .task-details { height: auto; border-top: none; }
+      .draft-actions { display: flex; justify-content: flex-end; gap: 8px; }
+      .draft-cancel-btn {
+        padding: 10px 16px; background: none; color: var(--todo-secondary-text);
+        border: 1px solid var(--todo-divider); border-radius: var(--todo-radius); cursor: pointer; font-family: inherit;
+      }
+      .add-input-wrap { position: relative; flex: 1; display: flex; min-width: 0; }
+      .add-input-wrap .add-input { padding-right: 34px; min-width: 0; }
+      .add-clear-btn {
+        position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+        width: 24px; height: 24px; border: none; border-radius: 50%; background: none;
+        color: var(--todo-secondary-text); font-size: 18px; line-height: 1; cursor: pointer; padding: 0;
+      }
+      .add-clear-btn:hover { background: var(--todo-surface); }
       .mic-btn {
         flex-shrink: 0; width: 38px; height: 38px; padding: 0;
         border: none; border-radius: var(--todo-radius);
@@ -13359,6 +13566,7 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("task-search", "ed_task_search", "show_task_search", true),
           makeToggle("show-add-due", "ed_show_add_due", "show_add_due", false),
           makeToggle("show-voice", "ed_show_voice", "show_voice", true),
+          makeToggle("show-add-details", "ed_show_add_details", "show_add_details", false),
           makeToggle("show-sort", "ed_show_sort", "show_sort", true),
           makeToggle("show-filters", "ed_show_filters", "show_filters", true),
           makeToggle("show-tag-chips", "ed_show_tag_chips", "show_tag_chips", true),

@@ -278,7 +278,10 @@
     "ed_ai_prompt_prefix_placeholder": "e.g. Minimalist icon of",
     "calendar_minutes_before": "{value} min before",
     "calendar_hours_before": "{value}h before",
-    "calendar_days_before": "{value}d before"
+    "calendar_days_before": "{value}d before",
+    "add_with_details": "Add and edit details",
+    "add_clear": "Clear",
+    "ed_show_add_details": "Add with details button"
   },
   "nl": {
     "ed_default_priority": "Standaardprioriteit",
@@ -559,7 +562,10 @@
     "due_ago_seconds": "Zojuist",
     "calendar_minutes_before": "{value} min van tevoren",
     "calendar_hours_before": "{value} uur van tevoren",
-    "calendar_days_before": "{value} dagen van tevoren"
+    "calendar_days_before": "{value} dagen van tevoren",
+    "ed_show_add_details": "Knop toevoegen met details",
+    "add_with_details": "Toevoegen en details bewerken",
+    "add_clear": "Wissen"
   },
   "it": {
     "ed_default_priority": "Priorità predefinita",
@@ -840,7 +846,10 @@
     "due_ago_seconds": "Proprio ora",
     "calendar_minutes_before": "{value} min prima",
     "calendar_hours_before": "{value} ore prima",
-    "calendar_days_before": "{value} giorni prima"
+    "calendar_days_before": "{value} giorni prima",
+    "ed_show_add_details": "Pulsante aggiungi con dettagli",
+    "add_with_details": "Aggiungi e modifica dettagli",
+    "add_clear": "Cancella"
   },
   "pl": {
     "ed_default_priority": "Domyślny priorytet",
@@ -1121,7 +1130,10 @@
     "due_ago_seconds": "Właśnie",
     "calendar_minutes_before": "{value} min przed",
     "calendar_hours_before": "{value} godz. przed",
-    "calendar_days_before": "{value} dni przed"
+    "calendar_days_before": "{value} dni przed",
+    "ed_show_add_details": "Przycisk dodawania ze szczegółami",
+    "add_with_details": "Dodaj i edytuj szczegóły",
+    "add_clear": "Wyczyść"
   },
   "sv": {
     "ed_default_priority": "Standardprioritet",
@@ -1402,7 +1414,10 @@
     "due_ago_seconds": "Just nu",
     "calendar_minutes_before": "{value} min innan",
     "calendar_hours_before": "{value} tim innan",
-    "calendar_days_before": "{value} dagar innan"
+    "calendar_days_before": "{value} dagar innan",
+    "ed_show_add_details": "Knapp lägg till med detaljer",
+    "add_with_details": "Lägg till och redigera detaljer",
+    "add_clear": "Rensa"
   },
   "fr": {
     "ed_default_priority": "Priorité par défaut",
@@ -1683,7 +1698,10 @@
     "due_ago_seconds": "À l'instant",
     "calendar_minutes_before": "{value} min avant",
     "calendar_hours_before": "{value} h avant",
-    "calendar_days_before": "{value} j avant"
+    "calendar_days_before": "{value} j avant",
+    "ed_show_add_details": "Bouton ajouter avec détails",
+    "add_with_details": "Ajouter et modifier les détails",
+    "add_clear": "Effacer"
   },
   "pt": {
     "ed_default_priority": "Prioridade padrão",
@@ -1964,7 +1982,10 @@
     "due_ago_seconds": "Agora mesmo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value}h antes",
-    "calendar_days_before": "{value}d antes"
+    "calendar_days_before": "{value}d antes",
+    "ed_show_add_details": "Botão adicionar com detalhes",
+    "add_with_details": "Adicionar e editar detalhes",
+    "add_clear": "Limpar"
   },
   "pt-BR": {
     "ed_default_priority": "Prioridade padrão",
@@ -2245,7 +2266,10 @@
     "due_ago_seconds": "Agora mesmo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value}h antes",
-    "calendar_days_before": "{value}d antes"
+    "calendar_days_before": "{value}d antes",
+    "ed_show_add_details": "Botão adicionar com detalhes",
+    "add_with_details": "Adicionar e editar detalhes",
+    "add_clear": "Limpar"
   },
   "es": {
     "ed_default_priority": "Prioridad predeterminada",
@@ -2526,7 +2550,10 @@
     "due_ago_seconds": "Ahora mismo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value} h antes",
-    "calendar_days_before": "{value} d antes"
+    "calendar_days_before": "{value} d antes",
+    "ed_show_add_details": "Botón añadir con detalles",
+    "add_with_details": "Añadir y editar detalles",
+    "add_clear": "Borrar"
   },
   "ru": {
     "ed_default_priority": "Приоритет по умолчанию",
@@ -2807,7 +2834,10 @@
     "due_ago_seconds": "Только что",
     "calendar_minutes_before": "за {value} мин",
     "calendar_hours_before": "за {value} ч",
-    "calendar_days_before": "за {value} дн."
+    "calendar_days_before": "за {value} дн.",
+    "ed_show_add_details": "Кнопка добавления с деталями",
+    "add_with_details": "Добавить и изменить детали",
+    "add_clear": "Очистить"
   },
   "cs": {
     "ed_default_priority": "Výchozí priorita",
@@ -3088,7 +3118,10 @@
     "due_ago_seconds": "Právě teď",
     "calendar_minutes_before": "{value} min předem",
     "calendar_hours_before": "{value} h předem",
-    "calendar_days_before": "{value} d předem"
+    "calendar_days_before": "{value} d předem",
+    "ed_show_add_details": "Tlačítko přidat s podrobnostmi",
+    "add_with_details": "Přidat a upravit podrobnosti",
+    "add_clear": "Vymazat"
   },
   "da": {
     "ed_default_priority": "Standardprioritet",
@@ -3369,7 +3402,10 @@
     "due_ago_seconds": "Lige nu",
     "calendar_minutes_before": "{value} min før",
     "calendar_hours_before": "{value} timer før",
-    "calendar_days_before": "{value} dage før"
+    "calendar_days_before": "{value} dage før",
+    "ed_show_add_details": "Knap tilføj med detaljer",
+    "add_with_details": "Tilføj og rediger detaljer",
+    "add_clear": "Ryd"
   },
   "no": {
     "ed_default_priority": "Standardprioritet",
@@ -3650,7 +3686,10 @@
     "due_ago_seconds": "Akkurat nå",
     "calendar_minutes_before": "{value} min før",
     "calendar_hours_before": "{value} timer før",
-    "calendar_days_before": "{value} dager før"
+    "calendar_days_before": "{value} dager før",
+    "ed_show_add_details": "Knapp legg til med detaljer",
+    "add_with_details": "Legg til og rediger detaljer",
+    "add_clear": "Tøm"
   },
   "fi": {
     "ed_default_priority": "Oletusprioriteetti",
@@ -3931,7 +3970,10 @@
     "due_ago_seconds": "Juuri nyt",
     "calendar_minutes_before": "{value} min ennen",
     "calendar_hours_before": "{value} h ennen",
-    "calendar_days_before": "{value} pv ennen"
+    "calendar_days_before": "{value} pv ennen",
+    "ed_show_add_details": "Lisää tietojen kanssa -painike",
+    "add_with_details": "Lisää ja muokkaa tietoja",
+    "add_clear": "Tyhjennä"
   },
   "hu": {
     "ed_default_priority": "Alapértelmezett prioritás",
@@ -4212,7 +4254,10 @@
     "due_ago_seconds": "Épp most",
     "calendar_minutes_before": "{value} perccel előtte",
     "calendar_hours_before": "{value} órával előtte",
-    "calendar_days_before": "{value} nappal előtte"
+    "calendar_days_before": "{value} nappal előtte",
+    "ed_show_add_details": "Hozzáadás részletekkel gomb",
+    "add_with_details": "Hozzáadás és részletek szerkesztése",
+    "add_clear": "Törlés"
   },
   "de": {
     "ed_default_priority": "Standard-Priorität",
@@ -4493,6 +4538,9 @@
     "ed_ai_prompt_prefix_placeholder": "z.B. Minimalistisches Icon von",
     "calendar_minutes_before": "{value} Min. vorher",
     "calendar_hours_before": "{value} Std. vorher",
-    "calendar_days_before": "{value} Tage vorher"
+    "calendar_days_before": "{value} Tage vorher",
+    "add_with_details": "Hinzufügen und Details bearbeiten",
+    "add_clear": "Leeren",
+    "ed_show_add_details": "Button Hinzufügen mit Details"
   }
 }
