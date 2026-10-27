@@ -336,6 +336,7 @@ Each entry in `columns` accepts the following options.
 | `show_due_date` | `true` | Show/hide due date and time |
 | `show_reminders` | `true` | Show/hide reminders |
 | `show_recurrence` | `true` | Show/hide recurrence settings |
+| `collapse_recurrence` | `false` | Fold the recurrence settings in the task details behind a one-line summary (e.g. *Recurrence: 2 w*); tap to open |
 | `show_history` | `false` | Show/hide the task change history |
 | `badge_priority` / `badge_progress` / `badge_due` / `badge_recurrence` / `badge_tags` / `badge_reminders` | `true` | Show/hide the corresponding chip on task rows without disabling the feature itself — e.g. keep reminders active but hide their chip (`badge_reminders: false`). The matching `show_*` switch still controls the feature (detail editor + chip) |
 | `show_move` | `true` | Show/hide the Move button in the task details (moves a task to another list, next to Duplicate / Delete) |

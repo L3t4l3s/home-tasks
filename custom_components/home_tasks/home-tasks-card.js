@@ -287,7 +287,8 @@ const _TRANSLATIONS = {
     "ed_ai_prompt_prefix_placeholder": "e.g. Minimalist icon of",
     "calendar_minutes_before": "{value} min before",
     "calendar_hours_before": "{value}h before",
-    "calendar_days_before": "{value}d before"
+    "calendar_days_before": "{value}d before",
+    "ed_collapse_recurrence": "Fold recurrence settings"
   },
   "nl": {
     "ed_default_priority": "Standaardprioriteit",
@@ -568,7 +569,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Zojuist",
     "calendar_minutes_before": "{value} min van tevoren",
     "calendar_hours_before": "{value} uur van tevoren",
-    "calendar_days_before": "{value} dagen van tevoren"
+    "calendar_days_before": "{value} dagen van tevoren",
+    "ed_collapse_recurrence": "Herhaling inklappen"
   },
   "it": {
     "ed_default_priority": "Priorità predefinita",
@@ -849,7 +851,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Proprio ora",
     "calendar_minutes_before": "{value} min prima",
     "calendar_hours_before": "{value} ore prima",
-    "calendar_days_before": "{value} giorni prima"
+    "calendar_days_before": "{value} giorni prima",
+    "ed_collapse_recurrence": "Comprimi ricorrenza"
   },
   "pl": {
     "ed_default_priority": "Domyślny priorytet",
@@ -1130,7 +1133,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Właśnie",
     "calendar_minutes_before": "{value} min przed",
     "calendar_hours_before": "{value} godz. przed",
-    "calendar_days_before": "{value} dni przed"
+    "calendar_days_before": "{value} dni przed",
+    "ed_collapse_recurrence": "Zwiń powtarzanie"
   },
   "sv": {
     "ed_default_priority": "Standardprioritet",
@@ -1411,7 +1415,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Just nu",
     "calendar_minutes_before": "{value} min innan",
     "calendar_hours_before": "{value} tim innan",
-    "calendar_days_before": "{value} dagar innan"
+    "calendar_days_before": "{value} dagar innan",
+    "ed_collapse_recurrence": "Fäll ihop upprepning"
   },
   "fr": {
     "ed_default_priority": "Priorité par défaut",
@@ -1692,7 +1697,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "À l'instant",
     "calendar_minutes_before": "{value} min avant",
     "calendar_hours_before": "{value} h avant",
-    "calendar_days_before": "{value} j avant"
+    "calendar_days_before": "{value} j avant",
+    "ed_collapse_recurrence": "Replier la récurrence"
   },
   "pt": {
     "ed_default_priority": "Prioridade padrão",
@@ -1973,7 +1979,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Agora mesmo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value}h antes",
-    "calendar_days_before": "{value}d antes"
+    "calendar_days_before": "{value}d antes",
+    "ed_collapse_recurrence": "Recolher recorrência"
   },
   "pt-BR": {
     "ed_default_priority": "Prioridade padrão",
@@ -2254,7 +2261,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Agora mesmo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value}h antes",
-    "calendar_days_before": "{value}d antes"
+    "calendar_days_before": "{value}d antes",
+    "ed_collapse_recurrence": "Recolher recorrência"
   },
   "es": {
     "ed_default_priority": "Prioridad predeterminada",
@@ -2535,7 +2543,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Ahora mismo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value} h antes",
-    "calendar_days_before": "{value} d antes"
+    "calendar_days_before": "{value} d antes",
+    "ed_collapse_recurrence": "Contraer recurrencia"
   },
   "ru": {
     "ed_default_priority": "Приоритет по умолчанию",
@@ -2816,7 +2825,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Только что",
     "calendar_minutes_before": "за {value} мин",
     "calendar_hours_before": "за {value} ч",
-    "calendar_days_before": "за {value} дн."
+    "calendar_days_before": "за {value} дн.",
+    "ed_collapse_recurrence": "Свернуть повторение"
   },
   "cs": {
     "ed_default_priority": "Výchozí priorita",
@@ -3097,7 +3107,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Právě teď",
     "calendar_minutes_before": "{value} min předem",
     "calendar_hours_before": "{value} h předem",
-    "calendar_days_before": "{value} d předem"
+    "calendar_days_before": "{value} d předem",
+    "ed_collapse_recurrence": "Sbalit opakování"
   },
   "da": {
     "ed_default_priority": "Standardprioritet",
@@ -3378,7 +3389,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Lige nu",
     "calendar_minutes_before": "{value} min før",
     "calendar_hours_before": "{value} timer før",
-    "calendar_days_before": "{value} dage før"
+    "calendar_days_before": "{value} dage før",
+    "ed_collapse_recurrence": "Fold gentagelse sammen"
   },
   "no": {
     "ed_default_priority": "Standardprioritet",
@@ -3659,7 +3671,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Akkurat nå",
     "calendar_minutes_before": "{value} min før",
     "calendar_hours_before": "{value} timer før",
-    "calendar_days_before": "{value} dager før"
+    "calendar_days_before": "{value} dager før",
+    "ed_collapse_recurrence": "Skjul gjentakelse"
   },
   "fi": {
     "ed_default_priority": "Oletusprioriteetti",
@@ -3940,7 +3953,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Juuri nyt",
     "calendar_minutes_before": "{value} min ennen",
     "calendar_hours_before": "{value} h ennen",
-    "calendar_days_before": "{value} pv ennen"
+    "calendar_days_before": "{value} pv ennen",
+    "ed_collapse_recurrence": "Pienennä toistuvuus"
   },
   "hu": {
     "ed_default_priority": "Alapértelmezett prioritás",
@@ -4221,7 +4235,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Épp most",
     "calendar_minutes_before": "{value} perccel előtte",
     "calendar_hours_before": "{value} órával előtte",
-    "calendar_days_before": "{value} nappal előtte"
+    "calendar_days_before": "{value} nappal előtte",
+    "ed_collapse_recurrence": "Ismétlés összecsukása"
   },
   "de": {
     "ed_default_priority": "Standard-Priorität",
@@ -4502,7 +4517,8 @@ const _TRANSLATIONS = {
     "ed_ai_prompt_prefix_placeholder": "z.B. Minimalistisches Icon von",
     "calendar_minutes_before": "{value} Min. vorher",
     "calendar_hours_before": "{value} Std. vorher",
-    "calendar_days_before": "{value} Tage vorher"
+    "calendar_days_before": "{value} Tage vorher",
+    "ed_collapse_recurrence": "Wiederholung einklappen"
   }
 };
 
@@ -9686,7 +9702,7 @@ class HomeTasksCard extends HTMLElement {
     leadUnitSelect.addEventListener("change", saveLead);
     _blurAfterChange(leadUnitSelect);
 
-    return this._el("div", { className: "detail-section" }, [
+    const recurrenceRows = [
       recurrenceToggleRow,
       recurrenceIntervalRow,
       recurrenceBasicRadioRow,
@@ -9699,7 +9715,29 @@ class HomeTasksCard extends HTMLElement {
       recurrenceEndRow,
       recurrenceEndDateWrap,
       recurrenceCountRow,
-    ]);
+    ];
+    const col = this._config.columns[colIdx] || {};
+    if (col.collapse_recurrence !== true) {
+      return this._el("div", { className: "detail-section" }, recurrenceRows);
+    }
+    // collapse_recurrence: the recurrence editor is a dozen rows; fold it
+    // behind a one-line summary ("Recurrence: every 2 weeks") until tapped.
+    // Open state is kept per task across re-renders.
+    this._recurrenceFoldOpen = this._recurrenceFoldOpen || new Set();
+    const badge = task.recurrence_enabled ? this._buildRecurrenceBadge(task) : null;
+    const summaryText = (badge && badge.textContent.replace(/^\u21BB\s*/, "").trim()) || this._t("history_disabled");
+    const fold = this._el("details", { className: "detail-section recurrence-fold" });
+    fold.open = this._recurrenceFoldOpen.has(task.id);
+    fold.addEventListener("toggle", () => {
+      if (fold.open) this._recurrenceFoldOpen.add(task.id);
+      else this._recurrenceFoldOpen.delete(task.id);
+    });
+    fold.appendChild(this._el("summary", {
+      className: "detail-label recurrence-fold-summary",
+      textContent: `${this._t("recurrence")}: ${summaryText}`,
+    }));
+    for (const row of recurrenceRows) fold.appendChild(row);
+    return fold;
   }
 
   _buildAssignedPersonSection(task, colIdx) {
@@ -11322,6 +11360,11 @@ class HomeTasksCard extends HTMLElement {
       .priority-badge.pri-medium { background: rgba(255, 152, 0, 0.15); color: var(--warning-color, #ff9800); }
       .priority-badge.pri-low { background: rgba(3, 169, 244, 0.15); color: var(--info-color, #03a9f4); }
       .priority-btn-row { display: flex; gap: 6px; }
+      .recurrence-fold > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px; }
+      .recurrence-fold > summary::-webkit-details-marker { display: none; }
+      .recurrence-fold > summary::after { content: "\\25B8"; opacity: 0.6; transition: transform 0.15s; }
+      .recurrence-fold[open] > summary::after { transform: rotate(90deg); }
+      .recurrence-fold[open] > summary { margin-bottom: 8px; }
       .priority-btn {
         flex: 1; padding: 5px 8px; border-radius: 4px; font-size: 12px; font-family: inherit;
         border: 1px solid var(--todo-divider); background: var(--todo-bg);
@@ -13415,6 +13458,7 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-due-date", "ed_show_due_date", "show_due_date", true),
           makeToggle("show-reminders", "ed_show_reminders", "show_reminders", true),
           makeToggle("show-recurrence", "ed_show_recurrence", "show_recurrence", true),
+          makeToggle("collapse-recurrence", "ed_collapse_recurrence", "collapse_recurrence", false),
           makeToggle("show-history", "ed_show_history", "show_history", false),
           makeToggle("show-move", "ed_show_move", "show_move", true),
         ]),
