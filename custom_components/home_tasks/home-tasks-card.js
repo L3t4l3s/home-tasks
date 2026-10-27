@@ -287,7 +287,9 @@ const _TRANSLATIONS = {
     "ed_ai_prompt_prefix_placeholder": "e.g. Minimalist icon of",
     "calendar_minutes_before": "{value} min before",
     "calendar_hours_before": "{value}h before",
-    "calendar_days_before": "{value}d before"
+    "calendar_days_before": "{value}d before",
+    "ed_hidden_persons": "Hide people",
+    "ed_hidden_persons_hint": "Not offered for assignment in this card"
   },
   "nl": {
     "ed_default_priority": "Standaardprioriteit",
@@ -568,7 +570,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Zojuist",
     "calendar_minutes_before": "{value} min van tevoren",
     "calendar_hours_before": "{value} uur van tevoren",
-    "calendar_days_before": "{value} dagen van tevoren"
+    "calendar_days_before": "{value} dagen van tevoren",
+    "ed_hidden_persons": "Personen verbergen",
+    "ed_hidden_persons_hint": "Niet aangeboden voor toewijzing in deze kaart"
   },
   "it": {
     "ed_default_priority": "Priorità predefinita",
@@ -849,7 +853,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Proprio ora",
     "calendar_minutes_before": "{value} min prima",
     "calendar_hours_before": "{value} ore prima",
-    "calendar_days_before": "{value} giorni prima"
+    "calendar_days_before": "{value} giorni prima",
+    "ed_hidden_persons": "Nascondi persone",
+    "ed_hidden_persons_hint": "Non proposte per l'assegnazione in questa scheda"
   },
   "pl": {
     "ed_default_priority": "Domyślny priorytet",
@@ -1130,7 +1136,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Właśnie",
     "calendar_minutes_before": "{value} min przed",
     "calendar_hours_before": "{value} godz. przed",
-    "calendar_days_before": "{value} dni przed"
+    "calendar_days_before": "{value} dni przed",
+    "ed_hidden_persons": "Ukryj osoby",
+    "ed_hidden_persons_hint": "Nie są proponowane do przypisania na tej karcie"
   },
   "sv": {
     "ed_default_priority": "Standardprioritet",
@@ -1411,7 +1419,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Just nu",
     "calendar_minutes_before": "{value} min innan",
     "calendar_hours_before": "{value} tim innan",
-    "calendar_days_before": "{value} dagar innan"
+    "calendar_days_before": "{value} dagar innan",
+    "ed_hidden_persons": "Dölj personer",
+    "ed_hidden_persons_hint": "Erbjuds inte för tilldelning i det här kortet"
   },
   "fr": {
     "ed_default_priority": "Priorité par défaut",
@@ -1692,7 +1702,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "À l'instant",
     "calendar_minutes_before": "{value} min avant",
     "calendar_hours_before": "{value} h avant",
-    "calendar_days_before": "{value} j avant"
+    "calendar_days_before": "{value} j avant",
+    "ed_hidden_persons": "Masquer des personnes",
+    "ed_hidden_persons_hint": "Non proposées pour l'attribution dans cette carte"
   },
   "pt": {
     "ed_default_priority": "Prioridade padrão",
@@ -1973,7 +1985,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Agora mesmo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value}h antes",
-    "calendar_days_before": "{value}d antes"
+    "calendar_days_before": "{value}d antes",
+    "ed_hidden_persons": "Ocultar pessoas",
+    "ed_hidden_persons_hint": "Não oferecidas para atribuição neste cartão"
   },
   "pt-BR": {
     "ed_default_priority": "Prioridade padrão",
@@ -2254,7 +2268,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Agora mesmo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value}h antes",
-    "calendar_days_before": "{value}d antes"
+    "calendar_days_before": "{value}d antes",
+    "ed_hidden_persons": "Ocultar pessoas",
+    "ed_hidden_persons_hint": "Não oferecidas para atribuição neste cartão"
   },
   "es": {
     "ed_default_priority": "Prioridad predeterminada",
@@ -2535,7 +2551,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Ahora mismo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value} h antes",
-    "calendar_days_before": "{value} d antes"
+    "calendar_days_before": "{value} d antes",
+    "ed_hidden_persons": "Ocultar personas",
+    "ed_hidden_persons_hint": "No se ofrecen para asignar en esta tarjeta"
   },
   "ru": {
     "ed_default_priority": "Приоритет по умолчанию",
@@ -2816,7 +2834,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Только что",
     "calendar_minutes_before": "за {value} мин",
     "calendar_hours_before": "за {value} ч",
-    "calendar_days_before": "за {value} дн."
+    "calendar_days_before": "за {value} дн.",
+    "ed_hidden_persons": "Скрыть людей",
+    "ed_hidden_persons_hint": "Не предлагаются для назначения в этой карточке"
   },
   "cs": {
     "ed_default_priority": "Výchozí priorita",
@@ -3097,7 +3117,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Právě teď",
     "calendar_minutes_before": "{value} min předem",
     "calendar_hours_before": "{value} h předem",
-    "calendar_days_before": "{value} d předem"
+    "calendar_days_before": "{value} d předem",
+    "ed_hidden_persons": "Skrýt osoby",
+    "ed_hidden_persons_hint": "V této kartě se nenabízejí k přiřazení"
   },
   "da": {
     "ed_default_priority": "Standardprioritet",
@@ -3378,7 +3400,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Lige nu",
     "calendar_minutes_before": "{value} min før",
     "calendar_hours_before": "{value} timer før",
-    "calendar_days_before": "{value} dage før"
+    "calendar_days_before": "{value} dage før",
+    "ed_hidden_persons": "Skjul personer",
+    "ed_hidden_persons_hint": "Tilbydes ikke til tildeling i dette kort"
   },
   "no": {
     "ed_default_priority": "Standardprioritet",
@@ -3659,7 +3683,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Akkurat nå",
     "calendar_minutes_before": "{value} min før",
     "calendar_hours_before": "{value} timer før",
-    "calendar_days_before": "{value} dager før"
+    "calendar_days_before": "{value} dager før",
+    "ed_hidden_persons": "Skjul personer",
+    "ed_hidden_persons_hint": "Tilbys ikke for tildeling i dette kortet"
   },
   "fi": {
     "ed_default_priority": "Oletusprioriteetti",
@@ -3940,7 +3966,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Juuri nyt",
     "calendar_minutes_before": "{value} min ennen",
     "calendar_hours_before": "{value} h ennen",
-    "calendar_days_before": "{value} pv ennen"
+    "calendar_days_before": "{value} pv ennen",
+    "ed_hidden_persons": "Piilota henkilöt",
+    "ed_hidden_persons_hint": "Ei tarjota määritettäväksi tässä kortissa"
   },
   "hu": {
     "ed_default_priority": "Alapértelmezett prioritás",
@@ -4221,7 +4249,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Épp most",
     "calendar_minutes_before": "{value} perccel előtte",
     "calendar_hours_before": "{value} órával előtte",
-    "calendar_days_before": "{value} nappal előtte"
+    "calendar_days_before": "{value} nappal előtte",
+    "ed_hidden_persons": "Személyek elrejtése",
+    "ed_hidden_persons_hint": "Ebben a kártyában nem választhatók hozzárendelésre"
   },
   "de": {
     "ed_default_priority": "Standard-Priorität",
@@ -4502,7 +4532,9 @@ const _TRANSLATIONS = {
     "ed_ai_prompt_prefix_placeholder": "z.B. Minimalistisches Icon von",
     "calendar_minutes_before": "{value} Min. vorher",
     "calendar_hours_before": "{value} Std. vorher",
-    "calendar_days_before": "{value} Tage vorher"
+    "calendar_days_before": "{value} Tage vorher",
+    "ed_hidden_persons": "Personen ausblenden",
+    "ed_hidden_persons_hint": "In dieser Karte nicht zur Zuweisung angeboten"
   }
 };
 
@@ -4544,9 +4576,9 @@ const nextFreeReminderOffset = (used) =>
 
 // Person options shared by the detail sheet's assignee select and the
 // editor's Defaults section (the "nobody" entry stays with the callers).
-const personEntries = (hass) =>
+const personEntries = (hass, hidden = []) =>
   Object.keys((hass && hass.states) || {})
-    .filter((eid) => eid.startsWith("person."))
+    .filter((eid) => eid.startsWith("person.") && !hidden.includes(eid))
     .sort()
     .map((eid) => ({
       value: eid,
@@ -9707,7 +9739,11 @@ class HomeTasksCard extends HTMLElement {
     const noneOpt = this._el("option", { value: "", textContent: this._t("nobody") });
     if (!task.assigned_person) noneOpt.selected = true;
     personSelect.appendChild(noneOpt);
-    for (const { value, label } of personEntries(this._hass)) {
+    // hidden_persons: people never offered for assignment in this card (system
+    // or visiting persons). Someone already assigned stays visible.
+    const hiddenPersons = (this._config.columns[colIdx] || {}).hidden_persons || [];
+    const offered = personEntries(this._hass, hiddenPersons.filter((p) => p !== task.assigned_person));
+    for (const { value, label } of offered) {
       const opt = this._el("option", { value, textContent: label });
       if (value === task.assigned_person) opt.selected = true;
       personSelect.appendChild(opt);
@@ -12678,6 +12714,13 @@ class HomeTasksCardEditor extends HTMLElement {
       .icon-btn:disabled { opacity: 0.3; cursor: default; }
       .icon-btn-spacer { flex: 1; }
       .toggle-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
+      .assignee-chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
+      .assignee-chip {
+        padding: 5px 10px; border-radius: 14px; font-size: 12px; font-family: inherit;
+        border: 1px solid var(--divider-color); background: none;
+        color: var(--secondary-text-color); cursor: pointer;
+      }
+      .assignee-chip.active { color: var(--primary-color); border-color: var(--primary-color); text-decoration: line-through; }
       .group-label {
         display: flex; align-items: center; gap: 10px; margin: 14px 0 2px;
         font-size: 12px; font-weight: 500; color: var(--secondary-text-color, #888);
@@ -13418,6 +13461,29 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-history", "ed_show_history", "show_history", false),
           makeToggle("show-move", "ed_show_move", "show_move", true),
         ]),
+        (() => {
+          // hidden_persons: tap a person to stop offering them for assignment.
+          const hidden = new Set(col.hidden_persons || []);
+          const row = this._el("div", { className: "assignee-chip-row" });
+          for (const { value, label } of personEntries(this._hass)) {
+            const chip = this._el("button", {
+              className: "assignee-chip" + (hidden.has(value) ? " active" : ""),
+              textContent: label,
+            });
+            chip.type = "button";
+            chip.addEventListener("click", () => {
+              if (hidden.has(value)) hidden.delete(value); else hidden.add(value);
+              chip.classList.toggle("active", hidden.has(value));
+              updateCol({ hidden_persons: hidden.size ? [...hidden].sort() : undefined });
+            });
+            row.appendChild(chip);
+          }
+          return this._el("div", { className: "field" }, [
+            this._el("div", { className: "group-label", textContent: this._t("ed_hidden_persons") }),
+            row,
+            this._el("div", { className: "hint", textContent: this._t("ed_hidden_persons_hint") }),
+          ]);
+        })(),
       ]),
       this._buildSectionsEditor(col),
       makeSection("images", "mdi:image-multiple", "ed_sec_images", [

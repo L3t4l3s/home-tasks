@@ -330,6 +330,7 @@ Each entry in `columns` accepts the following options.
 | `show_notes` | `true` | Show/hide the notes field |
 | `show_sub_tasks` | `true` | Show/hide sub-tasks |
 | `show_assigned_person` | `true` | Show/hide person assignment |
+| `hidden_persons` | — | List of `person.*` entities not offered for assignment in this card (e.g. a system or visiting person). Someone already assigned to a task stays visible. Set in the visual editor under *Hide people* |
 | `person_badge` | `name` | How the assigned person is shown on a task row: `off`, `picture`, `name`, `both`. Replaces `badge_person`. The picture is the person entity's Home Assistant profile picture; people without one get their initials |
 | `show_priority` | `true` | Show/hide priority field and badge |
 | `show_tags` | `true` | Show/hide tags, badges, and filter chips |
