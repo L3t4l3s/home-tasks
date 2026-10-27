@@ -31,7 +31,7 @@ Every task can carry over 20 individual attributes:
 - **Recurring (monthly)** — every N months on a specific day (1–31 or "last") **or** an Nth weekday (1st – 4th + last × Mon – Sun) — e.g. "every 24th", "every last day", "every 2nd Saturday", "every last Wednesday every 2 months"
 - **Recurring (yearly)** — every N years on a specific TT.MM anniversary (e.g. "every 24.12.")
 - **From completion or from due date** — without a fixed pattern, pick what a *late* tick counts from: **From completion** (default — every 2 days means 2 days after you actually did it) or **From due date** (the series keeps its own days; missed occurrences collapse into the next one on or after today, which may reopen the task straight away). Weekday, day-of-month, Nth-weekday and anniversary patterns always follow the due date, so ticking Tuesday's Mon–Fri chore on Wednesday brings Wednesday's back instead of skipping it
-- **Reopen early** — a completed recurring task normally stays done until it is due again; set a lead (minutes or hours for hourly series, hours or days otherwise) and it opens that long before, showing as an upcoming to-do while its due date still advances the full interval — e.g. the weekly shop due Saturday comes back on Monday. A lead as long as the interval isn't offered (the task would reopen the moment it is ticked off). Home Tasks lists only; linked lists reopen when due
+- **Reopen early** — a completed recurring task normally stays done until it is due again; set a lead (minutes or hours for hourly series, hours or days otherwise) and it opens that long before, showing as an upcoming to-do while its due date still advances the full interval — e.g. the weekly shop due Saturday comes back on Monday. A lead as long as the interval isn't offered (the task would reopen the moment it is ticked off). A list-wide lead in the card editor's *Defaults* is taken over when recurrence is switched on (see [List defaults](#list-defaults)). Home Tasks lists only; linked lists reopen when due
 - **Recurrence start date** ("Beginn")
 - **Recurrence end date**
 - **Maximum repetitions**
@@ -385,6 +385,12 @@ that shows the list. Other tags can still be added to a task, but typing a new t
 or two letters off a fixed one (`kitchn` for `kitchen`) offers the fixed tag instead, so a
 typo doesn't quietly split a category in two. Fixed tags aren't added to new tasks; that's
 what the default tags are for.
+
+Home Tasks lists also have a list-wide **Reopen early** lead (same section). A task takes
+it over when its recurrence is switched on, and the interval then starts a day longer than
+the lead, so it fits — a 30-day lead starts the task at every 31 days. Change the interval
+and a lead that no longer fits drops to `0`, as with one typed in. Tasks already recurring
+keep the lead they have when the list default changes.
 
 ### Styling
 

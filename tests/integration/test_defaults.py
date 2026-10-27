@@ -70,7 +70,7 @@ async def test_setting_one_default_leaves_the_others_alone(hass: HomeAssistant, 
     assert after == {
         "assignee": "person.alice", "reminders": [],
         "tags": ["chore"], "priority": 1, "section_id": None,
-        "tag_catalog": [],
+        "tag_catalog": [], "recurrence_reopen_lead": 0,
     }
 
 
@@ -141,7 +141,7 @@ async def test_the_websocket_round_trip_carries_the_new_fields(
     assert msg["result"]["defaults"] == {
         "assignee": None, "reminders": [],
         "tags": ["chore"], "priority": 2, "section_id": section["id"],
-        "tag_catalog": [],
+        "tag_catalog": [], "recurrence_reopen_lead": 0,
     }
 
 
@@ -203,6 +203,31 @@ async def test_an_external_list_has_defaults_too(
     assert msg["result"]["defaults"]["tags"] == ["shopping"]
     assert msg["result"]["defaults"]["priority"] == 1
     assert msg["result"]["defaults"]["section_id"] == section_id
+
+
+async def test_changing_the_reopen_lead_tells_the_cards(hass: HomeAssistant, store) -> None:
+    """Cards show it in the editor of a task not recurring yet, so they must
+    reload — an unchanged save stays quiet."""
+    calls = []
+    store.async_add_listener(lambda: calls.append(1))
+    await store.async_set_defaults(recurrence_reopen_lead=2 * 1440)
+    assert len(calls) == 1
+    await store.async_set_defaults(recurrence_reopen_lead=2 * 1440)
+    assert len(calls) == 1
+
+
+async def test_an_external_list_has_no_reopen_lead(
+    hass: HomeAssistant, hass_ws_client, ext_entry
+) -> None:
+    """Reopening early is native-only, for the list as for the task."""
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 23, "type": "home_tasks/set_defaults", "entity_id": EXT_ENTITY,
+        "recurrence_reopen_lead": 1440,
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is False
+    assert "linked lists" in msg["error"]["message"]
 
 
 class _Adapter:

@@ -170,6 +170,7 @@ const _TRANSLATIONS = {
     "ed_default_sort": "Default sort",
     "ed_tag_catalog": "Fixed tags",
     "ed_tag_catalog_hint": "Always suggested when tagging a task in this list — other tags can still be added on the task.",
+    "ed_default_lead_hint": "Taken over by a task when its recurrence is switched on; the interval then starts a day longer, so the lead fits. Tasks already recurring keep theirs. 0 = when it is due.",
     "tag_did_you_mean": "Did you mean {0}?",
     "ed_overdue_first": "Overdue tasks first",
     "reminder": "Reminders",
@@ -474,6 +475,7 @@ const _TRANSLATIONS = {
     "ed_default_sort": "Standaard sortering",
     "ed_tag_catalog": "Vaste tags",
     "ed_tag_catalog_hint": "Altijd voorgesteld bij het taggen in deze lijst — andere tags kun je bij de taak nog toevoegen.",
+    "ed_default_lead_hint": "Wordt door een taak overgenomen wanneer de herhaling wordt ingeschakeld; het interval begint dan een dag langer, zodat de voorloop past. Taken die al herhalen houden hun waarde. 0 = op de deadline zelf.",
     "tag_did_you_mean": "Bedoel je {0}?",
     "ed_overdue_first": "Verlopen taken eerst",
     "reminder": "Herinneringen",
@@ -755,6 +757,7 @@ const _TRANSLATIONS = {
     "ed_default_sort": "Ordinamento predefinito",
     "ed_tag_catalog": "Tag fissi",
     "ed_tag_catalog_hint": "Sempre suggeriti quando assegni tag in questo elenco — altri tag si possono aggiungere nell'attività.",
+    "ed_default_lead_hint": "Viene adottato da un'attività quando ne attivi la ripetizione; l'intervallo parte allora un giorno più lungo, così l'anticipo ci sta. Le attività già ricorrenti mantengono il proprio valore. 0 = alla scadenza.",
     "tag_did_you_mean": "Intendevi {0}?",
     "ed_overdue_first": "Attività scadute per prime",
     "reminder": "Promemoria",
@@ -1036,6 +1039,7 @@ const _TRANSLATIONS = {
     "ed_default_sort": "Domyślne sortowanie",
     "ed_tag_catalog": "Stałe tagi",
     "ed_tag_catalog_hint": "Zawsze podpowiadane przy tagowaniu w tej liście — inne tagi można dodać w zadaniu.",
+    "ed_default_lead_hint": "Zadanie przejmuje tę wartość przy włączeniu powtarzania; interwał zaczyna się wtedy o dzień dłuższy, aby wyprzedzenie się zmieściło. Zadania już cykliczne zachowują swoją wartość. 0 = w terminie.",
     "tag_did_you_mean": "Czy chodziło o {0}?",
     "ed_overdue_first": "Zaległe zadania najpierw",
     "reminder": "Przypomnienia",
@@ -1317,6 +1321,7 @@ const _TRANSLATIONS = {
     "ed_default_sort": "Standardsortering",
     "ed_tag_catalog": "Fasta taggar",
     "ed_tag_catalog_hint": "Föreslås alltid när du taggar i den här listan — andra taggar kan läggas till på uppgiften.",
+    "ed_default_lead_hint": "Tas över av en uppgift när dess upprepning slås på; intervallet börjar då en dag längre så att framförhållningen ryms. Uppgifter som redan upprepas behåller sitt värde. 0 = när den förfaller.",
     "tag_did_you_mean": "Menade du {0}?",
     "ed_overdue_first": "Försenade uppgifter först",
     "reminder": "Påminnelser",
@@ -1598,6 +1603,7 @@ const _TRANSLATIONS = {
     "ed_default_sort": "Tri par défaut",
     "ed_tag_catalog": "Étiquettes fixes",
     "ed_tag_catalog_hint": "Toujours proposées lors de l'étiquetage dans cette liste — d'autres étiquettes peuvent être ajoutées dans la tâche.",
+    "ed_default_lead_hint": "Repris par une tâche lorsque sa récurrence est activée ; l'intervalle démarre alors un jour plus long pour que l'avance tienne. Les tâches déjà récurrentes gardent leur valeur. 0 = à l'échéance.",
     "tag_did_you_mean": "Vouliez-vous dire {0} ?",
     "ed_overdue_first": "Tâches en retard en premier",
     "reminder": "Rappels",
@@ -1879,6 +1885,7 @@ const _TRANSLATIONS = {
     "ed_default_sort": "Ordenação padrão",
     "ed_tag_catalog": "Tags fixas",
     "ed_tag_catalog_hint": "Sempre sugeridas ao etiquetar nesta lista — outras tags podem ser adicionadas na tarefa.",
+    "ed_default_lead_hint": "Adotado por uma tarefa quando a repetição é ativada; o intervalo começa então um dia mais longo, para que a antecedência caiba. Tarefas já recorrentes mantêm o seu valor. 0 = no prazo.",
     "tag_did_you_mean": "Queria dizer {0}?",
     "ed_overdue_first": "Tarefas atrasadas primeiro",
     "reminder": "Lembretes",
@@ -2160,6 +2167,7 @@ const _TRANSLATIONS = {
     "ed_default_sort": "Ordenação padrão",
     "ed_tag_catalog": "Etiquetas fixas",
     "ed_tag_catalog_hint": "Sempre sugeridas ao adicionar etiquetas às tarefas desta lista — outras etiquetas também podem ser adicionadas à tarefa.",
+    "ed_default_lead_hint": "Adotado por uma tarefa quando a repetição é ativada; o intervalo começa então um dia mais longo, para que a antecedência caiba. Tarefas já recorrentes mantêm o seu valor. 0 = no vencimento.",
     "tag_did_you_mean": "Você quis dizer {0}?",
     "ed_overdue_first": "Tarefas atrasadas primeiro",
     "reminder": "Lembretes",
@@ -2441,6 +2449,7 @@ const _TRANSLATIONS = {
     "ed_default_sort": "Ordenación predeterminada",
     "ed_tag_catalog": "Etiquetas fijas",
     "ed_tag_catalog_hint": "Siempre sugeridas al etiquetar en esta lista; se pueden añadir otras etiquetas en la tarea.",
+    "ed_default_lead_hint": "Una tarea lo adopta al activar su repetición; el intervalo empieza entonces un día más largo para que la antelación quepa. Las tareas que ya se repiten conservan su valor. 0 = al vencer.",
     "tag_did_you_mean": "¿Quisiste decir {0}?",
     "ed_overdue_first": "Tareas vencidas primero",
     "reminder": "Recordatorios",
@@ -2722,6 +2731,7 @@ const _TRANSLATIONS = {
     "ed_default_sort": "Сортировка по умолчанию",
     "ed_tag_catalog": "Постоянные теги",
     "ed_tag_catalog_hint": "Всегда предлагаются при добавлении тега в этом списке — другие теги можно добавить в самой задаче.",
+    "ed_default_lead_hint": "Задача получает это значение при включении повторения; интервал тогда начинается на день длиннее, чтобы опережение поместилось. Уже повторяющиеся задачи сохраняют своё значение. 0 = в срок.",
     "tag_did_you_mean": "Вы имели в виду {0}?",
     "ed_overdue_first": "Просроченные сначала",
     "reminder": "Напоминания",
@@ -3003,6 +3013,7 @@ const _TRANSLATIONS = {
     "ed_default_sort": "Výchozí řazení",
     "ed_tag_catalog": "Pevné štítky",
     "ed_tag_catalog_hint": "Vždy nabízeny při štítkování v tomto seznamu — další štítky lze přidat přímo v úkolu.",
+    "ed_default_lead_hint": "Úkol tuto hodnotu převezme při zapnutí opakování; interval pak začne o den delší, aby se předstih vešel. Již opakované úkoly si ponechají svou hodnotu. 0 = v termínu.",
     "tag_did_you_mean": "Mysleli jste {0}?",
     "ed_overdue_first": "Úkoly po termínu nahoře",
     "reminder": "Připomínky",
@@ -3284,6 +3295,7 @@ const _TRANSLATIONS = {
     "ed_default_sort": "Standardsortering",
     "ed_tag_catalog": "Faste tags",
     "ed_tag_catalog_hint": "Foreslås altid, når du tagger i denne liste — andre tags kan tilføjes på opgaven.",
+    "ed_default_lead_hint": "Overtages af en opgave, når dens gentagelse slås til; intervallet starter så en dag længere, så forspringet passer. Opgaver, der allerede gentages, beholder deres værdi. 0 = når den forfalder.",
     "tag_did_you_mean": "Mente du {0}?",
     "ed_overdue_first": "Forfaldne opgaver først",
     "reminder": "Påmindelser",
@@ -3565,6 +3577,7 @@ const _TRANSLATIONS = {
     "ed_default_sort": "Standardsortering",
     "ed_tag_catalog": "Faste tagger",
     "ed_tag_catalog_hint": "Foreslås alltid når du tagger i denne listen — andre tagger kan legges til på oppgaven.",
+    "ed_default_lead_hint": "Overtas av en oppgave når gjentakelsen slås på; intervallet starter da en dag lenger, slik at forspranget passer. Oppgaver som allerede gjentas, beholder sin verdi. 0 = ved forfall.",
     "tag_did_you_mean": "Mente du {0}?",
     "ed_overdue_first": "Forfalte oppgaver først",
     "reminder": "Påminnelser",
@@ -3846,6 +3859,7 @@ const _TRANSLATIONS = {
     "ed_default_sort": "Oletuslajittelu",
     "ed_tag_catalog": "Kiinteät tagit",
     "ed_tag_catalog_hint": "Ehdotetaan aina tagattaessa tässä listassa — muita tageja voi lisätä tehtävässä.",
+    "ed_default_lead_hint": "Tehtävä ottaa tämän käyttöön, kun sen toisto kytketään päälle; väli alkaa silloin päivän pidempänä, jotta ennakko mahtuu. Jo toistuvat tehtävät pitävät oman arvonsa. 0 = eräpäivänä.",
     "tag_did_you_mean": "Tarkoititko {0}?",
     "ed_overdue_first": "Myöhässä olevat ensin",
     "reminder": "Muistutukset",
@@ -4127,6 +4141,7 @@ const _TRANSLATIONS = {
     "ed_default_sort": "Alapértelmezett rendezés",
     "ed_tag_catalog": "Rögzített címkék",
     "ed_tag_catalog_hint": "Mindig felajánlva címkézéskor ebben a listában — további címkék a feladatnál adhatók hozzá.",
+    "ed_default_lead_hint": "A feladat az ismétlés bekapcsolásakor átveszi ezt az értéket; az időköz ekkor egy nappal hosszabban indul, hogy az előretartás beleférjen. A már ismétlődő feladatok megtartják az értéküket. 0 = a határidőkor.",
     "tag_did_you_mean": "Erre gondoltál: {0}?",
     "ed_overdue_first": "Lejárt feladatok elöl",
     "reminder": "Emlékeztetők",
@@ -4385,6 +4400,7 @@ const _TRANSLATIONS = {
     "ed_default_sort": "Standard-Sortierung",
     "ed_tag_catalog": "Feste Tags",
     "ed_tag_catalog_hint": "Werden beim Taggen in dieser Liste immer vorgeschlagen — weitere Tags können in der Aufgabe ergänzt werden.",
+    "ed_default_lead_hint": "Wird von einer Aufgabe übernommen, wenn ihre Wiederholung eingeschaltet wird; das Intervall startet dann einen Tag länger, damit der Vorlauf passt. Bereits wiederkehrende Aufgaben behalten ihren Wert. 0 = erst bei Fälligkeit.",
     "tag_did_you_mean": "Meintest du {0}?",
     "ed_overdue_first": "Überfällige Aufgaben zuerst",
     "reminder": "Erinnerungen",
@@ -4521,6 +4537,8 @@ const REMINDER_OFFSETS = [
 // section (host provides _el/_t). MAX_REMINDERS mirrors the backend's
 // MAX_REMINDERS_PER_TASK.
 const MAX_REMINDERS = 5;
+// Mirrors the backend's MAX_REOPEN_LEAD_MINUTES: a year ahead at most.
+const MAX_REOPEN_LEAD_MINUTES = 365 * 24 * 60;
 const reminderOffsetOptions = (host, offset) => {
   const opts = [];
   let matched = false;
@@ -5171,6 +5189,7 @@ class HomeTasksCard extends HTMLElement {
         this._columns[i].tasks = r?.tasks ?? [];
         this._columns[i].sections = r?.sections ?? [];
         this._columns[i].tagCatalog = r?.tag_catalog ?? [];
+        this._columns[i].reopenLead = r?.reopen_lead ?? 0;
       } else {
         this._columns[i].tasks = [];
         this._columns[i].sections = [];
@@ -8627,11 +8646,16 @@ class HomeTasksCard extends HTMLElement {
 
   _buildRecurrenceSection(task, colIdx) {
     const recurrenceEnabled = task.recurrence_enabled || false;
-    const recurrenceValue = task.recurrence_value || 1;
+    const listLead = this._columns[colIdx]?.reopenLead || 0;
+    // Never set up yet: start the interval a day longer than the list's
+    // reopen lead, so switching it on keeps the lead (issue #77).
+    const leadDays = !task.recurrence_unit && listLead >= 1440 ? Math.floor(listLead / 1440) + 1 : 0;
+    const recurrenceValue = leadDays > 365 ? 2 : (leadDays || task.recurrence_value || 1);
     // Default unit "days"; legacy "weekdays" mode (unmigrated overlay) is
     // mapped to weeks+weekday-filter for UI purposes.
     const legacyWeekdaysMode = task.recurrence_type === "weekdays";
-    const recurrenceUnit = legacyWeekdaysMode ? "weeks" : (task.recurrence_unit || "days");
+    const recurrenceUnit = legacyWeekdaysMode ? "weeks"
+      : leadDays > 365 ? "years" : (task.recurrence_unit || "days");
     const recurrenceWeekdays = task.recurrence_weekdays || [];
     const recurrenceStartDate = task.recurrence_start_date || "";
     const recurrenceTime = task.recurrence_time || "00:00";
@@ -9121,9 +9145,15 @@ class HomeTasksCard extends HTMLElement {
     // interval (minutes/hours for hourly, hours/days otherwise).  A lead as
     // long as the interval is never offered — the backend would ignore it.
     // Native lists only: a linked list's reopen runs without it.
+    // Until recurrence is switched on the task has no lead of its own: it
+    // shows the list's (issue #77), which it takes over with the switch
+    // where the interval can hold it.
     const leadSupported = !this._isExternalCol(colIdx);
     const LEAD_FACTORS = { minutes: 1, hours: 60, days: 1440 };
-    let leadMinutes = Number.isInteger(task.recurrence_reopen_lead) ? task.recurrence_reopen_lead : 0;
+    // A recurring task without one (from before reopen early, or moved in)
+    // reopens when due, like the backend's `or 0`.
+    let leadMinutes = recurrenceEnabled
+      ? (Number.isInteger(task.recurrence_reopen_lead) ? task.recurrence_reopen_lead : 0) : null;
     const _intervalMinutes = () => {
       const unit = recurrenceUnitSelect.value || "days";
       // Weekdays only count while "On" is picked — otherwise they aren't saved.
@@ -9135,6 +9165,7 @@ class HomeTasksCard extends HTMLElement {
       ) || 1440;
     };
     const _leadMaxIn = (unit) => Math.floor((_intervalMinutes() - 1) / LEAD_FACTORS[unit]);
+    const _shownLead = () => leadMinutes ?? (listLead < _intervalMinutes() ? listLead : 0);
 
     const leadInput = this._el("input", {
       type: "number", "data-focus-key": "recurrence_reopen_lead",
@@ -9150,14 +9181,15 @@ class HomeTasksCard extends HTMLElement {
       const units = base.filter((u, i) => i === 0 || _leadMaxIn(u) >= 1);
       // A stored lead only minutes can express (90 min on a daily task)
       // keeps its unit rather than being shown rounded.
-      if (leadMinutes % LEAD_FACTORS[units[0]] !== 0) units.unshift("minutes");
-      const pick = [...units].reverse().find(u => leadMinutes % LEAD_FACTORS[u] === 0) || units[0];
+      const shown = _shownLead();
+      if (shown % LEAD_FACTORS[units[0]] !== 0) units.unshift("minutes");
+      const pick = [...units].reverse().find(u => shown % LEAD_FACTORS[u] === 0) || units[0];
       leadUnitSelect.replaceChildren(...units.map(u => {
         const opt = this._el("option", { value: u, textContent: this._t(`rec_${u}`) });
         if (u === pick) opt.selected = true;
         return opt;
       }));
-      leadInput.value = String(leadMinutes / LEAD_FACTORS[pick]);
+      leadInput.value = String(shown / LEAD_FACTORS[pick]);
       leadInput.max = String(_leadMaxIn(pick));
     };
     const saveLead = () => {
@@ -9638,6 +9670,11 @@ class HomeTasksCard extends HTMLElement {
         fields.recurrence_nth_week = null;
         fields.recurrence_anniversary = null;
       }
+      // Switched on: the list's lead, as shown; switched off: shown again
+      // as the one a later switch takes over.
+      leadMinutes = enabled ? _shownLead() : null;
+      if (enabled && leadSupported) fields.recurrence_reopen_lead = leadMinutes;
+      _fillLeadUnits();
       _saveAndReload(this._updateTaskRouted(colIdx, task.id, fields));
     });
 
@@ -12088,6 +12125,7 @@ class HomeTasksCardEditor extends HTMLElement {
           priority: d.priority ?? null,
           section_id: d.section_id || null,
           tag_catalog: [...(d.tag_catalog || [])],
+          recurrence_reopen_lead: d.recurrence_reopen_lead || 0,
         };
         this._renderDefaultsInto(container, col, this._listDefaults[key]);
       })
@@ -12237,6 +12275,61 @@ class HomeTasksCardEditor extends HTMLElement {
     ]);
   }
 
+  // The list's "Reopen early": number + unit like the task's own field, but
+  // with no interval to fit — a task starts its interval long enough for it.
+  _buildDefaultLead(defaults, save) {
+    const FACTORS = { minutes: 1, hours: 60, days: 1440 };
+    const lead = defaults.recurrence_reopen_lead || 0;
+    const units = ["hours", "days"];
+    if (lead % 60) units.unshift("minutes");  // kept as set, not rounded
+    const pick = [...units].reverse().find(u => lead % FACTORS[u] === 0);
+    const maxIn = (u) => Math.floor(MAX_REOPEN_LEAD_MINUTES / FACTORS[u]);
+    const input = this._el("input", { type: "number", value: String(lead / FACTORS[pick]) });
+    input.min = 0;
+    input.max = maxIn(pick);
+    const unitSelect = this._el("select", { className: "editor-native-select" });
+    for (const u of units) {
+      const opt = this._el("option", { value: u, textContent: this._t(`rec_${u}`) });
+      if (u === pick) opt.selected = true;
+      unitSelect.appendChild(opt);
+    }
+    const commit = () => {
+      const u = unitSelect.value;
+      const n = Math.min(Math.max(0, parseInt(input.value, 10) || 0), maxIn(u));
+      input.value = n;
+      input.max = maxIn(u);
+      if (n * FACTORS[u] === defaults.recurrence_reopen_lead) return;
+      defaults.recurrence_reopen_lead = n * FACTORS[u];
+      save({ recurrence_reopen_lead: defaults.recurrence_reopen_lead });
+    };
+    input.addEventListener("change", commit);
+    unitSelect.addEventListener("change", commit);
+    const spinUp = this._el("button", { className: "spin-btn spin-up", textContent: "▴", type: "button" });
+    const spinDown = this._el("button", { className: "spin-btn spin-down", textContent: "▾", type: "button" });
+    spinUp.addEventListener("click", () => {
+      input.value = (parseInt(input.value, 10) || 0) + 1;
+      commit();
+    });
+    spinDown.addEventListener("click", () => {
+      input.value = (parseInt(input.value, 10) || 0) - 1;
+      commit();
+    });
+    return [
+      this._el("div", { className: "def-lead-row" }, [
+        this._el("div", { className: "field-wrap" }, [
+          input,
+          this._el("span", { textContent: this._t("rec_lead_lbl") }),
+          this._el("div", { className: "spin-btns" }, [spinUp, spinDown]),
+        ]),
+        this._el("div", { className: "field-wrap" }, [
+          unitSelect,
+          this._el("span", { textContent: this._t("rec_unit_lbl") }),
+        ]),
+      ]),
+      this._el("span", { className: "hint", textContent: this._t("ed_default_lead_hint") }),
+    ];
+  }
+
   _renderDefaultsInto(container, col, defaults) {
     const target = this._sectionsTargetPayload(col);
     const key = this._sourceKeyForCol(col);
@@ -12268,7 +12361,9 @@ class HomeTasksCardEditor extends HTMLElement {
               (d.section_id || null) !== defaults.section_id ||
               JSON.stringify(norm) !== JSON.stringify(defaults.reminders) ||
               JSON.stringify(normTags) !== JSON.stringify(defaults.tags) ||
-              JSON.stringify(normCatalog) !== JSON.stringify(defaults.tag_catalog || []);
+              JSON.stringify(normCatalog) !== JSON.stringify(defaults.tag_catalog || []) ||
+              (d.recurrence_reopen_lead || 0) !== (defaults.recurrence_reopen_lead || 0);
+            defaults.recurrence_reopen_lead = d.recurrence_reopen_lead || 0;
             defaults.assignee = d.assignee || null;
             defaults.priority = d.priority ?? null;
             defaults.section_id = d.section_id || null;
@@ -12322,6 +12417,10 @@ class HomeTasksCardEditor extends HTMLElement {
         },
       ));
       kids.push(this._el("span", { className: "hint", textContent: this._t("ed_tag_catalog_hint") }));
+      // Reopen early (issue #77): taken over by a task when its recurrence
+      // is switched on, so a later change leaves recurring tasks alone.
+      // Native lists only, as for the task's own lead.
+      if (!col.entity_id) kids.push(...this._buildDefaultLead(defaults, save));
       kids.push(
         this._el("div", { className: "group-label" }, [
           this._el("span", { textContent: this._t("ed_group_new_tasks") }),
@@ -12753,6 +12852,8 @@ class HomeTasksCardEditor extends HTMLElement {
       .def-reminder-row { display: flex; align-items: center; gap: 8px; }
       .def-reminder-row .field-wrap { flex: 1; min-width: 0; }
       .def-reminder-row .icon-btn { font-size: 18px; line-height: 1; }
+      .def-lead-row { display: flex; gap: 8px; }
+      .def-lead-row .field-wrap { flex: 1; min-width: 0; }
       .def-saved-flash { opacity: 0; transition: opacity 0.3s; color: var(--primary-color, #03a9f4); font-size: 12px; font-weight: 500; }
       .def-saved-flash.show { opacity: 1; }
       .def-saved-flash.err { color: var(--error-color, #db4437); }

@@ -1505,6 +1505,11 @@ describe('add-row time input follows the provider\'s due-time capability', () =>
 });
 
 
+// The assignee picker: the one offering the people — "Reopen early" (issue
+// #77) sits with the list's settings above it.
+const personSelectIn = (root) => [...root.querySelectorAll('.defaults-editor select')]
+  .find(sel => [...sel.options].some(o => o.value.startsWith('person.')));
+
 describe('editor Defaults section (issues #44 / #46)', () => {
   async function makeEditor(colExtra, wsResponses = {}) {
     const { HomeTasksCard, window: win } = await loadCard({ force: true });
@@ -1534,7 +1539,7 @@ describe('editor Defaults section (issues #44 / #46)', () => {
     assert.ok(calls.some(c => c.type === 'home_tasks/get_defaults' && c.list_id === 'L1'));
     const container = root.querySelector('.defaults-editor');
     assert.ok(container, 'defaults editor container must render');
-    const personSel = container.querySelector('select');
+    const personSel = personSelectIn(container);
     assert.equal(personSel.value, 'person.alice');
     assert.ok(container.textContent.includes('Applied to every new task'));
     ed.remove();
@@ -1562,7 +1567,7 @@ describe('editor Defaults section (issues #44 / #46)', () => {
 
   test('changing the assignee saves via set_defaults', async () => {
     const { ed, calls, root } = await makeEditor({ list_id: 'L1' });
-    const personSel = root.querySelector('.defaults-editor select');
+    const personSel = personSelectIn(root);
     personSel.value = '';
     personSel.dispatchEvent(new ed.ownerDocument.defaultView.Event('change'));
     await new Promise(r => setTimeout(r, 10));
@@ -1579,6 +1584,32 @@ describe('editor Defaults section (issues #44 / #46)', () => {
     assert.ok(calls.some(c => c.type === 'home_tasks/get_defaults' && c.entity_id === 'todo.x'),
       'the overlay store is asked, not a list id');
     assert.ok(root.querySelector('.defaults-editor'));
+  });
+
+  test('a list-wide reopen lead renders and saves in minutes (issue #77)', async () => {
+    const { ed, calls, root } = await makeEditor(
+      { list_id: 'L1' },
+      { get_defaults: { defaults: { assignee: null, reminders: [], tags: [], recurrence_reopen_lead: 2880 } } },
+    );
+    const row = root.querySelector('.defaults-editor .def-lead-row');
+    const input = row.querySelector('input[type="number"]');
+    const unit = row.querySelector('select');
+    assert.equal(input.value, '2');
+    assert.equal(unit.value, 'days');
+    assert.deepEqual([...unit.options].map(o => o.value), ['hours', 'days']);
+
+    unit.value = 'hours';
+    unit.dispatchEvent(new ed.ownerDocument.defaultView.Event('change'));
+    await new Promise(r => setTimeout(r, 10));
+    const set = calls.find(c => c.type === 'home_tasks/set_defaults');
+    assert.equal(set.recurrence_reopen_lead, 120);
+    assert.deepEqual(Object.keys(set).filter(k => !['type', 'list_id'].includes(k)), ['recurrence_reopen_lead']);
+    ed.remove();
+  });
+
+  test('a linked list has no list-wide reopen lead', async () => {
+    const { root } = await makeEditor({ entity_id: 'todo.x' });
+    assert.equal(root.querySelector('.defaults-editor .def-lead-row'), null);
   });
 
   test('a default priority renders and saves', async () => {
@@ -1886,7 +1917,7 @@ describe('editor Defaults error paths and partial saves (review round 2)', () =>
 
   test('changing the assignee sends a partial payload without reminders', async () => {
     const { ed, calls, root } = await makeEditor();
-    const personSel = root.querySelector('.defaults-editor select');
+    const personSel = personSelectIn(root);
     personSel.value = 'person.alice';
     personSel.dispatchEvent(new ed.ownerDocument.defaultView.Event('change'));
     await new Promise(r => setTimeout(r, 10));
@@ -1901,7 +1932,7 @@ describe('editor Defaults error paths and partial saves (review round 2)', () =>
     const { ed, calls, root } = await makeEditor((msg) => {
       if (msg.type === 'home_tasks/set_defaults') throw new Error('boom');
     });
-    const personSel = root.querySelector('.defaults-editor select');
+    const personSel = personSelectIn(root);
     personSel.value = 'person.alice';
     personSel.dispatchEvent(new ed.ownerDocument.defaultView.Event('change'));
     await new Promise(r => setTimeout(r, 10));

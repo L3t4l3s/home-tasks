@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { loadCard } from './setup.mjs';
 
-async function makeCard(column = { list_id: 'L1' }) {
+async function makeCard(column = { list_id: 'L1' }, listLead = 0) {
   const { HomeTasksCard } = await loadCard({ force: true });
   const calls = [];
   const hass = {
@@ -19,7 +19,7 @@ async function makeCard(column = { list_id: 'L1' }) {
       calls.push(msg);
       if (msg.type === 'home_tasks/get_lists') return { lists: [{ id: 'L1', name: 'Test' }] };
       if (msg.type === 'home_tasks/get_external_lists') return { external_lists: [] };
-      if (msg.type === 'home_tasks/get_tasks') return { tasks: [] };
+      if (msg.type === 'home_tasks/get_tasks') return { tasks: [], reopen_lead: listLead };
       if (msg.type === 'home_tasks/get_external_tasks') return { tasks: [], sections: [] };
       return null;
     },
@@ -141,6 +141,69 @@ describe('reopen early', () => {
     assert.ok(!('recurrence_reopen_lead' in save));
     assert.equal(lead(section).input.value, '2');
     assert.equal(lead(section).select.value, 'hours');
+  });
+
+  // Issue #77: the list's lead is taken over when recurrence is switched on.
+  const neverSetUp = { recurrence_enabled: false, recurrence_unit: null, recurrence_reopen_lead: null };
+  async function switchOn(section) {
+    const sw = section.querySelector('ha-switch');
+    sw.checked = true;
+    sw.dispatchEvent(new Event('change'));
+    await tick();
+  }
+  const interval = (section) => [
+    section.querySelector('input[data-focus-key="recurrence_value"]').value,
+    section.querySelector('.recurrence-input-row select').value,
+  ];
+
+  test("a task never set up starts a day longer than the list's lead, and takes it over", async () => {
+    const { card, calls } = await makeCard({ list_id: 'L1' }, 30 * 1440);
+    const section = card._buildRecurrenceSection(baseTask(neverSetUp), 0);
+    assert.deepEqual(interval(section), ['31', 'days']);
+    assert.equal(lead(section).input.value, '30');
+    assert.equal(lead(section).select.value, 'days');
+    await switchOn(section);
+    const save = leadSaves(calls).at(-1);
+    assert.equal(save.recurrence_enabled, true);
+    assert.equal(save.recurrence_value, 31);
+    assert.equal(save.recurrence_unit, 'days');
+    assert.equal(save.recurrence_reopen_lead, 30 * 1440);
+  });
+
+  test('a list lead under a day keeps the daily start', async () => {
+    const { card, calls } = await makeCard({ list_id: 'L1' }, 6 * 60);
+    const section = card._buildRecurrenceSection(baseTask(neverSetUp), 0);
+    assert.deepEqual(interval(section), ['1', 'days']);
+    await switchOn(section);
+    assert.equal(leadSaves(calls).at(-1).recurrence_reopen_lead, 6 * 60);
+  });
+
+  test('a year-long list lead starts at every 2 years', async () => {
+    const { card } = await makeCard({ list_id: 'L1' }, 365 * 1440);
+    assert.deepEqual(interval(card._buildRecurrenceSection(baseTask(neverSetUp), 0)), ['2', 'years']);
+  });
+
+  test("an interval set up before stays, and only takes a list lead it can hold", async () => {
+    const { card, calls } = await makeCard({ list_id: 'L1' }, 30 * 1440);
+    const section = card._buildRecurrenceSection(
+      baseTask({ recurrence_enabled: false, recurrence_reopen_lead: 2 * 1440 }), 0);
+    assert.deepEqual(interval(section), ['1', 'weeks']);
+    assert.equal(lead(section).input.value, '0');
+    await switchOn(section);
+    assert.equal(leadSaves(calls).at(-1).recurrence_reopen_lead, 0);
+  });
+
+  test("a recurring task without a lead reopens when due, whatever the list's", async () => {
+    // From before reopen early, or moved in: the backend applies 0.
+    const { card } = await makeCard({ list_id: 'L1' }, 2 * 1440);
+    assert.equal(lead(card._buildRecurrenceSection(baseTask(), 0)).input.value, '0');
+  });
+
+  test("a recurring task keeps its own lead, whatever the list's", async () => {
+    const { card } = await makeCard({ list_id: 'L1' }, 2 * 1440);
+    const l = lead(card._buildRecurrenceSection(baseTask({ recurrence_reopen_lead: 1440 }), 0));
+    assert.equal(l.input.value, '1');
+    assert.equal(l.select.value, 'days');
   });
 
   test('a linked list does not offer it', async () => {

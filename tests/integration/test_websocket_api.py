@@ -1629,6 +1629,37 @@ async def test_ws_move_task_cross_external_to_native(
     assert "ext-uid-99" in mock_adapter.deleted
 
 
+async def test_a_recurring_task_moved_in_from_a_linked_list_takes_the_list_lead(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store,
+    external_config_entry,
+) -> None:
+    """Issue #77: arriving as a recurring task counts as switching recurrence on."""
+    mock_adapter = _MockAdapter("generic")
+    mock_adapter._tasks.append({
+        "uid": "ext-uid-77", "summary": "Boiler service", "status": "needs_action",
+        "due": "2026-07-01", "labels": [], "sub_items": [],
+    })
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})["todo.ws_external"] = mock_adapter
+    overlay = hass.data[DOMAIN][external_config_entry.entry_id]
+    await overlay.async_set_overlay(
+        "ext-uid-77", recurrence_enabled=True, recurrence_unit="weeks", recurrence_value=1,
+    )
+    await store.async_set_defaults(recurrence_reopen_lead=2 * 1440)
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 106,
+        "type": "home_tasks/move_task_cross",
+        "task_id": "ext-uid-77",
+        "source_entity_id": "todo.ws_external",
+        "target_list_id": mock_config_entry.entry_id,
+    })
+    assert (await client.receive_json())["success"] is True
+    moved = next(t for t in store.tasks if t["title"] == "Boiler service")
+    assert moved["recurrence_enabled"] is True
+    assert moved["recurrence_reopen_lead"] == 2 * 1440
+
+
 async def test_ws_move_task_cross_external_to_external(
     hass: HomeAssistant, hass_ws_client, mock_config_entry, patch_add_extra_js_url
 ) -> None:
@@ -2261,7 +2292,7 @@ async def test_ws_defaults_roundtrip_and_applied(hass: HomeAssistant, hass_ws_cl
     assert msg["result"]["defaults"] == {
         "assignee": "person.alice", "reminders": [0, 60],
         "tags": [], "priority": None, "section_id": None,
-        "tag_catalog": [],
+        "tag_catalog": [], "recurrence_reopen_lead": 0,
     }
 
     await client.send_json({"id": 302, "type": "home_tasks/get_defaults", "list_id": mock_config_entry.entry_id})
@@ -2297,7 +2328,7 @@ async def test_ws_defaults_roundtrip_and_applied(hass: HomeAssistant, hass_ws_cl
     assert msg["result"]["defaults"] == {
         "assignee": "person.bob", "reminders": [0, 60],
         "tags": [], "priority": None, "section_id": None,
-        "tag_catalog": [],
+        "tag_catalog": [], "recurrence_reopen_lead": 0,
     }
 
     # explicit empty reminders at creation win over the default ([] means
@@ -2319,7 +2350,7 @@ async def test_ws_defaults_roundtrip_and_applied(hass: HomeAssistant, hass_ws_cl
     assert msg["result"]["defaults"] == {
         "assignee": None, "reminders": [],
         "tags": [], "priority": None, "section_id": None,
-        "tag_catalog": [],
+        "tag_catalog": [], "recurrence_reopen_lead": 0,
     }
 
 

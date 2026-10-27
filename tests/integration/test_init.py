@@ -1662,6 +1662,52 @@ async def test_editing_the_lead_while_completed_rewrites_reopen_at(
     assert datetime.fromisoformat(store.get_task(stored["id"])["reopen_at"]) == _local(2026, 8, 10, 0, 0)
 
 
+async def _switch_recurrence_on(store, **fields) -> dict:
+    task = await store.async_add_task("Boiler service")
+    await store.async_update_task(
+        task["id"], recurrence_enabled=True, recurrence_unit="weeks", recurrence_value=1, **fields,
+    )
+    return store.get_task(task["id"])
+
+
+async def test_switching_recurrence_on_takes_the_list_lead(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Issue #77: the list's lead is stamped onto the task when it starts recurring."""
+    await store.async_set_defaults(recurrence_reopen_lead=2 * 1440)
+    assert (await store.async_add_task("Food shop"))["recurrence_reopen_lead"] is None
+    assert (await _switch_recurrence_on(store))["recurrence_reopen_lead"] == 2 * 1440
+
+
+async def test_a_lead_sent_with_the_switch_wins_over_the_list(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    await store.async_set_defaults(recurrence_reopen_lead=2 * 1440)
+    assert (await _switch_recurrence_on(store, recurrence_reopen_lead=0))["recurrence_reopen_lead"] == 0
+
+
+async def test_a_list_lead_too_long_for_the_interval_is_not_taken(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """A month's notice suits the yearly service, not the weekly chore."""
+    await store.async_set_defaults(recurrence_reopen_lead=30 * 1440)
+    assert (await _switch_recurrence_on(store))["recurrence_reopen_lead"] == 0
+
+
+async def test_changing_the_list_lead_leaves_recurring_tasks_alone(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """The default that applied when recurrence was switched on stays — until
+    it is switched off and on again."""
+    await store.async_set_defaults(recurrence_reopen_lead=2 * 1440)
+    task = await _switch_recurrence_on(store)
+    await store.async_set_defaults(recurrence_reopen_lead=3 * 1440)
+    assert store.get_task(task["id"])["recurrence_reopen_lead"] == 2 * 1440
+    await store.async_update_task(task["id"], recurrence_enabled=False)
+    await store.async_update_task(task["id"], recurrence_enabled=True)
+    assert store.get_task(task["id"])["recurrence_reopen_lead"] == 3 * 1440
+
+
 # Shared with tests-js/test_recurrence_lead.mjs: the card caps the lead with
 # its own copy of this calculation, and both must agree.
 _INTERVAL_CASES = json.loads(
@@ -1671,27 +1717,27 @@ _INTERVAL_CASES = json.loads(
 
 @pytest.mark.parametrize("case", _INTERVAL_CASES, ids=lambda c: f"{c['unit']}x{c['value']}{c['weekdays']}")
 def test_recurrence_interval_minutes(case) -> None:
-    from custom_components.home_tasks import _recurrence_interval_minutes
+    from custom_components.home_tasks.store import recurrence_interval_minutes
 
     task = {
         "recurrence_unit": case["unit"], "recurrence_value": case["value"],
         "recurrence_weekdays": case["weekdays"],
     }
-    assert _recurrence_interval_minutes(task) == case["minutes"]
+    assert recurrence_interval_minutes(task) == case["minutes"]
 
 
 def test_recurrence_interval_minutes_of_a_legacy_weekdays_task() -> None:
     """Unmigrated weekdays mode carries no unit — still weekly on its days."""
-    from custom_components.home_tasks import _recurrence_interval_minutes
+    from custom_components.home_tasks.store import recurrence_interval_minutes
 
     task = {"recurrence_type": "weekdays", "recurrence_unit": None, "recurrence_weekdays": [0, 3]}
-    assert _recurrence_interval_minutes(task) == 3 * 1440
+    assert recurrence_interval_minutes(task) == 3 * 1440
 
 
 @pytest.mark.parametrize("bad", [-1, 1.5, True, "60", 365 * 1440 + 1])
 async def test_reopen_lead_is_validated(hass: HomeAssistant, mock_config_entry, store, bad) -> None:
     task = await store.async_add_task("Food shop")
-    assert task["recurrence_reopen_lead"] == 0
+    assert task["recurrence_reopen_lead"] is None
     with pytest.raises(ValueError, match="recurrence_reopen_lead"):
         await store.async_update_task(task["id"], recurrence_reopen_lead=bad)
 

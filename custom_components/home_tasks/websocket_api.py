@@ -179,9 +179,12 @@ async def ws_get_tasks(hass, connection, msg):
     """Get all tasks for a list."""
     try:
         store = _get_store(hass, msg["list_id"])
+        defaults = store.get_defaults()
         connection.send_result(msg["id"], {
             "tasks": store.tasks, "sections": store.sections,
-            "tag_catalog": store.get_defaults()["tag_catalog"],
+            "tag_catalog": defaults["tag_catalog"],
+            # The lead a task takes over when its recurrence is switched on (issue #77).
+            "reopen_lead": defaults["recurrence_reopen_lead"],
         })
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -386,6 +389,9 @@ async def ws_get_defaults(hass, connection, msg):
         vol.Optional("priority"): vol.Any(vol.In([1, 2, 3]), None),
         vol.Optional("section_id"): vol.Any(_val_id, None),
         vol.Optional("tag_catalog"): vol.All(list, vol.Length(max=MAX_TAG_CATALOG)),
+        vol.Optional("recurrence_reopen_lead"): vol.All(
+            int, vol.Range(min=0, max=MAX_REOPEN_LEAD_MINUTES)
+        ),
         **_TARGET,
     }
 )
@@ -401,6 +407,11 @@ async def ws_set_defaults(hass, connection, msg):
         # partial-update semantics, so an omitted field keeps its value
         # instead of being silently cleared.
         kwargs = {k: msg[k] for k in DEFAULT_FIELDS if k in msg}
+        if "recurrence_reopen_lead" in msg:
+            # Reopening early is native-only, like the task's own lead.
+            if isinstance(store, ExternalTaskOverlayStore):
+                raise ValueError("recurrence_reopen_lead is not supported on linked lists")
+            kwargs["recurrence_reopen_lead"] = msg["recurrence_reopen_lead"]
         defaults = await store.async_set_defaults(**kwargs)
         connection.send_result(msg["id"], {"defaults": defaults})
     except Exception as err:
@@ -832,6 +843,7 @@ async def async_move_task_any(
             "recurrence_nth_week": task_data.get("recurrence_nth_week"),
             "recurrence_anniversary": task_data.get("recurrence_anniversary"),
             "recurrence_anchor": task_data.get("recurrence_anchor", "completion"),
+            "recurrence_reopen_lead": None,
             "completed_at": task_data.get("completed_at"),
             "assigned_person": task_data.get("assigned_person"),
             "tags": task_data.get("tags", []),
@@ -843,6 +855,10 @@ async def async_move_task_any(
             "external_id": None,
             "sync_source": None,
         }
+        # A linked list has no reopen lead: arriving here as a recurring
+        # task counts as switching recurrence on, so it takes the list's.
+        if new_task["recurrence_enabled"]:
+            new_task["recurrence_reopen_lead"] = tgt_store.default_reopen_lead(new_task)
         await tgt_store.async_import_task(new_task)
     else:
         # External target: create via adapter, then set overlay for all fields

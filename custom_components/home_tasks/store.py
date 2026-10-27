@@ -151,7 +151,37 @@ def validate_recurrence_value(value):
     return value
 
 
+def recurrence_interval_minutes(task: dict) -> int | None:
+    """The shortest gap between two occurrences, in minutes.
+
+    Nominal, not calendar-exact: a month counts as 28 days, a year as 365,
+    and "every week on Mon and Thu" as the 3 days from Mon to Thu.  It only
+    has to tell whether a reopen lead fits inside the interval.
+    """
+    unit = task.get("recurrence_unit")
+    value = task.get("recurrence_value") or 1
+    if task.get("recurrence_type") == "weekdays":
+        # Legacy weekdays mode (unmigrated): weekly on the listed days, and
+        # it may carry no unit at all.
+        unit, value = "weeks", 1
+    days = {"days": 1, "weeks": 7, "months": 28, "years": 365}
+    if unit == "hours":
+        return value * 60
+    if unit not in days:
+        return None
+    weekdays = sorted(set(task.get("recurrence_weekdays") or []))
+    if unit == "weeks" and len(weekdays) > 1:
+        gaps = [b - a for a, b in zip(weekdays, weekdays[1:])]
+        gaps.append(weekdays[0] + 7 - weekdays[-1])
+        return min(gaps) * 1440
+    return value * days[unit] * 1440
+
+
 def validate_recurrence_reopen_lead(value):
+    """Minutes, or None: not set yet — the list's default is stamped when
+    recurrence is switched on (async_update_task)."""
+    if value is None:
+        return None
     if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= MAX_REOPEN_LEAD_MINUTES:
         raise ValueError(
             f"recurrence_reopen_lead must be minutes between 0 and {MAX_REOPEN_LEAD_MINUTES}"
@@ -475,7 +505,7 @@ class HomeTasksStore:
             task.setdefault("recurrence_nth_week", None)
             task.setdefault("recurrence_anniversary", None)
             task.setdefault("recurrence_anchor", "completion")
-            task.setdefault("recurrence_reopen_lead", 0)
+            task.setdefault("recurrence_reopen_lead", None)
             task.setdefault("completed_at", None)
             task.setdefault("assigned_person", None)
             task.setdefault("tags", [])
@@ -566,6 +596,10 @@ class HomeTasksStore:
             # one (issue #61). Lives here so it's edited, stored and synced
             # with the other per-list settings.
             "tag_catalog": list(d.get("tag_catalog") or []),
+            # Not stamped onto new tasks either: a task takes it over when its
+            # recurrence is switched on (async_update_task) and keeps it when
+            # this changes later.  0 = reopen when due.
+            "recurrence_reopen_lead": d.get("recurrence_reopen_lead") or 0,
         }
 
     async def async_set_defaults(
@@ -576,6 +610,7 @@ class HomeTasksStore:
         priority: object = _UNSET,
         section_id: object = _UNSET,
         tag_catalog: object = _UNSET,
+        recurrence_reopen_lead: object = _UNSET,
     ) -> dict:
         """Update the list-level defaults.
 
@@ -611,6 +646,10 @@ class HomeTasksStore:
             tag_catalog = current["tag_catalog"]
         else:
             tag_catalog = validate_tag_catalog(tag_catalog) if tag_catalog else []
+        if recurrence_reopen_lead is _UNSET:
+            recurrence_reopen_lead = current["recurrence_reopen_lead"]
+        else:
+            recurrence_reopen_lead = validate_recurrence_reopen_lead(recurrence_reopen_lead) or 0
         self._data["defaults"] = {
             "assignee": assignee or None,
             "reminders": reminders,
@@ -618,14 +657,17 @@ class HomeTasksStore:
             "priority": priority,
             "section_id": section_id or None,
             "tag_catalog": tag_catalog,
+            "recurrence_reopen_lead": recurrence_reopen_lead,
         }
         # Immediate save (not async_delay_save): a pending delayed write of an
         # unloaded store instance could clobber newer disk state after a
         # config-entry reload, and the WS ack must mean "persisted".  Client-
         # side write coalescing already keeps the frequency low; only the
         # entity listener fanout is skipped here — except when the fixed tags
-        # changed: cards show those, and reload on the listener's sensor update.
-        if self.get_defaults()["tag_catalog"] != current["tag_catalog"]:
+        # or the reopen lead changed: cards show those (the lead in the editor
+        # of a task not recurring yet), and reload on the listener's sensor update.
+        now = self.get_defaults()
+        if any(now[k] != current[k] for k in ("tag_catalog", "recurrence_reopen_lead")):
             await self._async_save()
         else:
             await self._store.async_save(self._data)
@@ -736,7 +778,7 @@ class HomeTasksStore:
             "recurrence_nth_week": None,
             "recurrence_anniversary": None,
             "recurrence_anchor": "completion",
-            "recurrence_reopen_lead": 0,
+            "recurrence_reopen_lead": None,
             "completed_at": None,
             "reopen_at": None,
             "assigned_person": assigned_person,
@@ -792,6 +834,9 @@ class HomeTasksStore:
             self._validate_section_id(kwargs["section_id"])
         snapshot = self._snapshot_task(task)
         self._apply_field_updates(task, kwargs)
+        if (not snapshot["recurrence_enabled"] and task.get("recurrence_enabled")
+                and "recurrence_reopen_lead" not in kwargs):
+            task["recurrence_reopen_lead"] = self.default_reopen_lead(task)
         self._handle_completion_transition(task, snapshot, kwargs, actor, actor_user_id)
         # Completed before AND after this update (transitions are handled by
         # on_task_completed / on_task_reopened above): a due/recurrence edit
@@ -808,6 +853,17 @@ class HomeTasksStore:
         self._fire_update_callbacks(task, snapshot)
         await self._async_save()
         return task
+
+    def default_reopen_lead(self, task: dict) -> int:
+        """The list's reopen lead for a task whose recurrence is switched on.
+
+        Taken over once, then the task's own: changing the list default later
+        leaves it alone.  A lead the interval can't hold becomes 0 — the
+        card starts the interval long enough, other paths may not.
+        """
+        lead = self.get_defaults().get("recurrence_reopen_lead", 0)
+        interval = recurrence_interval_minutes(task)
+        return lead if interval is not None and lead < interval else 0
 
     @staticmethod
     def _validate_update_kwargs(kwargs: dict) -> None:

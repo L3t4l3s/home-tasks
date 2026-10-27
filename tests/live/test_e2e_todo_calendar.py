@@ -280,7 +280,11 @@ async def test_calendar_rich_description(
     )
     evt = next(e for e in events if e["summary"] == "Rich cal")
     desc = evt.get("description", "")
+    # The description is written in the instance language, not always English.
+    from custom_components.home_tasks.ui_translations import get_ui_translation
+
+    language = (await ws_client.send_command("get_config"))["language"]
     assert "Important meeting" in desc
-    assert "High" in desc
+    assert get_ui_translation(language)["pri_high"] in desc
     assert "#meeting" in desc
     assert "#urgent" in desc

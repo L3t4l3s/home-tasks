@@ -25,7 +25,13 @@ from .const import DOMAIN, MAX_SUB_TASKS_PER_TASK, MAX_TITLE_LENGTH, RECURRENCE_
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 from .overlay_store import ExternalTaskOverlayStore
-from .store import HomeTasksStore, _REOPEN_UNCHANGED, validate_reminders, validate_text
+from .store import (
+    HomeTasksStore,
+    _REOPEN_UNCHANGED,
+    recurrence_interval_minutes,
+    validate_reminders,
+    validate_text,
+)
 from .websocket_api import async_move_task_any, async_register_websocket_commands
 
 _LOGGER = logging.getLogger(__name__)
@@ -824,32 +830,6 @@ def _apply_start_date(task: dict, target: datetime) -> datetime:
     return target
 
 
-def _recurrence_interval_minutes(task: dict) -> int | None:
-    """The shortest gap between two occurrences, in minutes.
-
-    Nominal, not calendar-exact: a month counts as 28 days, a year as 365,
-    and "every week on Mon and Thu" as the 3 days from Mon to Thu.  It only
-    has to tell whether a reopen lead fits inside the interval.
-    """
-    unit = task.get("recurrence_unit")
-    value = task.get("recurrence_value") or 1
-    if task.get("recurrence_type") == "weekdays":
-        # Legacy weekdays mode (unmigrated): weekly on the listed days, and
-        # it may carry no unit at all.
-        unit, value = "weeks", 1
-    days = {"days": 1, "weeks": 7, "months": 28, "years": 365}
-    if unit == "hours":
-        return value * 60
-    if unit not in days:
-        return None
-    weekdays = sorted(set(task.get("recurrence_weekdays") or []))
-    if unit == "weeks" and len(weekdays) > 1:
-        gaps = [b - a for a, b in zip(weekdays, weekdays[1:])]
-        gaps.append(weekdays[0] + 7 - weekdays[-1])
-        return min(gaps) * 1440
-    return value * days[unit] * 1440
-
-
 def _apply_reopen_lead(
     task: dict, due_target: datetime | None, completed_at: datetime
 ) -> datetime | None:
@@ -871,7 +851,7 @@ def _apply_reopen_lead(
     lead = task.get("recurrence_reopen_lead") or 0
     if not isinstance(lead, int) or lead <= 0:
         return due_target
-    interval = _recurrence_interval_minutes(task)
+    interval = recurrence_interval_minutes(task)
     if interval is not None and lead >= interval:
         return due_target
     # Wall-clock arithmetic in local time: "1 day before Sunday 20:00" is
