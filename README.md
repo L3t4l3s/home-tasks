@@ -616,6 +616,11 @@ The `home_tasks_task_completed` event additionally includes who ticked the task 
 | `tags` | no | Comma-separated tags (e.g. `"kitchen,daily"`) |
 | `reminders` | no | Minute offsets before the due moment, comma-separated or list (e.g. `"60, 0"`; `0` = at due time). An explicitly empty value creates the task without reminders even when the list has default reminders |
 | `sub_tasks` | no | Sub-task titles as a list (e.g. `["Milk", "Bread"]`), created unchecked |
+| `section` | no | Section name (or id); left out, the list's default section applies |
+| `image_url` | no | A picture: `https://…`, `/local/…` or a `media-source://` id — copied to `/local/home_tasks` so it keeps loading |
+| `generate_image` | no | `true` draws the picture with the AI task entity of the list's card, like the card's button (not together with `image_url`) |
+| `position` | no | `top` or `bottom` of the list's manual order (default: bottom) |
+| `recurrence_…` | no | Make it recurring — see [Recurrence fields](#recurrence-fields) |
 
 #### `home_tasks.add_task_from_text`
 
@@ -706,6 +711,48 @@ Update any field of an existing task, found by `task_id` or `task_title`. Only t
 | `priority` | no | `1` (low) – `3` (high) |
 | `tags` | no | Comma-separated tags — replaces the existing tags |
 | `reminders` | no | Minute offsets before the due moment — replaces the existing reminders |
+| `section` | no | Section name (or id); empty moves the task out of its section |
+| `image_url` | no | A picture, as for `add_task`; empty removes it |
+| `generate_image` | no | `true` draws a new picture, even when the task has one |
+| `position` | no | `top` or `bottom` moves the task to that end of the list's manual order |
+| `recurrence_…` | no | Change the recurrence — see [Recurrence fields](#recurrence-fields) |
+
+#### Recurrence fields
+
+`add_task` and `update_task` take the recurrence settings of the card's task
+editor. Name only what you want set: the rest stays as it is, and settings
+that belong to another unit are cleared, as in the card. Naming any of them
+makes the task recurring; `recurrence_enabled: false` switches it off.
+
+| Field | Description |
+|-------|-------------|
+| `recurrence_unit` | `hours`, `days`, `weeks`, `months` or `years` — needed when the task has never recurred |
+| `recurrence_value` | Every how many units (`2` + `weeks` = every 2 weeks) |
+| `recurrence_weekdays` | Weekly on these days, as a list or comma-separated (`mon` … `sun`); monthly, the one day for `recurrence_nth_week`. `[]` ends a weekday pattern |
+| `recurrence_day_of_month` | Monthly on this day (`1`–`31` or `last`) |
+| `recurrence_nth_week` | Monthly on the nth weekday (`1`–`4` or `last`), with one day in `recurrence_weekdays` |
+| `recurrence_anniversary` | Yearly on this date (`MM-DD`) |
+| `recurrence_anchor` | Without a fixed day: count from the `completion` (default) or the `due` date |
+| `recurrence_start_date` / `recurrence_time` | Start date, and the time of day it becomes due |
+| `recurrence_end_date` / `recurrence_max_count` | End after a date, or after a number of repetitions (one of them; empty = no end) |
+| `recurrence_reopen_lead` | [Reopen early](#list-defaults), in minutes, shorter than the interval — Home Tasks lists only. Left out, a task that starts recurring takes the list's default |
+| `recurrence_enabled` | `false` switches recurrence off, keeping its settings for later |
+
+A combination the card wouldn't offer — a day of month on a weekly task, a
+lead as long as the interval — fails the call and changes nothing. On a
+Todoist list the provider repeats the task itself, so there is no `due`
+anchor and no fixed day on an every-2-months series.
+
+```yaml
+action: home_tasks.add_task
+data:
+  list_name: Household
+  title: Bins out
+  recurrence_unit: weeks
+  recurrence_weekdays: [mon, thu]
+  recurrence_time: "07:00"
+  section: Outside
+```
 
 #### `home_tasks.move_task`
 

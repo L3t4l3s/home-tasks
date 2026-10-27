@@ -29,6 +29,7 @@ from .const import (
     MAX_TAGS_PER_TASK,
     MAX_TASKS_PER_LIST,
     MAX_TITLE_LENGTH,
+    RECURRENCE_FIELDS,
     STORAGE_VERSION,
     VALID_MONTH_PATTERNS,
     VALID_NTH_WEEK,
@@ -686,9 +687,12 @@ class HomeTasksStore:
         tags: list | None = None,
         section_id: str | None = None,
         sub_tasks: list[str] | None = None,
+        recurrence: dict | None = None,
     ) -> dict:
         """Add a task, optionally with an initial due date/time (issue #38),
-        reminders (issue #43), notes, priority and sub-tasks (issue #70).
+        reminders (issue #43), notes, priority, sub-tasks (issue #70) and
+        recurrence fields (any of RECURRENCE_FIELDS, as the update path takes
+        them).
 
         Creating with these set (instead of add + update) keeps a single
         history entry / task_created event and no intermediate bare state.
@@ -726,6 +730,8 @@ class HomeTasksStore:
         if section_id is not None:
             self._validate_section_id(section_id)
         sub_titles = [validate_text(t, MAX_TITLE_LENGTH, "Sub-task title") for t in sub_tasks or []]
+        recurrence = {k: v for k, v in (recurrence or {}).items() if k in RECURRENCE_FIELDS}
+        self._validate_update_kwargs(recurrence)
         if len(sub_titles) > MAX_SUB_TASKS_PER_TASK:
             raise ValueError(f"Maximum number of sub-tasks ({MAX_SUB_TASKS_PER_TASK}) reached")
         if len(self._data["tasks"]) >= MAX_TASKS_PER_LIST:
@@ -789,6 +795,11 @@ class HomeTasksStore:
             "sync_source": None,
             "section_id": section_id,
         }
+        task.update(recurrence)
+        if "recurrence_max_count" in recurrence:
+            task["recurrence_remaining_count"] = task["recurrence_max_count"]
+        if task["recurrence_enabled"] and "recurrence_reopen_lead" not in recurrence:
+            task["recurrence_reopen_lead"] = self.default_reopen_lead(task)
         self._data["tasks"].append(task)
         await self._async_save()
         if self.on_task_created:

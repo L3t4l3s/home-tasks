@@ -1896,6 +1896,20 @@ async def ws_update_external_task(hass, connection, msg):
         _handle_error(connection, msg["id"], err)
 
 
+async def async_reorder_external_tasks(hass, entity_id: str, task_uids: list[str]) -> bool:
+    """Put a linked list's tasks in this order; True if the provider took it."""
+    adapter = _get_adapter(hass, entity_id)
+    handled = False
+    if adapter:
+        handled = await adapter.async_reorder_tasks(task_uids)
+    if not handled:
+        # Fallback: store order in overlay
+        overlay_store = _get_overlay_store(hass, entity_id)
+        for i, uid in enumerate(task_uids):
+            await overlay_store.async_set_overlay(uid, sort_order=i)
+    return handled
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "home_tasks/reorder_external_tasks",
@@ -1907,20 +1921,7 @@ async def ws_update_external_task(hass, connection, msg):
 async def ws_reorder_external_tasks(hass, connection, msg):
     """Reorder tasks via the provider adapter."""
     try:
-        entity_id = msg["entity_id"]
-        task_uids = msg["task_uids"]
-        adapter = _get_adapter(hass, entity_id)
-
-        handled = False
-        if adapter:
-            handled = await adapter.async_reorder_tasks(task_uids)
-
-        if not handled:
-            # Fallback: store order in overlay
-            overlay_store = _get_overlay_store(hass, entity_id)
-            for i, uid in enumerate(task_uids):
-                await overlay_store.async_set_overlay(uid, sort_order=i)
-
+        handled = await async_reorder_external_tasks(hass, msg["entity_id"], msg["task_uids"])
         connection.send_result(msg["id"], {"provider_handled": handled})
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -2659,6 +2660,49 @@ async def _async_generate_task_image(
     await _async_remember_image(hass, title, image_url, shares)
     return {"task": updated_task, "reused": False}
 
+
+
+async def async_set_task_image(hass, store, task_id: str, url: str | None) -> None:
+    """Set or clear a task's picture from a service call, as the card's
+    image picker does: published to /local, remembered for same-title tasks,
+    the picture it replaces cleaned up.
+
+    *store* is a native list's store or a linked list's overlay store.
+    """
+    if url and len(url) > MAX_IMAGE_URL_LENGTH:
+        raise ValueError(f"image_url must be at most {MAX_IMAGE_URL_LENGTH} characters")
+    if isinstance(store, ExternalTaskOverlayStore):
+        old_url = store.get_overlay(task_id).get("image_url")
+        tasks, _ = await _async_get_external_tasks(hass, store.entity_id)
+        title = next((t["title"] for t in tasks if t["id"] == task_id), "")
+    else:
+        task = store.get_task(task_id)
+        old_url, title = task.get("image_url"), task.get("title", "")
+    if url:
+        url = await _async_publish_image_url(hass, None, url)
+    if isinstance(store, ExternalTaskOverlayStore):
+        await store.async_set_overlay(task_id, image_url=url or None)
+    else:
+        await store.async_update_task(task_id, image_url=url or None)
+    await _async_forget_rejected(hass, old_url, url)
+    await _async_remember_image(hass, title, url, store.get_settings()["share_images"])
+    await _cleanup_orphan_image(hass, old_url, url)
+
+
+async def async_generate_service_image(
+    hass, task_id: str, *, entry_id: str | None = None,
+    todo_entity_id: str | None = None, force: bool = False,
+) -> None:
+    """Draw a task's picture for a service call, with the AI entity and
+    prompt prefix the list's card handed over — the same the background
+    queue uses (no entity handed over: the first ai_task entity)."""
+    queue = async_get_image_queue(hass)
+    cfg = queue.config_for({"list_id": entry_id, "entity_id": todo_entity_id}) if queue else {}
+    await async_generate_task_image(
+        hass, None, task_id=task_id, entry_id=entry_id, todo_entity_id=todo_entity_id,
+        prompt_prefix=cfg.get("prompt_prefix") or "", ai_entity_id=cfg.get("ai_task_entity_id"),
+        force=force,
+    )
 
 
 @websocket_api.websocket_command(

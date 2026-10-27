@@ -21,7 +21,18 @@ from .image_queue import async_register_image_queue
 from homeassistant.util import dt as dt_util
 
 from .ui_translations import load_ui_translations
-from .const import DOMAIN, MAX_SUB_TASKS_PER_TASK, MAX_TITLE_LENGTH, RECURRENCE_UNIT_SECONDS, VALID_MONTH_PATTERNS
+from .const import (
+    DOMAIN,
+    MAX_IMAGE_URL_LENGTH,
+    MAX_RECURRENCE_VALUE,
+    MAX_REOPEN_LEAD_MINUTES,
+    MAX_SUB_TASKS_PER_TASK,
+    MAX_TITLE_LENGTH,
+    RECURRENCE_UNIT_SECONDS,
+    VALID_MONTH_PATTERNS,
+    VALID_RECURRENCE_ANCHORS,
+    VALID_RECURRENCE_UNITS,
+)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 from .overlay_store import ExternalTaskOverlayStore
@@ -32,6 +43,7 @@ from .store import (
     validate_reminders,
     validate_text,
 )
+from .service_fields import recurrence_fields, resolve_section
 from .websocket_api import async_move_task_any, async_register_websocket_commands
 
 _LOGGER = logging.getLogger(__name__)
@@ -1901,6 +1913,72 @@ async def _update_external(
     )
 
 
+def _service_task_fields(
+    hass: HomeAssistant, kind: str, ident: str, store, data: dict, task: dict | None,
+) -> dict:
+    """The recurrence and section fields a service call names, as task fields.
+
+    Checked before anything is written, so a bad combination fails the call
+    instead of leaving a half-updated task.
+    """
+    if data.get("image_url") and data.get("generate_image"):
+        raise ServiceValidationError("Use either image_url or generate_image, not both")
+    try:
+        fields = recurrence_fields(
+            data, task, native=kind == "native",
+            provider_syncs=kind == "external" and _external_owns_recurrence(hass, ident),
+        )
+        if "section" in data:
+            fields["section_id"] = resolve_section(store.sections, data["section"])
+    except ValueError as err:
+        raise ServiceValidationError(str(err)) from err
+    return fields
+
+
+async def _async_service_image(
+    hass: HomeAssistant, kind: str, ident: str, store, task_id: str, data: dict, *, force: bool,
+) -> None:
+    """Set, clear or draw the picture a service call asks for."""
+    from .websocket_api import async_generate_service_image, async_set_task_image
+
+    try:
+        if "image_url" in data:
+            await async_set_task_image(hass, store, task_id, data["image_url"])
+        if data.get("generate_image"):
+            await async_generate_service_image(
+                hass, task_id, force=force,
+                entry_id=ident if kind == "native" else None,
+                todo_entity_id=ident if kind == "external" else None,
+            )
+    except Exception as err:
+        # The task itself is saved by now; say so, so a retry doesn't
+        # create it twice.
+        raise HomeAssistantError(f"The task was saved, but its picture was not: {err}") from err
+
+
+async def _async_service_position(
+    hass: HomeAssistant, kind: str, ident: str, store, task_id: str, position: str | None,
+) -> None:
+    """Move the task to the top or bottom of the list's manual order."""
+    if not position:
+        return
+    if kind == "native":
+        ids = [t["id"] for t in sorted(store.tasks, key=lambda t: t.get("sort_order", 0))]
+    else:
+        tasks = sorted(await _external_tasks(hass, ident), key=lambda t: t.get("sort_order", 0))
+        ids = [t["id"] for t in tasks]
+    others = [i for i in ids if i != task_id]
+    order = [task_id, *others] if position == "top" else [*others, task_id]
+    if order == ids:
+        return
+    if kind == "native":
+        await store.async_reorder_tasks(order)
+    else:
+        from .websocket_api import async_reorder_external_tasks
+
+        await async_reorder_external_tasks(hass, ident, order)
+
+
 def _async_register_services(hass: HomeAssistant) -> None:
     """Register integration services (once globally)."""
     if hass.services.has_service(DOMAIN, "add_task"):
@@ -1914,8 +1992,13 @@ def _async_register_services(hass: HomeAssistant) -> None:
         """
         kind, ident, store = _resolve_target(hass, call.data)
         actor = await _resolve_actor(hass, call)
+        extra = _service_task_fields(hass, kind, ident, store, data, None)
         if kind == "external":
-            from .websocket_api import async_add_external_sub_task, async_create_external_task
+            from .websocket_api import (
+                async_add_external_sub_task,
+                async_create_external_task,
+                async_update_external_task,
+            )
 
             fields = {"title": data["title"]}
             for key in ("assigned_person", "due_date", "due_time", "notes", "priority"):
@@ -1936,10 +2019,11 @@ def _async_register_services(hass: HomeAssistant) -> None:
             except ValueError as err:
                 raise ServiceValidationError(str(err)) from err
             new_uid = await async_create_external_task(hass, ident, fields)
-            if sub_titles and not new_uid:
+            wants_more = sub_titles or extra or "image_url" in data or data.get("generate_image")
+            if wants_more and not new_uid:
                 raise HomeAssistantError(
                     f"{ident} created the task but did not report its id; "
-                    "its sub-tasks were not added"
+                    "its sub-tasks, recurrence, section and picture were not set"
                 )
             for done, title in enumerate(sub_titles):
                 try:
@@ -1951,6 +2035,16 @@ def _async_register_services(hass: HomeAssistant) -> None:
                         f"Created {data['title']!r} on {ident}, but only {done} of "
                         f"{len(sub_titles)} sub-tasks: {err}"
                     ) from err
+            # The same routes the card takes once the task exists: recurrence
+            # through the provider where it can carry it, the section (ours
+            # alone) straight into the overlay.
+            section = {"section_id": extra.pop("section_id")} if "section_id" in extra else None
+            if extra:
+                await async_update_external_task(hass, ident, new_uid, extra, actor=actor)
+            if section:
+                await store.async_set_overlay(new_uid, **section)
+            await _async_service_position(hass, kind, ident, store, new_uid, data.get("position"))
+            await _async_service_image(hass, kind, ident, store, new_uid, data, force=False)
             return kind, ident, new_uid
         # Everything goes in at creation (one task_created event, one
         # 'created' history entry, no intermediate bare state); the store
@@ -1972,7 +2066,11 @@ def _async_register_services(hass: HomeAssistant) -> None:
             # left an "updated tags" entry in the history of a brand-new task.
             tags=_parse_service_tags(data["tags"]) if "tags" in data else None,
             sub_tasks=data.get("sub_tasks"),
+            section_id=extra.pop("section_id", None),
+            recurrence=extra,
         )
+        await _async_service_position(hass, kind, ident, store, task["id"], data.get("position"))
+        await _async_service_image(hass, kind, ident, store, task["id"], data, force=False)
         return kind, ident, task["id"]
 
     async def async_handle_add_task(call: ServiceCall) -> None:
@@ -2110,13 +2208,22 @@ def _async_register_services(hass: HomeAssistant) -> None:
             kwargs["tags"] = _parse_service_tags(call.data["tags"])
         if "reminders" in call.data:
             kwargs["reminders"] = call.data["reminders"]
-        if not kwargs:
-            return
         if kind == "external":
-            await _update_external(hass, ident, call.data, kwargs)
-            return
-        task = _resolve_task(store, call.data)
-        await store.async_update_task(task["id"], actor=actor, **kwargs)
+            task = await _resolve_external_task(hass, ident, call.data)
+            kwargs.update(_service_task_fields(hass, kind, ident, store, call.data, task))
+            # Sections are ours alone: the overlay, as the card sets them.
+            section = {"section_id": kwargs.pop("section_id")} if "section_id" in kwargs else None
+            if kwargs:
+                await _update_external(hass, ident, call.data, kwargs, task=task, actor=actor)
+            if section:
+                await store.async_set_overlay(task["id"], **section)
+        else:
+            task = _resolve_task(store, call.data)
+            kwargs.update(_service_task_fields(hass, kind, ident, store, call.data, task))
+            if kwargs:
+                await store.async_update_task(task["id"], actor=actor, **kwargs)
+        await _async_service_position(hass, kind, ident, store, task["id"], call.data.get("position"))
+        await _async_service_image(hass, kind, ident, store, task["id"], call.data, force=True)
 
     async def _resolve_any_task(call: ServiceCall) -> tuple[str, str, object, dict]:
         """The list and the task a call names, native or linked.
@@ -2337,6 +2444,45 @@ def _async_register_services(hass: HomeAssistant) -> None:
                 "Either task_id, task_title, assigned_person, tag, or tags must be provided"
             )
 
+    # Shared by add_task and update_task: what the card's task editor sets
+    # beyond the basics.  service_fields.recurrence_fields checks how the
+    # recurrence fields go together.
+    task_extras = {
+        vol.Optional("section"): vol.Any(None, cv.string),
+        vol.Optional("image_url"): vol.Any(
+            None, vol.All(cv.string, vol.Length(max=MAX_IMAGE_URL_LENGTH))
+        ),
+        vol.Optional("generate_image"): cv.boolean,
+        vol.Optional("position"): vol.In(("top", "bottom")),
+        vol.Optional("recurrence_enabled"): cv.boolean,
+        vol.Optional("recurrence_value"): vol.All(
+            vol.Coerce(int), vol.Range(min=1, max=MAX_RECURRENCE_VALUE)
+        ),
+        vol.Optional("recurrence_unit"): vol.In(VALID_RECURRENCE_UNITS),
+        vol.Optional("recurrence_weekdays"): vol.All(cv.ensure_list_csv, vol.Length(max=7)),
+        vol.Optional("recurrence_day_of_month"): vol.Any(
+            None, "last", vol.All(vol.Coerce(int), vol.Range(min=1, max=31))
+        ),
+        vol.Optional("recurrence_nth_week"): vol.Any(
+            None, "last", vol.All(vol.Coerce(int), vol.Range(min=1, max=4))
+        ),
+        vol.Optional("recurrence_anniversary"): vol.Any(
+            None, "", vol.Match(r"^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$")
+        ),
+        vol.Optional("recurrence_anchor"): vol.In(VALID_RECURRENCE_ANCHORS),
+        vol.Optional("recurrence_start_date"): vol.Any(None, cv.date),
+        # A time selector sends HH:MM:SS; the task keeps HH:MM.
+        vol.Optional("recurrence_time"): vol.Any(
+            None, vol.All(cv.string, vol.Match(r"^\d{2}:\d{2}(:\d{2})?$"), lambda v: v[:5])
+        ),
+        vol.Optional("recurrence_end_date"): vol.Any(None, cv.date),
+        vol.Optional("recurrence_max_count"): vol.Any(
+            None, vol.All(vol.Coerce(int), vol.Range(min=1))
+        ),
+        vol.Optional("recurrence_reopen_lead"): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=MAX_REOPEN_LEAD_MINUTES)
+        ),
+    }
     hass.services.async_register(
         DOMAIN, "add_task", async_handle_add_task,
         schema=vol.Schema({
@@ -2354,6 +2500,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
             vol.Optional("sub_tasks"): vol.All(
                 cv.ensure_list, [cv.string], vol.Length(max=MAX_SUB_TASKS_PER_TASK)
             ),
+            **task_extras,
         }),
     )
     hass.services.async_register(
@@ -2396,6 +2543,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
             vol.Optional("priority"): vol.Any(vol.All(vol.Coerce(int), vol.In([1, 2, 3])), None),
             vol.Optional("tags"): cv.string,
             vol.Optional("reminders"): _validate_service_reminders,
+            **task_extras,
         }),
     )
     sub_task_target = {

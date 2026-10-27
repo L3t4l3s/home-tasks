@@ -327,7 +327,7 @@ class ImageQueue:
         store = self._store_for(entry)
         return bool(store is not None and store.get_settings()["auto_generate_images"])
 
-    def _config_for(self, entry: dict) -> dict:
+    def config_for(self, entry: dict) -> dict:
         """Which AI entity and prefix to use for this entry's list.
 
         Every task is drawn with the prefix of its own list: the card that
@@ -350,7 +350,7 @@ class ImageQueue:
         """Generate one image. A failure is marked, never retried."""
         from .websocket_api import async_generate_task_image
 
-        cfg = self._config_for(entry)
+        cfg = self.config_for(entry)
         try:
             await async_generate_task_image(
                 self.hass,

@@ -43,6 +43,9 @@ class LinkedListAdapter:
         self.updated.append((task_uid, dict(fields)))
         return dict(fields)
 
+    async def async_reorder_tasks(self, task_uids):
+        return False  # no MOVE - the order goes into the overlay
+
     async def async_read_tasks(self):
         # A rich adapter is asked for the list itself; ours mirrors the todo
         # entity the fixture set up.

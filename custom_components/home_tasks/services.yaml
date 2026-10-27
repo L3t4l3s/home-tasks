@@ -77,6 +77,148 @@ add_task:
       selector:
         text:
           multiple: true
+    section:
+      name: Section
+      description: >-
+        Name (or id) of a section in the list. Left out, the list's default section applies.
+      example: "Kitchen"
+      selector:
+        text:
+    image_url:
+      name: Picture URL
+      description: >-
+        A picture for the task — an https:// URL, /local/… or a media-source://
+        id; it is copied to /local/home_tasks so it keeps loading.
+      selector:
+        text:
+    generate_image:
+      name: Draw a picture
+      description: >-
+        Draw the task's picture with the AI task entity of the list's card
+        (its image-generation options), as the card's button does.
+      selector:
+        boolean:
+    position:
+      name: Position
+      description: >-
+        Put the task at the top or bottom of the list's manual order — what
+        the card shows when it sorts manually. Left out, a new task goes to the bottom.
+      selector:
+        select:
+          options:
+            - top
+            - bottom
+    recurrence:
+      collapsed: true
+      fields:
+        recurrence_enabled:
+          name: Recurring
+          description: >-
+            Set any other recurrence field and the task recurs; this is only
+            needed to switch recurrence off.
+          selector:
+            boolean:
+        recurrence_value:
+          name: Every
+          description: The interval count — every 2 weeks is 2 and weeks.
+          selector:
+            number:
+              min: 1
+              max: 365
+        recurrence_unit:
+          name: Unit
+          description: >-
+            hours, days, weeks, months or years. Needed when the task has
+            never recurred.
+          selector:
+            select:
+              options:
+                - hours
+                - days
+                - weeks
+                - months
+                - years
+        recurrence_weekdays:
+          name: Weekdays
+          description: >-
+            Weekly: the days it repeats on (mon … sun). Monthly: the one day
+            for recurrence_nth_week. An empty list ends a weekday pattern.
+          example: '["mon", "thu"]'
+          selector:
+            select:
+              multiple: true
+              options:
+                - mon
+                - tue
+                - wed
+                - thu
+                - fri
+                - sat
+                - sun
+        recurrence_day_of_month:
+          name: Day of month
+          description: Monthly on this day (1–31, or "last").
+          example: "15"
+          selector:
+            text:
+        recurrence_nth_week:
+          name: Week of month
+          description: >-
+            Monthly on the nth weekday (1–4, or "last"), with one day in
+            recurrence_weekdays — e.g. the 2nd Tuesday.
+          example: "2"
+          selector:
+            text:
+        recurrence_anniversary:
+          name: Yearly on
+          description: Yearly on this date, as MM-DD.
+          example: "03-14"
+          selector:
+            text:
+        recurrence_anchor:
+          name: Count from
+          description: >-
+            Without a fixed day: count the next date from the completion
+            (default) or from the due date.
+          selector:
+            select:
+              options:
+                - completion
+                - due
+        recurrence_start_date:
+          name: Start
+          description: Recurrence starts on this date.
+          selector:
+            date:
+        recurrence_time:
+          name: Time
+          description: Time of day the task becomes due again.
+          selector:
+            time:
+        recurrence_end_date:
+          name: Until
+          description: Recurrence ends after this date.
+          selector:
+            date:
+        recurrence_max_count:
+          name: Times
+          description: Recurrence ends after this many repetitions.
+          selector:
+            number:
+              min: 1
+              max: 999
+        recurrence_reopen_lead:
+          name: Reopen early
+          description: >-
+            Minutes before the next due moment the completed task opens again,
+            shorter than the interval (1440 = a day). Home Tasks lists only;
+            left out, a task that starts recurring takes the list's default.
+          selector:
+            number:
+              min: 0
+              max: 525600
+              unit_of_measurement: min
+              mode: box
 
 add_task_from_text:
   name: Add Task From Text
@@ -258,6 +400,148 @@ update_task:
       description: Comma-separated minute offsets before the due moment (0 = at due time) — replaces the task's reminders.
       selector:
         text:
+    section:
+      name: Section
+      description: >-
+        Name (or id) of a section in the list. Empty moves the task out of its section.
+      example: "Kitchen"
+      selector:
+        text:
+    image_url:
+      name: Picture URL
+      description: >-
+        A picture for the task — an https:// URL, /local/… or a media-source://
+        id; it is copied to /local/home_tasks so it keeps loading. Empty removes the picture.
+      selector:
+        text:
+    generate_image:
+      name: Draw a picture
+      description: >-
+        Draw the task's picture with the AI task entity of the list's card
+        (its image-generation options), as the card's button does. Draws a new one even when the task has a picture.
+      selector:
+        boolean:
+    position:
+      name: Position
+      description: >-
+        Put the task at the top or bottom of the list's manual order — what
+        the card shows when it sorts manually. Left out, the task keeps its place.
+      selector:
+        select:
+          options:
+            - top
+            - bottom
+    recurrence:
+      collapsed: true
+      fields:
+        recurrence_enabled:
+          name: Recurring
+          description: >-
+            Set any other recurrence field and the task recurs; this is only
+            needed to switch recurrence off.
+          selector:
+            boolean:
+        recurrence_value:
+          name: Every
+          description: The interval count — every 2 weeks is 2 and weeks.
+          selector:
+            number:
+              min: 1
+              max: 365
+        recurrence_unit:
+          name: Unit
+          description: >-
+            hours, days, weeks, months or years. Needed when the task has
+            never recurred.
+          selector:
+            select:
+              options:
+                - hours
+                - days
+                - weeks
+                - months
+                - years
+        recurrence_weekdays:
+          name: Weekdays
+          description: >-
+            Weekly: the days it repeats on (mon … sun). Monthly: the one day
+            for recurrence_nth_week. An empty list ends a weekday pattern.
+          example: '["mon", "thu"]'
+          selector:
+            select:
+              multiple: true
+              options:
+                - mon
+                - tue
+                - wed
+                - thu
+                - fri
+                - sat
+                - sun
+        recurrence_day_of_month:
+          name: Day of month
+          description: Monthly on this day (1–31, or "last").
+          example: "15"
+          selector:
+            text:
+        recurrence_nth_week:
+          name: Week of month
+          description: >-
+            Monthly on the nth weekday (1–4, or "last"), with one day in
+            recurrence_weekdays — e.g. the 2nd Tuesday.
+          example: "2"
+          selector:
+            text:
+        recurrence_anniversary:
+          name: Yearly on
+          description: Yearly on this date, as MM-DD.
+          example: "03-14"
+          selector:
+            text:
+        recurrence_anchor:
+          name: Count from
+          description: >-
+            Without a fixed day: count the next date from the completion
+            (default) or from the due date.
+          selector:
+            select:
+              options:
+                - completion
+                - due
+        recurrence_start_date:
+          name: Start
+          description: Recurrence starts on this date.
+          selector:
+            date:
+        recurrence_time:
+          name: Time
+          description: Time of day the task becomes due again.
+          selector:
+            time:
+        recurrence_end_date:
+          name: Until
+          description: Recurrence ends after this date.
+          selector:
+            date:
+        recurrence_max_count:
+          name: Times
+          description: Recurrence ends after this many repetitions.
+          selector:
+            number:
+              min: 1
+              max: 999
+        recurrence_reopen_lead:
+          name: Reopen early
+          description: >-
+            Minutes before the next due moment the completed task opens again,
+            shorter than the interval (1440 = a day). Home Tasks lists only;
+            left out, a task that starts recurring takes the list's default.
+          selector:
+            number:
+              min: 0
+              max: 525600
+              unit_of_measurement: min
+              mode: box
 
 move_task:
   name: Move Task
