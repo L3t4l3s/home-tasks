@@ -291,7 +291,10 @@
     "due_quick_month": "In 1 month",
     "due_quick_3months": "In 3 months",
     "ed_offered_persons": "Selectable people",
-    "ed_offered_persons_hint": "Only highlighted people can be assigned in this card"
+    "ed_offered_persons_hint": "Only highlighted people can be assigned in this card",
+    "add_with_details": "Add and edit details",
+    "add_clear": "Clear",
+    "ed_show_add_details": "Add with details button"
   },
   "nl": {
     "ed_default_priority": "Standaardprioriteit",
@@ -585,7 +588,10 @@
     "due_quick_month": "Over 1 maand",
     "due_quick_3months": "Over 3 maanden",
     "ed_offered_persons": "Selecteerbare personen",
-    "ed_offered_persons_hint": "Alleen gemarkeerde personen kunnen in deze kaart worden toegewezen"
+    "ed_offered_persons_hint": "Alleen gemarkeerde personen kunnen in deze kaart worden toegewezen",
+    "ed_show_add_details": "Knop toevoegen met details",
+    "add_with_details": "Toevoegen en details bewerken",
+    "add_clear": "Wissen"
   },
   "it": {
     "ed_default_priority": "Priorità predefinita",
@@ -879,7 +885,10 @@
     "due_quick_month": "Tra 1 mese",
     "due_quick_3months": "Tra 3 mesi",
     "ed_offered_persons": "Persone selezionabili",
-    "ed_offered_persons_hint": "In questa scheda si possono assegnare solo le persone evidenziate"
+    "ed_offered_persons_hint": "In questa scheda si possono assegnare solo le persone evidenziate",
+    "ed_show_add_details": "Pulsante aggiungi con dettagli",
+    "add_with_details": "Aggiungi e modifica dettagli",
+    "add_clear": "Cancella"
   },
   "pl": {
     "ed_default_priority": "Domyślny priorytet",
@@ -1173,7 +1182,10 @@
     "due_quick_month": "Za 1 miesiąc",
     "due_quick_3months": "Za 3 miesiące",
     "ed_offered_persons": "Osoby do wyboru",
-    "ed_offered_persons_hint": "W tej karcie można przypisać tylko wyróżnione osoby"
+    "ed_offered_persons_hint": "W tej karcie można przypisać tylko wyróżnione osoby",
+    "ed_show_add_details": "Przycisk dodawania ze szczegółami",
+    "add_with_details": "Dodaj i edytuj szczegóły",
+    "add_clear": "Wyczyść"
   },
   "sv": {
     "ed_default_priority": "Standardprioritet",
@@ -1467,7 +1479,10 @@
     "due_quick_month": "Om 1 månad",
     "due_quick_3months": "Om 3 månader",
     "ed_offered_persons": "Valbara personer",
-    "ed_offered_persons_hint": "Endast markerade personer kan tilldelas i det här kortet"
+    "ed_offered_persons_hint": "Endast markerade personer kan tilldelas i det här kortet",
+    "ed_show_add_details": "Knapp lägg till med detaljer",
+    "add_with_details": "Lägg till och redigera detaljer",
+    "add_clear": "Rensa"
   },
   "fr": {
     "ed_default_priority": "Priorité par défaut",
@@ -1761,7 +1776,10 @@
     "due_quick_month": "Dans 1 mois",
     "due_quick_3months": "Dans 3 mois",
     "ed_offered_persons": "Personnes sélectionnables",
-    "ed_offered_persons_hint": "Seules les personnes en surbrillance peuvent être assignées dans cette carte"
+    "ed_offered_persons_hint": "Seules les personnes en surbrillance peuvent être assignées dans cette carte",
+    "ed_show_add_details": "Bouton ajouter avec détails",
+    "add_with_details": "Ajouter et modifier les détails",
+    "add_clear": "Effacer"
   },
   "pt": {
     "ed_default_priority": "Prioridade padrão",
@@ -2055,7 +2073,10 @@
     "due_quick_month": "Daqui a 1 mês",
     "due_quick_3months": "Daqui a 3 meses",
     "ed_offered_persons": "Pessoas selecionáveis",
-    "ed_offered_persons_hint": "Só as pessoas destacadas podem ser atribuídas neste cartão"
+    "ed_offered_persons_hint": "Só as pessoas destacadas podem ser atribuídas neste cartão",
+    "ed_show_add_details": "Botão adicionar com detalhes",
+    "add_with_details": "Adicionar e editar detalhes",
+    "add_clear": "Limpar"
   },
   "pt-BR": {
     "ed_default_priority": "Prioridade padrão",
@@ -2349,7 +2370,10 @@
     "due_quick_month": "Em 1 mês",
     "due_quick_3months": "Em 3 meses",
     "ed_offered_persons": "Pessoas selecionáveis",
-    "ed_offered_persons_hint": "Somente as pessoas destacadas podem ser atribuídas neste cartão"
+    "ed_offered_persons_hint": "Somente as pessoas destacadas podem ser atribuídas neste cartão",
+    "ed_show_add_details": "Botão adicionar com detalhes",
+    "add_with_details": "Adicionar e editar detalhes",
+    "add_clear": "Limpar"
   },
   "es": {
     "ed_default_priority": "Prioridad predeterminada",
@@ -2643,7 +2667,10 @@
     "due_quick_month": "En 1 mes",
     "due_quick_3months": "En 3 meses",
     "ed_offered_persons": "Personas seleccionables",
-    "ed_offered_persons_hint": "En esta tarjeta solo se pueden asignar las personas resaltadas"
+    "ed_offered_persons_hint": "En esta tarjeta solo se pueden asignar las personas resaltadas",
+    "ed_show_add_details": "Botón añadir con detalles",
+    "add_with_details": "Añadir y editar detalles",
+    "add_clear": "Borrar"
   },
   "ru": {
     "ed_default_priority": "Приоритет по умолчанию",
@@ -2937,7 +2964,10 @@
     "due_quick_month": "Через 1 месяц",
     "due_quick_3months": "Через 3 месяца",
     "ed_offered_persons": "Доступные люди",
-    "ed_offered_persons_hint": "В этой карточке можно назначать только выделенных людей"
+    "ed_offered_persons_hint": "В этой карточке можно назначать только выделенных людей",
+    "ed_show_add_details": "Кнопка добавления с деталями",
+    "add_with_details": "Добавить и изменить детали",
+    "add_clear": "Очистить"
   },
   "cs": {
     "ed_default_priority": "Výchozí priorita",
@@ -3231,7 +3261,10 @@
     "due_quick_month": "Za 1 měsíc",
     "due_quick_3months": "Za 3 měsíce",
     "ed_offered_persons": "Volitelné osoby",
-    "ed_offered_persons_hint": "V této kartě lze přiřadit jen zvýrazněné osoby"
+    "ed_offered_persons_hint": "V této kartě lze přiřadit jen zvýrazněné osoby",
+    "ed_show_add_details": "Tlačítko přidat s podrobnostmi",
+    "add_with_details": "Přidat a upravit podrobnosti",
+    "add_clear": "Vymazat"
   },
   "da": {
     "ed_default_priority": "Standardprioritet",
@@ -3525,7 +3558,10 @@
     "due_quick_month": "Om 1 måned",
     "due_quick_3months": "Om 3 måneder",
     "ed_offered_persons": "Valgbare personer",
-    "ed_offered_persons_hint": "Kun fremhævede personer kan tildeles i dette kort"
+    "ed_offered_persons_hint": "Kun fremhævede personer kan tildeles i dette kort",
+    "ed_show_add_details": "Knap tilføj med detaljer",
+    "add_with_details": "Tilføj og rediger detaljer",
+    "add_clear": "Ryd"
   },
   "no": {
     "ed_default_priority": "Standardprioritet",
@@ -3819,7 +3855,10 @@
     "due_quick_month": "Om 1 måned",
     "due_quick_3months": "Om 3 måneder",
     "ed_offered_persons": "Valgbare personer",
-    "ed_offered_persons_hint": "Bare uthevede personer kan tildeles i dette kortet"
+    "ed_offered_persons_hint": "Bare uthevede personer kan tildeles i dette kortet",
+    "ed_show_add_details": "Knapp legg til med detaljer",
+    "add_with_details": "Legg til og rediger detaljer",
+    "add_clear": "Tøm"
   },
   "fi": {
     "ed_default_priority": "Oletusprioriteetti",
@@ -4113,7 +4152,10 @@
     "due_quick_month": "1 kuukauden päästä",
     "due_quick_3months": "3 kuukauden päästä",
     "ed_offered_persons": "Valittavat henkilöt",
-    "ed_offered_persons_hint": "Tässä kortissa voi määrittää vain korostettuja henkilöitä"
+    "ed_offered_persons_hint": "Tässä kortissa voi määrittää vain korostettuja henkilöitä",
+    "ed_show_add_details": "Lisää tietojen kanssa -painike",
+    "add_with_details": "Lisää ja muokkaa tietoja",
+    "add_clear": "Tyhjennä"
   },
   "hu": {
     "ed_default_priority": "Alapértelmezett prioritás",
@@ -4407,7 +4449,10 @@
     "due_quick_month": "1 hónap múlva",
     "due_quick_3months": "3 hónap múlva",
     "ed_offered_persons": "Választható személyek",
-    "ed_offered_persons_hint": "Ebben a kártyában csak a kiemelt személyek rendelhetők hozzá"
+    "ed_offered_persons_hint": "Ebben a kártyában csak a kiemelt személyek rendelhetők hozzá",
+    "ed_show_add_details": "Hozzáadás részletekkel gomb",
+    "add_with_details": "Hozzáadás és részletek szerkesztése",
+    "add_clear": "Törlés"
   },
   "de": {
     "ed_default_priority": "Standard-Priorität",
@@ -4701,6 +4746,9 @@
     "due_quick_month": "In 1 Monat",
     "due_quick_3months": "In 3 Monaten",
     "ed_offered_persons": "Auswählbare Personen",
-    "ed_offered_persons_hint": "Nur markierte Personen können in dieser Karte zugewiesen werden"
+    "ed_offered_persons_hint": "Nur markierte Personen können in dieser Karte zugewiesen werden",
+    "add_with_details": "Hinzufügen und Details bearbeiten",
+    "add_clear": "Leeren",
+    "ed_show_add_details": "Button Hinzufügen mit Details"
   }
 }

@@ -319,6 +319,7 @@ Each entry in `columns` accepts the following options.
 | `show_progress` | `true` | Show/hide the task progress counter |
 | `show_add_task` | `true` | Show/hide the "add task" input row (set `false` for a read-only display) |
 | `show_add_due` | `false` | Show a due date (+ time) row under the add-task input so a due date can be set while creating the task; leave it empty to create without one. Hidden for external lists whose provider can't store due dates |
+| `show_add_details` | `false` | A second button (✎) next to + that opens a **draft** under the add field with the same detail fields as a task (in your `detail_order`, honouring the `show_*` switches). Nothing is created until *Add*; *Cancel* discards it and gives the title back. + and Enter still quick-add. (The add field also has a clear × while it holds text.) |
 | `show_voice` | `true` | Show/hide the voice-input mic button on the add-task row |
 | `show_task_search` | `true` | Live-search while typing (or dictating) in the add-task row: the column shows matching tasks — open and completed, across all sections — so you spot a task you already have instead of adding a duplicate. Escape, adding the task, or ticking off a match ends the search |
 | `show_sort` | `true` | Show/hide the sort button |
