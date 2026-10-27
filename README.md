@@ -617,9 +617,9 @@ The `home_tasks_task_completed` event additionally includes who ticked the task 
 | `reminders` | no | Minute offsets before the due moment, comma-separated or list (e.g. `"60, 0"`; `0` = at due time). An explicitly empty value creates the task without reminders even when the list has default reminders |
 | `sub_tasks` | no | Sub-task titles as a list (e.g. `["Milk", "Bread"]`), created unchecked |
 | `section` | no | Section name (or id); left out, the list's default section applies |
-| `image_url` | no | A picture: `https://…`, `/local/…` or a `media-source://` id — copied to `/local/home_tasks` so it keeps loading |
+| `image_url` | no | A picture: `https://…`, `/local/…` or a `media-source://` id. A media-source id or an internal HA path is copied to `/local/home_tasks` so every device can load it; a URL is kept as given |
 | `generate_image` | no | `true` draws the picture with the AI task entity of the list's card, like the card's button (not together with `image_url`) |
-| `position` | no | `top` or `bottom` of the list's manual order (default: bottom) |
+| `position` | no | `top` or `bottom` of the list's manual order (default: bottom); in the card that is within the task's section |
 | `recurrence_…` | no | Make it recurring — see [Recurrence fields](#recurrence-fields) |
 
 #### `home_tasks.add_task_from_text`
@@ -714,7 +714,7 @@ Update any field of an existing task, found by `task_id` or `task_title`. Only t
 | `section` | no | Section name (or id); empty moves the task out of its section |
 | `image_url` | no | A picture, as for `add_task`; empty removes it |
 | `generate_image` | no | `true` draws a new picture, even when the task has one |
-| `position` | no | `top` or `bottom` moves the task to that end of the list's manual order |
+| `position` | no | `top` or `bottom` moves the task to that end of the list's manual order, within its section in the card |
 | `recurrence_…` | no | Change the recurrence — see [Recurrence fields](#recurrence-fields) |
 
 #### Recurrence fields

@@ -88,7 +88,8 @@ add_task:
       name: Picture URL
       description: >-
         A picture for the task — an https:// URL, /local/… or a media-source://
-        id; it is copied to /local/home_tasks so it keeps loading.
+        id. A media-source:// id or an internal HA path is copied to
+        /local/home_tasks so every device can load it; a URL is kept as given.
       selector:
         text:
     generate_image:
@@ -102,13 +103,15 @@ add_task:
       name: Position
       description: >-
         Put the task at the top or bottom of the list's manual order — what
-        the card shows when it sorts manually. Left out, a new task goes to the bottom.
+        the card shows when it sorts manually, within the task's section. Left out, a new task goes to the bottom.
       selector:
         select:
           options:
             - top
             - bottom
     recurrence:
+      name: Recurrence
+      description: Repeat the task, as in the card's task editor.
       collapsed: true
       fields:
         recurrence_enabled:
@@ -411,7 +414,8 @@ update_task:
       name: Picture URL
       description: >-
         A picture for the task — an https:// URL, /local/… or a media-source://
-        id; it is copied to /local/home_tasks so it keeps loading. Empty removes the picture.
+        id. A media-source:// id or an internal HA path is copied to
+        /local/home_tasks so every device can load it; a URL is kept as given. Empty removes the picture.
       selector:
         text:
     generate_image:
@@ -425,13 +429,15 @@ update_task:
       name: Position
       description: >-
         Put the task at the top or bottom of the list's manual order — what
-        the card shows when it sorts manually. Left out, the task keeps its place.
+        the card shows when it sorts manually, within the task's section. Left out, the task keeps its place.
       selector:
         select:
           options:
             - top
             - bottom
     recurrence:
+      name: Recurrence
+      description: Repeat the task, as in the card's task editor.
       collapsed: true
       fields:
         recurrence_enabled:
