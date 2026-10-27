@@ -77,6 +77,11 @@ add_task:
       selector:
         text:
           multiple: true
+    section:
+      name: Section
+      description: Section to put the task in, by name or id. Leave out to use the list's default section.
+      selector:
+        text:
 
 add_task_from_text:
   name: Add Task From Text
@@ -256,6 +261,11 @@ update_task:
     reminders:
       name: Reminders
       description: Comma-separated minute offsets before the due moment (0 = at due time) — replaces the task's reminders.
+      selector:
+        text:
+    section:
+      name: Section
+      description: Move the task to this section, by name or id. An empty value takes it out of any section.
       selector:
         text:
 

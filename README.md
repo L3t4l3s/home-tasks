@@ -332,6 +332,7 @@ Each entry in `columns` accepts the following options.
 | `show_assigned_person` | `true` | Show/hide person assignment |
 | `person_badge` | `name` | How the assigned person is shown on a task row: `off`, `picture`, `name`, `both`. Replaces `badge_person`. The picture is the person entity's Home Assistant profile picture; people without one get their initials |
 | `show_priority` | `true` | Show/hide priority field and badge |
+| `show_section` | `true` | Show/hide the section field in the task details (only shown when the list has sections) |
 | `show_tags` | `true` | Show/hide tags, badges, and filter chips |
 | `show_due_date` | `true` | Show/hide due date and time |
 | `show_reminders` | `true` | Show/hide reminders |
@@ -610,6 +611,7 @@ The `home_tasks_task_completed` event additionally includes who ticked the task 
 | `tags` | no | Comma-separated tags (e.g. `"kitchen,daily"`) |
 | `reminders` | no | Minute offsets before the due moment, comma-separated or list (e.g. `"60, 0"`; `0` = at due time). An explicitly empty value creates the task without reminders even when the list has default reminders |
 | `sub_tasks` | no | Sub-task titles as a list (e.g. `["Milk", "Bread"]`), created unchecked |
+| `section` | no | Section name or id to put the task in (default: the list's default section) |
 
 #### `home_tasks.add_task_from_text`
 
@@ -700,6 +702,7 @@ Update any field of an existing task, found by `task_id` or `task_title`. Only t
 | `priority` | no | `1` (low) – `3` (high) |
 | `tags` | no | Comma-separated tags — replaces the existing tags |
 | `reminders` | no | Minute offsets before the due moment — replaces the existing reminders |
+| `section` | no | Section name or id to move the task to; an empty value takes it out of any section |
 
 #### `home_tasks.move_task`
 

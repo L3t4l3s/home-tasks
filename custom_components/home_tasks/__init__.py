@@ -1921,6 +1921,24 @@ async def _update_external(
     )
 
 
+def _resolve_service_section(sections: list[dict], value: str) -> str | None:
+    """Map a service ``section`` value (a section name or id) to a section id.
+
+    An empty string clears the section. Names match case-insensitively.
+    """
+    value = (value or "").strip()
+    if not value:
+        return None
+    for sec in sections:
+        if sec.get("id") == value:
+            return sec["id"]
+    for sec in sections:
+        if (sec.get("name") or "").strip().lower() == value.lower():
+            return sec["id"]
+    names = ", ".join(sec.get("name", "") for sec in sections) or "none"
+    raise ServiceValidationError(f"Unknown section {value!r} (sections: {names})")
+
+
 def _async_register_services(hass: HomeAssistant) -> None:
     """Register integration services (once globally)."""
     if hass.services.has_service(DOMAIN, "add_task"):
@@ -1945,6 +1963,12 @@ def _async_register_services(hass: HomeAssistant) -> None:
                 fields["reminders"] = data["reminders"]
             if "tags" in data:
                 fields["tags"] = _parse_service_tags(data["tags"])
+            section_id = None
+            if "section" in data:
+                from .websocket_api import _get_overlay_store
+
+                overlay_store = _get_overlay_store(hass, ident)
+                section_id = _resolve_service_section(overlay_store.sections, data["section"])
             # Checked before anything is created: the provider gets the task
             # first and the sub-tasks one by one after it, so a bad title
             # found halfway would leave a half-built task behind.
@@ -1971,6 +1995,9 @@ def _async_register_services(hass: HomeAssistant) -> None:
                         f"Created {data['title']!r} on {ident}, but only {done} of "
                         f"{len(sub_titles)} sub-tasks: {err}"
                     ) from err
+            if "section" in data and new_uid:
+                # Sections are ours alone - they live in the overlay.
+                await overlay_store.async_set_overlay(new_uid, section_id=section_id)
             return kind, ident, new_uid
         # Everything goes in at creation (one task_created event, one
         # 'created' history entry, no intermediate bare state); the store
@@ -1992,6 +2019,10 @@ def _async_register_services(hass: HomeAssistant) -> None:
             # left an "updated tags" entry in the history of a brand-new task.
             tags=_parse_service_tags(data["tags"]) if "tags" in data else None,
             sub_tasks=data.get("sub_tasks"),
+            **(
+                {"section_id": _resolve_service_section(store.sections, data["section"])}
+                if "section" in data else {}
+            ),
         )
         return kind, ident, task["id"]
 
@@ -2130,12 +2161,25 @@ def _async_register_services(hass: HomeAssistant) -> None:
             kwargs["tags"] = _parse_service_tags(call.data["tags"])
         if "reminders" in call.data:
             kwargs["reminders"] = call.data["reminders"]
-        if not kwargs:
+        has_section = "section" in call.data
+        if not kwargs and not has_section:
             return
         if kind == "external":
-            await _update_external(hass, ident, call.data, kwargs)
+            from .websocket_api import _get_overlay_store
+
+            task = await _resolve_external_task(hass, ident, call.data)
+            if kwargs:
+                await _update_external(hass, ident, call.data, kwargs, task=task)
+            if has_section:
+                overlay_store = _get_overlay_store(hass, ident)
+                await overlay_store.async_set_overlay(
+                    task["id"],
+                    section_id=_resolve_service_section(overlay_store.sections, call.data["section"]),
+                )
             return
         task = _resolve_task(store, call.data)
+        if has_section:
+            kwargs["section_id"] = _resolve_service_section(store.sections, call.data["section"])
         await store.async_update_task(task["id"], actor=actor, **kwargs)
 
     async def _resolve_any_task(call: ServiceCall) -> tuple[str, str, object, dict]:
@@ -2374,6 +2418,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
             vol.Optional("sub_tasks"): vol.All(
                 cv.ensure_list, [cv.string], vol.Length(max=MAX_SUB_TASKS_PER_TASK)
             ),
+            vol.Optional("section"): cv.string,
         }),
     )
     hass.services.async_register(
@@ -2416,6 +2461,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
             vol.Optional("priority"): vol.Any(vol.All(vol.Coerce(int), vol.In([1, 2, 3])), None),
             vol.Optional("tags"): cv.string,
             vol.Optional("reminders"): _validate_service_reminders,
+            vol.Optional("section"): cv.string,
         }),
     )
     sub_task_target = {

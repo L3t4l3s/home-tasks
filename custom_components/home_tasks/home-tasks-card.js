@@ -287,7 +287,9 @@ const _TRANSLATIONS = {
     "ed_ai_prompt_prefix_placeholder": "e.g. Minimalist icon of",
     "calendar_minutes_before": "{value} min before",
     "calendar_hours_before": "{value}h before",
-    "calendar_days_before": "{value}d before"
+    "calendar_days_before": "{value}d before",
+    "section_label": "Section",
+    "ed_show_section": "Section field"
   },
   "nl": {
     "ed_default_priority": "Standaardprioriteit",
@@ -568,7 +570,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Zojuist",
     "calendar_minutes_before": "{value} min van tevoren",
     "calendar_hours_before": "{value} uur van tevoren",
-    "calendar_days_before": "{value} dagen van tevoren"
+    "calendar_days_before": "{value} dagen van tevoren",
+    "ed_show_section": "Sectieveld",
+    "section_label": "Sectie"
   },
   "it": {
     "ed_default_priority": "Priorità predefinita",
@@ -849,7 +853,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Proprio ora",
     "calendar_minutes_before": "{value} min prima",
     "calendar_hours_before": "{value} ore prima",
-    "calendar_days_before": "{value} giorni prima"
+    "calendar_days_before": "{value} giorni prima",
+    "ed_show_section": "Campo sezione",
+    "section_label": "Sezione"
   },
   "pl": {
     "ed_default_priority": "Domyślny priorytet",
@@ -1130,7 +1136,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Właśnie",
     "calendar_minutes_before": "{value} min przed",
     "calendar_hours_before": "{value} godz. przed",
-    "calendar_days_before": "{value} dni przed"
+    "calendar_days_before": "{value} dni przed",
+    "ed_show_section": "Pole sekcji",
+    "section_label": "Sekcja"
   },
   "sv": {
     "ed_default_priority": "Standardprioritet",
@@ -1411,7 +1419,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Just nu",
     "calendar_minutes_before": "{value} min innan",
     "calendar_hours_before": "{value} tim innan",
-    "calendar_days_before": "{value} dagar innan"
+    "calendar_days_before": "{value} dagar innan",
+    "ed_show_section": "Avsnittsfält",
+    "section_label": "Avsnitt"
   },
   "fr": {
     "ed_default_priority": "Priorité par défaut",
@@ -1692,7 +1702,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "À l'instant",
     "calendar_minutes_before": "{value} min avant",
     "calendar_hours_before": "{value} h avant",
-    "calendar_days_before": "{value} j avant"
+    "calendar_days_before": "{value} j avant",
+    "ed_show_section": "Champ de section",
+    "section_label": "Section"
   },
   "pt": {
     "ed_default_priority": "Prioridade padrão",
@@ -1973,7 +1985,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Agora mesmo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value}h antes",
-    "calendar_days_before": "{value}d antes"
+    "calendar_days_before": "{value}d antes",
+    "ed_show_section": "Campo de seção",
+    "section_label": "Seção"
   },
   "pt-BR": {
     "ed_default_priority": "Prioridade padrão",
@@ -2254,7 +2268,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Agora mesmo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value}h antes",
-    "calendar_days_before": "{value}d antes"
+    "calendar_days_before": "{value}d antes",
+    "ed_show_section": "Campo de seção",
+    "section_label": "Seção"
   },
   "es": {
     "ed_default_priority": "Prioridad predeterminada",
@@ -2535,7 +2551,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Ahora mismo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value} h antes",
-    "calendar_days_before": "{value} d antes"
+    "calendar_days_before": "{value} d antes",
+    "ed_show_section": "Campo de sección",
+    "section_label": "Sección"
   },
   "ru": {
     "ed_default_priority": "Приоритет по умолчанию",
@@ -2816,7 +2834,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Только что",
     "calendar_minutes_before": "за {value} мин",
     "calendar_hours_before": "за {value} ч",
-    "calendar_days_before": "за {value} дн."
+    "calendar_days_before": "за {value} дн.",
+    "ed_show_section": "Поле раздела",
+    "section_label": "Раздел"
   },
   "cs": {
     "ed_default_priority": "Výchozí priorita",
@@ -3097,7 +3117,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Právě teď",
     "calendar_minutes_before": "{value} min předem",
     "calendar_hours_before": "{value} h předem",
-    "calendar_days_before": "{value} d předem"
+    "calendar_days_before": "{value} d předem",
+    "ed_show_section": "Pole sekce",
+    "section_label": "Sekce"
   },
   "da": {
     "ed_default_priority": "Standardprioritet",
@@ -3378,7 +3400,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Lige nu",
     "calendar_minutes_before": "{value} min før",
     "calendar_hours_before": "{value} timer før",
-    "calendar_days_before": "{value} dage før"
+    "calendar_days_before": "{value} dage før",
+    "ed_show_section": "Afsnitsfelt",
+    "section_label": "Afsnit"
   },
   "no": {
     "ed_default_priority": "Standardprioritet",
@@ -3659,7 +3683,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Akkurat nå",
     "calendar_minutes_before": "{value} min før",
     "calendar_hours_before": "{value} timer før",
-    "calendar_days_before": "{value} dager før"
+    "calendar_days_before": "{value} dager før",
+    "ed_show_section": "Seksjonsfelt",
+    "section_label": "Seksjon"
   },
   "fi": {
     "ed_default_priority": "Oletusprioriteetti",
@@ -3940,7 +3966,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Juuri nyt",
     "calendar_minutes_before": "{value} min ennen",
     "calendar_hours_before": "{value} h ennen",
-    "calendar_days_before": "{value} pv ennen"
+    "calendar_days_before": "{value} pv ennen",
+    "ed_show_section": "Osiokenttä",
+    "section_label": "Osio"
   },
   "hu": {
     "ed_default_priority": "Alapértelmezett prioritás",
@@ -4221,7 +4249,9 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Épp most",
     "calendar_minutes_before": "{value} perccel előtte",
     "calendar_hours_before": "{value} órával előtte",
-    "calendar_days_before": "{value} nappal előtte"
+    "calendar_days_before": "{value} nappal előtte",
+    "ed_show_section": "Szakasz mező",
+    "section_label": "Szakasz"
   },
   "de": {
     "ed_default_priority": "Standard-Priorität",
@@ -4502,7 +4532,9 @@ const _TRANSLATIONS = {
     "ed_ai_prompt_prefix_placeholder": "z.B. Minimalistisches Icon von",
     "calendar_minutes_before": "{value} Min. vorher",
     "calendar_hours_before": "{value} Std. vorher",
-    "calendar_days_before": "{value} Tage vorher"
+    "calendar_days_before": "{value} Tage vorher",
+    "ed_show_section": "Abschnittsfeld",
+    "section_label": "Abschnitt"
   }
 };
 
@@ -8354,6 +8386,7 @@ class HomeTasksCard extends HTMLElement {
     if (col.show_notes !== false) details.push(this._buildNotesSection(task, colIdx));
     if ((col.show_sub_tasks ?? col.show_sub_items) !== false) details.push(this._buildSubTasksSection(task, colIdx));
     if (col.show_assigned_person !== false) details.push(this._buildAssignedPersonSection(task, colIdx));
+    if (col.show_section !== false && (this._columns[colIdx].sections || []).length) details.push(this._buildSectionPickerSection(task, colIdx));
     if (col.show_priority !== false) details.push(this._buildPrioritySection(task, colIdx));
     if (col.show_tags !== false) details.push(this._buildTagsSection(task, colIdx));
     if (col.show_due_date !== false) details.push(this._buildDateSection(task, colIdx));
@@ -9722,6 +9755,53 @@ class HomeTasksCard extends HTMLElement {
     return this._el("div", { className: "detail-section" }, [
       this._el("label", { className: "detail-label", textContent: this._t("assigned_to") }),
       personWrap,
+    ]);
+  }
+
+  // Section picker in the task details: the same section_id update a drag
+  // across a section header makes, without needing to drag (hard on phones,
+  // and impossible to discover for tasks added outside a section).
+  _buildSectionPickerSection(task, colIdx) {
+    const sections = (this._columns[colIdx].sections || [])
+      .slice()
+      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    const sectionSelect = this._el("select", {});
+    const noneOpt = this._el("option", { value: "", textContent: this._t("ed_default_none") });
+    const current = sections.some((x) => x.id === task.section_id) ? task.section_id : "";
+    if (!current) noneOpt.selected = true;
+    sectionSelect.appendChild(noneOpt);
+    for (const sec of sections) {
+      const opt = this._el("option", { value: sec.id, textContent: sec.name });
+      if (sec.id === current) opt.selected = true;
+      sectionSelect.appendChild(opt);
+    }
+    sectionSelect.addEventListener("change", async () => {
+      const sectionId = sectionSelect.value || null;
+      task.section_id = sectionId;
+      this._render();
+      try {
+        if (this._isExternalCol(colIdx)) {
+          await this._callWs("home_tasks/update_external_overlay", {
+            entity_id: this._colEntityId(colIdx),
+            task_uid: task.id,
+            section_id: sectionId,
+          });
+        } else {
+          await this._callWs("home_tasks/update_task", {
+            list_id: this._colListId(colIdx),
+            task_id: task.id,
+            section_id: sectionId,
+          });
+        }
+      } catch (err) {
+        this._showError(`Section update failed: ${err.message || err}`);
+      }
+    });
+    this._blurSelectOnChange(sectionSelect);
+    const sectionWrap = this._el("div", { className: "sel-wrap no-label" }, [sectionSelect]);
+    return this._el("div", { className: "detail-section" }, [
+      this._el("label", { className: "detail-label", textContent: this._t("section_label") }),
+      sectionWrap,
     ]);
   }
 
@@ -13411,6 +13491,7 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-sub-tasks", "ed_show_sub_items", "show_sub_tasks", true),
           makeToggle("show-person", "ed_show_person", "show_assigned_person", true),
           makeToggle("show-priority", "ed_show_priority", "show_priority", true),
+          makeToggle("show-section", "ed_show_section", "show_section", true),
           makeToggle("show-tags", "ed_show_tags", "show_tags", true),
           makeToggle("show-due-date", "ed_show_due_date", "show_due_date", true),
           makeToggle("show-reminders", "ed_show_reminders", "show_reminders", true),
