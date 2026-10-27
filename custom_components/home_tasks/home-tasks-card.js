@@ -299,7 +299,9 @@ const _TRANSLATIONS = {
     "ed_tile_size_large": "Large",
     "due_quick_week": "In 1 week",
     "due_quick_month": "In 1 month",
-    "due_quick_3months": "In 3 months"
+    "due_quick_3months": "In 3 months",
+    "ed_hidden_persons": "Hide people",
+    "ed_hidden_persons_hint": "Not offered for assignment in this card"
   },
   "nl": {
     "ed_default_priority": "Standaardprioriteit",
@@ -592,7 +594,9 @@ const _TRANSLATIONS = {
     "ed_tile_size_large": "Groot",
     "due_quick_week": "Over 1 week",
     "due_quick_month": "Over 1 maand",
-    "due_quick_3months": "Over 3 maanden"
+    "due_quick_3months": "Over 3 maanden",
+    "ed_hidden_persons": "Personen verbergen",
+    "ed_hidden_persons_hint": "Niet aangeboden voor toewijzing in deze kaart"
   },
   "it": {
     "ed_default_priority": "Priorità predefinita",
@@ -885,7 +889,9 @@ const _TRANSLATIONS = {
     "ed_tile_size_large": "Grande",
     "due_quick_week": "Tra 1 settimana",
     "due_quick_month": "Tra 1 mese",
-    "due_quick_3months": "Tra 3 mesi"
+    "due_quick_3months": "Tra 3 mesi",
+    "ed_hidden_persons": "Nascondi persone",
+    "ed_hidden_persons_hint": "Non proposte per l'assegnazione in questa scheda"
   },
   "pl": {
     "ed_default_priority": "Domyślny priorytet",
@@ -1178,7 +1184,9 @@ const _TRANSLATIONS = {
     "ed_tile_size_large": "Duży",
     "due_quick_week": "Za 1 tydzień",
     "due_quick_month": "Za 1 miesiąc",
-    "due_quick_3months": "Za 3 miesiące"
+    "due_quick_3months": "Za 3 miesiące",
+    "ed_hidden_persons": "Ukryj osoby",
+    "ed_hidden_persons_hint": "Nie są proponowane do przypisania na tej karcie"
   },
   "sv": {
     "ed_default_priority": "Standardprioritet",
@@ -1471,7 +1479,9 @@ const _TRANSLATIONS = {
     "ed_tile_size_large": "Stor",
     "due_quick_week": "Om 1 vecka",
     "due_quick_month": "Om 1 månad",
-    "due_quick_3months": "Om 3 månader"
+    "due_quick_3months": "Om 3 månader",
+    "ed_hidden_persons": "Dölj personer",
+    "ed_hidden_persons_hint": "Erbjuds inte för tilldelning i det här kortet"
   },
   "fr": {
     "ed_default_priority": "Priorité par défaut",
@@ -1764,7 +1774,9 @@ const _TRANSLATIONS = {
     "ed_tile_size_large": "Grande",
     "due_quick_week": "Dans 1 semaine",
     "due_quick_month": "Dans 1 mois",
-    "due_quick_3months": "Dans 3 mois"
+    "due_quick_3months": "Dans 3 mois",
+    "ed_hidden_persons": "Masquer des personnes",
+    "ed_hidden_persons_hint": "Non proposées pour l'attribution dans cette carte"
   },
   "pt": {
     "ed_default_priority": "Prioridade padrão",
@@ -2057,7 +2069,9 @@ const _TRANSLATIONS = {
     "ed_tile_size_large": "Grande",
     "due_quick_week": "Daqui a 1 semana",
     "due_quick_month": "Daqui a 1 mês",
-    "due_quick_3months": "Daqui a 3 meses"
+    "due_quick_3months": "Daqui a 3 meses",
+    "ed_hidden_persons": "Ocultar pessoas",
+    "ed_hidden_persons_hint": "Não oferecidas para atribuição neste cartão"
   },
   "pt-BR": {
     "ed_default_priority": "Prioridade padrão",
@@ -2350,7 +2364,9 @@ const _TRANSLATIONS = {
     "ed_tile_size_large": "Grande",
     "due_quick_week": "Em 1 semana",
     "due_quick_month": "Em 1 mês",
-    "due_quick_3months": "Em 3 meses"
+    "due_quick_3months": "Em 3 meses",
+    "ed_hidden_persons": "Ocultar pessoas",
+    "ed_hidden_persons_hint": "Não oferecidas para atribuição neste cartão"
   },
   "es": {
     "ed_default_priority": "Prioridad predeterminada",
@@ -2643,7 +2659,9 @@ const _TRANSLATIONS = {
     "ed_tile_size_large": "Grande",
     "due_quick_week": "En 1 semana",
     "due_quick_month": "En 1 mes",
-    "due_quick_3months": "En 3 meses"
+    "due_quick_3months": "En 3 meses",
+    "ed_hidden_persons": "Ocultar personas",
+    "ed_hidden_persons_hint": "No se ofrecen para asignar en esta tarjeta"
   },
   "ru": {
     "ed_default_priority": "Приоритет по умолчанию",
@@ -2936,7 +2954,9 @@ const _TRANSLATIONS = {
     "ed_tile_size_large": "Большой",
     "due_quick_week": "Через 1 неделю",
     "due_quick_month": "Через 1 месяц",
-    "due_quick_3months": "Через 3 месяца"
+    "due_quick_3months": "Через 3 месяца",
+    "ed_hidden_persons": "Скрыть людей",
+    "ed_hidden_persons_hint": "Не предлагаются для назначения в этой карточке"
   },
   "cs": {
     "ed_default_priority": "Výchozí priorita",
@@ -3229,7 +3249,9 @@ const _TRANSLATIONS = {
     "ed_tile_size_large": "Velká",
     "due_quick_week": "Za 1 týden",
     "due_quick_month": "Za 1 měsíc",
-    "due_quick_3months": "Za 3 měsíce"
+    "due_quick_3months": "Za 3 měsíce",
+    "ed_hidden_persons": "Skrýt osoby",
+    "ed_hidden_persons_hint": "V této kartě se nenabízejí k přiřazení"
   },
   "da": {
     "ed_default_priority": "Standardprioritet",
@@ -3522,7 +3544,9 @@ const _TRANSLATIONS = {
     "ed_tile_size_large": "Stor",
     "due_quick_week": "Om 1 uge",
     "due_quick_month": "Om 1 måned",
-    "due_quick_3months": "Om 3 måneder"
+    "due_quick_3months": "Om 3 måneder",
+    "ed_hidden_persons": "Skjul personer",
+    "ed_hidden_persons_hint": "Tilbydes ikke til tildeling i dette kort"
   },
   "no": {
     "ed_default_priority": "Standardprioritet",
@@ -3815,7 +3839,9 @@ const _TRANSLATIONS = {
     "ed_tile_size_large": "Stor",
     "due_quick_week": "Om 1 uke",
     "due_quick_month": "Om 1 måned",
-    "due_quick_3months": "Om 3 måneder"
+    "due_quick_3months": "Om 3 måneder",
+    "ed_hidden_persons": "Skjul personer",
+    "ed_hidden_persons_hint": "Tilbys ikke for tildeling i dette kortet"
   },
   "fi": {
     "ed_default_priority": "Oletusprioriteetti",
@@ -4108,7 +4134,9 @@ const _TRANSLATIONS = {
     "ed_tile_size_large": "Suuri",
     "due_quick_week": "1 viikon päästä",
     "due_quick_month": "1 kuukauden päästä",
-    "due_quick_3months": "3 kuukauden päästä"
+    "due_quick_3months": "3 kuukauden päästä",
+    "ed_hidden_persons": "Piilota henkilöt",
+    "ed_hidden_persons_hint": "Ei tarjota määritettäväksi tässä kortissa"
   },
   "hu": {
     "ed_default_priority": "Alapértelmezett prioritás",
@@ -4401,7 +4429,9 @@ const _TRANSLATIONS = {
     "ed_tile_size_large": "Nagy",
     "due_quick_week": "1 hét múlva",
     "due_quick_month": "1 hónap múlva",
-    "due_quick_3months": "3 hónap múlva"
+    "due_quick_3months": "3 hónap múlva",
+    "ed_hidden_persons": "Személyek elrejtése",
+    "ed_hidden_persons_hint": "Ebben a kártyában nem választhatók hozzárendelésre"
   },
   "de": {
     "ed_default_priority": "Standard-Priorität",
@@ -4694,7 +4724,9 @@ const _TRANSLATIONS = {
     "ed_tile_size_large": "Groß",
     "due_quick_week": "In 1 Woche",
     "due_quick_month": "In 1 Monat",
-    "due_quick_3months": "In 3 Monaten"
+    "due_quick_3months": "In 3 Monaten",
+    "ed_hidden_persons": "Personen ausblenden",
+    "ed_hidden_persons_hint": "In dieser Karte nicht zur Zuweisung angeboten"
   }
 };
 
@@ -4738,9 +4770,9 @@ const nextFreeReminderOffset = (used) =>
 
 // Person options shared by the detail sheet's assignee select and the
 // editor's Defaults section (the "nobody" entry stays with the callers).
-const personEntries = (hass) =>
+const personEntries = (hass, hidden = []) =>
   Object.keys((hass && hass.states) || {})
-    .filter((eid) => eid.startsWith("person."))
+    .filter((eid) => eid.startsWith("person.") && !hidden.includes(eid))
     .sort()
     .map((eid) => ({
       value: eid,
@@ -10008,9 +10040,14 @@ class HomeTasksCard extends HTMLElement {
     // One chip per person; any number can be on (issue #75). The first one
     // switched on is the primary assignee - what older automations and
     // single-assignee providers see as assigned_person.
+    // hidden_persons: people never offered for assignment in this card (system
+    // or visiting persons). Someone already assigned stays visible.
+    const hiddenPersons = (this._config.columns[colIdx] || {}).hidden_persons || [];
+    const assigned = _assignees(task);
+    const offered = personEntries(this._hass, hiddenPersons.filter((p) => !assigned.includes(p)));
     const row = this._el("div", { className: "assignee-chip-row" });
-    for (const { value, label } of personEntries(this._hass)) {
-      const on = _assignees(task).includes(value);
+    for (const { value, label } of offered) {
+      const on = assigned.includes(value);
       const chip = this._el("button", {
         className: "assignee-chip" + (on ? " active" : ""),
         textContent: label,
@@ -13128,6 +13165,13 @@ class HomeTasksCardEditor extends HTMLElement {
       .icon-btn:disabled { opacity: 0.3; cursor: default; }
       .icon-btn-spacer { flex: 1; }
       .toggle-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
+      .assignee-chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
+      .assignee-chip {
+        padding: 5px 10px; border-radius: 14px; font-size: 12px; font-family: inherit;
+        border: 1px solid var(--divider-color); background: none;
+        color: var(--secondary-text-color); cursor: pointer;
+      }
+      .assignee-chip.active { color: var(--primary-color); border-color: var(--primary-color); text-decoration: line-through; }
       .group-label {
         display: flex; align-items: center; gap: 10px; margin: 14px 0 2px;
         font-size: 12px; font-weight: 500; color: var(--secondary-text-color, #888);
@@ -13890,6 +13934,29 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-history", "ed_show_history", "show_history", false),
           makeToggle("show-move", "ed_show_move", "show_move", true),
         ]),
+        (() => {
+          // hidden_persons: tap a person to stop offering them for assignment.
+          const hidden = new Set(col.hidden_persons || []);
+          const row = this._el("div", { className: "assignee-chip-row" });
+          for (const { value, label } of personEntries(this._hass)) {
+            const chip = this._el("button", {
+              className: "assignee-chip" + (hidden.has(value) ? " active" : ""),
+              textContent: label,
+            });
+            chip.type = "button";
+            chip.addEventListener("click", () => {
+              if (hidden.has(value)) hidden.delete(value); else hidden.add(value);
+              chip.classList.toggle("active", hidden.has(value));
+              updateCol({ hidden_persons: hidden.size ? [...hidden].sort() : undefined });
+            });
+            row.appendChild(chip);
+          }
+          return this._el("div", { className: "field" }, [
+            this._el("div", { className: "group-label", textContent: this._t("ed_hidden_persons") }),
+            row,
+            this._el("div", { className: "hint", textContent: this._t("ed_hidden_persons_hint") }),
+          ]);
+        })(),
       ]),
       this._buildSectionsEditor(col),
       makeSection("images", "mdi:image-multiple", "ed_sec_images", [
