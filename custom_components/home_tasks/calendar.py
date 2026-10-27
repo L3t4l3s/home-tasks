@@ -28,6 +28,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .ui_translations import get_ui_translation
+from .store import task_assignees
 from .external_view import (
     async_subscribe_external,
     get_external_tasks_snapshot,
@@ -350,11 +351,13 @@ class HomeTasksCalendarEntity(_BaseHomeTasksCalendar):
             label = {1: text["pri_low"], 2: text["pri_medium"], 3: text["pri_high"]}.get(pri, str(pri))
             meta.append(f"⚡ {text['priority']}: {label}")
 
-        person = task.get("assigned_person")
-        if person:
-            state = hass.states.get(person) if hass is not None else None
-            person = (state.attributes.get("friendly_name") if state else None) or person
-            meta.append(f"👤 {person}")
+        people = task_assignees(task)
+        if people:
+            names = []
+            for person in people:
+                state = hass.states.get(person) if hass is not None else None
+                names.append((state.attributes.get("friendly_name") if state else None) or person)
+            meta.append("👤 " + ", ".join(names))
 
         tags = task.get("tags")
         if tags:

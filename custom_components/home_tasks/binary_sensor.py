@@ -15,6 +15,7 @@ from homeassistant.helpers.event import async_track_time_change
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
+from .store import task_assignees
 from .external_view import (
     async_subscribe_external,
     get_external_tasks_snapshot,
@@ -72,7 +73,11 @@ class _BaseOverdueBinarySensor(BinarySensorEntity):
         overdue = self._overdue()
         return {
             "overdue_tasks": [
-                {"title": t["title"], "due_date": t["due_date"], "assigned_person": t.get("assigned_person")}
+                {
+                    "title": t["title"], "due_date": t["due_date"],
+                    "assigned_person": t.get("assigned_person"),
+                    "assigned_persons": task_assignees(t),
+                }
                 for t in overdue
             ],
             "overdue_count": len(overdue),

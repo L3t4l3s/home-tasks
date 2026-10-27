@@ -26,6 +26,7 @@ from .const import (
     MAX_SUB_TASKS_PER_TASK,
     MAX_TAG_CATALOG,
     MAX_TAG_LENGTH,
+    MAX_ASSIGNEES_PER_TASK,
     MAX_TAGS_PER_TASK,
     MAX_TASKS_PER_LIST,
     MAX_TITLE_LENGTH,
@@ -43,7 +44,7 @@ _TIME_PATTERN = re.compile(r"^\d{2}:\d{2}$")
 _MMDD_PATTERN = re.compile(r"^\d{2}-\d{2}$")
 
 _MAX_HISTORY = 50  # max history entries per task
-_HISTORY_FIELDS = ("title", "due_date", "due_time", "priority", "assigned_person", "tags", "notes", "recurrence_enabled")
+_HISTORY_FIELDS = ("title", "due_date", "due_time", "priority", "assigned_person", "assigned_persons", "tags", "notes", "recurrence_enabled")
 
 # Fields that determine WHEN a completed recurring task reopens.  Editing any
 # of them on a task that is (and stays) completed invalidates the persisted
@@ -267,6 +268,54 @@ def validate_assigned_person(value):
     return value
 
 
+def validate_assigned_persons(value):
+    """Everyone a task is assigned to (issue #75): person entity ids, the
+    primary assignee first. Duplicates and empty entries are dropped."""
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        raise ValueError("assigned_persons must be a list of person entity ids")
+    out: list[str] = []
+    for item in value:
+        validate_assigned_person(item)
+        if item and item not in out:
+            out.append(item)
+    if len(out) > MAX_ASSIGNEES_PER_TASK:
+        raise ValueError(f"A task can have at most {MAX_ASSIGNEES_PER_TASK} assignees")
+    return out
+
+
+def task_assignees(task: dict) -> list[str]:
+    """A task's assignees, primary first - also for tasks stored before
+    assigned_persons existed, which only carry assigned_person."""
+    people = list(task.get("assigned_persons") or [])
+    primary = task.get("assigned_person")
+    if primary and primary not in people:
+        people.insert(0, primary)
+    return people
+
+
+def sync_assignee_fields(kwargs: dict) -> None:
+    """Keep assigned_person (the primary assignee every older consumer reads)
+    and assigned_persons (all of them) consistent in an update payload.
+
+    assigned_persons wins when given: assigned_person becomes its first entry
+    (or, if also given and listed, moves to the front). assigned_person alone
+    keeps its old meaning - the single assignee - and resets the list to it.
+    """
+    if "assigned_persons" in kwargs:
+        people = kwargs["assigned_persons"]
+        primary = kwargs.get("assigned_person")
+        if primary and primary in people:
+            people = [primary] + [p for p in people if p != primary]
+        elif primary:
+            people = [primary] + people
+        kwargs["assigned_persons"] = people
+        kwargs["assigned_person"] = people[0] if people else None
+    elif "assigned_person" in kwargs:
+        kwargs["assigned_persons"] = [kwargs["assigned_person"]] if kwargs["assigned_person"] else []
+
+
 def validate_tag_catalog(value):
     """A list's fixed tags (issue #61): normalised like a task's tags — lower
     case, no leading '#', no duplicates — up to MAX_TAG_CATALOG of them."""
@@ -353,6 +402,7 @@ _FIELD_VALIDATORS = {
     "recurrence_max_count": validate_recurrence_max_count,
     "recurrence_remaining_count": validate_recurrence_remaining_count,
     "assigned_person": validate_assigned_person,
+    "assigned_persons": validate_assigned_persons,
     "tags": validate_tags,
     "reminders": validate_reminders,
     "due_time": validate_time,
@@ -478,6 +528,7 @@ class HomeTasksStore:
             task.setdefault("recurrence_reopen_lead", 0)
             task.setdefault("completed_at", None)
             task.setdefault("assigned_person", None)
+            task.setdefault("assigned_persons", [task["assigned_person"]] if task["assigned_person"] else [])
             task.setdefault("tags", [])
             task.setdefault("history", [])
             task.setdefault("image_url", None)
@@ -644,6 +695,7 @@ class HomeTasksStore:
         tags: list | None = None,
         section_id: str | None = None,
         sub_tasks: list[str] | None = None,
+        assigned_persons: list | None = None,
     ) -> dict:
         """Add a task, optionally with an initial due date/time (issue #38),
         reminders (issue #43), notes, priority and sub-tasks (issue #70).
@@ -673,8 +725,16 @@ class HomeTasksStore:
             known = {s["id"] for s in self._data.get("sections", [])}
             if defaults["section_id"] in known:
                 section_id = defaults["section_id"]
-        if assigned_person is not None:
-            assigned_person = validate_assigned_person(assigned_person)
+        if assigned_persons:
+            people = {"assigned_persons": validate_assigned_persons(assigned_persons)}
+            if assigned_person is not None:
+                people["assigned_person"] = validate_assigned_person(assigned_person)
+            sync_assignee_fields(people)
+            assigned_person, assigned_persons = people["assigned_person"], people["assigned_persons"]
+        else:
+            if assigned_person is not None:
+                assigned_person = validate_assigned_person(assigned_person)
+            assigned_persons = [assigned_person] if assigned_person else []
         due_date = validate_date(due_date, "due_date")
         due_time = validate_time(due_time) if due_date else None
         reminders = validate_reminders(reminders) if reminders else []
@@ -740,6 +800,7 @@ class HomeTasksStore:
             "completed_at": None,
             "reopen_at": None,
             "assigned_person": assigned_person,
+            "assigned_persons": assigned_persons,
             "tags": tags,
             "image_url": None,
             "history": history,
@@ -774,7 +835,7 @@ class HomeTasksStore:
         "recurrence_month_pattern", "recurrence_day_of_month",
         "recurrence_nth_week", "recurrence_anniversary", "recurrence_anchor",
         "recurrence_reopen_lead",
-        "assigned_person", "tags", "section_id", "image_url",
+        "assigned_person", "assigned_persons", "tags", "section_id", "image_url",
     )
 
     async def async_update_task(
@@ -817,6 +878,7 @@ class HomeTasksStore:
         if "recurrence_time" in kwargs:
             kwargs["recurrence_time"] = validate_time(kwargs["recurrence_time"])
         apply_field_validators(kwargs)
+        sync_assignee_fields(kwargs)
 
     @staticmethod
     def _snapshot_task(task: dict) -> dict:
@@ -824,6 +886,7 @@ class HomeTasksStore:
         return {
             "completed": task.get("completed", False),
             "assigned_person": task.get("assigned_person"),
+            "assigned_persons": task_assignees(task),
             "due_date": task.get("due_date"),
             "due_time": task.get("due_time"),
             "reminders": task.get("reminders", []),
@@ -877,6 +940,7 @@ class HomeTasksStore:
         "due_time": "from_to",
         "priority": "from_to",
         "assigned_person": "from_to",
+        "assigned_persons": "from_to",
         "tags": "from_to",
         "notes": "marker",
         "recurrence_enabled": "to_only",
@@ -894,9 +958,16 @@ class HomeTasksStore:
                 continue
             new_value = task.get(field)
             old_value = snapshot[field]
-            # tags need a list copy for accurate diffing
-            if field == "tags":
+            # list fields need a copy for accurate diffing
+            if field in ("tags", "assigned_persons"):
                 new_value = list(new_value or [])
+            # A change of the primary alone already shows as assigned_person;
+            # only record the list when who is assigned actually changed.
+            if field == "assigned_persons" and (
+                set(new_value) == set(old_value or [])
+                or (len(new_value) <= 1 and len(old_value or []) <= 1)
+            ):
+                continue
             if new_value == old_value:
                 continue
             entry = {"ts": _now, "action": "updated", "field": field, **_by}
@@ -929,8 +1000,11 @@ class HomeTasksStore:
             self.on_reminders_changed(task)
 
         new_person = task.get("assigned_person")
-        if new_person != snapshot["assigned_person"] and self.on_task_assigned:
-            self.on_task_assigned(task, snapshot["assigned_person"])
+        if self.on_task_assigned and (
+            new_person != snapshot["assigned_person"]
+            or set(task_assignees(task)) != set(snapshot["assigned_persons"])
+        ):
+            self.on_task_assigned(task, snapshot["assigned_person"], snapshot["assigned_persons"])
 
     async def async_reopen_task(
         self,
@@ -1048,6 +1122,7 @@ class HomeTasksStore:
             "recurrence_weekdays": list(source.get("recurrence_weekdays", [])),
             "image_url": validate_image_url(source.get("image_url")),
             "assigned_person": validate_assigned_person(assigned_person),
+            "assigned_persons": [assigned_person] if assigned_person else [],
             "completed": False,
             "completed_at": None,
             "reopen_at": None,

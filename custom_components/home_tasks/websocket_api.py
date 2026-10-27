@@ -11,9 +11,14 @@ from homeassistant.core import Context, HomeAssistant, callback
 
 from .image_library import async_get_image_library
 from .image_queue import PLACEHOLDER_IMAGE_URLS, async_get_image_queue
-from .const import DOMAIN, MAX_IMAGE_URL_LENGTH, MAX_REORDER_IDS, MAX_RECURRENCE_VALUE, MAX_REOPEN_LEAD_MINUTES, MAX_REMINDER_OFFSET_MINUTES, MAX_REMINDERS_PER_TASK, MAX_SUB_TASKS_PER_TASK, MAX_TAG_CATALOG, MAX_TAGS_PER_TASK, MAX_TITLE_LENGTH, RECURRENCE_FIELDS, VALID_RECURRENCE_ANCHORS, VALID_RECURRENCE_UNITS
+from .const import DOMAIN, MAX_ASSIGNEES_PER_TASK, MAX_IMAGE_URL_LENGTH, MAX_REORDER_IDS, MAX_RECURRENCE_VALUE, MAX_REOPEN_LEAD_MINUTES, MAX_REMINDER_OFFSET_MINUTES, MAX_REMINDERS_PER_TASK, MAX_SUB_TASKS_PER_TASK, MAX_TAG_CATALOG, MAX_TAGS_PER_TASK, MAX_TITLE_LENGTH, RECURRENCE_FIELDS, VALID_RECURRENCE_ANCHORS, VALID_RECURRENCE_UNITS
 from .overlay_store import ExternalTaskOverlayStore, OVERLAY_FIELDS, _empty_overlay
-from .store import validate_assigned_person
+from .store import (
+    sync_assignee_fields,
+    task_assignees,
+    validate_assigned_person,
+    validate_assigned_persons,
+)
 from .provider_adapters import ProviderAdapter, GenericAdapter, _get_external_todo_items
 
 _LOGGER = logging.getLogger(__name__)
@@ -193,6 +198,7 @@ async def ws_get_tasks(hass, connection, msg):
         vol.Required("list_id"): _val_id,
         vol.Required("title"): _val_title,
         vol.Optional("assigned_person"): vol.Any(str, None),
+        vol.Optional("assigned_persons"): vol.All(list, vol.Length(max=MAX_ASSIGNEES_PER_TASK), [str]),
         vol.Optional("due_date"): _val_date,
         vol.Optional("due_time"): _val_time,
         vol.Optional("reminders"): _val_reminders,
@@ -212,6 +218,7 @@ async def ws_add_task(hass, connection, msg):
             msg["title"],
             actor=actor,
             assigned_person=msg.get("assigned_person"),
+            assigned_persons=msg.get("assigned_persons"),
             due_date=msg.get("due_date"),
             due_time=msg.get("due_time"),
             reminders=msg.get("reminders"),
@@ -437,6 +444,7 @@ async def ws_set_defaults(hass, connection, msg):
         vol.Optional("recurrence_anchor"): vol.In(list(VALID_RECURRENCE_ANCHORS)),
         vol.Optional("recurrence_reopen_lead"): vol.All(int, vol.Range(min=0, max=MAX_REOPEN_LEAD_MINUTES)),
         vol.Optional("assigned_person"): vol.Any(str, None),
+        vol.Optional("assigned_persons"): vol.All(list, vol.Length(max=MAX_ASSIGNEES_PER_TASK), [str]),
         vol.Optional("tags"): vol.All(list, vol.Length(max=MAX_TAGS_PER_TASK)),
         vol.Optional("section_id"): vol.Any(_val_id, None),
         vol.Optional("image_url"): vol.Any(str, None),
@@ -456,7 +464,7 @@ async def ws_update_task(hass, connection, msg):
             "recurrence_end_type", "recurrence_end_date", "recurrence_max_count",
             "recurrence_remaining_count", "recurrence_month_pattern",
             "recurrence_day_of_month", "recurrence_nth_week", "recurrence_anniversary",
-            "recurrence_anchor", "recurrence_reopen_lead", "assigned_person", "tags", "section_id", "image_url",
+            "recurrence_anchor", "recurrence_reopen_lead", "assigned_person", "assigned_persons", "tags", "section_id", "image_url",
         ):
             if key in msg:
                 kwargs[key] = msg[key]
@@ -739,6 +747,7 @@ async def async_move_task_any(
                 "due_time": item.get("due_time"),
                 "priority": item.get("priority"),
                 "assigned_person": item.get("assigned_person"),
+                "assigned_persons": task_assignees(item),
                 "tags": item.get("tags", []),
                 "reminders": item.get("reminders", []),
                 "sub_items": item.get("sub_items", []),
@@ -776,6 +785,7 @@ async def async_move_task_any(
                 "due_time": item.get("due_time") or overlay.get("due_time"),
                 "priority": overlay.get("priority"),
                 "assigned_person": overlay.get("assigned_person"),
+                "assigned_persons": task_assignees(overlay),
                 "tags": overlay.get("tags", []),
                 "reminders": overlay.get("reminders", []),
                 "sub_items": overlay.get("sub_items", []),
@@ -834,6 +844,7 @@ async def async_move_task_any(
             "recurrence_anchor": task_data.get("recurrence_anchor", "completion"),
             "completed_at": task_data.get("completed_at"),
             "assigned_person": task_data.get("assigned_person"),
+            "assigned_persons": task_assignees(task_data),
             "tags": task_data.get("tags", []),
             "history": task_data.get("history", []),
             # Without this the picture is not just detached from the moved
@@ -1049,6 +1060,7 @@ def _merge_tasks_with_overlays(
             "recurrence_anchor": overlay.get("recurrence_anchor", "completion"),
             "completed_at": overlay.get("completed_at"),
             "assigned_person": overlay.get("assigned_person"),
+            "assigned_persons": task_assignees(overlay),
             "tags": overlay.get("tags", []),
             "history": overlay.get("history", []),
             "image_url": overlay.get("image_url"),
@@ -1117,6 +1129,7 @@ def _merge_tasks_with_adapter_data(
             "due_time": item.get("due_time") or overlay.get("due_time"),
             "sub_items": item.get("sub_items", []),
             "assigned_person": overlay.get("assigned_person"),
+            "assigned_persons": task_assignees(overlay),
             # Recurrence (from adapter if synced, else overlay)
             "recurrence_enabled": item.get("recurrence_enabled", overlay.get("recurrence_enabled", False)),
             "recurrence_type": item.get("recurrence_type", overlay.get("recurrence_type", "interval")),
@@ -1327,6 +1340,7 @@ async def ws_get_external_tasks(hass, connection, msg):
         vol.Optional("priority"): vol.Any(vol.In([1, 2, 3]), None),
         vol.Optional("due_time"): _val_time,
         vol.Optional("assigned_person"): vol.Any(str, None),
+        vol.Optional("assigned_persons"): vol.All(list, vol.Length(max=MAX_ASSIGNEES_PER_TASK), [str]),
         vol.Optional("tags"): vol.All(list, vol.Length(max=MAX_TAGS_PER_TASK)),
         vol.Optional("reminders"): _val_reminders,
         vol.Optional("sort_order"): int,
@@ -1609,6 +1623,17 @@ async def async_create_external_task(
         ):
             default_section = defaults["section_id"]
 
+    # Several assignees (issue #75): the provider only knows one, so it gets
+    # the primary and the full list lives in the overlay.
+    people = None
+    if "assigned_persons" in fields:
+        split = {"assigned_persons": fields.pop("assigned_persons")}
+        if fields.get("assigned_person"):
+            split["assigned_person"] = fields["assigned_person"]
+        sync_assignee_fields(split)
+        people = split["assigned_persons"]
+        fields["assigned_person"] = split["assigned_person"]
+
     if adapter:
         new_uid, adapter_unsynced = await adapter.async_create_task(fields)
     else:
@@ -1630,6 +1655,9 @@ async def async_create_external_task(
                 overlay_fields.setdefault(key, fields[key])
         if default_section:
             overlay_fields.setdefault("section_id", default_section)
+        if people is not None:
+            overlay_fields.pop("assigned_person", None)
+            overlay_fields["assigned_persons"] = people
         # Only persist keys the overlay store knows about
         overlay_kwargs = {k: v for k, v in overlay_fields.items() if k in OVERLAY_FIELDS}
         if overlay_kwargs:
@@ -1657,6 +1685,7 @@ async def async_create_external_task(
         vol.Optional("priority"): vol.Any(vol.In([1, 2, 3]), None),
         vol.Optional("tags"): vol.All(list, vol.Length(max=MAX_TAGS_PER_TASK)),
         vol.Optional("assigned_person"): vol.Any(str, None),
+        vol.Optional("assigned_persons"): vol.All(list, vol.Length(max=MAX_ASSIGNEES_PER_TASK), [str]),
         vol.Optional("reminders"): _val_reminders,
         vol.Optional("recurrence_enabled"): bool,
         vol.Optional("recurrence_type"): vol.In(["interval", "weekdays"]),
@@ -1700,11 +1729,28 @@ async def async_update_external_task(
     """
     adapter = _get_adapter(hass, entity_id)
 
+    # Several assignees (issue #75): the provider gets the primary, the
+    # overlay keeps everyone (written after the provider's leftovers, so an
+    # echoed assigned_person can't collapse the list back to one).
+    people = None
+    if "assigned_persons" in fields:
+        fields = dict(fields)
+        split = {"assigned_persons": validate_assigned_persons(fields.pop("assigned_persons"))}
+        if fields.get("assigned_person"):
+            split["assigned_person"] = validate_assigned_person(fields["assigned_person"])
+        sync_assignee_fields(split)
+        people = split["assigned_persons"]
+        fields["assigned_person"] = split["assigned_person"]
+
     if adapter:
         unsynced = await adapter.async_update_task(task_uid, fields)
     else:
         generic = GenericAdapter(hass, entity_id, {})
         unsynced = await generic.async_update_task(task_uid, fields)
+
+    if people is not None:
+        unsynced = {k: v for k, v in (unsynced or {}).items() if k != "assigned_person"}
+        await _get_overlay_store(hass, entity_id).async_set_overlay(task_uid, assigned_persons=people)
 
     # Store unsynced fields in overlay
     if unsynced:
@@ -1845,6 +1891,7 @@ async def ws_duplicate_external_task(hass, connection, msg):
         vol.Optional("priority"): vol.Any(vol.In([1, 2, 3]), None),
         vol.Optional("tags"): vol.All(list, vol.Length(max=MAX_TAGS_PER_TASK)),
         vol.Optional("assigned_person"): vol.Any(str, None),
+        vol.Optional("assigned_persons"): vol.All(list, vol.Length(max=MAX_ASSIGNEES_PER_TASK), [str]),
         vol.Optional("reminders"): _val_reminders,
         vol.Optional("sort_order"): int,
         vol.Optional("recurrence_enabled"): bool,

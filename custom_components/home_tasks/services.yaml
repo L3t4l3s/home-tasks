@@ -77,6 +77,11 @@ add_task:
       selector:
         text:
           multiple: true
+    assigned_persons:
+      name: Assigned persons
+      description: Everyone the task is assigned to, as comma-separated person entity ids (the first is the primary assignee). Overrides assigned_person.
+      selector:
+        text:
 
 add_task_from_text:
   name: Add Task From Text
@@ -256,6 +261,11 @@ update_task:
     reminders:
       name: Reminders
       description: Comma-separated minute offsets before the due moment (0 = at due time) — replaces the task's reminders.
+      selector:
+        text:
+    assigned_persons:
+      name: Assigned persons
+      description: Replace the task's assignees: comma-separated person entity ids, the first being the primary assignee. Empty clears them.
       selector:
         text:
 

@@ -164,7 +164,7 @@ async def test_overdue_comes_from_the_providers_due_date(hass: HomeAssistant, li
     assert state.state == "on"
     assert state.attributes["overdue_count"] == 1
     assert state.attributes["overdue_tasks"] == [
-        {"title": "Late", "due_date": yesterday.isoformat(), "assigned_person": None}
+        {"title": "Late", "due_date": yesterday.isoformat(), "assigned_person": None, "assigned_persons": []}
     ]
     assert hass.states.get(_sensor_id(hass, entry)).attributes["overdue_count"] == 1
 
@@ -184,7 +184,7 @@ async def test_overdue_comes_from_the_overlay_too(hass: HomeAssistant, linked) -
     state = hass.states.get(_binary_id(hass, entry))
     assert state.state == "on"
     assert state.attributes["overdue_tasks"] == [
-        {"title": "Bins", "due_date": yesterday, "assigned_person": "person.kevin"}
+        {"title": "Bins", "due_date": yesterday, "assigned_person": "person.kevin", "assigned_persons": ["person.kevin"]}
     ]
 
 
