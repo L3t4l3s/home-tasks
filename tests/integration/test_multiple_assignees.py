@@ -118,3 +118,85 @@ async def test_ws_update_task_accepts_list(hass: HomeAssistant, hass_ws_client, 
     t = store.get_task(task["id"])
     assert t["assigned_persons"] == [KEVIN, MIA]
     assert t["assigned_person"] == KEVIN
+
+
+async def test_a_copy_keeps_everyone_unless_made_for_someone_else(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    task = await store.async_add_task("Gutters", assigned_persons=[ANNA, KEVIN])
+    copy = await store.async_duplicate_task(task["id"], assigned_person=ANNA)
+    assert (copy["assigned_person"], copy["assigned_persons"]) == (ANNA, [ANNA, KEVIN])
+    other = await store.async_duplicate_task(task["id"], assigned_person=MIA)
+    assert (other["assigned_person"], other["assigned_persons"]) == (MIA, [MIA])
+    nobody = await store.async_duplicate_task(task["id"], assigned_person=None)
+    assert nobody["assigned_persons"] == []
+
+
+# ---------------------------------------------------------------------------
+# Linked lists: the provider gets the primary, the overlay keeps everyone
+# ---------------------------------------------------------------------------
+
+async def test_a_linked_list_keeps_everyone_in_the_overlay(hass: HomeAssistant, linked_list) -> None:
+    from tests.integration.linked_list_helpers import LIST_NAME, call, overlay
+
+    entry, adapter = linked_list
+    await call(hass, "update_task", list_name=LIST_NAME, task_title="Wipe bench", assigned_persons=f"{KEVIN},{ANNA}")
+    assert adapter.updated[-1][1]["assigned_person"] == KEVIN
+    assert "assigned_persons" not in adapter.updated[-1][1]
+    stored = overlay(hass, entry).get_overlay("uid-1")
+    assert (stored["assigned_person"], stored["assigned_persons"]) == (KEVIN, [KEVIN, ANNA])
+
+
+async def test_a_bad_list_on_a_linked_list_never_reaches_the_provider(hass: HomeAssistant, linked_list) -> None:
+    from tests.integration.linked_list_helpers import LIST_NAME, call
+
+    _entry, adapter = linked_list
+    with pytest.raises(Exception):
+        await call(hass, "add_task", list_name=LIST_NAME, title="Too many",
+                   assigned_persons=[f"person.p{i}" for i in range(11)])
+    assert not adapter.created
+
+
+async def test_a_linked_copy_keeps_everyone(hass: HomeAssistant, linked_list) -> None:
+    from custom_components.home_tasks.websocket_api import async_duplicate_external_task
+    from tests.integration.linked_list_helpers import EXT_ENTITY, overlay
+
+    entry, adapter = linked_list
+    await overlay(hass, entry).async_set_overlay("uid-1", assigned_persons=[ANNA, KEVIN])
+    new_uid = await async_duplicate_external_task(hass, EXT_ENTITY, "uid-1", ANNA)
+    assert adapter.created[-1]["assigned_person"] == ANNA
+    assert overlay(hass, entry).get_overlay(new_uid)["assigned_persons"] == [ANNA, KEVIN]
+
+
+async def test_history_of_a_task_born_shared_names_everyone(hass: HomeAssistant, mock_config_entry, store) -> None:
+    shared = await store.async_add_task("Gutters", assigned_persons=[ANNA, KEVIN])
+    assert [(h.get("field"), h.get("to")) for h in shared["history"]] == [
+        (None, None), ("assigned_person", ANNA), ("assigned_persons", [ANNA, KEVIN]),
+    ]
+    alone = await store.async_add_task("Bins", assigned_person=ANNA)
+    assert [h.get("field") for h in alone["history"]] == [None, "assigned_person"]
+
+
+async def test_the_primary_counts_towards_the_limit(hass: HomeAssistant, mock_config_entry, store) -> None:
+    task = await store.async_add_task("Party")
+    ten = [f"person.p{i}" for i in range(10)]
+    with pytest.raises(ValueError, match="at most 10"):
+        await store.async_update_task(task["id"], assigned_persons=ten, assigned_person=MIA)
+    assert store.get_task(task["id"])["assigned_persons"] == []
+
+
+async def test_linked_list_events_carry_everyone(hass: HomeAssistant, linked_list) -> None:
+    from custom_components.home_tasks.websocket_api import async_update_external_task
+    from tests.integration.linked_list_helpers import EXT_ENTITY, LIST_NAME, call, overlay
+
+    entry, _adapter = linked_list
+    created, completed = [], []
+    hass.bus.async_listen(f"{DOMAIN}_task_created", created.append)
+    hass.bus.async_listen(f"{DOMAIN}_task_completed", completed.append)
+    await call(hass, "add_task", list_name=LIST_NAME, title="Gutters", assigned_persons=[ANNA, KEVIN])
+    assert (created[-1].data["assigned_person"], created[-1].data["assigned_persons"]) == (ANNA, [ANNA, KEVIN])
+
+    await overlay(hass, entry).async_set_overlay("uid-1", assigned_persons=[KEVIN, MIA])
+    await async_update_external_task(hass, EXT_ENTITY, "uid-1", {"completed": True})
+    await hass.async_block_till_done()
+    assert completed[-1].data["assigned_persons"] == [KEVIN, MIA]

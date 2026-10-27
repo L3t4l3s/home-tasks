@@ -326,6 +326,14 @@ def task_assignees(task: dict) -> list[str]:
     return people
 
 
+def _copy_assignees(source: dict, assigned_person: str | None) -> list[str]:
+    """Who a copy of source is assigned to: everyone the source has when the
+    copy keeps its primary, else just the one person it was made for."""
+    if assigned_person and assigned_person == source.get("assigned_person"):
+        return task_assignees(source)
+    return [assigned_person] if assigned_person else []
+
+
 def sync_assignee_fields(kwargs: dict) -> None:
     """Keep assigned_person (the primary assignee every older consumer reads)
     and assigned_persons (all of them) consistent in an update payload.
@@ -341,6 +349,8 @@ def sync_assignee_fields(kwargs: dict) -> None:
             people = [primary] + [p for p in people if p != primary]
         elif primary:
             people = [primary] + people
+        if len(people) > MAX_ASSIGNEES_PER_TASK:
+            raise ValueError(f"A task can have at most {MAX_ASSIGNEES_PER_TASK} assignees")
         kwargs["assigned_persons"] = people
         kwargs["assigned_person"] = people[0] if people else None
     elif "assigned_person" in kwargs:
@@ -473,7 +483,8 @@ class HomeTasksStore:
         self.on_task_completed: Callable[..., None] | None = None
         self.on_task_created: Callable[[dict], None] | None = None
         self.on_task_deleted: Callable[[str], None] | None = None
-        self.on_task_assigned: Callable[[dict, str | None], None] | None = None
+        # (task, previous primary, everyone assigned before)
+        self.on_task_assigned: Callable[[dict, str | None, list[str]], None] | None = None
         # Fired instead of on_task_created when a task is RE-inserted into its
         # original list after a failed move: re-arms timers, no created event.
         self.on_task_restored: Callable[[dict], None] | None = None
@@ -815,6 +826,9 @@ class HomeTasksStore:
             if actor:
                 assigned_entry["by"] = actor
             history.append(assigned_entry)
+            if len(assigned_persons) > 1:
+                # Everyone else, too - as the update path records a list.
+                history.append({**assigned_entry, "field": "assigned_persons", "from": [], "to": list(assigned_persons)})
         task = {
             "id": str(uuid.uuid4()),
             "title": title,
@@ -1189,7 +1203,7 @@ class HomeTasksStore:
             "recurrence_weekdays": list(source.get("recurrence_weekdays", [])),
             "image_url": validate_image_url(source.get("image_url")),
             "assigned_person": validate_assigned_person(assigned_person),
-            "assigned_persons": [assigned_person] if assigned_person else [],
+            "assigned_persons": _copy_assignees(source, assigned_person),
             "completed": False,
             "completed_at": None,
             "reopen_at": None,

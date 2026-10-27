@@ -70,3 +70,27 @@ describe('details chips', () => {
     assert.equal(task.assigned_person, 'person.kevin');
   });
 });
+
+describe('row badges', () => {
+  const badges = (card, task) => {
+    const cs = card._columns[0];
+    const found = card._buildTaskMetaBadges(task, card._config.columns[0], cs, 0)
+      .filter((el) => el.classList.contains('assigned-badge'))
+      .map((el) => [el.getAttribute('data-eid'), el.textContent]);
+    return JSON.parse(JSON.stringify(found));
+  };
+
+  test('a shared task shows a badge per assignee, primary first', async () => {
+    const { card } = await makeCard([]);
+    const task = T('t', { assigned_person: 'person.kevin', assigned_persons: ['person.kevin', 'person.anna'] });
+    assert.deepEqual(badges(card, task), [['person.kevin', '👤 Kevin'], ['person.anna', '👤 Anna']]);
+  });
+
+  test('a provider collaborator without a person still gets its badge', async () => {
+    const { card } = await makeCard([]);
+    const task = T('t', { assigned_name: 'Sam' });
+    const found = badges(card, task);
+    assert.equal(found.length, 1);
+    assert.match(found[0][1], /Sam/);
+  });
+});

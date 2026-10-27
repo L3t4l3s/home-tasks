@@ -8355,7 +8355,7 @@ class HomeTasksCard extends HTMLElement {
     return img;
   }
 
-  _buildAssignedPersonBadge(task, cs, colIdx, eid = eid) {
+  _buildAssignedPersonBadge(task, cs, colIdx, eid = task.assigned_person) {
     let personName;
     if (eid && this._hass && this._hass.states && this._hass.states[eid]) {
       const attrs = this._hass.states[eid].attributes;

@@ -549,23 +549,30 @@ def _on_task_schedule_changed(hass: HomeAssistant, entry_id: str, task: dict) ->
     )
 
 
-def _fire_assignment_event(
-    hass: HomeAssistant, entry_id: str, task: dict, previous_person: str | None,
-    previous_persons: list[str] | None = None,
+def _add_assignment_change(
+    data: dict, task: dict, previous_person: str | None, previous_persons: list[str] | None,
 ) -> None:
-    """Fire an event when a task's assignees change.
+    """Who was assigned before and who is new, for a task_assigned event.
 
     previous_person is the former primary assignee (unchanged contract);
     previous_persons all former assignees, and added_persons the people who
     are new to the task - the ones an "assigned to you" notification is for.
     """
-    data = _build_event_data(hass, entry_id, task)
     data["previous_person"] = previous_person
     before = list(previous_persons) if previous_persons is not None else (
         [previous_person] if previous_person else []
     )
     data["previous_persons"] = before
     data["added_persons"] = [p for p in task_assignees(task) if p not in before]
+
+
+def _fire_assignment_event(
+    hass: HomeAssistant, entry_id: str, task: dict, previous_person: str | None,
+    previous_persons: list[str] | None = None,
+) -> None:
+    """Fire an event when a task's assignees change."""
+    data = _build_event_data(hass, entry_id, task)
+    _add_assignment_change(data, task, previous_person, previous_persons)
     hass.bus.async_fire(f"{DOMAIN}_task_assigned", data)
 
 
@@ -749,12 +756,7 @@ def _fire_external_assignment(
         "id": task_uid, "title": "", "_entity_id": entity_id,
     }
     data = _build_event_data(hass, entry_id, task)
-    data["previous_person"] = previous_person
-    before = list(previous_persons) if previous_persons is not None else (
-        [previous_person] if previous_person else []
-    )
-    data["previous_persons"] = before
-    data["added_persons"] = [p for p in task_assignees(task) if p not in before]
+    _add_assignment_change(data, task, previous_person, previous_persons)
     hass.bus.async_fire(f"{DOMAIN}_task_assigned", data)
 
 

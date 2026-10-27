@@ -1561,6 +1561,23 @@ def _external_entry_id(hass, entity_id: str) -> str | None:
     return None
 
 
+def _split_assignees(fields: dict) -> list[str] | None:
+    """Take assigned_persons out of a provider payload (issue #75).
+
+    The provider only knows one assignee: fields keeps the primary as
+    assigned_person, and the whole list - for the overlay - is returned.
+    None when the payload names no list.
+    """
+    if "assigned_persons" not in fields:
+        return None
+    split = {"assigned_persons": validate_assigned_persons(fields.pop("assigned_persons"))}
+    if fields.get("assigned_person"):
+        split["assigned_person"] = validate_assigned_person(fields["assigned_person"])
+    sync_assignee_fields(split)
+    fields["assigned_person"] = split["assigned_person"]
+    return split["assigned_persons"]
+
+
 def _fire_external_task_event(
     hass, event_type: str, entity_id: str, task_uid: str, fields: dict, *, task: dict | None = None,
     actor: str | None = None, actor_user_id: str | None = None,
@@ -1576,9 +1593,12 @@ def _fire_external_task_event(
     (``fields``) overrides it for the values the caller just changed.
     """
     src = dict(task or {})  # merged snapshot: title, assigned_person, due_date, tags …
-    for key in ("title", "assigned_person", "due_date", "tags"):
+    for key in ("title", "assigned_person", "assigned_persons", "due_date", "tags"):
         if key in fields:
             src[key] = fields[key]
+    if "assigned_person" in fields and "assigned_persons" not in fields:
+        # assigned_person alone is the single assignee, as everywhere else.
+        src["assigned_persons"] = []
     data: dict = {"task_id": task_uid, "task_title": src.get("title") or "", "entity_id": entity_id}
     entry_id = _external_entry_id(hass, entity_id)
     if entry_id:
@@ -1589,6 +1609,9 @@ def _fire_external_task_event(
         data["tags"] = src["tags"]
     if src.get("assigned_person"):
         data["assigned_person"] = src["assigned_person"]
+    people = task_assignees(src)
+    if people:
+        data["assigned_persons"] = people
     context = None
     if event_type == "task_completed":
         from . import completed_by_data
@@ -1641,14 +1664,7 @@ async def async_create_external_task(
 
     # Several assignees (issue #75): the provider only knows one, so it gets
     # the primary and the full list lives in the overlay.
-    people = None
-    if "assigned_persons" in fields:
-        split = {"assigned_persons": fields.pop("assigned_persons")}
-        if fields.get("assigned_person"):
-            split["assigned_person"] = fields["assigned_person"]
-        sync_assignee_fields(split)
-        people = split["assigned_persons"]
-        fields["assigned_person"] = split["assigned_person"]
+    people = _split_assignees(fields)
 
     if adapter:
         new_uid, adapter_unsynced = await adapter.async_create_task(fields)
@@ -1686,7 +1702,10 @@ async def async_create_external_task(
         )
     # Fire created for every provider — even when the generic adapter can't
     # resolve a UID, the title + entity are still useful to automations.
-    _fire_external_task_event(hass, "task_created", entity_id, new_uid or "", fields)
+    _fire_external_task_event(
+        hass, "task_created", entity_id, new_uid or "",
+        fields if people is None else {**fields, "assigned_persons": people},
+    )
     return new_uid
 
 
@@ -1748,15 +1767,8 @@ async def async_update_external_task(
     # Several assignees (issue #75): the provider gets the primary, the
     # overlay keeps everyone (written after the provider's leftovers, so an
     # echoed assigned_person can't collapse the list back to one).
-    people = None
-    if "assigned_persons" in fields:
-        fields = dict(fields)
-        split = {"assigned_persons": validate_assigned_persons(fields.pop("assigned_persons"))}
-        if fields.get("assigned_person"):
-            split["assigned_person"] = validate_assigned_person(fields["assigned_person"])
-        sync_assignee_fields(split)
-        people = split["assigned_persons"]
-        fields["assigned_person"] = split["assigned_person"]
+    fields = dict(fields)
+    people = _split_assignees(fields)
 
     if adapter:
         unsynced = await adapter.async_update_task(task_uid, fields)
@@ -1847,6 +1859,8 @@ async def async_duplicate_external_task(
     # The explicit assignee wins, including "nobody" - that is what
     # duplicate-for-someone-else is for.
     fields["assigned_person"] = validate_assigned_person(assigned_person)
+    if assigned_person and assigned_person == source.get("assigned_person"):
+        fields["assigned_persons"] = task_assignees(source)
 
     # No list defaults: a copy is the source again, not a fresh task.
     new_uid = await async_create_external_task(hass, entity_id, fields, apply_defaults=False)

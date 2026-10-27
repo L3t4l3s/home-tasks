@@ -145,7 +145,8 @@ class ExternalTaskOverlayStore:
         # events / schedule reminders. async_set_overlay is the choke point for
         # both assignment changes and reminder edits (whether they arrive via
         # update_external_task's unsynced fields or update_external_overlay).
-        self.on_task_assigned: Callable[..., None] | None = None
+        # (task uid, previous primary, everyone assigned before)
+        self.on_task_assigned: Callable[[str, str | None, list[str]], None] | None = None
         self.on_reminders_changed: Callable[[str], None] | None = None
 
     # -- listener support (mirrors HomeTasksStore) --
