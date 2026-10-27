@@ -332,6 +332,7 @@ Each entry in `columns` accepts the following options.
 | `show_assigned_person` | `true` | Show/hide person assignment |
 | `person_badge` | `name` | How the assigned person is shown on a task row: `off`, `picture`, `name`, `both`. Replaces `badge_person`. The picture is the person entity's Home Assistant profile picture; people without one get their initials |
 | `show_priority` | `true` | Show/hide priority field and badge |
+| `show_section` | `true` | Show/hide the section field in the task details (only shown when the list has sections) |
 | `show_tags` | `true` | Show/hide tags, badges, and filter chips |
 | `show_due_date` | `true` | Show/hide due date and time |
 | `show_reminders` | `true` | Show/hide reminders |
