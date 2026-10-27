@@ -287,7 +287,10 @@ const _TRANSLATIONS = {
     "ed_ai_prompt_prefix_placeholder": "e.g. Minimalist icon of",
     "calendar_minutes_before": "{value} min before",
     "calendar_hours_before": "{value}h before",
-    "calendar_days_before": "{value}d before"
+    "calendar_days_before": "{value}d before",
+    "due_quick_week": "Next week",
+    "due_quick_month": "Next month",
+    "due_quick_3months": "3 months"
   },
   "nl": {
     "ed_default_priority": "Standaardprioriteit",
@@ -568,7 +571,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Zojuist",
     "calendar_minutes_before": "{value} min van tevoren",
     "calendar_hours_before": "{value} uur van tevoren",
-    "calendar_days_before": "{value} dagen van tevoren"
+    "calendar_days_before": "{value} dagen van tevoren",
+    "due_quick_week": "Volgende week",
+    "due_quick_month": "Volgende maand",
+    "due_quick_3months": "3 maanden"
   },
   "it": {
     "ed_default_priority": "Priorità predefinita",
@@ -849,7 +855,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Proprio ora",
     "calendar_minutes_before": "{value} min prima",
     "calendar_hours_before": "{value} ore prima",
-    "calendar_days_before": "{value} giorni prima"
+    "calendar_days_before": "{value} giorni prima",
+    "due_quick_week": "Settimana prossima",
+    "due_quick_month": "Mese prossimo",
+    "due_quick_3months": "3 mesi"
   },
   "pl": {
     "ed_default_priority": "Domyślny priorytet",
@@ -1130,7 +1139,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Właśnie",
     "calendar_minutes_before": "{value} min przed",
     "calendar_hours_before": "{value} godz. przed",
-    "calendar_days_before": "{value} dni przed"
+    "calendar_days_before": "{value} dni przed",
+    "due_quick_week": "Za tydzień",
+    "due_quick_month": "Za miesiąc",
+    "due_quick_3months": "3 miesiące"
   },
   "sv": {
     "ed_default_priority": "Standardprioritet",
@@ -1411,7 +1423,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Just nu",
     "calendar_minutes_before": "{value} min innan",
     "calendar_hours_before": "{value} tim innan",
-    "calendar_days_before": "{value} dagar innan"
+    "calendar_days_before": "{value} dagar innan",
+    "due_quick_week": "Nästa vecka",
+    "due_quick_month": "Nästa månad",
+    "due_quick_3months": "3 månader"
   },
   "fr": {
     "ed_default_priority": "Priorité par défaut",
@@ -1692,7 +1707,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "À l'instant",
     "calendar_minutes_before": "{value} min avant",
     "calendar_hours_before": "{value} h avant",
-    "calendar_days_before": "{value} j avant"
+    "calendar_days_before": "{value} j avant",
+    "due_quick_week": "Semaine prochaine",
+    "due_quick_month": "Mois prochain",
+    "due_quick_3months": "3 mois"
   },
   "pt": {
     "ed_default_priority": "Prioridade padrão",
@@ -1973,7 +1991,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Agora mesmo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value}h antes",
-    "calendar_days_before": "{value}d antes"
+    "calendar_days_before": "{value}d antes",
+    "due_quick_week": "Próxima semana",
+    "due_quick_month": "Próximo mês",
+    "due_quick_3months": "3 meses"
   },
   "pt-BR": {
     "ed_default_priority": "Prioridade padrão",
@@ -2254,7 +2275,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Agora mesmo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value}h antes",
-    "calendar_days_before": "{value}d antes"
+    "calendar_days_before": "{value}d antes",
+    "due_quick_week": "Próxima semana",
+    "due_quick_month": "Próximo mês",
+    "due_quick_3months": "3 meses"
   },
   "es": {
     "ed_default_priority": "Prioridad predeterminada",
@@ -2535,7 +2559,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Ahora mismo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value} h antes",
-    "calendar_days_before": "{value} d antes"
+    "calendar_days_before": "{value} d antes",
+    "due_quick_week": "Próxima semana",
+    "due_quick_month": "Próximo mes",
+    "due_quick_3months": "3 meses"
   },
   "ru": {
     "ed_default_priority": "Приоритет по умолчанию",
@@ -2816,7 +2843,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Только что",
     "calendar_minutes_before": "за {value} мин",
     "calendar_hours_before": "за {value} ч",
-    "calendar_days_before": "за {value} дн."
+    "calendar_days_before": "за {value} дн.",
+    "due_quick_week": "Через неделю",
+    "due_quick_month": "Через месяц",
+    "due_quick_3months": "3 месяца"
   },
   "cs": {
     "ed_default_priority": "Výchozí priorita",
@@ -3097,7 +3127,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Právě teď",
     "calendar_minutes_before": "{value} min předem",
     "calendar_hours_before": "{value} h předem",
-    "calendar_days_before": "{value} d předem"
+    "calendar_days_before": "{value} d předem",
+    "due_quick_week": "Příští týden",
+    "due_quick_month": "Příští měsíc",
+    "due_quick_3months": "3 měsíce"
   },
   "da": {
     "ed_default_priority": "Standardprioritet",
@@ -3378,7 +3411,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Lige nu",
     "calendar_minutes_before": "{value} min før",
     "calendar_hours_before": "{value} timer før",
-    "calendar_days_before": "{value} dage før"
+    "calendar_days_before": "{value} dage før",
+    "due_quick_week": "Næste uge",
+    "due_quick_month": "Næste måned",
+    "due_quick_3months": "3 måneder"
   },
   "no": {
     "ed_default_priority": "Standardprioritet",
@@ -3659,7 +3695,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Akkurat nå",
     "calendar_minutes_before": "{value} min før",
     "calendar_hours_before": "{value} timer før",
-    "calendar_days_before": "{value} dager før"
+    "calendar_days_before": "{value} dager før",
+    "due_quick_week": "Neste uke",
+    "due_quick_month": "Neste måned",
+    "due_quick_3months": "3 måneder"
   },
   "fi": {
     "ed_default_priority": "Oletusprioriteetti",
@@ -3940,7 +3979,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Juuri nyt",
     "calendar_minutes_before": "{value} min ennen",
     "calendar_hours_before": "{value} h ennen",
-    "calendar_days_before": "{value} pv ennen"
+    "calendar_days_before": "{value} pv ennen",
+    "due_quick_week": "Ensi viikko",
+    "due_quick_month": "Ensi kuu",
+    "due_quick_3months": "3 kuukautta"
   },
   "hu": {
     "ed_default_priority": "Alapértelmezett prioritás",
@@ -4221,7 +4263,10 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Épp most",
     "calendar_minutes_before": "{value} perccel előtte",
     "calendar_hours_before": "{value} órával előtte",
-    "calendar_days_before": "{value} nappal előtte"
+    "calendar_days_before": "{value} nappal előtte",
+    "due_quick_week": "Jövő hét",
+    "due_quick_month": "Jövő hónap",
+    "due_quick_3months": "3 hónap"
   },
   "de": {
     "ed_default_priority": "Standard-Priorität",
@@ -4502,7 +4547,10 @@ const _TRANSLATIONS = {
     "ed_ai_prompt_prefix_placeholder": "z.B. Minimalistisches Icon von",
     "calendar_minutes_before": "{value} Min. vorher",
     "calendar_hours_before": "{value} Std. vorher",
-    "calendar_days_before": "{value} Tage vorher"
+    "calendar_days_before": "{value} Tage vorher",
+    "due_quick_week": "Nächste Woche",
+    "due_quick_month": "Nächster Monat",
+    "due_quick_3months": "3 Monate"
   }
 };
 
@@ -8435,9 +8483,33 @@ class HomeTasksCard extends HTMLElement {
     ]);
     const timeWrap = this._el("div", { className: "field-with-clear" }, [timeFieldWrap, timeClearBtn]);
     if (!supportsTime) timeWrap.style.display = "none";
+
+    // One-tap due dates: today, tomorrow, a week, a month, three months out.
+    // A set due time is kept; the button for the current date is highlighted.
+    const quickRow = this._el("div", { className: "due-quick-row" });
+    const today = new Date();
+    for (const [key, unit, val] of [
+      ["due_today", "days", 0], ["due_tomorrow", "days", 1], ["due_quick_week", "days", 7],
+      ["due_quick_month", "months", 1], ["due_quick_3months", "months", 3],
+    ]) {
+      const iso = this._localDateStr(this._advanceDateClamped(today, unit, val));
+      const btn = this._el("button", {
+        className: "due-quick-btn" + (task.due_date === iso ? " active" : ""),
+        textContent: this._t(key),
+      });
+      btn.addEventListener("click", () => {
+        dateInput.value = iso;
+        dateClearBtn.style.display = "";
+        timeInput.disabled = false;
+        quickRow.querySelectorAll(".due-quick-btn").forEach((b) => b.classList.toggle("active", b === btn));
+        this._updateTaskDue(task.id, iso, supportsTime ? timeInput.value : "", colIdx);
+      });
+      quickRow.appendChild(btn);
+    }
     return this._el("div", { className: "detail-section" }, [
       this._el("label", { className: "detail-label", textContent: this._t("due_date") }),
       this._el("div", { className: "due-input-row" }, [dateWrap, timeWrap]),
+      quickRow,
     ]);
   }
 
@@ -11322,6 +11394,16 @@ class HomeTasksCard extends HTMLElement {
       .priority-badge.pri-medium { background: rgba(255, 152, 0, 0.15); color: var(--warning-color, #ff9800); }
       .priority-badge.pri-low { background: rgba(3, 169, 244, 0.15); color: var(--info-color, #03a9f4); }
       .priority-btn-row { display: flex; gap: 6px; }
+      .due-quick-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+      .due-quick-btn {
+        padding: 5px 10px; border-radius: 14px; font-size: 12px; font-family: inherit;
+        border: 1px solid var(--todo-divider); background: var(--todo-bg);
+        color: var(--todo-secondary-text); cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s;
+      }
+      .due-quick-btn.active {
+        background: color-mix(in srgb, var(--todo-primary) 18%, transparent);
+        color: var(--todo-primary); border-color: var(--todo-primary);
+      }
       .priority-btn {
         flex: 1; padding: 5px 8px; border-radius: 4px; font-size: 12px; font-family: inherit;
         border: 1px solid var(--todo-divider); background: var(--todo-bg);

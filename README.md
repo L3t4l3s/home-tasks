@@ -114,6 +114,7 @@ Typical use: a shopping list whose sections are store aisles ("Produce", "Frozen
 - **Filter** per column — All / Open / Done, plus optional **Due Soon** filter (shows tasks due within a configurable number of days)
 - **Sort** per column — manual, due date, priority, title, assigned person
 - **Tag & person filter chips** in the column header — tap to filter; assigning the active person to new tasks automatically
+- **One-tap due dates** — Today, Tomorrow, Next week, Next month and 3 months buttons under the due date in the task details (a set due time is kept)
 - **Voice input** — dictate a new task title via the mic button (HA Assist speech-to-text, with browser speech as fallback)
 - **Compact mode** for denser task rows
 - **Auto-delete** completed tasks (optional, per column)
