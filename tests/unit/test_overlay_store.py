@@ -382,7 +382,7 @@ async def test_overlay_tags_empty_after_strip_skipped(hass: HomeAssistant, overl
 async def test_set_overlay_fires_assigned_only_on_change(hass: HomeAssistant, overlay_store) -> None:
     """on_task_assigned fires with the previous person, and only when it changes."""
     calls: list = []
-    overlay_store.on_task_assigned = lambda uid, prev: calls.append((uid, prev))
+    overlay_store.on_task_assigned = lambda uid, prev, prev_all=None: calls.append((uid, prev))
 
     await overlay_store.async_set_overlay("u1", assigned_person="person.alice")
     assert calls == [("u1", None)]

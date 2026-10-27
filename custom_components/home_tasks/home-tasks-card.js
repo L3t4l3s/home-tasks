@@ -4770,6 +4770,15 @@ function _tileMinWidth(col) {
   return Number.isFinite(n) ? Math.max(60, Math.min(400, n)) : null;
 }
 
+// Everyone a task is assigned to (issue #75), primary first. Older tasks
+// (and providers) only carry assigned_person.
+function _assignees(task) {
+  const people = Array.isArray(task && task.assigned_persons) ? task.assigned_persons.filter(Boolean) : [];
+  const primary = task && task.assigned_person;
+  if (primary && !people.includes(primary)) people.unshift(primary);
+  return people;
+}
+
 class HomeTasksCard extends HTMLElement {
   // The shortest gap between two occurrences, in minutes — what a reopen
   // lead must stay below.  Must match _recurrence_interval_minutes in
@@ -5969,7 +5978,7 @@ class HomeTasksCard extends HTMLElement {
     const preLabels = col.filters?.labels;
     if (preAssignees && preAssignees.length > 0) {
       const set = new Set(preAssignees);
-      tasks = tasks.filter((t) => set.has(t.assigned_person));
+      tasks = tasks.filter((t) => _assignees(t).some((p) => set.has(p)));
     }
     if (preLabels && preLabels.length > 0) {
       const set = new Set(preLabels);
@@ -6006,7 +6015,8 @@ class HomeTasksCard extends HTMLElement {
       tasks = tasks.filter((t) => t.tags && t.tags.some((tag) => cs.tagFilters.has(tag)));
     }
     if (cs.personFilters.size > 0) {
-      tasks = tasks.filter((t) => cs.personFilters.has(t.assigned_person));
+      // A shared task shows under each of its assignees.
+      tasks = tasks.filter((t) => _assignees(t).some((p) => cs.personFilters.has(p)));
     }
     const cmp = this._buildSortComparator(colIdx);
     // overdue_first (issue #57): open overdue tasks lead, oldest due date
@@ -7231,7 +7241,7 @@ class HomeTasksCard extends HTMLElement {
     const assignedPersons = new Set();
     const baseTasks = this._preFilteredTasks(colIdx);
     for (const t of baseTasks) {
-      if (t.assigned_person) assignedPersons.add(t.assigned_person);
+      for (const p of _assignees(t)) assignedPersons.add(p);
     }
     // Remove preset assignees — they are always applied and cannot be toggled by the user
     for (const eid of (col.filters?.assignees || [])) assignedPersons.delete(eid);
@@ -8195,7 +8205,9 @@ class HomeTasksCard extends HTMLElement {
     }
     if ((task.assigned_person || task.assigned_name) && col.show_assigned_person !== false
         && this._personMode(colIdx, "badge") !== "off") {
-      meta.push(this._buildAssignedPersonBadge(task, cs, colIdx));
+      const people = _assignees(task);
+      if (people.length) for (const eid of people) meta.push(this._buildAssignedPersonBadge(task, cs, colIdx, eid));
+      else meta.push(this._buildAssignedPersonBadge(task, cs, colIdx));
     }
     if (task.tags && task.tags.length > 0 && col.show_tags !== false && col.badge_tags !== false) {
       for (const tag of task.tags) {
@@ -8343,32 +8355,32 @@ class HomeTasksCard extends HTMLElement {
     return img;
   }
 
-  _buildAssignedPersonBadge(task, cs, colIdx) {
+  _buildAssignedPersonBadge(task, cs, colIdx, eid = eid) {
     let personName;
-    if (task.assigned_person && this._hass && this._hass.states && this._hass.states[task.assigned_person]) {
-      const attrs = this._hass.states[task.assigned_person].attributes;
-      personName = (attrs && attrs.friendly_name) || task.assigned_person;
+    if (eid && this._hass && this._hass.states && this._hass.states[eid]) {
+      const attrs = this._hass.states[eid].attributes;
+      personName = (attrs && attrs.friendly_name) || eid;
     } else if (task.assigned_name) {
       // Todoist collaborator with no HA person match
       personName = this._t("assigned_unknown").replace("%s", task.assigned_name);
     } else {
-      personName = task.assigned_person;
+      personName = eid;
     }
-    const isActivePerson = cs.personFilters.has(task.assigned_person);
+    const isActivePerson = cs.personFilters.has(eid);
     const mode = this._personMode(colIdx, "badge");
     const withAvatar = mode === "picture" || mode === "both";
     const avatarOnly = mode === "picture";
     const assignedBadge = this._el("span", {
       className: "assigned-badge" + (isActivePerson ? " active" : "") + (withAvatar ? " with-avatar" : "")
         + (avatarOnly ? " avatar-only" : ""),
-      "data-eid": task.assigned_person,
+      "data-eid": eid,
       title: personName,
     });
     if (avatarOnly) {
-      assignedBadge.appendChild(this._buildPersonAvatar(task.assigned_person, personName));
+      assignedBadge.appendChild(this._buildPersonAvatar(eid, personName));
     } else if (withAvatar) {
       assignedBadge.append(
-        this._buildPersonAvatar(task.assigned_person, personName),
+        this._buildPersonAvatar(eid, personName),
         this._el("span", { textContent: personName }),
       );
     } else {
@@ -8377,13 +8389,13 @@ class HomeTasksCard extends HTMLElement {
     assignedBadge.addEventListener("click", (e) => {
       e.stopPropagation();
       this._animateFilterChange(colIdx, () => {
-        if (cs.personFilters.has(task.assigned_person)) cs.personFilters.delete(task.assigned_person);
-        else cs.personFilters.add(task.assigned_person);
+        if (cs.personFilters.has(eid)) cs.personFilters.delete(eid);
+        else cs.personFilters.add(eid);
       });
       setTimeout(() => {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            this.shadowRoot.querySelectorAll(`.assigned-badge[data-eid="${CSS.escape(task.assigned_person)}"]`)
+            this.shadowRoot.querySelectorAll(`.assigned-badge[data-eid="${CSS.escape(eid)}"]`)
               .forEach(b => { b.classList.add("chip-anim"); b.addEventListener("animationend", () => b.classList.remove("chip-anim"), { once: true }); });
           });
         });
@@ -9910,25 +9922,31 @@ class HomeTasksCard extends HTMLElement {
   }
 
   _buildAssignedPersonSection(task, colIdx) {
-    const personSelect = this._el("select", {});
-    const noneOpt = this._el("option", { value: "", textContent: this._t("nobody") });
-    if (!task.assigned_person) noneOpt.selected = true;
-    personSelect.appendChild(noneOpt);
+    // One chip per person; any number can be on (issue #75). The first one
+    // switched on is the primary assignee - what older automations and
+    // single-assignee providers see as assigned_person.
+    const row = this._el("div", { className: "assignee-chip-row" });
     for (const { value, label } of personEntries(this._hass)) {
-      const opt = this._el("option", { value, textContent: label });
-      if (value === task.assigned_person) opt.selected = true;
-      personSelect.appendChild(opt);
+      const on = _assignees(task).includes(value);
+      const chip = this._el("button", {
+        className: "assignee-chip" + (on ? " active" : ""),
+        textContent: label,
+        title: label,
+      });
+      chip.setAttribute("aria-pressed", on ? "true" : "false");
+      chip.addEventListener("click", () => {
+        const now = _assignees(task);
+        const next = now.includes(value) ? now.filter((p) => p !== value) : [...now, value];
+        task.assigned_persons = next;
+        task.assigned_person = next[0] || null;
+        this._render();
+        this._updateTaskRouted(colIdx, task.id, { assigned_persons: next });
+      });
+      row.appendChild(chip);
     }
-    personSelect.addEventListener("change", () => {
-      task.assigned_person = personSelect.value || null;
-      this._render();
-      this._updateTaskRouted(colIdx, task.id, { assigned_person: task.assigned_person });
-    });
-    this._blurSelectOnChange(personSelect);
-    const personWrap = this._el("div", { className: "sel-wrap no-label" }, [personSelect]);
     return this._el("div", { className: "detail-section" }, [
       this._el("label", { className: "detail-label", textContent: this._t("assigned_to") }),
-      personWrap,
+      row,
     ]);
   }
 
@@ -10824,6 +10842,7 @@ class HomeTasksCard extends HTMLElement {
       due_time: this._t("due_time_lbl"),
       priority: this._t("priority"),
       assigned_person: this._t("assigned_to"),
+      assigned_persons: this._t("assigned_to"),
       tags: this._t("tags"),
       notes: this._t("notes"),
       recurrence_enabled: this._t("recurrence"),
@@ -10845,6 +10864,10 @@ class HomeTasksCard extends HTMLElement {
     }
     if (field === "assigned_person") {
       return this._hass?.states?.[v]?.attributes?.friendly_name || v;
+    }
+    if (field === "assigned_persons") {
+      const names = (Array.isArray(v) ? v : []).map((p) => this._hass?.states?.[p]?.attributes?.friendly_name || p);
+      return names.join(", ") || "\u2013";
     }
     if (field === "tags") {
       return Array.isArray(v) ? (v.join(", ") || "\u2013") : String(v);
@@ -11593,6 +11616,16 @@ class HomeTasksCard extends HTMLElement {
       .priority-badge.pri-medium { background: rgba(255, 152, 0, 0.15); color: var(--warning-color, #ff9800); }
       .priority-badge.pri-low { background: rgba(3, 169, 244, 0.15); color: var(--info-color, #03a9f4); }
       .priority-btn-row { display: flex; gap: 6px; }
+      .assignee-chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+      .assignee-chip {
+        padding: 5px 10px; border-radius: 14px; font-size: 12px; font-family: inherit;
+        border: 1px solid var(--todo-divider); background: var(--todo-bg);
+        color: var(--todo-secondary-text); cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s;
+      }
+      .assignee-chip.active {
+        background: color-mix(in srgb, var(--todo-primary) 18%, transparent);
+        color: var(--todo-primary); border-color: var(--todo-primary);
+      }
       .priority-btn {
         flex: 1; padding: 5px 8px; border-radius: 4px; font-size: 12px; font-family: inherit;
         border: 1px solid var(--todo-divider); background: var(--todo-bg);
@@ -12834,7 +12867,7 @@ class HomeTasksCardEditor extends HTMLElement {
       const persons = new Set();
       for (const t of tasks) {
         for (const tag of (t.tags || [])) tags.add(tag);
-        if (t.assigned_person) persons.add(t.assigned_person);
+        for (const p of _assignees(t)) persons.add(p);
       }
       // Persons may be stored as `person.*` entity ids — resolve each to its
       // friendly name for display while keeping the raw value for matching.

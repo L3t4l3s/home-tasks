@@ -32,6 +32,8 @@ from .const import (
 from .store import (
     apply_field_validators,
     validate_assigned_person,
+    sync_assignee_fields,
+    task_assignees,
     validate_date,
     validate_priority,
     validate_reminders,
@@ -52,6 +54,7 @@ OVERLAY_FIELDS = (
     "due_time",
     "notes",
     "assigned_person",
+    "assigned_persons",
     "tags",
     "reminders",
     "sub_items",
@@ -91,6 +94,7 @@ def _empty_overlay() -> dict:
         "due_time": None,
         "notes": None,
         "assigned_person": None,
+        "assigned_persons": [],
         "tags": [],
         "reminders": [],
         "sub_items": [],
@@ -141,7 +145,7 @@ class ExternalTaskOverlayStore:
         # events / schedule reminders. async_set_overlay is the choke point for
         # both assignment changes and reminder edits (whether they arrive via
         # update_external_task's unsynced fields or update_external_overlay).
-        self.on_task_assigned: Callable[[str, str | None], None] | None = None
+        self.on_task_assigned: Callable[..., None] | None = None
         self.on_reminders_changed: Callable[[str], None] | None = None
 
     # -- listener support (mirrors HomeTasksStore) --
@@ -266,6 +270,7 @@ class ExternalTaskOverlayStore:
         the rules in HomeTasksStore.async_update_task.
         """
         self._validate_overlay_fields(kwargs)
+        sync_assignee_fields(kwargs)
         if "section_id" in kwargs:
             self._validate_section_id(kwargs["section_id"])
 
@@ -274,6 +279,7 @@ class ExternalTaskOverlayStore:
             overlays[task_uid] = {}
         overlay = overlays[task_uid]
         prev_assigned = overlay.get("assigned_person")
+        prev_people = task_assignees(overlay)
 
         for key, value in kwargs.items():
             if key in OVERLAY_FIELDS:
@@ -284,10 +290,13 @@ class ExternalTaskOverlayStore:
         # reminders whenever the reminder set is touched.
         if (
             "assigned_person" in kwargs
-            and kwargs.get("assigned_person") != prev_assigned
+            and (
+                kwargs.get("assigned_person") != prev_assigned
+                or set(task_assignees(overlay)) != set(prev_people)
+            )
             and self.on_task_assigned
         ):
-            self.on_task_assigned(task_uid, prev_assigned)
+            self.on_task_assigned(task_uid, prev_assigned, prev_people)
         if "reminders" in kwargs and self.on_reminders_changed:
             self.on_reminders_changed(task_uid)
         return {**_empty_overlay(), **overlay}

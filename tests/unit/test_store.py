@@ -379,7 +379,7 @@ async def test_on_task_assigned_callback(hass: HomeAssistant) -> None:
     s = HomeTasksStore(hass, "cb-entry-3")
     await s.async_load()
     assigned = []
-    s.on_task_assigned = lambda task, prev: assigned.append((task["id"], prev))
+    s.on_task_assigned = lambda task, prev, prev_all=None: assigned.append((task["id"], prev))
     task = await s.async_add_task("Assign task")
     await s.async_update_task(task["id"], assigned_person="person.alice")
     assert len(assigned) == 1

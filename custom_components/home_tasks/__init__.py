@@ -40,6 +40,7 @@ from .store import (
     HomeTasksStore,
     _REOPEN_UNCHANGED,
     recurrence_interval_minutes,
+    task_assignees,
     validate_reminders,
     validate_text,
 )
@@ -300,6 +301,12 @@ def _build_event_data(hass: HomeAssistant, entry_id: str, task: dict) -> dict:
         data["entity_id"] = task["_entity_id"]
     if task.get("assigned_person"):
         data["assigned_person"] = task["assigned_person"]
+    # Everyone assigned (issue #75), primary first - lets a reminder/due
+    # automation notify each of them. Absent when nobody is assigned, like
+    # assigned_person.
+    people = task_assignees(task)
+    if people:
+        data["assigned_persons"] = people
     if task.get("due_date"):
         data["due_date"] = task["due_date"]
     if task.get("due_time"):
@@ -543,11 +550,22 @@ def _on_task_schedule_changed(hass: HomeAssistant, entry_id: str, task: dict) ->
 
 
 def _fire_assignment_event(
-    hass: HomeAssistant, entry_id: str, task: dict, previous_person: str | None
+    hass: HomeAssistant, entry_id: str, task: dict, previous_person: str | None,
+    previous_persons: list[str] | None = None,
 ) -> None:
-    """Fire an event when a task's assigned person changes."""
+    """Fire an event when a task's assignees change.
+
+    previous_person is the former primary assignee (unchanged contract);
+    previous_persons all former assignees, and added_persons the people who
+    are new to the task - the ones an "assigned to you" notification is for.
+    """
     data = _build_event_data(hass, entry_id, task)
     data["previous_person"] = previous_person
+    before = list(previous_persons) if previous_persons is not None else (
+        [previous_person] if previous_person else []
+    )
+    data["previous_persons"] = before
+    data["added_persons"] = [p for p in task_assignees(task) if p not in before]
     hass.bus.async_fire(f"{DOMAIN}_task_assigned", data)
 
 
@@ -722,13 +740,21 @@ def _build_external_task(hass: HomeAssistant, entry_id: str, entity_id: str, tas
     return None
 
 
-def _fire_external_assignment(hass: HomeAssistant, entry_id: str, entity_id: str, task_uid: str, previous_person) -> None:
-    """Fire home_tasks_task_assigned for an external task whose assignee changed."""
+def _fire_external_assignment(
+    hass: HomeAssistant, entry_id: str, entity_id: str, task_uid: str, previous_person,
+    previous_persons: list[str] | None = None,
+) -> None:
+    """Fire home_tasks_task_assigned for an external task whose assignees changed."""
     task = _build_external_task(hass, entry_id, entity_id, task_uid) or {
         "id": task_uid, "title": "", "_entity_id": entity_id,
     }
     data = _build_event_data(hass, entry_id, task)
     data["previous_person"] = previous_person
+    before = list(previous_persons) if previous_persons is not None else (
+        [previous_person] if previous_person else []
+    )
+    data["previous_persons"] = before
+    data["added_persons"] = [p for p in task_assignees(task) if p not in before]
     hass.bus.async_fire(f"{DOMAIN}_task_assigned", data)
 
 
@@ -1979,6 +2005,13 @@ async def _async_service_position(
         await async_reorder_external_tasks(hass, ident, order)
 
 
+def _parse_service_persons(value) -> list[str]:
+    """assigned_persons from a service call: a list, or comma-separated ids."""
+    if isinstance(value, list):
+        return [str(v).strip() for v in value if str(v).strip()]
+    return [v.strip() for v in str(value or "").split(",") if v.strip()]
+
+
 def _async_register_services(hass: HomeAssistant) -> None:
     """Register integration services (once globally)."""
     if hass.services.has_service(DOMAIN, "add_task"):
@@ -2008,6 +2041,8 @@ def _async_register_services(hass: HomeAssistant) -> None:
                 fields["reminders"] = data["reminders"]
             if "tags" in data:
                 fields["tags"] = _parse_service_tags(data["tags"])
+            if "assigned_persons" in data:
+                fields["assigned_persons"] = _parse_service_persons(data["assigned_persons"])
             # Checked before anything is created: the provider gets the task
             # first and the sub-tasks one by one after it, so a bad title
             # found halfway would leave a half-built task behind.
@@ -2068,6 +2103,9 @@ def _async_register_services(hass: HomeAssistant) -> None:
             sub_tasks=data.get("sub_tasks"),
             section_id=extra.pop("section_id", None),
             recurrence=extra,
+            assigned_persons=(
+                _parse_service_persons(data["assigned_persons"]) if "assigned_persons" in data else None
+            ),
         )
         await _async_service_position(hass, kind, ident, store, task["id"], data.get("position"))
         await _async_service_image(hass, kind, ident, store, task["id"], data, force=False)
@@ -2149,7 +2187,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
             done = bool(task.get("completed"))
             if (status == "open" and done) or (status == "completed" and not done):
                 return False
-            if person and task.get("assigned_person") != person:
+            if person and person not in task_assignees(task):
                 return False
             if tag and tag not in (t.lower() for t in task.get("tags") or []):
                 return False
@@ -2177,6 +2215,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
                     "due_date": t.get("due_date"),
                     "due_time": t.get("due_time"),
                     "assigned_person": t.get("assigned_person"),
+                    "assigned_persons": task_assignees(t),
                     "tags": list(t.get("tags") or []),
                     "priority": t.get("priority"),
                     "notes": t.get("notes") or "",
@@ -2208,6 +2247,8 @@ def _async_register_services(hass: HomeAssistant) -> None:
             kwargs["tags"] = _parse_service_tags(call.data["tags"])
         if "reminders" in call.data:
             kwargs["reminders"] = call.data["reminders"]
+        if "assigned_persons" in call.data:
+            kwargs["assigned_persons"] = _parse_service_persons(call.data["assigned_persons"])
         if kind == "external":
             task = await _resolve_external_task(hass, ident, call.data)
             kwargs.update(_service_task_fields(hass, kind, ident, store, call.data, task))
@@ -2491,6 +2532,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
             vol.Optional("entity_id"): cv.string,
             vol.Required("title"): cv.string,
             vol.Optional("assigned_person"): cv.string,
+            vol.Optional("assigned_persons"): vol.Any(cv.string, [cv.string]),
             vol.Optional("due_date"): cv.string,
             vol.Optional("due_time"): cv.string,
             vol.Optional("notes"): cv.string,
@@ -2540,6 +2582,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
             vol.Optional("due_time"): cv.string,
             vol.Optional("notes"): cv.string,
             vol.Optional("assigned_person"): cv.string,
+            vol.Optional("assigned_persons"): vol.Any(cv.string, [cv.string]),
             vol.Optional("priority"): vol.Any(vol.All(vol.Coerce(int), vol.In([1, 2, 3])), None),
             vol.Optional("tags"): cv.string,
             vol.Optional("reminders"): _validate_service_reminders,
@@ -2654,7 +2697,9 @@ async def _async_setup_native_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
     store.on_task_created = lambda task: _on_task_created(hass, entry.entry_id, task)
     store.on_task_deleted = lambda task_id: _on_task_deleted(hass, task_id)
     store.on_task_restored = lambda task: _rearm_task_timers(hass, entry.entry_id, task)
-    store.on_task_assigned = lambda task, prev: _fire_assignment_event(hass, entry.entry_id, task, prev)
+    store.on_task_assigned = lambda task, prev, prev_all=None: _fire_assignment_event(
+        hass, entry.entry_id, task, prev, prev_all
+    )
     store.on_task_reopened = lambda task: _on_task_reopened(hass, entry.entry_id, task)
     store.on_reminders_changed = lambda task: _schedule_reminders(hass, entry.entry_id, task)
     store.on_task_schedule_changed = lambda task: _on_task_schedule_changed(hass, entry.entry_id, task)
@@ -2684,8 +2729,8 @@ async def _async_setup_external_entry(hass: HomeAssistant, entry: ConfigEntry) -
 
     # Wire event/reminder hooks so external lists behave like native ones:
     # assignment fires task_assigned; reminder edits (re)schedule timers.
-    overlay_store.on_task_assigned = lambda uid, prev: _fire_external_assignment(
-        hass, entry.entry_id, entity_id, uid, prev
+    overlay_store.on_task_assigned = lambda uid, prev, prev_all=None: _fire_external_assignment(
+        hass, entry.entry_id, entity_id, uid, prev, prev_all
     )
     overlay_store.on_reminders_changed = lambda uid: _schedule_external_reminders(
         hass, entry.entry_id, entity_id, uid

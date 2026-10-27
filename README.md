@@ -114,6 +114,7 @@ Typical use: a shopping list whose sections are store aisles ("Produce", "Frozen
 - **Filter** per column — All / Open / Done, plus optional **Due Soon** filter (shows tasks due within a configurable number of days)
 - **Sort** per column — manual, due date, priority, title, assigned person
 - **Tag & person filter chips** in the column header — tap to filter; assigning the active person to new tasks automatically
+- **Several assignees per task** — tap people on or off in the task details; a shared task shows under each of its assignees' filter chips, and its row shows each of them. The first one is the primary assignee (`assigned_person`), which single-assignee providers such as Todoist sync; everyone is in `assigned_persons`
 - **Voice input** — dictate a new task title via the mic button (HA Assist speech-to-text, with browser speech as fallback)
 - **Compact mode** for denser task rows
 - **Auto-delete** completed tasks (optional, per column)
@@ -594,11 +595,11 @@ grid_options:
 | `home_tasks_task_completed` | Fired when a task is marked as done |
 | `home_tasks_task_due` | Fired when a task's due date is today (once per day) |
 | `home_tasks_task_overdue` | Fired when a task is past its due date (once per day) |
-| `home_tasks_task_assigned` | Fired when a person is assigned to a task — including tasks *created* with an assignee (explicitly, via the list default, or by duplicating for another person); `previous_person` is `null` in that case |
+| `home_tasks_task_assigned` | Fired when a task's assignees change — including tasks *created* with an assignee (explicitly, via the list default, or by duplicating for another person); `previous_person` is `null` in that case. Also carries `previous_persons` (everyone assigned before) and `added_persons` (the people new to the task — the ones to notify) |
 | `home_tasks_task_reopened` | Fired when a task is reopened (manually or by recurrence) |
 | `home_tasks_task_reminder` | Fired at the configured offset before a task's due time |
 
-All events include: `entry_id`, `task_id`, `task_title`, `list_name`, and (if set) `assigned_person`, `due_date`, `due_time`, `priority`, `notes` (truncated to 255 chars), `tags`.
+All events include: `entry_id`, `task_id`, `task_title`, `list_name`, and (if set) `assigned_person` (the primary assignee), `assigned_persons` (everyone assigned, primary first), `due_date`, `due_time`, `priority`, `notes` (truncated to 255 chars), `tags`.
 Events for external lists additionally include `entity_id` (the external todo entity).
 The `home_tasks_task_reminder` event additionally includes `reminder_offset_minutes`.
 The `home_tasks_task_completed` event additionally includes who ticked the task off, when a user did — from the card, the HA todo entity's actions (Companion App, `todo.update_item`) or a service called by a user: `completed_by` (the user's name, as in the task history), `completed_by_user_id`, and `completed_by_person` (the `person.*` linked to that user). The event runs in that user's context, so the logbook names them too. Completions by automations, by the recurrence, in a provider's own app or by an Assist voice command (Home Assistant's todo intents don't pass on who spoke) carry none of these fields.
@@ -613,6 +614,7 @@ The `home_tasks_task_completed` event additionally includes who ticked the task 
 | `entry_id` | * | Config entry ID (alternative to `list_name`) |
 | `title` | yes | Task title |
 | `assigned_person` | no | Person entity ID (e.g. `person.ben`) |
+| `assigned_persons` | no | Everyone the task is assigned to: comma-separated person entity IDs, the first being the primary (`assigned_person`). Overrides `assigned_person` |
 | `due_date` | no | Due date (`YYYY-MM-DD`) |
 | `due_time` | no | Due time (`HH:MM`, needs `due_date`) |
 | `notes` | no | Notes text |
@@ -667,7 +669,7 @@ with `response_variable`.
 |-------|----------|-------------|
 | `list_name` / `entry_id` / `entity_id` | * | The list, as for `add_task` |
 | `status` | no | `open` (default), `completed` or `all` |
-| `assigned_person` | no | Only tasks assigned to this person (e.g. `person.anna`) |
+| `assigned_person` | no | Only tasks this person is one of the assignees of (e.g. `person.anna`) |
 | `tag` | no | Only tasks with this tag (case-insensitive) |
 | `due` | no | `today`, `overdue` or `today_or_overdue` |
 
@@ -712,6 +714,7 @@ Update any field of an existing task, found by `task_id` or `task_title`. Only t
 | `due_time` | no | Due time (`HH:MM`) |
 | `notes` | no | Notes text |
 | `assigned_person` | no | Person entity ID |
+| `assigned_persons` | no | Everyone the task is assigned to: comma-separated person entity IDs, the first being the primary (`assigned_person`). Overrides `assigned_person` |
 | `priority` | no | `1` (low) – `3` (high) |
 | `tags` | no | Comma-separated tags — replaces the existing tags |
 | `reminders` | no | Minute offsets before the due moment — replaces the existing reminders |
