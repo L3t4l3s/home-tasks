@@ -278,7 +278,8 @@
     "ed_ai_prompt_prefix_placeholder": "e.g. Minimalist icon of",
     "calendar_minutes_before": "{value} min before",
     "calendar_hours_before": "{value}h before",
-    "calendar_days_before": "{value}d before"
+    "calendar_days_before": "{value}d before",
+    "ed_detail_order": "Order in task details"
   },
   "nl": {
     "ed_default_priority": "Standaardprioriteit",
@@ -559,7 +560,8 @@
     "due_ago_seconds": "Zojuist",
     "calendar_minutes_before": "{value} min van tevoren",
     "calendar_hours_before": "{value} uur van tevoren",
-    "calendar_days_before": "{value} dagen van tevoren"
+    "calendar_days_before": "{value} dagen van tevoren",
+    "ed_detail_order": "Volgorde in taakdetails"
   },
   "it": {
     "ed_default_priority": "Priorità predefinita",
@@ -840,7 +842,8 @@
     "due_ago_seconds": "Proprio ora",
     "calendar_minutes_before": "{value} min prima",
     "calendar_hours_before": "{value} ore prima",
-    "calendar_days_before": "{value} giorni prima"
+    "calendar_days_before": "{value} giorni prima",
+    "ed_detail_order": "Ordine nei dettagli"
   },
   "pl": {
     "ed_default_priority": "Domyślny priorytet",
@@ -1121,7 +1124,8 @@
     "due_ago_seconds": "Właśnie",
     "calendar_minutes_before": "{value} min przed",
     "calendar_hours_before": "{value} godz. przed",
-    "calendar_days_before": "{value} dni przed"
+    "calendar_days_before": "{value} dni przed",
+    "ed_detail_order": "Kolejność w szczegółach"
   },
   "sv": {
     "ed_default_priority": "Standardprioritet",
@@ -1402,7 +1406,8 @@
     "due_ago_seconds": "Just nu",
     "calendar_minutes_before": "{value} min innan",
     "calendar_hours_before": "{value} tim innan",
-    "calendar_days_before": "{value} dagar innan"
+    "calendar_days_before": "{value} dagar innan",
+    "ed_detail_order": "Ordning i detaljer"
   },
   "fr": {
     "ed_default_priority": "Priorité par défaut",
@@ -1683,7 +1688,8 @@
     "due_ago_seconds": "À l'instant",
     "calendar_minutes_before": "{value} min avant",
     "calendar_hours_before": "{value} h avant",
-    "calendar_days_before": "{value} j avant"
+    "calendar_days_before": "{value} j avant",
+    "ed_detail_order": "Ordre dans les détails"
   },
   "pt": {
     "ed_default_priority": "Prioridade padrão",
@@ -1964,7 +1970,8 @@
     "due_ago_seconds": "Agora mesmo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value}h antes",
-    "calendar_days_before": "{value}d antes"
+    "calendar_days_before": "{value}d antes",
+    "ed_detail_order": "Ordem nos detalhes"
   },
   "pt-BR": {
     "ed_default_priority": "Prioridade padrão",
@@ -2245,7 +2252,8 @@
     "due_ago_seconds": "Agora mesmo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value}h antes",
-    "calendar_days_before": "{value}d antes"
+    "calendar_days_before": "{value}d antes",
+    "ed_detail_order": "Ordem nos detalhes"
   },
   "es": {
     "ed_default_priority": "Prioridad predeterminada",
@@ -2526,7 +2534,8 @@
     "due_ago_seconds": "Ahora mismo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value} h antes",
-    "calendar_days_before": "{value} d antes"
+    "calendar_days_before": "{value} d antes",
+    "ed_detail_order": "Orden en los detalles"
   },
   "ru": {
     "ed_default_priority": "Приоритет по умолчанию",
@@ -2807,7 +2816,8 @@
     "due_ago_seconds": "Только что",
     "calendar_minutes_before": "за {value} мин",
     "calendar_hours_before": "за {value} ч",
-    "calendar_days_before": "за {value} дн."
+    "calendar_days_before": "за {value} дн.",
+    "ed_detail_order": "Порядок в деталях"
   },
   "cs": {
     "ed_default_priority": "Výchozí priorita",
@@ -3088,7 +3098,8 @@
     "due_ago_seconds": "Právě teď",
     "calendar_minutes_before": "{value} min předem",
     "calendar_hours_before": "{value} h předem",
-    "calendar_days_before": "{value} d předem"
+    "calendar_days_before": "{value} d předem",
+    "ed_detail_order": "Pořadí v detailech"
   },
   "da": {
     "ed_default_priority": "Standardprioritet",
@@ -3369,7 +3380,8 @@
     "due_ago_seconds": "Lige nu",
     "calendar_minutes_before": "{value} min før",
     "calendar_hours_before": "{value} timer før",
-    "calendar_days_before": "{value} dage før"
+    "calendar_days_before": "{value} dage før",
+    "ed_detail_order": "Rækkefølge i detaljer"
   },
   "no": {
     "ed_default_priority": "Standardprioritet",
@@ -3650,7 +3662,8 @@
     "due_ago_seconds": "Akkurat nå",
     "calendar_minutes_before": "{value} min før",
     "calendar_hours_before": "{value} timer før",
-    "calendar_days_before": "{value} dager før"
+    "calendar_days_before": "{value} dager før",
+    "ed_detail_order": "Rekkefølge i detaljer"
   },
   "fi": {
     "ed_default_priority": "Oletusprioriteetti",
@@ -3931,7 +3944,8 @@
     "due_ago_seconds": "Juuri nyt",
     "calendar_minutes_before": "{value} min ennen",
     "calendar_hours_before": "{value} h ennen",
-    "calendar_days_before": "{value} pv ennen"
+    "calendar_days_before": "{value} pv ennen",
+    "ed_detail_order": "Järjestys tiedoissa"
   },
   "hu": {
     "ed_default_priority": "Alapértelmezett prioritás",
@@ -4212,7 +4226,8 @@
     "due_ago_seconds": "Épp most",
     "calendar_minutes_before": "{value} perccel előtte",
     "calendar_hours_before": "{value} órával előtte",
-    "calendar_days_before": "{value} nappal előtte"
+    "calendar_days_before": "{value} nappal előtte",
+    "ed_detail_order": "Sorrend a részletekben"
   },
   "de": {
     "ed_default_priority": "Standard-Priorität",
@@ -4493,6 +4508,7 @@
     "ed_ai_prompt_prefix_placeholder": "z.B. Minimalistisches Icon von",
     "calendar_minutes_before": "{value} Min. vorher",
     "calendar_hours_before": "{value} Std. vorher",
-    "calendar_days_before": "{value} Tage vorher"
+    "calendar_days_before": "{value} Tage vorher",
+    "ed_detail_order": "Reihenfolge in den Details"
   }
 }

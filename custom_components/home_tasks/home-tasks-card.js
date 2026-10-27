@@ -287,7 +287,8 @@ const _TRANSLATIONS = {
     "ed_ai_prompt_prefix_placeholder": "e.g. Minimalist icon of",
     "calendar_minutes_before": "{value} min before",
     "calendar_hours_before": "{value}h before",
-    "calendar_days_before": "{value}d before"
+    "calendar_days_before": "{value}d before",
+    "ed_detail_order": "Order in task details"
   },
   "nl": {
     "ed_default_priority": "Standaardprioriteit",
@@ -568,7 +569,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Zojuist",
     "calendar_minutes_before": "{value} min van tevoren",
     "calendar_hours_before": "{value} uur van tevoren",
-    "calendar_days_before": "{value} dagen van tevoren"
+    "calendar_days_before": "{value} dagen van tevoren",
+    "ed_detail_order": "Volgorde in taakdetails"
   },
   "it": {
     "ed_default_priority": "Priorità predefinita",
@@ -849,7 +851,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Proprio ora",
     "calendar_minutes_before": "{value} min prima",
     "calendar_hours_before": "{value} ore prima",
-    "calendar_days_before": "{value} giorni prima"
+    "calendar_days_before": "{value} giorni prima",
+    "ed_detail_order": "Ordine nei dettagli"
   },
   "pl": {
     "ed_default_priority": "Domyślny priorytet",
@@ -1130,7 +1133,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Właśnie",
     "calendar_minutes_before": "{value} min przed",
     "calendar_hours_before": "{value} godz. przed",
-    "calendar_days_before": "{value} dni przed"
+    "calendar_days_before": "{value} dni przed",
+    "ed_detail_order": "Kolejność w szczegółach"
   },
   "sv": {
     "ed_default_priority": "Standardprioritet",
@@ -1411,7 +1415,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Just nu",
     "calendar_minutes_before": "{value} min innan",
     "calendar_hours_before": "{value} tim innan",
-    "calendar_days_before": "{value} dagar innan"
+    "calendar_days_before": "{value} dagar innan",
+    "ed_detail_order": "Ordning i detaljer"
   },
   "fr": {
     "ed_default_priority": "Priorité par défaut",
@@ -1692,7 +1697,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "À l'instant",
     "calendar_minutes_before": "{value} min avant",
     "calendar_hours_before": "{value} h avant",
-    "calendar_days_before": "{value} j avant"
+    "calendar_days_before": "{value} j avant",
+    "ed_detail_order": "Ordre dans les détails"
   },
   "pt": {
     "ed_default_priority": "Prioridade padrão",
@@ -1973,7 +1979,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Agora mesmo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value}h antes",
-    "calendar_days_before": "{value}d antes"
+    "calendar_days_before": "{value}d antes",
+    "ed_detail_order": "Ordem nos detalhes"
   },
   "pt-BR": {
     "ed_default_priority": "Prioridade padrão",
@@ -2254,7 +2261,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Agora mesmo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value}h antes",
-    "calendar_days_before": "{value}d antes"
+    "calendar_days_before": "{value}d antes",
+    "ed_detail_order": "Ordem nos detalhes"
   },
   "es": {
     "ed_default_priority": "Prioridad predeterminada",
@@ -2535,7 +2543,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Ahora mismo",
     "calendar_minutes_before": "{value} min antes",
     "calendar_hours_before": "{value} h antes",
-    "calendar_days_before": "{value} d antes"
+    "calendar_days_before": "{value} d antes",
+    "ed_detail_order": "Orden en los detalles"
   },
   "ru": {
     "ed_default_priority": "Приоритет по умолчанию",
@@ -2816,7 +2825,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Только что",
     "calendar_minutes_before": "за {value} мин",
     "calendar_hours_before": "за {value} ч",
-    "calendar_days_before": "за {value} дн."
+    "calendar_days_before": "за {value} дн.",
+    "ed_detail_order": "Порядок в деталях"
   },
   "cs": {
     "ed_default_priority": "Výchozí priorita",
@@ -3097,7 +3107,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Právě teď",
     "calendar_minutes_before": "{value} min předem",
     "calendar_hours_before": "{value} h předem",
-    "calendar_days_before": "{value} d předem"
+    "calendar_days_before": "{value} d předem",
+    "ed_detail_order": "Pořadí v detailech"
   },
   "da": {
     "ed_default_priority": "Standardprioritet",
@@ -3378,7 +3389,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Lige nu",
     "calendar_minutes_before": "{value} min før",
     "calendar_hours_before": "{value} timer før",
-    "calendar_days_before": "{value} dage før"
+    "calendar_days_before": "{value} dage før",
+    "ed_detail_order": "Rækkefølge i detaljer"
   },
   "no": {
     "ed_default_priority": "Standardprioritet",
@@ -3659,7 +3671,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Akkurat nå",
     "calendar_minutes_before": "{value} min før",
     "calendar_hours_before": "{value} timer før",
-    "calendar_days_before": "{value} dager før"
+    "calendar_days_before": "{value} dager før",
+    "ed_detail_order": "Rekkefølge i detaljer"
   },
   "fi": {
     "ed_default_priority": "Oletusprioriteetti",
@@ -3940,7 +3953,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Juuri nyt",
     "calendar_minutes_before": "{value} min ennen",
     "calendar_hours_before": "{value} h ennen",
-    "calendar_days_before": "{value} pv ennen"
+    "calendar_days_before": "{value} pv ennen",
+    "ed_detail_order": "Järjestys tiedoissa"
   },
   "hu": {
     "ed_default_priority": "Alapértelmezett prioritás",
@@ -4221,7 +4235,8 @@ const _TRANSLATIONS = {
     "due_ago_seconds": "Épp most",
     "calendar_minutes_before": "{value} perccel előtte",
     "calendar_hours_before": "{value} órával előtte",
-    "calendar_days_before": "{value} nappal előtte"
+    "calendar_days_before": "{value} nappal előtte",
+    "ed_detail_order": "Sorrend a részletekben"
   },
   "de": {
     "ed_default_priority": "Standard-Priorität",
@@ -4502,7 +4517,8 @@ const _TRANSLATIONS = {
     "ed_ai_prompt_prefix_placeholder": "z.B. Minimalistisches Icon von",
     "calendar_minutes_before": "{value} Min. vorher",
     "calendar_hours_before": "{value} Std. vorher",
-    "calendar_days_before": "{value} Tage vorher"
+    "calendar_days_before": "{value} Tage vorher",
+    "ed_detail_order": "Reihenfolge in den Details"
   }
 };
 
@@ -4598,6 +4614,14 @@ function listSupportsDue(info) {
 function listSupportsDueTime(info) {
   const features = (info && info.supported_features) || 0;
   return !!(features & TODO_FEATURE.SET_DUE_DATETIME);
+}
+
+// detail_order: the task-details fields in the order given; unknown keys
+// are ignored and fields not listed follow in the default order.
+function _detailOrder(col, defaults) {
+  const wanted = Array.isArray(col && col.detail_order) ? col.detail_order : [];
+  const listed = wanted.filter((k, i) => defaults.includes(k) && wanted.indexOf(k) === i);
+  return [...listed, ...defaults.filter((k) => !listed.includes(k))];
 }
 
 class HomeTasksCard extends HTMLElement {
@@ -8350,17 +8374,25 @@ class HomeTasksCard extends HTMLElement {
   _buildTaskDetails(task, colIdx) {
     const col = this._config.columns[colIdx];
 
+    // Each field: [shown?, builder]. detail_order picks the order; fields it
+    // doesn't name follow in the default order. The action row stays last.
+    const fields = {
+      notes: [col.show_notes !== false, () => this._buildNotesSection(task, colIdx)],
+      sub_tasks: [(col.show_sub_tasks ?? col.show_sub_items) !== false, () => this._buildSubTasksSection(task, colIdx)],
+      person: [col.show_assigned_person !== false, () => this._buildAssignedPersonSection(task, colIdx)],
+      priority: [col.show_priority !== false, () => this._buildPrioritySection(task, colIdx)],
+      tags: [col.show_tags !== false, () => this._buildTagsSection(task, colIdx)],
+      due_date: [col.show_due_date !== false, () => this._buildDateSection(task, colIdx)],
+      reminders: [col.show_reminders !== false, () => this._buildRemindersSection(task, colIdx)],
+      recurrence: [col.show_recurrence !== false, () => this._buildRecurrenceSection(task, colIdx)],
+      history: [!!col.show_history, () => this._buildHistorySection(task)],
+      images: [col.show_images === true, () => this._buildImageSection(task, colIdx)],
+    };
     const details = [];
-    if (col.show_notes !== false) details.push(this._buildNotesSection(task, colIdx));
-    if ((col.show_sub_tasks ?? col.show_sub_items) !== false) details.push(this._buildSubTasksSection(task, colIdx));
-    if (col.show_assigned_person !== false) details.push(this._buildAssignedPersonSection(task, colIdx));
-    if (col.show_priority !== false) details.push(this._buildPrioritySection(task, colIdx));
-    if (col.show_tags !== false) details.push(this._buildTagsSection(task, colIdx));
-    if (col.show_due_date !== false) details.push(this._buildDateSection(task, colIdx));
-    if (col.show_reminders !== false) details.push(this._buildRemindersSection(task, colIdx));
-    if (col.show_recurrence !== false) details.push(this._buildRecurrenceSection(task, colIdx));
-    if (col.show_history) details.push(this._buildHistorySection(task));
-    if (col.show_images === true) details.push(this._buildImageSection(task, colIdx));
+    for (const key of _detailOrder(col, Object.keys(fields))) {
+      const [shown, build] = fields[key];
+      if (shown) details.push(build());
+    }
     details.push(this._buildActionsSection(task, colIdx));
 
     const inner = this._el("div", { className: "task-details-inner" }, details);
@@ -12678,6 +12710,14 @@ class HomeTasksCardEditor extends HTMLElement {
       .icon-btn:disabled { opacity: 0.3; cursor: default; }
       .icon-btn-spacer { flex: 1; }
       .toggle-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
+      .detail-order-list { display: flex; flex-direction: column; gap: 2px; margin: 4px 0; }
+      .detail-order-row { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+      .detail-order-row > span { flex: 1; }
+      .detail-order-btn {
+        width: 28px; height: 24px; border-radius: 4px; border: 1px solid var(--divider-color);
+        background: none; color: var(--primary-text-color); cursor: pointer; font-size: 10px;
+      }
+      .detail-order-btn:disabled { opacity: 0.3; cursor: default; }
       .group-label {
         display: flex; align-items: center; gap: 10px; margin: 14px 0 2px;
         font-size: 12px; font-weight: 500; color: var(--secondary-text-color, #888);
@@ -13418,6 +13458,43 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-history", "ed_show_history", "show_history", false),
           makeToggle("show-move", "ed_show_move", "show_move", true),
         ]),
+        (() => {
+          // detail_order: move a field up/down in the task details.
+          const labels = {
+            notes: "ed_show_notes", sub_tasks: "ed_show_sub_items", person: "ed_show_person",
+            priority: "ed_show_priority", tags: "ed_show_tags", due_date: "ed_show_due_date",
+            reminders: "ed_show_reminders", recurrence: "ed_show_recurrence",
+            history: "ed_show_history", images: "ed_show_images",
+          };
+          const list = this._el("div", { className: "detail-order-list" });
+          const draw = () => {
+            const cur = (this._config.columns[tabIdx] || {});
+            const order = _detailOrder(cur, Object.keys(labels));
+            list.replaceChildren();
+            order.forEach((key, i) => {
+              const move = (d) => {
+                const next = order.slice();
+                [next[i], next[i + d]] = [next[i + d], next[i]];
+                updateCol({ detail_order: next });
+                draw();
+              };
+              const up = this._el("button", { className: "detail-order-btn", textContent: "\u25B2", title: "Up" });
+              const down = this._el("button", { className: "detail-order-btn", textContent: "\u25BC", title: "Down" });
+              up.type = "button"; down.type = "button";
+              up.disabled = i === 0; down.disabled = i === order.length - 1;
+              up.addEventListener("click", () => move(-1));
+              down.addEventListener("click", () => move(1));
+              list.appendChild(this._el("div", { className: "detail-order-row", "data-key": key }, [
+                this._el("span", { textContent: this._t(labels[key]) }), up, down,
+              ]));
+            });
+          };
+          draw();
+          return this._el("div", { className: "field" }, [
+            this._el("div", { className: "group-label", textContent: this._t("ed_detail_order") }),
+            list,
+          ]);
+        })(),
       ]),
       this._buildSectionsEditor(col),
       makeSection("images", "mdi:image-multiple", "ed_sec_images", [
