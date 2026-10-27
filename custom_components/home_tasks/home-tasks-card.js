@@ -304,7 +304,8 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Only highlighted people can be assigned in this card",
     "add_with_details": "Add with details",
     "add_clear": "Clear",
-    "ed_show_add_details": "Details when adding"
+    "ed_show_add_details": "Details when adding",
+    "ed_collapse_recurrence": "Fold recurrence settings"
   },
   "nl": {
     "ed_default_priority": "Standaardprioriteit",
@@ -602,7 +603,8 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Alleen gemarkeerde personen kunnen in deze kaart worden toegewezen",
     "ed_show_add_details": "Details bij toevoegen",
     "add_with_details": "Toevoegen met details",
-    "add_clear": "Wissen"
+    "add_clear": "Wissen",
+    "ed_collapse_recurrence": "Herhaling inklappen"
   },
   "it": {
     "ed_default_priority": "Priorità predefinita",
@@ -900,7 +902,8 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "In questa scheda si possono assegnare solo le persone evidenziate",
     "ed_show_add_details": "Dettagli alla creazione",
     "add_with_details": "Crea con dettagli",
-    "add_clear": "Cancella"
+    "add_clear": "Cancella",
+    "ed_collapse_recurrence": "Comprimi ricorrenza"
   },
   "pl": {
     "ed_default_priority": "Domyślny priorytet",
@@ -1198,7 +1201,8 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "W tej karcie można przypisać tylko wyróżnione osoby",
     "ed_show_add_details": "Szczegóły przy dodawaniu",
     "add_with_details": "Dodaj ze szczegółami",
-    "add_clear": "Wyczyść"
+    "add_clear": "Wyczyść",
+    "ed_collapse_recurrence": "Zwiń powtarzanie"
   },
   "sv": {
     "ed_default_priority": "Standardprioritet",
@@ -1496,7 +1500,8 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Endast markerade personer kan tilldelas i det här kortet",
     "ed_show_add_details": "Detaljer vid tillägg",
     "add_with_details": "Lägg till med detaljer",
-    "add_clear": "Rensa"
+    "add_clear": "Rensa",
+    "ed_collapse_recurrence": "Fäll ihop upprepning"
   },
   "fr": {
     "ed_default_priority": "Priorité par défaut",
@@ -1794,7 +1799,8 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Seules les personnes en surbrillance peuvent être assignées dans cette carte",
     "ed_show_add_details": "Détails à la création",
     "add_with_details": "Créer avec détails",
-    "add_clear": "Effacer"
+    "add_clear": "Effacer",
+    "ed_collapse_recurrence": "Replier la récurrence"
   },
   "pt": {
     "ed_default_priority": "Prioridade padrão",
@@ -2092,7 +2098,8 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Só as pessoas destacadas podem ser atribuídas neste cartão",
     "ed_show_add_details": "Detalhes ao adicionar",
     "add_with_details": "Adicionar com detalhes",
-    "add_clear": "Limpar"
+    "add_clear": "Limpar",
+    "ed_collapse_recurrence": "Recolher recorrência"
   },
   "pt-BR": {
     "ed_default_priority": "Prioridade padrão",
@@ -2390,7 +2397,8 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Somente as pessoas destacadas podem ser atribuídas neste cartão",
     "ed_show_add_details": "Detalhes ao adicionar",
     "add_with_details": "Adicionar com detalhes",
-    "add_clear": "Limpar"
+    "add_clear": "Limpar",
+    "ed_collapse_recurrence": "Recolher recorrência"
   },
   "es": {
     "ed_default_priority": "Prioridad predeterminada",
@@ -2688,7 +2696,8 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "En esta tarjeta solo se pueden asignar las personas resaltadas",
     "ed_show_add_details": "Detalles al añadir",
     "add_with_details": "Añadir con detalles",
-    "add_clear": "Borrar"
+    "add_clear": "Borrar",
+    "ed_collapse_recurrence": "Contraer recurrencia"
   },
   "ru": {
     "ed_default_priority": "Приоритет по умолчанию",
@@ -2986,7 +2995,8 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "В этой карточке можно назначать только выделенных людей",
     "ed_show_add_details": "Детали при добавлении",
     "add_with_details": "Добавить с деталями",
-    "add_clear": "Очистить"
+    "add_clear": "Очистить",
+    "ed_collapse_recurrence": "Свернуть повторение"
   },
   "cs": {
     "ed_default_priority": "Výchozí priorita",
@@ -3284,7 +3294,8 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "V této kartě lze přiřadit jen zvýrazněné osoby",
     "ed_show_add_details": "Podrobnosti při přidání",
     "add_with_details": "Přidat s podrobnostmi",
-    "add_clear": "Vymazat"
+    "add_clear": "Vymazat",
+    "ed_collapse_recurrence": "Sbalit opakování"
   },
   "da": {
     "ed_default_priority": "Standardprioritet",
@@ -3582,7 +3593,8 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Kun fremhævede personer kan tildeles i dette kort",
     "ed_show_add_details": "Detaljer ved tilføjelse",
     "add_with_details": "Tilføj med detaljer",
-    "add_clear": "Ryd"
+    "add_clear": "Ryd",
+    "ed_collapse_recurrence": "Fold gentagelse sammen"
   },
   "no": {
     "ed_default_priority": "Standardprioritet",
@@ -3880,7 +3892,8 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Bare uthevede personer kan tildeles i dette kortet",
     "ed_show_add_details": "Detaljer ved tillegg",
     "add_with_details": "Legg til med detaljer",
-    "add_clear": "Tøm"
+    "add_clear": "Tøm",
+    "ed_collapse_recurrence": "Skjul gjentakelse"
   },
   "fi": {
     "ed_default_priority": "Oletusprioriteetti",
@@ -4178,7 +4191,8 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Tässä kortissa voi määrittää vain korostettuja henkilöitä",
     "ed_show_add_details": "Tiedot lisättäessä",
     "add_with_details": "Lisää tietojen kanssa",
-    "add_clear": "Tyhjennä"
+    "add_clear": "Tyhjennä",
+    "ed_collapse_recurrence": "Pienennä toistuvuus"
   },
   "hu": {
     "ed_default_priority": "Alapértelmezett prioritás",
@@ -4476,7 +4490,8 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Ebben a kártyában csak a kiemelt személyek rendelhetők hozzá",
     "ed_show_add_details": "Részletek hozzáadáskor",
     "add_with_details": "Hozzáadás részletekkel",
-    "add_clear": "Törlés"
+    "add_clear": "Törlés",
+    "ed_collapse_recurrence": "Ismétlés összecsukása"
   },
   "de": {
     "ed_default_priority": "Standard-Priorität",
@@ -4774,7 +4789,8 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Nur markierte Personen können in dieser Karte zugewiesen werden",
     "add_with_details": "Mit Details anlegen",
     "add_clear": "Leeren",
-    "ed_show_add_details": "Details beim Anlegen"
+    "ed_show_add_details": "Details beim Anlegen",
+    "ed_collapse_recurrence": "Wiederholung einklappen"
   }
 };
 
@@ -10375,7 +10391,7 @@ class HomeTasksCard extends HTMLElement {
     leadUnitSelect.addEventListener("change", saveLead);
     _blurAfterChange(leadUnitSelect);
 
-    return this._el("div", { className: "detail-section" }, [
+    const recurrenceRows = [
       recurrenceToggleRow,
       recurrenceIntervalRow,
       recurrenceBasicRadioRow,
@@ -10388,7 +10404,29 @@ class HomeTasksCard extends HTMLElement {
       recurrenceEndRow,
       recurrenceEndDateWrap,
       recurrenceCountRow,
-    ]);
+    ];
+    const col = this._config.columns[colIdx] || {};
+    if (col.collapse_recurrence !== true) {
+      return this._el("div", { className: "detail-section" }, recurrenceRows);
+    }
+    // collapse_recurrence: the recurrence editor is a dozen rows; fold it
+    // behind a one-line summary ("Recurrence: every 2 weeks") until tapped.
+    // Open state is kept per task across re-renders.
+    this._recurrenceFoldOpen = this._recurrenceFoldOpen || new Set();
+    const badge = task.recurrence_enabled ? this._buildRecurrenceBadge(task) : null;
+    const summaryText = (badge && badge.textContent.replace(/^\u21BB\s*/, "").trim()) || this._t("history_disabled");
+    const fold = this._el("details", { className: "detail-section recurrence-fold" });
+    fold.open = this._recurrenceFoldOpen.has(task.id);
+    fold.addEventListener("toggle", () => {
+      if (fold.open) this._recurrenceFoldOpen.add(task.id);
+      else this._recurrenceFoldOpen.delete(task.id);
+    });
+    fold.appendChild(this._el("summary", {
+      className: "detail-label recurrence-fold-summary",
+      textContent: `${this._t("recurrence")}: ${summaryText}`,
+    }));
+    for (const row of recurrenceRows) fold.appendChild(row);
+    return fold;
   }
 
   _buildAssignedPersonSection(task, colIdx) {
@@ -12125,6 +12163,11 @@ class HomeTasksCard extends HTMLElement {
         color: var(--todo-primary); border-color: var(--todo-primary);
       }
       .due-quick-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+      .recurrence-fold > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px; }
+      .recurrence-fold > summary::-webkit-details-marker { display: none; }
+      .recurrence-fold > summary::after { content: "\\25B8"; opacity: 0.6; transition: transform 0.15s; }
+      .recurrence-fold[open] > summary::after { transform: rotate(90deg); }
+      .recurrence-fold[open] > summary { margin-bottom: 8px; }
       .priority-btn {
         flex: 1; padding: 5px 8px; border-radius: 4px; font-size: 12px; font-family: inherit;
         border: 1px solid var(--todo-divider); background: var(--todo-bg);
@@ -14382,6 +14425,7 @@ class HomeTasksCardEditor extends HTMLElement {
       ]),
       makeSection("config", "mdi:tune", "ed_sec_display", [
         detailFields,
+        makeToggle("collapse-recurrence", "ed_collapse_recurrence", "collapse_recurrence", false),
         makeToggle("show-move", "ed_show_move", "show_move", true),
         offeredPersons,
       ]),
