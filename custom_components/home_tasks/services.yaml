@@ -265,7 +265,7 @@ update_task:
         text:
     assigned_persons:
       name: Assigned persons
-      description: Replace the task's assignees: comma-separated person entity ids, the first being the primary assignee. Empty clears them.
+      description: Replace the task's assignees with comma-separated person entity ids, the first being the primary assignee. Empty clears them.
       selector:
         text:
 
