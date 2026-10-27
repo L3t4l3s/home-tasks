@@ -6719,6 +6719,19 @@ class HomeTasksCard extends HTMLElement {
   //   time_format  "language" | "system" | "am_pm" | "24"
   // "system" is the only case where the browser locale is intentionally
   // used; everything else must follow the HA profile, not the browser.
+  // Day of month for the recurrence badge: "24th" style suffixes. English
+  // needs the real ordinal (1st, 2nd, 3rd, 11th-13th, 21st ...); the other
+  // languages use one suffix for every day (24., 24º, 24e ...).
+  _dayOrdinal(day) {
+    const n = Number(day);
+    if (this._localeCode() === "en" && Number.isInteger(n)) {
+      const tens = n % 100;
+      const suffix = tens >= 11 && tens <= 13 ? "th" : ({ 1: "st", 2: "nd", 3: "rd" }[n % 10] || "th");
+      return `${n}${suffix}`;
+    }
+    return `${day}${this._t("rec_dom_short")}`;
+  }
+
   _localeCode() {
     const loc = this._hass?.locale;
     return (loc && loc.language) || this._hass?.language || "en";
@@ -8659,7 +8672,7 @@ class HomeTasksCard extends HTMLElement {
       recLabel = val === 1 ? days : `${val} ${unitLabels.weeks} ${days}`;
     } else if (unit === "months" && task.recurrence_month_pattern === "day_of_month" && task.recurrence_day_of_month != null) {
       const dom = task.recurrence_day_of_month;
-      const dayPart = dom === "last" ? this._t("rec_last_short") : `${dom}${this._t("rec_dom_short")}`;
+      const dayPart = dom === "last" ? this._t("rec_last_short") : this._dayOrdinal(dom);
       recLabel = val === 1 ? dayPart : `${dayPart} \u00b7 ${val} ${unitLabels.months}`;
     } else if (unit === "months" && task.recurrence_month_pattern === "nth_weekday" && task.recurrence_nth_week != null && task.recurrence_weekdays && task.recurrence_weekdays.length) {
       const nth = task.recurrence_nth_week;
