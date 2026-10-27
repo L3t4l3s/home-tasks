@@ -115,6 +115,7 @@ Typical use: a shopping list whose sections are store aisles ("Produce", "Frozen
 - **Sort** per column — manual, due date, priority, title, assigned person
 - **Tag & person filter chips** in the column header — tap to filter; assigning the active person to new tasks automatically
 - **Several assignees per task** — tap people on or off in the task details; a shared task shows under each of its assignees' filter chips, and its row shows each of them. The first one is the primary assignee (`assigned_person`), which single-assignee providers such as Todoist sync; everyone is in `assigned_persons`
+- **One-tap due dates** — Today, Tomorrow, Next week, Next month and 3 months buttons under the due date in the task details (a set due time is kept)
 - **Voice input** — dictate a new task title via the mic button (HA Assist speech-to-text, with browser speech as fallback)
 - **Compact mode** for denser task rows
 - **Auto-delete** completed tasks (optional, per column)

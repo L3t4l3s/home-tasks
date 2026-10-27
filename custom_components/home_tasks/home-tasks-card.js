@@ -296,7 +296,10 @@ const _TRANSLATIONS = {
     "ed_tile_size_default": "Default",
     "ed_tile_size_small": "Small",
     "ed_tile_size_medium": "Medium",
-    "ed_tile_size_large": "Large"
+    "ed_tile_size_large": "Large",
+    "due_quick_week": "Next week",
+    "due_quick_month": "Next month",
+    "due_quick_3months": "3 months"
   },
   "nl": {
     "ed_default_priority": "Standaardprioriteit",
@@ -586,7 +589,10 @@ const _TRANSLATIONS = {
     "ed_tile_size_default": "Standaard",
     "ed_tile_size_small": "Klein",
     "ed_tile_size_medium": "Middel",
-    "ed_tile_size_large": "Groot"
+    "ed_tile_size_large": "Groot",
+    "due_quick_week": "Volgende week",
+    "due_quick_month": "Volgende maand",
+    "due_quick_3months": "3 maanden"
   },
   "it": {
     "ed_default_priority": "Priorità predefinita",
@@ -876,7 +882,10 @@ const _TRANSLATIONS = {
     "ed_tile_size_default": "Predefinita",
     "ed_tile_size_small": "Piccola",
     "ed_tile_size_medium": "Media",
-    "ed_tile_size_large": "Grande"
+    "ed_tile_size_large": "Grande",
+    "due_quick_week": "Settimana prossima",
+    "due_quick_month": "Mese prossimo",
+    "due_quick_3months": "3 mesi"
   },
   "pl": {
     "ed_default_priority": "Domyślny priorytet",
@@ -1166,7 +1175,10 @@ const _TRANSLATIONS = {
     "ed_tile_size_default": "Domyślny",
     "ed_tile_size_small": "Mały",
     "ed_tile_size_medium": "Średni",
-    "ed_tile_size_large": "Duży"
+    "ed_tile_size_large": "Duży",
+    "due_quick_week": "Za tydzień",
+    "due_quick_month": "Za miesiąc",
+    "due_quick_3months": "3 miesiące"
   },
   "sv": {
     "ed_default_priority": "Standardprioritet",
@@ -1456,7 +1468,10 @@ const _TRANSLATIONS = {
     "ed_tile_size_default": "Standard",
     "ed_tile_size_small": "Liten",
     "ed_tile_size_medium": "Mellan",
-    "ed_tile_size_large": "Stor"
+    "ed_tile_size_large": "Stor",
+    "due_quick_week": "Nästa vecka",
+    "due_quick_month": "Nästa månad",
+    "due_quick_3months": "3 månader"
   },
   "fr": {
     "ed_default_priority": "Priorité par défaut",
@@ -1746,7 +1761,10 @@ const _TRANSLATIONS = {
     "ed_tile_size_default": "Par défaut",
     "ed_tile_size_small": "Petite",
     "ed_tile_size_medium": "Moyenne",
-    "ed_tile_size_large": "Grande"
+    "ed_tile_size_large": "Grande",
+    "due_quick_week": "Semaine prochaine",
+    "due_quick_month": "Mois prochain",
+    "due_quick_3months": "3 mois"
   },
   "pt": {
     "ed_default_priority": "Prioridade padrão",
@@ -2036,7 +2054,10 @@ const _TRANSLATIONS = {
     "ed_tile_size_default": "Padrão",
     "ed_tile_size_small": "Pequeno",
     "ed_tile_size_medium": "Médio",
-    "ed_tile_size_large": "Grande"
+    "ed_tile_size_large": "Grande",
+    "due_quick_week": "Próxima semana",
+    "due_quick_month": "Próximo mês",
+    "due_quick_3months": "3 meses"
   },
   "pt-BR": {
     "ed_default_priority": "Prioridade padrão",
@@ -2326,7 +2347,10 @@ const _TRANSLATIONS = {
     "ed_tile_size_default": "Padrão",
     "ed_tile_size_small": "Pequeno",
     "ed_tile_size_medium": "Médio",
-    "ed_tile_size_large": "Grande"
+    "ed_tile_size_large": "Grande",
+    "due_quick_week": "Próxima semana",
+    "due_quick_month": "Próximo mês",
+    "due_quick_3months": "3 meses"
   },
   "es": {
     "ed_default_priority": "Prioridad predeterminada",
@@ -2616,7 +2640,10 @@ const _TRANSLATIONS = {
     "ed_tile_size_default": "Predeterminado",
     "ed_tile_size_small": "Pequeño",
     "ed_tile_size_medium": "Mediano",
-    "ed_tile_size_large": "Grande"
+    "ed_tile_size_large": "Grande",
+    "due_quick_week": "Próxima semana",
+    "due_quick_month": "Próximo mes",
+    "due_quick_3months": "3 meses"
   },
   "ru": {
     "ed_default_priority": "Приоритет по умолчанию",
@@ -2906,7 +2933,10 @@ const _TRANSLATIONS = {
     "ed_tile_size_default": "По умолчанию",
     "ed_tile_size_small": "Маленький",
     "ed_tile_size_medium": "Средний",
-    "ed_tile_size_large": "Большой"
+    "ed_tile_size_large": "Большой",
+    "due_quick_week": "Через неделю",
+    "due_quick_month": "Через месяц",
+    "due_quick_3months": "3 месяца"
   },
   "cs": {
     "ed_default_priority": "Výchozí priorita",
@@ -3196,7 +3226,10 @@ const _TRANSLATIONS = {
     "ed_tile_size_default": "Výchozí",
     "ed_tile_size_small": "Malá",
     "ed_tile_size_medium": "Střední",
-    "ed_tile_size_large": "Velká"
+    "ed_tile_size_large": "Velká",
+    "due_quick_week": "Příští týden",
+    "due_quick_month": "Příští měsíc",
+    "due_quick_3months": "3 měsíce"
   },
   "da": {
     "ed_default_priority": "Standardprioritet",
@@ -3486,7 +3519,10 @@ const _TRANSLATIONS = {
     "ed_tile_size_default": "Standard",
     "ed_tile_size_small": "Lille",
     "ed_tile_size_medium": "Mellem",
-    "ed_tile_size_large": "Stor"
+    "ed_tile_size_large": "Stor",
+    "due_quick_week": "Næste uge",
+    "due_quick_month": "Næste måned",
+    "due_quick_3months": "3 måneder"
   },
   "no": {
     "ed_default_priority": "Standardprioritet",
@@ -3776,7 +3812,10 @@ const _TRANSLATIONS = {
     "ed_tile_size_default": "Standard",
     "ed_tile_size_small": "Liten",
     "ed_tile_size_medium": "Middels",
-    "ed_tile_size_large": "Stor"
+    "ed_tile_size_large": "Stor",
+    "due_quick_week": "Neste uke",
+    "due_quick_month": "Neste måned",
+    "due_quick_3months": "3 måneder"
   },
   "fi": {
     "ed_default_priority": "Oletusprioriteetti",
@@ -4066,7 +4105,10 @@ const _TRANSLATIONS = {
     "ed_tile_size_default": "Oletus",
     "ed_tile_size_small": "Pieni",
     "ed_tile_size_medium": "Keskikoko",
-    "ed_tile_size_large": "Suuri"
+    "ed_tile_size_large": "Suuri",
+    "due_quick_week": "Ensi viikko",
+    "due_quick_month": "Ensi kuu",
+    "due_quick_3months": "3 kuukautta"
   },
   "hu": {
     "ed_default_priority": "Alapértelmezett prioritás",
@@ -4356,7 +4398,10 @@ const _TRANSLATIONS = {
     "ed_tile_size_default": "Alapértelmezett",
     "ed_tile_size_small": "Kicsi",
     "ed_tile_size_medium": "Közepes",
-    "ed_tile_size_large": "Nagy"
+    "ed_tile_size_large": "Nagy",
+    "due_quick_week": "Jövő hét",
+    "due_quick_month": "Jövő hónap",
+    "due_quick_3months": "3 hónap"
   },
   "de": {
     "ed_default_priority": "Standard-Priorität",
@@ -4646,7 +4691,10 @@ const _TRANSLATIONS = {
     "ed_tile_size_default": "Standard",
     "ed_tile_size_small": "Klein",
     "ed_tile_size_medium": "Mittel",
-    "ed_tile_size_large": "Groß"
+    "ed_tile_size_large": "Groß",
+    "due_quick_week": "Nächste Woche",
+    "due_quick_month": "Nächster Monat",
+    "due_quick_3months": "3 Monate"
   }
 };
 
@@ -8636,9 +8684,33 @@ class HomeTasksCard extends HTMLElement {
     ]);
     const timeWrap = this._el("div", { className: "field-with-clear" }, [timeFieldWrap, timeClearBtn]);
     if (!supportsTime) timeWrap.style.display = "none";
+
+    // One-tap due dates: today, tomorrow, a week, a month, three months out.
+    // A set due time is kept; the button for the current date is highlighted.
+    const quickRow = this._el("div", { className: "due-quick-row" });
+    const today = new Date();
+    for (const [key, unit, val] of [
+      ["due_today", "days", 0], ["due_tomorrow", "days", 1], ["due_quick_week", "days", 7],
+      ["due_quick_month", "months", 1], ["due_quick_3months", "months", 3],
+    ]) {
+      const iso = this._localDateStr(this._advanceDateClamped(today, unit, val));
+      const btn = this._el("button", {
+        className: "due-quick-btn" + (task.due_date === iso ? " active" : ""),
+        textContent: this._t(key),
+      });
+      btn.addEventListener("click", () => {
+        dateInput.value = iso;
+        dateClearBtn.style.display = "";
+        timeInput.disabled = false;
+        quickRow.querySelectorAll(".due-quick-btn").forEach((b) => b.classList.toggle("active", b === btn));
+        this._updateTaskDue(task.id, iso, supportsTime ? timeInput.value : "", colIdx);
+      });
+      quickRow.appendChild(btn);
+    }
     return this._el("div", { className: "detail-section" }, [
       this._el("label", { className: "detail-label", textContent: this._t("due_date") }),
       this._el("div", { className: "due-input-row" }, [dateWrap, timeWrap]),
+      quickRow,
     ]);
   }
 
@@ -11623,6 +11695,16 @@ class HomeTasksCard extends HTMLElement {
         color: var(--todo-secondary-text); cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s;
       }
       .assignee-chip.active {
+        background: color-mix(in srgb, var(--todo-primary) 18%, transparent);
+        color: var(--todo-primary); border-color: var(--todo-primary);
+      }
+      .due-quick-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+      .due-quick-btn {
+        padding: 5px 10px; border-radius: 14px; font-size: 12px; font-family: inherit;
+        border: 1px solid var(--todo-divider); background: var(--todo-bg);
+        color: var(--todo-secondary-text); cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s;
+      }
+      .due-quick-btn.active {
         background: color-mix(in srgb, var(--todo-primary) 18%, transparent);
         color: var(--todo-primary); border-color: var(--todo-primary);
       }
