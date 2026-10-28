@@ -1539,7 +1539,7 @@ describe('editor Defaults section (issues #44 / #46)', () => {
     const container = root.querySelector('.defaults-editor');
     assert.ok(container, 'defaults editor container must render');
     assert.equal(personChipIn(container).getAttribute('aria-pressed'), 'true');
-    assert.ok(container.textContent.includes('Applied to every new task'));
+    assert.ok(container.textContent.includes('Default people'));
     ed.remove();
   });
 

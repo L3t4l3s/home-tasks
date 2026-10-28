@@ -1,6 +1,6 @@
 /**
  * Person chips in the editor: the default assignees (any number of people)
- * and the column's "Limit to assignees" preset, both once a select or a
+ * and the column's "Limit to people" preset, both once a select or a
  * free-text field.
  */
 import { test, describe } from 'node:test';
@@ -54,7 +54,7 @@ describe('default assignees', () => {
   });
 });
 
-describe('limit to assignees', () => {
+describe('limit to people', () => {
   async function editor(col, listPersons = []) {
     const { window } = await loadCard({ force: true });
     const ed = new (window.customElements.get('home-tasks-card-editor'))();
@@ -65,7 +65,7 @@ describe('limit to assignees', () => {
     const events = [];
     ed._fireChanged = () => events.push(plain(ed._config.columns[0].filters?.assignees));
     const root = ed._buildVisualEditor(0);
-    const label = [...root.querySelectorAll('.group-label')].find((l) => l.textContent === 'Limit to assignees');
+    const label = [...root.querySelectorAll('.group-label')].find((l) => l.textContent === 'Limit to people');
     return { events, field: label.parentElement };
   }
 
