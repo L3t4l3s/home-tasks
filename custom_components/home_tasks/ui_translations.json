@@ -291,8 +291,8 @@
     "due_quick_week": "In 1 week",
     "due_quick_month": "In 1 month",
     "due_quick_3months": "In 3 months",
-    "ed_hidden_persons": "Hide people",
-    "ed_hidden_persons_hint": "Not offered for assignment in this card"
+    "ed_offered_persons": "Selectable people",
+    "ed_offered_persons_hint": "Only highlighted people can be assigned in this card"
   },
   "nl": {
     "ed_default_priority": "Standaardprioriteit",
@@ -586,8 +586,8 @@
     "due_quick_week": "Over 1 week",
     "due_quick_month": "Over 1 maand",
     "due_quick_3months": "Over 3 maanden",
-    "ed_hidden_persons": "Personen verbergen",
-    "ed_hidden_persons_hint": "Niet aangeboden voor toewijzing in deze kaart"
+    "ed_offered_persons": "Selecteerbare personen",
+    "ed_offered_persons_hint": "Alleen gemarkeerde personen kunnen in deze kaart worden toegewezen"
   },
   "it": {
     "ed_default_priority": "Priorità predefinita",
@@ -881,8 +881,8 @@
     "due_quick_week": "Tra 1 settimana",
     "due_quick_month": "Tra 1 mese",
     "due_quick_3months": "Tra 3 mesi",
-    "ed_hidden_persons": "Nascondi persone",
-    "ed_hidden_persons_hint": "Non proposte per l'assegnazione in questa scheda"
+    "ed_offered_persons": "Persone selezionabili",
+    "ed_offered_persons_hint": "In questa scheda si possono assegnare solo le persone evidenziate"
   },
   "pl": {
     "ed_default_priority": "Domyślny priorytet",
@@ -1176,8 +1176,8 @@
     "due_quick_week": "Za 1 tydzień",
     "due_quick_month": "Za 1 miesiąc",
     "due_quick_3months": "Za 3 miesiące",
-    "ed_hidden_persons": "Ukryj osoby",
-    "ed_hidden_persons_hint": "Nie są proponowane do przypisania na tej karcie"
+    "ed_offered_persons": "Osoby do wyboru",
+    "ed_offered_persons_hint": "W tej karcie można przypisać tylko wyróżnione osoby"
   },
   "sv": {
     "ed_default_priority": "Standardprioritet",
@@ -1471,8 +1471,8 @@
     "due_quick_week": "Om 1 vecka",
     "due_quick_month": "Om 1 månad",
     "due_quick_3months": "Om 3 månader",
-    "ed_hidden_persons": "Dölj personer",
-    "ed_hidden_persons_hint": "Erbjuds inte för tilldelning i det här kortet"
+    "ed_offered_persons": "Valbara personer",
+    "ed_offered_persons_hint": "Endast markerade personer kan tilldelas i det här kortet"
   },
   "fr": {
     "ed_default_priority": "Priorité par défaut",
@@ -1766,8 +1766,8 @@
     "due_quick_week": "Dans 1 semaine",
     "due_quick_month": "Dans 1 mois",
     "due_quick_3months": "Dans 3 mois",
-    "ed_hidden_persons": "Masquer des personnes",
-    "ed_hidden_persons_hint": "Non proposées pour l'attribution dans cette carte"
+    "ed_offered_persons": "Personnes sélectionnables",
+    "ed_offered_persons_hint": "Seules les personnes en surbrillance peuvent être assignées dans cette carte"
   },
   "pt": {
     "ed_default_priority": "Prioridade padrão",
@@ -2061,8 +2061,8 @@
     "due_quick_week": "Daqui a 1 semana",
     "due_quick_month": "Daqui a 1 mês",
     "due_quick_3months": "Daqui a 3 meses",
-    "ed_hidden_persons": "Ocultar pessoas",
-    "ed_hidden_persons_hint": "Não oferecidas para atribuição neste cartão"
+    "ed_offered_persons": "Pessoas selecionáveis",
+    "ed_offered_persons_hint": "Só as pessoas destacadas podem ser atribuídas neste cartão"
   },
   "pt-BR": {
     "ed_default_priority": "Prioridade padrão",
@@ -2356,8 +2356,8 @@
     "due_quick_week": "Em 1 semana",
     "due_quick_month": "Em 1 mês",
     "due_quick_3months": "Em 3 meses",
-    "ed_hidden_persons": "Ocultar pessoas",
-    "ed_hidden_persons_hint": "Não oferecidas para atribuição neste cartão"
+    "ed_offered_persons": "Pessoas selecionáveis",
+    "ed_offered_persons_hint": "Somente as pessoas destacadas podem ser atribuídas neste cartão"
   },
   "es": {
     "ed_default_priority": "Prioridad predeterminada",
@@ -2651,8 +2651,8 @@
     "due_quick_week": "En 1 semana",
     "due_quick_month": "En 1 mes",
     "due_quick_3months": "En 3 meses",
-    "ed_hidden_persons": "Ocultar personas",
-    "ed_hidden_persons_hint": "No se ofrecen para asignar en esta tarjeta"
+    "ed_offered_persons": "Personas seleccionables",
+    "ed_offered_persons_hint": "En esta tarjeta solo se pueden asignar las personas resaltadas"
   },
   "ru": {
     "ed_default_priority": "Приоритет по умолчанию",
@@ -2946,8 +2946,8 @@
     "due_quick_week": "Через 1 неделю",
     "due_quick_month": "Через 1 месяц",
     "due_quick_3months": "Через 3 месяца",
-    "ed_hidden_persons": "Скрыть людей",
-    "ed_hidden_persons_hint": "Не предлагаются для назначения в этой карточке"
+    "ed_offered_persons": "Доступные люди",
+    "ed_offered_persons_hint": "В этой карточке можно назначать только выделенных людей"
   },
   "cs": {
     "ed_default_priority": "Výchozí priorita",
@@ -3241,8 +3241,8 @@
     "due_quick_week": "Za 1 týden",
     "due_quick_month": "Za 1 měsíc",
     "due_quick_3months": "Za 3 měsíce",
-    "ed_hidden_persons": "Skrýt osoby",
-    "ed_hidden_persons_hint": "V této kartě se nenabízejí k přiřazení"
+    "ed_offered_persons": "Volitelné osoby",
+    "ed_offered_persons_hint": "V této kartě lze přiřadit jen zvýrazněné osoby"
   },
   "da": {
     "ed_default_priority": "Standardprioritet",
@@ -3536,8 +3536,8 @@
     "due_quick_week": "Om 1 uge",
     "due_quick_month": "Om 1 måned",
     "due_quick_3months": "Om 3 måneder",
-    "ed_hidden_persons": "Skjul personer",
-    "ed_hidden_persons_hint": "Tilbydes ikke til tildeling i dette kort"
+    "ed_offered_persons": "Valgbare personer",
+    "ed_offered_persons_hint": "Kun fremhævede personer kan tildeles i dette kort"
   },
   "no": {
     "ed_default_priority": "Standardprioritet",
@@ -3831,8 +3831,8 @@
     "due_quick_week": "Om 1 uke",
     "due_quick_month": "Om 1 måned",
     "due_quick_3months": "Om 3 måneder",
-    "ed_hidden_persons": "Skjul personer",
-    "ed_hidden_persons_hint": "Tilbys ikke for tildeling i dette kortet"
+    "ed_offered_persons": "Valgbare personer",
+    "ed_offered_persons_hint": "Bare uthevede personer kan tildeles i dette kortet"
   },
   "fi": {
     "ed_default_priority": "Oletusprioriteetti",
@@ -4126,8 +4126,8 @@
     "due_quick_week": "1 viikon päästä",
     "due_quick_month": "1 kuukauden päästä",
     "due_quick_3months": "3 kuukauden päästä",
-    "ed_hidden_persons": "Piilota henkilöt",
-    "ed_hidden_persons_hint": "Ei tarjota määritettäväksi tässä kortissa"
+    "ed_offered_persons": "Valittavat henkilöt",
+    "ed_offered_persons_hint": "Tässä kortissa voi määrittää vain korostettuja henkilöitä"
   },
   "hu": {
     "ed_default_priority": "Alapértelmezett prioritás",
@@ -4421,8 +4421,8 @@
     "due_quick_week": "1 hét múlva",
     "due_quick_month": "1 hónap múlva",
     "due_quick_3months": "3 hónap múlva",
-    "ed_hidden_persons": "Személyek elrejtése",
-    "ed_hidden_persons_hint": "Ebben a kártyában nem választhatók hozzárendelésre"
+    "ed_offered_persons": "Választható személyek",
+    "ed_offered_persons_hint": "Ebben a kártyában csak a kiemelt személyek rendelhetők hozzá"
   },
   "de": {
     "ed_default_priority": "Standard-Priorität",
@@ -4716,7 +4716,7 @@
     "due_quick_week": "In 1 Woche",
     "due_quick_month": "In 1 Monat",
     "due_quick_3months": "In 3 Monaten",
-    "ed_hidden_persons": "Personen ausblenden",
-    "ed_hidden_persons_hint": "In dieser Karte nicht zur Zuweisung angeboten"
+    "ed_offered_persons": "Auswählbare Personen",
+    "ed_offered_persons_hint": "Nur markierte Personen können in dieser Karte zugewiesen werden"
   }
 }
