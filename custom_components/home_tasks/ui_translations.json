@@ -288,9 +288,9 @@
     "ed_tile_size_small": "Small",
     "ed_tile_size_medium": "Medium",
     "ed_tile_size_large": "Large",
-    "due_quick_week": "Next week",
-    "due_quick_month": "Next month",
-    "due_quick_3months": "3 months"
+    "due_quick_week": "In 1 week",
+    "due_quick_month": "In 1 month",
+    "due_quick_3months": "In 3 months"
   },
   "nl": {
     "ed_default_priority": "Standaardprioriteit",
@@ -581,9 +581,9 @@
     "ed_tile_size_small": "Klein",
     "ed_tile_size_medium": "Middel",
     "ed_tile_size_large": "Groot",
-    "due_quick_week": "Volgende week",
-    "due_quick_month": "Volgende maand",
-    "due_quick_3months": "3 maanden"
+    "due_quick_week": "Over 1 week",
+    "due_quick_month": "Over 1 maand",
+    "due_quick_3months": "Over 3 maanden"
   },
   "it": {
     "ed_default_priority": "Priorità predefinita",
@@ -874,9 +874,9 @@
     "ed_tile_size_small": "Piccola",
     "ed_tile_size_medium": "Media",
     "ed_tile_size_large": "Grande",
-    "due_quick_week": "Settimana prossima",
-    "due_quick_month": "Mese prossimo",
-    "due_quick_3months": "3 mesi"
+    "due_quick_week": "Tra 1 settimana",
+    "due_quick_month": "Tra 1 mese",
+    "due_quick_3months": "Tra 3 mesi"
   },
   "pl": {
     "ed_default_priority": "Domyślny priorytet",
@@ -1167,9 +1167,9 @@
     "ed_tile_size_small": "Mały",
     "ed_tile_size_medium": "Średni",
     "ed_tile_size_large": "Duży",
-    "due_quick_week": "Za tydzień",
-    "due_quick_month": "Za miesiąc",
-    "due_quick_3months": "3 miesiące"
+    "due_quick_week": "Za 1 tydzień",
+    "due_quick_month": "Za 1 miesiąc",
+    "due_quick_3months": "Za 3 miesiące"
   },
   "sv": {
     "ed_default_priority": "Standardprioritet",
@@ -1460,9 +1460,9 @@
     "ed_tile_size_small": "Liten",
     "ed_tile_size_medium": "Mellan",
     "ed_tile_size_large": "Stor",
-    "due_quick_week": "Nästa vecka",
-    "due_quick_month": "Nästa månad",
-    "due_quick_3months": "3 månader"
+    "due_quick_week": "Om 1 vecka",
+    "due_quick_month": "Om 1 månad",
+    "due_quick_3months": "Om 3 månader"
   },
   "fr": {
     "ed_default_priority": "Priorité par défaut",
@@ -1753,9 +1753,9 @@
     "ed_tile_size_small": "Petite",
     "ed_tile_size_medium": "Moyenne",
     "ed_tile_size_large": "Grande",
-    "due_quick_week": "Semaine prochaine",
-    "due_quick_month": "Mois prochain",
-    "due_quick_3months": "3 mois"
+    "due_quick_week": "Dans 1 semaine",
+    "due_quick_month": "Dans 1 mois",
+    "due_quick_3months": "Dans 3 mois"
   },
   "pt": {
     "ed_default_priority": "Prioridade padrão",
@@ -2046,9 +2046,9 @@
     "ed_tile_size_small": "Pequeno",
     "ed_tile_size_medium": "Médio",
     "ed_tile_size_large": "Grande",
-    "due_quick_week": "Próxima semana",
-    "due_quick_month": "Próximo mês",
-    "due_quick_3months": "3 meses"
+    "due_quick_week": "Daqui a 1 semana",
+    "due_quick_month": "Daqui a 1 mês",
+    "due_quick_3months": "Daqui a 3 meses"
   },
   "pt-BR": {
     "ed_default_priority": "Prioridade padrão",
@@ -2339,9 +2339,9 @@
     "ed_tile_size_small": "Pequeno",
     "ed_tile_size_medium": "Médio",
     "ed_tile_size_large": "Grande",
-    "due_quick_week": "Próxima semana",
-    "due_quick_month": "Próximo mês",
-    "due_quick_3months": "3 meses"
+    "due_quick_week": "Em 1 semana",
+    "due_quick_month": "Em 1 mês",
+    "due_quick_3months": "Em 3 meses"
   },
   "es": {
     "ed_default_priority": "Prioridad predeterminada",
@@ -2632,9 +2632,9 @@
     "ed_tile_size_small": "Pequeño",
     "ed_tile_size_medium": "Mediano",
     "ed_tile_size_large": "Grande",
-    "due_quick_week": "Próxima semana",
-    "due_quick_month": "Próximo mes",
-    "due_quick_3months": "3 meses"
+    "due_quick_week": "En 1 semana",
+    "due_quick_month": "En 1 mes",
+    "due_quick_3months": "En 3 meses"
   },
   "ru": {
     "ed_default_priority": "Приоритет по умолчанию",
@@ -2925,9 +2925,9 @@
     "ed_tile_size_small": "Маленький",
     "ed_tile_size_medium": "Средний",
     "ed_tile_size_large": "Большой",
-    "due_quick_week": "Через неделю",
-    "due_quick_month": "Через месяц",
-    "due_quick_3months": "3 месяца"
+    "due_quick_week": "Через 1 неделю",
+    "due_quick_month": "Через 1 месяц",
+    "due_quick_3months": "Через 3 месяца"
   },
   "cs": {
     "ed_default_priority": "Výchozí priorita",
@@ -3218,9 +3218,9 @@
     "ed_tile_size_small": "Malá",
     "ed_tile_size_medium": "Střední",
     "ed_tile_size_large": "Velká",
-    "due_quick_week": "Příští týden",
-    "due_quick_month": "Příští měsíc",
-    "due_quick_3months": "3 měsíce"
+    "due_quick_week": "Za 1 týden",
+    "due_quick_month": "Za 1 měsíc",
+    "due_quick_3months": "Za 3 měsíce"
   },
   "da": {
     "ed_default_priority": "Standardprioritet",
@@ -3511,9 +3511,9 @@
     "ed_tile_size_small": "Lille",
     "ed_tile_size_medium": "Mellem",
     "ed_tile_size_large": "Stor",
-    "due_quick_week": "Næste uge",
-    "due_quick_month": "Næste måned",
-    "due_quick_3months": "3 måneder"
+    "due_quick_week": "Om 1 uge",
+    "due_quick_month": "Om 1 måned",
+    "due_quick_3months": "Om 3 måneder"
   },
   "no": {
     "ed_default_priority": "Standardprioritet",
@@ -3804,9 +3804,9 @@
     "ed_tile_size_small": "Liten",
     "ed_tile_size_medium": "Middels",
     "ed_tile_size_large": "Stor",
-    "due_quick_week": "Neste uke",
-    "due_quick_month": "Neste måned",
-    "due_quick_3months": "3 måneder"
+    "due_quick_week": "Om 1 uke",
+    "due_quick_month": "Om 1 måned",
+    "due_quick_3months": "Om 3 måneder"
   },
   "fi": {
     "ed_default_priority": "Oletusprioriteetti",
@@ -4097,9 +4097,9 @@
     "ed_tile_size_small": "Pieni",
     "ed_tile_size_medium": "Keskikoko",
     "ed_tile_size_large": "Suuri",
-    "due_quick_week": "Ensi viikko",
-    "due_quick_month": "Ensi kuu",
-    "due_quick_3months": "3 kuukautta"
+    "due_quick_week": "1 viikon päästä",
+    "due_quick_month": "1 kuukauden päästä",
+    "due_quick_3months": "3 kuukauden päästä"
   },
   "hu": {
     "ed_default_priority": "Alapértelmezett prioritás",
@@ -4390,9 +4390,9 @@
     "ed_tile_size_small": "Kicsi",
     "ed_tile_size_medium": "Közepes",
     "ed_tile_size_large": "Nagy",
-    "due_quick_week": "Jövő hét",
-    "due_quick_month": "Jövő hónap",
-    "due_quick_3months": "3 hónap"
+    "due_quick_week": "1 hét múlva",
+    "due_quick_month": "1 hónap múlva",
+    "due_quick_3months": "3 hónap múlva"
   },
   "de": {
     "ed_default_priority": "Standard-Priorität",
@@ -4683,8 +4683,8 @@
     "ed_tile_size_small": "Klein",
     "ed_tile_size_medium": "Mittel",
     "ed_tile_size_large": "Groß",
-    "due_quick_week": "Nächste Woche",
-    "due_quick_month": "Nächster Monat",
-    "due_quick_3months": "3 Monate"
+    "due_quick_week": "In 1 Woche",
+    "due_quick_month": "In 1 Monat",
+    "due_quick_3months": "In 3 Monaten"
   }
 }
