@@ -39,13 +39,14 @@ describe('default assignees', () => {
     return { ed, calls, field };
   }
 
-  test('a list may default to several people', async () => {
+  test('a list may default to several people, the first one tapped leading', async () => {
     const { calls, field } = await editor({ assignees: ['person.kevin'], reminders: [] });
     assert.deepEqual(chipsIn(field), ['Anna', 'Kevin*']);
     field.querySelectorAll('.assignee-chip')[0].click();
     await new Promise((r) => setTimeout(r, 10));
     const set = calls.find((c) => c.type === 'home_tasks/set_defaults');
-    assert.deepEqual(plain(set.assignees), ['person.anna', 'person.kevin']);
+    // Kevin was there first, so he stays the primary although Anna sorts first.
+    assert.deepEqual(plain(set.assignees), ['person.kevin', 'person.anna']);
   });
 
   test('a default saved by an older version shows as its one person', async () => {

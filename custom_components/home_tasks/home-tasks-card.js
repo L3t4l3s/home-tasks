@@ -13960,15 +13960,6 @@ class HomeTasksCardEditor extends HTMLElement {
     ]);
   }
 
-  // Chip multi-select: removable chips for the selected values plus a text
-  // input with datalist autocomplete from `suggestions`. Free-text entry is
-  // allowed (Enter / comma / blur), so a value can be preset even when no
-  // task currently uses it. Renders fine with zero suggestions.
-  //
-  // `suggestions` items are plain strings or {value,label} objects. Chips and
-  // the datalist show the label; the stored value (e.g. a `person.*` entity
-  // id) is what the filter matches — so the editor can show "Ben" while the
-  // config keeps `person.ben`.
   // Everyone Home Assistant knows as a person, plus *extra* values that are
   // not one (a removed person, a provider's collaborator), named as stored.
   _personOptions(extra = []) {
@@ -13982,28 +13973,26 @@ class HomeTasksCardEditor extends HTMLElement {
   }
 
   // A row of person chips, any number on - the editor's counterpart of the
-  // assignee chips in the task details. onChange gets who is on, in the
-  // order of *options*; *keep* can refuse a change (returns false).
+  // assignee chips in the task details. onChange gets who is on in the order
+  // they were switched on, as there (the first is a default's primary);
+  // *keep* can refuse a change (returns false).
   _buildPersonChips(labelText, options, selected, onChange, { hint = null, keep = null } = {}) {
-    const on = new Set(selected || []);
+    let on = [...(selected || [])];
     const row = this._el("div", { className: "assignee-chip-row" });
     for (const { value, label } of options) {
       const chip = this._el("button", { className: "assignee-chip", textContent: label });
       chip.type = "button";
       const mark = () => {
-        chip.classList.toggle("active", on.has(value));
-        chip.setAttribute("aria-pressed", String(on.has(value)));
+        chip.classList.toggle("active", on.includes(value));
+        chip.setAttribute("aria-pressed", String(on.includes(value)));
       };
       mark();
       chip.addEventListener("click", () => {
-        const next = new Set(on);
-        if (next.has(value)) next.delete(value); else next.add(value);
-        const list = options.map((o) => o.value).filter((v) => next.has(v));
-        if (keep && !keep(list)) return;
-        on.clear();
-        list.forEach((v) => on.add(v));
+        const next = on.includes(value) ? on.filter((v) => v !== value) : [...on, value];
+        if (keep && !keep(next)) return;
+        on = next;
         mark();
-        onChange(list);
+        onChange([...on]);
       });
       row.appendChild(chip);
     }
@@ -14012,6 +14001,15 @@ class HomeTasksCardEditor extends HTMLElement {
     return this._el("div", { className: "field" }, kids);
   }
 
+  // Chip multi-select: removable chips for the selected values plus a text
+  // input with datalist autocomplete from `suggestions`. Free-text entry is
+  // allowed (Enter / comma / blur), so a value can be preset even when no
+  // task currently uses it. Renders fine with zero suggestions.
+  //
+  // `suggestions` items are plain strings or {value,label} objects. Chips and
+  // the datalist show the label; the stored value (e.g. a `person.*` entity
+  // id) is what the filter matches — so the editor can show "Ben" while the
+  // config keeps `person.ben`.
   _buildMultiSelect(labelText, currentValues, suggestions, onChange) {
     const values = Array.isArray(currentValues) ? currentValues.slice() : [];
     const opts = (suggestions || []).map((s) =>

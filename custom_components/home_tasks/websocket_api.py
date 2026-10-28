@@ -1647,7 +1647,8 @@ async def async_create_external_task(
     if overlay_store is not None and apply_defaults:
         defaults = overlay_store.get_defaults()
         # The default assignees only for a task the caller named nobody for.
-        if fields.get("assigned_person") is None and not fields.get("assigned_persons")                 and defaults["assignees"]:
+        if (fields.get("assigned_person") is None and not fields.get("assigned_persons")
+                and defaults["assignees"]):
             fields["assigned_persons"] = list(defaults["assignees"])
         # Presence, not truthiness: "reminders": [] is the caller saying
         # "this one gets none", the same as on a native list.
