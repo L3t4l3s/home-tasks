@@ -97,7 +97,7 @@ _TARGET = {
     vol.Exclusive("entity_id", "target"): _val_entity_id,
 }
 
-DEFAULT_FIELDS = ("assignee", "reminders", "tags", "priority", "section_id", "tag_catalog")
+DEFAULT_FIELDS = ("assignee", "assignees", "reminders", "tags", "priority", "section_id", "tag_catalog")
 
 
 def _get_target_store(hass, msg):
@@ -391,6 +391,7 @@ async def ws_get_defaults(hass, connection, msg):
     {
         vol.Required("type"): "home_tasks/set_defaults",
         vol.Optional("assignee"): vol.Any(str, None),
+        vol.Optional("assignees"): vol.All(list, vol.Length(max=MAX_ASSIGNEES_PER_TASK), [str]),
         vol.Optional("reminders"): _val_reminders,
         vol.Optional("tags"): vol.All(list, vol.Length(max=MAX_TAGS_PER_TASK)),
         vol.Optional("priority"): vol.Any(vol.In([1, 2, 3]), None),
@@ -1645,8 +1646,9 @@ async def async_create_external_task(
     default_section = None
     if overlay_store is not None and apply_defaults:
         defaults = overlay_store.get_defaults()
-        if fields.get("assigned_person") is None and defaults["assignee"]:
-            fields["assigned_person"] = defaults["assignee"]
+        # The default assignees only for a task the caller named nobody for.
+        if fields.get("assigned_person") is None and not fields.get("assigned_persons")                 and defaults["assignees"]:
+            fields["assigned_persons"] = list(defaults["assignees"])
         # Presence, not truthiness: "reminders": [] is the caller saying
         # "this one gets none", the same as on a native list.
         if "reminders" not in fields and defaults["reminders"]:

@@ -374,15 +374,15 @@ linked lists too, from the task's detail view.
 ### List defaults
 
 Every list — native or linked external — can define **defaults for new tasks**
-(card editor → *Defaults* section): a default assignee, reminders, tags, priority and
-section. They apply to every task created in that list, no matter how it is created —
+(card editor → *Defaults* section): default assignees (any number of people, the
+first one becomes the primary assignee), reminders, tags, priority and section. They apply to every task created in that list, no matter how it is created —
 card, `home_tasks.add_task`, voice input or `todo.add_item`. On an external list the
 defaults are offered to the provider first, so one that syncs labels or priority stores
 them itself; the section is kept locally, like all sections.
 Explicit values in the creating call always win, including an explicitly empty list
 (`reminders: []` / `tags: []` means "none" — only an omitted field falls back to the
-default). For the single-value fields (assignee, priority, section) `null` means "not
-provided" and still falls back.
+default). For the single-value fields (priority, section) `null` means "not provided"
+and still falls back; a task created with any assignee gets only the people named.
 Explicitly provided values (e.g. the card's auto-assign from an active person filter) win
 over the defaults.
 

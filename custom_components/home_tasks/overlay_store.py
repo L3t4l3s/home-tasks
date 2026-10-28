@@ -31,7 +31,8 @@ from .const import (
 )
 from .store import (
     apply_field_validators,
-    validate_assigned_person,
+    default_assignees,
+    updated_default_assignees,
     sync_assignee_fields,
     task_assignees,
     validate_date,
@@ -418,8 +419,10 @@ class ExternalTaskOverlayStore:
         the WebSocket layer do not care which kind of list they are talking to.
         """
         d = self._data.get("defaults") or {}
+        people = default_assignees(d)
         return {
-            "assignee": d.get("assignee") or None,
+            "assignee": people[0] if people else None,
+            "assignees": people,
             "reminders": list(d.get("reminders") or []),
             "tags": list(d.get("tags") or []),
             "priority": d.get("priority"),
@@ -438,13 +441,11 @@ class ExternalTaskOverlayStore:
         priority: object = _UNSET,
         section_id: object = _UNSET,
         tag_catalog: object = _UNSET,
+        assignees: object = _UNSET,
     ) -> dict:
         """Update the defaults; omitted fields keep their current value."""
         current = self.get_defaults()
-        if assignee is _UNSET:
-            assignee = current["assignee"]
-        elif assignee:
-            assignee = validate_assigned_person(assignee)
+        people = updated_default_assignees(current, assignee, assignees, _UNSET)
         if reminders is _UNSET:
             reminders = current["reminders"]
         else:
@@ -466,7 +467,8 @@ class ExternalTaskOverlayStore:
         else:
             tag_catalog = validate_tag_catalog(tag_catalog) if tag_catalog else []
         self._data["defaults"] = {
-            "assignee": assignee or None,
+            "assignee": people[0] if people else None,
+            "assignees": people,
             "reminders": reminders,
             "tags": tags,
             "priority": priority,

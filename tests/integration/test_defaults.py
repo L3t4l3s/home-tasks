@@ -68,7 +68,7 @@ async def test_setting_one_default_leaves_the_others_alone(hass: HomeAssistant, 
     after = await store.async_set_defaults(priority=1)
 
     assert after == {
-        "assignee": "person.alice", "reminders": [],
+        "assignee": "person.alice", "assignees": ["person.alice"], "reminders": [],
         "tags": ["chore"], "priority": 1, "section_id": None,
         "tag_catalog": [], "recurrence_reopen_lead": 0,
     }
@@ -139,7 +139,7 @@ async def test_the_websocket_round_trip_carries_the_new_fields(
     })
     msg = await client.receive_json()
     assert msg["result"]["defaults"] == {
-        "assignee": None, "reminders": [],
+        "assignee": None, "assignees": [], "reminders": [],
         "tags": ["chore"], "priority": 2, "section_id": section["id"],
         "tag_catalog": [], "recurrence_reopen_lead": 0,
     }
@@ -436,3 +436,92 @@ async def test_and_gets_them_when_it_stays_quiet(
     assert msg["result"]["tags"] == ["chore"]
     assert msg["result"]["priority"] == 3
 
+
+
+# ---------------------------------------------------------------------------
+# Several default assignees
+# ---------------------------------------------------------------------------
+
+async def test_a_default_can_name_several_people(hass: HomeAssistant, store) -> None:
+    await store.async_set_defaults(assignees=["person.alice", "person.bob"])
+
+    task = await store.async_add_task("Bins")
+
+    assert task["assigned_person"] == "person.alice"
+    assert task["assigned_persons"] == ["person.alice", "person.bob"]
+    # Older cards and automations read the first one as before.
+    assert store.get_defaults()["assignee"] == "person.alice"
+
+
+async def test_a_default_stored_before_several_still_applies(hass: HomeAssistant, store) -> None:
+    store._data["defaults"] = {"assignee": "person.alice"}
+
+    assert store.get_defaults()["assignees"] == ["person.alice"]
+    assert (await store.async_add_task("Bins"))["assigned_persons"] == ["person.alice"]
+
+
+async def test_an_older_card_setting_one_assignee_replaces_the_list(hass: HomeAssistant, store) -> None:
+    await store.async_set_defaults(assignees=["person.alice", "person.bob"])
+
+    after = await store.async_set_defaults(assignee="person.carol")
+
+    assert after["assignees"] == ["person.carol"]
+    assert (await store.async_set_defaults(assignee=None))["assignees"] == []
+
+
+async def test_a_caller_naming_people_gets_only_them(hass: HomeAssistant, store) -> None:
+    """The default used to be put in front of whoever the caller named."""
+    await store.async_set_defaults(assignees=["person.alice"])
+
+    task = await store.async_add_task("Bins", assigned_persons=["person.bob"])
+
+    assert task["assigned_persons"] == ["person.bob"]
+
+
+async def test_too_many_default_assignees_are_refused(hass: HomeAssistant, store) -> None:
+    with pytest.raises(ValueError):
+        await store.async_set_defaults(assignees=[f"person.p{i}" for i in range(11)])
+
+
+async def test_a_linked_list_gives_new_tasks_everyone(
+    hass: HomeAssistant, hass_ws_client, ext_entry
+) -> None:
+    overlay = _overlay(hass, ext_entry)
+    adapter = _Adapter()
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})[EXT_ENTITY] = adapter
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 60, "type": "home_tasks/set_defaults", "entity_id": EXT_ENTITY,
+        "assignees": ["person.alice", "person.bob"],
+    })
+    assert (await client.receive_json())["success"] is True
+
+    await client.send_json({
+        "id": 61, "type": "home_tasks/create_external_task",
+        "entity_id": EXT_ENTITY, "title": "Bread",
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True, msg
+
+    stored = overlay.get_overlay("uid-new")
+    assert stored["assigned_person"] == "person.alice"
+    assert stored["assigned_persons"] == ["person.alice", "person.bob"]
+
+
+async def test_a_linked_list_caller_naming_people_gets_only_them(
+    hass: HomeAssistant, hass_ws_client, ext_entry
+) -> None:
+    overlay = _overlay(hass, ext_entry)
+    await overlay.async_set_defaults(assignees=["person.alice"])
+    adapter = _Adapter()
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})[EXT_ENTITY] = adapter
+    client = await hass_ws_client(hass)
+
+    await client.send_json({
+        "id": 62, "type": "home_tasks/create_external_task",
+        "entity_id": EXT_ENTITY, "title": "Bread", "assigned_persons": ["person.bob"],
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True, msg
+
+    assert overlay.get_overlay("uid-new")["assigned_persons"] == ["person.bob"]

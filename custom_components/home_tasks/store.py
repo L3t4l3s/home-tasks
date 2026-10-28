@@ -326,6 +326,26 @@ def task_assignees(task: dict) -> list[str]:
     return people
 
 
+def default_assignees(defaults: dict) -> list[str]:
+    """Who new tasks on a list are assigned to: the stored list, or the one
+    assignee lists stored before a default could name several."""
+    people = list(defaults.get("assignees") or [])
+    if not people and defaults.get("assignee"):
+        people = [defaults["assignee"]]
+    return people
+
+
+def updated_default_assignees(current: dict, assignee, assignees, unset) -> list[str]:
+    """The default assignees after a partial set_defaults: assignees replaces
+    the list, assignee (older cards) sets it to that one person, and neither
+    keeps what is stored."""
+    if assignees is not unset:
+        return validate_assigned_persons(assignees)
+    if assignee is not unset:
+        return [validate_assigned_person(assignee)] if assignee else []
+    return default_assignees(current)
+
+
 def _copy_assignees(source: dict, assigned_person: str | None) -> list[str]:
     """Who a copy of source is assigned to: everyone the source has when the
     copy keeps its primary, else just the one person it was made for."""
@@ -649,8 +669,12 @@ class HomeTasksStore:
         which path creates it — card, WS, service, voice or todo platform
         (issues #44 / #46)."""
         d = self._data.get("defaults") or {}
+        people = default_assignees(d)
         return {
-            "assignee": d.get("assignee") or None,
+            # assignee: the first of assignees, for cards and automations
+            # from before a default could name several people.
+            "assignee": people[0] if people else None,
+            "assignees": people,
             "reminders": list(d.get("reminders") or []),
             "tags": list(d.get("tags") or []),
             "priority": d.get("priority"),
@@ -674,6 +698,7 @@ class HomeTasksStore:
         section_id: object = _UNSET,
         tag_catalog: object = _UNSET,
         recurrence_reopen_lead: object = _UNSET,
+        assignees: object = _UNSET,
     ) -> dict:
         """Update the list-level defaults.
 
@@ -685,10 +710,7 @@ class HomeTasksStore:
         immediate full-store save per editor interaction.
         """
         current = self.get_defaults()
-        if assignee is _UNSET:
-            assignee = current["assignee"]
-        elif assignee:
-            assignee = validate_assigned_person(assignee)
+        people = updated_default_assignees(current, assignee, assignees, _UNSET)
         if reminders is _UNSET:
             reminders = current["reminders"]
         else:
@@ -714,7 +736,9 @@ class HomeTasksStore:
         else:
             recurrence_reopen_lead = validate_recurrence_reopen_lead(recurrence_reopen_lead) or 0
         self._data["defaults"] = {
-            "assignee": assignee or None,
+            # assignee kept beside assignees, so a downgrade still finds one.
+            "assignee": people[0] if people else None,
+            "assignees": people,
             "reminders": reminders,
             "tags": tags,
             "priority": priority,
@@ -767,8 +791,8 @@ class HomeTasksStore:
         # explicit empty reminders list ([] means "no reminders", only None
         # means "not provided", mirroring the assignee check).
         defaults = self._data.get("defaults") or {}
-        if assigned_person is None and defaults.get("assignee"):
-            assigned_person = defaults["assignee"]
+        if assigned_person is None and not assigned_persons:
+            assigned_persons = default_assignees(defaults)
         if reminders is None and defaults.get("reminders"):
             reminders = list(defaults["reminders"])
         if tags is None and defaults.get("tags"):

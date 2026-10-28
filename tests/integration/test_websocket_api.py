@@ -2290,7 +2290,7 @@ async def test_ws_defaults_roundtrip_and_applied(hass: HomeAssistant, hass_ws_cl
     msg = await client.receive_json()
     assert msg["success"] is True
     assert msg["result"]["defaults"] == {
-        "assignee": "person.alice", "reminders": [0, 60],
+        "assignee": "person.alice", "assignees": ["person.alice"], "reminders": [0, 60],
         "tags": [], "priority": None, "section_id": None,
         "tag_catalog": [], "recurrence_reopen_lead": 0,
     }
@@ -2326,7 +2326,7 @@ async def test_ws_defaults_roundtrip_and_applied(hass: HomeAssistant, hass_ws_cl
     })
     msg = await client.receive_json()
     assert msg["result"]["defaults"] == {
-        "assignee": "person.bob", "reminders": [0, 60],
+        "assignee": "person.bob", "assignees": ["person.bob"], "reminders": [0, 60],
         "tags": [], "priority": None, "section_id": None,
         "tag_catalog": [], "recurrence_reopen_lead": 0,
     }
@@ -2348,7 +2348,7 @@ async def test_ws_defaults_roundtrip_and_applied(hass: HomeAssistant, hass_ws_cl
     })
     msg = await client.receive_json()
     assert msg["result"]["defaults"] == {
-        "assignee": None, "reminders": [],
+        "assignee": None, "assignees": [], "reminders": [],
         "tags": [], "priority": None, "section_id": None,
         "tag_catalog": [], "recurrence_reopen_lead": 0,
     }

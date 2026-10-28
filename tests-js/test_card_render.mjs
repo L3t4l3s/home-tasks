@@ -1505,10 +1505,9 @@ describe('add-row time input follows the provider\'s due-time capability', () =>
 });
 
 
-// The assignee picker: the one offering the people — "Reopen early" (issue
-// #77) sits with the list's settings above it.
-const personSelectIn = (root) => [...root.querySelectorAll('.defaults-editor select')]
-  .find(sel => [...sel.options].some(o => o.value.startsWith('person.')));
+// The default assignees: a chip per person, any number on.
+const personChipIn = (root, name = 'Alice') => [...root.querySelectorAll('.defaults-editor .assignee-chip')]
+  .find(chip => chip.textContent === name);
 
 describe('editor Defaults section (issues #44 / #46)', () => {
   async function makeEditor(colExtra, wsResponses = {}) {
@@ -1539,8 +1538,7 @@ describe('editor Defaults section (issues #44 / #46)', () => {
     assert.ok(calls.some(c => c.type === 'home_tasks/get_defaults' && c.list_id === 'L1'));
     const container = root.querySelector('.defaults-editor');
     assert.ok(container, 'defaults editor container must render');
-    const personSel = personSelectIn(container);
-    assert.equal(personSel.value, 'person.alice');
+    assert.equal(personChipIn(container).getAttribute('aria-pressed'), 'true');
     assert.ok(container.textContent.includes('Applied to every new task'));
     ed.remove();
   });
@@ -1567,13 +1565,11 @@ describe('editor Defaults section (issues #44 / #46)', () => {
 
   test('changing the assignee saves via set_defaults', async () => {
     const { ed, calls, root } = await makeEditor({ list_id: 'L1' });
-    const personSel = personSelectIn(root);
-    personSel.value = '';
-    personSel.dispatchEvent(new ed.ownerDocument.defaultView.Event('change'));
+    personChipIn(root).click();
     await new Promise(r => setTimeout(r, 10));
     const set = calls.find(c => c.type === 'home_tasks/set_defaults');
     assert.ok(set);
-    assert.equal(set.assignee, null);
+    assert.equal(JSON.stringify(set.assignees), '[]');
     ed.remove();
   });
 
@@ -1887,7 +1883,7 @@ describe('editor Defaults error paths and partial saves (review round 2)', () =>
         const custom = wsImpl && wsImpl(msg);
         if (custom !== undefined) return custom;
         if (msg.type === 'home_tasks/get_defaults') return { defaults: { assignee: null, reminders: [0] } };
-        if (msg.type === 'home_tasks/set_defaults') return { defaults: { assignee: msg.assignee ?? null, reminders: msg.reminders ?? [0] } };
+        if (msg.type === 'home_tasks/set_defaults') return { defaults: { assignees: msg.assignees ?? [], reminders: msg.reminders ?? [0] } };
         if (msg.type === 'home_tasks/get_lists') return { lists: [{ id: 'L1', name: 'L' }] };
         if (msg.type === 'home_tasks/get_external_lists') return { external_lists: [] };
         return null;
@@ -1917,13 +1913,11 @@ describe('editor Defaults error paths and partial saves (review round 2)', () =>
 
   test('changing the assignee sends a partial payload without reminders', async () => {
     const { ed, calls, root } = await makeEditor();
-    const personSel = personSelectIn(root);
-    personSel.value = 'person.alice';
-    personSel.dispatchEvent(new ed.ownerDocument.defaultView.Event('change'));
+    personChipIn(root).click();
     await new Promise(r => setTimeout(r, 10));
     const set = calls.find(c => c.type === 'home_tasks/set_defaults');
     assert.ok(set);
-    assert.equal(set.assignee, 'person.alice');
+    assert.equal(JSON.stringify(set.assignees), '["person.alice"]');
     assert.ok(!('reminders' in set), 'untouched field must be omitted (backend keeps it)');
     ed.remove();
   });
@@ -1932,9 +1926,7 @@ describe('editor Defaults error paths and partial saves (review round 2)', () =>
     const { ed, calls, root } = await makeEditor((msg) => {
       if (msg.type === 'home_tasks/set_defaults') throw new Error('boom');
     });
-    const personSel = personSelectIn(root);
-    personSel.value = 'person.alice';
-    personSel.dispatchEvent(new ed.ownerDocument.defaultView.Event('change'));
+    personChipIn(root).click();
     await new Promise(r => setTimeout(r, 10));
     const flash = root.querySelector('.def-saved-flash');
     assert.ok(flash.classList.contains('err'), 'error state shown');

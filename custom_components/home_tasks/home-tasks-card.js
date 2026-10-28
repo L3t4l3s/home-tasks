@@ -134,7 +134,7 @@ const _TRANSLATIONS = {
     "ed_ai_image_hint": "Applies to the whole card, not just this column.",
     "ed_queue_running": "generating…",
     "ed_queue_title": "Generation queue",
-    "ed_default_assignee": "Default assignee",
+    "ed_default_assignee": "Default assignees",
     "ed_defaults_hint": "Applied to every new task in this list — no matter how it is created (card, service, voice, todo). Changes are saved immediately.",
     "ed_defaults_saved": "Saved",
     "ed_defaults_load_failed": "Could not load defaults",
@@ -462,7 +462,7 @@ const _TRANSLATIONS = {
     "ed_ai_image_hint": "Geldt voor de hele kaart, niet alleen voor deze kolom.",
     "ed_queue_running": "wordt gemaakt…",
     "ed_queue_title": "Wachtrij",
-    "ed_default_assignee": "Standaard toegewezene",
+    "ed_default_assignee": "Standaard toegewezenen",
     "ed_defaults_hint": "Geldt voor elke nieuwe taak in deze lijst — ongeacht hoe die wordt aangemaakt. Wijzigingen worden direct opgeslagen.",
     "ed_defaults_saved": "Opgeslagen",
     "ed_defaults_load_failed": "Standaardwaarden konden niet worden geladen",
@@ -757,7 +757,7 @@ const _TRANSLATIONS = {
     "ed_ai_image_hint": "Vale per l'intera scheda, non solo per questa colonna.",
     "ed_queue_running": "in creazione…",
     "ed_queue_title": "Coda di generazione",
-    "ed_default_assignee": "Assegnatario predefinito",
+    "ed_default_assignee": "Assegnatari predefiniti",
     "ed_defaults_hint": "Si applica a ogni nuova attività di questo elenco, comunque venga creata. Le modifiche vengono salvate immediatamente.",
     "ed_defaults_saved": "Salvato",
     "ed_defaults_load_failed": "Impossibile caricare i valori predefiniti",
@@ -1052,7 +1052,7 @@ const _TRANSLATIONS = {
     "ed_ai_image_hint": "Dotyczy całej karty, nie tylko tej kolumny.",
     "ed_queue_running": "generowanie…",
     "ed_queue_title": "Kolejka generowania",
-    "ed_default_assignee": "Domyślny przypisany",
+    "ed_default_assignee": "Domyślnie przypisani",
     "ed_defaults_hint": "Dotyczy każdego nowego zadania na tej liście — niezależnie od sposobu utworzenia. Zmiany są zapisywane natychmiast.",
     "ed_defaults_saved": "Zapisano",
     "ed_defaults_load_failed": "Nie udało się wczytać ustawień domyślnych",
@@ -1347,7 +1347,7 @@ const _TRANSLATIONS = {
     "ed_ai_image_hint": "Gäller hela kortet, inte bara den här kolumnen.",
     "ed_queue_running": "skapas…",
     "ed_queue_title": "Genereringskö",
-    "ed_default_assignee": "Standardtilldelad",
+    "ed_default_assignee": "Standardtilldelade",
     "ed_defaults_hint": "Gäller varje ny uppgift i listan — oavsett hur den skapas. Ändringar sparas direkt.",
     "ed_defaults_saved": "Sparat",
     "ed_defaults_load_failed": "Det gick inte att läsa in standardvärdena",
@@ -1642,7 +1642,7 @@ const _TRANSLATIONS = {
     "ed_ai_image_hint": "S'applique à toute la carte, pas seulement à cette colonne.",
     "ed_queue_running": "en cours…",
     "ed_queue_title": "File de génération",
-    "ed_default_assignee": "Assigné par défaut",
+    "ed_default_assignee": "Assignés par défaut",
     "ed_defaults_hint": "S'applique à chaque nouvelle tâche de cette liste, quelle que soit sa création. Les modifications sont enregistrées immédiatement.",
     "ed_defaults_saved": "Enregistré",
     "ed_defaults_load_failed": "Impossible de charger les valeurs par défaut",
@@ -1937,7 +1937,7 @@ const _TRANSLATIONS = {
     "ed_ai_image_hint": "Aplica-se a todo o cartão, não apenas a esta coluna.",
     "ed_queue_running": "a gerar…",
     "ed_queue_title": "Fila de geração",
-    "ed_default_assignee": "Responsável padrão",
+    "ed_default_assignee": "Responsáveis padrão",
     "ed_defaults_hint": "Aplica-se a cada nova tarefa desta lista, seja como for criada. As alterações são guardadas imediatamente.",
     "ed_defaults_saved": "Guardado",
     "ed_defaults_load_failed": "Não foi possível carregar as predefinições",
@@ -2232,7 +2232,7 @@ const _TRANSLATIONS = {
     "ed_ai_image_hint": "Aplica-se a todo o cartão, não apenas a esta coluna.",
     "ed_queue_running": "gerando…",
     "ed_queue_title": "Fila de geração",
-    "ed_default_assignee": "Responsável padrão",
+    "ed_default_assignee": "Responsáveis padrão",
     "ed_defaults_hint": "Aplicado a cada nova tarefa desta lista, independentemente de como ela é criada (cartão, serviço, voz ou entidade de tarefas). As alterações são salvas imediatamente.",
     "ed_defaults_saved": "Salvo",
     "ed_defaults_load_failed": "Não foi possível carregar os padrões",
@@ -2527,7 +2527,7 @@ const _TRANSLATIONS = {
     "ed_ai_image_hint": "Se aplica a toda la tarjeta, no solo a esta columna.",
     "ed_queue_running": "generando…",
     "ed_queue_title": "Cola de generación",
-    "ed_default_assignee": "Asignado por defecto",
+    "ed_default_assignee": "Asignados por defecto",
     "ed_defaults_hint": "Se aplica a cada nueva tarea de esta lista, sin importar cómo se cree. Los cambios se guardan inmediatamente.",
     "ed_defaults_saved": "Guardado",
     "ed_defaults_load_failed": "No se pudieron cargar los valores predeterminados",
@@ -2822,7 +2822,7 @@ const _TRANSLATIONS = {
     "ed_ai_image_hint": "Действует для всей карточки, а не только для этого столбца.",
     "ed_queue_running": "создаётся…",
     "ed_queue_title": "Очередь генерации",
-    "ed_default_assignee": "Ответственный по умолчанию",
+    "ed_default_assignee": "Ответственные по умолчанию",
     "ed_defaults_hint": "Применяется к каждой новой задаче этого списка. Изменения сохраняются сразу.",
     "ed_defaults_saved": "Сохранено",
     "ed_defaults_load_failed": "Не удалось загрузить значения по умолчанию",
@@ -3412,7 +3412,7 @@ const _TRANSLATIONS = {
     "ed_ai_image_hint": "Gælder hele kortet, ikke kun denne kolonne.",
     "ed_queue_running": "genereres…",
     "ed_queue_title": "Genereringskø",
-    "ed_default_assignee": "Standardtildelt",
+    "ed_default_assignee": "Standardtildelte",
     "ed_defaults_hint": "Gælder for hver ny opgave på listen — uanset hvordan den oprettes. Ændringer gemmes med det samme.",
     "ed_defaults_saved": "Gemt",
     "ed_defaults_load_failed": "Standardværdierne kunne ikke indlæses",
@@ -3707,7 +3707,7 @@ const _TRANSLATIONS = {
     "ed_ai_image_hint": "Gjelder hele kortet, ikke bare denne kolonnen.",
     "ed_queue_running": "genereres…",
     "ed_queue_title": "Genereringskø",
-    "ed_default_assignee": "Standardtildelt",
+    "ed_default_assignee": "Standardtildelte",
     "ed_defaults_hint": "Gjelder hver ny oppgave i listen — uansett hvordan den opprettes. Endringer lagres umiddelbart.",
     "ed_defaults_saved": "Lagret",
     "ed_defaults_load_failed": "Kunne ikke laste standardverdiene",
@@ -4002,7 +4002,7 @@ const _TRANSLATIONS = {
     "ed_ai_image_hint": "Koskee koko korttia, ei vain tätä saraketta.",
     "ed_queue_running": "luodaan…",
     "ed_queue_title": "Luontijono",
-    "ed_default_assignee": "Oletusvastuuhenkilö",
+    "ed_default_assignee": "Oletusvastuuhenkilöt",
     "ed_defaults_hint": "Koskee jokaista listan uutta tehtävää luontitavasta riippumatta. Muutokset tallennetaan heti.",
     "ed_defaults_saved": "Tallennettu",
     "ed_defaults_load_failed": "Oletuksia ei voitu ladata",
@@ -4297,7 +4297,7 @@ const _TRANSLATIONS = {
     "ed_ai_image_hint": "Az egész kártyára vonatkozik, nem csak erre az oszlopra.",
     "ed_queue_running": "készül…",
     "ed_queue_title": "Generálási sor",
-    "ed_default_assignee": "Alapértelmezett felelős",
+    "ed_default_assignee": "Alapértelmezett felelősök",
     "ed_defaults_hint": "A lista minden új feladatára érvényes, bárhogyan is jön létre. A módosítások azonnal mentésre kerülnek.",
     "ed_defaults_saved": "Mentve",
     "ed_defaults_load_failed": "Az alapértelmezések betöltése sikertelen",
@@ -4561,7 +4561,7 @@ const _TRANSLATIONS = {
     "ed_ai_image_hint": "Gilt für die ganze Karte, nicht nur für diese Spalte.",
     "ed_queue_running": "wird erzeugt…",
     "ed_queue_title": "Warteschlange",
-    "ed_default_assignee": "Standard-Zuständige(r)",
+    "ed_default_assignee": "Standard-Zuständige",
     "ed_defaults_hint": "Gilt für jede neue Aufgabe dieser Liste — egal wie sie angelegt wird (Karte, Service, Sprache, Todo). Änderungen werden sofort gespeichert.",
     "ed_defaults_saved": "Gespeichert",
     "ed_defaults_load_failed": "Defaults konnten nicht geladen werden",
@@ -5551,6 +5551,7 @@ class HomeTasksCard extends HTMLElement {
         reminders: [...(listDefaults.reminders || [])],
         section_id: listDefaults.section_id || null,
         assigned_person: autoAssignPerson || listDefaults.assignee || null,
+        assigned_persons: autoAssignPerson ? [autoAssignPerson] : [...(listDefaults.assignees || [])],
         recurrence_enabled: false, _external: true,
       });
       const typed = { title, due: cs.newTaskDue, dueTime: cs.newTaskDueTime };
@@ -12511,7 +12512,7 @@ class HomeTasksCardEditor extends HTMLElement {
       .then((r) => {
         const d = (r && r.defaults) || {};
         this._listDefaults[key] = {
-          assignee: d.assignee || null,
+          assignees: [...(d.assignees || (d.assignee ? [d.assignee] : []))],
           reminders: [...(d.reminders || [])],
           tags: [...(d.tags || [])],
           priority: d.priority ?? null,
@@ -12748,7 +12749,8 @@ class HomeTasksCardEditor extends HTMLElement {
             const norm = d.reminders || [];
             const normTags = d.tags || [];
             const normCatalog = d.tag_catalog || [];
-            const changed = (d.assignee || null) !== defaults.assignee ||
+            const normPeople = d.assignees || (d.assignee ? [d.assignee] : []);
+            const changed = JSON.stringify(normPeople) !== JSON.stringify(defaults.assignees || []) ||
               (d.priority ?? null) !== defaults.priority ||
               (d.section_id || null) !== defaults.section_id ||
               JSON.stringify(norm) !== JSON.stringify(defaults.reminders) ||
@@ -12756,7 +12758,7 @@ class HomeTasksCardEditor extends HTMLElement {
               JSON.stringify(normCatalog) !== JSON.stringify(defaults.tag_catalog || []) ||
               (d.recurrence_reopen_lead || 0) !== (defaults.recurrence_reopen_lead || 0);
             defaults.recurrence_reopen_lead = d.recurrence_reopen_lead || 0;
-            defaults.assignee = d.assignee || null;
+            defaults.assignees = [...normPeople];
             defaults.priority = d.priority ?? null;
             defaults.section_id = d.section_id || null;
             defaults.reminders.splice(0, defaults.reminders.length, ...norm);
@@ -12788,7 +12790,6 @@ class HomeTasksCardEditor extends HTMLElement {
       pending = { ...(pending || {}), ...patch };
       if (!saving) flush();
     };
-    const persons = personEntries(this._hass);
     renderInto = () => {
       // Fixed tags sit with the section's other settings; the values every
       // new task gets follow under their own heading, so the intro reads as
@@ -12820,25 +12821,15 @@ class HomeTasksCardEditor extends HTMLElement {
         ]),
         this._el("span", { className: "hint", textContent: this._t("ed_defaults_hint") }),
       );
-      const personSelect = this._el("select", { className: "editor-native-select" });
-      const noneOpt = this._el("option", { value: "", textContent: this._t("nobody") });
-      if (!defaults.assignee) noneOpt.selected = true;
-      personSelect.appendChild(noneOpt);
-      for (const { value, label } of persons) {
-        const opt = this._el("option", { value, textContent: label });
-        if (value === defaults.assignee) opt.selected = true;
-        personSelect.appendChild(opt);
-      }
-      personSelect.addEventListener("change", () => {
-        defaults.assignee = personSelect.value || null;
-        save({ assignee: defaults.assignee });
-      });
-      // Same field-wrap + floating-label pattern as makeSelect ("View mode"
-      // etc.) — sel-wrap is card CSS and doesn't exist in the editor styles.
-      kids.push(this._el("div", { className: "field-wrap" }, [
-        personSelect,
-        this._el("span", { textContent: this._t("ed_default_assignee") }),
-      ]));
+      kids.push(this._buildPersonChips(
+        this._t("ed_default_assignee"),
+        this._personOptions(defaults.assignees),
+        defaults.assignees,
+        (people) => {
+          defaults.assignees = people;
+          save({ assignees: people });
+        },
+      ));
 
       const prioritySelect = this._el("select", { className: "editor-native-select" });
       for (const [value, labelKey] of [["", "ed_default_none"], ["1", "pri_low"], ["2", "pri_medium"], ["3", "pri_high"]]) {
@@ -13812,40 +13803,25 @@ class HomeTasksCardEditor extends HTMLElement {
     // keeps the ones switched off (hidden_persons), so a person added to
     // Home Assistant later is offered without editing every card.
     const offeredPersons = (() => {
-      const hidden = new Set(col.hidden_persons || []);
-      const row = this._el("div", { className: "assignee-chip-row" });
       // Someone hidden who is no longer in Home Assistant still gets a chip,
       // so the entry can be switched back on and leaves the config.
-      const people = personEntries(this._hass);
-      for (const eid of hidden) {
-        if (!people.some((p) => p.value === eid)) people.push({ value: eid, label: eid.replace(/^person\./, "") });
-      }
-      for (const { value, label } of people) {
-        const chip = this._el("button", { className: "assignee-chip", textContent: label });
-        chip.type = "button";
-        const mark = () => {
-          chip.classList.toggle("active", !hidden.has(value));
-          chip.setAttribute("aria-pressed", String(!hidden.has(value)));
-        };
-        mark();
-        chip.addEventListener("click", () => {
-          if (hidden.has(value)) hidden.delete(value);
+      const people = this._personOptions(col.hidden_persons);
+      const hidden = new Set(col.hidden_persons || []);
+      const field = this._buildPersonChips(
+        this._t("ed_offered_persons"),
+        people,
+        people.filter((p) => !hidden.has(p.value)).map((p) => p.value),
+        (on) => {
+          const off = people.map((p) => p.value).filter((v) => !on.includes(v)).sort();
+          updateCol({ hidden_persons: off.length ? off : undefined });
+        },
+        {
+          hint: this._t("ed_offered_persons_hint"),
           // At least one person stays selectable: with none, the task
           // details would show an empty assignee row.
-          else if (people.some((p) => p.value !== value && !hidden.has(p.value) && this._hass?.states?.[p.value])) {
-            hidden.add(value);
-          }
-          else return;
-          mark();
-          updateCol({ hidden_persons: hidden.size ? [...hidden].sort() : undefined });
-        });
-        row.appendChild(chip);
-      }
-      const field = this._el("div", { className: "field" }, [
-        this._el("div", { className: "group-label", textContent: this._t("ed_offered_persons") }),
-        row,
-        this._el("div", { className: "hint", textContent: this._t("ed_offered_persons_hint") }),
-      ]);
+          keep: (on) => on.some((v) => this._hass?.states?.[v]),
+        },
+      );
       if (col.show_assigned_person === false) field.style.display = "none";
       return field;
     })();
@@ -13956,10 +13932,12 @@ class HomeTasksCardEditor extends HTMLElement {
         filterField,
         dueSoonToggle,
         ...dueSoonDetail,
-        this._buildMultiSelect(
+        this._buildPersonChips(
           this._t("ed_preset_assignees"),
+          // Linked lists can name people Home Assistant doesn't know (a
+          // Todoist collaborator), so the list's own assignees come too.
+          this._personOptions([...meta.persons.map((p) => p.value), ...(col.filters?.assignees || [])]),
           col.filters?.assignees || [],
-          meta.persons,
           (vals) => updateFilters({ assignees: vals }),
         ),
         this._buildMultiSelect(
@@ -14028,6 +14006,49 @@ class HomeTasksCardEditor extends HTMLElement {
   // the datalist show the label; the stored value (e.g. a `person.*` entity
   // id) is what the filter matches — so the editor can show "Ben" while the
   // config keeps `person.ben`.
+  // Everyone Home Assistant knows as a person, plus *extra* values that are
+  // not one (a removed person, a provider's collaborator), named as stored.
+  _personOptions(extra = []) {
+    const people = personEntries(this._hass);
+    for (const v of extra || []) {
+      if (v && !people.some((p) => p.value === v)) {
+        people.push({ value: v, label: String(v).replace(/^person\./, "") });
+      }
+    }
+    return people;
+  }
+
+  // A row of person chips, any number on - the editor's counterpart of the
+  // assignee chips in the task details. onChange gets who is on, in the
+  // order of *options*; *keep* can refuse a change (returns false).
+  _buildPersonChips(labelText, options, selected, onChange, { hint = null, keep = null } = {}) {
+    const on = new Set(selected || []);
+    const row = this._el("div", { className: "assignee-chip-row" });
+    for (const { value, label } of options) {
+      const chip = this._el("button", { className: "assignee-chip", textContent: label });
+      chip.type = "button";
+      const mark = () => {
+        chip.classList.toggle("active", on.has(value));
+        chip.setAttribute("aria-pressed", String(on.has(value)));
+      };
+      mark();
+      chip.addEventListener("click", () => {
+        const next = new Set(on);
+        if (next.has(value)) next.delete(value); else next.add(value);
+        const list = options.map((o) => o.value).filter((v) => next.has(v));
+        if (keep && !keep(list)) return;
+        on.clear();
+        list.forEach((v) => on.add(v));
+        mark();
+        onChange(list);
+      });
+      row.appendChild(chip);
+    }
+    const kids = [this._el("div", { className: "group-label", textContent: labelText }), row];
+    if (hint) kids.push(this._el("div", { className: "hint", textContent: hint }));
+    return this._el("div", { className: "field" }, kids);
+  }
+
   _buildMultiSelect(labelText, currentValues, suggestions, onChange) {
     const values = Array.isArray(currentValues) ? currentValues.slice() : [];
     const opts = (suggestions || []).map((s) =>
