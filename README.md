@@ -343,7 +343,7 @@ Each entry in `columns` accepts the following options.
 | `show_due_date` | `true` | Show/hide due date and time |
 | `show_reminders` | `true` | Show/hide reminders |
 | `show_recurrence` | `true` | Show/hide recurrence settings |
-| `detail_order` | — | Order of the task-details fields, e.g. `[due_date, person, reminders, recurrence, notes]`. Keys: `notes`, `sub_tasks`, `person`, `section`, `priority`, `tags`, `due_date`, `reminders`, `recurrence`, `history`, `images`; fields not listed follow in the default order. Also in the visual editor (*Order in task details*) |
+| `detail_order` | — | Order of the task-details fields, e.g. `[due_date, person, reminders, recurrence, notes]`. Keys: `notes`, `sub_tasks`, `person`, `section`, `priority`, `tags`, `due_date`, `reminders`, `recurrence`, `history`, `images`; fields not listed follow in the default order. In the visual editor, the arrows next to each field in *Task features* set it |
 | `show_history` | `false` | Show/hide the task change history |
 | `badge_priority` / `badge_progress` / `badge_due` / `badge_recurrence` / `badge_tags` / `badge_reminders` | `true` | Show/hide the corresponding chip on task rows without disabling the feature itself — e.g. keep reminders active but hide their chip (`badge_reminders: false`). The matching `show_*` switch still controls the feature (detail editor + chip) |
 | `show_move` | `true` | Show/hide the Move button in the task details (moves a task to another list, next to Duplicate / Delete) |

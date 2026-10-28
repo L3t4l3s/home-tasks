@@ -299,8 +299,7 @@ const _TRANSLATIONS = {
     "due_quick_month": "In 1 month",
     "due_quick_3months": "In 3 months",
     "ed_offered_persons": "Selectable people",
-    "ed_offered_persons_hint": "Only highlighted people can be assigned in this card",
-    "ed_detail_order": "Order in task details"
+    "ed_offered_persons_hint": "Only highlighted people can be assigned in this card"
   },
   "nl": {
     "ed_default_priority": "Standaardprioriteit",
@@ -593,8 +592,7 @@ const _TRANSLATIONS = {
     "due_quick_month": "Over 1 maand",
     "due_quick_3months": "Over 3 maanden",
     "ed_offered_persons": "Selecteerbare personen",
-    "ed_offered_persons_hint": "Alleen gemarkeerde personen kunnen in deze kaart worden toegewezen",
-    "ed_detail_order": "Volgorde in taakdetails"
+    "ed_offered_persons_hint": "Alleen gemarkeerde personen kunnen in deze kaart worden toegewezen"
   },
   "it": {
     "ed_default_priority": "Priorità predefinita",
@@ -887,8 +885,7 @@ const _TRANSLATIONS = {
     "due_quick_month": "Tra 1 mese",
     "due_quick_3months": "Tra 3 mesi",
     "ed_offered_persons": "Persone selezionabili",
-    "ed_offered_persons_hint": "In questa scheda si possono assegnare solo le persone evidenziate",
-    "ed_detail_order": "Ordine nei dettagli"
+    "ed_offered_persons_hint": "In questa scheda si possono assegnare solo le persone evidenziate"
   },
   "pl": {
     "ed_default_priority": "Domyślny priorytet",
@@ -1181,8 +1178,7 @@ const _TRANSLATIONS = {
     "due_quick_month": "Za 1 miesiąc",
     "due_quick_3months": "Za 3 miesiące",
     "ed_offered_persons": "Osoby do wyboru",
-    "ed_offered_persons_hint": "W tej karcie można przypisać tylko wyróżnione osoby",
-    "ed_detail_order": "Kolejność w szczegółach"
+    "ed_offered_persons_hint": "W tej karcie można przypisać tylko wyróżnione osoby"
   },
   "sv": {
     "ed_default_priority": "Standardprioritet",
@@ -1475,8 +1471,7 @@ const _TRANSLATIONS = {
     "due_quick_month": "Om 1 månad",
     "due_quick_3months": "Om 3 månader",
     "ed_offered_persons": "Valbara personer",
-    "ed_offered_persons_hint": "Endast markerade personer kan tilldelas i det här kortet",
-    "ed_detail_order": "Ordning i detaljer"
+    "ed_offered_persons_hint": "Endast markerade personer kan tilldelas i det här kortet"
   },
   "fr": {
     "ed_default_priority": "Priorité par défaut",
@@ -1769,8 +1764,7 @@ const _TRANSLATIONS = {
     "due_quick_month": "Dans 1 mois",
     "due_quick_3months": "Dans 3 mois",
     "ed_offered_persons": "Personnes sélectionnables",
-    "ed_offered_persons_hint": "Seules les personnes en surbrillance peuvent être assignées dans cette carte",
-    "ed_detail_order": "Ordre dans les détails"
+    "ed_offered_persons_hint": "Seules les personnes en surbrillance peuvent être assignées dans cette carte"
   },
   "pt": {
     "ed_default_priority": "Prioridade padrão",
@@ -2063,8 +2057,7 @@ const _TRANSLATIONS = {
     "due_quick_month": "Daqui a 1 mês",
     "due_quick_3months": "Daqui a 3 meses",
     "ed_offered_persons": "Pessoas selecionáveis",
-    "ed_offered_persons_hint": "Só as pessoas destacadas podem ser atribuídas neste cartão",
-    "ed_detail_order": "Ordem nos detalhes"
+    "ed_offered_persons_hint": "Só as pessoas destacadas podem ser atribuídas neste cartão"
   },
   "pt-BR": {
     "ed_default_priority": "Prioridade padrão",
@@ -2357,8 +2350,7 @@ const _TRANSLATIONS = {
     "due_quick_month": "Em 1 mês",
     "due_quick_3months": "Em 3 meses",
     "ed_offered_persons": "Pessoas selecionáveis",
-    "ed_offered_persons_hint": "Somente as pessoas destacadas podem ser atribuídas neste cartão",
-    "ed_detail_order": "Ordem nos detalhes"
+    "ed_offered_persons_hint": "Somente as pessoas destacadas podem ser atribuídas neste cartão"
   },
   "es": {
     "ed_default_priority": "Prioridad predeterminada",
@@ -2651,8 +2643,7 @@ const _TRANSLATIONS = {
     "due_quick_month": "En 1 mes",
     "due_quick_3months": "En 3 meses",
     "ed_offered_persons": "Personas seleccionables",
-    "ed_offered_persons_hint": "En esta tarjeta solo se pueden asignar las personas resaltadas",
-    "ed_detail_order": "Orden en los detalles"
+    "ed_offered_persons_hint": "En esta tarjeta solo se pueden asignar las personas resaltadas"
   },
   "ru": {
     "ed_default_priority": "Приоритет по умолчанию",
@@ -2945,8 +2936,7 @@ const _TRANSLATIONS = {
     "due_quick_month": "Через 1 месяц",
     "due_quick_3months": "Через 3 месяца",
     "ed_offered_persons": "Доступные люди",
-    "ed_offered_persons_hint": "В этой карточке можно назначать только выделенных людей",
-    "ed_detail_order": "Порядок в деталях"
+    "ed_offered_persons_hint": "В этой карточке можно назначать только выделенных людей"
   },
   "cs": {
     "ed_default_priority": "Výchozí priorita",
@@ -3239,8 +3229,7 @@ const _TRANSLATIONS = {
     "due_quick_month": "Za 1 měsíc",
     "due_quick_3months": "Za 3 měsíce",
     "ed_offered_persons": "Volitelné osoby",
-    "ed_offered_persons_hint": "V této kartě lze přiřadit jen zvýrazněné osoby",
-    "ed_detail_order": "Pořadí v detailech"
+    "ed_offered_persons_hint": "V této kartě lze přiřadit jen zvýrazněné osoby"
   },
   "da": {
     "ed_default_priority": "Standardprioritet",
@@ -3533,8 +3522,7 @@ const _TRANSLATIONS = {
     "due_quick_month": "Om 1 måned",
     "due_quick_3months": "Om 3 måneder",
     "ed_offered_persons": "Valgbare personer",
-    "ed_offered_persons_hint": "Kun fremhævede personer kan tildeles i dette kort",
-    "ed_detail_order": "Rækkefølge i detaljer"
+    "ed_offered_persons_hint": "Kun fremhævede personer kan tildeles i dette kort"
   },
   "no": {
     "ed_default_priority": "Standardprioritet",
@@ -3827,8 +3815,7 @@ const _TRANSLATIONS = {
     "due_quick_month": "Om 1 måned",
     "due_quick_3months": "Om 3 måneder",
     "ed_offered_persons": "Valgbare personer",
-    "ed_offered_persons_hint": "Bare uthevede personer kan tildeles i dette kortet",
-    "ed_detail_order": "Rekkefølge i detaljer"
+    "ed_offered_persons_hint": "Bare uthevede personer kan tildeles i dette kortet"
   },
   "fi": {
     "ed_default_priority": "Oletusprioriteetti",
@@ -4121,8 +4108,7 @@ const _TRANSLATIONS = {
     "due_quick_month": "1 kuukauden päästä",
     "due_quick_3months": "3 kuukauden päästä",
     "ed_offered_persons": "Valittavat henkilöt",
-    "ed_offered_persons_hint": "Tässä kortissa voi määrittää vain korostettuja henkilöitä",
-    "ed_detail_order": "Järjestys tiedoissa"
+    "ed_offered_persons_hint": "Tässä kortissa voi määrittää vain korostettuja henkilöitä"
   },
   "hu": {
     "ed_default_priority": "Alapértelmezett prioritás",
@@ -4415,8 +4401,7 @@ const _TRANSLATIONS = {
     "due_quick_month": "1 hónap múlva",
     "due_quick_3months": "3 hónap múlva",
     "ed_offered_persons": "Választható személyek",
-    "ed_offered_persons_hint": "Ebben a kártyában csak a kiemelt személyek rendelhetők hozzá",
-    "ed_detail_order": "Sorrend a részletekben"
+    "ed_offered_persons_hint": "Ebben a kártyában csak a kiemelt személyek rendelhetők hozzá"
   },
   "de": {
     "ed_default_priority": "Standard-Priorität",
@@ -4709,8 +4694,7 @@ const _TRANSLATIONS = {
     "due_quick_month": "In 1 Monat",
     "due_quick_3months": "In 3 Monaten",
     "ed_offered_persons": "Auswählbare Personen",
-    "ed_offered_persons_hint": "Nur markierte Personen können in dieser Karte zugewiesen werden",
-    "ed_detail_order": "Reihenfolge in den Details"
+    "ed_offered_persons_hint": "Nur markierte Personen können in dieser Karte zugewiesen werden"
   }
 };
 
@@ -13166,14 +13150,9 @@ class HomeTasksCardEditor extends HTMLElement {
         background: color-mix(in srgb, var(--primary-color) 18%, transparent);
         color: var(--primary-color); border-color: var(--primary-color);
       }
-      .detail-order-list { display: flex; flex-direction: column; gap: 2px; margin: 4px 0; }
-      .detail-order-row { display: flex; align-items: center; gap: 6px; font-size: 13px; }
-      .detail-order-row > span { flex: 1; }
-      .detail-order-btn {
-        width: 28px; height: 24px; border-radius: 4px; border: 1px solid var(--divider-color);
-        background: none; color: var(--primary-text-color); cursor: pointer; font-size: 10px;
-      }
-      .detail-order-btn:disabled { opacity: 0.3; cursor: default; }
+      .detail-field-row { gap: 4px; }
+      .detail-field-row > .toggle-label { flex: 1; }
+      .detail-field-row > ha-switch { margin-left: 8px; }
       .group-label {
         display: flex; align-items: center; gap: 10px; margin: 14px 0 2px;
         font-size: 12px; font-weight: 500; color: var(--secondary-text-color, #888);
@@ -13830,6 +13809,70 @@ class HomeTasksCardEditor extends HTMLElement {
       return field;
     })();
 
+    // The task-details fields as one list: switched on or off, and moved up
+    // or down to set the order they appear in (detail_order). Selectable
+    // people sit under Persons, the only field they belong to.
+    const detailFields = (() => {
+      const FIELDS = [
+        ["notes", "ed_show_notes", "show_notes", true],
+        ["sub_tasks", "ed_show_sub_items", "show_sub_tasks", true],
+        ["person", "ed_show_person", "show_assigned_person", true],
+        ["section", "ed_show_section", "show_section", true],
+        ["priority", "ed_show_priority", "show_priority", true],
+        ["tags", "ed_show_tags", "show_tags", true],
+        ["due_date", "ed_show_due_date", "show_due_date", true],
+        ["reminders", "ed_show_reminders", "show_reminders", true],
+        ["recurrence", "ed_show_recurrence", "show_recurrence", true],
+        ["history", "ed_show_history", "show_history", false],
+        ["images", "ed_show_images", "show_images", false],
+      ];
+      const byKey = Object.fromEntries(FIELDS.map((f) => [f[0], f]));
+      const list = this._el("div", { className: "detail-field-list" });
+      const arrow = (icon, titleKey, disabled, onClick) => {
+        const btn = this._el("button", { className: "icon-btn", type: "button", title: this._t(titleKey) });
+        const ic = document.createElement("ha-icon");
+        ic.setAttribute("icon", icon);
+        btn.appendChild(ic);
+        btn.disabled = disabled;
+        btn.addEventListener("click", onClick);
+        return btn;
+      };
+      const draw = () => {
+        const cur = this._config.columns[tabIdx] || {};
+        const order = _detailOrder(cur, FIELDS.map((f) => f[0]));
+        list.replaceChildren();
+        order.forEach((key, i) => {
+          const [, labelKey, configKey, defaultOn] = byKey[key];
+          const isOn = (c) => (defaultOn ? c[configKey] !== false : c[configKey] === true);
+          const move = (d) => {
+            const next = order.slice();
+            [next[i], next[i + d]] = [next[i + d], next[i]];
+            updateCol({ detail_order: next });
+            draw();
+          };
+          const label = this._el("span", { className: "toggle-label", textContent: this._t(labelKey) });
+          const sw = document.createElement("ha-switch");
+          sw.checked = isOn(cur);
+          sw.setAttribute("aria-label", this._t(labelKey));
+          sw.addEventListener("change", () => {
+            updateCol({ [configKey]: sw.checked });
+            if (key === "person") offeredPersons.style.display = sw.checked ? "" : "none";
+            // Images has its switch in the Images section too.
+            if (key === "images") this._render();
+          });
+          list.appendChild(this._el("div", { className: "toggle-row detail-field-row", "data-key": key }, [
+            label,
+            arrow("mdi:arrow-up", "ed_move_up", i === 0, () => move(-1)),
+            arrow("mdi:arrow-down", "ed_move_down", i === order.length - 1, () => move(1)),
+            sw,
+          ]));
+          if (key === "person") list.appendChild(offeredPersons);
+        });
+      };
+      draw();
+      return list;
+    })();
+
     return this._el("div", { className: "visual-editor" }, [
       this._el("div", { className: "field" }, [
         this._el("div", { className: "field-wrap" }, [listSelect, this._el("span", { textContent: this._t("ed_list") })]),
@@ -13952,63 +13995,14 @@ class HomeTasksCardEditor extends HTMLElement {
         ),
       ]),
       makeSection("config", "mdi:tune", "ed_sec_display", [
-        this._el("div", { className: "toggle-grid" }, [
-          makeToggle("show-notes", "ed_show_notes", "show_notes", true),
-          makeToggle("show-sub-tasks", "ed_show_sub_items", "show_sub_tasks", true),
-          makeToggle("show-person", "ed_show_person", "show_assigned_person", true,
-            (on) => { offeredPersons.style.display = on ? "" : "none"; }),
-          makeToggle("show-priority", "ed_show_priority", "show_priority", true),
-          makeToggle("show-section", "ed_show_section", "show_section", true),
-          makeToggle("show-tags", "ed_show_tags", "show_tags", true),
-          makeToggle("show-due-date", "ed_show_due_date", "show_due_date", true),
-          makeToggle("show-reminders", "ed_show_reminders", "show_reminders", true),
-          makeToggle("show-recurrence", "ed_show_recurrence", "show_recurrence", true),
-          makeToggle("show-history", "ed_show_history", "show_history", false),
-          makeToggle("show-move", "ed_show_move", "show_move", true),
-        ]),
-        offeredPersons,
-        (() => {
-          // detail_order: move a field up/down in the task details.
-          const labels = {
-            notes: "ed_show_notes", sub_tasks: "ed_show_sub_items", person: "ed_show_person",
-            section: "ed_show_section", priority: "ed_show_priority", tags: "ed_show_tags", due_date: "ed_show_due_date",
-            reminders: "ed_show_reminders", recurrence: "ed_show_recurrence",
-            history: "ed_show_history", images: "ed_show_images",
-          };
-          const list = this._el("div", { className: "detail-order-list" });
-          const draw = () => {
-            const cur = (this._config.columns[tabIdx] || {});
-            const order = _detailOrder(cur, Object.keys(labels));
-            list.replaceChildren();
-            order.forEach((key, i) => {
-              const move = (d) => {
-                const next = order.slice();
-                [next[i], next[i + d]] = [next[i + d], next[i]];
-                updateCol({ detail_order: next });
-                draw();
-              };
-              const up = this._el("button", { className: "detail-order-btn", textContent: "\u25B2", title: "Up" });
-              const down = this._el("button", { className: "detail-order-btn", textContent: "\u25BC", title: "Down" });
-              up.type = "button"; down.type = "button";
-              up.disabled = i === 0; down.disabled = i === order.length - 1;
-              up.addEventListener("click", () => move(-1));
-              down.addEventListener("click", () => move(1));
-              list.appendChild(this._el("div", { className: "detail-order-row", "data-key": key }, [
-                this._el("span", { textContent: this._t(labels[key]) }), up, down,
-              ]));
-            });
-          };
-          draw();
-          return this._el("div", { className: "field" }, [
-            this._el("div", { className: "group-label", textContent: this._t("ed_detail_order") }),
-            list,
-          ]);
-        })(),
+        detailFields,
+        makeToggle("show-move", "ed_show_move", "show_move", true),
       ]),
       this._buildSectionsEditor(col),
       makeSection("images", "mdi:image-multiple", "ed_sec_images", [
         this._el("div", { className: "toggle-grid" }, [
-          makeToggle("show-images", "ed_show_images", "show_images", false),
+          // Also a row in the task-details list; redrawn so both show the same.
+          makeToggle("show-images", "ed_show_images", "show_images", false, () => this._render()),
           // Also tells the integration to generate for this list when no
           // dashboard is open - one switch, both behaviours.
           makeToggle("auto-image", "ed_auto_image", "auto_generate_image", false, (on) => {
