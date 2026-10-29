@@ -12446,7 +12446,10 @@ class HomeTasksCard extends HTMLElement {
         font-size: 11px; font-weight: 600; text-transform: uppercase;
         color: var(--todo-secondary-text); letter-spacing: 0.5px;
       }
-      .due-input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; overflow: hidden; }
+      /* Date and time side by side while both fit (date with its clear
+         button needs ~145px); in a narrow column (list_columns) the time
+         goes below the date instead of being pushed out on the right. */
+      .due-input-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 6px; overflow: hidden; }
       .due-input-row .field-wrap { min-width: 0; overflow: hidden; }
       .due-input-row .field-wrap input { padding: 18px 4px 4px 8px; font-size: 13px; }
       .due-input-row .field-wrap input:focus { padding: 17px 3px 3px 7px; }
@@ -12463,11 +12466,11 @@ class HomeTasksCard extends HTMLElement {
       .notes-view:focus-visible { outline: none; border: 2px solid var(--primary-color); padding: 9px 11px; }
       .notes-view a { color: var(--primary-color, #03a9f4); text-decoration: underline; cursor: pointer; }
       .field-wrap > span { position: absolute; top: 6px; left: 12px; font-size: 11px; font-weight: 400; color: var(--secondary-text-color); text-transform: none; letter-spacing: 0; pointer-events: none; }
-      .field-with-clear { display: flex; align-items: center; gap: 4px; }
+      .field-with-clear { display: flex; align-items: center; gap: 2px; min-width: 0; }
       .field-with-clear .field-wrap { flex: 1; min-width: 0; }
       .field-clear-btn {
         flex-shrink: 0; background: none; border: none; color: var(--secondary-text-color);
-        cursor: pointer; font-size: 16px; padding: 2px 6px; border-radius: 4px; line-height: 1;
+        cursor: pointer; font-size: 16px; padding: 2px 4px; border-radius: 4px; line-height: 1;
       }
       .field-clear-btn:hover { color: var(--error-color, #f44336); background: rgba(244, 67, 54, 0.15); }
       .field-wrap input:focus ~ span, .field-wrap textarea:focus ~ span { color: var(--primary-color); }
