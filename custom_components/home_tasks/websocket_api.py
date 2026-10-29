@@ -1772,6 +1772,11 @@ async def async_update_external_task(
     # echoed assigned_person can't collapse the list back to one).
     fields = dict(fields)
     people = _split_assignees(fields)
+    if "completed" in fields:
+        # Ours: the watcher of the provider's own app (external_watch)
+        # leaves this tick or reopen to the code below.
+        from .external_watch import note_own_change
+        note_own_change(hass, entity_id, task_uid)
 
     if adapter:
         unsynced = await adapter.async_update_task(task_uid, fields)
@@ -1825,7 +1830,7 @@ async def async_update_external_task(
             # task isn't seen as still-completed by startup recovery / UI.
             if merged and merged.get("completed_at"):
                 await _get_overlay_store(hass, entity_id).async_set_overlay(
-                    task_uid, completed_at=None, **_undo_count_off(merged)
+                    task_uid, completed_at=None, recreate=None, **_undo_count_off(merged)
                 )
     return unsynced or {}
 

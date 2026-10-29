@@ -80,6 +80,10 @@ OVERLAY_FIELDS = (
     "completed_at",
     "section_id",
     "image_url",
+    # What the provider held for a recurring task when it was completed
+    # (title, notes, due) - so the task can be put back if the provider's
+    # side is deleted before it reopens (issue #88). Ours alone.
+    "recreate",
 )
 
 _MAX_HISTORY = 50
@@ -120,7 +124,23 @@ def _empty_overlay() -> dict:
         "completed_at": None,
         "section_id": None,
         "image_url": None,
+        "recreate": None,
     }
+
+
+def _validate_recreate(value) -> dict:
+    """The provider-side snapshot kept for putting a deleted recurring task
+    back: its title, notes and due, nothing else."""
+    if not isinstance(value, dict):
+        raise ValueError("recreate must be an object")
+    out = {}
+    for key, limit in (("title", MAX_TITLE_LENGTH), ("notes", MAX_NOTES_LENGTH),
+                       ("due_date", 10), ("due_time", 5)):
+        v = value.get(key)
+        if v is not None and not isinstance(v, str):
+            raise ValueError(f"recreate.{key} must be a string or null")
+        out[key] = v[:limit] if v else None
+    return out
 
 
 def _trim_history(hist: list) -> None:
@@ -513,6 +533,8 @@ class ExternalTaskOverlayStore:
     @staticmethod
     def _validate_overlay_fields(kwargs: dict) -> None:
         """Validate incoming overlay fields (same rules as HomeTasksStore)."""
+        if kwargs.get("recreate") is not None:
+            kwargs["recreate"] = _validate_recreate(kwargs["recreate"])
         if "recurrence_time" in kwargs:
             kwargs["recurrence_time"] = validate_time(kwargs["recurrence_time"])
         apply_field_validators(kwargs)
