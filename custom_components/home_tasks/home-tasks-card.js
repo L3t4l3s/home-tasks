@@ -12018,7 +12018,8 @@ class HomeTasksCard extends HTMLElement {
       .section-body:empty { display: none; }
       /* list_columns: tasks flow into N columns (sections keep full-width
          headers). Each column is at least --ht-list-min-width (160px) wide, so a
-         narrow card falls back to fewer columns instead of squashing. */
+         narrow card falls back to fewer columns instead of squashing. An
+         expanded task keeps its column: its details open in place. */
       .list-cols .task-list,
       .list-cols .section-body:not(.collapsed):not(.expanding):not(:empty) {
         display: grid;
@@ -12029,7 +12030,6 @@ class HomeTasksCard extends HTMLElement {
         align-items: start;
       }
       .list-cols .task-list > :not(.task) { grid-column: 1 / -1; }
-      .list-cols .task.is-expanded { grid-column: 1 / -1; }
       .list-cols .task { min-width: 0; }
       .task {
         border: 1px solid var(--todo-divider); border-radius: var(--todo-radius);
