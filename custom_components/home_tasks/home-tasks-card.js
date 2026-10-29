@@ -12388,7 +12388,10 @@ class HomeTasksCard extends HTMLElement {
       .history-text { color: var(--primary-text-color); }
       .history-ts { color: var(--secondary-text-color); white-space: nowrap; font-size: 11px; }
       .history-empty { margin: 0; font-size: 12px; color: var(--secondary-text-color); }
-      .detail-actions { display: flex; justify-content: flex-end; padding-top: 4px; gap: 8px; }
+      /* In a narrow column (list_columns) the buttons wrap - Delete goes
+         below the others - instead of squeezing their labels. */
+      .detail-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; padding-top: 4px; gap: 8px; }
+      .detail-actions > button { white-space: nowrap; }
       .delete-task-btn {
         background: none; border: 1px solid var(--todo-error); color: var(--todo-error);
         padding: 6px 14px; border-radius: 4px; font-size: 12px; cursor: pointer; font-family: inherit;
