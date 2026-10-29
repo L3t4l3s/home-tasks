@@ -6,6 +6,13 @@ name: Prepare release
 # stay in: HA >=2026.3 serves it by convention via the /api/brands proxy).
 # HACS installs release versions from that zip asset (hacs.json zip_release),
 # so every release must carry it; release.yaml guards this on promotion.
+#
+# Release notes: commit them as RELEASE_NOTES.md (repo root) to main before
+# running this. They become the release description, and the file is removed
+# in the version-bump commit so the next release starts clean. A dispatch
+# input cannot carry them: workflow_dispatch inputs are single-line fields and
+# drop the newlines of pasted Markdown. Without the file, GitHub generates
+# the notes as before.
 
 on:
   workflow_dispatch:
@@ -51,6 +58,18 @@ jobs:
           grep -q "HOME-TASKS-CARD %c v$VERSION" custom_components/home_tasks/home-tasks-card.js \
             || { echo "::error::card banner bump did not apply"; exit 1; }
 
+      - name: Take over the release notes
+        run: |
+          if [ -f RELEASE_NOTES.md ]; then
+            cp RELEASE_NOTES.md "$RUNNER_TEMP/release-notes.md"
+            git rm -q RELEASE_NOTES.md
+            grep -q "v$VERSION" "$RUNNER_TEMP/release-notes.md" \
+              || echo "::warning::RELEASE_NOTES.md does not mention v$VERSION - notes for another version?"
+            echo "NOTES_FILE=$RUNNER_TEMP/release-notes.md" >> "$GITHUB_ENV"
+          else
+            echo "::notice::No RELEASE_NOTES.md on main - GitHub generates the notes."
+          fi
+
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
@@ -74,8 +93,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          if [ -n "$NOTES_FILE" ]; then
+            NOTES_ARGS=(--notes-file "$NOTES_FILE")
+          else
+            NOTES_ARGS=(--generate-notes)
+          fi
           gh release create "v$VERSION" home_tasks.zip \
             --target "$(git rev-parse HEAD)" \
             --title "v$VERSION" \
             --prerelease \
-            --generate-notes
+            "${NOTES_ARGS[@]}"
