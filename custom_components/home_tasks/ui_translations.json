@@ -295,8 +295,7 @@
     "ed_offered_persons_hint": "Only highlighted people can be assigned in this card",
     "add_with_details": "Add with details",
     "add_clear": "Clear",
-    "ed_show_add_details": "Details when adding",
-    "ed_collapse_recurrence": "Fold recurrence settings"
+    "ed_show_add_details": "Details when adding"
   },
   "nl": {
     "ed_default_priority": "Standaardprioriteit",
@@ -594,8 +593,7 @@
     "ed_offered_persons_hint": "Alleen gemarkeerde personen kunnen in deze kaart worden toegewezen",
     "ed_show_add_details": "Details bij toevoegen",
     "add_with_details": "Toevoegen met details",
-    "add_clear": "Wissen",
-    "ed_collapse_recurrence": "Herhaling inklappen"
+    "add_clear": "Wissen"
   },
   "it": {
     "ed_default_priority": "Priorità predefinita",
@@ -893,8 +891,7 @@
     "ed_offered_persons_hint": "In questa scheda si possono assegnare solo le persone evidenziate",
     "ed_show_add_details": "Dettagli alla creazione",
     "add_with_details": "Crea con dettagli",
-    "add_clear": "Cancella",
-    "ed_collapse_recurrence": "Comprimi ricorrenza"
+    "add_clear": "Cancella"
   },
   "pl": {
     "ed_default_priority": "Domyślny priorytet",
@@ -1192,8 +1189,7 @@
     "ed_offered_persons_hint": "W tej karcie można przypisać tylko wyróżnione osoby",
     "ed_show_add_details": "Szczegóły przy dodawaniu",
     "add_with_details": "Dodaj ze szczegółami",
-    "add_clear": "Wyczyść",
-    "ed_collapse_recurrence": "Zwiń powtarzanie"
+    "add_clear": "Wyczyść"
   },
   "sv": {
     "ed_default_priority": "Standardprioritet",
@@ -1491,8 +1487,7 @@
     "ed_offered_persons_hint": "Endast markerade personer kan tilldelas i det här kortet",
     "ed_show_add_details": "Detaljer vid tillägg",
     "add_with_details": "Lägg till med detaljer",
-    "add_clear": "Rensa",
-    "ed_collapse_recurrence": "Fäll ihop upprepning"
+    "add_clear": "Rensa"
   },
   "fr": {
     "ed_default_priority": "Priorité par défaut",
@@ -1790,8 +1785,7 @@
     "ed_offered_persons_hint": "Seules les personnes en surbrillance peuvent être assignées dans cette carte",
     "ed_show_add_details": "Détails à la création",
     "add_with_details": "Créer avec détails",
-    "add_clear": "Effacer",
-    "ed_collapse_recurrence": "Replier la récurrence"
+    "add_clear": "Effacer"
   },
   "pt": {
     "ed_default_priority": "Prioridade padrão",
@@ -2089,8 +2083,7 @@
     "ed_offered_persons_hint": "Só as pessoas destacadas podem ser atribuídas neste cartão",
     "ed_show_add_details": "Detalhes ao adicionar",
     "add_with_details": "Adicionar com detalhes",
-    "add_clear": "Limpar",
-    "ed_collapse_recurrence": "Recolher recorrência"
+    "add_clear": "Limpar"
   },
   "pt-BR": {
     "ed_default_priority": "Prioridade padrão",
@@ -2388,8 +2381,7 @@
     "ed_offered_persons_hint": "Somente as pessoas destacadas podem ser atribuídas neste cartão",
     "ed_show_add_details": "Detalhes ao adicionar",
     "add_with_details": "Adicionar com detalhes",
-    "add_clear": "Limpar",
-    "ed_collapse_recurrence": "Recolher recorrência"
+    "add_clear": "Limpar"
   },
   "es": {
     "ed_default_priority": "Prioridad predeterminada",
@@ -2687,8 +2679,7 @@
     "ed_offered_persons_hint": "En esta tarjeta solo se pueden asignar las personas resaltadas",
     "ed_show_add_details": "Detalles al añadir",
     "add_with_details": "Añadir con detalles",
-    "add_clear": "Borrar",
-    "ed_collapse_recurrence": "Contraer recurrencia"
+    "add_clear": "Borrar"
   },
   "ru": {
     "ed_default_priority": "Приоритет по умолчанию",
@@ -2986,8 +2977,7 @@
     "ed_offered_persons_hint": "В этой карточке можно назначать только выделенных людей",
     "ed_show_add_details": "Детали при добавлении",
     "add_with_details": "Добавить с деталями",
-    "add_clear": "Очистить",
-    "ed_collapse_recurrence": "Свернуть повторение"
+    "add_clear": "Очистить"
   },
   "cs": {
     "ed_default_priority": "Výchozí priorita",
@@ -3285,8 +3275,7 @@
     "ed_offered_persons_hint": "V této kartě lze přiřadit jen zvýrazněné osoby",
     "ed_show_add_details": "Podrobnosti při přidání",
     "add_with_details": "Přidat s podrobnostmi",
-    "add_clear": "Vymazat",
-    "ed_collapse_recurrence": "Sbalit opakování"
+    "add_clear": "Vymazat"
   },
   "da": {
     "ed_default_priority": "Standardprioritet",
@@ -3584,8 +3573,7 @@
     "ed_offered_persons_hint": "Kun fremhævede personer kan tildeles i dette kort",
     "ed_show_add_details": "Detaljer ved tilføjelse",
     "add_with_details": "Tilføj med detaljer",
-    "add_clear": "Ryd",
-    "ed_collapse_recurrence": "Fold gentagelse sammen"
+    "add_clear": "Ryd"
   },
   "no": {
     "ed_default_priority": "Standardprioritet",
@@ -3883,8 +3871,7 @@
     "ed_offered_persons_hint": "Bare uthevede personer kan tildeles i dette kortet",
     "ed_show_add_details": "Detaljer ved tillegg",
     "add_with_details": "Legg til med detaljer",
-    "add_clear": "Tøm",
-    "ed_collapse_recurrence": "Skjul gjentakelse"
+    "add_clear": "Tøm"
   },
   "fi": {
     "ed_default_priority": "Oletusprioriteetti",
@@ -4182,8 +4169,7 @@
     "ed_offered_persons_hint": "Tässä kortissa voi määrittää vain korostettuja henkilöitä",
     "ed_show_add_details": "Tiedot lisättäessä",
     "add_with_details": "Lisää tietojen kanssa",
-    "add_clear": "Tyhjennä",
-    "ed_collapse_recurrence": "Pienennä toistuvuus"
+    "add_clear": "Tyhjennä"
   },
   "hu": {
     "ed_default_priority": "Alapértelmezett prioritás",
@@ -4481,8 +4467,7 @@
     "ed_offered_persons_hint": "Ebben a kártyában csak a kiemelt személyek rendelhetők hozzá",
     "ed_show_add_details": "Részletek hozzáadáskor",
     "add_with_details": "Hozzáadás részletekkel",
-    "add_clear": "Törlés",
-    "ed_collapse_recurrence": "Ismétlés összecsukása"
+    "add_clear": "Törlés"
   },
   "de": {
     "ed_default_priority": "Standard-Priorität",
@@ -4780,7 +4765,6 @@
     "ed_offered_persons_hint": "Nur markierte Personen können in dieser Karte zugewiesen werden",
     "add_with_details": "Mit Details anlegen",
     "add_clear": "Leeren",
-    "ed_show_add_details": "Details beim Anlegen",
-    "ed_collapse_recurrence": "Wiederholung einklappen"
+    "ed_show_add_details": "Details beim Anlegen"
   }
 }

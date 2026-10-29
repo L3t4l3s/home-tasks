@@ -304,8 +304,7 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Only highlighted people can be assigned in this card",
     "add_with_details": "Add with details",
     "add_clear": "Clear",
-    "ed_show_add_details": "Details when adding",
-    "ed_collapse_recurrence": "Fold recurrence settings"
+    "ed_show_add_details": "Details when adding"
   },
   "nl": {
     "ed_default_priority": "Standaardprioriteit",
@@ -603,8 +602,7 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Alleen gemarkeerde personen kunnen in deze kaart worden toegewezen",
     "ed_show_add_details": "Details bij toevoegen",
     "add_with_details": "Toevoegen met details",
-    "add_clear": "Wissen",
-    "ed_collapse_recurrence": "Herhaling inklappen"
+    "add_clear": "Wissen"
   },
   "it": {
     "ed_default_priority": "Priorità predefinita",
@@ -902,8 +900,7 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "In questa scheda si possono assegnare solo le persone evidenziate",
     "ed_show_add_details": "Dettagli alla creazione",
     "add_with_details": "Crea con dettagli",
-    "add_clear": "Cancella",
-    "ed_collapse_recurrence": "Comprimi ricorrenza"
+    "add_clear": "Cancella"
   },
   "pl": {
     "ed_default_priority": "Domyślny priorytet",
@@ -1201,8 +1198,7 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "W tej karcie można przypisać tylko wyróżnione osoby",
     "ed_show_add_details": "Szczegóły przy dodawaniu",
     "add_with_details": "Dodaj ze szczegółami",
-    "add_clear": "Wyczyść",
-    "ed_collapse_recurrence": "Zwiń powtarzanie"
+    "add_clear": "Wyczyść"
   },
   "sv": {
     "ed_default_priority": "Standardprioritet",
@@ -1500,8 +1496,7 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Endast markerade personer kan tilldelas i det här kortet",
     "ed_show_add_details": "Detaljer vid tillägg",
     "add_with_details": "Lägg till med detaljer",
-    "add_clear": "Rensa",
-    "ed_collapse_recurrence": "Fäll ihop upprepning"
+    "add_clear": "Rensa"
   },
   "fr": {
     "ed_default_priority": "Priorité par défaut",
@@ -1799,8 +1794,7 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Seules les personnes en surbrillance peuvent être assignées dans cette carte",
     "ed_show_add_details": "Détails à la création",
     "add_with_details": "Créer avec détails",
-    "add_clear": "Effacer",
-    "ed_collapse_recurrence": "Replier la récurrence"
+    "add_clear": "Effacer"
   },
   "pt": {
     "ed_default_priority": "Prioridade padrão",
@@ -2098,8 +2092,7 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Só as pessoas destacadas podem ser atribuídas neste cartão",
     "ed_show_add_details": "Detalhes ao adicionar",
     "add_with_details": "Adicionar com detalhes",
-    "add_clear": "Limpar",
-    "ed_collapse_recurrence": "Recolher recorrência"
+    "add_clear": "Limpar"
   },
   "pt-BR": {
     "ed_default_priority": "Prioridade padrão",
@@ -2397,8 +2390,7 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Somente as pessoas destacadas podem ser atribuídas neste cartão",
     "ed_show_add_details": "Detalhes ao adicionar",
     "add_with_details": "Adicionar com detalhes",
-    "add_clear": "Limpar",
-    "ed_collapse_recurrence": "Recolher recorrência"
+    "add_clear": "Limpar"
   },
   "es": {
     "ed_default_priority": "Prioridad predeterminada",
@@ -2696,8 +2688,7 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "En esta tarjeta solo se pueden asignar las personas resaltadas",
     "ed_show_add_details": "Detalles al añadir",
     "add_with_details": "Añadir con detalles",
-    "add_clear": "Borrar",
-    "ed_collapse_recurrence": "Contraer recurrencia"
+    "add_clear": "Borrar"
   },
   "ru": {
     "ed_default_priority": "Приоритет по умолчанию",
@@ -2995,8 +2986,7 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "В этой карточке можно назначать только выделенных людей",
     "ed_show_add_details": "Детали при добавлении",
     "add_with_details": "Добавить с деталями",
-    "add_clear": "Очистить",
-    "ed_collapse_recurrence": "Свернуть повторение"
+    "add_clear": "Очистить"
   },
   "cs": {
     "ed_default_priority": "Výchozí priorita",
@@ -3294,8 +3284,7 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "V této kartě lze přiřadit jen zvýrazněné osoby",
     "ed_show_add_details": "Podrobnosti při přidání",
     "add_with_details": "Přidat s podrobnostmi",
-    "add_clear": "Vymazat",
-    "ed_collapse_recurrence": "Sbalit opakování"
+    "add_clear": "Vymazat"
   },
   "da": {
     "ed_default_priority": "Standardprioritet",
@@ -3593,8 +3582,7 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Kun fremhævede personer kan tildeles i dette kort",
     "ed_show_add_details": "Detaljer ved tilføjelse",
     "add_with_details": "Tilføj med detaljer",
-    "add_clear": "Ryd",
-    "ed_collapse_recurrence": "Fold gentagelse sammen"
+    "add_clear": "Ryd"
   },
   "no": {
     "ed_default_priority": "Standardprioritet",
@@ -3892,8 +3880,7 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Bare uthevede personer kan tildeles i dette kortet",
     "ed_show_add_details": "Detaljer ved tillegg",
     "add_with_details": "Legg til med detaljer",
-    "add_clear": "Tøm",
-    "ed_collapse_recurrence": "Skjul gjentakelse"
+    "add_clear": "Tøm"
   },
   "fi": {
     "ed_default_priority": "Oletusprioriteetti",
@@ -4191,8 +4178,7 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Tässä kortissa voi määrittää vain korostettuja henkilöitä",
     "ed_show_add_details": "Tiedot lisättäessä",
     "add_with_details": "Lisää tietojen kanssa",
-    "add_clear": "Tyhjennä",
-    "ed_collapse_recurrence": "Pienennä toistuvuus"
+    "add_clear": "Tyhjennä"
   },
   "hu": {
     "ed_default_priority": "Alapértelmezett prioritás",
@@ -4490,8 +4476,7 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Ebben a kártyában csak a kiemelt személyek rendelhetők hozzá",
     "ed_show_add_details": "Részletek hozzáadáskor",
     "add_with_details": "Hozzáadás részletekkel",
-    "add_clear": "Törlés",
-    "ed_collapse_recurrence": "Ismétlés összecsukása"
+    "add_clear": "Törlés"
   },
   "de": {
     "ed_default_priority": "Standard-Priorität",
@@ -4789,8 +4774,7 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Nur markierte Personen können in dieser Karte zugewiesen werden",
     "add_with_details": "Mit Details anlegen",
     "add_clear": "Leeren",
-    "ed_show_add_details": "Details beim Anlegen",
-    "ed_collapse_recurrence": "Wiederholung einklappen"
+    "ed_show_add_details": "Details beim Anlegen"
   }
 };
 
@@ -9011,7 +8995,9 @@ class HomeTasksCard extends HTMLElement {
       // A draft has no id the backend knows yet: sub-tasks, images and the
       // history need the task to exist.
       if (draft && (key === "sub_tasks" || key === "images" || key === "history")) continue;
-      if (_detailFieldOn(col, key) && (key !== "section" || hasSections)) details.push(build[key]());
+      if (_detailFieldOn(col, key) && (key !== "section" || hasSections)) {
+        details.push(this._foldableDetail(build[key](), key, task, colIdx));
+      }
     }
     if (!draft) details.push(this._buildActionsSection(task, colIdx));
 
@@ -9027,6 +9013,108 @@ class HomeTasksCard extends HTMLElement {
     });
 
     return wrapper;
+  }
+
+  // Fields of the task details folded by the user, by key: one choice for
+  // every task and card in this browser, kept in localStorage like the
+  // folded sections of a list.
+  _foldedDetails() {
+    if (!this._foldedDetailKeys) {
+      try {
+        const raw = window.localStorage.getItem("home_tasks_card:detail_fold");
+        const parsed = raw ? JSON.parse(raw) : [];
+        this._foldedDetailKeys = new Set(Array.isArray(parsed) ? parsed : []);
+      } catch (e) {
+        this._foldedDetailKeys = new Set();  // storage blocked: folding lasts this session
+      }
+    }
+    return this._foldedDetailKeys;
+  }
+
+  _setDetailFolded(key, folded) {
+    const keys = this._foldedDetails();
+    if (folded) keys.add(key);
+    else keys.delete(key);
+    try {
+      window.localStorage.setItem("home_tasks_card:detail_fold", JSON.stringify([...keys]));
+    } catch (e) { /* storage blocked: folding lasts this session */ }
+  }
+
+  // A one-line summary of what a field holds, shown next to its heading
+  // while it is folded; "" when nothing is set (then nothing is shown).
+  _detailSummary(key, task, colIdx) {
+    const nameOf = (eid) => this._hass?.states?.[eid]?.attributes?.friendly_name || eid;
+    switch (key) {
+      case "notes": return (task.notes || "").trim().split("\n")[0];
+      case "sub_tasks": return this._getSubTaskProgress(task) || "";
+      case "person": {
+        const names = _assignees(task).map(nameOf);
+        if (!names.length && task.assigned_name) names.push(task.assigned_name);
+        return names.join(", ");
+      }
+      case "section":
+        return (this._columns[colIdx].sections || []).find((x) => x.id === task.section_id)?.name || "";
+      case "priority": return task.priority ? this._buildPriorityBadge(task).textContent : "";
+      case "tags": return (task.tags || []).map((t) => "#" + t).join(" ");
+      case "due_date": return task.due_date ? this._formatDueDate(task.due_date, task.due_time) : "";
+      case "reminders": return (task.reminders || []).map((m) => {
+        const entry = REMINDER_OFFSETS.find(([v]) => v === m);
+        return entry ? this._t(entry[1]) : `${m} min`;
+      }).join(", ");
+      case "recurrence": {
+        // Its switch stays in the heading; the rule follows when it is on.
+        const badge = task.recurrence_enabled ? this._buildRecurrenceBadge(task) : null;
+        return badge ? badge.textContent.replace(/^↻\s*/, "").trim() : "";
+      }
+      default: return "";  // history, images: nothing short to say
+    }
+  }
+
+  // Makes a task-details field foldable: a tap on its heading folds it to
+  // that heading (plus the summary of what is set), and the choice is
+  // remembered per field. The heading is the field's label - for the
+  // recurrence its switch row, so the switch stays usable while folded.
+  _foldableDetail(section, key, task, colIdx) {
+    const head = section.firstElementChild;
+    const label = head && (head.classList.contains("detail-label") ? head : head.querySelector(".detail-label"));
+    if (!label) return section;
+    section.dataset.detailKey = key;
+    head.classList.add("detail-fold-head");
+    const caret = document.createElement("ha-icon");
+    caret.className = "detail-fold-caret";
+    caret.setAttribute("icon", "mdi:chevron-down");
+    head.insertBefore(caret, head.firstChild);
+    // Inside the heading, so folding (which hides all but the heading)
+    // leaves it in view.
+    const summary = this._el("span", { className: "detail-fold-summary" });
+    if (head === label) head.appendChild(summary);
+    else label.after(summary);
+    label.tabIndex = 0;
+    label.setAttribute("role", "button");
+    const apply = (folded) => {
+      section.classList.toggle("folded", folded);
+      label.setAttribute("aria-expanded", String(!folded));
+      summary.textContent = folded ? this._detailSummary(key, task, colIdx) : "";
+    };
+    apply(this._foldedDetails().has(key));
+    const toggle = () => {
+      const folded = !section.classList.contains("folded");
+      this._setDetailFolded(key, folded);
+      apply(folded);
+    };
+    head.addEventListener("click", (e) => {
+      // The recurrence switch (and anything else interactive in the
+      // heading) does its own job.
+      if (e.target.closest("ha-switch, input, button, select, a")) return;
+      e.preventDefault();
+      toggle();
+    });
+    label.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      toggle();
+    });
+    return section;
   }
 
   _buildDateSection(task, colIdx) {
@@ -10405,28 +10493,7 @@ class HomeTasksCard extends HTMLElement {
       recurrenceEndDateWrap,
       recurrenceCountRow,
     ];
-    const col = this._config.columns[colIdx] || {};
-    if (col.collapse_recurrence !== true) {
-      return this._el("div", { className: "detail-section" }, recurrenceRows);
-    }
-    // collapse_recurrence: the recurrence editor is a dozen rows; fold it
-    // behind a one-line summary ("Recurrence: every 2 weeks") until tapped.
-    // Open state is kept per task across re-renders.
-    this._recurrenceFoldOpen = this._recurrenceFoldOpen || new Set();
-    const badge = task.recurrence_enabled ? this._buildRecurrenceBadge(task) : null;
-    const summaryText = (badge && badge.textContent.replace(/^\u21BB\s*/, "").trim()) || this._t("history_disabled");
-    const fold = this._el("details", { className: "detail-section recurrence-fold" });
-    fold.open = this._recurrenceFoldOpen.has(task.id);
-    fold.addEventListener("toggle", () => {
-      if (fold.open) this._recurrenceFoldOpen.add(task.id);
-      else this._recurrenceFoldOpen.delete(task.id);
-    });
-    fold.appendChild(this._el("summary", {
-      className: "detail-label recurrence-fold-summary",
-      textContent: `${this._t("recurrence")}: ${summaryText}`,
-    }));
-    for (const row of recurrenceRows) fold.appendChild(row);
-    return fold;
+    return this._el("div", { className: "detail-section" }, recurrenceRows);
   }
 
   _buildAssignedPersonSection(task, colIdx) {
@@ -12163,11 +12230,21 @@ class HomeTasksCard extends HTMLElement {
         color: var(--todo-primary); border-color: var(--todo-primary);
       }
       .due-quick-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-      .recurrence-fold > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 6px; }
-      .recurrence-fold > summary::-webkit-details-marker { display: none; }
-      .recurrence-fold > summary::after { content: "\\25B8"; opacity: 0.6; transition: transform 0.15s; }
-      .recurrence-fold[open] > summary::after { transform: rotate(90deg); }
-      .recurrence-fold[open] > summary { margin-bottom: 8px; }
+      /* Folding a task-details field: its heading stays, with a caret and,
+         while folded, a one-line summary of what is set. */
+      .detail-fold-head { cursor: pointer; display: flex; align-items: center; gap: 6px; min-width: 0; }
+      .detail-section.folded > label.detail-fold-head { margin-bottom: 0; }
+      .detail-fold-caret {
+        --mdc-icon-size: 16px; flex-shrink: 0; color: var(--todo-secondary-text);
+        transition: transform 0.15s;
+      }
+      .detail-section.folded .detail-fold-caret { transform: rotate(-90deg); }
+      .detail-fold-summary {
+        flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        font-weight: normal; text-transform: none; letter-spacing: normal;
+        color: var(--todo-secondary-text);
+      }
+      .detail-section.folded > :not(.detail-fold-head) { display: none !important; }
       .priority-btn {
         flex: 1; padding: 5px 8px; border-radius: 4px; font-size: 12px; font-family: inherit;
         border: 1px solid var(--todo-divider); background: var(--todo-bg);
@@ -14425,7 +14502,6 @@ class HomeTasksCardEditor extends HTMLElement {
       ]),
       makeSection("config", "mdi:tune", "ed_sec_display", [
         detailFields,
-        makeToggle("collapse-recurrence", "ed_collapse_recurrence", "collapse_recurrence", false),
         makeToggle("show-move", "ed_show_move", "show_move", true),
         offeredPersons,
       ]),
