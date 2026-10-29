@@ -95,6 +95,43 @@ describe('show_add_details (draft)', () => {
     assert.ok(!calls.some((c) => c.type === 'home_tasks/add_task'));
   });
 
+  test('the pencil pressed again closes the draft and gives the title back', async () => {
+    const { card, calls } = await makeCard({ show_add_details: true });
+    const cs = card._columns[0];
+    cs.newTaskTitle = 'Gutters';
+    await card._openDraft(0);
+    const btn = card._buildColumnAddTask(cs, 0).querySelector('.add-details-btn');
+    assert.ok(btn.classList.contains('active'));
+    assert.equal(btn.getAttribute('aria-pressed'), 'true');
+    btn.click();
+    assert.equal(cs.draft, null);
+    assert.equal(cs.newTaskTitle, 'Gutters');
+    assert.ok(!calls.some((c) => c.type === 'home_tasks/add_task'));
+  });
+
+  test('the clear button shows while a draft is open and drops it', async () => {
+    const { card, calls } = await makeCard({ show_add_details: true });
+    const cs = card._columns[0];
+    cs.newTaskTitle = 'Gutters';
+    await card._openDraft(0);
+    const clear = card._buildColumnAddTask(cs, 0).querySelector('.add-clear-btn');
+    assert.equal(clear.style.display, '', 'shown although the field is empty');
+    clear.click();
+    assert.equal(cs.draft, null);
+    assert.equal(cs.newTaskTitle, '');
+    assert.ok(!calls.some((c) => c.type === 'home_tasks/add_task'));
+  });
+
+  test('closing keeps a title typed in the add row meanwhile', async () => {
+    const { card } = await makeCard({ show_add_details: true });
+    const cs = card._columns[0];
+    cs.newTaskTitle = 'Gutters';
+    await card._openDraft(0);
+    cs.newTaskTitle = 'Windows';
+    card._closeDraft(0, true);
+    assert.equal(cs.newTaskTitle, 'Windows');
+  });
+
   test('recurrence set on the draft is applied after creation', async () => {
     const { card, calls } = await makeCard({ show_add_details: true });
     const cs = card._columns[0];

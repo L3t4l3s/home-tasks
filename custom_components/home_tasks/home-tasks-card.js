@@ -5612,6 +5612,24 @@ class HomeTasksCard extends HTMLElement {
     this._render();
   }
 
+  // Closes the draft. With giveBack, its title and due date go back to the
+  // add row (Cancel, or the pencil again) unless something new was typed
+  // there meanwhile; without, the draft is dropped (the add row's clear).
+  _closeDraft(colIdx, giveBack) {
+    const cs = this._columns[colIdx];
+    const draft = cs.draft;
+    if (!draft) return;
+    if (giveBack && !cs.newTaskTitle) {
+      cs.newTaskTitle = draft.title || "";
+      if (this._config.columns[colIdx].show_add_due === true) {
+        cs.newTaskDue = draft.due_date || "";
+        cs.newTaskDueTime = draft.due_time || "";
+      }
+    }
+    cs.draft = null;
+    this._render();
+  }
+
   _buildDraftPanel(cs, colIdx) {
     const draft = cs.draft;
     const titleInput = this._el("input", {
@@ -5623,15 +5641,7 @@ class HomeTasksCard extends HTMLElement {
     const addBtn = this._el("button", { className: "add-btn", textContent: this._t("dialog_add") });
     addBtn.addEventListener("click", () => this._saveDraft(colIdx));
     const cancelBtn = this._el("button", { className: "draft-cancel-btn", textContent: this._t("dialog_cancel") });
-    cancelBtn.addEventListener("click", () => {
-      cs.newTaskTitle = draft.title || "";
-      if (this._config.columns[colIdx].show_add_due === true) {
-        cs.newTaskDue = draft.due_date || "";
-        cs.newTaskDueTime = draft.due_time || "";
-      }
-      cs.draft = null;
-      this._render();
-    });
+    cancelBtn.addEventListener("click", () => this._closeDraft(colIdx, true));
     return this._el("div", { className: "task-draft" }, [
       titleInput,
       this._buildTaskDetails(draft, colIdx, { draft: true }),
@@ -7386,19 +7396,25 @@ class HomeTasksCard extends HTMLElement {
     const addBtn = this._el("button", { className: "add-btn", textContent: "+" });
     addBtn.addEventListener("click", () => this._addTask(colIdx));
 
-    // Clear (x) inside the field, shown while there is text: empties the
-    // title and any search it was driving, and keeps the cursor there.
+    // Clear (x) inside the field, shown while there is text or a draft:
+    // empties the title and any search it was driving, drops the draft, and
+    // keeps the cursor there.
     const clearBtn = this._el("button", {
       className: "add-clear-btn", textContent: "\u00D7", title: this._t("add_clear"),
     });
     clearBtn.type = "button";
     clearBtn.setAttribute("aria-label", this._t("add_clear"));
-    if (!cs.newTaskTitle) clearBtn.style.display = "none";
-    addInput.addEventListener("input", () => { clearBtn.style.display = addInput.value ? "" : "none"; });
+    if (!cs.newTaskTitle && !cs.draft) clearBtn.style.display = "none";
+    addInput.addEventListener("input", () => { clearBtn.style.display = (addInput.value || cs.draft) ? "" : "none"; });
     clearBtn.addEventListener("click", () => {
       addInput.value = "";
       cs.newTaskTitle = "";
       clearBtn.style.display = "none";
+      if (cs.draft) {
+        cs.taskSearchQuery = "";
+        this._closeDraft(colIdx, false);
+        return;
+      }
       if (cs.taskSearchQuery) {
         cs.taskSearchQuery = "";
         this._refreshTaskListDOM(colIdx);
@@ -7457,14 +7473,19 @@ class HomeTasksCard extends HTMLElement {
       }
       dueRow = this._el("div", { className: "add-due-row" }, rowChildren);
     }
-    // show_add_details: a second button that creates the task and opens
-    // its details straight away, for filling in date, people etc. at once.
+    // show_add_details: a second button that drafts the task with its
+    // details under the add row; pressed again, it closes the draft.
     if (col.show_add_details === true) {
       const detailsBtn = this._el("button", {
-        className: "add-btn add-details-btn", textContent: "\u270E", title: this._t("add_with_details"),
+        className: "add-btn add-details-btn" + (cs.draft ? " active" : ""),
+        textContent: "\u270E", title: this._t("add_with_details"),
       });
       detailsBtn.setAttribute("aria-label", this._t("add_with_details"));
-      detailsBtn.addEventListener("click", () => this._openDraft(colIdx));
+      detailsBtn.setAttribute("aria-pressed", cs.draft ? "true" : "false");
+      detailsBtn.addEventListener("click", () => {
+        if (cs.draft) this._closeDraft(colIdx, true);
+        else this._openDraft(colIdx);
+      });
       children.push(detailsBtn);
     }
     children.push(addBtn);
@@ -11822,6 +11843,9 @@ class HomeTasksCard extends HTMLElement {
       }
       .add-btn:hover { opacity: 0.9; }
       .add-details-btn { padding: 10px 14px; }
+      .add-details-btn.active {
+        background: none; color: var(--todo-primary); box-shadow: inset 0 0 0 2px var(--todo-primary);
+      }
       .task-draft {
         border: 1px solid var(--todo-primary); border-radius: var(--todo-radius);
         padding: 10px; margin: -8px 0 16px; display: flex; flex-direction: column; gap: 8px;
