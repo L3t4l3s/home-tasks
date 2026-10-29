@@ -5581,8 +5581,8 @@ class HomeTasksCard extends HTMLElement {
   // detail fields as an existing one, and only created on Add.
   async _openDraft(colIdx) {
     const cs = this._columns[colIdx];
+    // An empty field is fine: the title can follow in it (Add nudges if not).
     const title = (cs.newTaskTitle || "").trim();
-    if (!title) { this._nudgeAddInput(colIdx); return; }
     const isExt = this._isExternalCol(colIdx);
     // The list's defaults, so the draft shows what the task will get.
     let defaults = isExt ? (this._sourceDefaults[this._colEntityId(colIdx)] || {}) : {};
@@ -5610,16 +5610,22 @@ class HomeTasksCard extends HTMLElement {
     cs.newTaskDueTime = "";
     cs.taskSearchQuery = "";
     this._render();
+    // The field is now the draft's title: ready for typing it. A frame later,
+    // as the browser ignores focus() on the freshly rebuilt card.
+    requestAnimationFrame(() => {
+      const input = this.shadowRoot?.querySelector(`.add-input[data-focus-key="add_task_col_${colIdx}"]`);
+      try { input?.focus(); } catch (_) { /* focus is a nicety, never a failure */ }
+    });
   }
 
-  // Closes the draft. With giveBack, its title and due date go back to the
-  // add row (Cancel, or the pencil again) unless something new was typed
-  // there meanwhile; without, the draft is dropped (the add row's clear).
+  // Closes the draft. With giveBack, its title and due date stay in the add
+  // row (Cancel, Escape, or the pencil again); without, the draft is dropped
+  // (the add row's clear).
   _closeDraft(colIdx, giveBack) {
     const cs = this._columns[colIdx];
     const draft = cs.draft;
     if (!draft) return;
-    if (giveBack && !cs.newTaskTitle) {
+    if (giveBack) {
       cs.newTaskTitle = draft.title || "";
       if (this._config.columns[colIdx].show_add_due === true) {
         cs.newTaskDue = draft.due_date || "";
@@ -5630,20 +5636,15 @@ class HomeTasksCard extends HTMLElement {
     this._render();
   }
 
+  // The draft's title is the add row's field (see _buildColumnAddTask); the
+  // panel holds its detail fields.
   _buildDraftPanel(cs, colIdx) {
     const draft = cs.draft;
-    const titleInput = this._el("input", {
-      type: "text", className: "add-input draft-title", value: draft.title,
-      "data-focus-key": `draft_title_col_${colIdx}`, autocomplete: "off",
-    });
-    titleInput.addEventListener("input", () => { draft.title = titleInput.value; });
-    titleInput.addEventListener("keydown", (e) => { if (e.key === "Enter") this._saveDraft(colIdx); });
     const addBtn = this._el("button", { className: "add-btn", textContent: this._t("dialog_add") });
     addBtn.addEventListener("click", () => this._saveDraft(colIdx));
     const cancelBtn = this._el("button", { className: "draft-cancel-btn", textContent: this._t("dialog_cancel") });
     cancelBtn.addEventListener("click", () => this._closeDraft(colIdx, true));
     return this._el("div", { className: "task-draft" }, [
-      titleInput,
       this._buildTaskDetails(draft, colIdx, { draft: true }),
       this._el("div", { className: "draft-actions" }, [cancelBtn, addBtn]),
     ]);
@@ -5654,7 +5655,7 @@ class HomeTasksCard extends HTMLElement {
     const draft = cs.draft;
     if (!draft || draft._saving) return;
     const title = (draft.title || "").trim();
-    if (!title) return;
+    if (!title) { this._nudgeAddInput(colIdx); return; }
     const base = {};
     for (const k of ["due_date", "due_time", "notes", "priority", "tags", "reminders", "assigned_persons"]) {
       const v = draft[k];
@@ -7361,16 +7362,20 @@ class HomeTasksCard extends HTMLElement {
     // Per-column opt-out via show_task_search (default on); editor switch
     // lives in HomeTasksCardEditor further below.
     const searchEnabled = col.show_task_search !== false;
+    // While a task is drafted (show_add_details), the field is its title:
+    // no search, Enter or + creates it, Escape closes the draft.
+    const draft = cs.draft;
 
     const addInput = this._el("input", {
       type: "text",
       className: "add-input",
       placeholder: this._t("add_placeholder"),
-      value: cs.newTaskTitle,
+      value: draft ? draft.title : cs.newTaskTitle,
       "data-focus-key": `add_task_col_${colIdx}`,
       autocomplete: "off",
     });
     addInput.addEventListener("input", (e) => {
+      if (draft) { draft.title = e.target.value; return; }
       cs.newTaskTitle = e.target.value;
       if (searchEnabled) {
         // Mirror the search text and refresh only the list (see
@@ -7381,6 +7386,11 @@ class HomeTasksCard extends HTMLElement {
       }
     });
     addInput.addEventListener("keydown", (e) => {
+      if (draft) {
+        if (e.key === "Enter") this._saveDraft(colIdx);
+        else if (e.key === "Escape") { e.preventDefault(); this._closeDraft(colIdx, true); }
+        return;
+      }
       if (e.key === "Enter") {
         this._addTask(colIdx);
       } else if (searchEnabled && e.key === "Escape" && cs.taskSearchQuery) {
@@ -7394,7 +7404,7 @@ class HomeTasksCard extends HTMLElement {
       }
     });
     const addBtn = this._el("button", { className: "add-btn", textContent: "+" });
-    addBtn.addEventListener("click", () => this._addTask(colIdx));
+    addBtn.addEventListener("click", () => (draft ? this._saveDraft(colIdx) : this._addTask(colIdx)));
 
     // Clear (x) inside the field, shown while there is text or a draft:
     // empties the title and any search it was driving, drops the draft, and
@@ -7404,14 +7414,14 @@ class HomeTasksCard extends HTMLElement {
     });
     clearBtn.type = "button";
     clearBtn.setAttribute("aria-label", this._t("add_clear"));
-    if (!cs.newTaskTitle && !cs.draft) clearBtn.style.display = "none";
-    addInput.addEventListener("input", () => { clearBtn.style.display = (addInput.value || cs.draft) ? "" : "none"; });
+    if (!cs.newTaskTitle && !draft) clearBtn.style.display = "none";
+    addInput.addEventListener("input", () => { clearBtn.style.display = (addInput.value || draft) ? "" : "none"; });
     clearBtn.addEventListener("click", () => {
       addInput.value = "";
       cs.newTaskTitle = "";
       clearBtn.style.display = "none";
-      if (cs.draft) {
-        cs.taskSearchQuery = "";
+      if (draft) {
+        try { addInput.focus(); } catch (_) { /* best-effort */ }
         this._closeDraft(colIdx, false);
         return;
       }
@@ -7440,7 +7450,8 @@ class HomeTasksCard extends HTMLElement {
     // Due date at creation (issue #38): opt-in per column. When enabled, a
     // second row with date (+ time) inputs sits under the add-task input;
     // leaving it empty simply creates the task without a due date.
-    const showAddDue = col.show_add_due === true && this._colSupportsDue(colIdx);
+    // A draft has its own due date field among the details.
+    const showAddDue = col.show_add_due === true && this._colSupportsDue(colIdx) && !draft;
     let dueRow = null;
     if (showAddDue) {
       const dateInput = this._el("input", {
@@ -11850,7 +11861,6 @@ class HomeTasksCard extends HTMLElement {
         border: 1px solid var(--todo-primary); border-radius: var(--todo-radius);
         padding: 10px; margin: -8px 0 16px; display: flex; flex-direction: column; gap: 8px;
       }
-      .task-draft .draft-title { width: 100%; box-sizing: border-box; }
       /* the details normally open via a height animation on the task row */
       .task-draft .task-details { height: auto; border-top: none; }
       .draft-actions { display: flex; justify-content: flex-end; gap: 8px; }

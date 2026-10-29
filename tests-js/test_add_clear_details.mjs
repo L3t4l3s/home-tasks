@@ -122,14 +122,61 @@ describe('show_add_details (draft)', () => {
     assert.ok(!calls.some((c) => c.type === 'home_tasks/add_task'));
   });
 
-  test('closing keeps a title typed in the add row meanwhile', async () => {
-    const { card } = await makeCard({ show_add_details: true });
+  test('the add field is the draft title; no due row and no search meanwhile', async () => {
+    const { card, calls } = await makeCard({ show_add_details: true, show_add_due: true });
+    card._colSupportsDue = () => true;
+    const cs = card._columns[0];
+    cs.newTaskTitle = 'Gutters';
+    const before = card._buildColumnAddTask(cs, 0);
+    assert.ok(before.querySelector('.add-due-row'), 'due row without a draft');
+    await card._openDraft(0);
+    assert.equal(card._buildDraftPanel(cs, 0).querySelector('input.add-input'), null, 'no second title field');
+    const row = card._buildColumnAddTask(cs, 0);
+    assert.equal(row.querySelector('.add-due-row'), null, 'due row gone while drafting');
+    const input = row.querySelector('.add-input');
+    assert.equal(input.value, 'Gutters');
+    card._refreshTaskListDOM = () => { throw new Error('searched'); };
+    input.value = 'Clean gutters';
+    input.dispatchEvent(new window.Event('input'));
+    assert.equal(cs.draft.title, 'Clean gutters');
+    assert.equal(cs.taskSearchQuery, '');
+    input.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter' }));
+    await new Promise((r) => setTimeout(r, 0));
+    const add = calls.find((c) => c.type === 'home_tasks/add_task');
+    assert.equal(add.title, 'Clean gutters');
+    assert.equal(cs.draft, null);
+  });
+
+  test('the pencil opens the draft with an empty field too; Add without a title creates nothing', async () => {
+    const { card, calls } = await makeCard({ show_add_details: true });
+    const cs = card._columns[0];
+    let nudged = 0;
+    card._nudgeAddInput = () => { nudged++; };
+    card._buildColumnAddTask(cs, 0).querySelector('.add-details-btn').click();
+    await new Promise((r) => setTimeout(r, 0));
+    assert.ok(cs.draft, 'draft opened');
+    assert.equal(cs.draft.title, '');
+    await card._saveDraft(0);
+    assert.equal(nudged, 1);
+    assert.ok(cs.draft, 'still open');
+    assert.ok(!calls.some((c) => c.type === 'home_tasks/add_task'));
+  });
+
+  test('+ creates the draft; Escape in the field closes it', async () => {
+    const { card, calls } = await makeCard({ show_add_details: true });
     const cs = card._columns[0];
     cs.newTaskTitle = 'Gutters';
     await card._openDraft(0);
-    cs.newTaskTitle = 'Windows';
-    card._closeDraft(0, true);
-    assert.equal(cs.newTaskTitle, 'Windows');
+    let row = card._buildColumnAddTask(cs, 0);
+    row.querySelector('.add-input').dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape' }));
+    assert.equal(cs.draft, null);
+    assert.equal(cs.newTaskTitle, 'Gutters');
+    await card._openDraft(0);
+    row = card._buildColumnAddTask(cs, 0);
+    [...row.querySelectorAll('.add-btn')].find((b) => b.textContent === '+').click();
+    await new Promise((r) => setTimeout(r, 0));
+    assert.equal(calls.filter((c) => c.type === 'home_tasks/add_task').length, 1);
+    assert.equal(cs.draft, null);
   });
 
   test('recurrence set on the draft is applied after creation', async () => {
