@@ -152,6 +152,59 @@ async def test_todo_delete_via_service(hass: HomeAssistant, mock_config_entry, s
     assert all(t["id"] != task["id"] for t in store.tasks)
 
 
+async def _completed_recurring(hass, store, title="Bins"):
+    task = await store.async_add_task(title)
+    await store.async_update_task(
+        task["id"], due_date="2026-10-24", recurrence_enabled=True,
+        recurrence_unit="weeks", recurrence_value=1,
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+    return task
+
+
+async def test_clear_completed_keeps_recurring_tasks(hass: HomeAssistant, mock_config_entry, store) -> None:
+    """Issue #88: "clear completed" removes the done one-offs, but a recurring
+    task waiting for its next occurrence stays - it is not finished for good."""
+    recurring = await _completed_recurring(hass, store)
+    once = await store.async_add_task("Once")
+    await store.async_update_task(once["id"], completed=True)
+    await hass.async_block_till_done()
+
+    entity_id = _get_todo_entity_id(hass, mock_config_entry.entry_id)
+    await hass.services.async_call(
+        "todo", "remove_completed_items", {"entity_id": entity_id}, blocking=True,
+    )
+    await hass.async_block_till_done()
+    ids = {t["id"] for t in store.tasks}
+    assert recurring["id"] in ids
+    assert once["id"] not in ids
+
+
+async def test_removing_only_a_recurring_task_says_why(hass: HomeAssistant, mock_config_entry, store) -> None:
+    from homeassistant.exceptions import ServiceValidationError
+
+    recurring = await _completed_recurring(hass, store, "Bins")
+    entity_id = _get_todo_entity_id(hass, mock_config_entry.entry_id)
+    with pytest.raises(ServiceValidationError, match="Bins"):
+        await hass.services.async_call(
+            "todo", "remove_item", {"entity_id": entity_id, "item": [recurring["id"]]}, blocking=True,
+        )
+    assert any(t["id"] == recurring["id"] for t in store.tasks)
+
+
+async def test_an_open_recurring_task_can_be_removed(hass: HomeAssistant, mock_config_entry, store) -> None:
+    """Only the completed one waiting to reopen is kept; removing an open
+    recurring task is a deliberate delete."""
+    task = await store.async_add_task("Bins")
+    await store.async_update_task(task["id"], recurrence_enabled=True, recurrence_unit="weeks", recurrence_value=1)
+    entity_id = _get_todo_entity_id(hass, mock_config_entry.entry_id)
+    await hass.services.async_call(
+        "todo", "remove_item", {"entity_id": entity_id, "item": [task["id"]]}, blocking=True,
+    )
+    assert all(t["id"] != task["id"] for t in store.tasks)
+
+
 async def test_todo_create_with_description(hass: HomeAssistant, mock_config_entry, store) -> None:
     """todo.add_item with description stores it as notes on the task."""
     entity_id = _get_todo_entity_id(hass, mock_config_entry.entry_id)

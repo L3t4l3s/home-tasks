@@ -11,6 +11,7 @@ from homeassistant.components.todo import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity import CONTEXT_RECENT_TIME_SECONDS
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -197,11 +198,32 @@ class HomeTasksEntity(TodoListEntity):
         self.async_write_ha_state()
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
-        """Delete todo items."""
+        """Delete todo items - but not a recurring task waiting for its next
+        occurrence (issue #88).
+
+        To Home Assistant, the phone and other apps such a task is just a
+        completed item, so "clear completed" would end the whole series. It
+        stays and reopens as planned; the card deletes it, or the item goes
+        once its recurrence is switched off.
+        """
         self._actor_context = None
+        kept = []
         for uid in uids:
+            try:
+                task = self._store.get_task(uid)
+            except ValueError:
+                task = None
+            if task and task.get("completed") and task.get("recurrence_enabled"):
+                kept.append(task.get("title") or uid)
+                continue
             await self._store.async_delete_task(uid)
         self.async_write_ha_state()
+        if kept and len(kept) == len(uids):
+            raise ServiceValidationError(
+                "Recurring tasks are not deleted here - they reopen at their next "
+                f"occurrence: {', '.join(kept)}. Delete them in the Home Tasks card, "
+                "or switch their recurrence off first."
+            )
 
     async def async_move_todo_item(
         self, uid: str, previous_uid: str | None = None
