@@ -6720,14 +6720,21 @@ class HomeTasksCard extends HTMLElement {
   // "system" is the only case where the browser locale is intentionally
   // used; everything else must follow the HA profile, not the browser.
   // Day of month for the recurrence badge: "24th" style suffixes. English
-  // needs the real ordinal (1st, 2nd, 3rd, 11th-13th, 21st ...); the other
-  // languages use one suffix for every day (24., 24º, 24e ...).
+  // needs the real ordinal (1st, 2nd, 3rd, 11th-13th, 21st ...), Swedish
+  // too (1:a, 2:a, 3:e, 11:e, 21:a), and French writes the first as 1er;
+  // the other languages use one suffix for every day (24., 24º, 24e ...).
+  // By the base language, so en-GB counts as English.
   _dayOrdinal(day) {
     const n = Number(day);
-    if (this._localeCode() === "en" && Number.isInteger(n)) {
+    if (Number.isInteger(n)) {
+      const lang = this._localeCode().split("-")[0];
       const tens = n % 100;
-      const suffix = tens >= 11 && tens <= 13 ? "th" : ({ 1: "st", 2: "nd", 3: "rd" }[n % 10] || "th");
-      return `${n}${suffix}`;
+      if (lang === "en") {
+        const suffix = tens >= 11 && tens <= 13 ? "th" : ({ 1: "st", 2: "nd", 3: "rd" }[n % 10] || "th");
+        return `${n}${suffix}`;
+      }
+      if (lang === "sv") return `${n}${(n % 10 === 1 || n % 10 === 2) && tens !== 11 && tens !== 12 ? ":a" : ":e"}`;
+      if (lang === "fr" && n === 1) return "1er";
     }
     return `${day}${this._t("rec_dom_short")}`;
   }

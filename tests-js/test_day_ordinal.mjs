@@ -30,3 +30,19 @@ test('other languages keep their suffix', async () => {
   const c = await card('de');
   assert.equal(c._dayOrdinal(22), '22.');
 });
+
+test('a regional English counts as English', async () => {
+  const c = await card('en-GB');
+  assert.equal(c._dayOrdinal(22), '22nd');
+});
+
+test('Swedish: :a after 1 and 2 (not 11, 12), :e otherwise', async () => {
+  const c = await card('sv');
+  const got = [1, 2, 3, 11, 12, 21, 22, 23, 31].map((d) => c._dayOrdinal(d));
+  assert.deepEqual(got, ['1:a', '2:a', '3:e', '11:e', '12:e', '21:a', '22:a', '23:e', '31:a']);
+});
+
+test('French: 1er, then 2e, 3e ...', async () => {
+  const c = await card('fr');
+  assert.deepEqual([1, 2, 21].map((d) => c._dayOrdinal(d)), ['1er', '2e', '21e']);
+});
