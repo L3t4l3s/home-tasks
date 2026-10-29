@@ -4884,27 +4884,31 @@ function _tileMinWidth(col) {
   return Number.isFinite(n) ? Math.max(60, Math.min(400, n)) : null;
 }
 
-// Everyone a task is assigned to (issue #75), primary first. Older tasks
-// (and providers) only carry assigned_person.
-// Task-details fields folded by the user (by key), for every card on the
-// page: one Set, loaded once from localStorage, so two cards never write
-// back each other's stale copy. A card that folds a field tells the others
-// with DETAIL_FOLD_EVENT.
+// Task-details fields folded by the user (by key), per list - like the
+// folded sections of a list - and kept in localStorage. One Set per list for
+// every card on the page, loaded once, so two cards showing the same list
+// never write back each other's stale copy; a card that folds a field tells
+// the others with DETAIL_FOLD_EVENT.
 const DETAIL_FOLD_STORAGE_KEY = "home_tasks_card:detail_fold";
 const DETAIL_FOLD_EVENT = "home-tasks-detail-fold";
-let _foldedDetailSet = null;
-function _foldedDetailKeys() {
-  if (!_foldedDetailSet) {
+const _foldedDetailSets = new Map();
+function _foldedDetailKeys(list) {
+  let keys = _foldedDetailSets.get(list);
+  if (!keys) {
     try {
-      const raw = window.localStorage.getItem(DETAIL_FOLD_STORAGE_KEY);
+      const raw = window.localStorage.getItem(`${DETAIL_FOLD_STORAGE_KEY}:${list}`);
       const parsed = raw ? JSON.parse(raw) : [];
-      _foldedDetailSet = new Set(Array.isArray(parsed) ? parsed : []);
+      keys = new Set(Array.isArray(parsed) ? parsed : []);
     } catch (e) {
-      _foldedDetailSet = new Set();  // storage blocked: folding lasts this session
+      keys = new Set();  // storage blocked: folding lasts this session
     }
+    _foldedDetailSets.set(list, keys);
   }
-  return _foldedDetailSet;
+  return keys;
 }
+
+// Everyone a task is assigned to (issue #75), primary first. Older tasks
+// (and providers) only carry assigned_person.
 
 function _assignees(task) {
   const people = Array.isArray(task && task.assigned_persons) ? task.assigned_persons.filter(Boolean) : [];
@@ -9028,29 +9032,31 @@ class HomeTasksCard extends HTMLElement {
     return wrapper;
   }
 
-  // Fields of the task details folded by the user, by key: one choice for
-  // every task and card in this browser (see _foldedDetailKeys).
-  _foldedDetails() {
-    return _foldedDetailKeys();
+  // Fields of the task details folded by the user in this column's list,
+  // by key: one choice for every task of the list (see _foldedDetailKeys).
+  _foldedDetails(colIdx) {
+    return _foldedDetailKeys(this._columnStorageKey(colIdx));
   }
 
-  // Folds or opens a field everywhere: in this card's open task details at
-  // once, in the other cards on the page through an event (each listens
-  // while connected), and in localStorage for the next visit.
-  _setDetailFolded(key, folded) {
-    const keys = _foldedDetailKeys();
+  // Folds or opens a field of a column's list everywhere it shows: in this
+  // card's open task details at once, in other cards on the page with the
+  // same list through an event (each listens while connected), and in
+  // localStorage for the next visit.
+  _setDetailFolded(colIdx, key, folded) {
+    const list = this._columnStorageKey(colIdx);
+    const keys = _foldedDetailKeys(list);
     if (folded) keys.add(key);
     else keys.delete(key);
     try {
-      window.localStorage.setItem(DETAIL_FOLD_STORAGE_KEY, JSON.stringify([...keys]));
+      window.localStorage.setItem(`${DETAIL_FOLD_STORAGE_KEY}:${list}`, JSON.stringify([...keys]));
     } catch (e) { /* storage blocked: folding lasts this session */ }
-    this._applyDetailFold(key, folded);
-    window.dispatchEvent(new CustomEvent(DETAIL_FOLD_EVENT, { detail: { key, folded, source: this } }));
+    this._applyDetailFold(list, key, folded);
+    window.dispatchEvent(new CustomEvent(DETAIL_FOLD_EVENT, { detail: { list, key, folded, source: this } }));
   }
 
-  _applyDetailFold(key, folded) {
+  _applyDetailFold(list, key, folded) {
     for (const s of this.shadowRoot?.querySelectorAll(`.detail-section[data-detail-key="${key}"]`) || []) {
-      s._applyFold?.(folded);
+      if (s.dataset.foldList === list) s._applyFold?.(folded);
     }
   }
 
@@ -9090,6 +9096,7 @@ class HomeTasksCard extends HTMLElement {
     const label = head && (head.classList.contains("detail-label") ? head : head.querySelector(".detail-label"));
     if (!label) return section;
     section.dataset.detailKey = key;
+    section.dataset.foldList = this._columnStorageKey(colIdx);
     head.classList.add("detail-fold-head");
     const caret = document.createElement("ha-icon");
     caret.className = "detail-fold-caret";
@@ -9109,10 +9116,10 @@ class HomeTasksCard extends HTMLElement {
       summary.textContent = folded ? this._detailSummary(key, shown, colIdx) : "";
     };
     section._applyFold = apply;
-    apply(this._foldedDetails().has(key));
+    apply(this._foldedDetails(colIdx).has(key));
     const toggle = () => {
       const folded = !section.classList.contains("folded");
-      this._setDetailFolded(key, folded);
+      this._setDetailFolded(colIdx, key, folded);
       apply(folded);  // also when this section is not (yet) in the card
     };
     // The recurrence switch works while folded: the summary follows it
@@ -12887,7 +12894,7 @@ class HomeTasksCard extends HTMLElement {
     this._ensureCardMod();
     if (!this._detailFoldHandler) {
       this._detailFoldHandler = (e) => {
-        if (e.detail.source !== this) this._applyDetailFold(e.detail.key, e.detail.folded);
+        if (e.detail.source !== this) this._applyDetailFold(e.detail.list, e.detail.key, e.detail.folded);
       };
       window.addEventListener(DETAIL_FOLD_EVENT, this._detailFoldHandler);
     }

@@ -1,7 +1,7 @@
 /**
  * Folding the task-details fields: a tap on a field's heading folds it to
  * that heading plus a one-line summary of what is set; the card remembers
- * which fields are folded. (Grew out of collapse_recurrence, PR #82.)
+ * which fields are folded, per list. (Grew out of collapse_recurrence, PR #82.)
  */
 import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
@@ -52,7 +52,7 @@ describe('folding the task-details fields', () => {
     head(tags).click();
     assert.ok(tags.classList.contains('folded'));
     assert.equal(summary(tags), '#bins #weekly');
-    assert.deepEqual(JSON.parse(window.localStorage.getItem('home_tasks_card:detail_fold')), ['tags']);
+    assert.deepEqual(JSON.parse(window.localStorage.getItem('home_tasks_card:detail_fold:L1')), ['tags']);
 
     // Another task, and a fresh card in the same browser, start folded too.
     const other = field(card._buildTaskDetails(T({ id: 'T2', tags: ['x'] }), 0), 'tags');
@@ -61,12 +61,12 @@ describe('folding the task-details fields', () => {
     const card2 = new HomeTasksCard();
     card2.setConfig({ columns: [{ list_id: 'L1' }] });
     card2.hass = makeMockHass();
-    assert.ok(card2._foldedDetails().has('tags'));
+    assert.ok(card2._foldedDetails(0).has('tags'));
 
     head(other).click();
     assert.ok(!other.classList.contains('folded'));
     assert.equal(summary(other), '', 'no summary while open');
-    assert.deepEqual(JSON.parse(window.localStorage.getItem('home_tasks_card:detail_fold')), []);
+    assert.deepEqual(JSON.parse(window.localStorage.getItem('home_tasks_card:detail_fold:L1')), []);
   });
 
   test('nothing set: folded without a summary', async () => {
@@ -85,7 +85,7 @@ describe('folding the task-details fields', () => {
       reminders: [0], section_id: 'S1', sub_items: [{ title: 'a', completed: true }, { title: 'b', completed: false }],
     });
     const { card } = await build(task);
-    for (const key of ['notes', 'person', 'priority', 'reminders', 'section', 'sub_tasks']) card._setDetailFolded(key, true);
+    for (const key of ['notes', 'person', 'priority', 'reminders', 'section', 'sub_tasks']) card._setDetailFolded(0, key, true);
     const details = card._buildTaskDetails(task, 0);
     assert.equal(summary(field(details, 'notes')), 'Blue bin');
     assert.equal(summary(field(details, 'person')), 'Kevin');
@@ -98,7 +98,7 @@ describe('folding the task-details fields', () => {
   test('recurrence folded: its switch stays usable, the rule shows when on', async () => {
     const on = T({ recurrence_enabled: true, recurrence_unit: 'weeks', recurrence_value: 2 });
     const { card } = await build(on);
-    card._setDetailFolded('recurrence', true);
+    card._setDetailFolded(0, 'recurrence', true);
     const rec = field(card._buildTaskDetails(on, 0), 'recurrence');
     assert.ok(rec.classList.contains('folded'));
     assert.match(summary(rec), /^2 /);
@@ -135,7 +135,7 @@ describe('folding the task-details fields', () => {
       proto.setItem = setItem;
     }
   });
-  test('two cards share the folds: neither writes back a stale copy, both follow', async () => {
+  test('two cards with the same list share the folds: neither writes back a stale copy, both follow', async () => {
     const task = T({ tags: ['x'], notes: 'n' });
     const { card: a, window } = await build(task);
     const { HomeTasksCard } = await loadCard();
@@ -151,7 +151,7 @@ describe('folding the task-details fields', () => {
       head(field(a.shadowRoot, 'tags')).click();
       assert.ok(field(b.shadowRoot, 'tags').classList.contains('folded'), 'b follows a');
       head(field(b.shadowRoot, 'notes')).click();
-      assert.deepEqual(JSON.parse(window.localStorage.getItem('home_tasks_card:detail_fold')).sort(), ['notes', 'tags']);
+      assert.deepEqual(JSON.parse(window.localStorage.getItem('home_tasks_card:detail_fold:L1')).sort(), ['notes', 'tags']);
       assert.ok(field(a.shadowRoot, 'notes').classList.contains('folded'), 'a follows b');
     } finally {
       a.remove();
@@ -170,12 +170,33 @@ describe('folding the task-details fields', () => {
   test('switching the folded recurrence on shows its rule at once', async () => {
     const task = T({ recurrence_unit: 'weeks', recurrence_value: 2 });
     const { card, window } = await build(task);
-    card._setDetailFolded('recurrence', true);
+    card._setDetailFolded(0, 'recurrence', true);
     const rec = field(card._buildTaskDetails(task, 0), 'recurrence');
     assert.equal(summary(rec), '');
     const sw = head(rec).querySelector('ha-switch');
     sw.checked = true;
     sw.dispatchEvent(new window.Event('change', { bubbles: true }));
     assert.match(summary(rec), /^2 /);
+  });
+  test('another list keeps its own folds', async () => {
+    const task = T({ tags: ['x'] });
+    const { card: a, window } = await build(task);
+    const { HomeTasksCard } = await loadCard();
+    const b = new HomeTasksCard();
+    b.setConfig({ columns: [{ list_id: 'L2' }] });
+    b.hass = makeMockHass({ language: 'en' });
+    b._render = () => {};
+    window.document.body.append(a, b);
+    try {
+      a.shadowRoot.append(a._buildTaskDetails(task, 0));
+      b.shadowRoot.append(b._buildTaskDetails(task, 0));
+      head(field(a.shadowRoot, 'tags')).click();
+      assert.ok(!field(b.shadowRoot, 'tags').classList.contains('folded'), 'L2 stays open');
+      assert.ok(!b._foldedDetails(0).has('tags'));
+      assert.equal(window.localStorage.getItem('home_tasks_card:detail_fold:L2'), null);
+    } finally {
+      a.remove();
+      b.remove();
+    }
   });
 });
