@@ -216,6 +216,88 @@ async def test_reopen_without_user_rolls_back_completion_due_advance(
     assert "pre_advance_due_date" not in reopened
 
 
+async def _weekly_task(store, **extra) -> dict:
+    task = await store.async_add_task("Weekly shop")
+    await store.async_update_task(
+        task["id"], due_date="2026-10-24", recurrence_enabled=True,
+        recurrence_unit="weeks", recurrence_value=1, recurrence_weekdays=[5], **extra,
+    )
+    return store.get_task(task["id"])
+
+
+async def test_manual_reopen_gives_the_occurrence_back(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """With an end after N times, completing counts one off; undoing the
+    completion counts it back - an accidental tick costs no occurrence."""
+    task = await _weekly_task(store, recurrence_end_type="count", recurrence_max_count=3)
+    assert task["recurrence_remaining_count"] == 3
+
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+    assert store.get_task(task["id"])["recurrence_remaining_count"] == 2
+
+    await store.async_update_task(task["id"], completed=False, actor="tester")
+    reopened = store.get_task(task["id"])
+    assert reopened["recurrence_remaining_count"] == 3
+    assert "pre_advance_remaining_count" not in reopened
+
+
+async def test_manual_reopen_of_the_last_occurrence_switches_recurrence_back_on(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """The last completion switches the recurrence off; undoing it switches
+    it back on with that one occurrence left."""
+    task = await _weekly_task(store, recurrence_end_type="count", recurrence_max_count=1)
+
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+    done = store.get_task(task["id"])
+    assert done["recurrence_enabled"] is False
+    assert done["recurrence_remaining_count"] == 0
+
+    await store.async_update_task(task["id"], completed=False, actor="tester")
+    reopened = store.get_task(task["id"])
+    assert reopened["recurrence_enabled"] is True
+    assert reopened["recurrence_remaining_count"] == 1
+
+
+async def test_scheduled_reopen_keeps_the_count(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    task = await _weekly_task(store, recurrence_end_type="count", recurrence_max_count=3)
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+    await store.async_reopen_task(task["id"], scheduled=True)
+    reopened = store.get_task(task["id"])
+    assert reopened["recurrence_remaining_count"] == 2
+    assert "pre_advance_remaining_count" not in reopened
+
+
+async def test_reopen_with_a_due_date_keeps_that_date(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """A reopen that sets the due date itself is not rolled back over it."""
+    task = await _weekly_task(store)
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+
+    await store.async_update_task(task["id"], completed=False, due_date="2026-12-01", actor="tester")
+    reopened = store.get_task(task["id"])
+    assert reopened["due_date"] == "2026-12-01"
+    assert "pre_advance_due_date" not in reopened
+
+
+async def test_a_copy_of_a_completed_task_carries_nothing_to_undo(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    task = await _weekly_task(store, recurrence_end_type="count", recurrence_max_count=3)
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+    copy = await store.async_duplicate_task(task["id"])
+    assert not [k for k in copy if k.startswith("pre_advance_")]
+
+
 async def test_unload_entry_cleans_up(hass: HomeAssistant, mock_config_entry) -> None:
     """Unloading a config entry removes the store from hass.data."""
     entry_id = mock_config_entry.entry_id

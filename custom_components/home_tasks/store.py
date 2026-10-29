@@ -60,6 +60,14 @@ _SCHEDULE_FIELDS = (
     "recurrence_remaining_count", "recurrence_reopen_lead",
 )
 
+# What a recurring task's completion changed, kept on the task until it is
+# reopened: a manual reopen undoes the completion and puts these back, the
+# recurrence timer's reopen keeps them (Store._rollback_advanced_due).
+_ADVANCE_STASH = (
+    "pre_advance_due_date", "pre_advance_due_time",
+    "pre_advance_remaining_count", "pre_advance_recurrence_enabled",
+)
+
 
 def _trim_history(hist: list) -> None:
     """Trim history in-place to _MAX_HISTORY entries."""
@@ -1017,25 +1025,35 @@ class HomeTasksStore:
 
     @staticmethod
     def _clear_advance_stash(task: dict) -> None:
-        """Drop the pre-completion due-date stash without restoring it.
+        """Drop the pre-completion stash without restoring it.
 
         Used by the scheduled recurrence reopen, where the advance made at
         completion time IS the task's real next occurrence."""
-        task.pop("pre_advance_due_date", None)
-        task.pop("pre_advance_due_time", None)
+        for key in _ADVANCE_STASH:
+            task.pop(key, None)
 
     @staticmethod
-    def _rollback_advanced_due(task: dict) -> None:
-        """Undo a completion's due-date advance when that completion is manually
+    def _rollback_advanced_due(task: dict, keep_due: bool = False) -> None:
+        """Undo a completion's advance when that completion is manually
         reopened.
 
         Completing a recurring task rolls due_date/due_time forward to the next
-        occurrence (see _on_task_completed). A manual un-tick means the
-        completion was undone, so the forward roll must be undone too —
+        occurrence (see _on_task_completed) and, with an end after N times,
+        counts one off (switching the recurrence off after the last). A manual
+        un-tick means the completion was undone, so all of that is undone too —
         otherwise an accidental tick-then-untick leaves the task stuck a cycle
-        ahead. A no-op when there is nothing stashed (non-recurring tasks, or a
-        reopen not following an auto-advance)."""
-        if "pre_advance_due_date" not in task:
+        ahead, or a run short. A no-op when there is nothing stashed
+        (non-recurring tasks, or a reopen not following a completion).
+
+        keep_due: the reopen sets the due date itself; only the count goes
+        back."""
+        if "pre_advance_remaining_count" in task:
+            task["recurrence_remaining_count"] = task.pop("pre_advance_remaining_count")
+        if task.pop("pre_advance_recurrence_enabled", False):
+            task["recurrence_enabled"] = True
+        if "pre_advance_due_date" not in task or keep_due:
+            task.pop("pre_advance_due_date", None)
+            task.pop("pre_advance_due_time", None)
             return
         old_date = task.pop("pre_advance_due_date")
         old_time = task.pop("pre_advance_due_time", None)
@@ -1060,12 +1078,18 @@ class HomeTasksStore:
         is_completed = task.get("completed", False)
         if is_completed and not was_completed:
             task["completed_at"] = datetime.now(timezone.utc).isoformat()
-            # Decrement remaining recurrence count
+            # A stash from an earlier completion that was never reopened
+            # (e.g. completed again after an import) is not this one's.
+            self._clear_advance_stash(task)
+            # Decrement remaining recurrence count - remembered, so a manual
+            # reopen can give the occurrence back (_rollback_advanced_due).
             if task.get("recurrence_end_type") == "count" and task.get("recurrence_remaining_count") is not None:
+                task["pre_advance_remaining_count"] = task["recurrence_remaining_count"]
                 remaining = task["recurrence_remaining_count"] - 1
                 task["recurrence_remaining_count"] = max(0, remaining)
-                if remaining <= 0:
+                if remaining <= 0 and task.get("recurrence_enabled"):
                     task["recurrence_enabled"] = False
+                    task["pre_advance_recurrence_enabled"] = True
             # Notify: fires event + schedules recurrence (no-op if recurrence not configured)
             if self.on_task_completed:
                 self.on_task_completed(task, actor=actor, user_id=actor_user_id)
@@ -1074,8 +1098,10 @@ class HomeTasksStore:
             task["reopen_at"] = None  # manual reopen — pending schedule is void
             # update_task is only ever user/automation driven (the recurrence
             # timer reopens via async_reopen_task(scheduled=True)), so this
-            # reopen always undoes the completion's due-date advance.
-            self._rollback_advanced_due(task)
+            # reopen always undoes the completion's advance - except a due
+            # date the same update sets, which wins.
+            self._rollback_advanced_due(
+                task, keep_due="due_date" in kwargs or "due_time" in kwargs)
             if self.on_task_reopened:
                 self.on_task_reopened(task)
 
@@ -1291,6 +1317,8 @@ class HomeTasksStore:
             "sync_source": None,
             "recurrence_remaining_count": source.get("recurrence_max_count"),
         }
+        for key in _ADVANCE_STASH:  # the copy starts open: nothing to undo
+            new_task.pop(key, None)
         # Place the copy directly after its source and renumber contiguously, so
         # it always lands right behind the source regardless of any pre-existing
         # sort_order gaps or ties (which get healed in the process).
