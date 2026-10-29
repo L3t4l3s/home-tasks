@@ -58,6 +58,14 @@ export async function loadCard({ force = false, frozenNow = null } = {}) {
     dom.window.Date = FrozenDate;
   }
 
+  // jsdom has no CSS.escape; the card calls it in timers (long-press drag,
+  // chip refresh) that fire whenever a test runs slow.
+  if (!dom.window.CSS) {
+    dom.window.CSS = {
+      escape: (v) => String(v).replace(/[^a-zA-Z0-9_ -￿-]/g, (c) => `\\${c}`),
+    };
+  }
+
   // Install jsdom globals on Node's globalThis so test code can use them
   // without window. prefixes if needed.
   globalThis.window = dom.window;

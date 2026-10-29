@@ -301,9 +301,9 @@ const _TRANSLATIONS = {
     "due_quick_3months": "In 3 months",
     "ed_offered_persons": "Selectable people",
     "ed_offered_persons_hint": "Only highlighted people can be assigned in this card",
-    "add_with_details": "Add and edit details",
+    "add_with_details": "Add with details",
     "add_clear": "Clear",
-    "ed_show_add_details": "Add with details button"
+    "ed_show_add_details": "Details when adding"
   },
   "nl": {
     "ed_default_priority": "Standaardprioriteit",
@@ -598,8 +598,8 @@ const _TRANSLATIONS = {
     "due_quick_3months": "Over 3 maanden",
     "ed_offered_persons": "Selecteerbare personen",
     "ed_offered_persons_hint": "Alleen gemarkeerde personen kunnen in deze kaart worden toegewezen",
-    "ed_show_add_details": "Knop toevoegen met details",
-    "add_with_details": "Toevoegen en details bewerken",
+    "ed_show_add_details": "Details bij toevoegen",
+    "add_with_details": "Toevoegen met details",
     "add_clear": "Wissen"
   },
   "it": {
@@ -895,8 +895,8 @@ const _TRANSLATIONS = {
     "due_quick_3months": "Tra 3 mesi",
     "ed_offered_persons": "Persone selezionabili",
     "ed_offered_persons_hint": "In questa scheda si possono assegnare solo le persone evidenziate",
-    "ed_show_add_details": "Pulsante aggiungi con dettagli",
-    "add_with_details": "Aggiungi e modifica dettagli",
+    "ed_show_add_details": "Dettagli alla creazione",
+    "add_with_details": "Crea con dettagli",
     "add_clear": "Cancella"
   },
   "pl": {
@@ -1192,8 +1192,8 @@ const _TRANSLATIONS = {
     "due_quick_3months": "Za 3 miesiące",
     "ed_offered_persons": "Osoby do wyboru",
     "ed_offered_persons_hint": "W tej karcie można przypisać tylko wyróżnione osoby",
-    "ed_show_add_details": "Przycisk dodawania ze szczegółami",
-    "add_with_details": "Dodaj i edytuj szczegóły",
+    "ed_show_add_details": "Szczegóły przy dodawaniu",
+    "add_with_details": "Dodaj ze szczegółami",
     "add_clear": "Wyczyść"
   },
   "sv": {
@@ -1489,8 +1489,8 @@ const _TRANSLATIONS = {
     "due_quick_3months": "Om 3 månader",
     "ed_offered_persons": "Valbara personer",
     "ed_offered_persons_hint": "Endast markerade personer kan tilldelas i det här kortet",
-    "ed_show_add_details": "Knapp lägg till med detaljer",
-    "add_with_details": "Lägg till och redigera detaljer",
+    "ed_show_add_details": "Detaljer vid tillägg",
+    "add_with_details": "Lägg till med detaljer",
     "add_clear": "Rensa"
   },
   "fr": {
@@ -1786,8 +1786,8 @@ const _TRANSLATIONS = {
     "due_quick_3months": "Dans 3 mois",
     "ed_offered_persons": "Personnes sélectionnables",
     "ed_offered_persons_hint": "Seules les personnes en surbrillance peuvent être assignées dans cette carte",
-    "ed_show_add_details": "Bouton ajouter avec détails",
-    "add_with_details": "Ajouter et modifier les détails",
+    "ed_show_add_details": "Détails à la création",
+    "add_with_details": "Créer avec détails",
     "add_clear": "Effacer"
   },
   "pt": {
@@ -2083,8 +2083,8 @@ const _TRANSLATIONS = {
     "due_quick_3months": "Daqui a 3 meses",
     "ed_offered_persons": "Pessoas selecionáveis",
     "ed_offered_persons_hint": "Só as pessoas destacadas podem ser atribuídas neste cartão",
-    "ed_show_add_details": "Botão adicionar com detalhes",
-    "add_with_details": "Adicionar e editar detalhes",
+    "ed_show_add_details": "Detalhes ao adicionar",
+    "add_with_details": "Adicionar com detalhes",
     "add_clear": "Limpar"
   },
   "pt-BR": {
@@ -2380,8 +2380,8 @@ const _TRANSLATIONS = {
     "due_quick_3months": "Em 3 meses",
     "ed_offered_persons": "Pessoas selecionáveis",
     "ed_offered_persons_hint": "Somente as pessoas destacadas podem ser atribuídas neste cartão",
-    "ed_show_add_details": "Botão adicionar com detalhes",
-    "add_with_details": "Adicionar e editar detalhes",
+    "ed_show_add_details": "Detalhes ao adicionar",
+    "add_with_details": "Adicionar com detalhes",
     "add_clear": "Limpar"
   },
   "es": {
@@ -2677,8 +2677,8 @@ const _TRANSLATIONS = {
     "due_quick_3months": "En 3 meses",
     "ed_offered_persons": "Personas seleccionables",
     "ed_offered_persons_hint": "En esta tarjeta solo se pueden asignar las personas resaltadas",
-    "ed_show_add_details": "Botón añadir con detalles",
-    "add_with_details": "Añadir y editar detalles",
+    "ed_show_add_details": "Detalles al añadir",
+    "add_with_details": "Añadir con detalles",
     "add_clear": "Borrar"
   },
   "ru": {
@@ -2974,8 +2974,8 @@ const _TRANSLATIONS = {
     "due_quick_3months": "Через 3 месяца",
     "ed_offered_persons": "Доступные люди",
     "ed_offered_persons_hint": "В этой карточке можно назначать только выделенных людей",
-    "ed_show_add_details": "Кнопка добавления с деталями",
-    "add_with_details": "Добавить и изменить детали",
+    "ed_show_add_details": "Детали при добавлении",
+    "add_with_details": "Добавить с деталями",
     "add_clear": "Очистить"
   },
   "cs": {
@@ -3271,8 +3271,8 @@ const _TRANSLATIONS = {
     "due_quick_3months": "Za 3 měsíce",
     "ed_offered_persons": "Volitelné osoby",
     "ed_offered_persons_hint": "V této kartě lze přiřadit jen zvýrazněné osoby",
-    "ed_show_add_details": "Tlačítko přidat s podrobnostmi",
-    "add_with_details": "Přidat a upravit podrobnosti",
+    "ed_show_add_details": "Podrobnosti při přidání",
+    "add_with_details": "Přidat s podrobnostmi",
     "add_clear": "Vymazat"
   },
   "da": {
@@ -3568,8 +3568,8 @@ const _TRANSLATIONS = {
     "due_quick_3months": "Om 3 måneder",
     "ed_offered_persons": "Valgbare personer",
     "ed_offered_persons_hint": "Kun fremhævede personer kan tildeles i dette kort",
-    "ed_show_add_details": "Knap tilføj med detaljer",
-    "add_with_details": "Tilføj og rediger detaljer",
+    "ed_show_add_details": "Detaljer ved tilføjelse",
+    "add_with_details": "Tilføj med detaljer",
     "add_clear": "Ryd"
   },
   "no": {
@@ -3865,8 +3865,8 @@ const _TRANSLATIONS = {
     "due_quick_3months": "Om 3 måneder",
     "ed_offered_persons": "Valgbare personer",
     "ed_offered_persons_hint": "Bare uthevede personer kan tildeles i dette kortet",
-    "ed_show_add_details": "Knapp legg til med detaljer",
-    "add_with_details": "Legg til og rediger detaljer",
+    "ed_show_add_details": "Detaljer ved tillegg",
+    "add_with_details": "Legg til med detaljer",
     "add_clear": "Tøm"
   },
   "fi": {
@@ -4162,8 +4162,8 @@ const _TRANSLATIONS = {
     "due_quick_3months": "3 kuukauden päästä",
     "ed_offered_persons": "Valittavat henkilöt",
     "ed_offered_persons_hint": "Tässä kortissa voi määrittää vain korostettuja henkilöitä",
-    "ed_show_add_details": "Lisää tietojen kanssa -painike",
-    "add_with_details": "Lisää ja muokkaa tietoja",
+    "ed_show_add_details": "Tiedot lisättäessä",
+    "add_with_details": "Lisää tietojen kanssa",
     "add_clear": "Tyhjennä"
   },
   "hu": {
@@ -4459,8 +4459,8 @@ const _TRANSLATIONS = {
     "due_quick_3months": "3 hónap múlva",
     "ed_offered_persons": "Választható személyek",
     "ed_offered_persons_hint": "Ebben a kártyában csak a kiemelt személyek rendelhetők hozzá",
-    "ed_show_add_details": "Hozzáadás részletekkel gomb",
-    "add_with_details": "Hozzáadás és részletek szerkesztése",
+    "ed_show_add_details": "Részletek hozzáadáskor",
+    "add_with_details": "Hozzáadás részletekkel",
     "add_clear": "Törlés"
   },
   "de": {
@@ -4756,9 +4756,9 @@ const _TRANSLATIONS = {
     "due_quick_3months": "In 3 Monaten",
     "ed_offered_persons": "Auswählbare Personen",
     "ed_offered_persons_hint": "Nur markierte Personen können in dieser Karte zugewiesen werden",
-    "add_with_details": "Hinzufügen und Details bearbeiten",
+    "add_with_details": "Mit Details anlegen",
     "add_clear": "Leeren",
-    "ed_show_add_details": "Button Hinzufügen mit Details"
+    "ed_show_add_details": "Details beim Anlegen"
   }
 };
 
@@ -5583,7 +5583,6 @@ class HomeTasksCard extends HTMLElement {
     const cs = this._columns[colIdx];
     const title = (cs.newTaskTitle || "").trim();
     if (!title) { this._nudgeAddInput(colIdx); return; }
-    const col = this._config.columns[colIdx];
     const isExt = this._isExternalCol(colIdx);
     // The list's defaults, so the draft shows what the task will get.
     let defaults = isExt ? (this._sourceDefaults[this._colEntityId(colIdx)] || {}) : {};
@@ -5591,19 +5590,24 @@ class HomeTasksCard extends HTMLElement {
       const r = await this._callWs("home_tasks/get_defaults", { list_id: this._colListId(colIdx) });
       defaults = (r && r.defaults) || {};
     }
-    let person = defaults.assignee || null;
-    if (cs.personFilters.size === 1) person = [...cs.personFilters][0];
-    else if (cs.personFilters.size === 0 && col.filters?.assignees?.length === 1) person = col.filters.assignees[0];
+    const person = this._autoAssignPerson(colIdx);
+    const people = person ? [person] : [...(defaults.assignees || (defaults.assignee ? [defaults.assignee] : []))];
+    const { addDue, addDueTime } = this._addRowDue(colIdx);
     cs.draft = {
       id: `__draft__${colIdx}`, _draft: true, title, completed: false, notes: "", sub_items: [],
-      due_date: null, due_time: null, priority: defaults.priority ?? null,
+      due_date: addDue, due_time: addDueTime, priority: defaults.priority ?? null,
       tags: [...(defaults.tags || [])], reminders: [...(defaults.reminders || [])],
-      section_id: defaults.section_id || null, assigned_person: person,
-      assigned_persons: person ? [person] : [],
+      section_id: defaults.section_id || null, assigned_person: people[0] || null,
+      assigned_persons: people,
       recurrence_enabled: false, recurrence_value: 1, recurrence_unit: null, recurrence_type: "interval",
       recurrence_weekdays: [],
+      // What the list fills in by itself: a field the draft empties is
+      // cleared again once the task exists (see _saveDraft).
+      _defaults: defaults,
     };
     cs.newTaskTitle = "";
+    cs.newTaskDue = "";
+    cs.newTaskDueTime = "";
     cs.taskSearchQuery = "";
     this._render();
   }
@@ -5621,6 +5625,10 @@ class HomeTasksCard extends HTMLElement {
     const cancelBtn = this._el("button", { className: "draft-cancel-btn", textContent: this._t("dialog_cancel") });
     cancelBtn.addEventListener("click", () => {
       cs.newTaskTitle = draft.title || "";
+      if (this._config.columns[colIdx].show_add_due === true) {
+        cs.newTaskDue = draft.due_date || "";
+        cs.newTaskDueTime = draft.due_time || "";
+      }
       cs.draft = null;
       this._render();
     });
@@ -5634,38 +5642,53 @@ class HomeTasksCard extends HTMLElement {
   async _saveDraft(colIdx) {
     const cs = this._columns[colIdx];
     const draft = cs.draft;
-    if (!draft) return;
+    if (!draft || draft._saving) return;
     const title = (draft.title || "").trim();
     if (!title) return;
     const base = {};
-    for (const k of ["due_date", "due_time", "notes", "priority", "tags", "reminders", "assigned_person"]) {
+    for (const k of ["due_date", "due_time", "notes", "priority", "tags", "reminders", "assigned_persons"]) {
       const v = draft[k];
       if (v !== null && v !== undefined && v !== "" && !(Array.isArray(v) && !v.length)) base[k] = v;
     }
     if (!base.due_date) delete base.due_time;
-    if (Array.isArray(draft.assigned_persons) && draft.assigned_persons.length > 1) base.assigned_persons = draft.assigned_persons;
-    const recurrence = {};
-    if (draft.recurrence_enabled) {
-      for (const [k, v] of Object.entries(draft)) if (k.startsWith("recurrence_")) recurrence[k] = v;
+    // After creating: what the list would fill in by itself but the draft
+    // left empty is cleared again, and recurrence is set - one routed update,
+    // which takes every recurrence field on both kinds of list (creating an
+    // external task does not).
+    const d = draft._defaults || {};
+    const after = {};
+    if (draft.priority == null && d.priority) after.priority = null;
+    if (!draft.tags?.length && d.tags?.length) after.tags = [];
+    if (!draft.reminders?.length && d.reminders?.length) after.reminders = [];
+    if (!draft.assigned_persons?.length && (d.assignees?.length || d.assignee)) {
+      after.assigned_person = null;
+      after.assigned_persons = [];
     }
+    if (!draft.section_id && d.section_id && !this._isExternalCol(colIdx)) after.section_id = null;
+    if (draft.recurrence_enabled) {
+      for (const [k, v] of Object.entries(draft)) if (k.startsWith("recurrence_")) after[k] = v;
+    }
+    draft._saving = true;
     try {
+      let newId;
       if (this._isExternalCol(colIdx)) {
         const res = await this._callWs("home_tasks/create_external_task",
-          { entity_id: this._colEntityId(colIdx), title, ...base, ...recurrence }, { rethrow: true });
-        if (draft.section_id && res?.uid) {
+          { entity_id: this._colEntityId(colIdx), title, ...base }, { rethrow: true });
+        newId = res?.uid;
+        if (newId && (draft.section_id || d.section_id)) {
+          // Sections of an external list live in the overlay only.
           await this._callWs("home_tasks/update_external_overlay",
-            { entity_id: this._colEntityId(colIdx), task_uid: res.uid, section_id: draft.section_id });
+            { entity_id: this._colEntityId(colIdx), task_uid: newId, section_id: draft.section_id || null });
         }
       } else {
-        const listId = this._colListId(colIdx);
-        const payload = { list_id: listId, title, ...base };
+        const payload = { list_id: this._colListId(colIdx), title, ...base };
         if (draft.section_id) payload.section_id = draft.section_id;
         const res = await this._callWs("home_tasks/add_task", payload, { rethrow: true });
-        if (res?.id && Object.keys(recurrence).length) {
-          await this._callWs("home_tasks/update_task", { list_id: listId, task_id: res.id, ...recurrence });
-        }
+        newId = res?.id;
       }
+      if (newId && Object.keys(after).length) await this._updateTaskRouted(colIdx, newId, after);
     } catch (err) {
+      draft._saving = false;
       this._showError(this._t("add_failed"));
       return;
     }
@@ -5673,6 +5696,30 @@ class HomeTasksCard extends HTMLElement {
     if (this._isExternalCol(colIdx)) this._reloadExternal(colIdx);
     else await this._loadAllTasks();
     this._render();
+  }
+
+  // Auto-assign: the one person active in the person filter, or else the
+  // column's one preset assignee unless this card doesn't offer them
+  // (hidden_persons). null when neither applies.
+  _autoAssignPerson(colIdx) {
+    const cs = this._columns[colIdx];
+    const col = this._config.columns[colIdx];
+    if (cs.personFilters.size === 1) return [...cs.personFilters][0];
+    if (cs.personFilters.size === 0 && col.filters?.assignees?.length === 1
+        && !(col.hidden_persons || []).includes(col.filters.assignees[0])) {
+      return col.filters.assignees[0];
+    }
+    return null;
+  }
+
+  // Due date chosen in the add row (issue #38) — only when the option is
+  // on and the column supports due dates; a time without a date is ignored.
+  _addRowDue(colIdx) {
+    const cs = this._columns[colIdx];
+    const col = this._config.columns[colIdx];
+    const addDue = (col.show_add_due === true && this._colSupportsDue(colIdx) && cs.newTaskDue) ? cs.newTaskDue : null;
+    const addDueTime = (addDue && cs.newTaskDueTime && this._colSupportsDueTime(colIdx)) ? cs.newTaskDueTime : null;
+    return { addDue, addDueTime };
   }
 
   async _addTask(colIdx) {
@@ -5696,23 +5743,9 @@ class HomeTasksCard extends HTMLElement {
     // Snapshot existing task positions (they may shift when new task is inserted)
     const before = this._captureListFlip(colIdx);
 
-    // Auto-assign: if exactly one person is active in the person filter, assign
-    // the new task to that person automatically.
     const col = this._config.columns[colIdx];
-    let autoAssignPerson = null;
-    if (cs.personFilters.size === 1) {
-      autoAssignPerson = [...cs.personFilters][0];
-    } else if (cs.personFilters.size === 0 && col.filters?.assignees?.length === 1
-        && !(col.hidden_persons || []).includes(col.filters.assignees[0])) {
-      // ...or the column's one preset assignee, unless this card doesn't
-      // offer them (hidden_persons).
-      autoAssignPerson = col.filters.assignees[0];
-    }
-
-    // Due date chosen in the add row (issue #38) — only when the option is
-    // on and the column supports due dates; a time without a date is ignored.
-    const addDue = (col.show_add_due === true && this._colSupportsDue(colIdx) && cs.newTaskDue) ? cs.newTaskDue : null;
-    const addDueTime = (addDue && cs.newTaskDueTime && this._colSupportsDueTime(colIdx)) ? cs.newTaskDueTime : null;
+    const autoAssignPerson = this._autoAssignPerson(colIdx);
+    const { addDue, addDueTime } = this._addRowDue(colIdx);
     const resetAddDue = () => { cs.newTaskDue = ""; cs.newTaskDueTime = ""; };
 
     let result;
@@ -8865,6 +8898,9 @@ class HomeTasksCard extends HTMLElement {
     const hasSections = (this._columns[colIdx].sections || []).length > 0;
     const details = [];
     for (const key of _detailOrder(col)) {
+      // A draft has no id the backend knows yet: sub-tasks, images and the
+      // history need the task to exist.
+      if (draft && (key === "sub_tasks" || key === "images" || key === "history")) continue;
       if (_detailFieldOn(col, key) && (key !== "section" || hasSections)) details.push(build[key]());
     }
     if (!draft) details.push(this._buildActionsSection(task, colIdx));

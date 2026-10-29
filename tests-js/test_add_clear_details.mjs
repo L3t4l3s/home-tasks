@@ -108,3 +108,88 @@ describe('show_add_details (draft)', () => {
     assert.equal(upd.recurrence_value, 2);
   });
 });
+
+describe('the draft and the list defaults', () => {
+  async function draftCard(colConfig, defaults, { external = false } = {}) {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [external ? { entity_id: 'todo.x', ...colConfig } : { list_id: 'L1', ...colConfig }] });
+    const calls = [];
+    card.hass = makeMockHass({
+      callWS: async (m) => {
+        calls.push(m);
+        if (m.type === 'home_tasks/get_defaults') return { defaults };
+        if (m.type === 'home_tasks/add_task') return { id: 'NEW1' };
+        if (m.type === 'home_tasks/create_external_task') return { uid: 'U1' };
+        return null;
+      },
+    });
+    if (external) card._sourceDefaults['todo.x'] = defaults;
+    card._render = () => {};
+    card._loadAllTasks = async () => {};
+    card._reloadExternal = () => {};
+    const cs = card._columns[0];
+    cs.newTaskTitle = 'Task';
+    return { card, cs, calls };
+  }
+  const plain = (o) => JSON.parse(JSON.stringify(o));
+
+  test('every default person, and the due date picked in the add row', async () => {
+    const { card, cs } = await draftCard({ show_add_details: true, show_add_due: true },
+      { assignees: ['person.kevin', 'person.lisa'] });
+    cs.newTaskDue = '2027-03-01';
+    await card._openDraft(0);
+    assert.deepEqual(plain(cs.draft.assigned_persons), ['person.kevin', 'person.lisa']);
+    assert.equal(cs.draft.due_date, '2027-03-01');
+    assert.equal(cs.newTaskDue, '');
+    await card._saveDraft(0);
+  });
+
+  test('a default the draft emptied stays empty', async () => {
+    const { card, cs, calls } = await draftCard({ show_add_details: true },
+      { assignees: ['person.kevin'], tags: ['home'], priority: 2 });
+    await card._openDraft(0);
+    await card._updateTaskRouted(0, cs.draft.id, { assigned_persons: [], tags: [], priority: null });
+    await card._saveDraft(0);
+    const upd = calls.find((c) => c.type === 'home_tasks/update_task');
+    assert.equal(upd.task_id, 'NEW1');
+    assert.deepEqual(plain(upd.assigned_persons), []);
+    assert.deepEqual(plain(upd.tags), []);
+    assert.equal(upd.priority, null);
+  });
+
+  test('a kept default sends no clean-up', async () => {
+    const { card, calls } = await draftCard({ show_add_details: true }, { tags: ['home'] });
+    await card._openDraft(0);
+    await card._saveDraft(0);
+    assert.ok(!calls.some((c) => c.type === 'home_tasks/update_task'));
+  });
+
+  test('external list: recurrence follows creation, not inside it', async () => {
+    const { card, cs, calls } = await draftCard({ show_add_details: true }, {}, { external: true });
+    await card._openDraft(0);
+    await card._updateTaskRouted(0, cs.draft.id, { recurrence_enabled: true, recurrence_end_type: 'count', recurrence_max_count: 3 });
+    await card._saveDraft(0);
+    const create = calls.find((c) => c.type === 'home_tasks/create_external_task');
+    assert.equal('recurrence_end_type' in create, false);
+    const upd = calls.find((c) => c.type === 'home_tasks/update_external_task');
+    assert.equal(upd.task_uid, 'U1');
+    assert.equal(upd.recurrence_max_count, 3);
+  });
+
+  test('Add pressed twice creates one task', async () => {
+    const { card, calls } = await draftCard({ show_add_details: true }, {});
+    await card._openDraft(0);
+    await Promise.all([card._saveDraft(0), card._saveDraft(0)]);
+    assert.equal(calls.filter((c) => c.type === 'home_tasks/add_task').length, 1);
+  });
+
+  test('no sub-tasks, images or history before the task exists', async () => {
+    const { card, cs } = await draftCard({ show_add_details: true, show_images: true, show_history: true }, {});
+    await card._openDraft(0);
+    const panel = card._buildDraftPanel(cs, 0);
+    const labels = [...panel.querySelectorAll('.detail-label')].map((l) => l.textContent);
+    for (const l of ['Sub-tasks', 'History', 'Image']) assert.ok(!labels.includes(l), JSON.stringify(labels));
+    assert.ok(labels.includes('Notes'), JSON.stringify(labels));
+  });
+});
