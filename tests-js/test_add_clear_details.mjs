@@ -277,3 +277,123 @@ describe('the draft and the list defaults', () => {
     assert.ok(labels.includes('Notes'), JSON.stringify(labels));
   });
 });
+
+describe('show_add_details review fixes', () => {
+  async function draftCard(colConfig, defaults, { external = false, fail = [] } = {}) {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [external ? { entity_id: 'todo.x', ...colConfig } : { list_id: 'L1', ...colConfig }] });
+    const calls = [];
+    const errors = [];
+    card.hass = makeMockHass({
+      callWS: async (m) => {
+        calls.push(m);
+        if (fail.includes(m.type)) throw new Error('boom');
+        if (m.type === 'home_tasks/get_defaults') return { defaults };
+        if (m.type === 'home_tasks/add_task') return { id: 'NEW1' };
+        if (m.type === 'home_tasks/create_external_task') return { uid: 'U1' };
+        return null;
+      },
+    });
+    card._render = () => {};
+    card._loadAllTasks = async () => {};
+    card._reloadExternal = () => {};
+    card._showError = (msg) => errors.push(msg);
+    const cs = card._columns[0];
+    cs.newTaskTitle = 'Task';
+    return { card, cs, calls, errors };
+  }
+  const writes = (calls) => calls.filter((c) => /update|delete|reorder/.test(c.type));
+
+  test('no detail field of a draft writes to the backend', async () => {
+    for (const external of [false, true]) {
+      const { card, cs, calls } = await draftCard(
+        { show_add_details: true, show_images: true, show_history: true }, {}, { external });
+      cs.sections = [{ id: 'S1', name: 'Bakery', sort_order: 0 }, { id: 'S2', name: 'Fruit', sort_order: 1 }];
+      await card._openDraft(0);
+      const panel = card._buildDraftPanel(cs, 0);
+      for (const sel of panel.querySelectorAll('select')) {
+        if (sel.options.length < 2) continue;
+        sel.value = sel.options[sel.options.length - 1].value;
+        sel.dispatchEvent(new window.Event('change'));
+      }
+      for (const inp of panel.querySelectorAll('input[type="date"], input[type="time"], input[type="number"]')) {
+        inp.value = inp.type === 'date' ? '2027-03-01' : inp.type === 'time' ? '08:00' : '2';
+        inp.dispatchEvent(new window.Event('change'));
+      }
+      await new Promise((r) => setTimeout(r, 0));
+      assert.deepEqual(writes(calls), [], `${external ? 'external' : 'native'}: ${JSON.stringify(writes(calls))}`);
+      assert.equal(cs.draft.section_id, 'S2', 'the section stays on the draft');
+    }
+  });
+
+  test('dictating while drafting sets the draft title, without searching', async () => {
+    const { card, cs } = await draftCard({ show_add_details: true }, {});
+    await card._openDraft(0);
+    card._refreshTaskListDOM = () => { throw new Error('searched'); };
+    card._startHAStt = async (_c, _i, setTranscript) => setTranscript('Clean windows');
+    card._startVoiceInput(0);
+    await new Promise((r) => setTimeout(r, 0));
+    assert.equal(cs.draft.title, 'Clean windows');
+    assert.equal(cs.newTaskTitle, '');
+    assert.equal(cs.taskSearchQuery, '');
+  });
+
+  test('a failure after creating closes the draft and reports it', async () => {
+    const { card, cs, calls, errors } = await draftCard({ show_add_details: true }, {}, { fail: ['home_tasks/update_task'] });
+    await card._openDraft(0);
+    cs.draft.recurrence_enabled = true;
+    await card._saveDraft(0);
+    assert.equal(calls.filter((c) => c.type === 'home_tasks/add_task').length, 1);
+    assert.equal(cs.draft, null, 'closed: Add again would create it twice');
+    assert.deepEqual(errors, ['Task added, but some of its details could not be saved']);
+  });
+
+  test('a failed create keeps the draft', async () => {
+    const { card, cs, errors } = await draftCard({ show_add_details: true }, {}, { fail: ['home_tasks/add_task'] });
+    await card._openDraft(0);
+    await card._saveDraft(0);
+    assert.ok(cs.draft);
+    assert.deepEqual(errors, ['Could not add task']);
+  });
+
+  test('a save finishing late leaves a newer draft alone', async () => {
+    const { card, cs } = await draftCard({ show_add_details: true }, {});
+    await card._openDraft(0);
+    const saving = card._saveDraft(0);
+    card._closeDraft(0, false);
+    cs.newTaskTitle = 'Next';
+    await card._openDraft(0);
+    const next = cs.draft;
+    await saving;
+    assert.equal(cs.draft, next);
+  });
+
+  test('an external draft asks for the current defaults', async () => {
+    const { card, cs, calls } = await draftCard({ show_add_details: true }, { tags: ['fresh'] }, { external: true });
+    card._sourceDefaults['todo.x'] = { tags: ['stale'] };
+    await card._openDraft(0);
+    assert.ok(calls.some((c) => c.type === 'home_tasks/get_defaults' && c.entity_id === 'todo.x'));
+    assert.equal(JSON.stringify(cs.draft.tags), '["fresh"]');
+    assert.deepEqual(card._sourceDefaults['todo.x'], { tags: ['fresh'] });
+  });
+
+  test('closing gives the title back as a search, like typed text', async () => {
+    const { card, cs } = await draftCard({ show_add_details: true }, {});
+    await card._openDraft(0);
+    cs.draft.title = 'Milk ';
+    card._closeDraft(0, true);
+    assert.equal(cs.newTaskTitle, 'Milk ');
+    assert.equal(cs.taskSearchQuery, 'Milk');
+  });
+
+  test('the pressed pencil is labelled by what it does', async () => {
+    const { card, cs } = await draftCard({ show_add_details: true }, {});
+    let btn = card._buildColumnAddTask(cs, 0).querySelector('.add-details-btn');
+    assert.equal(btn.title, 'Add with details');
+    await card._openDraft(0);
+    btn = card._buildColumnAddTask(cs, 0).querySelector('.add-details-btn');
+    assert.equal(btn.title, 'Cancel');
+    assert.equal(btn.getAttribute('aria-label'), 'Cancel');
+  });
+});

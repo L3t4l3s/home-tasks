@@ -40,6 +40,7 @@ const _TRANSLATIONS = {
     "my_tasks": "My Tasks",
     "add_placeholder": "Add new task...",
     "add_failed": "Could not add task",
+    "draft_details_failed": "Task added, but some of its details could not be saved",
     "duplicate_failed": "Could not duplicate task",
     "dialog_cancel": "Cancel",
     "dialog_add": "Add",
@@ -371,6 +372,7 @@ const _TRANSLATIONS = {
     "my_tasks": "Mijn taken",
     "add_placeholder": "Nieuwe taak toevoegen...",
     "add_failed": "Taak kon niet worden toegevoegd",
+    "draft_details_failed": "Taak toegevoegd, maar sommige details konden niet worden opgeslagen",
     "duplicate_failed": "Taak kon niet worden gedupliceerd",
     "dialog_cancel": "Annuleren",
     "dialog_add": "Toevoegen",
@@ -668,6 +670,7 @@ const _TRANSLATIONS = {
     "my_tasks": "Le mie attività",
     "add_placeholder": "Aggiungi nuova attività...",
     "add_failed": "Impossibile aggiungere l'attività",
+    "draft_details_failed": "Attività creata, ma alcuni dettagli non sono stati salvati",
     "duplicate_failed": "Impossibile duplicare l'attività",
     "dialog_cancel": "Annulla",
     "dialog_add": "Aggiungi",
@@ -965,6 +968,7 @@ const _TRANSLATIONS = {
     "my_tasks": "Moje zadania",
     "add_placeholder": "Dodaj nowe zadanie...",
     "add_failed": "Nie udało się dodać zadania",
+    "draft_details_failed": "Zadanie dodano, ale nie udało się zapisać niektórych szczegółów",
     "duplicate_failed": "Nie udało się zduplikować zadania",
     "dialog_cancel": "Anuluj",
     "dialog_add": "Dodaj",
@@ -1262,6 +1266,7 @@ const _TRANSLATIONS = {
     "my_tasks": "Mina uppgifter",
     "add_placeholder": "Lägg till ny uppgift...",
     "add_failed": "Kunde inte lägga till uppgiften",
+    "draft_details_failed": "Uppgiften har lagts till, men vissa detaljer kunde inte sparas",
     "duplicate_failed": "Kunde inte duplicera uppgiften",
     "dialog_cancel": "Avbryt",
     "dialog_add": "Lägg till",
@@ -1559,6 +1564,7 @@ const _TRANSLATIONS = {
     "my_tasks": "Mes tâches",
     "add_placeholder": "Ajouter une nouvelle tâche...",
     "add_failed": "Impossible d'ajouter la tâche",
+    "draft_details_failed": "Tâche créée, mais certains détails n'ont pas pu être enregistrés",
     "duplicate_failed": "Impossible de dupliquer la tâche",
     "dialog_cancel": "Annuler",
     "dialog_add": "Ajouter",
@@ -1856,6 +1862,7 @@ const _TRANSLATIONS = {
     "my_tasks": "Minhas tarefas",
     "add_placeholder": "Adicionar nova tarefa...",
     "add_failed": "Não foi possível adicionar a tarefa",
+    "draft_details_failed": "Tarefa adicionada, mas não foi possível guardar alguns detalhes",
     "duplicate_failed": "Não foi possível duplicar a tarefa",
     "dialog_cancel": "Cancelar",
     "dialog_add": "Adicionar",
@@ -2153,6 +2160,7 @@ const _TRANSLATIONS = {
     "my_tasks": "Minhas tarefas",
     "add_placeholder": "Adicionar nova tarefa...",
     "add_failed": "Não foi possível adicionar a tarefa",
+    "draft_details_failed": "Tarefa adicionada, mas não foi possível salvar alguns detalhes",
     "duplicate_failed": "Não foi possível duplicar a tarefa",
     "dialog_cancel": "Cancelar",
     "dialog_add": "Adicionar",
@@ -2450,6 +2458,7 @@ const _TRANSLATIONS = {
     "my_tasks": "Mis tareas",
     "add_placeholder": "Añadir nueva tarea...",
     "add_failed": "No se pudo añadir la tarea",
+    "draft_details_failed": "Tarea añadida, pero no se pudieron guardar algunos detalles",
     "duplicate_failed": "No se pudo duplicar la tarea",
     "dialog_cancel": "Cancelar",
     "dialog_add": "Agregar",
@@ -2747,6 +2756,7 @@ const _TRANSLATIONS = {
     "my_tasks": "Мои задачи",
     "add_placeholder": "Добавить новую задачу...",
     "add_failed": "Не удалось добавить задачу",
+    "draft_details_failed": "Задача добавлена, но некоторые детали не удалось сохранить",
     "duplicate_failed": "Не удалось дублировать задачу",
     "dialog_cancel": "Отмена",
     "dialog_add": "Добавить",
@@ -3044,6 +3054,7 @@ const _TRANSLATIONS = {
     "my_tasks": "Moje úkoly",
     "add_placeholder": "Přidat nový úkol...",
     "add_failed": "Úkol se nepodařilo přidat",
+    "draft_details_failed": "Úkol byl přidán, ale některé podrobnosti se nepodařilo uložit",
     "duplicate_failed": "Úkol se nepodařilo duplikovat",
     "dialog_cancel": "Zrušit",
     "dialog_add": "Přidat",
@@ -3341,6 +3352,7 @@ const _TRANSLATIONS = {
     "my_tasks": "Mine opgaver",
     "add_placeholder": "Tilføj ny opgave...",
     "add_failed": "Opgaven kunne ikke tilføjes",
+    "draft_details_failed": "Opgaven er tilføjet, men nogle detaljer kunne ikke gemmes",
     "duplicate_failed": "Opgaven kunne ikke duplikeres",
     "dialog_cancel": "Annullér",
     "dialog_add": "Tilføj",
@@ -3638,6 +3650,7 @@ const _TRANSLATIONS = {
     "my_tasks": "Mine oppgaver",
     "add_placeholder": "Legg til ny oppgave...",
     "add_failed": "Kunne ikke legge til oppgaven",
+    "draft_details_failed": "Oppgaven er lagt til, men noen detaljer kunne ikke lagres",
     "duplicate_failed": "Oppgaven kunne ikke dupliseres",
     "dialog_cancel": "Avbryt",
     "dialog_add": "Legg til",
@@ -3935,6 +3948,7 @@ const _TRANSLATIONS = {
     "my_tasks": "Omat tehtävät",
     "add_placeholder": "Lisää uusi tehtävä...",
     "add_failed": "Tehtävän lisääminen epäonnistui",
+    "draft_details_failed": "Tehtävä lisättiin, mutta joitakin tietoja ei voitu tallentaa",
     "duplicate_failed": "Tehtävän monistaminen epäonnistui",
     "dialog_cancel": "Peruuta",
     "dialog_add": "Lisää",
@@ -4232,6 +4246,7 @@ const _TRANSLATIONS = {
     "my_tasks": "Feladataim",
     "add_placeholder": "Új feladat hozzáadása...",
     "add_failed": "A feladat hozzáadása nem sikerült",
+    "draft_details_failed": "A feladat hozzáadva, de néhány részletet nem sikerült menteni",
     "duplicate_failed": "A feladat nem másolható",
     "dialog_cancel": "Mégse",
     "dialog_add": "Hozzáad",
@@ -4496,6 +4511,7 @@ const _TRANSLATIONS = {
     "my_tasks": "Meine Aufgaben",
     "add_placeholder": "Neue Aufgabe hinzufügen...",
     "add_failed": "Aufgabe konnte nicht hinzugefügt werden",
+    "draft_details_failed": "Aufgabe angelegt, aber einige Details konnten nicht gespeichert werden",
     "duplicate_failed": "Aufgabe konnte nicht dupliziert werden",
     "dialog_cancel": "Abbrechen",
     "dialog_add": "Hinzufügen",
@@ -5328,10 +5344,10 @@ class HomeTasksCard extends HTMLElement {
    * For external columns: routed through the backend adapter (handles
    * provider-specific sync + overlay for unsynced fields).
    */
-  async _updateTaskRouted(colIdx, taskId, fields) {
+  async _updateTaskRouted(colIdx, taskId, fields, { rethrow = false } = {}) {
     // A draft (show_add_details) isn't created yet: edits stay on it until Add.
-    const draft = this._columns[colIdx]?.draft;
-    if (draft && taskId === draft.id) {
+    const draft = this._draftFor(colIdx, taskId);
+    if (draft) {
       Object.assign(draft, fields);
       if (Array.isArray(fields.assigned_persons)) draft.assigned_person = fields.assigned_persons[0] || null;
       this._render();
@@ -5342,7 +5358,7 @@ class HomeTasksCard extends HTMLElement {
         list_id: this._colListId(colIdx),
         task_id: taskId,
         ...fields,
-      });
+      }, { rethrow });
     }
 
     // External: send all fields to the backend — the adapter decides what
@@ -5351,7 +5367,14 @@ class HomeTasksCard extends HTMLElement {
       entity_id: this._colEntityId(colIdx),
       task_uid: taskId,
       ...fields,
-    });
+    }, { rethrow });
+  }
+
+  // The column's draft (show_add_details) when taskId is its id, else null.
+  // A detail field that saves on its own must keep a draft's edits on it.
+  _draftFor(colIdx, taskId) {
+    const draft = this._columns[colIdx]?.draft;
+    return draft && taskId === draft.id ? draft : null;
   }
 
   async _deleteTaskCmd(colIdx, taskId) {
@@ -5584,12 +5607,12 @@ class HomeTasksCard extends HTMLElement {
     // An empty field is fine: the title can follow in it (Add nudges if not).
     const title = (cs.newTaskTitle || "").trim();
     const isExt = this._isExternalCol(colIdx);
-    // The list's defaults, so the draft shows what the task will get.
-    let defaults = isExt ? (this._sourceDefaults[this._colEntityId(colIdx)] || {}) : {};
-    if (!isExt) {
-      const r = await this._callWs("home_tasks/get_defaults", { list_id: this._colListId(colIdx) });
-      defaults = (r && r.defaults) || {};
-    }
+    // The list's defaults as they are now, so the draft shows what the task
+    // will get (a linked list's cached ones may be stale, or not loaded).
+    const r = await this._callWs("home_tasks/get_defaults",
+      isExt ? { entity_id: this._colEntityId(colIdx) } : { list_id: this._colListId(colIdx) });
+    const defaults = (r && r.defaults) || {};
+    if (isExt && r) this._sourceDefaults[this._colEntityId(colIdx)] = r.defaults || null;
     const person = this._autoAssignPerson(colIdx);
     const people = person ? [person] : [...(defaults.assignees || (defaults.assignee ? [defaults.assignee] : []))];
     const { addDue, addDueTime } = this._addRowDue(colIdx);
@@ -5627,6 +5650,8 @@ class HomeTasksCard extends HTMLElement {
     if (!draft) return;
     if (giveBack) {
       cs.newTaskTitle = draft.title || "";
+      // Text in the field searches, as typed or dictated text does.
+      if (this._config.columns[colIdx].show_task_search !== false) cs.taskSearchQuery = cs.newTaskTitle.trim();
       if (this._config.columns[colIdx].show_add_due === true) {
         cs.newTaskDue = draft.due_date || "";
         cs.newTaskDueTime = draft.due_time || "";
@@ -5679,31 +5704,41 @@ class HomeTasksCard extends HTMLElement {
     if (draft.recurrence_enabled) {
       for (const [k, v] of Object.entries(draft)) if (k.startsWith("recurrence_")) after[k] = v;
     }
+    const isExt = this._isExternalCol(colIdx);
     draft._saving = true;
+    let newId;
     try {
-      let newId;
-      if (this._isExternalCol(colIdx)) {
+      if (isExt) {
         const res = await this._callWs("home_tasks/create_external_task",
           { entity_id: this._colEntityId(colIdx), title, ...base }, { rethrow: true });
         newId = res?.uid;
-        if (newId && (draft.section_id || d.section_id)) {
-          // Sections of an external list live in the overlay only.
-          await this._callWs("home_tasks/update_external_overlay",
-            { entity_id: this._colEntityId(colIdx), task_uid: newId, section_id: draft.section_id || null });
-        }
       } else {
         const payload = { list_id: this._colListId(colIdx), title, ...base };
         if (draft.section_id) payload.section_id = draft.section_id;
         const res = await this._callWs("home_tasks/add_task", payload, { rethrow: true });
         newId = res?.id;
       }
-      if (newId && Object.keys(after).length) await this._updateTaskRouted(colIdx, newId, after);
     } catch (err) {
+      // Nothing was created: the draft stays for another try.
       draft._saving = false;
       this._showError(this._t("add_failed"));
       return;
     }
-    cs.draft = null;
+    // The task exists from here on, so the draft closes even if what follows
+    // fails - Add again would create it twice. A failure is reported instead.
+    try {
+      if (newId && isExt && (draft.section_id || d.section_id)) {
+        // Sections of an external list live in the overlay only.
+        await this._callWs("home_tasks/update_external_overlay",
+          { entity_id: this._colEntityId(colIdx), task_uid: newId, section_id: draft.section_id || null },
+          { rethrow: true });
+      }
+      if (newId && Object.keys(after).length) await this._updateTaskRouted(colIdx, newId, after, { rethrow: true });
+    } catch (err) {
+      this._showError(this._t("draft_details_failed"));
+    }
+    // Only this draft: one opened while it was saving stays.
+    if (cs.draft === draft) cs.draft = null;
     if (this._isExternalCol(colIdx)) this._reloadExternal(colIdx);
     else await this._loadAllTasks();
     this._render();
@@ -6185,6 +6220,8 @@ class HomeTasksCard extends HTMLElement {
   // A task's section: ours alone, so on a linked list it lives in the
   // overlay, never at the provider.
   async _saveSectionId(colIdx, taskId, sectionId) {
+    const draft = this._draftFor(colIdx, taskId);
+    if (draft) { draft.section_id = sectionId; return; }
     if (this._isExternalCol(colIdx)) {
       await this._callWs("home_tasks/update_external_overlay", {
         entity_id: this._colEntityId(colIdx),
@@ -7079,7 +7116,10 @@ class HomeTasksCard extends HTMLElement {
     // Helper: update the visible input + column state
     const setTranscript = (text) => {
       const cs = this._columns[colIdx];
-      if (cs) cs.newTaskTitle = text;
+      // While a task is drafted the add field is its title, without search.
+      const draft = !inputEl && cs?.draft;
+      if (draft) draft.title = text;
+      else if (cs) cs.newTaskTitle = text;
       if (inputEl) {
         inputEl.value = text;
       } else {
@@ -7088,7 +7128,7 @@ class HomeTasksCard extends HTMLElement {
       }
       // Dictating a title searches exactly like typing it does — otherwise
       // the same text in the same field would behave differently.
-      if (cs && this._config.columns[colIdx]?.show_task_search !== false) {
+      if (cs && !draft && this._config.columns[colIdx]?.show_task_search !== false) {
         cs.taskSearchQuery = text.trim();
         this._refreshTaskListDOM(colIdx);
       }
@@ -7487,14 +7527,16 @@ class HomeTasksCard extends HTMLElement {
     // show_add_details: a second button that drafts the task with its
     // details under the add row; pressed again, it closes the draft.
     if (col.show_add_details === true) {
+      // Pressed, it says what it then does: close the draft, like Cancel.
+      const detailsLabel = this._t(draft ? "dialog_cancel" : "add_with_details");
       const detailsBtn = this._el("button", {
-        className: "add-btn add-details-btn" + (cs.draft ? " active" : ""),
-        textContent: "\u270E", title: this._t("add_with_details"),
+        className: "add-btn add-details-btn" + (draft ? " active" : ""),
+        textContent: "\u270E", title: detailsLabel,
       });
-      detailsBtn.setAttribute("aria-label", this._t("add_with_details"));
-      detailsBtn.setAttribute("aria-pressed", cs.draft ? "true" : "false");
+      detailsBtn.setAttribute("aria-label", detailsLabel);
+      detailsBtn.setAttribute("aria-pressed", draft ? "true" : "false");
       detailsBtn.addEventListener("click", () => {
-        if (cs.draft) this._closeDraft(colIdx, true);
+        if (draft) this._closeDraft(colIdx, true);
         else this._openDraft(colIdx);
       });
       children.push(detailsBtn);
