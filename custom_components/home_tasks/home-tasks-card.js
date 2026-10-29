@@ -4901,6 +4901,26 @@ function _tileMinWidth(col) {
 
 // Everyone a task is assigned to (issue #75), primary first. Older tasks
 // (and providers) only carry assigned_person.
+// Task-details fields folded by the user (by key), for every card on the
+// page: one Set, loaded once from localStorage, so two cards never write
+// back each other's stale copy. A card that folds a field tells the others
+// with DETAIL_FOLD_EVENT.
+const DETAIL_FOLD_STORAGE_KEY = "home_tasks_card:detail_fold";
+const DETAIL_FOLD_EVENT = "home-tasks-detail-fold";
+let _foldedDetailSet = null;
+function _foldedDetailKeys() {
+  if (!_foldedDetailSet) {
+    try {
+      const raw = window.localStorage.getItem(DETAIL_FOLD_STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      _foldedDetailSet = new Set(Array.isArray(parsed) ? parsed : []);
+    } catch (e) {
+      _foldedDetailSet = new Set();  // storage blocked: folding lasts this session
+    }
+  }
+  return _foldedDetailSet;
+}
+
 function _assignees(task) {
   const people = Array.isArray(task && task.assigned_persons) ? task.assigned_persons.filter(Boolean) : [];
   const primary = task && task.assigned_person;
@@ -8644,12 +8664,15 @@ class HomeTasksCard extends HTMLElement {
     return meta;
   }
 
+  _priorityLabel(priority) {
+    return { 1: this._t("pri_low"), 2: this._t("pri_medium"), 3: this._t("pri_high") }[priority];
+  }
+
   _buildPriorityBadge(task) {
-    const priLabels = { 1: this._t("pri_low"), 2: this._t("pri_medium"), 3: this._t("pri_high") };
     const priClass = { 1: "pri-low", 2: "pri-medium", 3: "pri-high" };
     return this._el("span", {
       className: `priority-badge ${priClass[task.priority] || ""}`,
-      textContent: priLabels[task.priority],
+      textContent: this._priorityLabel(task.priority),
     });
   }
 
@@ -8853,11 +8876,16 @@ class HomeTasksCard extends HTMLElement {
     return tagBadge;
   }
 
+  // A reminder offset (minutes before due) as its label, e.g. "1 day before".
+  _reminderLabel(minutes) {
+    const entry = REMINDER_OFFSETS.find(([v]) => v === minutes);
+    return entry ? this._t(entry[1]) : minutes + " min";
+  }
+
   _buildReminderBadge(task) {
     let remText;
     if (task.reminders.length === 1) {
-      const entry = REMINDER_OFFSETS.find(([v]) => v === task.reminders[0]);
-      remText = "\u23F0 " + (entry ? this._t(entry[1]) : task.reminders[0] + " min");
+      remText = "\u23F0 " + this._reminderLabel(task.reminders[0]);
     } else {
       remText = "\u23F0 " + task.reminders.length;
     }
@@ -9016,28 +9044,29 @@ class HomeTasksCard extends HTMLElement {
   }
 
   // Fields of the task details folded by the user, by key: one choice for
-  // every task and card in this browser, kept in localStorage like the
-  // folded sections of a list.
+  // every task and card in this browser (see _foldedDetailKeys).
   _foldedDetails() {
-    if (!this._foldedDetailKeys) {
-      try {
-        const raw = window.localStorage.getItem("home_tasks_card:detail_fold");
-        const parsed = raw ? JSON.parse(raw) : [];
-        this._foldedDetailKeys = new Set(Array.isArray(parsed) ? parsed : []);
-      } catch (e) {
-        this._foldedDetailKeys = new Set();  // storage blocked: folding lasts this session
-      }
-    }
-    return this._foldedDetailKeys;
+    return _foldedDetailKeys();
   }
 
+  // Folds or opens a field everywhere: in this card's open task details at
+  // once, in the other cards on the page through an event (each listens
+  // while connected), and in localStorage for the next visit.
   _setDetailFolded(key, folded) {
-    const keys = this._foldedDetails();
+    const keys = _foldedDetailKeys();
     if (folded) keys.add(key);
     else keys.delete(key);
     try {
-      window.localStorage.setItem("home_tasks_card:detail_fold", JSON.stringify([...keys]));
+      window.localStorage.setItem(DETAIL_FOLD_STORAGE_KEY, JSON.stringify([...keys]));
     } catch (e) { /* storage blocked: folding lasts this session */ }
+    this._applyDetailFold(key, folded);
+    window.dispatchEvent(new CustomEvent(DETAIL_FOLD_EVENT, { detail: { key, folded, source: this } }));
+  }
+
+  _applyDetailFold(key, folded) {
+    for (const s of this.shadowRoot?.querySelectorAll(`.detail-section[data-detail-key="${key}"]`) || []) {
+      s._applyFold?.(folded);
+    }
   }
 
   // A one-line summary of what a field holds, shown next to its heading
@@ -9054,13 +9083,10 @@ class HomeTasksCard extends HTMLElement {
       }
       case "section":
         return (this._columns[colIdx].sections || []).find((x) => x.id === task.section_id)?.name || "";
-      case "priority": return task.priority ? this._buildPriorityBadge(task).textContent : "";
+      case "priority": return task.priority ? this._priorityLabel(task.priority) : "";
       case "tags": return (task.tags || []).map((t) => "#" + t).join(" ");
       case "due_date": return task.due_date ? this._formatDueDate(task.due_date, task.due_time) : "";
-      case "reminders": return (task.reminders || []).map((m) => {
-        const entry = REMINDER_OFFSETS.find(([v]) => v === m);
-        return entry ? this._t(entry[1]) : `${m} min`;
-      }).join(", ");
+      case "reminders": return (task.reminders || []).map((m) => this._reminderLabel(m)).join(", ");
       case "recurrence": {
         // Its switch stays in the heading; the rule follows when it is on.
         const badge = task.recurrence_enabled ? this._buildRecurrenceBadge(task) : null;
@@ -9091,17 +9117,26 @@ class HomeTasksCard extends HTMLElement {
     else label.after(summary);
     label.tabIndex = 0;
     label.setAttribute("role", "button");
+    let shown = task;
     const apply = (folded) => {
       section.classList.toggle("folded", folded);
       label.setAttribute("aria-expanded", String(!folded));
-      summary.textContent = folded ? this._detailSummary(key, task, colIdx) : "";
+      summary.textContent = folded ? this._detailSummary(key, shown, colIdx) : "";
     };
+    section._applyFold = apply;
     apply(this._foldedDetails().has(key));
     const toggle = () => {
       const folded = !section.classList.contains("folded");
       this._setDetailFolded(key, folded);
-      apply(folded);
+      apply(folded);  // also when this section is not (yet) in the card
     };
+    // The recurrence switch works while folded: the summary follows it
+    // straight away, not only once the saved task comes back.
+    head.addEventListener("change", (e) => {
+      if (!e.target.matches?.("ha-switch")) return;
+      shown = { ...shown, recurrence_enabled: e.target.checked };
+      apply(section.classList.contains("folded"));
+    });
     head.addEventListener("click", (e) => {
       // The recurrence switch (and anything else interactive in the
       // heading) does its own job.
@@ -10479,7 +10514,7 @@ class HomeTasksCard extends HTMLElement {
     leadUnitSelect.addEventListener("change", saveLead);
     _blurAfterChange(leadUnitSelect);
 
-    const recurrenceRows = [
+    return this._el("div", { className: "detail-section" }, [
       recurrenceToggleRow,
       recurrenceIntervalRow,
       recurrenceBasicRadioRow,
@@ -10492,8 +10527,7 @@ class HomeTasksCard extends HTMLElement {
       recurrenceEndRow,
       recurrenceEndDateWrap,
       recurrenceCountRow,
-    ];
-    return this._el("div", { className: "detail-section" }, recurrenceRows);
+    ]);
   }
 
   _buildAssignedPersonSection(task, colIdx) {
@@ -12233,7 +12267,6 @@ class HomeTasksCard extends HTMLElement {
       /* Folding a task-details field: its heading stays, with a caret and,
          while folded, a one-line summary of what is set. */
       .detail-fold-head { cursor: pointer; display: flex; align-items: center; gap: 6px; min-width: 0; }
-      .detail-section.folded > label.detail-fold-head { margin-bottom: 0; }
       .detail-fold-caret {
         --mdc-icon-size: 16px; flex-shrink: 0; color: var(--todo-secondary-text);
         transition: transform 0.15s;
@@ -12867,6 +12900,12 @@ class HomeTasksCard extends HTMLElement {
 
   connectedCallback() {
     this._ensureCardMod();
+    if (!this._detailFoldHandler) {
+      this._detailFoldHandler = (e) => {
+        if (e.detail.source !== this) this._applyDetailFold(e.detail.key, e.detail.folded);
+      };
+      window.addEventListener(DETAIL_FOLD_EVENT, this._detailFoldHandler);
+    }
     this._updateFitRows();
     // A pending lists retry is cancelled on disconnect — resume the ladder
     // when the card is re-attached (dashboard view switch during startup),
@@ -12916,6 +12955,10 @@ class HomeTasksCard extends HTMLElement {
   }
 
   disconnectedCallback() {
+    if (this._detailFoldHandler) {
+      window.removeEventListener(DETAIL_FOLD_EVENT, this._detailFoldHandler);
+      this._detailFoldHandler = null;
+    }
     if (this._sortCloseHandler) {
       document.removeEventListener("click", this._sortCloseHandler);
       this._sortCloseHandler = null;

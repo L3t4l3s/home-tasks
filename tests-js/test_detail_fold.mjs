@@ -135,4 +135,47 @@ describe('folding the task-details fields', () => {
       proto.setItem = setItem;
     }
   });
+  test('two cards share the folds: neither writes back a stale copy, both follow', async () => {
+    const task = T({ tags: ['x'], notes: 'n' });
+    const { card: a, window } = await build(task);
+    const { HomeTasksCard } = await loadCard();
+    const b = new HomeTasksCard();
+    b.setConfig({ columns: [{ list_id: 'L1' }] });
+    b.hass = makeMockHass({ language: 'en' });
+    b._render = () => {};
+    b._columns[0].tasks = [task];
+    window.document.body.append(a, b);
+    try {
+      a.shadowRoot.append(a._buildTaskDetails(task, 0));
+      b.shadowRoot.append(b._buildTaskDetails(task, 0));
+      head(field(a.shadowRoot, 'tags')).click();
+      assert.ok(field(b.shadowRoot, 'tags').classList.contains('folded'), 'b follows a');
+      head(field(b.shadowRoot, 'notes')).click();
+      assert.deepEqual(JSON.parse(window.localStorage.getItem('home_tasks_card:detail_fold')).sort(), ['notes', 'tags']);
+      assert.ok(field(a.shadowRoot, 'notes').classList.contains('folded'), 'a follows b');
+    } finally {
+      a.remove();
+      b.remove();
+    }
+  });
+
+  test('every open task of the card folds together', async () => {
+    const { card } = await build(T());
+    card.shadowRoot.append(card._buildTaskDetails(T(), 0), card._buildTaskDetails(T({ id: 'T2' }), 0));
+    const [first, second] = card.shadowRoot.querySelectorAll('.detail-section[data-detail-key="tags"]');
+    head(first).click();
+    assert.ok(second.classList.contains('folded'));
+  });
+
+  test('switching the folded recurrence on shows its rule at once', async () => {
+    const task = T({ recurrence_unit: 'weeks', recurrence_value: 2 });
+    const { card, window } = await build(task);
+    card._setDetailFolded('recurrence', true);
+    const rec = field(card._buildTaskDetails(task, 0), 'recurrence');
+    assert.equal(summary(rec), '');
+    const sw = head(rec).querySelector('ha-switch');
+    sw.checked = true;
+    sw.dispatchEvent(new window.Event('change', { bubbles: true }));
+    assert.match(summary(rec), /^2 /);
+  });
 });
