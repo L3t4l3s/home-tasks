@@ -289,6 +289,7 @@ const _TRANSLATIONS = {
     "calendar_days_before": "{value}d before",
     "section_label": "Section",
     "ed_show_section": "Section field",
+    "ed_section_field_no_sections": "Shows once the list has sections",
     "ed_list_columns": "Task columns",
     "ed_tile_size": "Tile size",
     "ed_tile_size_default": "Default",
@@ -581,6 +582,7 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} uur van tevoren",
     "calendar_days_before": "{value} dagen van tevoren",
     "ed_show_section": "Sectieveld",
+    "ed_section_field_no_sections": "Verschijnt zodra de lijst secties heeft",
     "section_label": "Sectie",
     "ed_list_columns": "Takenkolommen",
     "ed_tile_size": "Tegelgrootte",
@@ -874,6 +876,7 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} ore prima",
     "calendar_days_before": "{value} giorni prima",
     "ed_show_section": "Campo sezione",
+    "ed_section_field_no_sections": "Compare quando l'elenco ha delle sezioni",
     "section_label": "Sezione",
     "ed_list_columns": "Colonne di attività",
     "ed_tile_size": "Dimensione caselle",
@@ -1167,6 +1170,7 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} godz. przed",
     "calendar_days_before": "{value} dni przed",
     "ed_show_section": "Pole sekcji",
+    "ed_section_field_no_sections": "Pojawi się, gdy lista będzie mieć sekcje",
     "section_label": "Sekcja",
     "ed_list_columns": "Kolumny zadań",
     "ed_tile_size": "Rozmiar kafelków",
@@ -1460,6 +1464,7 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} tim innan",
     "calendar_days_before": "{value} dagar innan",
     "ed_show_section": "Avsnittsfält",
+    "ed_section_field_no_sections": "Visas när listan har avsnitt",
     "section_label": "Avsnitt",
     "ed_list_columns": "Uppgiftskolumner",
     "ed_tile_size": "Rutstorlek",
@@ -1753,6 +1758,7 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} h avant",
     "calendar_days_before": "{value} j avant",
     "ed_show_section": "Champ de section",
+    "ed_section_field_no_sections": "Apparaît dès que la liste a des sections",
     "section_label": "Section",
     "ed_list_columns": "Colonnes de tâches",
     "ed_tile_size": "Taille des tuiles",
@@ -2046,6 +2052,7 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value}h antes",
     "calendar_days_before": "{value}d antes",
     "ed_show_section": "Campo de seção",
+    "ed_section_field_no_sections": "Aparece quando a lista tiver seções",
     "section_label": "Seção",
     "ed_list_columns": "Colunas de tarefas",
     "ed_tile_size": "Tamanho dos blocos",
@@ -2339,6 +2346,7 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value}h antes",
     "calendar_days_before": "{value}d antes",
     "ed_show_section": "Campo de seção",
+    "ed_section_field_no_sections": "Aparece quando a lista tiver seções",
     "section_label": "Seção",
     "ed_list_columns": "Colunas de tarefas",
     "ed_tile_size": "Tamanho dos blocos",
@@ -2632,6 +2640,7 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} h antes",
     "calendar_days_before": "{value} d antes",
     "ed_show_section": "Campo de sección",
+    "ed_section_field_no_sections": "Aparece cuando la lista tenga secciones",
     "section_label": "Sección",
     "ed_list_columns": "Columnas de tareas",
     "ed_tile_size": "Tamaño de mosaicos",
@@ -2925,6 +2934,7 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "за {value} ч",
     "calendar_days_before": "за {value} дн.",
     "ed_show_section": "Поле раздела",
+    "ed_section_field_no_sections": "Появится, когда в списке будут разделы",
     "section_label": "Раздел",
     "ed_list_columns": "Колонки задач",
     "ed_tile_size": "Размер плиток",
@@ -3218,6 +3228,7 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} h předem",
     "calendar_days_before": "{value} d předem",
     "ed_show_section": "Pole sekce",
+    "ed_section_field_no_sections": "Zobrazí se, jakmile bude mít seznam sekce",
     "section_label": "Sekce",
     "ed_list_columns": "Sloupce úkolů",
     "ed_tile_size": "Velikost dlaždic",
@@ -3511,6 +3522,7 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} timer før",
     "calendar_days_before": "{value} dage før",
     "ed_show_section": "Afsnitsfelt",
+    "ed_section_field_no_sections": "Vises, når listen har afsnit",
     "section_label": "Afsnit",
     "ed_list_columns": "Opgavekolonner",
     "ed_tile_size": "Flisestørrelse",
@@ -3804,6 +3816,7 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} timer før",
     "calendar_days_before": "{value} dager før",
     "ed_show_section": "Seksjonsfelt",
+    "ed_section_field_no_sections": "Vises når listen har seksjoner",
     "section_label": "Seksjon",
     "ed_list_columns": "Oppgavekolonner",
     "ed_tile_size": "Flisestørrelse",
@@ -4097,6 +4110,7 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} h ennen",
     "calendar_days_before": "{value} pv ennen",
     "ed_show_section": "Osiokenttä",
+    "ed_section_field_no_sections": "Näkyy, kun listalla on osioita",
     "section_label": "Osio",
     "ed_list_columns": "Tehtäväsarakkeet",
     "ed_tile_size": "Ruutujen koko",
@@ -4390,6 +4404,7 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} órával előtte",
     "calendar_days_before": "{value} nappal előtte",
     "ed_show_section": "Szakasz mező",
+    "ed_section_field_no_sections": "Akkor jelenik meg, ha a listának vannak szakaszai",
     "section_label": "Szakasz",
     "ed_list_columns": "Feladatoszlopok",
     "ed_tile_size": "Csempeméret",
@@ -4683,6 +4698,7 @@ const _TRANSLATIONS = {
     "calendar_hours_before": "{value} Std. vorher",
     "calendar_days_before": "{value} Tage vorher",
     "ed_show_section": "Bereichsfeld",
+    "ed_section_field_no_sections": "Erscheint, sobald die Liste Bereiche hat",
     "section_label": "Bereich",
     "ed_list_columns": "Aufgabenspalten",
     "ed_tile_size": "Kachelgröße",
@@ -4828,12 +4844,46 @@ function _assignees(task) {
   return people;
 }
 
+// The task-details fields in their default order: [key, editor label,
+// show_* option, shown by default, older name of the option].
+const DETAIL_FIELDS = [
+  ["notes", "ed_show_notes", "show_notes", true],
+  ["sub_tasks", "ed_show_sub_items", "show_sub_tasks", true, "show_sub_items"],
+  ["person", "ed_show_person", "show_assigned_person", true],
+  ["section", "ed_show_section", "show_section", true],
+  ["priority", "ed_show_priority", "show_priority", true],
+  ["tags", "ed_show_tags", "show_tags", true],
+  ["due_date", "ed_show_due_date", "show_due_date", true],
+  ["reminders", "ed_show_reminders", "show_reminders", true],
+  ["recurrence", "ed_show_recurrence", "show_recurrence", true],
+  ["history", "ed_show_history", "show_history", false],
+  ["images", "ed_show_images", "show_images", false],
+];
+const DETAIL_FIELD = Object.fromEntries(DETAIL_FIELDS.map((f) => [f[0], f]));
+const DETAIL_KEYS = DETAIL_FIELDS.map((f) => f[0]);
+
+// Whether a column has the task-details field *key* switched on.
+function _detailFieldOn(col, key) {
+  const [, , option, defaultOn, legacy] = DETAIL_FIELD[key];
+  const v = col[option] ?? (legacy ? col[legacy] : undefined);
+  return defaultOn ? v !== false : v === true;
+}
+
 // detail_order: the task-details fields in the order given; unknown keys
 // are ignored and fields not listed follow in the default order.
-function _detailOrder(col, defaults) {
+function _detailOrder(col, defaults = DETAIL_KEYS) {
   const wanted = Array.isArray(col && col.detail_order) ? col.detail_order : [];
   const listed = wanted.filter((k, i) => defaults.includes(k) && wanted.indexOf(k) === i);
   return [...listed, ...defaults.filter((k) => !listed.includes(k))];
+}
+
+// The shortest detail_order giving *order*: fields at the end that already
+// follow in the default order are left out, so a field a later version adds
+// still lands in its default place.
+function _shortDetailOrder(order) {
+  let n = order.length;
+  while (n > 0 && _detailOrder({ detail_order: order.slice(0, n - 1) }).join() === order.join()) n--;
+  return n ? order.slice(0, n) : undefined;
 }
 
 class HomeTasksCard extends HTMLElement {
@@ -8254,7 +8304,7 @@ class HomeTasksCard extends HTMLElement {
       meta.push(this._buildPriorityBadge(task));
     }
     const subProgress = this._getSubTaskProgress(task);
-    if (subProgress && (col.show_sub_tasks ?? col.show_sub_items) !== false && col.badge_progress !== false) {
+    if (subProgress && _detailFieldOn(col, "sub_tasks") && col.badge_progress !== false) {
       meta.push(this._el("span", { className: "sub-badge", textContent: subProgress }));
     }
     if (task.due_date && col.show_due_date !== false && col.badge_due !== false) {
@@ -8611,26 +8661,25 @@ class HomeTasksCard extends HTMLElement {
   _buildTaskDetails(task, colIdx) {
     const col = this._config.columns[colIdx];
 
-    // Each field: [shown?, builder]. detail_order picks the order; fields it
-    // doesn't name follow in the default order. The action row stays last.
-    const fields = {
-      notes: [col.show_notes !== false, () => this._buildNotesSection(task, colIdx)],
-      sub_tasks: [(col.show_sub_tasks ?? col.show_sub_items) !== false, () => this._buildSubTasksSection(task, colIdx)],
-      person: [col.show_assigned_person !== false, () => this._buildAssignedPersonSection(task, colIdx)],
-      section: [col.show_section !== false && (this._columns[colIdx].sections || []).length > 0,
-        () => this._buildSectionPickerSection(task, colIdx)],
-      priority: [col.show_priority !== false, () => this._buildPrioritySection(task, colIdx)],
-      tags: [col.show_tags !== false, () => this._buildTagsSection(task, colIdx)],
-      due_date: [col.show_due_date !== false, () => this._buildDateSection(task, colIdx)],
-      reminders: [col.show_reminders !== false, () => this._buildRemindersSection(task, colIdx)],
-      recurrence: [col.show_recurrence !== false, () => this._buildRecurrenceSection(task, colIdx)],
-      history: [!!col.show_history, () => this._buildHistorySection(task)],
-      images: [col.show_images === true, () => this._buildImageSection(task, colIdx)],
+    // detail_order picks the order; fields it doesn't name follow in the
+    // default order. The action row stays last.
+    const build = {
+      notes: () => this._buildNotesSection(task, colIdx),
+      sub_tasks: () => this._buildSubTasksSection(task, colIdx),
+      person: () => this._buildAssignedPersonSection(task, colIdx),
+      section: () => this._buildSectionPickerSection(task, colIdx),
+      priority: () => this._buildPrioritySection(task, colIdx),
+      tags: () => this._buildTagsSection(task, colIdx),
+      due_date: () => this._buildDateSection(task, colIdx),
+      reminders: () => this._buildRemindersSection(task, colIdx),
+      recurrence: () => this._buildRecurrenceSection(task, colIdx),
+      history: () => this._buildHistorySection(task),
+      images: () => this._buildImageSection(task, colIdx),
     };
+    const hasSections = (this._columns[colIdx].sections || []).length > 0;
     const details = [];
-    for (const key of _detailOrder(col, Object.keys(fields))) {
-      const [shown, build] = fields[key];
-      if (shown) details.push(build());
+    for (const key of _detailOrder(col)) {
+      if (_detailFieldOn(col, key) && (key !== "section" || hasSections)) details.push(build[key]());
     }
     details.push(this._buildActionsSection(task, colIdx));
 
@@ -13151,7 +13200,8 @@ class HomeTasksCardEditor extends HTMLElement {
         color: var(--primary-color); border-color: var(--primary-color);
       }
       .detail-field-row { gap: 4px; }
-      .detail-field-row > .toggle-label { flex: 1; }
+      .detail-field-row > .toggle-label { flex: 1; display: flex; flex-direction: column; }
+      .detail-field-row.unavailable > .toggle-label { color: var(--secondary-text-color); }
       .detail-field-row > ha-switch { margin-left: 8px; }
       .group-label {
         display: flex; align-items: center; gap: 10px; margin: 14px 0 2px;
@@ -13809,64 +13859,57 @@ class HomeTasksCardEditor extends HTMLElement {
       return field;
     })();
 
+    // Images has its switch in the Images section too; the two follow
+    // each other.
+    const imagesToggle = makeToggle("show-images", "ed_show_images", "show_images", false, (on) => {
+      const twin = detailFields.querySelector('.detail-field-row[data-key="images"] ha-switch');
+      if (twin) twin.checked = on;
+    });
+
     // The task-details fields as one list: switched on or off, and moved up
-    // or down to set the order they appear in (detail_order). Selectable
-    // people sit under Persons, the only field they belong to.
+    // or down to set the order they appear in (detail_order).
     const detailFields = (() => {
-      const FIELDS = [
-        ["notes", "ed_show_notes", "show_notes", true],
-        ["sub_tasks", "ed_show_sub_items", "show_sub_tasks", true],
-        ["person", "ed_show_person", "show_assigned_person", true],
-        ["section", "ed_show_section", "show_section", true],
-        ["priority", "ed_show_priority", "show_priority", true],
-        ["tags", "ed_show_tags", "show_tags", true],
-        ["due_date", "ed_show_due_date", "show_due_date", true],
-        ["reminders", "ed_show_reminders", "show_reminders", true],
-        ["recurrence", "ed_show_recurrence", "show_recurrence", true],
-        ["history", "ed_show_history", "show_history", false],
-        ["images", "ed_show_images", "show_images", false],
-      ];
-      const byKey = Object.fromEntries(FIELDS.map((f) => [f[0], f]));
       const list = this._el("div", { className: "detail-field-list" });
-      const arrow = (icon, titleKey, disabled, onClick) => {
-        const btn = this._el("button", { className: "icon-btn", type: "button", title: this._t(titleKey) });
-        const ic = document.createElement("ha-icon");
-        ic.setAttribute("icon", icon);
-        btn.appendChild(ic);
-        btn.disabled = disabled;
-        btn.addEventListener("click", onClick);
-        return btn;
-      };
+      // Section only shows in the details once the list has sections.
+      const sections = this._listSections[this._sourceKeyForCol(col)];
+      const noSections = Array.isArray(sections) && sections.length === 0;
       const draw = () => {
         const cur = this._config.columns[tabIdx] || {};
-        const order = _detailOrder(cur, FIELDS.map((f) => f[0]));
+        const order = _detailOrder(cur);
         list.replaceChildren();
         order.forEach((key, i) => {
-          const [, labelKey, configKey, defaultOn] = byKey[key];
-          const isOn = (c) => (defaultOn ? c[configKey] !== false : c[configKey] === true);
+          const [, labelKey, option, , legacy] = DETAIL_FIELD[key];
           const move = (d) => {
             const next = order.slice();
             [next[i], next[i + d]] = [next[i + d], next[i]];
-            updateCol({ detail_order: next });
+            updateCol({ detail_order: _shortDetailOrder(next) });
             draw();
           };
           const label = this._el("span", { className: "toggle-label", textContent: this._t(labelKey) });
+          const unavailable = key === "section" && noSections;
+          if (unavailable) {
+            label.appendChild(this._el("span", { className: "hint", textContent: this._t("ed_section_field_no_sections") }));
+          }
           const sw = document.createElement("ha-switch");
-          sw.checked = isOn(cur);
+          sw.checked = _detailFieldOn(cur, key);
           sw.setAttribute("aria-label", this._t(labelKey));
           sw.addEventListener("change", () => {
-            updateCol({ [configKey]: sw.checked });
+            const updates = { [option]: sw.checked };
+            // The older name would otherwise still win where the new one is unset.
+            if (legacy && legacy in (this._config.columns[tabIdx] || {})) updates[legacy] = undefined;
+            updateCol(updates);
             if (key === "person") offeredPersons.style.display = sw.checked ? "" : "none";
-            // Images has its switch in the Images section too.
-            if (key === "images") this._render();
+            if (key === "images") imagesToggle.querySelector("ha-switch").checked = sw.checked;
           });
-          list.appendChild(this._el("div", { className: "toggle-row detail-field-row", "data-key": key }, [
+          list.appendChild(this._el("div", {
+            className: "toggle-row detail-field-row" + (unavailable ? " unavailable" : ""),
+            "data-key": key,
+          }, [
             label,
-            arrow("mdi:arrow-up", "ed_move_up", i === 0, () => move(-1)),
-            arrow("mdi:arrow-down", "ed_move_down", i === order.length - 1, () => move(1)),
+            this._iconButton("mdi:arrow-up", "ed_move_up", i === 0, () => move(-1)),
+            this._iconButton("mdi:arrow-down", "ed_move_down", i === order.length - 1, () => move(1)),
             sw,
           ]));
-          if (key === "person") list.appendChild(offeredPersons);
         });
       };
       draw();
@@ -13997,12 +14040,12 @@ class HomeTasksCardEditor extends HTMLElement {
       makeSection("config", "mdi:tune", "ed_sec_display", [
         detailFields,
         makeToggle("show-move", "ed_show_move", "show_move", true),
+        offeredPersons,
       ]),
       this._buildSectionsEditor(col),
       makeSection("images", "mdi:image-multiple", "ed_sec_images", [
         this._el("div", { className: "toggle-grid" }, [
-          // Also a row in the task-details list; redrawn so both show the same.
-          makeToggle("show-images", "ed_show_images", "show_images", false, () => this._render()),
+          imagesToggle,
           // Also tells the integration to generate for this list when no
           // dashboard is open - one switch, both behaviours.
           makeToggle("auto-image", "ed_auto_image", "auto_generate_image", false, (on) => {
@@ -14154,6 +14197,17 @@ class HomeTasksCardEditor extends HTMLElement {
     ]);
   }
 
+  // An icon-only button, e.g. the up/down arrows in the editor's lists.
+  _iconButton(icon, titleKey, disabled, onClick) {
+    const btn = this._el("button", { className: "icon-btn", type: "button", title: this._t(titleKey) });
+    const ic = document.createElement("ha-icon");
+    ic.setAttribute("icon", icon);
+    btn.appendChild(ic);
+    btn.disabled = disabled;
+    btn.addEventListener("click", onClick);
+    return btn;
+  }
+
   _buildSectionsEditor(col) {
     const key = this._sourceKeyForCol(col);
     const cached = key ? this._listSections[key] : null;
@@ -14203,10 +14257,7 @@ class HomeTasksCardEditor extends HTMLElement {
       const section = list[i];
       const row = this._el("div", { className: "sections-editor-row" });
 
-      const upBtn = this._el("button", { className: "icon-btn", type: "button", title: this._t("ed_move_up") || "Up" });
-      upBtn.appendChild((() => { const ic = document.createElement("ha-icon"); ic.setAttribute("icon", "mdi:arrow-up"); return ic; })());
-      upBtn.disabled = i === 0;
-      upBtn.addEventListener("click", async () => {
+      const upBtn = this._iconButton("mdi:arrow-up", "ed_move_up", i === 0, async () => {
         if (i === 0) return;
         const ids = list.map((s) => s.id);
         [ids[i - 1], ids[i]] = [ids[i], ids[i - 1]];
@@ -14216,10 +14267,7 @@ class HomeTasksCardEditor extends HTMLElement {
       });
       row.appendChild(upBtn);
 
-      const downBtn = this._el("button", { className: "icon-btn", type: "button", title: this._t("ed_move_down") || "Down" });
-      downBtn.appendChild((() => { const ic = document.createElement("ha-icon"); ic.setAttribute("icon", "mdi:arrow-down"); return ic; })());
-      downBtn.disabled = i === list.length - 1;
-      downBtn.addEventListener("click", async () => {
+      const downBtn = this._iconButton("mdi:arrow-down", "ed_move_down", i === list.length - 1, async () => {
         if (i === list.length - 1) return;
         const ids = list.map((s) => s.id);
         [ids[i], ids[i + 1]] = [ids[i + 1], ids[i]];
