@@ -288,6 +288,35 @@ async def test_reopen_with_a_due_date_keeps_that_date(
     assert "pre_advance_due_date" not in reopened
 
 
+@pytest.mark.parametrize("hour", [0, 7, 23])
+async def test_ticked_before_its_time_reopened_days_later_goes_back_to_that_time(
+    hass: HomeAssistant, freezer, mock_config_entry, store, hour
+) -> None:
+    """Due today at 18:00, ticked off before 18:00 (at any hour of the day or
+    night), reopened by hand days later: the task is back on today 18:00 -
+    now overdue, as the completion is undone - and no reminder for the past
+    moment fires."""
+    from custom_components.home_tasks import DATA_REMINDER_TIMERS
+
+    tz = dt_util.DEFAULT_TIME_ZONE
+    freezer.move_to(datetime(2026, 10, 24, hour, 30, tzinfo=tz))
+    task = await _weekly_task(store, due_time="18:00", reminders=[0, 60])
+    task = await store.async_update_task(task["id"], due_date="2026-10-24")
+
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+    done = store.get_task(task["id"])
+    assert (done["due_date"], done["due_time"]) == ("2026-10-31", "18:00")
+
+    freezer.move_to(datetime(2026, 10, 29, 21, 15, tzinfo=tz))  # five days on, after 18:00
+    await store.async_update_task(task["id"], completed=False, actor="tester")
+    await hass.async_block_till_done()
+    reopened = store.get_task(task["id"])
+    assert (reopened["due_date"], reopened["due_time"]) == ("2026-10-24", "18:00")
+    assert not [k for k in hass.data.get(DATA_REMINDER_TIMERS, {}) if k.startswith(task["id"])], \
+        "reminders for a moment already past are not armed"
+
+
 async def test_a_copy_of_a_completed_task_carries_nothing_to_undo(
     hass: HomeAssistant, mock_config_entry, store
 ) -> None:

@@ -286,6 +286,11 @@ class ExternalTaskOverlayStore:
         for key, value in kwargs.items():
             if key in OVERLAY_FIELDS:
                 overlay[key] = value
+        # Parity with HomeTasksStore: a new end count starts the countdown.
+        # The card only sends recurrence_max_count, so without this an end
+        # after N times never counted down on a linked list.
+        if "recurrence_max_count" in kwargs and "recurrence_remaining_count" not in kwargs:
+            overlay["recurrence_remaining_count"] = kwargs["recurrence_max_count"]
 
         await self._async_save()
         # Parity with the native store: fire assignment on change, and (re)schedule

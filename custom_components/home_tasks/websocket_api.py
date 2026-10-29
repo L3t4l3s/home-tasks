@@ -1825,9 +1825,26 @@ async def async_update_external_task(
             # task isn't seen as still-completed by startup recovery / UI.
             if merged and merged.get("completed_at"):
                 await _get_overlay_store(hass, entity_id).async_set_overlay(
-                    task_uid, completed_at=None
+                    task_uid, completed_at=None, **_undo_count_off(merged)
                 )
     return unsynced or {}
+
+
+def _undo_count_off(task: dict) -> dict:
+    """The overlay fields that give back the occurrence a completion counted
+    off (end after N times), for a manual reopen - parity with the native
+    Store._rollback_advanced_due. Only called when the task carries the
+    completion stamp, which _handle_external_recurrence_completion sets in
+    the same write as the count."""
+    if task.get("recurrence_end_type") != "count" or task.get("recurrence_remaining_count") is None:
+        return {}
+    remaining = task["recurrence_remaining_count"]
+    out = {"recurrence_remaining_count": remaining + 1}
+    if task.get("recurrence_max_count"):
+        out["recurrence_remaining_count"] = min(remaining + 1, task["recurrence_max_count"])
+    if remaining == 0 and not task.get("recurrence_enabled"):
+        out["recurrence_enabled"] = True  # the last completion had switched it off
+    return out
 
 
 async def async_duplicate_external_task(

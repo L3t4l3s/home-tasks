@@ -1587,8 +1587,13 @@ async def _handle_external_recurrence_completion(
         return
     completed_at = datetime.now(timezone.utc)
     overlay_kwargs: dict = {"completed_at": completed_at.isoformat()}
-    if task.get("recurrence_end_type") == "count" and task.get("recurrence_remaining_count") is not None:
-        remaining = task["recurrence_remaining_count"] - 1
+    # A count set before the overlay started the countdown itself was never
+    # started: it starts here, at the full count.
+    left = task.get("recurrence_remaining_count")
+    if left is None and task.get("recurrence_end_type") == "count":
+        left = task.get("recurrence_max_count")
+    if task.get("recurrence_end_type") == "count" and left is not None:
+        remaining = left - 1
         overlay_kwargs["recurrence_remaining_count"] = max(0, remaining)
         if remaining <= 0:
             overlay_kwargs["recurrence_enabled"] = False

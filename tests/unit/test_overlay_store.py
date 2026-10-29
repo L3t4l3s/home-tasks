@@ -267,6 +267,17 @@ async def test_recurrence_remaining_count_negative(hass: HomeAssistant, overlay_
         await overlay_store.async_set_overlay("uid-t", recurrence_remaining_count=-1)
 
 
+async def test_a_new_end_count_starts_the_countdown(hass: HomeAssistant, overlay_store) -> None:
+    """Parity with the native store: the card sends recurrence_max_count
+    alone, and the remaining count starts from it."""
+    o = await overlay_store.async_set_overlay("uid-t", recurrence_end_type="count", recurrence_max_count=3)
+    assert o["recurrence_remaining_count"] == 3
+    o = await overlay_store.async_set_overlay("uid-t", recurrence_remaining_count=1)
+    assert o["recurrence_remaining_count"] == 1, "a count written on its own stays"
+    o = await overlay_store.async_set_overlay("uid-t", recurrence_max_count=None)
+    assert o["recurrence_remaining_count"] is None
+
+
 async def test_recurrence_start_date_invalid(hass: HomeAssistant, overlay_store) -> None:
     with pytest.raises(ValueError, match="YYYY-MM-DD"):
         await overlay_store.async_set_overlay("uid-t", recurrence_start_date="01/01/2026")

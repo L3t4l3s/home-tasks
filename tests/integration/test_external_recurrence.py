@@ -376,6 +376,95 @@ async def test_manual_reopen_via_ws_clears_completed_at(
     assert _overlay(hass, ext_entry).get_all_overlays()["t1"].get("completed_at") is None
 
 
+@pytest.mark.parametrize(
+    ("remaining", "enabled", "want_remaining", "want_enabled"),
+    [
+        (2, True, 3, True),    # completed with 3 left: one given back
+        (0, False, 1, True),   # the last completion switched it off: back on
+    ],
+)
+async def test_manual_reopen_via_ws_gives_the_occurrence_back(
+    hass: HomeAssistant, hass_ws_client, ext_entry,
+    remaining, enabled, want_remaining, want_enabled,
+) -> None:
+    """With an end after N times, undoing a completion counts the occurrence
+    back on a linked list too - parity with native lists (#87)."""
+    _register_todo_items(hass, [
+        TodoItem(uid="t1", summary="Recurring", status=TodoItemStatus.COMPLETED),
+    ])
+    await _overlay(hass, ext_entry).async_set_overlay(
+        "t1", recurrence_enabled=enabled, recurrence_unit="days", recurrence_value=1,
+        recurrence_end_type="count", recurrence_max_count=3,
+        recurrence_remaining_count=remaining,
+        completed_at=datetime.now(timezone.utc).isoformat(),
+    )
+
+    async def _fake_update(call):
+        return None
+
+    hass.services.async_register("todo", "update_item", _fake_update)
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 72, "type": "home_tasks/update_external_task",
+        "entity_id": ENTITY, "task_uid": "t1", "completed": False,
+    })
+    assert (await client.receive_json())["success"] is True
+    await hass.async_block_till_done()
+
+    overlay = _overlay(hass, ext_entry).get_all_overlays()["t1"]
+    assert overlay["recurrence_remaining_count"] == want_remaining
+    assert overlay["recurrence_enabled"] is want_enabled
+    assert overlay.get("completed_at") is None
+
+
+async def test_a_countdown_never_started_starts_at_the_full_count(
+    hass: HomeAssistant, ext_entry
+) -> None:
+    """An end count set before the overlay started the countdown (remaining
+    still empty) counts down from the full count at the next completion."""
+    _register_todo_items(hass, [
+        TodoItem(uid="t1", summary="Recurring", status=TodoItemStatus.COMPLETED),
+    ])
+    overlay = _overlay(hass, ext_entry)
+    await overlay.async_set_overlay(
+        "t1", recurrence_enabled=True, recurrence_unit="days", recurrence_value=1,
+        recurrence_end_type="count",
+    )
+    # as old data has it: a max count but no remaining count
+    overlay._data["overlays"]["t1"].update(recurrence_max_count=3, recurrence_remaining_count=None)
+
+    await _handle_external_recurrence_completion(hass, ext_entry.entry_id, ENTITY, "t1")
+    assert overlay.get_all_overlays()["t1"]["recurrence_remaining_count"] == 2
+
+
+async def test_manual_reopen_without_a_completion_stamp_keeps_the_count(
+    hass: HomeAssistant, hass_ws_client, ext_entry
+) -> None:
+    """No stamp, no count taken off (e.g. ticked in the provider's app):
+    nothing to give back."""
+    _register_todo_items(hass, [
+        TodoItem(uid="t1", summary="Recurring", status=TodoItemStatus.COMPLETED),
+    ])
+    await _overlay(hass, ext_entry).async_set_overlay(
+        "t1", recurrence_enabled=True, recurrence_unit="days", recurrence_value=1,
+        recurrence_end_type="count", recurrence_max_count=3, recurrence_remaining_count=2,
+    )
+
+    async def _fake_update(call):
+        return None
+
+    hass.services.async_register("todo", "update_item", _fake_update)
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 73, "type": "home_tasks/update_external_task",
+        "entity_id": ENTITY, "task_uid": "t1", "completed": False,
+    })
+    assert (await client.receive_json())["success"] is True
+    await hass.async_block_till_done()
+    assert _overlay(hass, ext_entry).get_all_overlays()["t1"]["recurrence_remaining_count"] == 2
+
+
 async def test_delete_external_overlay_cancels_timers(
     hass: HomeAssistant, hass_ws_client, ext_entry
 ) -> None:
