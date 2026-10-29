@@ -65,8 +65,8 @@ describe('list_columns', () => {
 });
 
 describe('tile_size', () => {
-  test('presets map to a minimum tile width', async () => {
-    for (const [size, px] of [['small', '80px'], ['medium', '140px'], ['large', '200px']]) {
+  test('presets map to a minimum tile width; medium is the built-in size', async () => {
+    for (const [size, px] of [['small', '80px'], ['medium', ''], ['large', '200px']]) {
       const col = await render({ view_mode: 'tiles', tile_size: size });
       assert.equal(col.style.getPropertyValue('--ht-tile-min'), px, size);
     }
@@ -80,6 +80,41 @@ describe('tile_size', () => {
   test('unset or unknown keeps the built-in size', async () => {
     assert.equal((await render({ view_mode: 'tiles' })).style.getPropertyValue('--ht-tile-min'), '');
     assert.equal((await render({ view_mode: 'tiles', tile_size: 'huge' })).style.getPropertyValue('--ht-tile-min'), '');
+  });
+});
+
+describe('tile_size in the editor', () => {
+  async function tileSelect(colExtra) {
+    const { window } = await loadCard({ force: true });
+    const Editor = window.customElements.get('home-tasks-card-editor');
+    const ed = new Editor();
+    ed.hass = { ...hassWith([]), language: 'en' };
+    ed.setConfig({ columns: [{ list_id: 'L1', view_mode: 'tiles', ...colExtra }] });
+    window.document.body.appendChild(ed);
+    await new Promise((r) => setTimeout(r, 150));
+    const changes = [];
+    ed.addEventListener('config-changed', (e) => changes.push(e.detail.config));
+    const sel = [...ed.shadowRoot.querySelectorAll('select')].find((s) => [...s.options].some((o) => o.value === 'large'));
+    return { ed, sel, changes, window };
+  }
+
+  test('small, medium, large - medium chosen when nothing is set', async () => {
+    const { ed, sel } = await tileSelect({});
+    assert.deepEqual([...sel.options].map((o) => o.value), ['small', 'medium', 'large']);
+    assert.equal(sel.value, 'medium');
+    ed.remove();
+  });
+
+  test('picking medium leaves tile_size unset; a YAML width stays offered', async () => {
+    const { ed, sel, changes, window } = await tileSelect({ tile_size: 'large' });
+    sel.value = 'medium';
+    sel.dispatchEvent(new window.Event('change'));
+    assert.equal(changes.at(-1).columns[0].tile_size, undefined);
+    ed.remove();
+    const again = await tileSelect({ tile_size: 95 });
+    assert.deepEqual([...again.sel.options].map((o) => o.value), ['small', 'medium', 'large', '95']);
+    assert.equal(again.sel.value, '95');
+    again.ed.remove();
   });
 });
 

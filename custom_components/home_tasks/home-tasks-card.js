@@ -293,7 +293,6 @@ const _TRANSLATIONS = {
     "ed_section_field_no_sections": "Shows once the list has sections",
     "ed_list_columns": "Task columns",
     "ed_tile_size": "Tile size",
-    "ed_tile_size_default": "Default",
     "ed_tile_size_small": "Small",
     "ed_tile_size_medium": "Medium",
     "ed_tile_size_large": "Large",
@@ -591,7 +590,6 @@ const _TRANSLATIONS = {
     "section_label": "Sectie",
     "ed_list_columns": "Takenkolommen",
     "ed_tile_size": "Tegelgrootte",
-    "ed_tile_size_default": "Standaard",
     "ed_tile_size_small": "Klein",
     "ed_tile_size_medium": "Middel",
     "ed_tile_size_large": "Groot",
@@ -889,7 +887,6 @@ const _TRANSLATIONS = {
     "section_label": "Sezione",
     "ed_list_columns": "Colonne di attività",
     "ed_tile_size": "Dimensione caselle",
-    "ed_tile_size_default": "Predefinita",
     "ed_tile_size_small": "Piccola",
     "ed_tile_size_medium": "Media",
     "ed_tile_size_large": "Grande",
@@ -1187,7 +1184,6 @@ const _TRANSLATIONS = {
     "section_label": "Sekcja",
     "ed_list_columns": "Kolumny zadań",
     "ed_tile_size": "Rozmiar kafelków",
-    "ed_tile_size_default": "Domyślny",
     "ed_tile_size_small": "Mały",
     "ed_tile_size_medium": "Średni",
     "ed_tile_size_large": "Duży",
@@ -1485,7 +1481,6 @@ const _TRANSLATIONS = {
     "section_label": "Avsnitt",
     "ed_list_columns": "Uppgiftskolumner",
     "ed_tile_size": "Rutstorlek",
-    "ed_tile_size_default": "Standard",
     "ed_tile_size_small": "Liten",
     "ed_tile_size_medium": "Mellan",
     "ed_tile_size_large": "Stor",
@@ -1783,7 +1778,6 @@ const _TRANSLATIONS = {
     "section_label": "Section",
     "ed_list_columns": "Colonnes de tâches",
     "ed_tile_size": "Taille des tuiles",
-    "ed_tile_size_default": "Par défaut",
     "ed_tile_size_small": "Petite",
     "ed_tile_size_medium": "Moyenne",
     "ed_tile_size_large": "Grande",
@@ -2081,7 +2075,6 @@ const _TRANSLATIONS = {
     "section_label": "Seção",
     "ed_list_columns": "Colunas de tarefas",
     "ed_tile_size": "Tamanho dos blocos",
-    "ed_tile_size_default": "Padrão",
     "ed_tile_size_small": "Pequeno",
     "ed_tile_size_medium": "Médio",
     "ed_tile_size_large": "Grande",
@@ -2379,7 +2372,6 @@ const _TRANSLATIONS = {
     "section_label": "Seção",
     "ed_list_columns": "Colunas de tarefas",
     "ed_tile_size": "Tamanho dos blocos",
-    "ed_tile_size_default": "Padrão",
     "ed_tile_size_small": "Pequeno",
     "ed_tile_size_medium": "Médio",
     "ed_tile_size_large": "Grande",
@@ -2677,7 +2669,6 @@ const _TRANSLATIONS = {
     "section_label": "Sección",
     "ed_list_columns": "Columnas de tareas",
     "ed_tile_size": "Tamaño de mosaicos",
-    "ed_tile_size_default": "Predeterminado",
     "ed_tile_size_small": "Pequeño",
     "ed_tile_size_medium": "Mediano",
     "ed_tile_size_large": "Grande",
@@ -2975,7 +2966,6 @@ const _TRANSLATIONS = {
     "section_label": "Раздел",
     "ed_list_columns": "Колонки задач",
     "ed_tile_size": "Размер плиток",
-    "ed_tile_size_default": "По умолчанию",
     "ed_tile_size_small": "Маленький",
     "ed_tile_size_medium": "Средний",
     "ed_tile_size_large": "Большой",
@@ -3273,7 +3263,6 @@ const _TRANSLATIONS = {
     "section_label": "Sekce",
     "ed_list_columns": "Sloupce úkolů",
     "ed_tile_size": "Velikost dlaždic",
-    "ed_tile_size_default": "Výchozí",
     "ed_tile_size_small": "Malá",
     "ed_tile_size_medium": "Střední",
     "ed_tile_size_large": "Velká",
@@ -3571,7 +3560,6 @@ const _TRANSLATIONS = {
     "section_label": "Afsnit",
     "ed_list_columns": "Opgavekolonner",
     "ed_tile_size": "Flisestørrelse",
-    "ed_tile_size_default": "Standard",
     "ed_tile_size_small": "Lille",
     "ed_tile_size_medium": "Mellem",
     "ed_tile_size_large": "Stor",
@@ -3869,7 +3857,6 @@ const _TRANSLATIONS = {
     "section_label": "Seksjon",
     "ed_list_columns": "Oppgavekolonner",
     "ed_tile_size": "Flisestørrelse",
-    "ed_tile_size_default": "Standard",
     "ed_tile_size_small": "Liten",
     "ed_tile_size_medium": "Middels",
     "ed_tile_size_large": "Stor",
@@ -4167,7 +4154,6 @@ const _TRANSLATIONS = {
     "section_label": "Osio",
     "ed_list_columns": "Tehtäväsarakkeet",
     "ed_tile_size": "Ruutujen koko",
-    "ed_tile_size_default": "Oletus",
     "ed_tile_size_small": "Pieni",
     "ed_tile_size_medium": "Keskikoko",
     "ed_tile_size_large": "Suuri",
@@ -4465,7 +4451,6 @@ const _TRANSLATIONS = {
     "section_label": "Szakasz",
     "ed_list_columns": "Feladatoszlopok",
     "ed_tile_size": "Csempeméret",
-    "ed_tile_size_default": "Alapértelmezett",
     "ed_tile_size_small": "Kicsi",
     "ed_tile_size_medium": "Közepes",
     "ed_tile_size_large": "Nagy",
@@ -4763,7 +4748,6 @@ const _TRANSLATIONS = {
     "section_label": "Bereich",
     "ed_list_columns": "Aufgabenspalten",
     "ed_tile_size": "Kachelgröße",
-    "ed_tile_size_default": "Standard",
     "ed_tile_size_small": "Klein",
     "ed_tile_size_medium": "Mittel",
     "ed_tile_size_large": "Groß",
@@ -4889,11 +4873,12 @@ function _listMinWidth(col) {
 }
 
 // tile_size: "small" | "medium" | "large", or a minimum tile width in px
-// (60-400). Unset keeps the built-in size (140px, 100px in compact mode).
-const _TILE_SIZES = { small: 80, medium: 140, large: 200 };
+// (60-400). Medium is the built-in size and the default (140px, 100px in
+// compact mode), so it sets nothing - same as leaving tile_size unset.
+const _TILE_SIZES = { small: 80, large: 200 };
 function _tileMinWidth(col) {
   const v = col && col.tile_size;
-  if (v == null || v === "") return null;
+  if (v == null || v === "" || v === "medium") return null;
   if (typeof v === "string" && _TILE_SIZES[v]) return _TILE_SIZES[v];
   const n = parseInt(v, 10);
   return Number.isFinite(n) ? Math.max(60, Math.min(400, n)) : null;
@@ -14448,14 +14433,14 @@ class HomeTasksCardEditor extends HTMLElement {
           ? makeSelect(
             "ed_tile_size",
             [
-              ["", "ed_tile_size_default"], ["small", "ed_tile_size_small"],
-              ["medium", "ed_tile_size_medium"], ["large", "ed_tile_size_large"],
+              ["small", "ed_tile_size_small"], ["medium", "ed_tile_size_medium"], ["large", "ed_tile_size_large"],
               // A width in px set in YAML: shown as itself, kept unless changed.
               ...(_tileMinWidth(col) && !_TILE_SIZES[col.tile_size]
                 ? [[String(col.tile_size), `${_tileMinWidth(col)} px`]] : []),
             ],
-            col.tile_size == null ? "" : String(col.tile_size),
-            (val) => updateCol({ tile_size: val === "" ? undefined : (_TILE_SIZES[val] ? val : parseInt(val, 10)) })
+            // Medium is the default: unset (or unknown) shows as it.
+            _tileMinWidth(col) ? String(col.tile_size) : "medium",
+            (val) => updateCol({ tile_size: val === "medium" ? undefined : (_TILE_SIZES[val] ? val : parseInt(val, 10)) })
           )
           : makeSelect(
             "ed_list_columns",

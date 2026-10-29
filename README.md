@@ -306,7 +306,7 @@ Each entry in `columns` accepts the following options.
 | `view_mode` | `list` | Layout: `list` (detailed rows) or `tiles` (image grid) |
 | `list_columns` | `1` | List view: lay a list's tasks out in up to 4 columns (section headers stay full width, an opened task spans the row). Columns stay at least `list_column_min_width` wide (default 160px — two fit on a phone), so narrow screens fall back to fewer |
 | `list_column_min_width` | `160` | List view with `list_columns`: minimum column width in px (80–600) before the card drops to fewer columns |
-| `tile_size` | — | Tiles view: `small` (80px), `medium` (140px), `large` (200px), or a minimum tile width in px (60–400). Unset keeps the built-in size (140px, 100px with `compact`) |
+| `tile_size` | `medium` | Tiles view: `small` (80px), `medium` (the built-in size: 140px, 100px with `compact`), `large` (200px), or a minimum tile width in px (60–400) |
 | `default_filter` | `all` | Initial filter: `all`, `open`, `done`, or `due_soon` |
 | `default_sort` | `manual` | Initial sort: `manual`, `due`, `priority`, `title`, or `person` |
 | `overdue_first` | `false` | Open overdue tasks lead the list — oldest due date first — whatever the sort; completed tasks stay at the bottom. Works within each section. With manual sort, an overdue task stays on top even when dragged; the position you drag it to applies once it's no longer overdue |
