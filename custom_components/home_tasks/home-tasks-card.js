@@ -6292,6 +6292,12 @@ class HomeTasksCard extends HTMLElement {
       await this._loadAllTasks();
       return;
     }
+    // Dropped among the target's tasks: the section it was dropped in wins
+    // (null = the unsorted top). Not there, or under Done: the backend keeps
+    // a section of the same name.
+    const dropped = this._getOrderWithSectionFromDom(tgtColIdx)
+      .find((p) => String(p.taskId) === String(taskId));
+    if (dropped && dropped.sectionId !== "__done__") payload.section = dropped.sectionId;
 
     // Shared executor: fast path vs cross routing + error toast. A failed
     // move skips the reorder and just reloads the authoritative state.

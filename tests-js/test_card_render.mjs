@@ -1791,6 +1791,53 @@ describe('move to list (issue #47)', () => {
 });
 
 
+describe('cross-column drop sends the section it was dropped in (#89)', () => {
+  async function setup() {
+    const { HomeTasksCard } = await loadCard({ force: true });
+    const hass = makeRecordingHass({
+      'home_tasks/get_lists': { lists: [{ id: 'L1', name: 'List 1' }, { id: 'L2', name: 'List 2' }] },
+      'home_tasks/get_tasks': (msg) => (msg.list_id === 'L1'
+        ? { tasks: [{ id: 'T1', title: 'Wander', sort_order: 0, sub_items: [], completed: false }] }
+        : {
+          tasks: [{ id: 'T2', title: 'Stay', sort_order: 0, sub_items: [], completed: false, section_id: 'S2' }],
+          sections: [{ id: 'S2', name: 'Keller', sort_order: 0 }],
+        }),
+      'home_tasks/move_task': {},
+      'home_tasks/reorder_tasks': {},
+    });
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [{ list_id: 'L1' }, { list_id: 'L2' }] });
+    card.hass = hass;
+    await flush(card);
+    const dragged = card.shadowRoot.querySelector('.task[data-task-id="T1"]');
+    const tgtList = card.shadowRoot.querySelector('.task-list[data-col-idx="1"]');
+    return { card, hass, dragged, tgtList };
+  }
+  const moveCall = (hass) => hass.calls.find(c => c.type === 'home_tasks/move_task');
+
+  test('dropped inside a section: that section', async () => {
+    const { card, hass, dragged, tgtList } = await setup();
+    tgtList.querySelector('.section-body').prepend(dragged);
+    await card._moveTask(0, 1, 'T1', card._getOrderFromDom(1));
+    assert.equal(moveCall(hass).section, 'S2');
+  });
+
+  test('dropped in the unsorted top: explicitly no section', async () => {
+    const { card, hass, dragged, tgtList } = await setup();
+    tgtList.prepend(dragged);
+    await card._moveTask(0, 1, 'T1', card._getOrderFromDom(1));
+    assert.ok('section' in moveCall(hass));
+    assert.equal(moveCall(hass).section, null);
+  });
+
+  test('not dropped among the target tasks: no section sent (same-name rule)', async () => {
+    const { card, hass } = await setup();
+    await card._moveTask(0, 1, 'T1', []);
+    assert.ok(!('section' in moveCall(hass)));
+  });
+});
+
+
 // ---------------------------------------------------------------------------
 // Code-review fixes: move error surfacing, defaults cache, non-preset offsets
 // ---------------------------------------------------------------------------

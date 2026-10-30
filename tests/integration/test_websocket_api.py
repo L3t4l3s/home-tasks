@@ -875,6 +875,105 @@ async def test_move_to_and_from_a_linked_list_keeps_the_section(
     assert back["section_id"] == kitchen["id"]
 
 
+async def test_move_into_a_linked_list_with_a_given_section(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store, external_config_entry
+) -> None:
+    """`section` picks the linked list's section; an unknown one stops the
+    move before the provider gets anything; a section deleted while the
+    provider creates the item does not fail the move (#89 review)."""
+    from homeassistant.components.todo import TodoItem, TodoItemStatus
+
+    entities = await _two_external_lists(hass, {"todo.ws_external": []})
+    overlay = hass.data[DOMAIN][external_config_entry.entry_id]
+    cellar = await overlay.async_add_section("Cellar")
+    doomed = await overlay.async_add_section("Doomed")
+    added: list[str] = []
+
+    async def _add_item(call) -> None:  # noqa: ANN001
+        uid = f"ext-given-{len(added)}"
+        added.append(uid)
+        entities["todo.ws_external"].todo_items.append(
+            TodoItem(uid=uid, summary=call.data["item"], status=TodoItemStatus.NEEDS_ACTION))
+        if call.data["item"] == "Late":
+            await overlay.async_delete_section(doomed["id"])
+
+    hass.services.async_register("todo", "add_item", _add_item)
+    hass.services.async_register("todo", "remove_item", lambda call: None)
+
+    client = await hass_ws_client(hass)
+    msg_id = 430
+
+    async def _move(title: str, **extra) -> dict:
+        nonlocal msg_id
+        msg_id += 1
+        task = await store.async_add_task(title)
+        await client.send_json({
+            "id": msg_id, "type": "home_tasks/move_task_cross",
+            "source_list_id": mock_config_entry.entry_id,
+            "target_entity_id": "todo.ws_external", "task_id": task["id"], **extra,
+        })
+        return await client.receive_json()
+
+    assert (await _move("Wine", section="cellar"))["success"]
+    assert overlay.get_overlay(added[-1])["section_id"] == cellar["id"]
+
+    res = await _move("Ghost", section="Attic")
+    assert not res["success"] and "No section" in res["error"]["message"]
+    assert len(added) == 1
+    assert any(t["title"] == "Ghost" for t in store.tasks)
+
+    assert (await _move("Late", section="Doomed"))["success"]
+    assert overlay.get_overlay(added[-1])["section_id"] is None
+    assert not any(t["title"] == "Late" for t in store.tasks)
+
+
+async def test_move_within_the_same_linked_list_is_refused(
+    hass: HomeAssistant, hass_ws_client, external_config_entry
+) -> None:
+    """Moving a linked-list task into its own list would re-create and delete
+    it (new uid, overlay at risk) - refused like a native same-list move."""
+    from homeassistant.components.todo import TodoItem, TodoItemStatus
+
+    await _two_external_lists(hass, {"todo.ws_external": [
+        TodoItem(uid="ext-self", summary="Stay", status=TodoItemStatus.NEEDS_ACTION)]})
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 440, "type": "home_tasks/move_task_cross", "source_entity_id": "todo.ws_external",
+        "target_entity_id": "todo.ws_external", "task_id": "ext-self",
+    })
+    res = await client.receive_json()
+    assert not res["success"]
+    assert "different" in res["error"]["message"]
+
+
+async def test_native_move_takes_the_dropped_section(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store
+) -> None:
+    """The card's native fast path passes the section a task was dropped in;
+    null is no section even where a same-named one exists (#89 review)."""
+    entry_b = MockConfigEntry(domain=DOMAIN, data={"name": "Drop B"}, title="Drop B")
+    entry_b.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry_b.entry_id)
+    await hass.async_block_till_done()
+    store_b = hass.data[DOMAIN][entry_b.entry_id]
+    await store.async_add_section("Kitchen")
+    src_kitchen = store.sections[0]
+    await store_b.async_add_section("Kitchen")
+    cellar = await store_b.async_add_section("Cellar")
+
+    client = await hass_ws_client(hass)
+    for msg_id, (title, section, expected) in enumerate(
+        [("Dropped", cellar["id"], cellar["id"]), ("Unsorted", None, None)], start=450,
+    ):
+        task = await store.async_add_task(title, section_id=src_kitchen["id"])
+        await client.send_json({
+            "id": msg_id, "type": "home_tasks/move_task", "source_list_id": mock_config_entry.entry_id,
+            "target_list_id": entry_b.entry_id, "task_id": task["id"], "section": section,
+        })
+        assert (await client.receive_json())["success"]
+        assert next(t for t in store_b.tasks if t["title"] == title)["section_id"] == expected
+
+
 async def test_generated_image_reaches_every_list(
     hass: HomeAssistant, hass_ws_client, mock_config_entry, store, external_config_entry
 ) -> None:

@@ -167,6 +167,15 @@ def recurrence_fields(
     return out
 
 
+def section_id_by_name(sections: list[dict], name: str | None) -> str | None:
+    """The id of the section called *name* (case and outer spaces ignored)."""
+    key = (name or "").strip().lower()
+    if not key:
+        return None
+    return next((s["id"] for s in sections
+                 if (s.get("name") or "").strip().lower() == key), None)
+
+
 def resolve_section(sections: list[dict], value: str | None) -> str | None:
     """A section's id from its name or id; empty = no section."""
     if value is None or not str(value).strip():
@@ -175,8 +184,8 @@ def resolve_section(sections: list[dict], value: str | None) -> str | None:
     for section in sections:
         if section.get("id") == text:
             return section["id"]
-    for section in sections:
-        if (section.get("name") or "").strip().lower() == text.lower():
-            return section["id"]
+    section_id = section_id_by_name(sections, text)
+    if section_id is not None:
+        return section_id
     names = ", ".join(s.get("name") or s["id"] for s in sections) or "none"
     raise ValueError(f"No section {text!r} in this list (sections: {names})")

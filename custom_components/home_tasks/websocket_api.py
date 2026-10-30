@@ -20,7 +20,7 @@ from .store import (
     validate_assigned_persons,
 )
 from .provider_adapters import ProviderAdapter, GenericAdapter, _get_external_todo_items
-from .service_fields import resolve_section
+from .service_fields import resolve_section, section_id_by_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -674,6 +674,7 @@ async def ws_reorder_sub_tasks(hass, connection, msg):
         vol.Required("source_list_id"): _val_id,
         vol.Required("target_list_id"): _val_id,
         vol.Required("task_id"): _val_id,
+        vol.Optional("section"): vol.Any(None, _val_id),
     }
 )
 @websocket_api.async_response
@@ -685,13 +686,14 @@ async def ws_move_task(hass, connection, msg):
             task_id=msg["task_id"],
             src_list_id=msg["source_list_id"],
             tgt_list_id=msg["target_list_id"],
+            section=msg.get("section", SAME_SECTION),
         )
         connection.send_result(msg["id"])
     except Exception as err:
         _handle_error(connection, msg["id"], err)
 
 
-_SAME_SECTION = object()
+SAME_SECTION = object()
 
 
 def _moved_task_section(
@@ -706,7 +708,7 @@ def _moved_task_section(
     """
     tgt_sections = (_get_store(hass, tgt_list_id) if tgt_list_id
                     else _get_overlay_store(hass, tgt_entity_id)).sections
-    if section is not _SAME_SECTION:
+    if section is not SAME_SECTION:
         return resolve_section(tgt_sections, section)
     if src_list_id:
         src = _get_store(hass, src_list_id)
@@ -715,10 +717,7 @@ def _moved_task_section(
         src = _get_overlay_store(hass, src_entity_id)
         src_section_id = src.get_overlay(task_id).get("section_id")
     name = next((s.get("name") for s in src.sections if s["id"] == src_section_id), None)
-    if not name or not name.strip():
-        return None
-    return next((s["id"] for s in tgt_sections
-                 if (s.get("name") or "").strip().lower() == name.strip().lower()), None)
+    return section_id_by_name(tgt_sections, name)
 
 
 async def async_move_task_any(
@@ -728,7 +727,7 @@ async def async_move_task_any(
     src_entity_id: str | None = None,
     tgt_list_id: str | None = None,
     tgt_entity_id: str | None = None,
-    section=_SAME_SECTION,
+    section=SAME_SECTION,
 ) -> None:
     """Move a task between any combination of native and external lists.
 
@@ -748,7 +747,7 @@ async def async_move_task_any(
 
     src_is_native = bool(src_list_id)
     tgt_is_native = bool(tgt_list_id)
-    if src_is_native and tgt_is_native and src_list_id == tgt_list_id:
+    if (src_list_id, src_entity_id) == (tgt_list_id, tgt_entity_id):
         raise ValueError("source and target must be different")
     # Before anything moves: an unknown section must not leave a half move.
     tgt_section_id = _moved_task_section(
@@ -909,6 +908,10 @@ async def async_move_task_any(
         # task counts as switching recurrence on, so it takes the list's.
         if new_task["recurrence_enabled"]:
             new_task["recurrence_reopen_lead"] = tgt_store.default_reopen_lead(new_task)
+        # The provider read above can take a while; a section deleted in
+        # the meantime must not fail the move.
+        if not any(s["id"] == tgt_section_id for s in tgt_store.sections):
+            tgt_section_id = None
         await tgt_store.async_import_task(new_task, section_id=tgt_section_id)
     else:
         # External target: create via adapter, then set overlay for all fields
@@ -985,8 +988,13 @@ async def async_move_task_any(
         # Always transfer list-type fields even if empty (to preserve cleared state)
         for field in ("tags", "reminders", "sub_items", "recurrence_weekdays"):
             overlay_fields[field] = task_data.get(field, [])
-        # The target's own section, never the source list's id.
-        overlay_fields["section_id"] = tgt_section_id
+        # The target's own section, never the source list's id - and only
+        # if it still exists after the provider round trip: a section deleted
+        # meanwhile would fail the overlay write and leave a bare duplicate.
+        overlay_fields["section_id"] = (
+            tgt_section_id
+            if any(s["id"] == tgt_section_id for s in tgt_overlay.sections) else None
+        )
 
         if new_uid and overlay_fields:
             await tgt_overlay.async_set_overlay(new_uid, **overlay_fields)
@@ -1023,6 +1031,7 @@ async def async_move_task_any(
         vol.Optional("source_entity_id"): _val_entity_id,
         vol.Optional("target_list_id"): _val_id,
         vol.Optional("target_entity_id"): _val_entity_id,
+        vol.Optional("section"): vol.Any(None, _val_id),
     }
 )
 @websocket_api.async_response
@@ -1036,6 +1045,7 @@ async def ws_move_task_cross(hass, connection, msg):
             src_entity_id=msg.get("source_entity_id"),
             tgt_list_id=msg.get("target_list_id"),
             tgt_entity_id=msg.get("target_entity_id"),
+            section=msg.get("section", SAME_SECTION),
         )
         connection.send_result(msg["id"])
     except Exception as err:

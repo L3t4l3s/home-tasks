@@ -613,7 +613,7 @@ move_task:
       description: >-
         Name (or id) of a section in the target list. Left out, the task goes
         into the target's section of the same name as its own, if there is one.
-        Empty puts it in no section.
+        For no section, give an empty string (section: "" in YAML mode).
       example: "Kitchen"
       selector:
         text:

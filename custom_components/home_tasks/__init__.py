@@ -45,7 +45,7 @@ from .store import (
     validate_text,
 )
 from .service_fields import recurrence_fields, resolve_section
-from .websocket_api import async_move_task_any, async_register_websocket_commands
+from .websocket_api import SAME_SECTION, async_move_task_any, async_register_websocket_commands
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -2512,7 +2512,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
                 src_entity_id=src_entity,
                 tgt_list_id=tgt_list_id,
                 tgt_entity_id=tgt_entity,
-                **({"section": call.data["section"]} if "section" in call.data else {}),
+                section=call.data.get("section", SAME_SECTION),
             )
         except ValueError as err:
             raise ServiceValidationError(str(err)) from err
