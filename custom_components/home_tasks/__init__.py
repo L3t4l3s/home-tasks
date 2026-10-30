@@ -2512,6 +2512,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
                 src_entity_id=src_entity,
                 tgt_list_id=tgt_list_id,
                 tgt_entity_id=tgt_entity,
+                **({"section": call.data["section"]} if "section" in call.data else {}),
             )
         except ValueError as err:
             raise ServiceValidationError(str(err)) from err
@@ -2776,6 +2777,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
             vol.Optional("target_list_name"): cv.string,
             vol.Optional("target_entry_id"): cv.string,
             vol.Optional("target_entity_id"): cv.string,
+            vol.Optional("section"): vol.Any(None, cv.string),
         }),
     )
     hass.services.async_register(

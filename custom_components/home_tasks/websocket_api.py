@@ -20,6 +20,7 @@ from .store import (
     validate_assigned_persons,
 )
 from .provider_adapters import ProviderAdapter, GenericAdapter, _get_external_todo_items
+from .service_fields import resolve_section
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -690,6 +691,36 @@ async def ws_move_task(hass, connection, msg):
         _handle_error(connection, msg["id"], err)
 
 
+_SAME_SECTION = object()
+
+
+def _moved_task_section(
+    hass, task_id: str, src_list_id: str | None, src_entity_id: str | None,
+    tgt_list_id: str | None, tgt_entity_id: str | None, section,
+) -> str | None:
+    """The target list's section a moved task goes into (issue #89).
+
+    Section ids belong to a list, so the task goes into the target's section
+    of the same name as its own, if there is one. *section* - a name or id
+    in the target, empty for none - says otherwise.
+    """
+    tgt_sections = (_get_store(hass, tgt_list_id) if tgt_list_id
+                    else _get_overlay_store(hass, tgt_entity_id)).sections
+    if section is not _SAME_SECTION:
+        return resolve_section(tgt_sections, section)
+    if src_list_id:
+        src = _get_store(hass, src_list_id)
+        src_section_id = src.get_task(task_id).get("section_id")
+    else:
+        src = _get_overlay_store(hass, src_entity_id)
+        src_section_id = src.get_overlay(task_id).get("section_id")
+    name = next((s.get("name") for s in src.sections if s["id"] == src_section_id), None)
+    if not name or not name.strip():
+        return None
+    return next((s["id"] for s in tgt_sections
+                 if (s.get("name") or "").strip().lower() == name.strip().lower()), None)
+
+
 async def async_move_task_any(
     hass,
     task_id: str,
@@ -697,12 +728,16 @@ async def async_move_task_any(
     src_entity_id: str | None = None,
     tgt_list_id: str | None = None,
     tgt_entity_id: str | None = None,
+    section=_SAME_SECTION,
 ) -> None:
     """Move a task between any combination of native and external lists.
 
     Shared implementation behind the home_tasks/move_task_cross WS command
     and the home_tasks.move_task service. Raises ValueError on invalid input
     or provider errors; the callers translate that for their client.
+
+    The task keeps its section where the target has one of the same name;
+    *section* (a name or id in the target, empty for none) overrides that.
     """
     import uuid
 
@@ -713,16 +748,19 @@ async def async_move_task_any(
 
     src_is_native = bool(src_list_id)
     tgt_is_native = bool(tgt_list_id)
+    if src_is_native and tgt_is_native and src_list_id == tgt_list_id:
+        raise ValueError("source and target must be different")
+    # Before anything moves: an unknown section must not leave a half move.
+    tgt_section_id = _moved_task_section(
+        hass, task_id, src_list_id, src_entity_id, tgt_list_id, tgt_entity_id, section)
 
     # --- Native → Native (delegate to existing logic) ---
     if src_is_native and tgt_is_native:
-        if src_list_id == tgt_list_id:
-            raise ValueError("source and target must be different")
         src_store = _get_store(hass, src_list_id)
         tgt_store = _get_store(hass, tgt_list_id)
         task_data = await src_store.async_export_task(task_id)
         try:
-            await tgt_store.async_import_task(task_data)
+            await tgt_store.async_import_task(task_data, section_id=tgt_section_id)
         except ValueError:
             # Never lose the task when the target rejects it (e.g. list
             # full): put it back where it was — same section, same sort
@@ -871,7 +909,7 @@ async def async_move_task_any(
         # task counts as switching recurrence on, so it takes the list's.
         if new_task["recurrence_enabled"]:
             new_task["recurrence_reopen_lead"] = tgt_store.default_reopen_lead(new_task)
-        await tgt_store.async_import_task(new_task)
+        await tgt_store.async_import_task(new_task, section_id=tgt_section_id)
     else:
         # External target: create via adapter, then set overlay for all fields
         tgt_adapter = _get_adapter(hass, tgt_entity_id)
@@ -947,6 +985,8 @@ async def async_move_task_any(
         # Always transfer list-type fields even if empty (to preserve cleared state)
         for field in ("tags", "reminders", "sub_items", "recurrence_weekdays"):
             overlay_fields[field] = task_data.get(field, [])
+        # The target's own section, never the source list's id.
+        overlay_fields["section_id"] = tgt_section_id
 
         if new_uid and overlay_fields:
             await tgt_overlay.async_set_overlay(new_uid, **overlay_fields)

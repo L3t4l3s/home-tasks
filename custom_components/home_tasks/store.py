@@ -1255,8 +1255,13 @@ class HomeTasksStore:
             self.on_task_deleted(task_id)
         return dict(task)
 
-    async def async_import_task(self, task: dict, restore: bool = False) -> dict:
+    async def async_import_task(
+        self, task: dict, restore: bool = False, section_id: str | None = None
+    ) -> dict:
         """Insert an existing task dict into this list (for cross-list move).
+
+        *section_id* is the section of this list the task goes into (the
+        caller resolves it - by the source section's name, issue #89).
 
         restore=True re-inserts a task into its ORIGINAL list after a failed
         move: its section id and sort position are still valid there, and the
@@ -1270,10 +1275,12 @@ class HomeTasksStore:
         max_order = max((t["sort_order"] for t in self._data["tasks"]), default=-1)
         # Section ids are per-list: a moved task must not keep pointing at a
         # section of its source list (phantom grouping in the target).
+        if section_id is not None:
+            self._validate_section_id(section_id)
         task = {
             **task,
             "sort_order": task.get("sort_order", max_order + 1) if restore else max_order + 1,
-            "section_id": task.get("section_id") if restore else None,
+            "section_id": task.get("section_id") if restore else section_id,
         }
         self._data["tasks"].append(task)
         await self._async_save()

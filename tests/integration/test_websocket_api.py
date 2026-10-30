@@ -832,6 +832,49 @@ async def test_move_between_external_lists_keeps_the_image(
     assert (img_dir / "moved2.png").exists(), "the image file must survive the move"
 
 
+async def test_move_to_and_from_a_linked_list_keeps_the_section(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store, external_config_entry
+) -> None:
+    """A linked list's sections live in its overlay: a moved task finds the
+    one of the same name there, and back (#89) - never the source's id."""
+    from homeassistant.components.todo import TodoItem, TodoItemStatus
+
+    entities = await _two_external_lists(hass, {"todo.ws_external": []})
+
+    def _add_item(call) -> None:  # noqa: ANN001 — the adapter finds the new uid by diffing
+        entities["todo.ws_external"].todo_items.append(
+            TodoItem(uid="ext-sec-new", summary=call.data["item"], status=TodoItemStatus.NEEDS_ACTION)
+        )
+
+    def _remove_item(call) -> None:  # noqa: ANN001
+        entities["todo.ws_external"].todo_items = [
+            i for i in entities["todo.ws_external"].todo_items if i.uid not in call.data["item"]]
+
+    hass.services.async_register("todo", "add_item", _add_item)
+    hass.services.async_register("todo", "remove_item", _remove_item)
+
+    overlay = hass.data[DOMAIN][external_config_entry.entry_id]
+    kitchen = await store.async_add_section("Kitchen")
+    ext_kitchen = await overlay.async_add_section("Kitchen")
+    task = await store.async_add_task("Pots", section_id=kitchen["id"])
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 424, "type": "home_tasks/move_task_cross", "source_list_id": mock_config_entry.entry_id,
+        "target_entity_id": "todo.ws_external", "task_id": task["id"],
+    })
+    assert (await client.receive_json())["success"]
+    assert overlay.get_overlay("ext-sec-new")["section_id"] == ext_kitchen["id"]
+
+    await client.send_json({
+        "id": 425, "type": "home_tasks/move_task_cross", "source_entity_id": "todo.ws_external",
+        "target_list_id": mock_config_entry.entry_id, "task_id": "ext-sec-new",
+    })
+    assert (await client.receive_json())["success"]
+    back = next(t for t in store.tasks if t["title"] == "Pots")
+    assert back["section_id"] == kitchen["id"]
+
+
 async def test_generated_image_reaches_every_list(
     hass: HomeAssistant, hass_ws_client, mock_config_entry, store, external_config_entry
 ) -> None:

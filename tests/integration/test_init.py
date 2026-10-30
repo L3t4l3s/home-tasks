@@ -3857,6 +3857,51 @@ async def test_service_move_task(
         )
 
 
+async def test_move_task_keeps_a_section_of_the_same_name(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Section ids belong to a list: a moved task goes into the target's
+    section of the same name, or none; `section` says otherwise (#89)."""
+    from homeassistant.exceptions import ServiceValidationError
+
+    entry2 = MockConfigEntry(domain=DOMAIN, data={"name": "Archive"}, title="Archive")
+    entry2.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry2.entry_id)
+    await hass.async_block_till_done()
+    store2 = hass.data[DOMAIN][entry2.entry_id]
+    kitchen = await store.async_add_section("Kitchen")
+    garden = await store.async_add_section("Garden")
+    kitchen2 = await store2.async_add_section(" kitchen ")
+    cellar2 = await store2.async_add_section("Cellar")
+
+    async def move(title: str, target, **extra) -> dict:
+        src, tgt = (store, entry2) if target is store2 else (store2, mock_config_entry)
+        task = next(t for t in src.tasks if t["title"] == title)
+        await hass.services.async_call(
+            DOMAIN, "move_task",
+            {"entry_id": (mock_config_entry if src is store else entry2).entry_id,
+             "task_id": task["id"], "target_entry_id": tgt.entry_id, **extra},
+            blocking=True,
+        )
+        return next(t for t in target.tasks if t["id"] == task["id"])
+
+    await store.async_add_task("Pots", section_id=kitchen["id"])
+    await store.async_add_task("Rake", section_id=garden["id"])
+    await store.async_add_task("Wine", section_id=kitchen["id"])
+    await store.async_add_task("Plain", section_id=kitchen["id"])
+
+    assert (await move("Pots", store2))["section_id"] == kitchen2["id"], "same name"
+    assert (await move("Rake", store2))["section_id"] is None, "no such section there"
+    assert (await move("Wine", store2, section="Cellar"))["section_id"] == cellar2["id"]
+    assert (await move("Plain", store2, section=""))["section_id"] is None
+
+    # An unknown section stops the move before anything changes.
+    with pytest.raises(ServiceValidationError, match="No section"):
+        await move("Pots", store, section="Attic")
+    assert any(t["title"] == "Pots" for t in store2.tasks)
+    assert (await move("Pots", store))["section_id"] == kitchen["id"], "and back"
+
+
 async def test_event_payload_includes_full_task_info(
     hass: HomeAssistant, mock_config_entry, store
 ) -> None:

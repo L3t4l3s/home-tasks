@@ -770,7 +770,7 @@ data:
 
 #### `home_tasks.move_task`
 
-Move a task to another list — same as the card's Move button. Provide exactly one target.
+Move a task to another list — same as the card's Move button. Provide exactly one target. The task keeps its section when the target list has one of the same name (in the card too); `section` puts it somewhere else.
 
 | Field | Required | Description |
 |-------|----------|-------------|
@@ -782,6 +782,7 @@ Move a task to another list — same as the card's Move button. Provide exactly 
 | `target_list_name` | *** | Name of the native target list |
 | `target_entry_id` | *** | Config entry ID of the native target list |
 | `target_entity_id` | *** | Linked external todo entity to move the task into |
+| `section` | no | Section name (or id) in the target list; empty puts the task in no section |
 
 *\*\*\* Exactly one of the three target fields.*
 

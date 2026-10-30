@@ -608,6 +608,15 @@ move_task:
       selector:
         entity:
           domain: todo
+    section:
+      name: Section
+      description: >-
+        Name (or id) of a section in the target list. Left out, the task goes
+        into the target's section of the same name as its own, if there is one.
+        Empty puts it in no section.
+      example: "Kitchen"
+      selector:
+        text:
 
 complete_task:
   name: Complete Task
