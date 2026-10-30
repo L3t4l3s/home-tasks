@@ -15,6 +15,7 @@ Tasks can have several assignees, recurring tasks can reopen early and survive "
 - **One-tap due dates**: Today, Tomorrow, In 1 week, In 1 month and In 3 months buttons in the task details (#81, thanks @jdiviney).
 - **Selectable people (`hidden_persons`)**: choose which people a card offers for assignment (#83, thanks @jdiviney).
 - **Section field in the task details** (#78, thanks @jdiviney).
+- **Moving keeps the section**: a moved task goes into the target list's section of the same name; drag & drop puts it into the section it is dropped in, and `move_task` has a `section` field (#89).
 - **Due dates by voice and text**: relative dates now understand months, years and spoken numbers up to 999 ("in sixty days") (#73).
 - **Ordinals in the recurrence badge**: "1st", "22nd" in English, and the matching forms in Swedish and French (#86, thanks @jdiviney).
 - **Brazilian Portuguese**: a new language. Calendar descriptions are now translated and show people by name (#71, #72, thanks @Willyanlz).
