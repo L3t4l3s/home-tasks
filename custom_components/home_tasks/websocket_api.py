@@ -1765,6 +1765,19 @@ async def async_update_external_task(
     Returns the fields the provider could not take, so a caller can say what
     was kept locally.
     """
+    if "completed" not in fields:
+        return await _async_update_external_task(hass, entity_id, task_uid, fields, actor, actor_user_id)
+    # Ours: the watcher of the provider's own app (external_watch) leaves
+    # this tick or reopen to the code below, however long the provider takes.
+    from .external_watch import own_change
+    with own_change(hass, entity_id, task_uid):
+        return await _async_update_external_task(hass, entity_id, task_uid, fields, actor, actor_user_id)
+
+
+async def _async_update_external_task(
+    hass, entity_id: str, task_uid: str, fields: dict,
+    actor: str | None, actor_user_id: str | None,
+) -> dict:
     adapter = _get_adapter(hass, entity_id)
 
     # Several assignees (issue #75): the provider gets the primary, the
@@ -1772,11 +1785,6 @@ async def async_update_external_task(
     # echoed assigned_person can't collapse the list back to one).
     fields = dict(fields)
     people = _split_assignees(fields)
-    if "completed" in fields:
-        # Ours: the watcher of the provider's own app (external_watch)
-        # leaves this tick or reopen to the code below.
-        from .external_watch import note_own_change
-        note_own_change(hass, entity_id, task_uid)
 
     if adapter:
         unsynced = await adapter.async_update_task(task_uid, fields)

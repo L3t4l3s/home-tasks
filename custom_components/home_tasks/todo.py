@@ -1,6 +1,7 @@
 """Todo platform for Home Tasks integration."""
 
 from datetime import date, datetime, timezone
+import logging
 import time
 
 from homeassistant.components.todo import (
@@ -17,6 +18,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -218,7 +221,12 @@ class HomeTasksEntity(TodoListEntity):
                 continue
             await self._store.async_delete_task(uid)
         self.async_write_ha_state()
-        if kept and len(kept) == len(uids):
+        if kept and len(kept) < len(uids):
+            # Mixed in with others ("clear completed"): the rest goes, and an
+            # error here would greet every clear-up - the log says why these stay.
+            _LOGGER.info("Kept recurring tasks that reopen at their next occurrence: %s",
+                         ", ".join(kept))
+        elif kept:
             raise ServiceValidationError(
                 "Recurring tasks are not deleted here - they reopen at their next "
                 f"occurrence: {', '.join(kept)}. Delete them in the Home Tasks card, "

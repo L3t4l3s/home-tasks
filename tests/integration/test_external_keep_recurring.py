@@ -75,10 +75,20 @@ async def test_completion_keeps_what_the_provider_holds(hass: HomeAssistant, ext
     overlay = _overlay(hass, ext_entry).get_all_overlays()["t1"]
     assert overlay["recreate"] == {"title": "Bins", "notes": "Blue one", "due_date": "2026-10-24", "due_time": None}
     assert overlay["recurrence_remaining_count"] == 4
+    _cleanup(hass, "t1")
 
-    # Reported twice (card and watcher): counted once.
+
+async def test_a_stale_stamp_does_not_swallow_a_new_completion(hass: HomeAssistant, ext_entry) -> None:
+    """Reopened somewhere the watcher did not see it, then ticked in the card:
+    a new completion all the same."""
+    _provider(hass, [TodoItem(uid="t1", summary="Bins", status=TodoItemStatus.COMPLETED)])
+    store = _overlay(hass, ext_entry)
+    await store.async_set_overlay("t1", completed_at="2026-01-01T08:00:00+00:00",
+                                  recurrence_remaining_count=4, **RECURRING)
     await _handle_external_recurrence_completion(hass, ext_entry.entry_id, ENTITY, "t1")
-    assert _overlay(hass, ext_entry).get_all_overlays()["t1"]["recurrence_remaining_count"] == 4
+    overlay = store.get_all_overlays()["t1"]
+    assert overlay["completed_at"] > "2026-01-01T08:00:00+00:00"
+    assert overlay["recurrence_remaining_count"] == 3
     _cleanup(hass, "t1")
 
 
@@ -140,6 +150,16 @@ async def test_a_list_that_cannot_be_read_loses_nothing(hass: HomeAssistant, ext
     assert store.get_all_overlays()["t1"]["recreate"] == {
         "title": "Bins", "notes": None, "due_date": None, "due_time": None}
 
+    # Loaded, but its items not yet - or unavailable: no second copy.
+    entity = _provider(hass, [])
+    entity.todo_items = None
+    await _async_reopen_external_task(hass, ext_entry.entry_id, ENTITY, "t1")
+    entity.todo_items = []
+    hass.states.async_set(ENTITY, "unavailable")
+    await _async_reopen_external_task(hass, ext_entry.entry_id, ENTITY, "t1")
+    assert entity.todo_items == []
+    assert store.get_all_overlays()["t1"]["recreate"]["title"] == "Bins"
+
 
 # --- the watcher ------------------------------------------------------------------
 
@@ -187,6 +207,55 @@ async def test_reopened_in_the_app_gives_the_occurrence_back(hass: HomeAssistant
     assert overlay["recurrence_remaining_count"] == 5
     assert overlay["completed_at"] is None and overlay["recreate"] is None
     assert "t1" not in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+
+
+async def test_reopened_in_the_app_while_away_is_seen_at_the_first_look(
+    hass: HomeAssistant, ext_entry
+) -> None:
+    """Unticked while Home Assistant was down: no earlier look to compare
+    with, and still the occurrence comes back."""
+    _provider(hass, [TodoItem(uid="t1", summary="Bins", status=TodoItemStatus.NEEDS_ACTION)])
+    store = _overlay(hass, ext_entry)
+    await store.async_set_overlay("t1", completed_at="2026-10-20T08:00:00+00:00",
+                                  recreate={"title": "Bins"}, recurrence_remaining_count=4, **RECURRING)
+    reopened = []
+    hass.bus.async_listen(f"{DOMAIN}_task_reopened", lambda e: reopened.append(e.data))
+    await _watch(hass, ext_entry).async_check()
+    await hass.async_block_till_done()
+    overlay = store.get_all_overlays()["t1"]
+    assert overlay["completed_at"] is None and overlay["recurrence_remaining_count"] == 5
+    assert reopened and reopened[0]["task_id"] == "t1"
+
+
+async def test_a_tick_of_ours_is_ours_however_long_the_provider_takes(
+    hass: HomeAssistant, ext_entry, monkeypatch
+) -> None:
+    clock = [1000.0]
+    monkeypatch.setattr(external_watch, "_now", lambda: clock[0])
+    _provider(hass, [TodoItem(uid="t1", summary="Bins", status=TodoItemStatus.COMPLETED)])
+    store = _overlay(hass, ext_entry)
+    await store.async_set_overlay("t1", **RECURRING)
+    with external_watch.own_change(hass, ENTITY, "t1"):
+        clock[0] += 300  # a slow provider write
+        await _watch(hass, ext_entry).async_check()
+        assert store.get_all_overlays()["t1"]["completed_at"] is None
+    clock[0] += 10
+    assert external_watch._recently_ours(hass, ENTITY, "t1"), "and a while after"
+    clock[0] += external_watch.OWN_CHANGE_WINDOW
+    assert not external_watch._recently_ours(hass, ENTITY, "t1")
+
+
+async def test_what_is_put_back_follows_edits_while_it_waits(hass: HomeAssistant, ext_entry) -> None:
+    entity = _provider(hass, [TodoItem(uid="t1", summary="Bins", status=TodoItemStatus.COMPLETED)])
+    store = _overlay(hass, ext_entry)
+    await store.async_set_overlay("t1", **RECURRING)
+    await _handle_external_recurrence_completion(hass, ext_entry.entry_id, ENTITY, "t1")
+    _cleanup(hass, "t1")
+    entity.todo_items = [TodoItem(uid="t1", summary="Blue bins", status=TodoItemStatus.COMPLETED,
+                                  description="Thursday")]
+    await _watch(hass, ext_entry).async_check()
+    assert store.get_all_overlays()["t1"]["recreate"] == {
+        "title": "Blue bins", "notes": "Thursday", "due_date": None, "due_time": None}
 
 
 async def test_an_open_recurring_task_gone_from_the_app_counts_as_done(

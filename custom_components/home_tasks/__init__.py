@@ -752,21 +752,38 @@ def _build_external_task(hass: HomeAssistant, entry_id: str, entity_id: str, tas
     except Exception as err:  # noqa: BLE001
         _LOGGER.debug("Could not build external task %s/%s: %s", entity_id, task_uid, err)
         return None
-    for task in merged + _vanished_external_tasks(store, items):
-        if str(task.get("id")) == str(task_uid):
-            task["_entity_id"] = entity_id  # so events carry the external entity ref
-            return task
-    return None
+    task = next((t for t in merged if str(t.get("id")) == str(task_uid)), None)
+    if task is None:
+        task = next((t for t in _vanished_external_tasks(hass, entity_id, store, items)
+                     if str(t.get("id")) == str(task_uid)), None)
+    if task is not None:
+        task["_entity_id"] = entity_id  # so events carry the external entity ref
+    return task
 
 
-def _vanished_external_tasks(store: ExternalTaskOverlayStore, items: list[dict]) -> list[dict]:
+def _recreate_snapshot(task: dict) -> dict:
+    """What a linked recurring task is put back with if its provider side is
+    deleted while it waits to reopen (issue #88): title, notes and due."""
+    return {
+        "title": task.get("title") or "", "notes": task.get("notes") or None,
+        "due_date": task.get("due_date"), "due_time": task.get("due_time"),
+    }
+
+
+def _vanished_external_tasks(
+    hass: HomeAssistant, entity_id: str, store: ExternalTaskOverlayStore, items: list[dict]
+) -> list[dict]:
     """Completed recurring tasks of a linked list that its provider no longer
     has, built from the overlay's snapshot of them (issue #88).
 
-    Only *items* - a successful read of the provider - decides what is gone,
-    so a list that could not be read loses nothing.
+    Only a real read of the provider - available, its items loaded - decides
+    what is gone, so a list that could not be read loses nothing and gets no
+    second copy.
     """
+    from .external_watch import provider_readable
     from .websocket_api import _merge_tasks_with_overlays
+    if not provider_readable(hass, entity_id):
+        return []
     present = {str(i.get("uid")) for i in items}
     synthetic = []
     for uid, overlay in store.get_all_overlays().items():
@@ -1608,38 +1625,32 @@ def _external_owns_recurrence(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def _handle_external_recurrence_completion(
     hass: HomeAssistant, entry_id: str, entity_id: str, task_uid: str,
-    snapshot: dict | None = None,
+    last_item: dict | None = None,
 ) -> None:
     """On external completion of a recurring task: stamp completed_at, apply the
     count limit, and schedule the reopen — unless the provider owns recurrence.
 
-    Once per completion: a task already stamped is left alone, so the card's
-    path and the watcher (external_watch, a tick in the provider's app) can
-    both report the same one. *snapshot* stands in for a provider item that
-    is already gone (issue #88).
+    *last_item* - the provider item as last seen - stands in for one that is
+    already gone (issue #88). The card's path and the watcher of the
+    provider's app (external_watch) never both report one completion: the
+    watcher leaves a tick of ours alone (own_change).
     """
     if _external_owns_recurrence(hass, entity_id):
         return  # provider auto-recurs on close (e.g. Todoist)
     task = _build_external_task(hass, entry_id, entity_id, task_uid)
-    if task is None and snapshot is not None:
+    if task is None and last_item is not None:
         from .websocket_api import _get_overlay_store, _merge_tasks_with_overlays
-        task = _merge_tasks_with_overlays([{
-            "uid": task_uid, "summary": snapshot.get("title") or "",
-            "description": snapshot.get("notes"), "due": snapshot.get("due_date"),
-            "due_time": snapshot.get("due_time"), "status": "completed",
-        }], _get_overlay_store(hass, entity_id))[0]
+        task = _merge_tasks_with_overlays(
+            [{**last_item, "status": "completed"}], _get_overlay_store(hass, entity_id))[0]
         task["_entity_id"] = entity_id
-    if task is None or not task.get("recurrence_enabled") or task.get("completed_at"):
+    if task is None or not task.get("recurrence_enabled"):
         return
     completed_at = datetime.now(timezone.utc)
     overlay_kwargs: dict = {
         "completed_at": completed_at.isoformat(),
         # What the provider holds now, to put the task back if its side is
         # deleted before it reopens ("clear completed" in another app, #88).
-        "recreate": snapshot or {
-            "title": task.get("title") or "", "notes": task.get("notes") or None,
-            "due_date": task.get("due_date"), "due_time": task.get("due_time"),
-        },
+        "recreate": _recreate_snapshot(task),
     }
     # A count set before the overlay started the countdown itself was never
     # started: it starts here, at the full count.
@@ -1667,11 +1678,10 @@ async def _async_reopen_external_task(
     task = _build_external_task(hass, entry_id, entity_id, task_uid)
     if task is None or not task.get("recurrence_enabled"):
         return
-    from .external_watch import note_own_change
+    from .external_watch import own_change
     from .provider_adapters import GenericAdapter
     from .websocket_api import _get_adapter, _get_overlay_store
     adapter = _get_adapter(hass, entity_id) or GenericAdapter(hass, entity_id, {})
-    note_own_change(hass, entity_id, task_uid)
     # A linked list's due date is not advanced at completion (the provider
     # owns it).  A due-anchored series needs it to move, though — the next
     # completion counts from it — so it reopens on the occurrence it
@@ -1693,19 +1703,20 @@ async def _async_reopen_external_task(
     if task.get("_vanished"):
         await _async_recreate_external_task(hass, entry_id, entity_id, task, fields)
         return
-    try:
-        unsynced = await adapter.async_update_task(task_uid, fields)
-    except Exception as err:  # noqa: BLE001
-        _LOGGER.warning("Could not reopen external recurring task %s: %s", task_uid, err)
-        return
-    overlay_kwargs: dict = {"completed_at": None, "recreate": None}
-    for key in ("due_date", "due_time"):
-        if unsynced and key in unsynced:
-            overlay_kwargs[key] = unsynced[key]
-    subs = task.get("sub_items") or []
-    if subs:
-        overlay_kwargs["sub_items"] = [{**s, "completed": False} for s in subs]
-    await _get_overlay_store(hass, entity_id).async_set_overlay(task_uid, **overlay_kwargs)
+    with own_change(hass, entity_id, task_uid):
+        try:
+            unsynced = await adapter.async_update_task(task_uid, fields)
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.warning("Could not reopen external recurring task %s: %s", task_uid, err)
+            return
+        overlay_kwargs: dict = {"completed_at": None, "recreate": None}
+        for key in ("due_date", "due_time"):
+            if unsynced and key in unsynced:
+                overlay_kwargs[key] = unsynced[key]
+        subs = task.get("sub_items") or []
+        if subs:
+            overlay_kwargs["sub_items"] = [{**s, "completed": False} for s in subs]
+        await _get_overlay_store(hass, entity_id).async_set_overlay(task_uid, **overlay_kwargs)
     task["completed"] = False
     task["completed_at"] = None
     task.update({k: fields[k] for k in ("due_date", "due_time") if k in fields})
@@ -1797,7 +1808,7 @@ def _recover_external_recurrence_timers(hass: HomeAssistant, entry_id: str, enti
     timers = hass.data.get(DATA_RECURRENCE_TIMERS, {})
     # Deleted at the provider while waiting (#88): still due to reopen - and
     # be put back - like any other.
-    for task in merged + _vanished_external_tasks(store, items):
+    for task in merged + _vanished_external_tasks(hass, entity_id, store, items):
         if not task.get("completed") or not task.get("recurrence_enabled"):
             continue
         if not task.get("completed_at"):

@@ -19,7 +19,8 @@ Providers that run the recurrence themselves (Todoist) are left alone.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 import logging
 import time
 
@@ -35,6 +36,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 DATA_OWN_CHANGES = f"{DOMAIN}_own_external_changes"
+DATA_OWN_PENDING = f"{DOMAIN}_own_external_pending"
 # A tick or reopen made through our own code is left to it for this long:
 # the provider's echo of it is not an outside change.
 OWN_CHANGE_WINDOW = 30.0
@@ -60,9 +62,41 @@ def note_own_change(hass: HomeAssistant, entity_id: str, task_uid: str) -> None:
     changes[(entity_id, str(task_uid))] = now
 
 
+@contextmanager
+def own_change(hass: HomeAssistant, entity_id: str, task_uid: str) -> Iterator[None]:
+    """A tick or reopen of ours in progress: left to us for as long as it
+    runs - a slow provider write can outlast OWN_CHANGE_WINDOW - and for
+    OWN_CHANGE_WINDOW after."""
+    key = (entity_id, str(task_uid))
+    pending = hass.data.setdefault(DATA_OWN_PENDING, {})
+    pending[key] = pending.get(key, 0) + 1
+    try:
+        yield
+    finally:
+        pending[key] -= 1
+        if not pending[key]:
+            del pending[key]
+        note_own_change(hass, entity_id, task_uid)
+
+
 def _recently_ours(hass: HomeAssistant, entity_id: str, task_uid: str) -> bool:
-    t = hass.data.get(DATA_OWN_CHANGES, {}).get((entity_id, str(task_uid)))
+    key = (entity_id, str(task_uid))
+    if hass.data.get(DATA_OWN_PENDING, {}).get(key):
+        return True
+    t = hass.data.get(DATA_OWN_CHANGES, {}).get(key)
     return t is not None and _now() - t < OWN_CHANGE_WINDOW
+
+
+def provider_readable(hass: HomeAssistant, entity_id: str) -> bool:
+    """Whether the provider's item list can be taken as what it holds: the
+    entity is available and has loaded its items. An empty read otherwise
+    says nothing about what is gone."""
+    state = hass.states.get(entity_id)
+    if state is None or state.state in ("unavailable", "unknown"):
+        return False
+    comp = hass.data.get("todo")
+    entity = comp.get_entity(entity_id) if comp and hasattr(comp, "get_entity") else None
+    return entity is not None and getattr(entity, "todo_items", None) is not None
 
 
 class _ExternalWatch:
@@ -120,6 +154,7 @@ class _ExternalWatch:
             _cancel_recurrence,
             _external_owns_recurrence,
             _handle_external_recurrence_completion,
+            _recreate_snapshot,
         )
         from .provider_adapters import _get_external_todo_items
         from .websocket_api import (
@@ -132,8 +167,7 @@ class _ExternalWatch:
         hass, entity_id = self.hass, self.entity_id
         if _external_owns_recurrence(hass, entity_id):
             return
-        state = hass.states.get(entity_id)
-        if state is None or state.state in ("unavailable", "unknown"):
+        if not provider_readable(hass, entity_id):
             return  # keep the last look; nothing can be told from here
         try:
             items = _get_external_todo_items(hass, entity_id)
@@ -142,6 +176,7 @@ class _ExternalWatch:
             return
         overlays = store.get_all_overlays()
         current = {str(i["uid"]): i for i in items}
+        merged = {str(t["id"]): t for t in _merge_tasks_with_overlays(items, store)}
         prev, self.snapshot = self.snapshot, dict(current)
         now = _now()
 
@@ -158,15 +193,24 @@ class _ExternalWatch:
                 await _handle_external_recurrence_completion(hass, self.entry_id, entity_id, uid)
                 task = _merge_tasks_with_overlays([item], store)[0]
                 _fire_external_task_event(hass, "task_completed", entity_id, uid, {}, task=task)
-            elif (not done and overlay.get("completed_at") and prev is not None
-                  and prev.get(uid, {}).get("status") == "completed"):
-                # Reopened in the provider's app: the same as an untick in the
-                # card - the reopen timer goes, the occurrence comes back.
+            elif not done and overlay.get("completed_at"):
+                # Open again, but not by us (a reopen of ours is own_change):
+                # reopened in the provider's app - also while Home Assistant
+                # was down, or ticked and unticked between two looks. The
+                # same as an untick in the card: the reopen timer goes, the
+                # occurrence comes back.
                 _LOGGER.info("Recurring task '%s' was reopened in %s's app", item.get("summary"), entity_id)
                 _cancel_recurrence(hass, uid)
+                await store.async_set_overlay(
+                    uid, completed_at=None, recreate=None, **_undo_count_off(merged[uid]))
                 task = _merge_tasks_with_overlays([item], store)[0]
-                await store.async_set_overlay(uid, completed_at=None, recreate=None, **_undo_count_off(task))
                 _fire_external_task_event(hass, "task_reopened", entity_id, uid, {}, task=task)
+            elif done and overlay.get("completed_at") and overlay.get("recreate"):
+                # Waiting to reopen: keep what would be put back in step with
+                # edits made meanwhile (in the card or elsewhere).
+                snap = _recreate_snapshot(merged[uid])
+                if snap != overlay["recreate"]:
+                    await store.async_set_overlay(uid, recreate=snap)
 
         if prev is None:
             return  # the first look: nothing to compare with
@@ -189,13 +233,7 @@ class _ExternalWatch:
                 "Recurring task '%s' disappeared from %s - counted as done, back at its next occurrence",
                 last.get("summary"), entity_id,
             )
-            await _handle_external_recurrence_completion(
-                hass, self.entry_id, entity_id, uid,
-                snapshot={
-                    "title": last.get("summary") or "", "notes": last.get("description") or None,
-                    "due_date": last.get("due"), "due_time": last.get("due_time"),
-                },
-            )
+            await _handle_external_recurrence_completion(hass, self.entry_id, entity_id, uid, last_item=last)
 
 
 def async_watch_external(hass: HomeAssistant, entry_id: str, entity_id: str) -> Callable[[], None]:
