@@ -1,241 +1,129 @@
-# Home Tasks
+<p align="center">
+  <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/custom_components/home_tasks/brand/icon@2x.png" width="96" alt="Home Tasks icon">
+</p>
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://hacs.xyz/)
-[![Validate](https://github.com/L3t4l3s/home-tasks/actions/workflows/validate.yaml/badge.svg)](https://github.com/L3t4l3s/home-tasks/actions/workflows/validate.yaml)
+<h1 align="center">Home Tasks</h1>
 
-A feature-rich, highly customizable task management solution for Home Assistant — combining a native **integration** (sensors, calendar, events, services) with a versatile Lovelace **dashboard card** offering list and image-tile views, recurring tasks, reminders, sub-tasks, voice input, and optional AI-generated task images. Supports linking **external todo lists** from CalDAV, Google Tasks, Todoist, Bring, Local Todo, and other providers — with full feature parity (recurrence, events, and calendar included).
+<p align="center">
+  <b>The to-do lists your whole household shares — right inside Home Assistant.</b><br>
+  Chores, shopping, projects and kids' tasks, with recurring tasks, reminders, people, pictures and voice.
+</p>
+
+<p align="center">
+  <a href="https://hacs.xyz/"><img src="https://img.shields.io/badge/HACS-Default-41BDF5.svg" alt="HACS Default"></a>
+  <a href="https://github.com/L3t4l3s/home-tasks/actions/workflows/validate.yaml"><img src="https://github.com/L3t4l3s/home-tasks/actions/workflows/validate.yaml/badge.svg" alt="Validate"></a>
+</p>
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/header-light.png" width="400" alt="Home Tasks in light mode">
   <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/header-dark.png" width="400" alt="Home Tasks in dark mode">
 </p>
 
+## What is Home Tasks?
+
+Home Tasks turns Home Assistant into the place where your household keeps its to-dos. It has two parts that work together:
+
+- 🧩 **An integration** that keeps your lists in Home Assistant. Every list is a regular `todo.*` entity with a calendar, sensors, events and services — so tasks can drive automations, show up on your phone and be added by voice.
+- 🖼️ **A dashboard card** to work with them: a clean list or a picture grid, several lists side by side, drag & drop, filters per person and tag, and every detail of a task one tap away.
+
+Already using **Todoist, Google Tasks, Nextcloud, Bring** or another to-do app? Link those lists, and they get the same card and the same features — while your family keeps using the app they know.
+
+<table>
+<tr>
+<td width="33%" valign="top" align="center">
+<img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/usecase-work.png" height="460" alt="A task with sub-tasks, priority and due date"><br>
+<b>Everything a task needs</b><br>
+<sub>Due dates, priorities, sub-tasks, reminders, people and notes</sub>
+</td>
+<td width="33%" valign="top" align="center">
+<img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/Shopping-list.png" height="460" alt="Shopping list grouped in sections"><br>
+<b>Sorted the way you shop</b><br>
+<sub>Sections like store aisles, done items out of the way</sub>
+</td>
+<td width="33%" valign="top" align="center">
+<img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/meals.png" height="460" alt="Tile view with pictures"><br>
+<b>Lists or pictures</b><br>
+<sub>A picture grid for meals, products or kids' chores — AI can draw them</sub>
+</td>
+</tr>
+</table>
+
+**Why Home Tasks?**
+
+- 🔁 **Recurring tasks done right** — "every 2nd Saturday", "Mon–Fri" or "3 days after I last did it", and they come back on their own.
+- 👨‍👩‍👧 **Made for families** — assign tasks to people, filter by person, and let reminders find the right one.
+- 🤖 **Ready for automations** — events when tasks are due, overdue or completed, plus services, a calendar and sensors for every list.
+- 🏠 **Local** — your lists live in Home Assistant. Nothing leaves the house unless you link a cloud list or ask AI for a picture.
+
+---
+
+## Contents
+
+- ✨ [Features](#features)
+- 📊 [Entities](#entities)
+- 📦 [Installation](#installation)
+- ⚙️ [Setup](#setup) — lists, linked lists and their providers, AI pictures
+- 🎨 [Card configuration](#card-configuration) — options, list defaults, styling, examples
+- 🤖 [Automations](#automations) — events, services, example automations
+- 🗣️ [View Assist](#view-assist)
+- ❤️ [Support](#support)
+
+---
+
 ## Features
 
-### Per-Task Fields
+### Tasks
 
-Every task can carry over 20 individual attributes:
+- **Due date and time**, with overdue highlighting
+- **Priority** — low, medium, high
+- **Several assignees** — any Home Assistant person
+- **Tags**, **notes** and **sub-tasks** with a progress bar
+- **Reminders** — up to 5 per task, as Home Assistant events
+- **Picture** — picked from your media or generated by AI
+- **Recurring tasks** — every N hours to years, on weekdays, on a day of the month, "the 2nd Saturday" or a yearly date; with a start date, end date or number of times
+  - counts from when you did it or keeps to its due dates — your choice
+  - can reopen early, e.g. the Saturday shop comes back on Monday
+  - survives Home Assistant's *clear completed*; to end it, delete it in the card or switch recurrence off
+- **History** — every change with who made it and when
 
-- **Title** — edit inline (expand a task in list view, or open its detail sheet in tiles view)
-- **Image** — an optional picture per task, set manually or auto-generated with AI (see [Task Images & AI Generation](#task-images--ai-generation))
-- **Notes** — free-text field per task
-- **Due date** with overdue highlighting
-- **Due time**
-- **Priority** — Low / Medium / High with colored badges
-- **Assigned person** — any HA person entity
-- **Tags** — multiple tags for categorization
-- **Sub-tasks** — nested checklist with progress bar
-- **Reminders** — up to 5 per task, fire as HA events at a configurable offset before due time
-- **Recurring** — fixed intervals: every N hours, days, weeks, months, years
-- **Recurring (weekly)** — every N weeks on selected weekdays (Mon – Sun, any combination)
-- **Recurring (monthly)** — every N months on a specific day (1–31 or "last") **or** an Nth weekday (1st – 4th + last × Mon – Sun) — e.g. "every 24th", "every last day", "every 2nd Saturday", "every last Wednesday every 2 months"
-- **Recurring (yearly)** — every N years on a specific TT.MM anniversary (e.g. "every 24.12.")
-- **From completion or from due date** — without a fixed pattern, pick what a *late* tick counts from: **From completion** (default — every 2 days means 2 days after you actually did it) or **From due date** (the series keeps its own days; missed occurrences collapse into the next one on or after today, which may reopen the task straight away). Weekday, day-of-month, Nth-weekday and anniversary patterns always follow the due date, so ticking Tuesday's Mon–Fri chore on Wednesday brings Wednesday's back instead of skipping it
-- **Reopen early** — a completed recurring task normally stays done until it is due again; set a lead (minutes or hours for hourly series, hours or days otherwise) and it opens that long before, showing as an upcoming to-do while its due date still advances the full interval — e.g. the weekly shop due Saturday comes back on Monday. A lead as long as the interval isn't offered (the task would reopen the moment it is ticked off). A list-wide lead in the card editor's *Defaults* is taken over when recurrence is switched on (see [List defaults](#list-defaults)). Home Tasks lists only; linked lists reopen when due
-- **Undo a tick** — unticking a recurring task (by mistake, or the tick was undone) puts its due date back and gives back the occurrence an "end after N times" counted off; only the reopen at the next occurrence keeps them moved on
-- **Recurring tasks survive "clear completed"** — a completed recurring task waiting for its next occurrence is not finished for good. On a Home Tasks list, Home Assistant's *clear completed* (and `todo.remove_item`) leaves it in place. On a linked list, where the phone app, Thunderbird or another client may delete it at the provider, it is put back when it reopens - with its tags, people, recurrence and the rest. Ticking or reopening it in the provider's own app counts too, and an open recurring task deleted there counts as done and comes back at its next occurrence. To end a recurring task for good, delete it in the card (or switch its recurrence off)
-- **Recurrence start date** ("Beginn")
-- **Recurrence end date**
-- **Maximum repetitions**
-- **Completion state** with timestamp
-- **Task history / audit log** — every field change recorded with actor and timestamp
+### Dashboard card
 
-### External Todo Lists
+- **List or tile view** per list — rows with every detail one tap away, or a picture grid where you tap a tile to tick it off
+- **Several lists side by side** in one card, e.g. as a Kanban board
+- **Sections** — group a list under headers like store aisles, rooms or project phases; every dashboard shows the same ones
+- **Drag & drop** — reorder, sort into sections, or move tasks to another list
+- **Filter and sort** — open/done/due soon, by date, priority, title or person; tap a tag or person chip to filter
+- **Task details inline** — edit every field; fold the ones you rarely need; one-tap due dates (today, tomorrow, in 1 week …)
+- **Voice input** — dictate a task with the mic button (Home Assistant Assist, or the browser's speech recognition)
+- **Pictures and AI** — a picture per task from your media, or drawn by AI from its title and reused for every task with that title ([setup](#task-pictures-and-ai-generation))
+- **Linked to-do lists** — Todoist, Google Tasks, Nextcloud/CalDAV, Bring and more in the same card, with every Home Tasks feature ([providers](#linked-lists))
+- **Duplicate, move, auto-delete completed** — per task or per list
+- **Compact mode**, smooth animations, and a **visual editor** for all of it
 
-Display tasks from **any HA todo integration** alongside native Home Tasks lists — on the same card, in the same UI.
+### Home Assistant integration
 
-- Link external todo entities via **Settings > Integrations > Home Tasks > Link external todo list**
-- Provider type is **auto-detected** (Todoist, CalDAV, Google Tasks, etc.) — no extra configuration needed
-- For **generic providers** (CalDAV, Google Tasks, Shopping List, etc.): each field is bidirectionally synced only if the provider's todo entity advertises the matching capability (SET_DUE_DATE, SET_DESCRIPTION, …). Everything else — priority, tags, sub-tasks, reminders, recurrence, [task images](#task-images--ai-generation), and base fields the provider can't hold — lives in a local overlay so every Home Tasks feature keeps working.
-- For **Todoist**: full bidirectional sync via direct API access — see [Todoist Deep Integration](#todoist-deep-integration) below
-- The card editor **auto-configures visibility** based on the provider's capabilities when you select an external list
-- You can manually enable overlay fields for external lists if you want them locally
-- **Full feature parity**: all [automation events](#events) fire for external lists too (created, completed, reopened, due, overdue, assigned, reminder), they get the same [calendar, open-tasks and overdue entities](#entities), and **recurrence runs locally** for providers that don't manage it themselves — completing a recurring task reopens it on schedule (for providers that *do* own recurrence, like Todoist, theirs is used instead)
-
-#### Verified Providers
-
-| Provider | HA Integration | Title & Status | Due Date | Due Time | Description | Reorder | Priority | Labels | Sub-tasks | Assignee | Recurrence | Reminders |
-|----------|---------------|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| **CalDAV** (Nextcloud, etc.) | [CalDAV](https://www.home-assistant.io/integrations/caldav/) (Core) | yes | yes | yes | yes | no | no | no | no | no | no | no |
-| **Google Tasks** | [Google Tasks](https://www.home-assistant.io/integrations/google_tasks/) (Core) | yes | yes | no | yes | yes | no | no | no | no | no | no |
-| **Todoist** | [Todoist](https://www.home-assistant.io/integrations/todoist/) (Core) | yes | yes | yes | yes | yes | yes | yes | yes | no | yes | yes |
-| **Local Todo** | [Local Todo](https://www.home-assistant.io/integrations/local_todo/) (Core) | yes | yes | no | yes | no | no | no | no | no | no | no |
-| **Bring** | [Bring](https://www.home-assistant.io/integrations/bring/) (Core) | yes | no | no | yes | no | no | no | no | no | no | no |
-| **Shopping List** | [Shopping List](https://www.home-assistant.io/integrations/shopping_list/) (Core) | yes | no | no | no | no | no | no | no | no | no | no |
-
-**yes** = bidirectionally synced with the provider. **no** = not synced, but still available locally in Home Tasks via overlay.
-
-**Provider notes:**
-
-- **Google Tasks** — Google's REST API does not expose due times or recurrence ([open issue](https://issuetracker.google.com/issues/36759725)). The Google Tasks web UI shows recurrence dropdowns, but those are written client-side only and never appear in the API — Home Assistant therefore can't read or write them. Use Home Tasks' local recurrence (executed by the integration, not the provider).
-- **Todoist** — full bidirectional sync via direct Todoist API.
-- **Local Todo** — simple file-based lists built into HA.
-- **Bring** — shopping list; all extra fields available locally via overlay.
-- **Shopping List** — minimal core shopping list (title + status only); all extra fields via overlay.
-
-Any other integration that creates `todo.*` entities following HA's standard `TodoListEntity` should also work.
-
-Tasks can be **moved between native and external lists** via drag & drop on multi-column cards. Fields that the target provider cannot sync are preserved in the local overlay.
-
-#### Todoist Deep Integration
-
-When you link a Todoist list, Home Tasks automatically detects the Todoist provider and uses the **Todoist REST API directly** (via the existing Todoist integration's API token — no extra configuration required). This enables full bidirectional sync for nearly all fields including title, status, description, due date/time, priority, labels/tags, sort order, sub-tasks, assigned person, recurrence, and reminders.
-
-Home Tasks uses its **own lightweight REST API client** (no dependency on `todoist-api-python`) to communicate directly with the Todoist API. The only requirement is the existing HA Todoist integration being configured — the API token is read from its config entry automatically.
-
-**Unsupported Todoist features** (not synchronized):
-
-- **Comments** — Todoist has a threaded comment system with timestamps and multiple authors; Home Tasks uses a single notes/description field
-- **Attachments** — file attachments on tasks or comments
-- **Sections** — task grouping within Todoist projects
-- **Task duration** — how long a task takes (e.g. 30 minutes)
-- **Label colors** — Todoist labels have their own colors and ordering
-- **Deadline vs. due date** — Todoist separates planned work date (due) from deadline
-- **Favorites** — marking tasks or projects as favorites
-- **Saved filters** — Todoist's own filter query language
-
-### Sections
-
-Group tasks within a list under named, optionally icon-bearing **sections** that render as headers between rows. Auto-sort runs *within* each section so manual order is preserved across groups; completed tasks pool in a single "Done" header at the bottom and return to their original section on reopen. Sections live with the list (server-side), so every card and every dashboard sees the same sections — and tasks created from voice, automations, or HA's todo entity can be assigned to a section just like via the card.
-
-Manage sections from the **card editor → Sections**: add, rename, change icon, reorder, delete (tasks fall back to "no section" — never lost). On the card itself, sections can be **collapsed / expanded** with a tap on the header (state persists per browser); during drag & drop, hovering a collapsed section header for ~600 ms automatically opens it ("spring-loaded folder") so you can drop into it. The "Done" header is the only header that's not a drop target — completion is changed via the checkbox.
-
-Typical use: a shopping list whose sections are store aisles ("Produce", "Frozen", "Bakery"), a project list grouped by status, or a chore list grouped by room. v1 supports manual assignment; auto-assignment by tag, title keyword, or learned history is on the roadmap.
-
-### Dashboard Card
-
-- **Multi-column layout** — display multiple lists side-by-side on a single card
-- **Per-column configuration** — title, icon, default filter, default sort, show/hide every field individually
-- **List or Tiles view** — choose per column between detailed task rows and a compact image grid (see [Tile View](#tile-view))
-- **Task images** — show a picture per task; optionally auto-generate them with AI (see [Task Images & AI Generation](#task-images--ai-generation))
-- **Sections** — group tasks under named headers with optional icons (see above)
-- **Drag & drop** reordering on desktop and mobile, including across sections
-- **Cross-list drag & drop** — move tasks between columns (multi-column cards only)
-- **Click a task** to expand its details and edit every field inline
-- **Duplicate** a task with one click — the copy appears right after the original
-- **Filter** per column — All / Open / Done, plus optional **Due Soon** filter (shows tasks due within a configurable number of days)
-- **Sort** per column — manual, due date, priority, title, assigned person
-- **Tag & person filter chips** in the column header — tap to filter; assigning the active person to new tasks automatically
-- **Several assignees per task** — tap people on or off in the task details; a shared task shows under each of its assignees' filter chips, and its row shows each of them. The first one is the primary assignee (`assigned_person`), which single-assignee providers such as Todoist sync; everyone is in `assigned_persons`
-- **Foldable task details** — tap a field's heading in the task details (notes, people, tags, recurrence …) to fold it down to one line that sums up what is set (nothing, when nothing is). The card remembers which fields you folded, per list (for every task of it), in this browser. A folded recurrence keeps its on/off switch
-- **One-tap due dates** — Today, Tomorrow, In 1 week, In 1 month and In 3 months buttons under the due date in the task details (a set due time is kept)
-- **Voice input** — dictate a new task title via the mic button (HA Assist speech-to-text, with browser speech as fallback)
-- **Compact mode** for denser task rows
-- **Auto-delete** completed tasks (optional, per column)
-- **Smooth animations** — FLIP transitions for sort, filter, create, delete, complete, and reopen
-- **Visual card editor** — fully configurable without writing YAML
-
-#### Tile View
-
-Set a column's **view mode** to **Tiles** for a compact, visual grid instead of detailed rows — ideal for lists where the image matters (recipes, products, chores for kids). Each tile shows the task image as background (or a colored letter placeholder when there's none), the title overlaid (toggle with `show_tile_title`), and a checkmark when done.
-
-- **Tap** a tile to toggle completion
-- **Long-press** (or click & hold) a tile to open its **detail sheet** — the full editor with every field, including an editable title
-- **Drag** a tile to reorder, with the same live animations as the list view
-
-#### Voice Input
-
-A mic button on the add-task row lets you dictate a task title instead of typing it. It uses Home Assistant's **Assist speech-to-text** when available and falls back to the browser's built-in speech recognition. Hide the button per column with `show_voice: false`.
-
-### Task Images & AI Generation
-
-Give tasks a picture — handy for recipes, products on a shopping list, or visual chores for kids. Images appear as the tile background in [Tiles view](#tile-view) and as a thumbnail in list view.
-
-- **Enable display** per column with `show_images: true`
-- **Pick an image** from the task's detail view via the media-browser button — any file under your Home Assistant `media/` sources
-- **Generate with AI** — the generate button creates an image from the task title via an [`ai_task`](https://www.home-assistant.io/integrations/ai_task/) entity (configured card-wide, see below)
-- **Remove** an image anytime with the × on its thumbnail
-
-Images work on **native and external lists alike**. For an external list the picture is kept in the local overlay and never sent to the provider — Todoist, Nextcloud or Bring stay untouched, and the image is visible only in Home Assistant.
-
-**AI image generation setup** (card-level, in the visual editor under *AI Image Generation*):
-
-```yaml
-type: custom:home-tasks-card
-image_generation:
-  entity_id: ai_task.openai          # any ai_task.* entity (OpenAI, Gemini, …)
-  prompt_prefix: "Minimalist icon of" # optional, prepended to every prompt
-columns:
-  - list_id: "your-list-id"
-    show_images: true
-    auto_generate_image: true        # generate automatically on task creation
-```
-
-> The main **Model** of your AI entity must be a text/vision model; the actual image model is configured in the AI integration's *image generation* option. `auto_generate_image` only runs when `show_images` is on **and** an `image_generation` entity is set.
-
-**Background generation** (no dashboard required)
-
-`auto_generate_image` also tells the integration to look after that list on
-its own: whenever a task shows up without a picture — by voice, by a service
-call, by a recurrence at 3am — Home Tasks generates one, no browser needed.
-It works through them back to back, so switching the option on fills a list
-within minutes rather than trickling.
-
-There are **no retries**. A task is attempted once; if the provider fails, the
-task gets a "generation failed" placeholder so you can see it, and is left
-alone. Switching `auto_generate_image` off and on again gives those tasks
-another go, and the generate button in the task details always works. While a
-task waits its turn it shows a "generating image" placeholder.
-
-Switching `auto_generate_image` off stops the list at once: whatever is still
-queued for it is dropped and the waiting placeholders disappear again. Turning
-it on and off repeatedly costs nothing — a task is only ever queued once.
-
-Everything image-related lives in one place: the card editor's **Images**
-section holds the two switches, the `ai_task` entity and prompt prefix, the
-per-list sharing switch, and the queue. The entity and prefix are remembered
-**per list**: every list takes them from the card that shows it, and the
-background queue draws each task with its own list's prefix — so two
-dashboards with different styles never overwrite each other. The queue shows what is being
-generated right now and numbers what comes next, and single jobs can be
-cancelled — cancelling also switches that list's automatic generation off,
-since otherwise the next scan would queue the task straight back.
-
-**Good to know:**
-
-- **No duplicate work** — if another task with the same title already has an image, it's reused instead of generating again; generating an image assigns it to every task with that title, in every list — native and linked alike. Linked lists are read from their provider for this, so a generation with several linked lists takes a moment longer.
-- **Pictures outlive their task** — Home Tasks keeps a library of title →
-  picture, independent of any task. Tick off "take out the bins", let the
-  recurrence recreate it, and the picture comes back from disk instead of the
-  provider. A title matches when every word is there — case, punctuation,
-  word order and an inflected ending don't matter ("take out the bin" finds
-  "Take out the bins"), but a **different word means a different task**:
-  "Ben's room tidy" never takes the picture of "Ben's room vacuum", "paint
-  Kevin's wall" none from "paint Kevin's ceiling", "milk 1l" none from "milk
-  2l". Matching is local string comparison; nothing is sent anywhere.
-  Pictures that were already on tasks when you update are learned a minute
-  after start, so they are reusable too.
-  Removing a picture from a task counts as rejecting it: it leaves the library
-  and will not be handed back. The library keeps the 2000 most recently used
-  pictures and deletes the files of the ones it drops, unless a task still
-  points at them.
-- **Per-list opt-out** — a list can keep its pictures to itself: card editor → *Images* → **Share images with other lists** (on by default). Off means the list neither takes an image from another list nor from the library, and hands none over either, while two identical titles *inside* it still share one picture. That is what you want for, say, three children with their own list of the same chores and their own images — instead of nudging titles apart with extra spaces.
-- **Only the title leaves the house** — the AI prompt is built from the task title alone; notes and other fields are never sent.
-- **Persistent** — generated and picked images are copied into `config/www/home_tasks/` and served from `/local/…`, so they keep working regardless of how you access Home Assistant (local IP, custom port, or a domain) and don't expire. Unused image files are cleaned up automatically.
-- **Duplicating** a task copies its image too, and **moving** a task to another list — native or linked — takes the image along.
-
-### Home Assistant Integration
-
-- **7 automation events**: created, completed, reopened, due, overdue, assigned, reminder
-- **Services**: add (also straight from a spoken sentence, fields included), update, move, complete, reopen, and assign tasks from automations — and read a list's tasks with assignee and tags (`get_tasks`)
-- **Sensors**: open task count + overdue binary sensor per list
-- **Calendar**: every list — native **and external** — gets a `calendar.*` entity. Tasks with due dates appear as all-day or timed events, and **recurring tasks are projected onto every occurrence** (each week, month, etc.) via standard RRULE, usable in any HA calendar card or automation
-- **Todo entity**: each native list is exposed as a standard `todo.*` entity with full HA todo platform support (Companion App, Apple Watch, etc.)
-- **Multiple lists** via separate integration config entries
-- **[View Assist](#view-assist)**: a ready-made view and blueprints for View Assist satellites — show the list, add tasks by voice, reminders on the nearest satellite
+- **7 automation events** — created, completed, reopened, due, overdue, assigned, reminder ([Events](#events))
+- **Services** — add (also from a spoken sentence), update, move, complete, reopen, assign and read tasks ([Services](#services))
+- **[View Assist](#view-assist)** — a ready-made view and blueprints for voice satellites with a screen
 
 ### Languages
 
-Available in 16 languages and regional variants — follows your HA language setting automatically:
-
 English · German · French · Spanish · Portuguese · Brazilian Portuguese · Italian · Dutch · Polish · Swedish · Danish · Norwegian · Finnish · Czech · Russian · Hungarian
 
-Calendar event descriptions use the Home Assistant **instance language**, since
-the same event is shared by all users. Priority, sub-task progress, and reminder
-offsets reuse the card translations in every supported language. Unknown locales
-fall back to English. Assigned people are shown by their
-entity's friendly name, falling back to the entity ID when no name is available.
-Task titles, notes, and tags are kept exactly as entered.
+---
+
+## Entities
+
+For each list — native and linked — the integration creates:
+
+| Entity | What it shows |
+|--------|---------------|
+| `todo.{list_name}` | The list as a standard to-do entity (Companion App, Assist, Apple Watch, every to-do card). Native lists only — a linked list already has its provider's |
+| `calendar.{list_name}_calendar` | Tasks with a due date as events — all-day, or one hour at the due time. Recurring tasks appear on every occurrence |
+| `sensor.{list_name}_open_tasks` | Number of open tasks. Attributes: `open_task_titles`, `overdue_count`, `total_tasks` |
+| `binary_sensor.{list_name}_overdue` | `on` while a task is overdue. Attributes: `overdue_tasks`, `overdue_count` |
+
+On a linked list, the sensors are `unavailable` while the provider is, so an outage never reads as an empty list.
 
 ---
 
@@ -268,6 +156,8 @@ Home Tasks is available in the HACS default repository.
 
 ## Setup
 
+Every list is set up as its own entry of the integration. The dashboard card is registered automatically — just add it to your dashboard.
+
 ### Native Lists
 
 1. Go to **Settings** → **Devices & Services** → **Add Integration**
@@ -277,7 +167,7 @@ Home Tasks is available in the HACS default repository.
 5. Enter a name for your list
 6. Repeat for additional lists
 
-### External Lists
+### Linked Lists
 
 1. Set up the external provider's HA integration first (e.g. CalDAV, Google Tasks, Todoist)
 2. Go to **Settings** → **Devices & Services** → **Add Integration**
@@ -287,13 +177,59 @@ Home Tasks is available in the HACS default repository.
 6. Select the todo entity from the dropdown
 7. The external list is now available in the card editor
 
-The Lovelace card is automatically registered — just add it to your dashboard.
+**Supported providers**
+
+| Provider | Synced with the provider |
+|----------|--------------------------|
+| **[Todoist](https://www.home-assistant.io/integrations/todoist/)** | Nearly everything: title, status, notes, due date & time, priority, labels, order, sub-tasks, assignee, recurrence, reminders |
+| **[CalDAV](https://www.home-assistant.io/integrations/caldav/)** (Nextcloud, …) | Title, status, notes, due date & time |
+| **[Google Tasks](https://www.home-assistant.io/integrations/google_tasks/)** | Title, status, notes, due date, order |
+| **[Local To-do](https://www.home-assistant.io/integrations/local_todo/)** | Title, status, notes, due date |
+| **[Bring!](https://www.home-assistant.io/integrations/bring/)** | Title, status, notes |
+| **[Shopping List](https://www.home-assistant.io/integrations/shopping_list/)** | Title, status |
+
+Anything a provider can't store — priority, tags, sub-tasks, reminders, recurrence, pictures — Home Tasks keeps locally, so **every feature works on every list**, including events, calendar and sensors. Any other integration with standard `todo.*` entities should work too.
+
+- **Recurrence** runs in Home Tasks for providers that have none; Todoist keeps its own.
+- **Google Tasks** — Google's API has no due times and no recurrence ([open issue](https://issuetracker.google.com/issues/36759725)); the recurrence in Google's web UI never reaches the API. Use Home Tasks' recurrence instead.
+- **Todoist** — Home Tasks talks to the Todoist API directly, with the token of your existing Todoist integration; no extra setup. Not synced: comments, attachments, Todoist sections, task duration, label colors, deadlines, favorites and saved filters.
+
+### Task pictures and AI generation
+
+Turn pictures on per list with `show_images: true` (card editor → *Images*). Then the task details offer:
+
+- **Pick** — any file from your Home Assistant `media/` sources
+- **Generate** — a picture from the task title, by an [`ai_task`](https://www.home-assistant.io/integrations/ai_task/) entity
+- **Remove** — the × on the thumbnail
+
+To generate pictures, set the AI entity in the card editor under *Images*, or in YAML:
+
+```yaml
+type: custom:home-tasks-card
+image_generation:
+  entity_id: ai_task.openai          # any ai_task.* entity (OpenAI, Gemini, …)
+  prompt_prefix: "Minimalist icon of" # optional, prepended to every prompt
+columns:
+  - list_id: "your-list-id"
+    show_images: true
+    auto_generate_image: true        # generate automatically on task creation
+```
+
+> The main **Model** of your AI entity must be a text/vision model; the actual image model is configured in the AI integration's *image generation* option. `auto_generate_image` only runs when `show_images` is on **and** an `image_generation` entity is set.
+
+**Automatic pictures** — with `auto_generate_image`, the integration draws a picture for every new task of the list on its own, however it was added (voice, automation, recurrence), no open dashboard needed. A failed generation is not retried; the task shows a placeholder, and the generate button tries again. The card editor's *Images* section shows the queue.
+
+Pictures are stored in `config/www/home_tasks/` and reused for every task with the same title, in every list. A list can opt out under *Images* → **Share images with other lists**, e.g. when each child has their own list with their own pictures.
 
 ---
 
 ## Card Configuration
 
 All options are available in the visual card editor. The examples below cover the most common setups.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/Card-editor.png" width="700" alt="The visual card editor">
+</p>
 
 ### Column option reference
 
@@ -366,43 +302,12 @@ These options live at the **root** of the card config, not inside a column.
 
 The old flat format (`list_id` at root level) is still supported and migrated automatically.
 
-### Services and linked lists
-
-Every task service — `add_task`, `add_task_from_text`, `get_tasks`, `update_task`,
-`complete_task`, `assign_task`, `reopen_task` — works on a **linked external list** as well as a native one: name it
-with `list_name` as usual, or point at its todo entity with `entity_id`. The change
-takes the same route as the card, so the provider stores what it can (Todoist labels,
-for example) and the local overlay keeps the rest. `move_task` names a linked source with
-`source_entity_id` plus either `task_id` or `task_title`. Duplicating a task works on
-linked lists too, from the task's detail view.
-
 ### List defaults
 
-Every list — native or linked external — can define **defaults for new tasks**
-(card editor → *Defaults* section): default assignees (any number of people, the
-first one becomes the primary assignee), reminders, tags, priority and section. They apply to every task created in that list, no matter how it is created —
-card, `home_tasks.add_task`, voice input or `todo.add_item`. On an external list the
-defaults are offered to the provider first, so one that syncs labels or priority stores
-them itself; the section is kept locally, like all sections.
-Explicit values in the creating call always win, including an explicitly empty list
-(`reminders: []` / `tags: []` means "none" — only an omitted field falls back to the
-default). For the single-value fields (priority, section) `null` means "not provided"
-and still falls back; a task created with any assignee gets only the people named.
-Explicitly provided values (e.g. the card's auto-assign from an active person filter) win
-over the defaults.
+Each list — native or linked — can preset new tasks (card editor → *Defaults*): assignees, reminders, tags, priority and section. They apply however a task is created: card, voice, service or `todo.add_item`; values given when creating it win. The same place sets:
 
-The same section holds the list's **fixed tags**: a set of tags that the tag input
-always suggests — first, whether or not any task carries them right now — in every card
-that shows the list. Other tags can still be added to a task, but typing a new tag that is one
-or two letters off a fixed one (`kitchn` for `kitchen`) offers the fixed tag instead, so a
-typo doesn't quietly split a category in two. Fixed tags aren't added to new tasks; that's
-what the default tags are for.
-
-Home Tasks lists also have a list-wide **Reopen early** lead (same section). A task takes
-it over when its recurrence is switched on, and the interval then starts a day longer than
-the lead, so it fits — a 30-day lead starts the task at every 31 days. Change the interval
-and a lead that no longer fits drops to `0`, as with one typed in. Tasks already recurring
-keep the lead they have when the list default changes.
+- **Fixed tags** — always suggested in the tag input, and a near-miss typo (`kitchn`) offers the fixed tag instead
+- **Reopen early** — a list-wide lead for recurring tasks ([Tasks](#tasks))
 
 ### Styling
 
@@ -459,7 +364,7 @@ columns:
 
 #### 🛒 Shopping List
 
-<img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/Shopping-list.png" alt="Shopping list">
+*Pictured at the top: [Sorted the way you shop](#what-is-home-tasks).*
 
 Minimal and fast — just items and checkboxes. Completed entries disappear immediately. All metadata fields hidden to reduce clutter.
 
@@ -486,9 +391,9 @@ columns:
 
 #### 🍽️ Meals (Tile View)
 
-<img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/meals.png" alt="Meals list in tile view with images">
+*Pictured at the top: [Lists or pictures](#what-is-home-tasks).*
 
-A visual board in [tile view](#tile-view) — each task is a card with its (optionally AI-generated) image. Great for meal plans, recipes, or anything where the picture matters. Tap to complete, long-press for details.
+A visual board in [tile view](#dashboard-card) — each task is a card with its (optionally AI-generated) image. Great for meal plans, recipes, or anything where the picture matters. Tap to complete, long-press for details.
 
 ```yaml
 type: custom:home-tasks-card
@@ -507,7 +412,7 @@ columns:
 
 <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/usecase-chores.png" alt="Kids chores in tile view with comic-style images">
 
-Kid-friendly [tile view](#tile-view) — each chore is a picture card with a playful, AI-generated comic image (prompt prefix `Comic style illustration for kids:`). Tap to complete. Person assignment and weekday recurrence still run underneath.
+Kid-friendly [tile view](#dashboard-card) — each chore is a picture card with a playful, AI-generated comic image (prompt prefix `Comic style illustration for kids:`). Tap to complete. Person assignment and weekday recurrence still run underneath.
 
 ```yaml
 type: custom:home-tasks-card
@@ -612,6 +517,8 @@ The `home_tasks_task_reminder` event additionally includes `reminder_offset_minu
 The `home_tasks_task_completed` event additionally includes who ticked the task off, when a user did — from the card, the HA todo entity's actions (Companion App, `todo.update_item`) or a service called by a user: `completed_by` (the user's name, as in the task history), `completed_by_user_id`, and `completed_by_person` (the `person.*` linked to that user). The event runs in that user's context, so the logbook names them too. Completions by automations, by the recurrence, in a provider's own app or by an Assist voice command (Home Assistant's todo intents don't pass on who spoke) carry none of these fields.
 
 ### Services
+
+Every task service works on a **linked list** too: name it with `list_name` as usual, or give its todo entity as `entity_id`. The provider stores what it can, Home Tasks keeps the rest.
 
 #### `home_tasks.add_task`
 
@@ -851,17 +758,6 @@ the requested state — ticking "Milk" twice ticks both.
 ```
 
 *\* Either `list_name` or `entry_id`. \*\* See individual service descriptions for required combinations.*
-
-### Entities
-
-For each list — native and linked — the integration creates:
-
-- **Todo** (`todo.{list_name}`, native lists only — a linked list already has its provider's): Standard HA todo entity — works with the Companion App, Apple Watch, Google Home, and any HA automation that targets `todo.*` entities.
-- **Calendar** (`calendar.{list_name}_calendar`): Tasks with a due date appear as calendar events. Tasks with only a due date show as all-day events; tasks with both due date and due time show as 1-hour timed events with a rich description (notes, priority, assignee, tags, sub-task progress, reminders). **Recurring tasks expand onto every occurrence** in the viewed range (mapped to an RFC-5545 RRULE — daily, weekly on selected weekdays, monthly by day-of-month/Nth-weekday, yearly anniversary). External lists get a calendar entity too. A calendar needs a date to anchor on, so tasks without a due date aren't shown (hourly recurrence has no calendar equivalent and shows as a single event).
-- **Sensor** (`sensor.{list_name}_open_tasks`): Number of open tasks. Attributes: `open_task_titles`, `overdue_count`, `total_tasks`.
-- **Binary Sensor** (`binary_sensor.{list_name}_overdue`): `on` if any open task is past its due date. Attributes: `overdue_tasks` (title, due date, assignee), `overdue_count`. Re-evaluated at midnight, so a task due today turns overdue without anyone touching the list.
-
-On a linked list the sensor and binary sensor read the provider's items together with what Home Tasks keeps for them (assignee, and the due date when the provider cannot hold one), and follow both the provider's entity and edits made in the card. They are `unavailable` while the provider's todo entity is missing or itself unavailable, so a provider outage never reads as an empty list.
 
 ### Example Automations
 
