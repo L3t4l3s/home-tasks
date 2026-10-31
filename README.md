@@ -5,7 +5,7 @@
 <h1 align="center">Home Tasks</h1>
 
 <p align="center">
-  <b>The to-do lists your whole household shares — right inside Home Assistant.</b><br>
+  <b>Get things done at home — together, right in Home Assistant.</b><br>
   Chores, shopping, projects and kids' tasks, with recurring tasks, reminders, people, pictures and voice.
 </p>
 
@@ -15,8 +15,8 @@
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/header-light.png" width="400" alt="Home Tasks in light mode">
-  <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/header-dark.png" width="400" alt="Home Tasks in dark mode">
+  <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/header-light.png" height="460" alt="A household list with people, tags and recurring tasks">
+  <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/header-chores.png" height="460" alt="Kids chores as picture tiles in the Frosted Glass theme">
 </p>
 
 ## What is Home Tasks?
@@ -364,7 +364,7 @@ columns:
 
 #### 🛒 Shopping List
 
-*Pictured at the top: [Sorted the way you shop](#what-is-home-tasks).*
+<img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/Shopping-list.png" alt="Shopping list grouped in sections">
 
 Minimal and fast — just items and checkboxes. Completed entries disappear immediately. All metadata fields hidden to reduce clutter.
 
@@ -391,7 +391,7 @@ columns:
 
 #### 🍽️ Meals (Tile View)
 
-*Pictured at the top: [Lists or pictures](#what-is-home-tasks).*
+<img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/meals.png" alt="Meals in tile view with pictures">
 
 A visual board in [tile view](#dashboard-card) — each task is a card with its (optionally AI-generated) image. Great for meal plans, recipes, or anything where the picture matters. Tap to complete, long-press for details.
 
