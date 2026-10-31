@@ -35,6 +35,7 @@ from .const import (
 )
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+from .config_flow import recurring_advances_on_complete
 from .overlay_store import ExternalTaskOverlayStore
 from .store import (
     HomeTasksStore,
@@ -461,10 +462,20 @@ def _on_task_completed(
             old_due_time, task.get("due_time"),
         )
 
-    # Pass the lead-shifted reopen target into the scheduler so the reopen
-    # timer fires ahead of the due date; the due_date advance above used the
-    # un-shifted target.
-    _schedule_recurrence(hass, entry_id, task, completed_at=completed_at, precomputed_target=reopen_target)
+    if (
+        target is not None
+        and recurring_advances_on_complete(hass.config_entries.async_get_entry(entry_id))
+    ):
+        # The list opted into "advance on complete": skip the future reopen
+        # timer and flip the task back to open right now.  The due_date above
+        # was already advanced to the next cycle, so the task reappears in
+        # the open list immediately (the UX of recurring-aware task managers).
+        hass.async_create_task(_async_reopen_task(hass, entry_id, task["id"]))
+    else:
+        # Pass the lead-shifted reopen target into the scheduler so the reopen
+        # timer fires ahead of the due date; the due_date advance above used the
+        # un-shifted target.
+        _schedule_recurrence(hass, entry_id, task, completed_at=completed_at, precomputed_target=reopen_target)
     # _schedule_reminders cancels old timers first, then (for recurring tasks)
     # reschedules against the newly-advanced due_date.
     _schedule_reminders(hass, entry_id, task)
@@ -1667,6 +1678,10 @@ async def _handle_external_recurrence_completion(
     if overlay_kwargs.get("recurrence_enabled") is False:
         return  # count exhausted — no further reopen
     task["completed_at"] = overlay_kwargs["completed_at"]
+    if recurring_advances_on_complete(hass.config_entries.async_get_entry(entry_id)):
+        # Advance-on-complete mode: reopen right now instead of scheduling a timer.
+        await _async_reopen_external_task(hass, entry_id, entity_id, task_uid)
+        return
     _schedule_recurrence(hass, entry_id, task, completed_at=completed_at)
 
 

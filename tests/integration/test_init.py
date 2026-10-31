@@ -1401,6 +1401,120 @@ async def test_completion_advances_due_date_for_recurring_task(
     assert stored["due_time"] == "14:00"
 
 
+async def _enable_advance_option(hass, entry) -> None:
+    """Flip on the per-list "advance on complete" option for a config entry."""
+    from custom_components.home_tasks.config_flow import OPTION_RECURRING_ADVANCES
+
+    hass.config_entries.async_update_entry(
+        entry, options={OPTION_RECURRING_ADVANCES: True}
+    )
+    await hass.async_block_till_done()
+
+
+async def test_recurring_advances_immediately_when_option_enabled(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """With the advance-on-complete option on, completing a recurring task
+    reopens it immediately and shifts due_date to the next cycle."""
+    from datetime import date as _date
+
+    await _enable_advance_option(hass, mock_config_entry)
+
+    events_completed = []
+    events_reopened = []
+    hass.bus.async_listen(f"{DOMAIN}_task_completed", lambda e: events_completed.append(e))
+    hass.bus.async_listen(f"{DOMAIN}_task_reopened", lambda e: events_reopened.append(e))
+
+    today = _date.today()
+    task = await store.async_add_task("Advance now")
+    await store.async_update_task(
+        task["id"],
+        due_date=today.isoformat(),
+        recurrence_enabled=True,
+        recurrence_type="interval",
+        recurrence_unit="days",
+        recurrence_value=1,
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+
+    stored = store.get_task(task["id"])
+    # Immediately back to open, with due_date advanced
+    assert stored["completed"] is False
+    assert stored["completed_at"] is None
+    assert stored["due_date"] == (today + timedelta(days=1)).isoformat()
+    # Both lifecycle events fired (completed then reopened)
+    assert len(events_completed) == 1
+    assert len(events_reopened) == 1
+
+
+async def test_recurring_advances_does_not_schedule_timer(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Advance-on-complete must not leave a pending reopen timer behind."""
+    from datetime import date as _date
+
+    from custom_components.home_tasks import DATA_RECURRENCE_TIMERS
+    from custom_components.home_tasks.config_flow import OPTION_RECURRING_ADVANCES
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={OPTION_RECURRING_ADVANCES: True}
+    )
+    await hass.async_block_till_done()
+
+    today = _date.today()
+    task = await store.async_add_task("No timer")
+    await store.async_update_task(
+        task["id"],
+        due_date=today.isoformat(),
+        recurrence_enabled=True,
+        recurrence_type="interval",
+        recurrence_unit="days",
+        recurrence_value=1,
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+
+    timers = hass.data.get(DATA_RECURRENCE_TIMERS, {})
+    assert task["id"] not in timers, "advance-on-complete should not schedule a reopen timer"
+
+
+async def test_recurring_advances_count_exhaustion_stays_completed(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """When the last repetition is consumed, the task stays completed (no reopen)."""
+    from datetime import date as _date
+
+    from custom_components.home_tasks.config_flow import OPTION_RECURRING_ADVANCES
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={OPTION_RECURRING_ADVANCES: True}
+    )
+    await hass.async_block_till_done()
+
+    today = _date.today()
+    task = await store.async_add_task("Last one")
+    await store.async_update_task(
+        task["id"],
+        due_date=today.isoformat(),
+        recurrence_enabled=True,
+        recurrence_type="interval",
+        recurrence_unit="days",
+        recurrence_value=1,
+        recurrence_end_type="count",
+        recurrence_max_count=1,
+        recurrence_remaining_count=1,
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+
+    stored = store.get_task(task["id"])
+    # Count exhausted → recurrence disabled, task stays completed
+    assert stored["completed"] is True
+    assert stored["recurrence_enabled"] is False
+    assert stored["recurrence_remaining_count"] == 0
+
+
 async def test_completion_never_overwrites_due_time_from_recurrence_time(
     hass: HomeAssistant, mock_config_entry, store
 ) -> None:

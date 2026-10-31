@@ -517,3 +517,43 @@ async def test_recover_immediate_reopen_for_past_target(hass: HomeAssistant, ext
     assert "t1" not in hass.data.get(DATA_RECURRENCE_TIMERS, {})
     assert any(c.get("status") == "needs_action" for c in calls)
     assert len(events) == 1
+
+
+async def test_external_advances_immediately_when_option_enabled(
+    hass: HomeAssistant, ext_entry
+) -> None:
+    """With advance-on-complete on, completing a recurring external task reopens
+    it immediately (no scheduled timer), like native lists."""
+    from custom_components.home_tasks.config_flow import OPTION_RECURRING_ADVANCES
+
+    _register_todo_items(hass, [
+        TodoItem(uid="t1", summary="Recurring", status=TodoItemStatus.COMPLETED),
+    ])
+    await _overlay(hass, ext_entry).async_set_overlay(
+        "t1", recurrence_enabled=True, recurrence_unit="days", recurrence_value=1,
+    )
+    hass.config_entries.async_update_entry(
+        ext_entry, options={OPTION_RECURRING_ADVANCES: True}
+    )
+    await hass.async_block_till_done()
+
+    calls = []
+
+    async def _fake_update(call):
+        calls.append(dict(call.data))
+
+    hass.services.async_register("todo", "update_item", _fake_update)
+    events = []
+    hass.bus.async_listen(f"{DOMAIN}_task_reopened", lambda e: events.append(e))
+
+    await _handle_external_recurrence_completion(hass, ext_entry.entry_id, ENTITY, "t1")
+    await hass.async_block_till_done()
+
+    # No scheduled timer — the task was reopened immediately
+    assert "t1" not in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+    # Provider item flipped back to open
+    assert any(c.get("status") == "needs_action" for c in calls)
+    assert len(events) == 1
+    # completed_at cleared by the reopen
+    assert _overlay(hass, ext_entry).get_all_overlays()["t1"].get("completed_at") is None
+

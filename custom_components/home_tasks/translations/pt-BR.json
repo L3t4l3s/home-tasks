@@ -36,5 +36,20 @@
       "no_external_entities": "Nenhuma entidade de tarefas externa encontrada. Configure primeiro uma integração CalDAV, Google Tasks ou Todoist.",
       "max_lists_reached": "O número máximo de listas (50) foi atingido."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opções da lista",
+        "data": {
+          "recurring_complete_advances": "Avançar tarefas recorrentes para o próximo ciclo ao concluí-las",
+          "todo_filter_assignees": "Lista de tarefas: mostrar somente estes responsáveis",
+          "todo_filter_include_unassigned": "Lista de tarefas: incluir tarefas sem responsável",
+          "todo_filter_tag_mode": "Lista de tarefas: modo de filtro por etiqueta",
+          "todo_filter_tags": "Lista de tarefas: etiquetas a incluir ou excluir",
+          "todo_sort": "Lista de tarefas: ordem de classificação"
+        }
+      }
+    }
   }
 }
