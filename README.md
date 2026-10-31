@@ -129,11 +129,15 @@ On a linked list, the sensors are `unavailable` while the provider is, so an out
 
 ## Installation
 
+[![Open the Home Tasks repository in the Marketplace (or in HACS before 2026.11) on your Home Assistant instance.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=L3t4l3s&repository=home-tasks&category=integration)
+
+The button opens Home Tasks in the Marketplace — or in HACS on Home Assistant before 2026.11.
+
 ### Marketplace (Home Assistant 2026.11 and newer, recommended)
 
 Home Tasks is in the catalog of the Marketplace that is built into Home Assistant.
 
-1. Go to **Settings** → **Marketplace** and search for **Home Tasks**
+1. Click the button above — or go to **Settings** → **Marketplace** and search for **Home Tasks**
 2. Click **Download**
 3. Set it up as described under [Setup](#setup) — a first install needs no restart; after an update, Home Assistant offers the restart as a repair
 
@@ -142,8 +146,6 @@ An existing HACS installation carries over when you update to 2026.11: Home Task
 ### HACS (Home Assistant before 2026.11)
 
 Home Tasks is available in the HACS default repository.
-
-[![Open your Home Assistant instance and open the Home Tasks repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=L3t4l3s&repository=home-tasks&category=integration)
 
 1. Click the button above — or open HACS and search for **Home Tasks**
 2. Click **Download**
