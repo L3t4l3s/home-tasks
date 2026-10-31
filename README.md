@@ -38,7 +38,7 @@ Every task can carry over 20 individual attributes:
 - **Recurrence end date**
 - **Maximum repetitions**
 - **Completion state** with timestamp
-- **Advance-on-complete** *(optional, per list)* — by default, completing a recurring task moves it to "Done" and reopens it later at the next occurrence; enable **Settings → Devices & Services → Home Tasks → *list* → Configure → "Advance recurring tasks to the next cycle on completion"** to instead reopen it **immediately** and shift its due date to the next cycle right when you tick it off (matching TickTick/Things-style behavior). Applies to native lists and to external lists whose provider doesn't own recurrence (Todoist always uses its own).
+- **Advance-on-complete** *(optional, per list)* — by default, a completed recurring task stays in "Done" until its next occurrence is due; enable **Settings → Devices & Services → Home Tasks → *list* → Configure → "Advance recurring tasks to the next cycle on completion"** to reopen it **immediately** when you tick it off, with its due date (already advanced at completion) pointing at the next cycle — matching TickTick/Things-style behavior. Applies to native lists and to external lists whose provider doesn't own recurrence (Todoist always uses its own).
 - **Task history / audit log** — every field change recorded with actor and timestamp
 
 ### External Todo Lists
