@@ -66,7 +66,7 @@ describe('list_columns', () => {
 
 describe('tile_size', () => {
   test('presets map to a minimum tile width; medium is the built-in size', async () => {
-    for (const [size, px] of [['small', '80px'], ['medium', ''], ['large', '200px']]) {
+    for (const [size, px] of [['small', '80px'], ['compact', '100px'], ['medium', ''], ['large', '200px']]) {
       const col = await render({ view_mode: 'tiles', tile_size: size });
       assert.equal(col.style.getPropertyValue('--ht-tile-min'), px, size);
     }
@@ -75,6 +75,15 @@ describe('tile_size', () => {
   test('a number is a width in px, clamped to 60-400', async () => {
     assert.equal((await render({ view_mode: 'tiles', tile_size: 95 })).style.getPropertyValue('--ht-tile-min'), '95px');
     assert.equal((await render({ view_mode: 'tiles', tile_size: 10 })).style.getPropertyValue('--ht-tile-min'), '60px');
+  });
+
+  test('the compact switch leaves the tile size alone', async () => {
+    const col = await render({ view_mode: 'tiles', compact: true });
+    assert.equal(col.style.getPropertyValue('--ht-tile-min'), '');
+    const css = [...col.getRootNode().querySelectorAll('style')].map((s) => s.textContent).join('\n');
+    const rule = css.match(/\.compact \.tile-grid-inner \{[^}]*\}/);
+    assert.ok(rule, 'compact grid rule present');
+    assert.doesNotMatch(rule[0], /grid-template-columns|--ht-tile-min/);
   });
 
   test('unset or unknown keeps the built-in size', async () => {
@@ -98,9 +107,10 @@ describe('tile_size in the editor', () => {
     return { ed, sel, changes, window };
   }
 
-  test('small, medium, large - medium chosen when nothing is set', async () => {
+  test('small, compact, normal, large - normal chosen when nothing is set', async () => {
     const { ed, sel } = await tileSelect({});
-    assert.deepEqual([...sel.options].map((o) => o.value), ['small', 'medium', 'large']);
+    assert.deepEqual([...sel.options].map((o) => o.value), ['small', 'compact', 'medium', 'large']);
+    assert.deepEqual([...sel.options].map((o) => o.textContent), ['Small', 'Compact', 'Normal', 'Large']);
     assert.equal(sel.value, 'medium');
     ed.remove();
   });
@@ -112,7 +122,7 @@ describe('tile_size in the editor', () => {
     assert.equal(changes.at(-1).columns[0].tile_size, undefined);
     ed.remove();
     const again = await tileSelect({ tile_size: 95 });
-    assert.deepEqual([...again.sel.options].map((o) => o.value), ['small', 'medium', 'large', '95']);
+    assert.deepEqual([...again.sel.options].map((o) => o.value), ['small', 'compact', 'medium', 'large', '95']);
     assert.equal(again.sel.value, '95');
     again.ed.remove();
   });

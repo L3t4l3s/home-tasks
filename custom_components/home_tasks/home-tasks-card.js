@@ -294,7 +294,8 @@ const _TRANSLATIONS = {
     "ed_list_columns": "Task columns",
     "ed_tile_size": "Tile size",
     "ed_tile_size_small": "Small",
-    "ed_tile_size_medium": "Medium",
+    "ed_tile_size_compact": "Compact",
+    "ed_tile_size_medium": "Normal",
     "ed_tile_size_large": "Large",
     "due_quick_week": "In 1 week",
     "due_quick_month": "In 1 month",
@@ -591,7 +592,8 @@ const _TRANSLATIONS = {
     "ed_list_columns": "Takenkolommen",
     "ed_tile_size": "Tegelgrootte",
     "ed_tile_size_small": "Klein",
-    "ed_tile_size_medium": "Middel",
+    "ed_tile_size_compact": "Compact",
+    "ed_tile_size_medium": "Normaal",
     "ed_tile_size_large": "Groot",
     "due_quick_week": "Over 1 week",
     "due_quick_month": "Over 1 maand",
@@ -888,7 +890,8 @@ const _TRANSLATIONS = {
     "ed_list_columns": "Colonne di attività",
     "ed_tile_size": "Dimensione caselle",
     "ed_tile_size_small": "Piccola",
-    "ed_tile_size_medium": "Media",
+    "ed_tile_size_compact": "Compatta",
+    "ed_tile_size_medium": "Normale",
     "ed_tile_size_large": "Grande",
     "due_quick_week": "Tra 1 settimana",
     "due_quick_month": "Tra 1 mese",
@@ -1185,7 +1188,8 @@ const _TRANSLATIONS = {
     "ed_list_columns": "Kolumny zadań",
     "ed_tile_size": "Rozmiar kafelków",
     "ed_tile_size_small": "Mały",
-    "ed_tile_size_medium": "Średni",
+    "ed_tile_size_compact": "Kompaktowy",
+    "ed_tile_size_medium": "Normalny",
     "ed_tile_size_large": "Duży",
     "due_quick_week": "Za 1 tydzień",
     "due_quick_month": "Za 1 miesiąc",
@@ -1482,7 +1486,8 @@ const _TRANSLATIONS = {
     "ed_list_columns": "Uppgiftskolumner",
     "ed_tile_size": "Rutstorlek",
     "ed_tile_size_small": "Liten",
-    "ed_tile_size_medium": "Mellan",
+    "ed_tile_size_compact": "Kompakt",
+    "ed_tile_size_medium": "Normal",
     "ed_tile_size_large": "Stor",
     "due_quick_week": "Om 1 vecka",
     "due_quick_month": "Om 1 månad",
@@ -1779,7 +1784,8 @@ const _TRANSLATIONS = {
     "ed_list_columns": "Colonnes de tâches",
     "ed_tile_size": "Taille des tuiles",
     "ed_tile_size_small": "Petite",
-    "ed_tile_size_medium": "Moyenne",
+    "ed_tile_size_compact": "Compacte",
+    "ed_tile_size_medium": "Normale",
     "ed_tile_size_large": "Grande",
     "due_quick_week": "Dans 1 semaine",
     "due_quick_month": "Dans 1 mois",
@@ -2076,7 +2082,8 @@ const _TRANSLATIONS = {
     "ed_list_columns": "Colunas de tarefas",
     "ed_tile_size": "Tamanho dos blocos",
     "ed_tile_size_small": "Pequeno",
-    "ed_tile_size_medium": "Médio",
+    "ed_tile_size_compact": "Compacto",
+    "ed_tile_size_medium": "Normal",
     "ed_tile_size_large": "Grande",
     "due_quick_week": "Daqui a 1 semana",
     "due_quick_month": "Daqui a 1 mês",
@@ -2373,7 +2380,8 @@ const _TRANSLATIONS = {
     "ed_list_columns": "Colunas de tarefas",
     "ed_tile_size": "Tamanho dos blocos",
     "ed_tile_size_small": "Pequeno",
-    "ed_tile_size_medium": "Médio",
+    "ed_tile_size_compact": "Compacto",
+    "ed_tile_size_medium": "Normal",
     "ed_tile_size_large": "Grande",
     "due_quick_week": "Em 1 semana",
     "due_quick_month": "Em 1 mês",
@@ -2670,7 +2678,8 @@ const _TRANSLATIONS = {
     "ed_list_columns": "Columnas de tareas",
     "ed_tile_size": "Tamaño de mosaicos",
     "ed_tile_size_small": "Pequeño",
-    "ed_tile_size_medium": "Mediano",
+    "ed_tile_size_compact": "Compacto",
+    "ed_tile_size_medium": "Normal",
     "ed_tile_size_large": "Grande",
     "due_quick_week": "En 1 semana",
     "due_quick_month": "En 1 mes",
@@ -2967,7 +2976,8 @@ const _TRANSLATIONS = {
     "ed_list_columns": "Колонки задач",
     "ed_tile_size": "Размер плиток",
     "ed_tile_size_small": "Маленький",
-    "ed_tile_size_medium": "Средний",
+    "ed_tile_size_compact": "Компактный",
+    "ed_tile_size_medium": "Обычный",
     "ed_tile_size_large": "Большой",
     "due_quick_week": "Через 1 неделю",
     "due_quick_month": "Через 1 месяц",
@@ -3264,7 +3274,8 @@ const _TRANSLATIONS = {
     "ed_list_columns": "Sloupce úkolů",
     "ed_tile_size": "Velikost dlaždic",
     "ed_tile_size_small": "Malá",
-    "ed_tile_size_medium": "Střední",
+    "ed_tile_size_compact": "Kompaktní",
+    "ed_tile_size_medium": "Normální",
     "ed_tile_size_large": "Velká",
     "due_quick_week": "Za 1 týden",
     "due_quick_month": "Za 1 měsíc",
@@ -3561,7 +3572,8 @@ const _TRANSLATIONS = {
     "ed_list_columns": "Opgavekolonner",
     "ed_tile_size": "Flisestørrelse",
     "ed_tile_size_small": "Lille",
-    "ed_tile_size_medium": "Mellem",
+    "ed_tile_size_compact": "Kompakt",
+    "ed_tile_size_medium": "Normal",
     "ed_tile_size_large": "Stor",
     "due_quick_week": "Om 1 uge",
     "due_quick_month": "Om 1 måned",
@@ -3858,7 +3870,8 @@ const _TRANSLATIONS = {
     "ed_list_columns": "Oppgavekolonner",
     "ed_tile_size": "Flisestørrelse",
     "ed_tile_size_small": "Liten",
-    "ed_tile_size_medium": "Middels",
+    "ed_tile_size_compact": "Kompakt",
+    "ed_tile_size_medium": "Normal",
     "ed_tile_size_large": "Stor",
     "due_quick_week": "Om 1 uke",
     "due_quick_month": "Om 1 måned",
@@ -4155,7 +4168,8 @@ const _TRANSLATIONS = {
     "ed_list_columns": "Tehtäväsarakkeet",
     "ed_tile_size": "Ruutujen koko",
     "ed_tile_size_small": "Pieni",
-    "ed_tile_size_medium": "Keskikoko",
+    "ed_tile_size_compact": "Kompakti",
+    "ed_tile_size_medium": "Normaali",
     "ed_tile_size_large": "Suuri",
     "due_quick_week": "1 viikon päästä",
     "due_quick_month": "1 kuukauden päästä",
@@ -4452,7 +4466,8 @@ const _TRANSLATIONS = {
     "ed_list_columns": "Feladatoszlopok",
     "ed_tile_size": "Csempeméret",
     "ed_tile_size_small": "Kicsi",
-    "ed_tile_size_medium": "Közepes",
+    "ed_tile_size_compact": "Kompakt",
+    "ed_tile_size_medium": "Normál",
     "ed_tile_size_large": "Nagy",
     "due_quick_week": "1 hét múlva",
     "due_quick_month": "1 hónap múlva",
@@ -4749,7 +4764,8 @@ const _TRANSLATIONS = {
     "ed_list_columns": "Aufgabenspalten",
     "ed_tile_size": "Kachelgröße",
     "ed_tile_size_small": "Klein",
-    "ed_tile_size_medium": "Mittel",
+    "ed_tile_size_compact": "Kompakt",
+    "ed_tile_size_medium": "Normal",
     "ed_tile_size_large": "Groß",
     "due_quick_week": "In 1 Woche",
     "due_quick_month": "In 1 Monat",
@@ -4872,10 +4888,11 @@ function _listMinWidth(col) {
   return Number.isFinite(n) ? Math.max(80, Math.min(600, n)) : null;
 }
 
-// tile_size: "small" | "medium" | "large", or a minimum tile width in px
-// (60-400). Medium is the built-in size and the default (140px, 100px in
-// compact mode), so it sets nothing - same as leaving tile_size unset.
-const _TILE_SIZES = { small: 80, large: 200 };
+// tile_size: "small" | "compact" | "medium" | "large", or a minimum tile
+// width in px (60-400). Medium ("Normal") is the built-in size and the
+// default (140px), so it sets nothing - same as leaving tile_size unset.
+// The compact switch doesn't change the tile size.
+const _TILE_SIZES = { small: 80, compact: 100, large: 200 };
 function _tileMinWidth(col) {
   const v = col && col.tile_size;
   if (v == null || v === "" || v === "medium") return null;
@@ -12871,7 +12888,8 @@ class HomeTasksCard extends HTMLElement {
       }
 
       /* Compact tile variant */
-      .compact .tile-grid-inner { grid-template-columns: repeat(auto-fill, minmax(var(--ht-tile-min, 100px), 1fr)); gap: 7px; }
+      /* No tile width here: the size is tile_size's alone (100px is "compact"). */
+      .compact .tile-grid-inner { gap: 7px; }
       .compact .task-tile { border-radius: 10px; }
       .compact .tile-title { font-size: 11px; }
 
@@ -14446,7 +14464,7 @@ class HomeTasksCardEditor extends HTMLElement {
           ? makeSelect(
             "ed_tile_size",
             [
-              ["small", "ed_tile_size_small"], ["medium", "ed_tile_size_medium"], ["large", "ed_tile_size_large"],
+              ["small", "ed_tile_size_small"], ["compact", "ed_tile_size_compact"], ["medium", "ed_tile_size_medium"], ["large", "ed_tile_size_large"],
               // A width in px set in YAML: shown as itself, kept unless changed.
               ...(_tileMinWidth(col) && !_TILE_SIZES[col.tile_size]
                 ? [[String(col.tile_size), `${_tileMinWidth(col)} px`]] : []),
