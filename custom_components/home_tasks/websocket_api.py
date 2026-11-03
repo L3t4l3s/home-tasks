@@ -2260,6 +2260,14 @@ async def _cleanup_orphan_image(hass, old_url: str | None, new_url: str | None) 
         for t in tasks:
             if _local_image_name(t.get("image_url")) == old_name:
                 return  # still referenced — keep the file
+    # The library may still hand the file out for that title on the next
+    # generation; it drops its own entries (forget, eviction) before asking
+    # here, so one that is left is still wanted.
+    library = async_get_image_library(hass)
+    if library is not None and any(
+        _local_image_name(url) == old_name for url in library.entries
+    ):
+        return
     import os
     path = hass.config.path("www", "home_tasks", old_name)
     thumb = os.path.splitext(path)[0] + "_thumb.webp"
@@ -2601,6 +2609,7 @@ async def _async_generate_task_image(
         task = store.get_task(task_id)
 
     title = task.get("title", "")
+    old_image_url = task.get("image_url")
     title_key = title.strip().lower()
     title_hash = hashlib.md5(title_key.encode(), usedforsecurity=False).hexdigest()[:16]
 
@@ -2743,7 +2752,16 @@ async def _async_generate_task_image(
 
     # Convert auth-required internal URLs to public /media/local/ URLs so
     # the Lovelace card can display them without auth headers.
-    image_filename = f"{title_hash}.png"
+    # The shared pool uses one file per title. A list that keeps its
+    # pictures to itself needs a file of its own as well — named by the
+    # title alone, the same chore drawn on another list overwrote this
+    # list's picture on disk, sharing switch or not.
+    if shares:
+        image_filename = f"{title_hash}.png"
+    else:
+        list_key = (todo_entity_id if overlay_store else entry_id) or ""
+        list_hash = hashlib.md5(list_key.encode(), usedforsecurity=False).hexdigest()[:8]
+        image_filename = f"{title_hash}_{list_hash}.png"
     image_url = await _save_image_to_public_media(hass, connection, image_url, image_filename)
 
     # Never persist an unresolved media-source:// URI — the browser can't
@@ -2802,6 +2820,9 @@ async def _async_generate_task_image(
             )
 
     await _async_remember_image(hass, title, image_url, shares)
+    # A list that moved to a file of its own leaves the one it used before;
+    # reclaim it unless another task (or the library) still uses it.
+    await _cleanup_orphan_image(hass, old_image_url, image_url)
     return {"task": updated_task, "reused": False}
 
 

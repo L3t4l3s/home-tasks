@@ -1149,6 +1149,208 @@ async def test_list_with_sharing_off_still_shares_inside_itself(
     assert store.get_task(b["id"])["image_url"] == store.get_task(a["id"])["image_url"]
 
 
+async def test_list_with_sharing_off_gets_its_own_file(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store
+) -> None:
+    """The same title on two opted-out lists must not land in one file.
+
+    The file was named by the title alone, so drawing "Zimmer aufräumen" for
+    Kid B overwrote Kid A's picture on disk — both tasks kept their own
+    entry, but it pointed at the same, replaced, file.
+    """
+    from unittest.mock import AsyncMock, patch
+
+    from homeassistant.core import SupportsResponse
+
+    entry_b = MockConfigEntry(domain=DOMAIN, data={"name": "Kid B"}, title="Kid B")
+    entry_b.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry_b.entry_id)
+    await hass.async_block_till_done()
+    store_b = hass.data[DOMAIN][entry_b.entry_id]
+    entry_c = MockConfigEntry(domain=DOMAIN, data={"name": "Kid C"}, title="Kid C")
+    entry_c.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry_c.entry_id)
+    await hass.async_block_till_done()
+    store_c = hass.data[DOMAIN][entry_c.entry_id]
+
+    client = await hass_ws_client(hass)
+    for i, entry_id in enumerate((mock_config_entry.entry_id, entry_b.entry_id)):
+        await client.send_json({
+            "id": 440 + i,
+            "type": "home_tasks/set_list_settings",
+            "list_id": entry_id,
+            "share_images": False,
+        })
+        assert (await client.receive_json())["success"] is True
+
+    a = await store.async_add_task("Zimmer aufräumen")
+    b = await store_b.async_add_task("Zimmer aufräumen")
+    c = await store_c.async_add_task("Zimmer aufräumen")
+
+    hass.services.async_register(
+        "ai_task",
+        "generate_image",
+        AsyncMock(return_value={"media_source_id": "media-source://media_source/g.png"}),
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+    filenames = {}
+
+    async def fake_save(_hass, _conn, _url, filename):
+        filenames[len(filenames)] = filename
+        return f"/local/home_tasks/{filename}"
+
+    with patch(
+        "custom_components.home_tasks.websocket_api._save_image_to_public_media",
+        new=fake_save,
+    ):
+        for i, (entry_id, task) in enumerate(
+            ((mock_config_entry.entry_id, a), (entry_b.entry_id, b), (entry_c.entry_id, c))
+        ):
+            await client.send_json({
+                "id": 450 + i,
+                "type": "home_tasks/generate_task_image",
+                "entry_id": entry_id,
+                "task_id": task["id"],
+                "entity_id": "ai_task.test",
+                "force": True,
+            })
+            msg = await client.receive_json()
+            assert msg["success"] is True, msg
+
+    file_a, file_b, file_c = filenames[0], filenames[1], filenames[2]
+    assert file_a != file_b, "two opted-out lists, two files"
+    assert file_c not in (file_a, file_b), "the shared pool's file is neither of them"
+    assert store.get_task(a["id"])["image_url"].split("?")[0].endswith(file_a)
+    assert store_b.get_task(b["id"])["image_url"].split("?")[0].endswith(file_b)
+
+
+async def test_linked_list_with_sharing_off_gets_its_own_file(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store, external_config_entry
+) -> None:
+    """Linked lists are told apart by their todo entity, not by entry_id."""
+    from unittest.mock import AsyncMock, patch
+
+    from homeassistant.components.todo import TodoItem, TodoItemStatus
+    from homeassistant.core import SupportsResponse
+
+    await _two_external_lists(hass, {
+        "todo.ws_external": [
+            TodoItem(uid="ext-own-1", summary="Zimmer aufräumen", status=TodoItemStatus.NEEDS_ACTION)
+        ],
+    })
+    a = await store.async_add_task("Zimmer aufräumen")
+
+    client = await hass_ws_client(hass)
+    for i, target in enumerate(({"list_id": mock_config_entry.entry_id}, {"entity_id": "todo.ws_external"})):
+        await client.send_json({
+            "id": 460 + i, "type": "home_tasks/set_list_settings", **target, "share_images": False,
+        })
+        assert (await client.receive_json())["success"] is True
+
+    hass.services.async_register(
+        "ai_task",
+        "generate_image",
+        AsyncMock(return_value={"media_source_id": "media-source://media_source/g.png"}),
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+    filenames = []
+
+    async def fake_save(_hass, _conn, _url, filename):
+        filenames.append(filename)
+        return f"/local/home_tasks/{filename}"
+
+    with patch(
+        "custom_components.home_tasks.websocket_api._save_image_to_public_media",
+        new=fake_save,
+    ):
+        for i, target in enumerate((
+            {"entry_id": mock_config_entry.entry_id, "task_id": a["id"]},
+            {"todo_entity_id": "todo.ws_external", "task_id": "ext-own-1"},
+        )):
+            await client.send_json({
+                "id": 470 + i, "type": "home_tasks/generate_task_image", **target,
+                "entity_id": "ai_task.test", "force": True,
+            })
+            msg = await client.receive_json()
+            assert msg["success"] is True, msg
+
+    assert len(filenames) == 2 and filenames[0] != filenames[1]
+
+
+async def test_moving_to_an_own_file_reclaims_the_old_one(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store
+) -> None:
+    """A list that stopped sharing draws into a file of its own; the shared
+    file it used before goes once nothing points at it any more."""
+    import os
+    from unittest.mock import AsyncMock, patch
+
+    from homeassistant.core import SupportsResponse
+
+    www = hass.config.path("www", "home_tasks")
+    os.makedirs(www, exist_ok=True)
+    old_path = os.path.join(www, "oldshared.png")
+    with open(old_path, "wb") as fh:
+        fh.write(b"x")
+    a = await store.async_add_task("Zimmer aufräumen")
+    await store.async_update_task(a["id"], image_url="/local/home_tasks/oldshared.png?v=1")
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 480, "type": "home_tasks/set_list_settings",
+        "list_id": mock_config_entry.entry_id, "share_images": False,
+    })
+    assert (await client.receive_json())["success"] is True
+
+    hass.services.async_register(
+        "ai_task",
+        "generate_image",
+        AsyncMock(return_value={"media_source_id": "media-source://media_source/g.png"}),
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+
+    async def fake_save(_hass, _conn, _url, filename):
+        return f"/local/home_tasks/{filename}"
+
+    with patch(
+        "custom_components.home_tasks.websocket_api._save_image_to_public_media",
+        new=fake_save,
+    ):
+        await client.send_json({
+            "id": 481, "type": "home_tasks/generate_task_image",
+            "entry_id": mock_config_entry.entry_id, "task_id": a["id"],
+            "entity_id": "ai_task.test", "force": True,
+        })
+        msg = await client.receive_json()
+    assert msg["success"] is True, msg
+    assert not os.path.exists(old_path), "nothing uses the old file any more"
+
+
+async def test_cleanup_keeps_a_file_the_library_still_hands_out(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """No task uses it any more, but the library would serve it for that title."""
+    import os
+
+    from custom_components.home_tasks.image_library import async_get_image_library
+    from custom_components.home_tasks.websocket_api import _cleanup_orphan_image
+
+    www = hass.config.path("www", "home_tasks")
+    os.makedirs(www, exist_ok=True)
+    path = os.path.join(www, "remembered.png")
+    with open(path, "wb") as fh:
+        fh.write(b"x")
+    library = async_get_image_library(hass)
+    assert library is not None
+    await library.async_remember("Zimmer aufräumen", "/local/home_tasks/remembered.png?v=1")
+
+    await _cleanup_orphan_image(hass, "/local/home_tasks/remembered.png?v=1", "/local/home_tasks/new.png")
+    assert os.path.exists(path)
+
+    await library.async_forget("/local/home_tasks/remembered.png?v=1")
+    assert not os.path.exists(path), "forgotten by the library and unused: gone"
+
+
 async def test_list_settings_round_trip(
     hass: HomeAssistant, hass_ws_client, mock_config_entry, external_config_entry
 ) -> None:
