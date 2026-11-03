@@ -165,6 +165,7 @@ jobs:
           git push -f origin "refs/tags/v$VERSION"
           gh release edit "$OLD_TAG" \
             --tag "v$VERSION" \
+            --target "$(git rev-parse HEAD)" \
             --title "v$VERSION" \
             --prerelease \
             --notes-file "$NOTES_FILE"
