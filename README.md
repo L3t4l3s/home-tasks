@@ -1,3 +1,5 @@
+<center>
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/custom_components/home_tasks/brand/icon@2x.png" width="96" alt="Home Tasks icon">
 </p>
@@ -18,6 +20,8 @@
   <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/header-light.png" height="460" alt="A household list with people, tags and recurring tasks">
   <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/header-chores.png" height="460" alt="Kids chores as picture tiles in the Frosted Glass theme">
 </p>
+
+</center>
 
 ## What is Home Tasks?
 
@@ -59,14 +63,14 @@ Already using **Todoist, Google Tasks, Nextcloud, Bring** or another to-do app? 
 
 ## Contents
 
-- ✨ [Features](#features)
-- 📊 [Entities](#entities)
-- 📦 [Installation](#installation)
-- ⚙️ [Setup](#setup) — lists, linked lists and their providers, AI pictures
-- 🎨 [Card configuration](#card-configuration) — options, list defaults, styling, examples
-- 🤖 [Automations](#automations) — events, services, example automations
-- 🗣️ [View Assist](#view-assist)
-- ❤️ [Support](#support)
+- ✨ [Features](https://github.com/L3t4l3s/home-tasks#features)
+- 📊 [Entities](https://github.com/L3t4l3s/home-tasks#entities)
+- 📦 [Installation](https://github.com/L3t4l3s/home-tasks#installation)
+- ⚙️ [Setup](https://github.com/L3t4l3s/home-tasks#setup) — lists, linked lists and their providers, AI pictures
+- 🎨 [Card configuration](https://github.com/L3t4l3s/home-tasks#card-configuration) — options, list defaults, styling, examples
+- 🤖 [Automations](https://github.com/L3t4l3s/home-tasks#automations) — events, services, example automations
+- 🗣️ [View Assist](https://github.com/L3t4l3s/home-tasks#view-assist)
+- ❤️ [Support](https://github.com/L3t4l3s/home-tasks#support)
 
 ---
 
@@ -95,16 +99,16 @@ Already using **Todoist, Google Tasks, Nextcloud, Bring** or another to-do app? 
 - **Filter and sort** — open/done/due soon, by date, priority, title or person; tap a tag or person chip to filter
 - **Task details inline** — edit every field; fold the ones you rarely need; one-tap due dates (today, tomorrow, in 1 week …)
 - **Voice input** — dictate a task with the mic button (Home Assistant Assist, or the browser's speech recognition)
-- **Pictures and AI** — a picture per task from your media, or drawn by AI from its title and reused for every task with that title ([setup](#task-pictures-and-ai-generation))
-- **Linked to-do lists** — Todoist, Google Tasks, Nextcloud/CalDAV, Bring and more in the same card, with every Home Tasks feature ([providers](#linked-lists))
+- **Pictures and AI** — a picture per task from your media, or drawn by AI from its title and reused for every task with that title ([setup](https://github.com/L3t4l3s/home-tasks#task-pictures-and-ai-generation))
+- **Linked to-do lists** — Todoist, Google Tasks, Nextcloud/CalDAV, Bring and more in the same card, with every Home Tasks feature ([providers](https://github.com/L3t4l3s/home-tasks#linked-lists))
 - **Duplicate, move, auto-delete completed** — per task or per list
 - **Compact mode**, smooth animations, and a **visual editor** for all of it
 
 ### Home Assistant integration
 
-- **7 automation events** — created, completed, reopened, due, overdue, assigned, reminder ([Events](#events))
-- **Services** — add (also from a spoken sentence), update, move, complete, reopen, assign and read tasks ([Services](#services))
-- **[View Assist](#view-assist)** — a ready-made view and blueprints for voice satellites with a screen
+- **7 automation events** — created, completed, reopened, due, overdue, assigned, reminder ([Events](https://github.com/L3t4l3s/home-tasks#events))
+- **Services** — add (also from a spoken sentence), update, move, complete, reopen, assign and read tasks ([Services](https://github.com/L3t4l3s/home-tasks#services))
+- **[View Assist](https://github.com/L3t4l3s/home-tasks#view-assist)** — a ready-made view and blueprints for voice satellites with a screen
 
 ### Languages
 
@@ -139,7 +143,7 @@ Home Tasks is in the catalog of the Marketplace that is built into Home Assistan
 
 1. Click the button above — or go to **Settings** → **Marketplace** and search for **Home Tasks**
 2. Click **Download**
-3. Set it up as described under [Setup](#setup) — a first install needs no restart; after an update, Home Assistant offers the restart as a repair
+3. Set it up as described under [Setup](https://github.com/L3t4l3s/home-tasks#setup) — a first install needs no restart; after an update, Home Assistant offers the restart as a repair
 
 An existing HACS installation carries over when you update to 2026.11: Home Tasks stays installed and keeps getting its updates through the Marketplace.
 
@@ -229,9 +233,13 @@ Pictures are stored in `config/www/home_tasks/` and reused for every task with t
 
 All options are available in the visual card editor. The examples below cover the most common setups.
 
+<center>
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/Card-editor.png" width="700" alt="The visual card editor">
 </p>
+
+</center>
 
 ### Column option reference
 
@@ -309,7 +317,7 @@ The old flat format (`list_id` at root level) is still supported and migrated au
 Each list — native or linked — can preset new tasks (card editor → *Defaults*): assignees, reminders, tags, priority and section. They apply however a task is created: card, voice, service or `todo.add_item`; values given when creating it win. The same place sets:
 
 - **Fixed tags** — always suggested in the tag input, and a near-miss typo (`kitchn`) offers the fixed tag instead
-- **Reopen early** — a list-wide lead for recurring tasks ([Tasks](#tasks))
+- **Reopen early** — a list-wide lead for recurring tasks ([Tasks](https://github.com/L3t4l3s/home-tasks#tasks))
 
 ### Styling
 
@@ -395,7 +403,7 @@ columns:
 
 <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/meals.png" alt="Meals in tile view with pictures">
 
-A visual board in [tile view](#dashboard-card) — each task is a card with its (optionally AI-generated) image. Great for meal plans, recipes, or anything where the picture matters. Tap to complete, long-press for details.
+A visual board in [tile view](https://github.com/L3t4l3s/home-tasks#dashboard-card) — each task is a card with its (optionally AI-generated) image. Great for meal plans, recipes, or anything where the picture matters. Tap to complete, long-press for details.
 
 ```yaml
 type: custom:home-tasks-card
@@ -414,7 +422,7 @@ columns:
 
 <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/usecase-chores.png" alt="Kids chores in tile view with comic-style images">
 
-Kid-friendly [tile view](#dashboard-card) — each chore is a picture card with a playful, AI-generated comic image (prompt prefix `Comic style illustration for kids:`). Tap to complete. Person assignment and weekday recurrence still run underneath.
+Kid-friendly [tile view](https://github.com/L3t4l3s/home-tasks#dashboard-card) — each chore is a picture card with a playful, AI-generated comic image (prompt prefix `Comic style illustration for kids:`). Tap to complete. Person assignment and weekday recurrence still run underneath.
 
 ```yaml
 type: custom:home-tasks-card
@@ -475,9 +483,13 @@ columns:
 
 ### Multi-Column Example: Kanban Board
 
+<center>
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/Multi-column-kanban.png" width="820" alt="Multi-column Kanban board">
 </p>
+
+</center>
 
 Multiple lists displayed side-by-side on a single card. Tasks can be dragged between columns. Extend `grid_options` to give the card more horizontal space.
 
@@ -542,7 +554,7 @@ Every task service works on a **linked list** too: name it with `list_name` as u
 | `image_url` | no | A picture: `https://…`, `/local/…` or a `media-source://` id. A media-source id or an internal HA path is copied to `/local/home_tasks` so every device can load it; a URL is kept as given |
 | `generate_image` | no | `true` draws the picture with the AI task entity of the list's card, like the card's button (not together with `image_url`) |
 | `position` | no | `top` or `bottom` of the list's manual order (default: bottom); in the card that is within the task's section |
-| `recurrence_…` | no | Make it recurring — see [Recurrence fields](#recurrence-fields) |
+| `recurrence_…` | no | Make it recurring — see [Recurrence fields](https://github.com/L3t4l3s/home-tasks#recurrence-fields) |
 
 #### `home_tasks.add_task_from_text`
 
@@ -638,7 +650,7 @@ Update any field of an existing task, found by `task_id` or `task_title`. Only t
 | `image_url` | no | A picture, as for `add_task`; empty removes it |
 | `generate_image` | no | `true` draws a new picture, even when the task has one |
 | `position` | no | `top` or `bottom` moves the task to that end of the list's manual order, within its section in the card |
-| `recurrence_…` | no | Change the recurrence — see [Recurrence fields](#recurrence-fields) |
+| `recurrence_…` | no | Change the recurrence — see [Recurrence fields](https://github.com/L3t4l3s/home-tasks#recurrence-fields) |
 
 #### Recurrence fields
 
@@ -658,7 +670,7 @@ makes the task recurring; `recurrence_enabled: false` switches it off.
 | `recurrence_anchor` | Without a fixed day: count from the `completion` (default) or the `due` date |
 | `recurrence_start_date` / `recurrence_time` | Start date, and the time of day it becomes due |
 | `recurrence_end_date` / `recurrence_max_count` | End after a date, or after a number of repetitions (one of them; empty = no end) |
-| `recurrence_reopen_lead` | [Reopen early](#list-defaults), in minutes, shorter than the interval — Home Tasks lists only. Left out, a task that starts recurring takes the list's default |
+| `recurrence_reopen_lead` | [Reopen early](https://github.com/L3t4l3s/home-tasks#list-defaults), in minutes, shorter than the interval — Home Tasks lists only. Left out, a task that starts recurring takes the list's default |
 | `recurrence_enabled` | `false` switches recurrence off, keeping its settings for later |
 
 A combination the card wouldn't offer — a day of month on a weekly task, a
