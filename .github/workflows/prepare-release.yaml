@@ -13,6 +13,13 @@ name: Prepare release
 # input cannot carry them: workflow_dispatch inputs are single-line fields and
 # drop the newlines of pasted Markdown. Without the file, GitHub generates
 # the notes as before.
+#
+# "Update the newest pre-release" rebuilds the newest release instead of
+# creating one: it must still be a pre-release (a published release is never
+# changed under the people who installed it). The release keeps its page and
+# gets the new tag, title and zip; a renamed version deletes the old tag.
+# Without RELEASE_NOTES.md it keeps its notes, with the version in the
+# heading and the compare link moved along.
 
 on:
   workflow_dispatch:
@@ -21,12 +28,20 @@ on:
         description: "Release version, e.g. 1.12.3 (no leading v)"
         required: true
         type: string
+      update_prerelease:
+        description: "Update the newest pre-release instead of creating a new one"
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   prepare:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      UPDATE: ${{ inputs.update_prerelease }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -41,7 +56,27 @@ jobs:
             echo "::error::Version '$VERSION' must be X.Y.Z (digits and dots only)"
             exit 1
           fi
-          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+          if [ "$UPDATE" = "true" ]; then
+            NEWEST="$(gh release list --exclude-drafts --limit 1 \
+              --json tagName,isPrerelease -q '.[0] | "\(.tagName) \(.isPrerelease)"')"
+            OLD_TAG="${NEWEST% *}"
+            if [ -z "$OLD_TAG" ]; then
+              echo "::error::There is no release to update"
+              exit 1
+            fi
+            if [ "${NEWEST#* }" != "true" ]; then
+              echo "::error::The newest release $OLD_TAG is published, not a pre-release - cut a new version instead"
+              exit 1
+            fi
+            if [ "$(git rev-parse "$OLD_TAG^{commit}")" = "$(git rev-parse HEAD)" ] \
+               && [ "$OLD_TAG" = "v$VERSION" ] && [ ! -f RELEASE_NOTES.md ]; then
+              echo "::error::$OLD_TAG is already at the head of main - nothing to update"
+              exit 1
+            fi
+            echo "OLD_TAG=$OLD_TAG" >> "$GITHUB_ENV"
+            echo "NEW_COMMITS=$(git rev-list --count "$OLD_TAG..HEAD")" >> "$GITHUB_ENV"
+          fi
+          if git rev-parse "v$VERSION" >/dev/null 2>&1 && [ "v$VERSION" != "$OLD_TAG" ]; then
             echo "::error::Tag v$VERSION already exists"
             exit 1
           fi
@@ -66,6 +101,14 @@ jobs:
             grep -q "v$VERSION" "$RUNNER_TEMP/release-notes.md" \
               || echo "::warning::RELEASE_NOTES.md does not mention v$VERSION - notes for another version?"
             echo "NOTES_FILE=$RUNNER_TEMP/release-notes.md" >> "$GITHUB_ENV"
+          elif [ -n "$OLD_TAG" ]; then
+            # Keep the notes; only the heading and the compare link name the version.
+            OLD_RE="${OLD_TAG//./\\.}"
+            gh release view "$OLD_TAG" --json body -q .body \
+              | sed -E "s/^(#+ *)$OLD_RE\b/\1v$VERSION/; s/\.\.\.$OLD_RE\b/...v$VERSION/g" \
+              > "$RUNNER_TEMP/release-notes.md"
+            echo "NOTES_FILE=$RUNNER_TEMP/release-notes.md" >> "$GITHUB_ENV"
+            echo "::notice::No RELEASE_NOTES.md on main - $OLD_TAG keeps its notes."
           else
             echo "::notice::No RELEASE_NOTES.md on main - GitHub generates the notes."
           fi
@@ -77,6 +120,10 @@ jobs:
           git add custom_components/home_tasks/manifest.json \
                   custom_components/home_tasks/home-tasks-card.js
           if git diff --staged --quiet; then
+            if [ -n "$OLD_TAG" ]; then
+              echo "::notice::Version is already $VERSION - nothing to commit, the release moves to the head of main."
+              exit 0
+            fi
             echo "::error::Nothing changed — is the version already $VERSION?"
             exit 1
           fi
@@ -89,9 +136,16 @@ jobs:
           zip -r ../../home_tasks.zip .
           unzip -l ../../home_tasks.zip
 
+      - name: Check the zip carries the version
+        run: |
+          ZIPPED="$(unzip -p home_tasks.zip manifest.json | jq -r .version)"
+          if [ "$ZIPPED" != "$VERSION" ]; then
+            echo "::error::home_tasks.zip has version '$ZIPPED', expected '$VERSION'"
+            exit 1
+          fi
+
       - name: Create tag and pre-release with zip asset
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ !inputs.update_prerelease }}
         run: |
           if [ -n "$NOTES_FILE" ]; then
             NOTES_ARGS=(--notes-file "$NOTES_FILE")
@@ -103,3 +157,22 @@ jobs:
             --title "v$VERSION" \
             --prerelease \
             "${NOTES_ARGS[@]}"
+
+      - name: Move the pre-release to the new tag and zip
+        if: ${{ inputs.update_prerelease }}
+        run: |
+          git tag -f "v$VERSION" HEAD
+          git push -f origin "refs/tags/v$VERSION"
+          gh release edit "$OLD_TAG" \
+            --tag "v$VERSION" \
+            --title "v$VERSION" \
+            --prerelease \
+            --notes-file "$NOTES_FILE"
+          gh release upload "v$VERSION" home_tasks.zip --clobber
+          if [ "$OLD_TAG" != "v$VERSION" ]; then
+            git push origin --delete "refs/tags/$OLD_TAG"
+          fi
+          {
+            echo "### Pre-release updated"
+            echo "$OLD_TAG → v$VERSION at $(git rev-parse --short HEAD), $NEW_COMMITS commit(s) of main since $OLD_TAG."
+          } >> "$GITHUB_STEP_SUMMARY"
