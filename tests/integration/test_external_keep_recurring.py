@@ -1,11 +1,12 @@
 """Issue #88 on linked lists: a recurring task deleted, ticked or reopened in
 the provider's own app (phone, Thunderbird, HA's to-do view)."""
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock
 
 import pytest
 from homeassistant.components.todo import TodoItem, TodoItemStatus
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.home_tasks import (
@@ -346,13 +347,16 @@ async def test_an_unavailable_list_changes_nothing(hass: HomeAssistant, ext_entr
 async def test_put_back_on_a_due_anchored_series_moves_the_due_on(hass: HomeAssistant, ext_entry) -> None:
     entity = _provider(hass, [TodoItem(uid="t1", summary="Bins", status=TodoItemStatus.COMPLETED)])
     store = _overlay(hass, ext_entry)
-    await store.async_set_overlay("t1", due_date="2026-10-24", recurrence_anchor="due", **RECURRING)
+    # Due a few days ahead, so the next occurrence is one week on — fixed
+    # dates turned into a late completion (a catch-up) once they had passed.
+    due = dt_util.now().date() + timedelta(days=3)
+    await store.async_set_overlay("t1", due_date=due.isoformat(), recurrence_anchor="due", **RECURRING)
     await _handle_external_recurrence_completion(hass, ext_entry.entry_id, ENTITY, "t1")
     _cleanup(hass, "t1")
     entity.todo_items = []
     await _async_reopen_external_task(hass, ext_entry.entry_id, ENTITY, "t1")
     new_uid = entity.todo_items[0].uid
-    assert store.get_all_overlays()[new_uid]["due_date"] == "2026-10-31"
+    assert store.get_all_overlays()[new_uid]["due_date"] == (due + timedelta(days=7)).isoformat()
 
 
 async def test_after_a_restart_a_task_gone_at_the_provider_still_reopens(hass: HomeAssistant, ext_entry) -> None:
