@@ -66,7 +66,7 @@ Already using **Todoist, Google Tasks, Nextcloud, Bring** or another to-do app? 
 - ✨ [Features](https://github.com/L3t4l3s/home-tasks#features)
 - 📊 [Entities](https://github.com/L3t4l3s/home-tasks#entities)
 - 📦 [Installation](https://github.com/L3t4l3s/home-tasks#installation)
-- ⚙️ [Setup](https://github.com/L3t4l3s/home-tasks#setup) — lists, linked lists and their providers, AI pictures
+- ⚙️ [Setup](https://github.com/L3t4l3s/home-tasks#setup) — lists, linked lists and their providers, day plans, AI pictures
 - 🎨 [Card configuration](https://github.com/L3t4l3s/home-tasks#card-configuration) — options, list defaults, styling, examples
 - 🤖 [Automations](https://github.com/L3t4l3s/home-tasks#automations) — events, services, example automations
 - 🗣️ [View Assist](https://github.com/L3t4l3s/home-tasks#view-assist)
@@ -94,6 +94,7 @@ Already using **Todoist, Google Tasks, Nextcloud, Bring** or another to-do app? 
 
 - **List or tile view** per list — rows with every detail one tap away, or a picture grid where you tap a tile to tick it off
 - **Several lists side by side** in one card, e.g. as a Kanban board
+- **Day plan card** — today and the days after it side by side, with the tasks you picked for each day and the ones due on it, from all your lists ([day plan card](https://github.com/L3t4l3s/home-tasks#day-plan-card))
 - **Sections** — group a list under headers like store aisles, rooms or project phases; every dashboard shows the same ones
 - **Drag & drop** — reorder, sort into sections, or move tasks to another list
 - **Filter and sort** — open/done/due soon, by date, priority, title or person; tap a tag or person chip to filter
@@ -108,6 +109,7 @@ Already using **Todoist, Google Tasks, Nextcloud, Bring** or another to-do app? 
 
 - **7 automation events** — created, completed, reopened, due, overdue, assigned, reminder ([Events](https://github.com/L3t4l3s/home-tasks#events))
 - **Services** — add (also from a spoken sentence), update, move, complete, reopen, assign and read tasks ([Services](https://github.com/L3t4l3s/home-tasks#services))
+- **Tools for AI assistants** — every [day plan](https://github.com/L3t4l3s/home-tasks#day-plans) offers its own set of tools to conversation agents and to Home Assistant's MCP Server ([Day plans and AI assistants](https://github.com/L3t4l3s/home-tasks#day-plans-and-ai-assistants))
 - **[View Assist](https://github.com/L3t4l3s/home-tasks#view-assist)** — a ready-made view and blueprints for voice satellites with a screen
 
 ### Languages
@@ -128,6 +130,12 @@ For each list — native and linked — the integration creates:
 | `binary_sensor.{list_name}_overdue` | `on` while a task is overdue. Attributes: `overdue_tasks`, `overdue_count` |
 
 On a linked list, the sensors are `unavailable` while the provider is, so an outage never reads as an empty list.
+
+For each [day plan](https://github.com/L3t4l3s/home-tasks#day-plans):
+
+| Entity | What it shows |
+|--------|---------------|
+| `sensor.{plan_name}_open_items` | Number of tasks still open on the plan today. Attributes: `date`, `done`, `total`, `note` |
 
 ---
 
@@ -199,6 +207,94 @@ Anything a provider can't store — priority, tags, sub-tasks, reminders, recurr
 - **Recurrence** runs in Home Tasks for providers that have none; Todoist keeps its own.
 - **Google Tasks** — Google's API has no due times and no recurrence ([open issue](https://issuetracker.google.com/issues/36759725)); the recurrence in Google's web UI never reaches the API. Use Home Tasks' recurrence instead.
 - **Todoist** — Home Tasks talks to the Todoist API directly, with the token of your existing Todoist integration; no extra setup. Not synced: comments, attachments, Todoist sections, task duration, label colors, deadlines, favorites and saved filters.
+
+### Day Plans
+
+A day plan is a view across your lists: for today and the days after it, which
+tasks are meant for which day, and in what order. The tasks stay in their
+lists — the plan only refers to them. Checking a task off in its list shows on
+the plan, and taking a task off the plan leaves the task as it is.
+
+1. Go to **Settings → Devices & Services → Add Integration → Home Tasks**
+2. Select **"Create a day plan"** and name it (e.g. *Today*)
+3. Optional: **Configure** on the plan's entry
+
+| Setting | Default | What it does |
+|---------|---------|--------------|
+| Lists | all | The lists the plan may show tasks from — e.g. only your work lists. Lists added later belong to an "all lists" plan automatically. A chosen list that is deleted later keeps limiting the plan (shown as *Deleted list*) until you take it out |
+| Workdays | every day | The days the plan has. Other days are skipped: with Monday–Friday, the day after Friday is Monday |
+| Show tasks with a due date on their day | on | A task with a due date is on its day without being planned. Overdue tasks are on today; a task due on a day off is on the workday before it. Such a task can be moved to another day, but not taken off the plan |
+| Unfinished tasks of the last planned day | offer | `get_day_plan` offers them as `carry_over` while nothing is planned for today — or they come over automatically, or not at all |
+
+A plan covers its current day and the six plan days after it. From today on a
+task sits on one day only: planning it for another day moves it. Past days are
+kept for two weeks.
+
+Show a plan with the [day plan card](https://github.com/L3t4l3s/home-tasks#day-plan-card), and
+fill it there, with the [plan services](https://github.com/L3t4l3s/home-tasks#day-plan-services), or let an
+[assistant](https://github.com/L3t4l3s/home-tasks#day-plans-and-ai-assistants) do it. In a list card, a task
+of a list that a plan draws from has **Plan for…** in its details.
+
+#### Day plans and AI assistants
+
+Every day plan offers a **set of tools** for an AI assistant, named after the
+plan. With it an assistant can read and write the tasks of the plan's lists
+and put the day together — with priorities, tags, assignees and the working
+order, none of which it gets from plain to-do entities.
+
+The set reaches the plan and its lists, and nothing else: no devices, no
+other lists. A plan over your work lists gives an assistant your work tasks
+and not the house.
+
+The tools are marked as reading, changing or deleting, which Home Assistant's
+MCP Server passes on: a read-only connection gets `get_tasks`, `get_task` and
+`get_plan` only, and a client can ask before it runs a tool that deletes.
+
+| Tool | What it does |
+|------|--------------|
+| `home_tasks__get_tasks` | Reads the tasks of the plan's lists, with all fields. Filters: lists, status, tag, person, due |
+| `home_tasks__get_task` | Reads all of one task: also its reminders, how it recurs, its section, its picture and its recent history |
+| `home_tasks__add_task` | Creates a task in one of the plan's lists — with notes, due date, priority, tags, assignees, sub-tasks, section, reminders, recurrence, position, picture |
+| `home_tasks__update_task` | Changes fields of a task; `null` clears a due date, a priority, the notes, the section or the picture and switches recurring off |
+| `home_tasks__complete_task` | Marks a task as done |
+| `home_tasks__reopen_task` | Opens a completed task again |
+| `home_tasks__delete_task` | Deletes a task for good. The only tool that cannot be undone; the assistant is told to use it only when asked to delete |
+| `home_tasks__move_task` | Moves a task to another list of the plan |
+| `home_tasks__add_sub_task` / `update_sub_task` / `remove_sub_task` | Adds a sub-task, renames it or ticks it off, removes it |
+| `home_tasks__get_plan` | Reads the plan, 1–7 days |
+| `home_tasks__set_plan` | Sets the working order of a day and its note (`merge` or `replace`) |
+| `home_tasks__plan_task` | Puts one task on a day, or moves it there |
+| `home_tasks__unplan_task` | Takes a task off the plan |
+
+Two ways to hand the set to an assistant:
+
+- **A conversation agent in Home Assistant**: in the agent's settings (the
+  configuration of your AI integration), choose the plan among the tools it
+  may use — next to Assist, or instead of it.
+- **An assistant outside Home Assistant**, through the
+  [Model Context Protocol Server](https://www.home-assistant.io/integrations/mcp_server/)
+  integration. There every set of tools has its own address, listed under
+  **Settings → System → AI**; the plan's ends in `/api/mcp/home_tasks-<entry ID>`.
+  Point the assistant's connector at that address and it gets the plan and
+  nothing else. It needs the access token of an administrator account.
+
+Along with the tools the assistant is told how the plan works and how to plan
+a day: keep what is already on today, treat due and overdue tasks as fixed
+points, fill up in working order and write with `merge`, so that nothing you
+planned yourself gets lost. A morning briefing is then one automation:
+
+```yaml
+automation:
+  - alias: Plan my day
+    triggers:
+      - trigger: time
+        at: "07:30:00"
+    actions:
+      - action: conversation.process
+        data:
+          agent_id: conversation.my_agent   # an agent that has the plan's tools
+          text: Plan my day.
+```
 
 ### Task pictures and AI generation
 
@@ -311,6 +407,70 @@ These options live at the **root** of the card config, not inside a column.
 | `grid_options` | — | Standard HA grid sizing (e.g. `columns: 36`, `rows: auto`) |
 
 The old flat format (`list_id` at root level) is still supported and migrated automatically.
+
+### Day plan card
+
+A card type of its own, **Home Tasks: Day plan** in the card picker
+(`custom:home-tasks-day-plan-card`), next to the list card (**Home Tasks:
+List**, `custom:home-tasks-card`). It shows a [day plan](https://github.com/L3t4l3s/home-tasks#day-plans):
+one column per day, the current day first with its focus note and progress.
+Its editor is laid out like a list
+column's: the plan on top, below it the sections *Display* — the number of
+days, a compact mode, the weekend, and switches for the date, the progress
+bar and the focus line of a day — *Task features* — which fields an open row
+shows and in which order, as for a list — and *Lists*, the **lists the plan
+draws from**. The lists and the **weekend** switch are settings of the plan
+itself (its lists and workdays): they are saved at once, and they also apply
+to other cards showing the plan and to the plan's tools for assistants
+(administrators only).
+
+For administrators the editor — the list card's as well — has a link
+**Create a new list or day plan**. It opens the Home Tasks page of Home
+Assistant's settings in a new tab — **Add service** there makes the list or
+the plan; back in the editor, it can be picked. A day plan card that finds no
+plan shows the same link.
+
+```yaml
+type: custom:home-tasks-day-plan-card
+plan: <entry ID of the plan>   # not needed when there is only one plan
+days: 5                        # 1–7 day columns; 1 = today only
+```
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `plan` | the only plan | Entry ID of the plan to show; the card picker and the visual editor fill it in |
+| `days` | `1` | How many plan days to show, 1–7. Days off (see the plan's workdays) are skipped |
+| `title` | — | Optional card title above the days |
+| `show_date` | `true` | The date next to a day's name ("Today, 14 Nov") |
+| `show_progress` | `true` | The progress bar of the current day |
+| `show_focus` | `true` | The focus line of a day. Off hides it altogether, also a focus that is set |
+| `compact` | `false` | Denser rows and day headers |
+
+- **Rows** are tasks of your lists, in the working order of the day. A row's
+  number takes the place of the checkbox: tap it to complete the task. A
+  completed task stays on its day, struck through; a tap on its tick takes
+  the completion back. A recurring task that has already been opened for
+  its next round stays done on the day too — there a tap takes back the
+  day's "done" only: the row is open on the day again, the task and its
+  next due date are left as they are.
+- **Tap a row** to open the task's details — the same editor as in its list.
+  Right at the top are the plan's own actions: to the next day, to another
+  day, off the plan. Tasks that are on a day through their due date can be
+  moved, but not taken off — the row says so where the button would be.
+- **Drag** a row to reorder the day, or onto another day to re-plan it.
+- **Plan a task** under a day searches the open tasks of the plan's lists;
+  the lists show as chips under the search field to narrow it down.
+- **The focus note** of a day is edited by tapping it.
+- When nothing is planned for today yet and the last planned day has open
+  tasks left, the card offers to **carry them over** (plan setting
+  *Unfinished tasks of the last planned day*).
+
+What a row shows is set with the [column options](https://github.com/L3t4l3s/home-tasks#column-option-reference)
+that deal with tasks — `show_priority`, `show_tags`, `person_badge`,
+`compact`, `detail_order` and so on — at the root of the card config. The
+visual editor sets the fields of an open row (*Task features*); the badges on
+a row are YAML. The options that shape a list (filters, sort, sections,
+add-task row, tiles) have no effect here, and neither has `columns`.
 
 ### List defaults
 
@@ -528,6 +688,7 @@ grid_options:
 All events include: `entry_id`, `task_id`, `task_title`, `list_name`, and (if set) `assigned_person` (the primary assignee), `assigned_persons` (everyone assigned, primary first), `due_date`, `due_time`, `priority`, `notes` (truncated to 255 chars), `tags`.
 Events for external lists additionally include `entity_id` (the external todo entity).
 The `home_tasks_task_reminder` event additionally includes `reminder_offset_minutes`.
+The `home_tasks_task_reopened` event additionally includes `reopened_by: recurrence` when the task's recurrence opened it for its next occurrence, rather than somebody un-ticking it.
 The `home_tasks_task_completed` event additionally includes who ticked the task off, when a user did — from the card, the HA todo entity's actions (Companion App, `todo.update_item`) or a service called by a user: `completed_by` (the user's name, as in the task history), `completed_by_user_id`, and `completed_by_person` (the `person.*` linked to that user). The event runs in that user's context, so the logbook names them too. Completions by automations, by the recurrence, in a provider's own app or by an Assist voice command (Home Assistant's todo intents don't pass on who spoke) carry none of these fields.
 
 ### Services
@@ -555,6 +716,9 @@ Every task service works on a **linked list** too: name it with `list_name` as u
 | `generate_image` | no | `true` draws the picture with the AI task entity of the list's card, like the card's button (not together with `image_url`) |
 | `position` | no | `top` or `bottom` of the list's manual order (default: bottom); in the card that is within the task's section |
 | `recurrence_…` | no | Make it recurring — see [Recurrence fields](https://github.com/L3t4l3s/home-tasks#recurrence-fields) |
+
+Returns (with `response_variable`) the new task's `task_id` and the
+`list_name`, so a script can go on working with the task it just created.
 
 #### `home_tasks.add_task_from_text`
 
@@ -595,7 +759,7 @@ with `response_variable`.
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `list_name` / `entry_id` / `entity_id` | * | The list, as for `add_task` |
+| `list_name` / `entry_id` / `entity_id` | * | The list, as for `add_task` — or several, as a YAML list (e.g. `list_name: [Household, Garden]`), for one overview across lists |
 | `status` | no | `open` (default), `completed` or `all` |
 | `assigned_person` | no | Only tasks this person is one of the assignees of (e.g. `person.anna`) |
 | `tag` | no | Only tasks with this tag (case-insensitive) |
@@ -604,7 +768,17 @@ with `response_variable`.
 Returns `list_name`, the list's fixed tags as `tag_catalog`, and `tasks`, in the card's order; each task has `id`,
 `title`, `completed`, `completed_at`, `due_date`, `due_time`,
 `assigned_person`, `tags`, `priority`, `notes`, `section_id`, `sub_items`
-(`id`, `title`, `completed`) and `recurrence_enabled`.
+(`id`, `title`, `completed`), `recurrence_enabled`, the `list_name` and
+`entry_id` of its list, and `last_changed` — when its history last recorded
+something (its creation, a field change, a completion; sub-task edits don't
+count).
+
+With several lists, `tasks` holds them list after list in the order the lists
+were named, and `lists` has each list's `list_name`, `entry_id` and
+`tag_catalog` (the top-level `list_name` and `tag_catalog` are only there for
+a single list). A linked list that cannot be read right now — its provider is
+away, or the list is gone — does not fail the call: its entry in `lists`
+carries an `error` and the other lists' tasks are returned.
 
 A badge count of *my* tasks due today, as a trigger-based template sensor:
 
@@ -638,8 +812,8 @@ Update any field of an existing task, found by `task_id` or `task_title`. Only t
 | `task_title` | ** | Title of the task |
 | `task_id` | ** | UUID of the task |
 | `title` | no | New title |
-| `due_date` | no | Due date (`YYYY-MM-DD`) |
-| `due_time` | no | Due time (`HH:MM`) |
+| `due_date` | no | Due date (`YYYY-MM-DD`); empty (`""`) removes it, and the due time with it |
+| `due_time` | no | Due time (`HH:MM`); empty (`""`) removes it |
 | `notes` | no | Notes text |
 | `assigned_person` | no | Person entity ID |
 | `assigned_persons` | no | Everyone the task is assigned to: comma-separated person entity IDs, the first being the primary (`assigned_person`). Overrides `assigned_person` |
@@ -772,6 +946,38 @@ the requested state — ticking "Milk" twice ticks both.
 ```
 
 *\* Either `list_name` or `entry_id`. \*\* See individual service descriptions for required combinations.*
+
+#### Day plan services
+
+For [day plans](https://github.com/L3t4l3s/home-tasks#day-plans). Every one
+takes `plan` — the plan's name or entry ID, not needed when there is only one
+plan — and `date` (`YYYY-MM-DD`), which defaults to the plan's current day.
+Tasks are named by their ID, as `get_tasks` returns it.
+
+| Service | Fields | What it does |
+|---------|--------|--------------|
+| `home_tasks.get_day_plan` | `days` (1–7, default 1) | Returns `days`, each with `date`, `note` and `items` in working order. Call it with `response_variable` |
+| `home_tasks.set_day_plan` | `items` (task IDs in order), `note`, `mode` | Sets a day's tasks and their order. `mode: merge` (default) keeps what is already on the day, after the tasks named; `replace` takes the rest off, except what is done or there through its due date |
+| `home_tasks.plan_task` | `task_id`, `position` (`top` / `bottom`) | Puts one task on a day, or moves it there |
+| `home_tasks.unplan_task` | `task_id`, `entry_id` (the task's list, only needed when two lists share the ID) | Takes a task off the plan; the task itself is not changed |
+
+Each item of `get_day_plan` has `task_id`, the `entry_id` and `list_name` of its
+list, `title`, `priority`, `tags`, `assigned_person`, `assigned_persons`,
+`due_date`, `due_time`, `completed` and `kind`: `planned` (put there on
+purpose), `due` or `overdue` (there through its due date). A task completed
+while it is on a day stays on that day as done — also a recurring one that has
+opened again for its next round.
+
+```yaml
+- action: home_tasks.get_day_plan
+  data:
+    days: 5
+  response_variable: plan
+- action: home_tasks.set_day_plan
+  data:
+    items: ["{{ first_task_id }}", "{{ second_task_id }}"]
+    note: "Focus: release"
+```
 
 ### Example Automations
 
