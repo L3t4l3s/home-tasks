@@ -1,6 +1,7 @@
 # Plan: several card types over one shared core
 
-Status: stage 1 is built (2026-11-15); stages 2 to 4 are a proposal.
+Status: stages 1 to 3 are built (2026-11-15); stage 4, the timeline card,
+needs a plan of its own.
 
 ## Why
 
@@ -94,7 +95,7 @@ is released, changing it is a migration for users.
   type; the tests about switching the view go.
 - README, `DAY_PLAN_SPEC.md`.
 
-### 2 — A build step, nothing moved in behaviour (medium)
+### 2 — A build step, nothing moved in behaviour (medium) — done
 
 - `esbuild` as a dev dependency; `npm run build` writes the card file and
   takes over what `build:i18n` does (the translations become an import).
@@ -103,23 +104,57 @@ is released, changing it is a migration for users.
 - Tests keep loading the built file through `tests-js/setup.mjs`, unchanged.
 - `validate.yaml`: "run `npm run build` and commit the card".
 - Before starting: every open pull request that touches the card file is
-  merged or closed. A split makes each of them conflict. (An older note
-  lists seven stacked ones; not re-checked for this plan.)
+  merged or closed. A split makes each of them conflict. Checked when it
+  was done: one open pull request (#90), which does not touch the card.
 
-### 3 — Take the core out for real (large; before the timeline card)
+How it was checked: the old file and the bundle, both put through esbuild,
+differ only in how top-level names are declared (`var` instead of `const`,
+classes as expressions) and in where `_htText` stands; the translation
+table is the same as data. The bundle builds the same twice, and every
+module boundary is a comment like `// src/views/list-card.js` in it.
+Comments of the sources do not go into the bundle.
 
-This is the actual decoupling. Today the shared code addresses everything by
-column: `colIdx` appears 607 times, against `this._columns[colIdx]` and
-`this._config.columns[colIdx]`.
+### 3 — Take the core out for real (large; before the timeline card) — done, in part
 
-- A list's data becomes an object of its own (tasks, sections, tag catalog,
-  stamp, stale flag; load, update, reload of a linked list). Views hold such
-  objects instead of column states; the plan view no longer invents columns.
-- Task details, row pieces and drag take a list-data object and options
-  instead of a column index. Done in steps: first an adapter so that both
-  ways work, then one consumer after the other.
-- The class `HomeTasksDayPlanCard` stops extending the list card and uses the
-  core directly; the `_planMode` branches disappear from the list card.
+What was built:
+
+```
+src/core/card-base.js      TasksCardBase extends HTMLElement     (~6,500 lines)
+src/views/list-card.js     HomeTasksCard extends TasksCardBase   (~1,800)
+src/views/day-plan-card.js HomeTasksDayPlanCard extends TasksCardBase (~900)
+src/editors/editor-base.js EditorBase extends HTMLElement        (~500)
+src/editors/list-editor.js HomeTasksCardEditor extends EditorBase (~1,450)
+src/editors/plan-editor.js HomeTasksDayPlanCardEditor extends EditorBase (~200)
+```
+
+- The day plan card no longer extends the list card: both extend
+  `TasksCardBase`, as both editors extend `EditorBase`. `_planMode` and
+  `_isPlanEditor` are gone; the places that asked became hooks a card type
+  fills in (`_buildCardContent`, `_watchHass`, `_loadOwnData`,
+  `_bootIncomplete`, `_afterListsLoaded`, `_loadAllTasks`, `_sourceStamps`,
+  `_dropDragged`, `_findTaskRow`, `_extraTaskActions` and a few that are
+  empty by default; `_buildEditorBody` and `_afterListsLoaded` in the
+  editors). Defaults sit at the end of each base class.
+- The plan view no longer invents columns: shared code reaches a card's
+  lists through `_sourceCols()` / `_sourceCol(i)` - the configured columns
+  of a list card, the lists a plan draws from (`_planCols`) - and a plan
+  card's `_config` holds its own options only.
+- The plan's styles moved with the day plan card; "Plan for…" with the
+  list card.
+- How it was sorted: what the day plan card calls, and what those call, is
+  the base; the rest of the old class is the list card. Methods moved
+  verbatim. A check over the three classes finds no method called that the
+  class or its base lacks.
+
+Left as it was, for later:
+
+- The list's data is not an object of its own yet: per list the card keeps
+  one state object with its tasks and the list card's view state (filter,
+  sort, the add-task row) together, and shared code still addresses a list
+  by its index (`colIdx`, "the card's list number" now). Taking the data out
+  is the next step towards the timeline card.
+- The base holds some styles and helpers only the list card uses (tiles,
+  sections); harmless, since the day plan card simply does not use them.
 
 ### 4 — The timeline card (its own plan)
 
@@ -131,5 +166,6 @@ days. Stage 3 is what makes this a view to add rather than a third mode.
 
 ## Open decisions
 
-1. When: stages 2 and 3 after the open pull requests, before the timeline.
-2. The name of the timeline card's type.
+1. The name of the timeline card's type.
+2. Pull request #90 (filters and "advance on completion" for native lists)
+   conflicts with the day-plan branch in six backend files, not in the card.

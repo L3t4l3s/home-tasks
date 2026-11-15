@@ -5314,8 +5314,8 @@ function _shortDetailOrder(order) {
 }
 var NEW_ENTRY_PATH = "/config/integrations/integration/home_tasks";
 
-// src/views/list-card.js
-var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
+// src/core/card-base.js
+var TasksCardBase = class _TasksCardBase extends HTMLElement {
   // The shortest gap between two occurrences, in minutes — what a reopen
   // lead must stay below.  Must match _recurrence_interval_minutes in
   // __init__.py; tests/fixtures/recurrence_interval_cases.json is checked
@@ -5424,71 +5424,6 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
     }
     return `${d}.`;
   }
-  setConfig(config) {
-    if (config.view === "day_plan") {
-      throw new Error(
-        "The day plan is a card of its own: use type custom:home-tasks-day-plan-card (and drop view)"
-      );
-    }
-    if (config.list_id && !config.columns) {
-      const { type, columns: _c, ...colConfig } = config;
-      config = { ...type ? { type } : {}, columns: [colConfig] };
-    }
-    if (!config.columns || !Array.isArray(config.columns) || config.columns.length === 0) {
-      config = { ...config, columns: [{}] };
-    }
-    config = {
-      ...config,
-      columns: config.columns.map(({ type: _t, ...col }) => col)
-    };
-    const prevConfig = this._config || { columns: [] };
-    this._config = config;
-    while (this._columns.length < config.columns.length) {
-      this._columns.push(this._defaultColState());
-    }
-    this._columns.length = config.columns.length;
-    if (this._editingTaskId) {
-      const taskStillExists = this._columns.some((cs) => cs.tasks?.some((t) => t.id === this._editingTaskId));
-      if (!taskStillExists) this._editingTaskId = null;
-    }
-    const allTaskIds = new Set(this._columns.flatMap((cs) => (cs.tasks || []).map((t) => t.id)));
-    for (const id of this._expandedTasks) {
-      if (!allTaskIds.has(id)) this._expandedTasks.delete(id);
-    }
-    for (let i = 0; i < config.columns.length; i++) {
-      const col = config.columns[i];
-      const prevCol = prevConfig.columns?.[i];
-      const colSourceChanged = col.list_id !== prevCol?.list_id || col.entity_id !== prevCol?.entity_id;
-      if (colSourceChanged) {
-        this._columns[i].taskSearchQuery = "";
-        this._columns[i].newTaskTitle = "";
-      }
-      if (colSourceChanged || col.default_filter !== prevCol?.default_filter) {
-        this._columns[i].filter = col.default_filter || "all";
-        if (this._columns[i].filter === "due_soon" && col.show_due_soon_filter !== true) {
-          this._columns[i].filter = "all";
-        }
-        this._columns[i].tagFilters = /* @__PURE__ */ new Set();
-        this._columns[i].personFilters = /* @__PURE__ */ new Set();
-      }
-      if (col.show_tags === false && prevCol?.show_tags !== false) {
-        this._columns[i].tagFilters = /* @__PURE__ */ new Set();
-      }
-      if (col.show_assigned_person === false && prevCol?.show_assigned_person !== false) {
-        this._columns[i].personFilters = /* @__PURE__ */ new Set();
-      }
-      if (colSourceChanged || col.default_sort !== prevCol?.default_sort) {
-        this._columns[i].sortBy = col.default_sort || "manual";
-      }
-    }
-    if (this._initialized) {
-      this._loadAllTasks();
-    } else {
-      this._render();
-    }
-    this._syncImageGenerationConfig();
-    this._ensureCardMod();
-  }
   set hass(hass) {
     const prev = this._hass;
     this._hass = hass;
@@ -5498,41 +5433,43 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
       return;
     }
     if (prev && hass) {
-      if (this._planMode) {
-        this._watchPlan(prev, hass);
-        this._syncExtPollTimer();
-        return;
-      }
-      for (const col of this._config.columns) {
-        if (col.entity_id) {
-          if (prev.states?.[col.entity_id] !== hass.states?.[col.entity_id]) {
-            this._bgUpdates = (this._bgUpdates || 0) + 1;
-            this._loadAllTasks().finally(() => {
-              this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1);
-            });
-            return;
-          }
-        }
-        if (col.list_id) {
-          const list = (this._lists || []).find((l) => l.id === col.list_id);
-          const seid = list?.sensor_entity_id;
-          if (seid && prev.states?.[seid] !== hass.states?.[seid]) {
-            this._bgUpdates = (this._bgUpdates || 0) + 1;
-            this._loadAllTasks().finally(() => {
-              this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1);
-            });
-            return;
-          }
-        }
-      }
+      if (this._watchHass(prev, hass)) return;
     }
     this._syncExtPollTimer();
   }
+  // Whether a change Home Assistant reports concerns one of this card's
+  // lists - then it is loaded again, and true says so. A card type watches
+  // what it shows; this is a card of lists' way (a day plan has its own).
+  _watchHass(prev, hass) {
+    for (const col of this._sourceCols()) {
+      if (col.entity_id) {
+        if (prev.states?.[col.entity_id] !== hass.states?.[col.entity_id]) {
+          this._bgUpdates = (this._bgUpdates || 0) + 1;
+          this._loadAllTasks().finally(() => {
+            this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1);
+          });
+          return true;
+        }
+      }
+      if (col.list_id) {
+        const list = (this._lists || []).find((l) => l.id === col.list_id);
+        const seid = list?.sensor_entity_id;
+        if (seid && prev.states?.[seid] !== hass.states?.[seid]) {
+          this._bgUpdates = (this._bgUpdates || 0) + 1;
+          this._loadAllTasks().finally(() => {
+            this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1);
+          });
+          return true;
+        }
+      }
+    }
+    return false;
+  }
   _syncExtPollTimer() {
-    const hasExternal = this._config.columns.some((c) => c.entity_id);
+    const hasExternal = this._sourceCols().some((c) => c.entity_id);
     if (hasExternal && !this._extPollTimer) {
       this._extPollTimer = setInterval(async () => {
-        if (this._planMode) this._planDoubtShown();
+        this._beforePoll();
         this._bgUpdates = (this._bgUpdates || 0) + 1;
         try {
           await this._loadAllTasks(true);
@@ -5588,9 +5525,6 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
     }
     return el;
   }
-  _text(str) {
-    return document.createTextNode(str);
-  }
   // --- Data methods ---
   // `rethrow` is for callers that have to tell a refusal from our own 5s
   // race: the backend saying no means the action did not happen, a timeout
@@ -5624,27 +5558,20 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
    */
   _reloadExternal(colIdx) {
     setTimeout(() => {
-      if (this._planMode) this._planDoubt(colIdx);
+      this._beforeExternalReload(colIdx);
       this._loadAllTasks();
     }, 1500);
   }
   _isExternalCol(colIdx) {
-    return !!this._config.columns[colIdx]?.entity_id;
+    return !!this._sourceCol(colIdx)?.entity_id;
   }
   _colEntityId(colIdx) {
-    return this._config.columns[colIdx]?.entity_id;
+    return this._sourceCol(colIdx)?.entity_id;
   }
   _getExternalListInfo(colIdx) {
     if (!this._isExternalCol(colIdx)) return null;
     const entityId = this._colEntityId(colIdx);
     return (this._externalLists || []).find((l) => l.entity_id === entityId) || null;
-  }
-  // Can tasks in this column carry a due date / a due time? Native lists
-  // always; external lists per provider capability (see listSupportsDue /
-  // listSupportsDueTime at module level).
-  _colSupportsDue(colIdx) {
-    if (!this._isExternalCol(colIdx)) return true;
-    return listSupportsDue(this._getExternalListInfo(colIdx));
   }
   _colSupportsDueTime(colIdx) {
     if (!this._isExternalCol(colIdx)) return true;
@@ -5653,9 +5580,6 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
   _colSupportedFeatures(colIdx) {
     if (!this._isExternalCol(colIdx)) return -1;
     return this._getExternalListInfo(colIdx)?.supported_features ?? 0;
-  }
-  _colProviderType(colIdx) {
-    return this._getExternalListInfo(colIdx)?.provider_type ?? (this._isExternalCol(colIdx) ? "generic" : "native");
   }
   _colCapabilities(colIdx) {
     return this._getExternalListInfo(colIdx)?.capabilities ?? (this._isExternalCol(colIdx) ? {} : null);
@@ -5731,7 +5655,7 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
   // and a second dashboard with another style cannot overwrite it.
   async _syncImageGenerationConfig() {
     if (!this._hass || !this._config) return;
-    const wanted = (this._config.columns || []).filter(
+    const wanted = (this._sourceCols() || []).filter(
       (c) => c.auto_generate_image === true && c.show_images === true && (c.list_id || c.entity_id)
     );
     if (!wanted.length) return;
@@ -5763,19 +5687,15 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
     const [nativeResult, externalResult] = await Promise.all([
       this._callWs("home_tasks/get_lists"),
       this._callWs("home_tasks/get_external_lists"),
-      // A day plan names the lists it draws from; a list card asks which
-      // plans there are, for "Plan for…".
-      this._planMode ? this._loadPlan() : this._loadPlans()
+      // What the card type needs besides the lists: a day plan its plan,
+      // a card of lists the plans it can offer "Plan for…" with.
+      this._loadOwnData()
     ]);
     if (nativeResult && Array.isArray(nativeResult.lists)) {
       this._lists = nativeResult.lists;
     }
     this._externalLists = externalResult && Array.isArray(externalResult.external_lists) ? externalResult.external_lists.filter((l) => l.linked) : [];
-    const missingConfigured = !this._planMode && this._config.columns.some(
-      (c) => c.list_id && !this._lists.some((l) => l.id === c.list_id)
-    );
-    const missingPlan = this._planMode && !this._plan;
-    if (nativeResult === null || externalResult === null || missingConfigured || missingPlan) {
+    if (nativeResult === null || externalResult === null || this._bootIncomplete()) {
       this._scheduleListsRetry();
     } else {
       this._listsRetryCount = 0;
@@ -5785,19 +5705,7 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
       }
     }
     this._syncImageGenerationConfig();
-    if (this._planMode) {
-      await this._loadColumnTasks();
-      this._render();
-      return;
-    }
-    const hasAnyList = this._config.columns.some((c) => c.list_id || c.entity_id);
-    if (!hasAnyList && this._lists.length > 0) {
-      const newCols = [...this._config.columns];
-      newCols[0] = { ...newCols[0], list_id: this._lists[0].id };
-      this._config = { ...this._config, columns: newCols };
-      this._columns[0].filter = newCols[0].default_filter || "all";
-    }
-    await this._loadAllTasks();
+    await this._afterListsLoaded();
   }
   _scheduleListsRetry() {
     const delays = [2e3, 5e3, 1e4, 3e4, 6e4, 6e4, 6e4, 6e4];
@@ -5823,29 +5731,21 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
     const r = await this._callWs("home_tasks/get_defaults", { entity_id: entityId });
     this._sourceDefaults[entityId] = r && r.defaults || null;
   }
-  // *quiet*: a look in the background (a sensor changed, the poll). In a
-  // day plan one that finds nothing new leaves the card as it is - a
-  // rebuild under the pointer or mid-scroll for no change is only a flicker.
+  // Read the tasks of the card's lists again and draw the card. *quiet*: a
+  // look in the background (a sensor changed, the poll) - a card type may
+  // leave the card as it is when it finds nothing new (the day plan does).
   async _loadAllTasks(quiet = false) {
-    if (!this._planMode) {
-      await this._loadColumnTasks();
-      this._render();
-      return;
-    }
-    const before = this._planJson;
-    await this._loadPlan();
-    const changed = await this._loadColumnTasks();
-    if (quiet && changed === 0 && before !== void 0 && this._planJson === before) return;
+    await this._loadColumnTasks();
     this._render();
   }
   // Returns how many of a day plan's lists came back different from what
   // the card held (0 for a card of lists, which renders after every load).
   async _loadColumnTasks() {
     const states = this._columns;
-    const sources = this._planMode ? this._plan && this._plan.sources || [] : null;
+    const sources = this._sourceStamps();
     let changed = 0;
     const content = (cs) => JSON.stringify([cs.tasks, cs.sections, cs.tagCatalog]);
-    await Promise.all(this._config.columns.map(async (col, i) => {
+    await Promise.all(this._sourceCols().map(async (col, i) => {
       const cs = states[i];
       if (!cs) return;
       const stamp = sources ? sources[i] && sources[i].stamp : void 0;
@@ -5880,13 +5780,13 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
     return changed;
   }
   _colListId(colIdx) {
-    return this._config.columns[colIdx]?.list_id;
+    return this._sourceCol(colIdx)?.list_id;
   }
   // Whether the column's list takes part in the cross-list image pool. The
   // backend decides what is actually stored; the card asks the same question
   // so its optimistic update does not show an image that will never arrive.
   _colSharesImages(colIdx) {
-    const col = this._config.columns[colIdx];
+    const col = this._sourceCol(colIdx);
     if (!col) return false;
     const info = col.entity_id ? (this._externalLists || []).find((l) => l.entity_id === col.entity_id) : (this._lists || []).find((l) => l.id === col.list_id);
     return info ? info.share_images !== false : true;
@@ -5896,319 +5796,11 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
   // hand out their own uids and two of them can collide — so anything that
   // patches "this task everywhere" must compare source, not just id.
   _colSourceKey(colIdx) {
-    const col = this._config.columns[colIdx];
+    const col = this._sourceCol(colIdx);
     if (!col) return null;
     if (col.entity_id) return `ext:${col.entity_id}`;
     if (col.list_id) return `native:${col.list_id}`;
     return null;
-  }
-  // Enter inside the add-row date/time inputs: _render defers rebuilds while
-  // a date/time input has focus (its segment state would be lost), which
-  // would swallow the render that shows the new task. Hand focus to the
-  // title input first (focus restore after the rebuild targets it anyway).
-  _addTaskFromDueRow(colIdx) {
-    const titleInput = this.shadowRoot.querySelector(`.add-input[data-focus-key="add_task_col_${colIdx}"]`);
-    if (titleInput) {
-      try {
-        titleInput.focus();
-      } catch (_) {
-      }
-    } else {
-      const active = this.shadowRoot.activeElement;
-      if (active && active.blur) active.blur();
-    }
-    return this._addTask(colIdx);
-  }
-  _nudgeAddInput(colIdx) {
-    const el = this.shadowRoot?.querySelector(
-      `.add-input[data-focus-key="add_task_col_${colIdx}"]`
-    );
-    if (!el) return;
-    try {
-      el.focus();
-    } catch (_) {
-    }
-    el.classList.remove("nudge");
-    void el.offsetWidth;
-    el.classList.add("nudge");
-    setTimeout(() => el.classList.remove("nudge"), 700);
-  }
-  // show_add_details: a new task is drafted under the add row with the same
-  // detail fields as an existing one, and only created on Add.
-  async _openDraft(colIdx) {
-    const cs = this._columns[colIdx];
-    const title = (cs.newTaskTitle || "").trim();
-    const isExt = this._isExternalCol(colIdx);
-    const r = await this._callWs(
-      "home_tasks/get_defaults",
-      isExt ? { entity_id: this._colEntityId(colIdx) } : { list_id: this._colListId(colIdx) }
-    );
-    const defaults = r && r.defaults || {};
-    if (isExt && r) this._sourceDefaults[this._colEntityId(colIdx)] = r.defaults || null;
-    const person = this._autoAssignPerson(colIdx);
-    const people = person ? [person] : [...defaults.assignees || (defaults.assignee ? [defaults.assignee] : [])];
-    const { addDue, addDueTime } = this._addRowDue(colIdx);
-    cs.draft = {
-      id: `__draft__${colIdx}`,
-      _draft: true,
-      title,
-      completed: false,
-      notes: "",
-      sub_items: [],
-      due_date: addDue,
-      due_time: addDueTime,
-      priority: defaults.priority ?? null,
-      tags: [...defaults.tags || []],
-      reminders: [...defaults.reminders || []],
-      section_id: defaults.section_id || null,
-      assigned_person: people[0] || null,
-      assigned_persons: people,
-      recurrence_enabled: false,
-      recurrence_value: 1,
-      recurrence_unit: null,
-      recurrence_type: "interval",
-      recurrence_weekdays: [],
-      // What the list fills in by itself: a field the draft empties is
-      // cleared again once the task exists (see _saveDraft).
-      _defaults: defaults
-    };
-    cs.newTaskTitle = "";
-    cs.newTaskDue = "";
-    cs.newTaskDueTime = "";
-    cs.taskSearchQuery = "";
-    this._render();
-    requestAnimationFrame(() => {
-      const input = this.shadowRoot?.querySelector(`.add-input[data-focus-key="add_task_col_${colIdx}"]`);
-      try {
-        input?.focus();
-      } catch (_) {
-      }
-    });
-  }
-  // Closes the draft. With giveBack, its title and due date stay in the add
-  // row (Cancel, Escape, or the pencil again); without, the draft is dropped
-  // (the add row's clear).
-  _closeDraft(colIdx, giveBack) {
-    const cs = this._columns[colIdx];
-    const draft = cs.draft;
-    if (!draft) return;
-    if (giveBack) {
-      cs.newTaskTitle = draft.title || "";
-      if (this._config.columns[colIdx].show_task_search !== false) cs.taskSearchQuery = cs.newTaskTitle.trim();
-      if (this._config.columns[colIdx].show_add_due === true) {
-        cs.newTaskDue = draft.due_date || "";
-        cs.newTaskDueTime = draft.due_time || "";
-      }
-    }
-    cs.draft = null;
-    this._render();
-  }
-  // The draft's title is the add row's field (see _buildColumnAddTask); the
-  // panel holds its detail fields.
-  _buildDraftPanel(cs, colIdx) {
-    const draft = cs.draft;
-    const addBtn = this._el("button", { className: "add-btn", textContent: this._t("dialog_add") });
-    addBtn.addEventListener("click", () => this._saveDraft(colIdx));
-    const cancelBtn = this._el("button", { className: "draft-cancel-btn", textContent: this._t("dialog_cancel") });
-    cancelBtn.addEventListener("click", () => this._closeDraft(colIdx, true));
-    return this._el("div", { className: "task-draft" }, [
-      this._buildTaskDetails(draft, colIdx, { draft: true }),
-      this._el("div", { className: "draft-actions" }, [cancelBtn, addBtn])
-    ]);
-  }
-  async _saveDraft(colIdx) {
-    const cs = this._columns[colIdx];
-    const draft = cs.draft;
-    if (!draft || draft._saving) return;
-    const title = (draft.title || "").trim();
-    if (!title) {
-      this._nudgeAddInput(colIdx);
-      return;
-    }
-    const base = {};
-    for (const k of ["due_date", "due_time", "notes", "priority", "tags", "reminders", "assigned_persons"]) {
-      const v = draft[k];
-      if (v !== null && v !== void 0 && v !== "" && !(Array.isArray(v) && !v.length)) base[k] = v;
-    }
-    if (!base.due_date) delete base.due_time;
-    const d = draft._defaults || {};
-    const after = {};
-    if (draft.priority == null && d.priority) after.priority = null;
-    if (!draft.tags?.length && d.tags?.length) after.tags = [];
-    if (!draft.reminders?.length && d.reminders?.length) after.reminders = [];
-    if (!draft.assigned_persons?.length && (d.assignees?.length || d.assignee)) {
-      after.assigned_person = null;
-      after.assigned_persons = [];
-    }
-    if (!draft.section_id && d.section_id && !this._isExternalCol(colIdx)) after.section_id = null;
-    if (draft.recurrence_enabled) {
-      for (const [k, v] of Object.entries(draft)) if (k.startsWith("recurrence_")) after[k] = v;
-    }
-    const isExt = this._isExternalCol(colIdx);
-    draft._saving = true;
-    let newId;
-    try {
-      if (isExt) {
-        const res = await this._callWs(
-          "home_tasks/create_external_task",
-          { entity_id: this._colEntityId(colIdx), title, ...base },
-          { rethrow: true }
-        );
-        newId = res?.uid;
-      } else {
-        const payload = { list_id: this._colListId(colIdx), title, ...base };
-        if (draft.section_id) payload.section_id = draft.section_id;
-        const res = await this._callWs("home_tasks/add_task", payload, { rethrow: true });
-        newId = res?.id;
-      }
-    } catch (err) {
-      draft._saving = false;
-      this._showError(this._t("add_failed"));
-      return;
-    }
-    try {
-      if (newId && isExt && (draft.section_id || d.section_id)) {
-        await this._callWs(
-          "home_tasks/update_external_overlay",
-          { entity_id: this._colEntityId(colIdx), task_uid: newId, section_id: draft.section_id || null },
-          { rethrow: true }
-        );
-      }
-      if (newId && Object.keys(after).length) await this._updateTaskRouted(colIdx, newId, after, { rethrow: true });
-    } catch (err) {
-      this._showError(this._t("draft_details_failed"));
-    }
-    if (cs.draft === draft) cs.draft = null;
-    if (this._isExternalCol(colIdx)) this._reloadExternal(colIdx);
-    else await this._loadAllTasks();
-    this._render();
-  }
-  // Auto-assign: the one person active in the person filter, or else the
-  // column's one preset assignee unless this card doesn't offer them
-  // (hidden_persons). null when neither applies.
-  _autoAssignPerson(colIdx) {
-    const cs = this._columns[colIdx];
-    const col = this._config.columns[colIdx];
-    if (cs.personFilters.size === 1) return [...cs.personFilters][0];
-    if (cs.personFilters.size === 0 && col.filters?.assignees?.length === 1 && !(col.hidden_persons || []).includes(col.filters.assignees[0])) {
-      return col.filters.assignees[0];
-    }
-    return null;
-  }
-  // Due date chosen in the add row (issue #38) — only when the option is
-  // on and the column supports due dates; a time without a date is ignored.
-  _addRowDue(colIdx) {
-    const cs = this._columns[colIdx];
-    const col = this._config.columns[colIdx];
-    const addDue = col.show_add_due === true && this._colSupportsDue(colIdx) && cs.newTaskDue ? cs.newTaskDue : null;
-    const addDueTime = addDue && cs.newTaskDueTime && this._colSupportsDueTime(colIdx) ? cs.newTaskDueTime : null;
-    return { addDue, addDueTime };
-  }
-  async _addTask(colIdx) {
-    const cs = this._columns[colIdx];
-    const title = cs.newTaskTitle.trim();
-    if (!title) {
-      this._nudgeAddInput(colIdx);
-      return;
-    }
-    cs.taskSearchQuery = "";
-    if (!this._colListId(colIdx) && !this._colEntityId(colIdx)) return;
-    const addInput = this.shadowRoot.querySelector(`.add-input[data-focus-key="add_task_col_${colIdx}"]`);
-    const addInputRect = addInput ? addInput.getBoundingClientRect() : null;
-    const before = this._captureListFlip(colIdx);
-    const col = this._config.columns[colIdx];
-    const autoAssignPerson = this._autoAssignPerson(colIdx);
-    const { addDue, addDueTime } = this._addRowDue(colIdx);
-    const resetAddDue = () => {
-      cs.newTaskDue = "";
-      cs.newTaskDueTime = "";
-    };
-    let result;
-    if (this._isExternalCol(colIdx)) {
-      const tempId = "_pending_" + Date.now();
-      const listDefaults = this._sourceDefaults[this._colEntityId(colIdx)] || {};
-      cs.tasks.push({
-        id: tempId,
-        title,
-        completed: false,
-        notes: "",
-        due_date: addDue,
-        due_time: addDueTime,
-        sort_order: cs.tasks.length,
-        sub_items: [],
-        priority: listDefaults.priority ?? null,
-        tags: [...listDefaults.tags || []],
-        reminders: [...listDefaults.reminders || []],
-        section_id: listDefaults.section_id || null,
-        assigned_person: autoAssignPerson || listDefaults.assignee || null,
-        assigned_persons: autoAssignPerson ? [autoAssignPerson] : [...listDefaults.assignees || []],
-        recurrence_enabled: false,
-        _external: true
-      });
-      const typed = { title, due: cs.newTaskDue, dueTime: cs.newTaskDueTime };
-      cs.newTaskTitle = "";
-      resetAddDue();
-      this._justAddedTaskId = tempId;
-      this._addInputRect = addInputRect;
-      this._render();
-      this._justAddedTaskId = null;
-      this._addInputRect = null;
-      this._applyFlip(before, colIdx, 0.25);
-      let addError = null;
-      try {
-        const payload = { entity_id: this._colEntityId(colIdx), title };
-        if (autoAssignPerson) payload.assigned_person = autoAssignPerson;
-        if (addDue) {
-          payload.due_date = addDue;
-          if (addDueTime) payload.due_time = addDueTime;
-        }
-        result = await this._callWs("home_tasks/create_external_task", payload, { rethrow: true });
-      } catch (err) {
-        addError = err;
-      }
-      if (!result && !this._isWsTimeout(addError)) {
-        cs.tasks = cs.tasks.filter((t) => t.id !== tempId);
-        cs.newTaskTitle = typed.title;
-        cs.newTaskDue = typed.due;
-        cs.newTaskDueTime = typed.dueTime;
-        this._showError(this._t("add_failed"));
-        this._render();
-      }
-      this._reloadExternal(colIdx);
-      if (result?.uid && col.auto_generate_image && col.show_images === true && this._config.image_generation?.entity_id) {
-        this._autoGenerateExternalImage(colIdx, String(result.uid));
-      }
-    } else {
-      const payload = { list_id: this._colListId(colIdx), title };
-      if (autoAssignPerson) payload.assigned_person = autoAssignPerson;
-      if (addDue) {
-        payload.due_date = addDue;
-        if (addDueTime) payload.due_time = addDueTime;
-      }
-      let addError = null;
-      try {
-        result = await this._callWs("home_tasks/add_task", payload, { rethrow: true });
-      } catch (err) {
-        addError = err;
-      }
-      if (result) {
-        cs.newTaskTitle = "";
-        resetAddDue();
-        this._justAddedTaskId = result.id ? String(result.id) : null;
-        this._addInputRect = addInputRect;
-        await this._loadAllTasks();
-        this._justAddedTaskId = null;
-        this._addInputRect = null;
-        this._applyFlip(before, colIdx, 0.25);
-        if (result && col.auto_generate_image && col.show_images === true && this._config.image_generation?.entity_id) {
-          this._generateTaskImage(result, colIdx);
-        }
-      } else if (this._isWsTimeout(addError)) {
-        await this._loadAllTasks();
-      } else {
-        this._showError(this._t("add_failed"));
-      }
-    }
   }
   // Wrapper around the toggle logic: ticking off a task you searched for
   // ends the search, so the section view comes back instead of leaving you
@@ -6230,7 +5822,7 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
   // Returns whether the task actually changed state (false = the user
   // cancelled the confirm_complete prompt).
   async _toggleTaskCore(taskId, completed, colIdx) {
-    const col = this._config.columns[colIdx];
+    const col = this._sourceCol(colIdx);
     const cs = this._columns[colIdx];
     const newCompleted = !completed;
     const task = cs.tasks.find((t) => t.id === taskId);
@@ -6313,12 +5905,12 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
       });
       const cs = this._columns[colIdx];
       if (cs?.tasks) cs.tasks = cs.tasks.filter((t) => String(t.id) !== String(taskId));
-      if (this._planMode) this._planForget(taskId, colIdx);
+      this._taskGoneLocally(taskId, colIdx);
       this._expandedTasks.delete(taskId);
       this._render();
       this._applyFlip(before, colIdx, 0.22);
       await this._deleteTaskCmd(colIdx, taskId);
-      if (this._planMode) this._planJson = null;
+      this._afterDeleteSent();
       await this._loadAllTasks();
     } else {
       await this._deleteTaskCmd(colIdx, taskId);
@@ -6572,7 +6164,7 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
   // --- Filter & Sort ---
   _preFilteredTasks(colIdx) {
     const cs = this._columns[colIdx];
-    const col = this._config.columns[colIdx];
+    const col = this._sourceCol(colIdx);
     let tasks = cs.tasks;
     const preAssignees = col.filters?.assignees;
     const preLabels = col.filters?.labels;
@@ -6598,7 +6190,7 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
         tasks = baseTasks.filter((t) => t.completed);
         break;
       case "due_soon": {
-        const col = this._config.columns[colIdx];
+        const col = this._sourceCol(colIdx);
         const days = col.due_soon_days ?? 7;
         const hideOverdue = col.hide_overdue === true;
         tasks = baseTasks.filter(
@@ -6616,7 +6208,7 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
       tasks = tasks.filter((t) => _assignees(t).some((p) => cs.personFilters.has(p)));
     }
     const cmp = this._buildSortComparator(colIdx);
-    const overdueFirst = this._config?.columns?.[colIdx]?.overdue_first === true;
+    const overdueFirst = this._sourceCol(colIdx)?.overdue_first === true;
     const overdue = (t) => overdueFirst && !t.completed && this._isDueDateOverdue(t.due_date);
     return tasks.slice().sort((a, b) => {
       if (a.completed !== b.completed) return a.completed ? 1 : -1;
@@ -6792,10 +6384,6 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
       this._applyFlip(before, colIdx, 0.25);
     }, delay);
   }
-  // --- Helpers ---
-  _getCompletedCount(colIdx) {
-    return this._columns[colIdx].tasks.filter((t) => t.completed).length;
-  }
   _getSubTaskProgress(task) {
     if (!task.sub_items || task.sub_items.length === 0) return null;
     const done = task.sub_items.filter((s) => s.completed).length;
@@ -6882,25 +6470,6 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
   }
   _confirmDialog(message, okLabel) {
     return this._modalDialog({ message, okLabel, resolveOk: () => true }).then((v) => !!v);
-  }
-  // Per-column max_height (issues #33 / #34): cap only the task body and let
-  // it scroll internally. Header, add-task row, filters and chips are
-  // siblings above it and therefore stay put. 0 / unset = unlimited.
-  // Every path that builds a column body must go through this — a targeted
-  // refresh (see _refreshTaskListDOM) replaces that node, and without the cap
-  // the list grows out of the card, which clips it in an overflow-hidden or
-  // fixed-row layout.
-  _applyColumnMaxHeight(body, col) {
-    const maxH = this._columnMaxHeight(col);
-    if (maxH) {
-      body.classList.add("scrollable");
-      body.style.maxHeight = `${maxH}px`;
-    }
-  }
-  // Column max_height in px, or 0 when unset/invalid/non-positive.
-  _columnMaxHeight(col) {
-    const n = Number(col && col.max_height);
-    return Number.isFinite(n) && n > 0 ? Math.round(n) : 0;
   }
   // Grow a textarea to fit its content (issue #32): reset to auto so it can
   // also shrink, then take the scroll height plus the border (the field is
@@ -7016,16 +6585,6 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
     const opts = { day: "numeric", month: "short" };
     if (target.getFullYear() !== now.getFullYear()) opts.year = "2-digit";
     return target.toLocaleDateString(lang, opts);
-  }
-  _getListName(colIdx) {
-    const col = this._config.columns[colIdx];
-    if (col.title) return col.title;
-    if (col.entity_id) {
-      const ext = (this._externalLists || []).find((l) => l.entity_id === col.entity_id);
-      return ext ? ext.name : col.entity_id;
-    }
-    const list = this._lists.find((l) => l.id === col.list_id);
-    return list ? list.name : this._t("my_tasks");
   }
   // --- Render ---
   // Hold a render back until the focused field is left, then run it —
@@ -7150,793 +6709,12 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
       setTimeout(() => document.addEventListener("click", this._sortCloseHandler, { once: true }), 0);
     }
   }
-  _buildCardContent() {
-    if (this._planMode) return this._buildPlanView();
-    const cols = this._config.columns;
-    if (cols.length === 1) {
-      return this._buildColumn(0);
-    }
-    const children = [];
-    if (this._config.title) {
-      const titleEl = document.createElement("h1");
-      titleEl.className = "card-global-title";
-      titleEl.textContent = this._config.title;
-      children.push(titleEl);
-    }
-    children.push(this._el("div", { className: "multi-columns" }, cols.map((_, i) => this._buildColumn(i))));
-    return this._el("div", {}, children);
-  }
-  _buildColumn(colIdx) {
-    const col = this._config.columns[colIdx];
-    const cs = this._columns[colIdx];
-    const filteredTasks = this._filteredTasks(colIdx);
-    const completedCount = this._getCompletedCount(colIdx);
-    const totalCount = cs.tasks.length;
-    const hideFilters = col.auto_delete_completed === true && col.show_due_soon_filter !== true || col.show_filters === false;
-    const header = this._buildColumnHeader(col, colIdx, completedCount, totalCount);
-    const addTask = this._buildColumnAddTask(cs, colIdx);
-    const sortBtnWrapper = col.show_sort !== false ? this._buildColumnSortControl(col, cs, colIdx) : null;
-    const tagChips = col.show_tag_chips === false ? null : this._buildColumnTagChips(col, cs, colIdx);
-    const personChips = this._personMode(colIdx, "filter") === "off" ? null : this._buildColumnPersonChips(col, cs, colIdx);
-    const sortInTagRow = hideFilters && tagChips !== null && sortBtnWrapper !== null;
-    const sortInPersonRow = hideFilters && tagChips === null && personChips !== null && sortBtnWrapper !== null;
-    const filters = this._buildColumnFilterRow(hideFilters, sortBtnWrapper, sortInTagRow, sortInPersonRow, colIdx);
-    const tagChipsEl = tagChips && sortInTagRow ? this._el("div", { className: "tag-chips-row" }, [tagChips, sortBtnWrapper]) : tagChips;
-    const personChipsEl = personChips && sortInPersonRow ? this._el("div", { className: "person-chips-row" }, [personChips, sortBtnWrapper]) : personChips;
-    const isTiles = col.view_mode === "tiles";
-    const taskList = this._buildColumnBody(filteredTasks, colIdx);
-    this._applyColumnMaxHeight(taskList, col);
-    const children = [];
-    if (header) children.push(header);
-    if (col.show_add_task !== false) children.push(addTask);
-    if (cs.draft) children.push(this._buildDraftPanel(cs, colIdx));
-    if (filters) children.push(filters);
-    if (tagChipsEl) children.push(tagChipsEl);
-    if (personChipsEl) children.push(personChipsEl);
-    children.push(taskList);
-    const listCols = _listColumns(col);
-    const className = "card-column" + (col.compact === true ? " compact" : "") + (isTiles ? " tiles-mode" : "") + (listCols > 1 ? " list-cols" : "");
-    const columnEl = this._el("div", { className }, children);
-    if (listCols > 1) {
-      columnEl.style.setProperty("--ht-list-cols", String(listCols));
-      const minW = _listMinWidth(col);
-      if (minW) columnEl.style.setProperty("--ht-list-min-width", `${minW}px`);
-    }
-    const tileMin = _tileMinWidth(col);
-    if (tileMin) columnEl.style.setProperty("--ht-tile-min", `${tileMin}px`);
-    return columnEl;
-  }
-  _buildColumnHeader(col, colIdx, completedCount, totalCount) {
-    const showTitle = col.show_title !== false;
-    const showProgress = col.show_progress !== false;
-    const headerChildren = [];
-    if (showTitle) {
-      const titleEl = document.createElement("h1");
-      titleEl.className = "title";
-      if (col.icon) {
-        const iconEl = document.createElement("ha-icon");
-        iconEl.setAttribute("icon", col.icon);
-        iconEl.style.cssText = "--mdc-icon-size:1em;width:1em;height:1em;flex-shrink:0;";
-        titleEl.appendChild(iconEl);
-      }
-      titleEl.appendChild(document.createTextNode(this._getListName(colIdx)));
-      headerChildren.push(titleEl);
-    }
-    if (showProgress) {
-      headerChildren.push(this._el("span", {
-        className: "progress",
-        textContent: this._t("progress", completedCount, totalCount)
-      }));
-    }
-    return headerChildren.length > 0 ? this._el("div", { className: "header" }, headerChildren) : null;
-  }
-  // Start voice input. colIdx identifies the column; inputEl is the <input>
-  // element to fill (list-row input or tile-dialog input). If omitted the
-  // column's newTaskTitle state is updated instead (legacy path).
-  // Voice capture needs a secure context: browser mic (getUserMedia) or the
-  // Web Speech API. Neither exists in e.g. the Home Assistant iOS app's webview
-  // or plain-HTTP contexts — hide the mic button there instead of showing a
-  // button that can only fail.
-  _voiceSupported() {
-    return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) || !!(window.SpeechRecognition || window.webkitSpeechRecognition);
-  }
-  _startVoiceInput(colIdx, inputEl = null) {
-    if (this._voiceActive.has(colIdx)) {
-      this._voiceActive.get(colIdx)();
-      return;
-    }
-    const setTranscript = (text) => {
-      const cs = this._columns[colIdx];
-      const draft = !inputEl && cs?.draft;
-      if (draft) draft.title = text;
-      else if (cs) cs.newTaskTitle = text;
-      if (inputEl) {
-        inputEl.value = text;
-      } else {
-        const inp = this.shadowRoot.querySelector(`.add-input[data-focus-key="add_task_col_${colIdx}"]`);
-        if (inp) inp.value = text;
-      }
-      if (cs && !draft && this._config.columns[colIdx]?.show_task_search !== false) {
-        cs.taskSearchQuery = text.trim();
-        this._refreshTaskListDOM(colIdx);
-      }
-    };
-    const stopRecording = () => {
-      const cleanup = this._voiceActive.get(colIdx);
-      if (cleanup) cleanup();
-    };
-    this._startHAStt(colIdx, inputEl, setTranscript, stopRecording).catch((err) => {
-      console.warn("Home Tasks voice: HA Assist STT failed.", err);
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (SR) {
-        this._startWebSpeech(colIdx, inputEl, setTranscript);
-      } else {
-        const reason = err && err.message ? ": " + err.message : "";
-        this._showError(this._t("voice_failed") + reason);
-      }
-    });
-  }
-  // Primary: HA assist_pipeline/run STT (streams raw PCM to HA's STT backend)
-  async _startHAStt(colIdx, inputEl, setTranscript) {
-    if (!this._hass || !this._hass.connection) throw new Error("no hass");
-    let stream;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch (err) {
-      throw new Error("mic denied: " + err.message);
-    }
-    let audioRefs = null;
-    let sttHandlerId = null;
-    let unsub = null;
-    let cleaned = false;
-    const cleanup = () => {
-      if (cleaned) return;
-      cleaned = true;
-      if (audioRefs) {
-        try {
-          audioRefs.processor.disconnect();
-        } catch (_) {
-        }
-        try {
-          audioRefs.audioCtx.close();
-        } catch (_) {
-        }
-        try {
-          if (sttHandlerId != null) {
-            this._hass.connection.socket.send(new Uint8Array([sttHandlerId]).buffer);
-          }
-        } catch (_) {
-        }
-        audioRefs = null;
-      }
-      if (stream) {
-        stream.getTracks().forEach((t) => t.stop());
-        stream = null;
-      }
-      if (unsub) {
-        try {
-          unsub();
-        } catch (_) {
-        }
-        unsub = null;
-      }
-      this._voiceActive.delete(colIdx);
-      this._updateMicBtn(colIdx, inputEl, false);
-    };
-    this._voiceActive.set(colIdx, cleanup);
-    this._updateMicBtn(colIdx, inputEl, true);
-    try {
-      unsub = await this._hass.connection.subscribeMessage(
-        (event) => {
-          if (!event || !event.type) return;
-          if (event.type === "run-start") {
-            sttHandlerId = event.data?.runner_data?.stt_binary_handler_id ?? null;
-          } else if (event.type === "stt-start") {
-            if (sttHandlerId == null) {
-              console.warn("HA STT: missing stt_binary_handler_id, falling back to Web Speech");
-              cleanup();
-              this._startWebSpeech(colIdx, inputEl, setTranscript);
-              return;
-            }
-            audioRefs = this._streamPcmAudio(stream, cleanup, sttHandlerId);
-          } else if (event.type === "stt-end") {
-            const text = event.data?.stt_output?.text || "";
-            if (text) setTranscript(text);
-            cleanup();
-          } else if (event.type === "error") {
-            console.warn("HA STT error:", event.data);
-            cleanup();
-            this._startWebSpeech(colIdx, inputEl, setTranscript);
-          } else if (event.type === "run-end") {
-            cleanup();
-          }
-        },
-        {
-          type: "assist_pipeline/run",
-          start_stage: "stt",
-          end_stage: "stt",
-          input: { sample_rate: 16e3 }
-        }
-      );
-    } catch (err) {
-      cleanup();
-      throw err;
-    }
-  }
-  // Stream PCM audio from the MediaStream to HA via binary WebSocket frames.
-  // Returns { audioCtx, processor } for the caller to store and disconnect later.
-  _streamPcmAudio(stream, onError, handlerId) {
-    const SAMPLE_RATE = 16e3;
-    const BUFFER_SIZE = 4096;
-    try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: SAMPLE_RATE });
-      const source = audioCtx.createMediaStreamSource(stream);
-      const processor = audioCtx.createScriptProcessor(BUFFER_SIZE, 1, 1);
-      processor.onaudioprocess = (e) => {
-        const float32 = e.inputBuffer.getChannelData(0);
-        const pcm16 = new Int16Array(float32.length);
-        for (let i = 0; i < float32.length; i++) {
-          pcm16[i] = Math.max(-32768, Math.min(32767, float32[i] * 32767));
-        }
-        const frame = new Uint8Array(1 + pcm16.byteLength);
-        frame[0] = handlerId;
-        frame.set(new Uint8Array(pcm16.buffer), 1);
-        try {
-          this._hass.connection.socket.send(frame.buffer);
-        } catch (err) {
-          if (onError) onError(err);
-        }
-      };
-      source.connect(processor);
-      processor.connect(audioCtx.destination);
-      return { audioCtx, processor };
-    } catch (err) {
-      console.warn("PCM stream setup failed:", err);
-      if (onError) onError(err);
-      return null;
-    }
-  }
-  // Fallback: Web Speech API (browser-native, less accurate)
-  _startWebSpeech(colIdx, inputEl, setTranscript) {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-      this._updateMicBtn(colIdx, inputEl, false);
-      console.warn("Home Tasks voice: no browser speech recognition available.");
-      this._showError(this._t("voice_failed"));
-      return;
-    }
-    if (!this._voiceActive.has(colIdx)) {
-    }
-    const recognition = new SR();
-    recognition.lang = this._config.voice_lang || "de-DE";
-    recognition.interimResults = true;
-    recognition.maxAlternatives = 3;
-    recognition.continuous = false;
-    const cleanup = () => {
-      try {
-        recognition.abort();
-      } catch (_) {
-      }
-      this._voiceActive.delete(colIdx);
-      this._updateMicBtn(colIdx, inputEl, false);
-    };
-    this._voiceActive.set(colIdx, cleanup);
-    this._updateMicBtn(colIdx, inputEl, true);
-    recognition.onresult = (event) => {
-      const result = event.results[event.results.length - 1];
-      const transcript = result[0].transcript;
-      setTranscript(transcript);
-      if (result.isFinal) {
-        this._voiceActive.delete(colIdx);
-        this._updateMicBtn(colIdx, inputEl, false);
-      }
-    };
-    recognition.onerror = (e) => {
-      console.warn("Web Speech error:", e.error);
-      cleanup();
-    };
-    recognition.onend = () => {
-      if (this._voiceActive.has(colIdx)) cleanup();
-    };
-    try {
-      recognition.start();
-    } catch (err) {
-      cleanup();
-    }
-  }
-  // Update the mic button state without a full re-render.
-  // inputEl: if set, update a mic-btn inside the tile dialog; else find
-  // the column-level mic-btn via data attribute.
-  _updateMicBtn(colIdx, inputEl, recording) {
-    const MIC_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 15c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V6zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-2.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>`;
-    const STOP_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>`;
-    let btn;
-    if (inputEl) {
-      btn = inputEl.closest(".tile-dialog")?.querySelector(".mic-btn");
-    } else {
-      btn = this.shadowRoot.querySelector(`.mic-btn[data-col-idx="${colIdx}"]`);
-    }
-    if (!btn) {
-      this._render();
-      return;
-    }
-    btn.innerHTML = recording ? STOP_SVG : MIC_SVG;
-    btn.title = recording ? this._t("voice_stop") : this._t("voice_input");
-    if (recording) {
-      btn.classList.add("recording");
-    } else {
-      btn.classList.remove("recording");
-    }
-  }
-  // The scrollable body of a column: task list or tile grid. Both the full
-  // render and the targeted refresh below go through here, so a refresh
-  // produces exactly what a re-render would.
-  _buildColumnBody(filteredTasks, colIdx) {
-    const col = this._config.columns[colIdx];
-    if (col.view_mode === "tiles") {
-      const query = this._activeSearchQuery(colIdx);
-      return this._buildColumnTileGrid(
-        query ? this._searchMatches(query, colIdx) : filteredTasks,
-        colIdx
-      );
-    }
-    return this._buildColumnTaskList(filteredTasks, colIdx);
-  }
-  // Updates only the column body, leaving the add-task <input> untouched.
-  //
-  // A full this._render() rebuilds the whole card, and even though focus
-  // and caret position are restored afterwards via data-focus-key, the
-  // <input> DOM node is technically removed and recreated in the process.
-  // On mobile this makes the on-screen keyboard flicker closed and open
-  // again on every keystroke. Replacing only the body container avoids
-  // that, since the <input> is never touched.
-  _refreshTaskListDOM(colIdx) {
-    const col = this._config.columns[colIdx];
-    const selector = col.view_mode === "tiles" ? `.tile-grid-wrap[data-col-idx="${colIdx}"]` : `.task-list[data-col-idx="${colIdx}"]`;
-    const oldBody = this.shadowRoot.querySelector(selector);
-    if (!oldBody || !oldBody.parentNode) {
-      this._render();
-      return;
-    }
-    const before = this._captureListFlip(colIdx);
-    const newBody = this._buildColumnBody(this._filteredTasks(colIdx), colIdx);
-    this._applyColumnMaxHeight(newBody, col);
-    oldBody.replaceWith(newBody);
-    this._applyFlip(before, colIdx, 0.2);
-  }
-  _buildColumnAddTask(cs, colIdx) {
-    const col = this._config.columns[colIdx];
-    const searchEnabled = col.show_task_search !== false;
-    const draft = cs.draft;
-    const addInput = this._el("input", {
-      type: "text",
-      className: "add-input",
-      placeholder: this._t("add_placeholder"),
-      value: draft ? draft.title : cs.newTaskTitle,
-      "data-focus-key": `add_task_col_${colIdx}`,
-      autocomplete: "off"
-    });
-    addInput.addEventListener("input", (e) => {
-      if (draft) {
-        draft.title = e.target.value;
-        return;
-      }
-      cs.newTaskTitle = e.target.value;
-      if (searchEnabled) {
-        cs.taskSearchQuery = e.target.value.trim();
-        this._refreshTaskListDOM(colIdx);
-      }
-    });
-    addInput.addEventListener("keydown", (e) => {
-      if (draft) {
-        if (e.key === "Enter") this._saveDraft(colIdx);
-        else if (e.key === "Escape") {
-          e.preventDefault();
-          this._closeDraft(colIdx, true);
-        }
-        return;
-      }
-      if (e.key === "Enter") {
-        this._addTask(colIdx);
-      } else if (searchEnabled && e.key === "Escape" && cs.taskSearchQuery) {
-        e.preventDefault();
-        addInput.value = "";
-        cs.newTaskTitle = "";
-        cs.taskSearchQuery = "";
-        this._refreshTaskListDOM(colIdx);
-      }
-    });
-    const addBtn = this._el("button", { className: "add-btn", textContent: "+" });
-    addBtn.addEventListener("click", () => draft ? this._saveDraft(colIdx) : this._addTask(colIdx));
-    const clearBtn = this._el("button", {
-      className: "add-clear-btn",
-      textContent: "×",
-      title: this._t("add_clear")
-    });
-    clearBtn.type = "button";
-    clearBtn.setAttribute("aria-label", this._t("add_clear"));
-    if (!cs.newTaskTitle && !draft) clearBtn.style.display = "none";
-    addInput.addEventListener("input", () => {
-      clearBtn.style.display = addInput.value || draft ? "" : "none";
-    });
-    clearBtn.addEventListener("click", () => {
-      addInput.value = "";
-      cs.newTaskTitle = "";
-      clearBtn.style.display = "none";
-      if (draft) {
-        try {
-          addInput.focus();
-        } catch (_) {
-        }
-        this._closeDraft(colIdx, false);
-        return;
-      }
-      if (cs.taskSearchQuery) {
-        cs.taskSearchQuery = "";
-        this._refreshTaskListDOM(colIdx);
-      }
-      try {
-        addInput.focus();
-      } catch (_) {
-      }
-    });
-    const inputWrap = this._el("div", { className: "add-input-wrap" }, [addInput, clearBtn]);
-    const children = [inputWrap];
-    if (col.show_voice !== false && this._voiceSupported()) {
-      const isRecording = this._voiceActive.has(colIdx);
-      const micBtn = this._el("button", {
-        className: "mic-btn" + (isRecording ? " recording" : ""),
-        title: isRecording ? this._t("voice_stop") : this._t("voice_input"),
-        "data-col-idx": String(colIdx),
-        innerHTML: isRecording ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 15c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V6zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-2.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>`
-      });
-      micBtn.addEventListener("click", () => this._startVoiceInput(colIdx));
-      children.push(micBtn);
-    }
-    const showAddDue = col.show_add_due === true && this._colSupportsDue(colIdx) && !draft;
-    let dueRow = null;
-    if (showAddDue) {
-      const dateInput = this._el("input", {
-        type: "date",
-        className: "add-due-date",
-        value: cs.newTaskDue || "",
-        "data-focus-key": `add_due_col_${colIdx}`,
-        "aria-label": this._t("due_date_lbl")
-      });
-      dateInput.addEventListener("change", () => {
-        cs.newTaskDue = dateInput.value || "";
-      });
-      dateInput.addEventListener("keydown", (e) => {
-        if (e.key !== "Enter") return;
-        e.preventDefault();
-        cs.newTaskDue = dateInput.value || "";
-        this._addTaskFromDueRow(colIdx);
-      });
-      const rowChildren = [dateInput];
-      if (this._colSupportsDueTime(colIdx)) {
-        const timeInput = this._el("input", {
-          type: "time",
-          className: "add-due-time",
-          value: cs.newTaskDueTime || "",
-          "data-focus-key": `add_due_time_col_${colIdx}`,
-          "aria-label": this._t("due_time_lbl")
-        });
-        timeInput.addEventListener("change", () => {
-          cs.newTaskDueTime = timeInput.value || "";
-        });
-        timeInput.addEventListener("keydown", (e) => {
-          if (e.key !== "Enter") return;
-          e.preventDefault();
-          cs.newTaskDueTime = timeInput.value || "";
-          this._addTaskFromDueRow(colIdx);
-        });
-        rowChildren.push(timeInput);
-      }
-      dueRow = this._el("div", { className: "add-due-row" }, rowChildren);
-    }
-    if (col.show_add_details === true) {
-      const detailsLabel = this._t(draft ? "dialog_cancel" : "add_with_details");
-      const detailsBtn = this._el("button", {
-        className: "add-btn add-details-btn" + (draft ? " active" : ""),
-        textContent: "✎",
-        title: detailsLabel
-      });
-      detailsBtn.setAttribute("aria-label", detailsLabel);
-      detailsBtn.setAttribute("aria-pressed", draft ? "true" : "false");
-      detailsBtn.addEventListener("click", () => {
-        if (draft) this._closeDraft(colIdx, true);
-        else this._openDraft(colIdx);
-      });
-      children.push(detailsBtn);
-    }
-    children.push(addBtn);
-    const row = this._el("div", { className: "add-task" }, children);
-    if (!dueRow) return row;
-    return this._el("div", { className: "add-task-group" }, [row, dueRow]);
-  }
-  _buildColumnSortControl(col, cs, colIdx) {
-    const sortLabels = {
-      manual: this._t("sort_manual"),
-      due: this._t("sort_due"),
-      priority: this._t("sort_priority"),
-      title: this._t("sort_title"),
-      person: this._t("sort_person")
-    };
-    const sortKeys = ["manual"];
-    if (col.show_due_date !== false) sortKeys.push("due");
-    if (col.show_priority !== false) sortKeys.push("priority");
-    sortKeys.push("title");
-    if (col.show_assigned_person !== false) sortKeys.push("person");
-    const effectiveSortBy = sortKeys.includes(cs.sortBy) ? cs.sortBy : "manual";
-    const sortDropdown = this._el("div", { className: "sort-dropdown" + (cs.sortOpen ? "" : " hidden") });
-    for (const key of sortKeys) {
-      const opt = this._el("div", {
-        className: "sort-option" + (effectiveSortBy === key ? " active" : ""),
-        textContent: sortLabels[key]
-      });
-      opt.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const before = this._captureListFlip(colIdx);
-        cs.sortBy = key;
-        cs.sortOpen = false;
-        this._render();
-        this._applyFlip(before, colIdx, 0.3);
-      });
-      sortDropdown.appendChild(opt);
-    }
-    const sortBtnWrapper = this._el("div", { className: "sort-btn-wrapper" });
-    const sortBtn = this._el("button", {
-      className: "sort-btn" + (effectiveSortBy !== "manual" ? " active" : ""),
-      textContent: "↑ ↓",
-      title: sortLabels[effectiveSortBy]
-    });
-    sortBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const wasOpen = cs.sortOpen;
-      this._columns.forEach((c) => {
-        c.sortOpen = false;
-      });
-      cs.sortOpen = !wasOpen;
-      this._render();
-    });
-    sortBtnWrapper.appendChild(sortBtn);
-    sortBtnWrapper.appendChild(sortDropdown);
-    return sortBtnWrapper;
-  }
-  _buildColumnTagChips(col, cs, colIdx) {
-    if (col.show_tags === false) return null;
-    const allTags = /* @__PURE__ */ new Set();
-    const baseTasks = this._preFilteredTasks(colIdx);
-    for (const t of baseTasks) {
-      for (const tag of t.tags || []) allTags.add(tag);
-    }
-    for (const label of col.filters?.labels || []) allTags.delete(label);
-    if (allTags.size === 0) return null;
-    const chipChildren = [];
-    for (const tag of [...allTags].sort()) {
-      chipChildren.push(this._buildColumnTagChip(tag, cs, colIdx));
-    }
-    return this._el("div", { className: "tag-chips" }, chipChildren);
-  }
-  _buildColumnTagChip(tag, cs, colIdx) {
-    const isActive = cs.tagFilters.has(tag);
-    const chip = this._el("button", {
-      className: "tag-chip" + (isActive ? " active" : ""),
-      textContent: "#" + tag,
-      "data-tag": tag
-    });
-    chip.addEventListener("click", () => {
-      this._animateFilterChange(colIdx, () => {
-        if (cs.tagFilters.has(tag)) cs.tagFilters.delete(tag);
-        else cs.tagFilters.add(tag);
-      });
-      setTimeout(() => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            this.shadowRoot.querySelectorAll(`.tag-chip[data-tag="${CSS.escape(tag)}"]`).forEach((c) => {
-              c.classList.add("chip-anim");
-              c.addEventListener("animationend", () => c.classList.remove("chip-anim"), { once: true });
-            });
-          });
-        });
-      }, 0);
-    });
-    return chip;
-  }
-  _buildColumnPersonChips(col, cs, colIdx) {
-    if (col.show_assigned_person === false) return null;
-    const assignedPersons = /* @__PURE__ */ new Set();
-    const baseTasks = this._preFilteredTasks(colIdx);
-    for (const t of baseTasks) {
-      for (const p of _assignees(t)) assignedPersons.add(p);
-    }
-    for (const eid of col.filters?.assignees || []) assignedPersons.delete(eid);
-    if (assignedPersons.size === 0) return null;
-    const chipChildren = [];
-    for (const eid of [...assignedPersons].sort()) {
-      chipChildren.push(this._buildColumnPersonChip(eid, cs, colIdx));
-    }
-    return this._el("div", { className: "person-chips" }, chipChildren);
-  }
-  _buildColumnPersonChip(eid, cs, colIdx) {
-    const isActive = cs.personFilters.has(eid);
-    let name = eid;
-    if (this._hass && this._hass.states && this._hass.states[eid]) {
-      name = this._hass.states[eid].attributes?.friendly_name || eid;
-    }
-    const mode = this._personMode(colIdx, "filter");
-    const withAvatar = mode === "picture" || mode === "both";
-    const avatarOnly = mode === "picture";
-    const chip = this._el("button", {
-      className: "person-chip" + (isActive ? " active" : "") + (withAvatar ? " with-avatar" : "") + (avatarOnly ? " avatar-only" : ""),
-      "data-eid": eid,
-      title: name
-    });
-    if (avatarOnly) {
-      chip.appendChild(this._buildPersonAvatar(eid, name));
-    } else if (withAvatar) {
-      chip.append(this._buildPersonAvatar(eid, name), this._el("span", { textContent: name }));
-    } else {
-      chip.textContent = "👤 " + name;
-    }
-    chip.addEventListener("click", () => {
-      this._animateFilterChange(colIdx, () => {
-        if (cs.personFilters.has(eid)) cs.personFilters.delete(eid);
-        else cs.personFilters.add(eid);
-      });
-      setTimeout(() => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            this.shadowRoot.querySelectorAll(`.person-chip[data-eid="${CSS.escape(eid)}"]`).forEach((c) => {
-              c.classList.add("chip-anim");
-              c.addEventListener("animationend", () => c.classList.remove("chip-anim"), { once: true });
-            });
-          });
-        });
-      }, 0);
-    });
-    return chip;
-  }
-  _buildColumnFilterRow(hideFilters, sortBtnWrapper, sortInTagRow, sortInPersonRow, colIdx) {
-    const col = this._config.columns[colIdx];
-    const autoDelete = col.auto_delete_completed === true;
-    const dueSoonEnabled = col.show_due_soon_filter === true;
-    const children = [];
-    if (hideFilters) {
-      if (sortBtnWrapper && !sortInTagRow && !sortInPersonRow) {
-        children.push(this._el("div", { className: "filter-spacer" }));
-        children.push(sortBtnWrapper);
-      }
-    } else {
-      if (autoDelete) {
-        children.push(this._buildFilterBtn(this._t("filter_all"), "all", colIdx));
-      } else {
-        children.push(
-          this._buildFilterBtn(this._t("filter_all"), "all", colIdx),
-          this._buildFilterBtn(this._t("filter_open"), "open", colIdx),
-          this._buildFilterBtn(this._t("filter_done"), "done", colIdx)
-        );
-      }
-      if (dueSoonEnabled) {
-        children.push(this._buildFilterBtn(this._t("filter_due_soon"), "due_soon", colIdx));
-      }
-      children.push(this._el("div", { className: "filter-spacer" }));
-      if (sortBtnWrapper) children.push(sortBtnWrapper);
-    }
-    return children.length > 0 ? this._el("div", { className: "filters" }, children) : null;
-  }
   // The trimmed search query in effect for a column — "" when nothing is
   // typed or the column opted out via show_task_search: false.
   _activeSearchQuery(colIdx) {
-    const col = this._config.columns[colIdx];
+    const col = this._sourceCol(colIdx);
     if (!col || col.show_task_search === false) return "";
     return (this._columns[colIdx]?.taskSearchQuery || "").trim();
-  }
-  // Tasks whose title contains the query, prefix matches first. Deliberately
-  // ignores the All/Open/Done filter and the tag/person chips: the point of
-  // the search is to find a task you already have, wherever it sits.
-  _searchMatches(query, colIdx) {
-    const cs = this._columns[colIdx];
-    const q = query.toLowerCase();
-    return (cs.tasks || []).filter((t) => t.title && t.title.toLowerCase().includes(q)).sort((a, b) => {
-      const aStarts = a.title.toLowerCase().startsWith(q) ? 0 : 1;
-      const bStarts = b.title.toLowerCase().startsWith(q) ? 0 : 1;
-      if (aStarts !== bStarts) return aStarts - bStarts;
-      return a.title.localeCompare(b.title);
-    });
-  }
-  // While searching, replaces the normal section-grouped view with a flat
-  // list of matches (open + completed, across all sections) so section
-  // headers don't eat the whole screen on mobile.
-  _buildTaskSearchResults(query, colIdx) {
-    const matches = this._searchMatches(query, colIdx);
-    const children = matches.length === 0 ? [this._el("div", { className: "empty-state", textContent: this._t("empty") })] : matches.map((task) => this._buildTask(task, colIdx));
-    return this._el("div", { className: "task-list", "data-col-idx": String(colIdx) }, children);
-  }
-  _buildColumnTaskList(filteredTasks, colIdx) {
-    const cs = this._columns[colIdx];
-    const col = this._config.columns[colIdx];
-    const activeQuery = this._activeSearchQuery(colIdx);
-    if (activeQuery) {
-      return this._buildTaskSearchResults(activeQuery, colIdx);
-    }
-    const sections = (cs.sections || []).slice().sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
-    const taskListChildren = [];
-    if (filteredTasks.length === 0) {
-      taskListChildren.push(
-        this._el("div", { className: "empty-state", textContent: this._t("empty") })
-      );
-    } else if (sections.length === 0) {
-      const openTasks = filteredTasks.filter((t) => !t.completed);
-      const doneTasks = filteredTasks.filter((t) => t.completed);
-      for (const task of openTasks) taskListChildren.push(this._buildTask(task, colIdx));
-      if (doneTasks.length > 0 && openTasks.length > 0) {
-        taskListChildren.push(this._buildDoneHeader(colIdx));
-        for (const task of doneTasks) {
-          if (!this._isSectionCollapsed(colIdx, "__done__")) {
-            taskListChildren.push(this._buildTask(task, colIdx));
-          }
-        }
-      } else {
-        for (const task of doneTasks) taskListChildren.push(this._buildTask(task, colIdx));
-      }
-    } else {
-      const knownIds = new Set(sections.map((s) => s.id));
-      const openTasks = filteredTasks.filter((t) => !t.completed);
-      const doneTasks = filteredTasks.filter((t) => t.completed);
-      const unsorted = openTasks.filter((t) => !t.section_id || !knownIds.has(t.section_id));
-      const bySection = new Map(sections.map((s) => [s.id, []]));
-      for (const t of openTasks) {
-        if (t.section_id && knownIds.has(t.section_id)) bySection.get(t.section_id).push(t);
-      }
-      for (const t of unsorted) taskListChildren.push(this._buildTask(t, colIdx));
-      for (const section of sections) {
-        const tasksIn = bySection.get(section.id) || [];
-        const collapsed = this._isSectionCollapsed(colIdx, section.id);
-        taskListChildren.push(this._buildSectionHeader(section, colIdx, { collapsed, count: tasksIn.length }));
-        taskListChildren.push(this._buildSectionBody(section.id, tasksIn, colIdx, collapsed));
-      }
-      if (doneTasks.length > 0) {
-        const collapsed = this._isSectionCollapsed(colIdx, "__done__");
-        taskListChildren.push(this._buildDoneHeader(colIdx, { collapsed, count: doneTasks.length }));
-        taskListChildren.push(this._buildSectionBody("__done__", doneTasks, colIdx, collapsed));
-      }
-    }
-    const taskList = this._el("div", {
-      className: "task-list",
-      "data-col-idx": String(colIdx)
-    }, taskListChildren);
-    taskList.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      if (!this._draggedTaskId) return;
-      const tgtColIdx = parseInt(taskList.dataset.colIdx);
-      if (tgtColIdx !== this._draggedColIdx) {
-        const draggedEl = this._taskDragElement();
-        if (draggedEl && draggedEl.parentNode !== taskList) {
-          if (draggedEl.parentElement) draggedEl.parentElement.removeChild(draggedEl);
-          taskList.appendChild(draggedEl);
-        }
-        taskList.closest(".card-column")?.classList.add("drag-target");
-      }
-    });
-    taskList.addEventListener("drop", (e) => {
-      e.preventDefault();
-      this._finishDrag();
-    });
-    return taskList;
-  }
-  // ── Tile / Kachel view ─────────────────────────────────────────────────────
-  _buildColumnTileGrid(filteredTasks, colIdx) {
-    const openTasks = filteredTasks.filter((t) => !t.completed);
-    const doneTasks = filteredTasks.filter((t) => t.completed);
-    const ordered = [...openTasks, ...doneTasks];
-    const tileEls = ordered.map((task) => this._buildTaskTile(task, colIdx));
-    if (tileEls.length === 0) {
-      const empty = this._el("div", { className: "empty-state", textContent: this._t("empty") });
-      return this._el("div", { className: "tile-grid-wrap", "data-col-idx": String(colIdx) }, [empty]);
-    }
-    const grid = this._el("div", { className: "tile-grid-inner" }, tileEls);
-    return this._el("div", { className: "tile-grid-wrap", "data-col-idx": String(colIdx) }, [grid]);
   }
   // Derive the small WebP thumbnail URL for one of our public images
   // (/local/home_tasks/<base>.<ext> -> <base>_thumb.webp). Other URLs unchanged.
@@ -7949,7 +6727,7 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
     return path.replace(/\.[^/.]+$/, "") + "_thumb.webp" + q;
   }
   _buildTaskTile(task, colIdx) {
-    const col = this._config.columns[colIdx];
+    const col = this._sourceCol(colIdx);
     const showImages = col.show_images === true;
     const thumbUrl = showImages ? task.image_url || null : null;
     const cls = [
@@ -8239,306 +7017,9 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
     this.shadowRoot.append(backdrop, sheet);
     requestAnimationFrame(() => requestAnimationFrame(() => sheet.classList.add("open")));
   }
-  _buildFilterBtn(label, value, colIdx) {
-    const cs = this._columns[colIdx];
-    const btn = this._el("button", {
-      className: `filter-btn${cs.filter === value ? " active" : ""}`,
-      textContent: label
-    });
-    btn.addEventListener("click", () => {
-      this._animateFilterChange(colIdx, () => {
-        cs.filter = value;
-      });
-    });
-    return btn;
-  }
   _columnStorageKey(colIdx) {
-    const col = this._config.columns[colIdx] || {};
+    const col = this._sourceCol(colIdx) || {};
     return col.list_id || col.entity_id || `col_${colIdx}`;
-  }
-  _isSectionCollapsed(colIdx, sectionId) {
-    try {
-      const key = `home_tasks_card:section_collapse:${this._columnStorageKey(colIdx)}:${sectionId}`;
-      return window.localStorage.getItem(key) === "1";
-    } catch (e) {
-      return false;
-    }
-  }
-  _setSectionCollapsed(colIdx, sectionId, collapsed) {
-    try {
-      const key = `home_tasks_card:section_collapse:${this._columnStorageKey(colIdx)}:${sectionId}`;
-      if (collapsed) window.localStorage.setItem(key, "1");
-      else window.localStorage.removeItem(key);
-    } catch (e) {
-    }
-  }
-  _toggleSectionCollapsed(colIdx, sectionId) {
-    const currentlyCollapsed = this._isSectionCollapsed(colIdx, sectionId);
-    if (currentlyCollapsed) {
-      this._setSectionCollapsed(colIdx, sectionId, false);
-      this._expandingSection = sectionId;
-      this._render();
-      this._expandingSection = null;
-      this._animateSectionExpand(colIdx, sectionId);
-    } else {
-      const header = this._findSectionHeader(colIdx, sectionId);
-      if (header) header.classList.add("collapsed");
-      this._animateSectionCollapse(colIdx, sectionId, () => {
-        this._setSectionCollapsed(colIdx, sectionId, true);
-        this._render();
-      });
-    }
-  }
-  _buildSectionBody(sectionId, tasks, colIdx, collapsed) {
-    let cls = "section-body";
-    if (collapsed) cls += " collapsed";
-    if (!collapsed && this._expandingSection === sectionId) cls += " expanding";
-    const body = this._el("div", { className: cls });
-    body.dataset.sectionId = sectionId;
-    for (const t of tasks) body.appendChild(this._buildTask(t, colIdx));
-    return body;
-  }
-  _findSectionHeader(colIdx, sectionId) {
-    return this.shadowRoot.querySelector(
-      `.task-list[data-col-idx="${CSS.escape(String(colIdx))}"] .section-header[data-section-id="${CSS.escape(String(sectionId))}"]`
-    );
-  }
-  _findSectionBody(colIdx, sectionId) {
-    return this.shadowRoot.querySelector(
-      `.task-list[data-col-idx="${CSS.escape(String(colIdx))}"] .section-body[data-section-id="${CSS.escape(String(sectionId))}"]`
-    );
-  }
-  _animateSectionCollapse(colIdx, sectionId, done) {
-    const body = this._findSectionBody(colIdx, sectionId);
-    if (!body) {
-      done();
-      return;
-    }
-    if (document.hidden) {
-      done();
-      return;
-    }
-    const h = body.scrollHeight;
-    body.style.maxHeight = h + "px";
-    body.style.opacity = "1";
-    body.style.overflow = "hidden";
-    void body.offsetHeight;
-    let finished = false;
-    const finish = (e) => {
-      if (e && e.propertyName !== "max-height") return;
-      if (finished) return;
-      finished = true;
-      body.removeEventListener("transitionend", finish);
-      body.style.transition = "";
-      body.style.maxHeight = "";
-      body.style.opacity = "";
-      body.style.overflow = "";
-      done();
-    };
-    body.addEventListener("transitionend", finish);
-    setTimeout(() => finish(), 320);
-    requestAnimationFrame(() => {
-      if (finished) return;
-      body.style.transition = "max-height 0.22s ease, opacity 0.18s ease";
-      body.style.maxHeight = "0";
-      body.style.opacity = "0";
-    });
-  }
-  _animateSectionExpand(colIdx, sectionId) {
-    let cleared = false;
-    const clear = (e) => {
-      if (e && e.propertyName !== "max-height") return;
-      if (cleared) return;
-      cleared = true;
-      const body = this._findSectionBody(colIdx, sectionId);
-      if (!body) return;
-      body.removeEventListener("transitionend", clear);
-      body.classList.remove("expanding");
-      body.style.transition = "";
-      body.style.maxHeight = "";
-      body.style.opacity = "";
-      body.style.overflow = "";
-    };
-    setTimeout(() => clear(), 360);
-    if (document.hidden) {
-      clear();
-      return;
-    }
-    requestAnimationFrame(() => {
-      if (cleared) return;
-      const body = this._findSectionBody(colIdx, sectionId);
-      if (!body) return;
-      const targetH = body.scrollHeight;
-      body.classList.remove("expanding");
-      body.style.maxHeight = "0";
-      body.style.opacity = "0";
-      body.style.overflow = "hidden";
-      void body.offsetHeight;
-      body.addEventListener("transitionend", clear);
-      requestAnimationFrame(() => {
-        if (cleared) return;
-        body.style.transition = "max-height 0.22s ease, opacity 0.22s ease";
-        body.style.maxHeight = targetH + "px";
-        body.style.opacity = "1";
-      });
-    });
-  }
-  _buildSectionHeader(section, colIdx, opts = {}) {
-    const { collapsed = false, count = 0, isDone = false } = opts;
-    let className = "section-header";
-    if (collapsed) className += " collapsed";
-    if (isDone) className += " done-header";
-    const header = this._el("div", { className });
-    header.dataset.sectionId = section.id;
-    if (section.icon) {
-      const icon = document.createElement("ha-icon");
-      icon.setAttribute("icon", section.icon);
-      header.appendChild(icon);
-    }
-    const name = this._el("span", { className: "section-name", textContent: section.name });
-    header.appendChild(name);
-    if (count > 0) {
-      header.appendChild(this._el("span", { className: "sub-badge", textContent: String(count) }));
-    }
-    const caret = document.createElement("ha-icon");
-    caret.setAttribute("icon", "mdi:chevron-down");
-    caret.className = "section-caret";
-    header.appendChild(caret);
-    header.addEventListener("click", (e) => {
-      e.stopPropagation();
-      this._toggleSectionCollapsed(colIdx, section.id);
-    });
-    this._attachDragToSectionHeader(header, section.id, colIdx, opts.isDone === true);
-    return header;
-  }
-  _attachDragToSectionHeader(headerEl, sectionId, colIdx, isDoneHeader) {
-    const onEnter = () => {
-      if (!this._draggedTaskId) return;
-      headerEl.classList.add("drop-target");
-      if (!isDoneHeader && this._isSectionCollapsed(colIdx, sectionId)) {
-        if (this._springLoadTimer) clearTimeout(this._springLoadTimer);
-        this._springLoadOriginallyCollapsed = sectionId;
-        this._springLoadTimer = setTimeout(() => {
-          this._setSectionCollapsed(colIdx, sectionId, false);
-          this._render();
-        }, 600);
-      }
-    };
-    const onLeave = () => {
-      headerEl.classList.remove("drop-target");
-      if (this._springLoadTimer) {
-        clearTimeout(this._springLoadTimer);
-        this._springLoadTimer = null;
-      }
-    };
-    const onOver = (e) => {
-      if (!this._draggedTaskId) return;
-      e.preventDefault();
-      e.dataTransfer.dropEffect = isDoneHeader ? "none" : "move";
-      headerEl.classList.add("drop-target");
-      if (isDoneHeader) return;
-      const draggedEl = this.shadowRoot.querySelector(`.task[data-task-id="${CSS.escape(String(this._draggedTaskId))}"]`);
-      if (!draggedEl) return;
-      const body = headerEl.nextElementSibling;
-      const target = body && body.classList.contains("section-body") ? body : null;
-      if (target && draggedEl.parentNode === target && draggedEl === target.firstChild) return;
-      if (target) {
-        const list = headerEl.closest(".task-list");
-        const siblings = [...list.querySelectorAll(".task:not(.dragging), .section-header, .section-body")];
-        const before = new Map(siblings.map((el) => [el, el.getBoundingClientRect().top]));
-        target.insertBefore(draggedEl, target.firstChild);
-        siblings.forEach((el) => {
-          const dy = (before.get(el) ?? el.getBoundingClientRect().top) - el.getBoundingClientRect().top;
-          if (Math.abs(dy) < 1) return;
-          el.style.transition = "none";
-          el.style.transform = `translateY(${dy}px)`;
-          requestAnimationFrame(() => {
-            el.style.transition = "transform 0.18s ease";
-            el.style.transform = "";
-            el.addEventListener("transitionend", () => {
-              el.style.transition = "";
-              el.style.transform = "";
-            }, { once: true });
-          });
-        });
-      }
-    };
-    headerEl.addEventListener("dragenter", onEnter);
-    headerEl.addEventListener("dragleave", onLeave);
-    headerEl.addEventListener("dragover", onOver);
-    headerEl.addEventListener("drop", (e) => {
-      e.preventDefault();
-      headerEl.classList.remove("drop-target");
-      this._finishDrag();
-    });
-  }
-  _buildDoneHeader(colIdx, opts = {}) {
-    return this._buildSectionHeader(
-      { id: "__done__", name: this._t("done_section_header"), icon: "mdi:check-circle-outline" },
-      colIdx,
-      { ...opts, isDone: true }
-    );
-  }
-  _buildTask(task, colIdx) {
-    const cs = this._columns[colIdx];
-    const col = this._config.columns[colIdx];
-    const isExpanded = this._expandedTasks.has(task.id);
-    const isEditing = this._editingTaskId === task.id;
-    let className = "task";
-    if (task.completed) className += " completed";
-    if (isExpanded) className += " is-expanded";
-    const taskEl = this._el("div", { className, draggable: !isEditing && !isExpanded });
-    taskEl.dataset.taskId = task.id;
-    const checkboxEl = this._buildTaskCheckbox(task, colIdx);
-    const contentChildren = this._buildTaskContentChildren(task, colIdx, isEditing);
-    const metaBadges = this._buildTaskMetaBadges(task, col, cs, colIdx);
-    if (metaBadges.length > 0) {
-      contentChildren.push(this._el("div", { className: "task-meta" }, metaBadges));
-    }
-    const contentEl = this._el("div", { className: "task-content" }, contentChildren);
-    const expandBtn = this._buildTaskExpandButton(isExpanded);
-    const mainRowChildren = [checkboxEl, contentEl];
-    if (task.image_url && !isEditing && col.show_images === true) {
-      const _full = task.image_url;
-      const _small = this._thumbUrl(_full);
-      const thumb = this._el("img", {
-        className: "task-thumb",
-        src: _small,
-        alt: "",
-        title: task.title
-      });
-      if (_small !== _full) thumb.addEventListener("error", () => {
-        thumb.src = _full;
-      }, { once: true });
-      thumb.addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (isExpanded) this._expandedTasks.delete(task.id);
-        else this._expandedTasks.add(task.id);
-        this._render();
-      });
-      mainRowChildren.push(thumb);
-    }
-    mainRowChildren.push(expandBtn);
-    const mainRow = this._el("div", { className: "task-main" }, mainRowChildren);
-    this._attachTaskExpandClickHandler(mainRow, task, taskEl, colIdx);
-    taskEl.appendChild(mainRow);
-    if (isExpanded) {
-      const detailsEl = this._buildTaskDetails(task, colIdx);
-      taskEl.appendChild(detailsEl);
-      this._animateExpandedDetails(detailsEl, task);
-    }
-    this._attachDragToTask(taskEl, task.id, colIdx);
-    this._attachTaskAppearanceAnimations(task, colIdx);
-    return taskEl;
-  }
-  _buildTaskCheckbox(task, colIdx) {
-    const checkbox = this._el("input", { type: "checkbox", checked: task.completed });
-    checkbox.addEventListener("click", (e) => {
-      if (Date.now() < (this._suppressRowTapUntil || 0)) e.preventDefault();
-    });
-    checkbox.addEventListener("change", () => this._toggleTask(task.id, task.completed, colIdx));
-    const checkmark = this._el("span", { className: "checkmark" });
-    return this._el("label", { className: "checkbox-container" }, [checkbox, checkmark]);
   }
   _buildTaskContentChildren(task, colIdx, isEditing) {
     const children = [];
@@ -8580,7 +7061,7 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
       }, 0);
     } else {
       const titleSpan = this._el("span", { className: "task-title", textContent: task.title });
-      if (this._config?.columns?.[colIdx]?.tap_to_complete !== true) titleSpan.addEventListener("dblclick", (e) => {
+      if (this._sourceCol(colIdx)?.tap_to_complete !== true) titleSpan.addEventListener("dblclick", (e) => {
         e.stopPropagation();
         this._expandedTasks.add(task.id);
         this._editingTaskId = task.id;
@@ -8701,7 +7182,7 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
   // Configs written before the dropdown existed are read through their old
   // keys, so an update changes nothing on screen.
   _personMode(colIdx, which) {
-    const col = this._config.columns[colIdx] || {};
+    const col = this._sourceCol(colIdx) || {};
     const chosen = which === "badge" ? col.person_badge : col.person_filter;
     if (PERSON_MODES.includes(chosen)) return chosen;
     const chipOn = which === "badge" ? col.badge_person !== false : col.show_person_chips !== false;
@@ -8830,7 +7311,7 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
     return this._el("span", { className: "reminder-badge", textContent: remText });
   }
   _attachTaskExpandClickHandler(mainRow, task, taskEl, colIdx) {
-    const tapToComplete = this._config?.columns?.[colIdx]?.tap_to_complete === true;
+    const tapToComplete = this._sourceCol(colIdx)?.tap_to_complete === true;
     mainRow.addEventListener("click", (e) => {
       if (e.detail > 1) return;
       if (e.target.closest(".checkbox-container")) return;
@@ -8906,26 +7387,8 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
       detailsEl.style.height = "auto";
     }
   }
-  _attachTaskAppearanceAnimations(task, colIdx) {
-    if (this._justAppearedTaskIds && this._justAppearedTaskIds.has(String(task.id))) {
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          const el = this.shadowRoot.querySelector(
-            `.task-list[data-col-idx="${colIdx}"] .task[data-task-id="${CSS.escape(String(task.id))}"]`
-          );
-          if (el) {
-            el.classList.add("task-anim-enter");
-            el.addEventListener("animationend", () => el.classList.remove("task-anim-enter"), { once: true });
-          }
-        });
-      });
-    }
-    if (this._justAddedTaskId && this._justAddedTaskId === String(task.id)) {
-      this._animateTaskEntry(task.id, colIdx);
-    }
-  }
   _buildTaskDetails(task, colIdx, { draft = false } = {}) {
-    const col = this._config.columns[colIdx];
+    const col = this._sourceCol(colIdx);
     const build = {
       notes: () => this._buildNotesSection(task, colIdx),
       sub_tasks: () => this._buildSubTasksSection(task, colIdx),
@@ -9789,7 +8252,7 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
     const _intervalMinutes = () => {
       const unit = recurrenceUnitSelect.value || "days";
       const weekdays = unit === "weeks" && weekPatOnRadio.checked ? weekdayCheckboxes.map((cb, i) => cb.checked ? i : -1).filter((i) => i >= 0) : [];
-      return _HomeTasksCard.recurrenceIntervalMinutes(
+      return _TasksCardBase.recurrenceIntervalMinutes(
         unit,
         parseInt(recurrenceValueInput.value) || 1,
         weekdays
@@ -10271,7 +8734,7 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
     ]);
   }
   _buildAssignedPersonSection(task, colIdx) {
-    const hiddenPersons = (this._config.columns[colIdx] || {}).hidden_persons || [];
+    const hiddenPersons = (this._sourceCol(colIdx) || {}).hidden_persons || [];
     const assigned = _assignees(task);
     const offered = personEntries(this._hass, hiddenPersons.filter((p) => !assigned.includes(p)));
     const row = this._el("div", { className: "assignee-chip-row" });
@@ -10586,16 +9049,9 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
     return this._el("div", { className: "detail-section" }, reminderSectionChildren);
   }
   _buildActionsSection(task, colIdx) {
-    const col = this._config.columns[colIdx];
+    const col = this._sourceCol(colIdx);
     const children = [];
-    if (!this._planMode && !task.completed && this._plansForCol(colIdx).length > 0) {
-      const planBtn = this._el("button", {
-        className: "move-task-btn plan-for-btn",
-        textContent: this._t("plan_for")
-      });
-      planBtn.addEventListener("click", () => this._planTaskViaDialog(task, colIdx));
-      children.push(planBtn);
-    }
+    children.push(...this._extraTaskActions(task, colIdx));
     const moveTargets = this._moveTargets(colIdx);
     if (col.show_move !== false && moveTargets.length > 0) {
       const moveBtn = this._el("button", {
@@ -10664,7 +9120,7 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
     }
     const srcEntityId = srcIsExternal ? this._colEntityId(colIdx) : null;
     const seen = /* @__PURE__ */ new Set();
-    for (let i = 0; i < (this._config.columns || []).length; i++) {
+    for (let i = 0; i < (this._sourceCols() || []).length; i++) {
       if (!this._isExternalCol(i)) continue;
       const eid = this._colEntityId(i);
       if (!eid || eid === srcEntityId || seen.has(eid)) continue;
@@ -10722,7 +9178,7 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
     });
   }
   _buildImageSection(task, colIdx) {
-    const col = this._config.columns[colIdx];
+    const col = this._sourceCol(colIdx);
     const isGenerating = this._generatingImage.has(task.id);
     const children = [];
     if (task.image_url) {
@@ -10909,26 +9365,8 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
     oldSec.replaceWith(this._buildImageSection(task, colIdx));
     if (body) body.scrollTop = st;
   }
-  // Auto-generation for an external column, waiting for the task the provider
-  // just created to reach the card. Polls rather than chaining onto
-  // _reloadExternal, which is a fire-and-forget timer. Gives up quietly: an
-  // automatic extra is not worth an error popup, and the button in the task
-  // details still works.
-  async _autoGenerateExternalImage(colIdx, uid) {
-    const sourceKey = this._colSourceKey(colIdx);
-    for (let attempt = 0; attempt < 12; attempt++) {
-      if (!this.isConnected) return;
-      if (this._colSourceKey(colIdx) !== sourceKey) return;
-      const task = this._columns[colIdx]?.tasks?.find((t) => String(t.id) === uid);
-      if (task) {
-        if (!task.image_url) await this._generateTaskImage(task, colIdx);
-        return;
-      }
-      await new Promise((r) => setTimeout(r, 500));
-    }
-  }
   async _generateTaskImage(task, colIdx, force = false) {
-    const col = this._config.columns[colIdx];
+    const col = this._sourceCol(colIdx);
     const imgCfg = this._config.image_generation || {};
     this._generatingImage.add(task.id);
     this._refreshOpenSheetImage(task.id, colIdx);
@@ -10996,7 +9434,7 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
     this._thumbCache.clear();
   }
   async _saveImageUrl(task, colIdx, url) {
-    const col = this._config.columns[colIdx];
+    const col = this._sourceCol(colIdx);
     try {
       let result;
       if (col.entity_id) {
@@ -11273,7 +9711,7 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
   }
   _mergeHiddenTasks(colIdx, visibleOrder, draggedId = null) {
     const cs = this._columns[colIdx];
-    if (this._config?.columns?.[colIdx]?.overdue_first === true) {
+    if (this._sourceCol(colIdx)?.overdue_first === true) {
       const pinned = new Set(
         (cs.tasks || []).filter((t) => !t.completed && this._isDueDateOverdue(t.due_date) && String(t.id) !== String(draggedId)).map((t) => t.id)
       );
@@ -11407,10 +9845,11 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
       this._touchStartTimer = null;
     }
     if (!draggedId || srcColIdx === null) return;
-    if (this._planMode) {
-      this._finishPlanDrag(draggedEl);
-      return;
-    }
+    this._dropDragged(draggedEl, draggedId, srcColIdx, tgtColIdx);
+  }
+  // Where a dragged row was let go: a card of lists moves it to the column
+  // and section it lies in now (a day plan re-plans its day instead).
+  _dropDragged(draggedEl, draggedId, srcColIdx, tgtColIdx) {
     if (!isNaN(tgtColIdx) && tgtColIdx !== srcColIdx) {
       const targetTaskIds = this._getOrderFromDom(tgtColIdx);
       this._moveTask(srcColIdx, tgtColIdx, draggedId, targetTaskIds);
@@ -11535,9 +9974,8 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
         if (draggedEl && body && body.classList.contains("section-body") && draggedEl.parentNode !== body) {
           body.insertBefore(draggedEl, body.firstChild);
         }
-      } else if (this._planMode && shadowEl) {
-        const dayList = shadowEl.closest(".plan-day-list");
-        if (dayList) this._planDropInto(dayList);
+      } else if (shadowEl) {
+        this._touchOverNothing(shadowEl);
       }
     };
     const onTouchEnd = () => {
@@ -11555,141 +9993,6 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
     taskEl.addEventListener("touchmove", onTouchMove, { passive: false });
     taskEl.addEventListener("touchend", onTouchEnd);
     taskEl.addEventListener("touchcancel", onTouchEnd);
-  }
-  // ── Day plan view ──────────────────────────────────────────────────────────
-  //
-  // HomeTasksDayPlanCard shows the days of a plan instead of list columns. A plan
-  // only refers to tasks, so the card still loads the lists the plan draws
-  // from - as columns that are never drawn. Every row is then a task of one
-  // of those columns, and ticking it off, editing it or opening its details
-  // runs through the same code as in a list.
-  _setPlanConfig(config) {
-    const { type: _type, view: _view, plan, days, title: _title, columns: _c, list_id: _l, entity_id: _e, ...template } = config;
-    for (const key of ["tap_to_complete", "auto_delete_completed", "view_mode", "list_columns"]) delete template[key];
-    const wasPlan = this._planMode === true;
-    this._planMode = true;
-    this._planTemplate = template;
-    const n = parseInt(days, 10);
-    this._planDays = Number.isFinite(n) ? Math.min(7, Math.max(1, n)) : 1;
-    if (!wasPlan || (plan || null) !== this._planId) {
-      this._plan = null;
-      this._planError = null;
-      this._planLoaded = false;
-      this._planSensorId = null;
-    }
-    this._planId = plan || null;
-    this._config = { ...config, columns: wasPlan ? this._config.columns : [] };
-    if (!wasPlan) this._columns = [];
-    this._applyPlanSources();
-    if (this._initialized) this._loadAllTasks();
-    else this._render();
-    this._ensureCardMod();
-  }
-  _planSourceKey(col) {
-    return col.entity_id ? `ext:${col.entity_id}` : `native:${col.list_id}`;
-  }
-  // The plan's lists as columns (never drawn). A list keeps the tasks it
-  // has loaded when the plan is read again.
-  _applyPlanSources() {
-    const sources = this._plan && this._plan.sources || [];
-    const kept = new Map(
-      (this._config.columns || []).map((c, i) => [this._planSourceKey(c), this._columns[i]])
-    );
-    const columns = sources.map((s) => ({
-      ...this._planTemplate,
-      ...s.kind === "external" ? { entity_id: s.entity_id } : { list_id: s.entry_id }
-    }));
-    this._config = { ...this._config, columns };
-    this._columns = columns.map((c) => kept.get(this._planSourceKey(c)) || this._defaultColState());
-    this._planColByEntry = new Map(sources.map((s, i) => [s.entry_id, i]));
-  }
-  // What tells a day plan card to look again: the plan's sensor (it changes
-  // when the plan reads differently, and only then), and for a linked list
-  // its todo entity. Without the sensor - its entity disabled - the sensors
-  // of the native lists stand in.
-  _watchPlan(prev, hass) {
-    const changed = (id) => !!id && prev.states?.[id] !== hass.states?.[id];
-    const planSensor = this._planSensorId;
-    const sensorThere = !!(planSensor && hass.states?.[planSensor]);
-    let reload = changed(planSensor);
-    this._config.columns.forEach((col, i) => {
-      const cs = this._columns[i];
-      if (!cs) return;
-      let watch = null;
-      if (col.entity_id) watch = col.entity_id;
-      else if (!sensorThere) watch = (this._lists || []).find((l) => l.id === col.list_id)?.sensor_entity_id;
-      if (changed(watch)) {
-        cs.stale = true;
-        reload = true;
-      }
-    });
-    if (!reload) return;
-    this._bgUpdates = (this._bgUpdates || 0) + 1;
-    this._loadAllTasks(true).finally(() => {
-      this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1);
-    });
-  }
-  // Doubt the card's copy of a list (of every linked list when none is
-  // named): the next load asks for it again.
-  _planDoubt(colIdx) {
-    this._columns.forEach((cs, i) => {
-      if (colIdx === void 0 ? !!this._config.columns[i]?.entity_id : i === colIdx) cs.stale = true;
-    });
-  }
-  // The poll of a day plan: a provider can change what Home Assistant's own
-  // todo entity does not carry (labels, a priority). Asked only for linked
-  // lists that have a row on the days shown.
-  _planDoubtShown() {
-    const shown = /* @__PURE__ */ new Set();
-    for (const day of this._plan && this._plan.days || []) {
-      for (const row of day.items || []) shown.add(row.entry_id);
-    }
-    (this._plan && this._plan.sources || []).forEach((src, i) => {
-      if (src.kind === "external" && shown.has(src.entry_id) && this._columns[i]) this._columns[i].stale = true;
-    });
-  }
-  async _loadPlan() {
-    const msg = { days: this._planDays };
-    if (this._planId) msg.plan = this._planId;
-    let result = null;
-    let refused = null;
-    try {
-      result = await this._callWs("home_tasks/get_plan", msg, { rethrow: true });
-    } catch (err) {
-      if (this._isWsTimeout(err)) return;
-      refused = err && err.message || String(err);
-    }
-    if (result && Array.isArray(result.days)) {
-      const json = JSON.stringify(result);
-      if (!this._plan || json !== this._planJson) {
-        this._plan = result;
-        this._planJson = json;
-      }
-      this._planError = null;
-      if (result.sensor_entity_id) this._planSensorId = result.sensor_entity_id;
-    } else {
-      this._plan = null;
-      this._planJson = null;
-      this._planError = refused;
-      if (refused) this._scheduleListsRetry();
-    }
-    this._planLoaded = true;
-    this._applyPlanSources();
-  }
-  // A change to the plan itself. A refusal is a rule of the plan and is
-  // shown as the backend words it; the plan is read again either way.
-  async _planWrite(type, data) {
-    const msg = { ...data };
-    const planId = this._plan && this._plan.id || this._planId;
-    if (planId) msg.plan = planId;
-    try {
-      await this._callWs(type, msg, { rethrow: true });
-    } catch (err) {
-      if (!this._isWsTimeout(err)) this._showError(err && err.message || String(err));
-      this._planJson = null;
-    }
-    await this._loadPlan();
-    this._render();
   }
   _planDate(str) {
     const [y, m, d] = String(str).split("-").map(Number);
@@ -11709,502 +10012,18 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
   _planDayLabel(dateStr, today) {
     return `${this._planDayName(dateStr, today)}, ${this._planShortDate(dateStr)}`;
   }
-  _buildPlanView() {
-    const children = [];
-    if (this._config.title) {
-      children.push(this._el("h1", { className: "card-global-title", textContent: this._config.title }));
-    }
-    const plan = this._plan;
-    if (!plan) {
-      if (this._planLoaded) {
-        const lines = [this._el("div", { textContent: this._t("plan_none") })];
-        if (this._planError) {
-          lines.push(this._el("div", { className: "plan-missing-detail", textContent: this._planError }));
-        }
-        if (this._hass?.user?.is_admin === true) {
-          const link = this._el("a", {
-            className: "new-entry-link",
-            href: NEW_ENTRY_PATH,
-            textContent: `+ ${this._t("new_entry_link")}`
-          });
-          link.addEventListener("click", (e) => {
-            if (e.button || e.ctrlKey || e.metaKey || e.shiftKey) return;
-            e.preventDefault();
-            history.pushState(null, "", NEW_ENTRY_PATH);
-            window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: false } }));
-          });
-          lines.push(link);
-        }
-        children.push(this._el("div", { className: "plan-missing" }, lines));
-      }
-      return this._el("div", { className: "plan-view" }, children);
-    }
-    const days = plan.days || [];
-    children.push(this._el(
-      "div",
-      { className: "plan-days" + (days.length === 1 ? " single" : "") },
-      days.map((day, i) => this._buildPlanDay(day, i === 0))
-    ));
-    const compact = this._planTemplate.compact === true ? " compact" : "";
-    return this._el("div", { className: "plan-view" + compact }, children);
-  }
-  _buildPlanDay(day, isCurrent) {
-    const plan = this._plan;
-    const rows = day.items || [];
-    const done = rows.filter((r) => r.completed).length;
-    const opts = this._planTemplate || {};
-    const headLine = [
-      this._el("span", { className: "plan-day-name", textContent: this._planDayName(day.date, plan.today) })
-    ];
-    if (opts.show_date !== false) {
-      headLine.push(this._el("span", { className: "plan-day-date", textContent: this._planShortDate(day.date) }));
-    }
-    if (!isCurrent) {
-      headLine.push(this._el("span", { className: "plan-count", textContent: String(rows.length) }));
-    }
-    const head = [this._el("div", { className: "plan-head-line" }, headLine)];
-    if (opts.show_focus !== false) head.push(this._buildPlanNote(day));
-    if (isCurrent && opts.show_progress !== false) {
-      const fill = this._el("div", { className: "plan-bar-fill" });
-      fill.style.width = rows.length ? `${Math.round(done / rows.length * 100)}%` : "0%";
-      head.push(this._el("div", { className: "plan-progress" }, [
-        this._el("span", { className: "plan-progress-text", textContent: this._t("progress", done, rows.length) }),
-        this._el("div", { className: "plan-bar" }, [fill])
-      ]));
-    }
-    const showList = (plan.sources || []).length > 1;
-    const list = this._el("div", { className: "task-list plan-day-list", "data-plan-date": day.date }, [
-      ...rows.map((row, i) => this._buildPlanRow(row, i + 1, showList, day)),
-      // Hidden by CSS as soon as the day holds a row - also one dragged in.
-      this._el("div", { className: "plan-empty", textContent: this._t("plan_empty") })
-    ]);
-    list.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      if (!this._draggedTaskId || e.target.closest && e.target.closest(".task")) return;
-      this._planDropInto(list);
-    });
-    list.addEventListener("drop", (e) => {
-      e.preventDefault();
-      this._finishDrag();
-    });
-    const children = [this._el("div", { className: "plan-day-head" }, head), list];
-    const offer = day.carry_over;
-    if (offer && (offer.items || []).length) children.push(this._buildPlanCarryOver(day, offer));
-    children.push(this._buildPlanAdd(day));
-    return this._el("div", { className: "plan-day" + (isCurrent ? " plan-current" : "") }, children);
-  }
   _taskDragElement(taskId = this._draggedTaskId, colIdx = this._draggedColIdx) {
     if (this._draggedTaskElement?.isConnected && String(taskId) === String(this._draggedTaskId) && colIdx === this._draggedColIdx) {
       return this._draggedTaskElement;
     }
-    let selector = `.task[data-task-id="${CSS.escape(String(taskId))}"]`;
-    if (this._planMode) {
-      const src = this._plan?.sources?.[colIdx];
-      if (!src) return null;
-      selector += `[data-plan-entry="${CSS.escape(String(src.entry_id))}"]`;
-      return this.shadowRoot.querySelector(selector);
-    }
+    return this._findTaskRow(taskId, colIdx);
+  }
+  // The row of a task of the card's list *colIdx*.
+  _findTaskRow(taskId, colIdx) {
+    const selector = `.task[data-task-id="${CSS.escape(String(taskId))}"]`;
     const found = [...this.shadowRoot.querySelectorAll(selector)];
     if (found.length < 2) return found[0] || null;
     return found.find((el) => el.classList.contains("dragging")) || found.find((el) => el.closest(".task-list")?.dataset.colIdx === String(colIdx)) || found[0];
-  }
-  _planDropInto(list) {
-    const el = this._taskDragElement();
-    if (el && el.parentNode !== list) list.insertBefore(el, list.querySelector(".plan-empty"));
-  }
-  // The day's focus: a line of text, edited in place.
-  _buildPlanNote(day) {
-    if (this._planNoteEditing === day.date) {
-      const input = this._el("input", {
-        type: "text",
-        className: "plan-note-input",
-        value: day.note || "",
-        maxlength: "255",
-        placeholder: this._t("plan_note_placeholder")
-      });
-      let finished = false;
-      const finish = (save) => {
-        if (finished) return;
-        finished = true;
-        this._planNoteEditing = null;
-        const value = input.value.trim();
-        if (save && value !== (day.note || "")) {
-          this._planWrite("home_tasks/set_plan_day", { date: day.date, note: value || null });
-        } else {
-          this._render();
-        }
-      };
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          finish(true);
-        } else if (e.key === "Escape") finish(false);
-      });
-      input.addEventListener("blur", () => finish(true));
-      setTimeout(() => {
-        if (input.isConnected) input.focus();
-      }, 0);
-      return input;
-    }
-    const note = this._el("div", {
-      className: "plan-note" + (day.note ? "" : " empty"),
-      textContent: day.note || this._t("plan_note_placeholder")
-    });
-    note.addEventListener("click", () => {
-      this._planNoteEditing = day.date;
-      this._render();
-    });
-    return note;
-  }
-  _buildPlanCarryOver(day, offer) {
-    const btn = this._el("button", {
-      className: "plan-carry",
-      textContent: this._t("plan_carry_over", this._planShortDate(offer.date), offer.items.length)
-    });
-    btn.addEventListener("click", () => this._planWrite("home_tasks/set_plan_day", {
-      date: day.date,
-      items: offer.items.map((r) => ({ task_id: r.task_id, entry_id: r.entry_id }))
-    }));
-    return btn;
-  }
-  // One row of a day: a task of one of the plan's lists, with its place in
-  // the day's order where a list has the checkbox.
-  _buildPlanRow(row, number, showList, day) {
-    const colIdx = this._planColByEntry ? this._planColByEntry.get(row.entry_id) : void 0;
-    const cs = colIdx !== void 0 ? this._columns[colIdx] : null;
-    const task = cs ? (cs.tasks || []).find((t) => String(t.id) === String(row.task_id)) : null;
-    const listBadge = showList ? this._el("span", { className: "plan-list-badge", textContent: row.list_name }) : null;
-    const done = !!row.completed;
-    let className = `task plan-row plan-kind-${row.kind}`;
-    if (done) className += " completed";
-    if (!task) {
-      const meta2 = listBadge ? [this._el("div", { className: "task-meta" }, [listBadge])] : [];
-      return this._el("div", { className }, [
-        this._el("div", { className: "task-main" }, [
-          this._el("span", { className: "plan-num" + (done ? " done" : ""), textContent: done ? "✓" : String(number) }),
-          this._el("div", { className: "task-content" }, [
-            this._el("span", { className: "task-title", textContent: row.title }),
-            ...meta2
-          ])
-        ])
-      ]);
-    }
-    const col = this._config.columns[colIdx];
-    const isExpanded = this._expandedTasks.has(task.id);
-    const isEditing = this._editingTaskId === task.id;
-    if (isExpanded) className += " is-expanded";
-    const taskEl = this._el("div", { className, draggable: !done && !isEditing && !isExpanded });
-    taskEl.dataset.taskId = task.id;
-    taskEl.dataset.planEntry = row.entry_id;
-    const contentChildren = this._buildTaskContentChildren(task, colIdx, isEditing);
-    const meta = this._buildTaskMetaBadges(task, col, cs, colIdx);
-    if (listBadge) meta.unshift(listBadge);
-    if (meta.length > 0) contentChildren.push(this._el("div", { className: "task-meta" }, meta));
-    const mainRow = this._el("div", { className: "task-main" }, [
-      this._buildPlanNumber(row, task, colIdx, number),
-      this._el("div", { className: "task-content" }, contentChildren),
-      this._buildTaskExpandButton(isExpanded)
-    ]);
-    this._attachTaskExpandClickHandler(mainRow, task, taskEl, colIdx);
-    taskEl.appendChild(mainRow);
-    if (isExpanded) {
-      const actions = this._buildPlanActions(task, day, row);
-      if (actions.length > 0) taskEl.appendChild(this._el("div", { className: "plan-actions" }, actions));
-      const detailsEl = this._buildTaskDetails(task, colIdx);
-      taskEl.appendChild(detailsEl);
-      this._animateExpandedDetails(detailsEl, task);
-    }
-    if (!done) this._attachDragToTask(taskEl, task.id, colIdx);
-    return taskEl;
-  }
-  _buildPlanNumber(row, task, colIdx, number) {
-    const done = !!row.completed;
-    const btn = this._el("button", { className: "plan-num" + (done ? " done" : ""), title: task.title });
-    if (done) {
-      const icon = document.createElement("ha-icon");
-      icon.setAttribute("icon", "mdi:check");
-      btn.appendChild(icon);
-    } else {
-      btn.textContent = String(number);
-    }
-    const rowKey = `${row.entry_id}|${task.id}`;
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      if (Date.now() < (this._suppressRowTapUntil || 0)) return;
-      const guard = this._planUntickGuard;
-      if (guard && guard.key === rowKey && Date.now() < guard.until) return;
-      if (done && !task.completed) {
-        row.completed = false;
-        this._planUntickGuard = { key: rowKey, until: Date.now() + 700 };
-        this._render();
-        this._planWrite("home_tasks/untick_plan_task", { task_id: String(task.id), entry_id: row.entry_id });
-        return;
-      }
-      this._planToggle(row, task, colIdx);
-    });
-    return btn;
-  }
-  // Tick a row off (or take the tick back). The row shows it at once; the
-  // task's list and the plan follow.
-  async _planToggle(row, task, colIdx) {
-    const col = this._config.columns[colIdx];
-    const done = !task.completed;
-    if (done && col.confirm_complete === true) {
-      const ok = await this._confirmDialog(
-        this._t("confirm_complete_msg", task.title),
-        this._t("confirm_complete_ok")
-      );
-      if (!ok) return;
-    }
-    const was = { row: row.completed, task: task.completed };
-    row.completed = done;
-    const recurring = task.recurrence_enabled && task.recurrence_unit;
-    if (!(this._isExternalCol(colIdx) && recurring)) task.completed = done;
-    this._render();
-    try {
-      await this._updateTaskRouted(colIdx, task.id, { completed: done }, { rethrow: true });
-    } catch (err) {
-      row.completed = was.row;
-      task.completed = was.task;
-      if (this._columns[colIdx]) this._columns[colIdx].stale = true;
-      if (!this._isWsTimeout(err)) this._showError(err && err.message || String(err));
-    }
-    if (this._isExternalCol(colIdx)) this._reloadExternal(colIdx);
-    await this._loadAllTasks();
-  }
-  // "Plan a task" under a day: a search across the plan's lists.
-  _buildPlanAdd(day) {
-    const state = this._planAdd;
-    if (!state || state.date !== day.date) {
-      const icon = document.createElement("ha-icon");
-      icon.setAttribute("icon", "mdi:plus");
-      const btn = this._el("button", { className: "plan-add-btn" }, [icon, this._t("plan_add")]);
-      btn.addEventListener("click", () => {
-        this._planAdd = { date: day.date, query: "", fresh: true };
-        this._render();
-      });
-      return btn;
-    }
-    const input = this._el("input", {
-      type: "text",
-      className: "plan-add-input",
-      value: state.query,
-      placeholder: this._t("plan_search_placeholder"),
-      "data-focus-key": "plan_add"
-    });
-    const results = this._el("div", { className: "plan-add-results" });
-    if (!state.lists) state.lists = /* @__PURE__ */ new Set();
-    const fill = () => results.replaceChildren(...this._buildPlanCandidates(day, state.query, state.lists));
-    const withTasks = this._planCandidateLists(day);
-    for (const entryId of [...state.lists]) {
-      if (!withTasks.some((src) => src.entry_id === entryId)) state.lists.delete(entryId);
-    }
-    const chips = withTasks.length > 1 ? this._el("div", { className: "plan-add-lists" }, withTasks.map((src) => {
-      const chip = this._el("button", {
-        className: "plan-list-chip" + (state.lists.has(src.entry_id) ? " active" : ""),
-        textContent: src.name
-      });
-      chip.dataset.planEntry = src.entry_id;
-      chip.addEventListener("click", () => {
-        if (state.lists.has(src.entry_id)) state.lists.delete(src.entry_id);
-        else state.lists.add(src.entry_id);
-        chip.classList.toggle("active", state.lists.has(src.entry_id));
-        fill();
-      });
-      return chip;
-    })) : null;
-    input.addEventListener("input", () => {
-      state.query = input.value;
-      fill();
-    });
-    const close = () => {
-      this._planAdd = null;
-      this._render();
-    };
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") close();
-    });
-    fill();
-    if (state.fresh) {
-      state.fresh = false;
-      setTimeout(() => {
-        if (input.isConnected) input.focus();
-      }, 0);
-    }
-    const closeIcon = document.createElement("ha-icon");
-    closeIcon.setAttribute("icon", "mdi:close");
-    const closeBtn = this._el("button", { className: "plan-add-close", title: this._t("dialog_cancel") }, [closeIcon]);
-    closeBtn.addEventListener("click", close);
-    return this._el("div", { className: "plan-add" }, [
-      this._el("div", { className: "plan-add-row" }, [input, closeBtn]),
-      chips,
-      results
-    ]);
-  }
-  // The plan's lists that hold an open task not on *day* yet.
-  _planCandidateLists(day) {
-    const onDay = new Set((day.items || []).map((r) => `${r.entry_id}|${r.task_id}`));
-    return (this._plan.sources || []).filter((src, i) => (this._columns[i] && this._columns[i].tasks || []).some(
-      (task) => !task.completed && !onDay.has(`${src.entry_id}|${task.id}`)
-    ));
-  }
-  // Open tasks of the plan's lists that are not on *day* yet.
-  _buildPlanCandidates(day, query, lists = /* @__PURE__ */ new Set()) {
-    const onDay = new Set((day.items || []).map((r) => `${r.entry_id}|${r.task_id}`));
-    const q = String(query || "").trim().toLowerCase();
-    const sources = this._plan.sources || [];
-    const showList = sources.length > 1;
-    const found = [];
-    sources.forEach((src, i) => {
-      if (lists.size > 0 && !lists.has(src.entry_id)) return;
-      for (const task of this._columns[i] && this._columns[i].tasks || []) {
-        if (task.completed || onDay.has(`${src.entry_id}|${task.id}`)) continue;
-        if (q && !String(task.title || "").toLowerCase().includes(q)) continue;
-        found.push({ task, src });
-      }
-    });
-    if (found.length === 0) {
-      return [this._el("div", { className: "plan-no-results", textContent: this._t("plan_no_results") })];
-    }
-    return found.slice(0, 8).map(({ task, src }) => {
-      const children = [this._el("span", { className: "plan-candidate-title", textContent: task.title })];
-      if (task.due_date) children.push(this._buildDueDateBadge(task));
-      if (showList) children.push(this._el("span", { className: "plan-list-badge", textContent: src.name }));
-      const btn = this._el("button", { className: "plan-candidate" }, children);
-      btn.addEventListener("click", () => this._planWrite("home_tasks/plan_task", {
-        task_id: String(task.id),
-        entry_id: src.entry_id,
-        date: day.date
-      }));
-      return btn;
-    });
-  }
-  // Take a task's rows out of the plan as it is shown, ahead of the backend
-  // (which drops the reference to a deleted task on its own).
-  _planForget(taskId, colIdx) {
-    const src = this._plan && (this._plan.sources || [])[colIdx];
-    if (!src) return;
-    for (const day of this._plan.days || []) {
-      day.items = (day.items || []).filter(
-        (r) => !(r.entry_id === src.entry_id && String(r.task_id) === String(taskId))
-      );
-    }
-  }
-  // At the top of an open row: to the next day, to another day, off the
-  // plan. A task that is there through its due date can only be moved.
-  _buildPlanActions(task, day, row) {
-    if (row.completed) return [];
-    const plan = this._plan;
-    const ref = { task_id: String(task.id), entry_id: row.entry_id };
-    const others = (plan.horizon || []).filter((d) => d !== day.date);
-    const next = (plan.horizon || [])[(plan.horizon || []).indexOf(day.date) + 1];
-    const buttons = [];
-    const button = (cls, label, onClick) => {
-      const btn = this._el("button", { className: `move-task-btn ${cls}`, textContent: label });
-      btn.addEventListener("click", onClick);
-      buttons.push(btn);
-    };
-    if (next) {
-      button("plan-next-btn", `→ ${this._planDayName(next, plan.today)}`, () => this._planWrite("home_tasks/plan_task", { ...ref, date: next }));
-    }
-    if (others.length > 1) {
-      button("plan-move-btn", `→ ${this._t("plan_move_day")}`, async () => {
-        const date = await this._planDayDialog(task, others, plan.today, this._t("move_task"));
-        if (date) this._planWrite("home_tasks/plan_task", { ...ref, date });
-      });
-    }
-    if (row.kind === "planned") {
-      button("plan-remove-btn", this._t("plan_remove"), () => this._planWrite("home_tasks/unplan_task", { ...ref }));
-    } else {
-      buttons.push(this._el("span", { className: "plan-due-hint", textContent: this._t("plan_due_hint") }));
-    }
-    return buttons;
-  }
-  // Resolves with the day picked (an ISO date), or null.
-  _planDayDialog(task, dates, today, okLabel) {
-    const sel = this._el("select", { className: "ht-move-select" }, dates.map(
-      (d) => this._el("option", { value: d, textContent: this._planDayLabel(d, today) })
-    ));
-    return this._modalDialog({
-      message: this._t("plan_day_msg", task.title),
-      okLabel,
-      body: [sel],
-      resolveOk: () => sel.value
-    });
-  }
-  // --- "Plan for…" in a list ---
-  async _loadPlans() {
-    const r = await this._callWs("home_tasks/get_plans");
-    this._plans = r && Array.isArray(r.plans) ? r.plans : [];
-  }
-  // The plans a column's list belongs to, with the list's id in each.
-  _plansForCol(colIdx) {
-    const col = this._config.columns[colIdx];
-    if (!col) return [];
-    const found = [];
-    for (const plan of this._plans || []) {
-      const src = (plan.sources || []).find(
-        (s) => col.entity_id ? s.entity_id === col.entity_id : s.entry_id === col.list_id
-      );
-      if (src) found.push({ plan, entry_id: src.entry_id });
-    }
-    return found;
-  }
-  async _planTaskViaDialog(task, colIdx) {
-    await this._loadPlans();
-    const targets = this._plansForCol(colIdx);
-    if (targets.length === 0) return;
-    const planSel = this._el("select", { className: "ht-move-select plan-pick" }, targets.map(
-      (t, i) => this._el("option", { value: String(i), textContent: t.plan.name })
-    ));
-    const daySel = this._el("select", { className: "ht-move-select day-pick" });
-    const fillDays = () => {
-      const plan = targets[Number(planSel.value) || 0].plan;
-      const today = plan.today || this._localDateStr(/* @__PURE__ */ new Date());
-      daySel.replaceChildren(...(plan.horizon || []).map(
-        (d) => this._el("option", { value: d, textContent: this._planDayLabel(d, today) })
-      ));
-    };
-    planSel.addEventListener("change", fillDays);
-    fillDays();
-    const choice = await this._modalDialog({
-      message: this._t("plan_day_msg", task.title),
-      okLabel: this._t("plan_ok"),
-      body: targets.length > 1 ? [planSel, daySel] : [daySel],
-      resolveOk: () => ({ target: targets[Number(planSel.value) || 0], date: daySel.value })
-    });
-    if (!choice || !choice.date) return;
-    try {
-      await this._callWs("home_tasks/plan_task", {
-        plan: choice.target.plan.id,
-        task_id: String(task.id),
-        entry_id: choice.target.entry_id,
-        date: choice.date
-      }, { rethrow: true });
-    } catch (err) {
-      if (!this._isWsTimeout(err)) this._showError(err && err.message || String(err));
-    }
-  }
-  // A drag ended: the day the row lies in now gets its rows in the order
-  // they stand. That re-plans a row that came from another day.
-  async _finishPlanDrag(el) {
-    const list = el && el.closest(".plan-day-list");
-    if (!list) {
-      this._render();
-      return;
-    }
-    const date = list.dataset.planDate;
-    const items = [...list.querySelectorAll(".task[data-task-id]")].map((n) => ({
-      task_id: n.dataset.taskId,
-      entry_id: n.dataset.planEntry
-    }));
-    const day = (this._plan && this._plan.days || []).find((d) => d.date === date);
-    const was = (day && day.items || []).map((r) => `${r.entry_id}|${r.task_id}`).join("\n");
-    if (items.map((r) => `${r.entry_id}|${r.task_id}`).join("\n") === was) {
-      this._render();
-      return;
-    }
-    await this._planWrite("home_tasks/set_plan_day", { date, items });
   }
   // --- Styles ---
   _getStyles() {
@@ -13109,6 +10928,2475 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
       .task-anim-enter {
         animation: task-enter 0.22s ease-out;
       }
+    `;
+  }
+  // --- Card config ---
+  connectedCallback() {
+    this._ensureCardMod();
+    if (!this._detailFoldHandler) {
+      this._detailFoldHandler = (e) => {
+        if (e.detail.source !== this) this._applyDetailFold(e.detail.list, e.detail.key, e.detail.folded);
+      };
+      window.addEventListener(DETAIL_FOLD_EVENT, this._detailFoldHandler);
+    }
+    this._updateFitRows();
+    if (this._initialized && this._listsRetryCount > 0 && !this._listsRetryTimer) {
+      this._listsRetryCount--;
+      this._scheduleListsRetry();
+    }
+  }
+  // HA's sections view sets --row-size on the card's grid cell wrapper when
+  // the Layout tab uses a fixed number of rows (inherited into our shadow
+  // DOM); it is empty/"auto" otherwise and in masonry views. Toggle a host
+  // class so the CSS can switch to fill-and-scroll mode (see ha-card rules).
+  _updateFitRows() {
+    let rows = "";
+    try {
+      rows = (getComputedStyle(this).getPropertyValue("--row-size") || "").trim();
+    } catch (_) {
+    }
+    this.classList.toggle("fit-rows", rows !== "" && rows !== "auto");
+  }
+  // card-mod compatibility (issues #31 / #34). card-mod normally styles us
+  // through its hui-card hook, but on a cold page load — while this (large)
+  // module is still being fetched — HA mounts a placeholder first and
+  // card-mod's application can get lost in the swap. card-mod's developer
+  // API exists for exactly this: ask it to apply to this element ourselves.
+  // apply_card_mod reuses an existing <card-mod> node of the same type, so
+  // calling it when the hook already ran is a no-op, and the node survives
+  // our re-renders (see _render's overlay preservation).
+  _ensureCardMod() {
+    if (!(this._config && this._config.card_mod)) return;
+    if (!("customElements" in window) || !customElements.whenDefined) return;
+    if (this._cardModPending) return;
+    this._cardModPending = true;
+    customElements.whenDefined("card-mod").then((cm) => {
+      this._cardModPending = false;
+      cm = cm || customElements.get("card-mod");
+      const cur = this._config && this._config.card_mod;
+      if (!this.isConnected || !cur) return;
+      if (!cm || typeof cm.applyToElement !== "function") return;
+      try {
+        cm.applyToElement(this, "card", cur, { config: this._config }, true, "type-custom-home-tasks-card");
+      } catch (_) {
+      }
+    });
+  }
+  disconnectedCallback() {
+    if (this._detailFoldHandler) {
+      window.removeEventListener(DETAIL_FOLD_EVENT, this._detailFoldHandler);
+      this._detailFoldHandler = null;
+    }
+    if (this._sortCloseHandler) {
+      document.removeEventListener("click", this._sortCloseHandler);
+      this._sortCloseHandler = null;
+    }
+    if (this._touchStartTimer) {
+      clearTimeout(this._touchStartTimer);
+      this._touchStartTimer = null;
+    }
+    if (this._subTouchStartTimer) {
+      clearTimeout(this._subTouchStartTimer);
+      this._subTouchStartTimer = null;
+    }
+    if (this._extPollTimer) {
+      clearInterval(this._extPollTimer);
+      this._extPollTimer = null;
+    }
+    if (this._listsRetryTimer) {
+      clearTimeout(this._listsRetryTimer);
+      this._listsRetryTimer = null;
+    }
+    if (this._voiceActive) {
+      for (const cleanup of this._voiceActive.values()) {
+        try {
+          cleanup();
+        } catch (_) {
+        }
+      }
+      this._voiceActive.clear();
+    }
+  }
+  getCardSize() {
+    return 3 + this._columns.reduce((sum, cs) => sum + cs.tasks.length, 0);
+  }
+  getLayoutOptions() {
+    return {
+      grid_columns: "full",
+      grid_min_columns: 4,
+      grid_rows: "auto",
+      grid_min_rows: 2
+    };
+  }
+  // Current HA API (sections view Layout tab, 12-column grid — the legacy
+  // getLayoutOptions above speaks the old 4-column grid, HA migrates ×3).
+  // Rows default to "auto"; a fixed number makes the card fill the cell and
+  // scroll its body.
+  getGridOptions() {
+    return {
+      columns: "full",
+      min_columns: 12,
+      rows: "auto",
+      min_rows: 2
+    };
+  }
+  // ── What a card type fills in ─────────────────────────────────────────────
+  //
+  // The shared code above knows a card's lists by their index ("colIdx")
+  // and reaches their settings through _sourceCols()/_sourceCol(i): the
+  // columns a card of lists is configured with, the lists a day plan draws
+  // from. The rest are the points where card types differ.
+  // The lists the card shows tasks of, as column options.
+  _sourceCols() {
+    return this._config.columns;
+  }
+  _sourceCol(i) {
+    return this._config.columns[i];
+  }
+  // What the card draws in its ha-card.
+  _buildCardContent() {
+    return document.createElement("div");
+  }
+  // Loaded together with the lists when the card starts.
+  _loadOwnData() {
+    return null;
+  }
+  // Whether what the backend answered at start is not all there yet (it is
+  // still starting): the lists are asked for again then.
+  _bootIncomplete() {
+    return false;
+  }
+  // The lists are known: load their tasks.
+  async _afterListsLoaded() {
+    await this._loadAllTasks();
+  }
+  // Per list, what says whether its tasks changed since the card read them
+  // ({stamp}), or null when the card reads every list every time.
+  _sourceStamps() {
+    return null;
+  }
+  // Before the 30 s poll of linked lists.
+  _beforePoll() {
+  }
+  // Before a linked list is read again after a write to it.
+  _beforeExternalReload(_colIdx) {
+  }
+  // A task was deleted on the card, ahead of the backend's answer.
+  _taskGoneLocally(_taskId, _colIdx) {
+  }
+  // ... and the backend has been told.
+  _afterDeleteSent() {
+  }
+  // Buttons the card type puts first among a task's actions.
+  _extraTaskActions(_task, _colIdx) {
+    return [];
+  }
+  // A touch drag over the card but over no row.
+  _touchOverNothing(_el) {
+  }
+};
+
+// src/views/list-card.js
+var HomeTasksCard = class extends TasksCardBase {
+  setConfig(config) {
+    if (config.view === "day_plan") {
+      throw new Error(
+        "The day plan is a card of its own: use type custom:home-tasks-day-plan-card (and drop view)"
+      );
+    }
+    if (config.list_id && !config.columns) {
+      const { type, columns: _c, ...colConfig } = config;
+      config = { ...type ? { type } : {}, columns: [colConfig] };
+    }
+    if (!config.columns || !Array.isArray(config.columns) || config.columns.length === 0) {
+      config = { ...config, columns: [{}] };
+    }
+    config = {
+      ...config,
+      columns: config.columns.map(({ type: _t, ...col }) => col)
+    };
+    const prevConfig = this._config || { columns: [] };
+    this._config = config;
+    while (this._columns.length < config.columns.length) {
+      this._columns.push(this._defaultColState());
+    }
+    this._columns.length = config.columns.length;
+    if (this._editingTaskId) {
+      const taskStillExists = this._columns.some((cs) => cs.tasks?.some((t) => t.id === this._editingTaskId));
+      if (!taskStillExists) this._editingTaskId = null;
+    }
+    const allTaskIds = new Set(this._columns.flatMap((cs) => (cs.tasks || []).map((t) => t.id)));
+    for (const id of this._expandedTasks) {
+      if (!allTaskIds.has(id)) this._expandedTasks.delete(id);
+    }
+    for (let i = 0; i < config.columns.length; i++) {
+      const col = config.columns[i];
+      const prevCol = prevConfig.columns?.[i];
+      const colSourceChanged = col.list_id !== prevCol?.list_id || col.entity_id !== prevCol?.entity_id;
+      if (colSourceChanged) {
+        this._columns[i].taskSearchQuery = "";
+        this._columns[i].newTaskTitle = "";
+      }
+      if (colSourceChanged || col.default_filter !== prevCol?.default_filter) {
+        this._columns[i].filter = col.default_filter || "all";
+        if (this._columns[i].filter === "due_soon" && col.show_due_soon_filter !== true) {
+          this._columns[i].filter = "all";
+        }
+        this._columns[i].tagFilters = /* @__PURE__ */ new Set();
+        this._columns[i].personFilters = /* @__PURE__ */ new Set();
+      }
+      if (col.show_tags === false && prevCol?.show_tags !== false) {
+        this._columns[i].tagFilters = /* @__PURE__ */ new Set();
+      }
+      if (col.show_assigned_person === false && prevCol?.show_assigned_person !== false) {
+        this._columns[i].personFilters = /* @__PURE__ */ new Set();
+      }
+      if (colSourceChanged || col.default_sort !== prevCol?.default_sort) {
+        this._columns[i].sortBy = col.default_sort || "manual";
+      }
+    }
+    if (this._initialized) {
+      this._loadAllTasks();
+    } else {
+      this._render();
+    }
+    this._syncImageGenerationConfig();
+    this._ensureCardMod();
+  }
+  _text(str) {
+    return document.createTextNode(str);
+  }
+  // Can tasks in this column carry a due date / a due time? Native lists
+  // always; external lists per provider capability (see listSupportsDue /
+  // listSupportsDueTime at module level).
+  _colSupportsDue(colIdx) {
+    if (!this._isExternalCol(colIdx)) return true;
+    return listSupportsDue(this._getExternalListInfo(colIdx));
+  }
+  _colProviderType(colIdx) {
+    return this._getExternalListInfo(colIdx)?.provider_type ?? (this._isExternalCol(colIdx) ? "generic" : "native");
+  }
+  // Enter inside the add-row date/time inputs: _render defers rebuilds while
+  // a date/time input has focus (its segment state would be lost), which
+  // would swallow the render that shows the new task. Hand focus to the
+  // title input first (focus restore after the rebuild targets it anyway).
+  _addTaskFromDueRow(colIdx) {
+    const titleInput = this.shadowRoot.querySelector(`.add-input[data-focus-key="add_task_col_${colIdx}"]`);
+    if (titleInput) {
+      try {
+        titleInput.focus();
+      } catch (_) {
+      }
+    } else {
+      const active = this.shadowRoot.activeElement;
+      if (active && active.blur) active.blur();
+    }
+    return this._addTask(colIdx);
+  }
+  _nudgeAddInput(colIdx) {
+    const el = this.shadowRoot?.querySelector(
+      `.add-input[data-focus-key="add_task_col_${colIdx}"]`
+    );
+    if (!el) return;
+    try {
+      el.focus();
+    } catch (_) {
+    }
+    el.classList.remove("nudge");
+    void el.offsetWidth;
+    el.classList.add("nudge");
+    setTimeout(() => el.classList.remove("nudge"), 700);
+  }
+  // show_add_details: a new task is drafted under the add row with the same
+  // detail fields as an existing one, and only created on Add.
+  async _openDraft(colIdx) {
+    const cs = this._columns[colIdx];
+    const title = (cs.newTaskTitle || "").trim();
+    const isExt = this._isExternalCol(colIdx);
+    const r = await this._callWs(
+      "home_tasks/get_defaults",
+      isExt ? { entity_id: this._colEntityId(colIdx) } : { list_id: this._colListId(colIdx) }
+    );
+    const defaults = r && r.defaults || {};
+    if (isExt && r) this._sourceDefaults[this._colEntityId(colIdx)] = r.defaults || null;
+    const person = this._autoAssignPerson(colIdx);
+    const people = person ? [person] : [...defaults.assignees || (defaults.assignee ? [defaults.assignee] : [])];
+    const { addDue, addDueTime } = this._addRowDue(colIdx);
+    cs.draft = {
+      id: `__draft__${colIdx}`,
+      _draft: true,
+      title,
+      completed: false,
+      notes: "",
+      sub_items: [],
+      due_date: addDue,
+      due_time: addDueTime,
+      priority: defaults.priority ?? null,
+      tags: [...defaults.tags || []],
+      reminders: [...defaults.reminders || []],
+      section_id: defaults.section_id || null,
+      assigned_person: people[0] || null,
+      assigned_persons: people,
+      recurrence_enabled: false,
+      recurrence_value: 1,
+      recurrence_unit: null,
+      recurrence_type: "interval",
+      recurrence_weekdays: [],
+      // What the list fills in by itself: a field the draft empties is
+      // cleared again once the task exists (see _saveDraft).
+      _defaults: defaults
+    };
+    cs.newTaskTitle = "";
+    cs.newTaskDue = "";
+    cs.newTaskDueTime = "";
+    cs.taskSearchQuery = "";
+    this._render();
+    requestAnimationFrame(() => {
+      const input = this.shadowRoot?.querySelector(`.add-input[data-focus-key="add_task_col_${colIdx}"]`);
+      try {
+        input?.focus();
+      } catch (_) {
+      }
+    });
+  }
+  // Closes the draft. With giveBack, its title and due date stay in the add
+  // row (Cancel, Escape, or the pencil again); without, the draft is dropped
+  // (the add row's clear).
+  _closeDraft(colIdx, giveBack) {
+    const cs = this._columns[colIdx];
+    const draft = cs.draft;
+    if (!draft) return;
+    if (giveBack) {
+      cs.newTaskTitle = draft.title || "";
+      if (this._config.columns[colIdx].show_task_search !== false) cs.taskSearchQuery = cs.newTaskTitle.trim();
+      if (this._config.columns[colIdx].show_add_due === true) {
+        cs.newTaskDue = draft.due_date || "";
+        cs.newTaskDueTime = draft.due_time || "";
+      }
+    }
+    cs.draft = null;
+    this._render();
+  }
+  // The draft's title is the add row's field (see _buildColumnAddTask); the
+  // panel holds its detail fields.
+  _buildDraftPanel(cs, colIdx) {
+    const draft = cs.draft;
+    const addBtn = this._el("button", { className: "add-btn", textContent: this._t("dialog_add") });
+    addBtn.addEventListener("click", () => this._saveDraft(colIdx));
+    const cancelBtn = this._el("button", { className: "draft-cancel-btn", textContent: this._t("dialog_cancel") });
+    cancelBtn.addEventListener("click", () => this._closeDraft(colIdx, true));
+    return this._el("div", { className: "task-draft" }, [
+      this._buildTaskDetails(draft, colIdx, { draft: true }),
+      this._el("div", { className: "draft-actions" }, [cancelBtn, addBtn])
+    ]);
+  }
+  async _saveDraft(colIdx) {
+    const cs = this._columns[colIdx];
+    const draft = cs.draft;
+    if (!draft || draft._saving) return;
+    const title = (draft.title || "").trim();
+    if (!title) {
+      this._nudgeAddInput(colIdx);
+      return;
+    }
+    const base = {};
+    for (const k of ["due_date", "due_time", "notes", "priority", "tags", "reminders", "assigned_persons"]) {
+      const v = draft[k];
+      if (v !== null && v !== void 0 && v !== "" && !(Array.isArray(v) && !v.length)) base[k] = v;
+    }
+    if (!base.due_date) delete base.due_time;
+    const d = draft._defaults || {};
+    const after = {};
+    if (draft.priority == null && d.priority) after.priority = null;
+    if (!draft.tags?.length && d.tags?.length) after.tags = [];
+    if (!draft.reminders?.length && d.reminders?.length) after.reminders = [];
+    if (!draft.assigned_persons?.length && (d.assignees?.length || d.assignee)) {
+      after.assigned_person = null;
+      after.assigned_persons = [];
+    }
+    if (!draft.section_id && d.section_id && !this._isExternalCol(colIdx)) after.section_id = null;
+    if (draft.recurrence_enabled) {
+      for (const [k, v] of Object.entries(draft)) if (k.startsWith("recurrence_")) after[k] = v;
+    }
+    const isExt = this._isExternalCol(colIdx);
+    draft._saving = true;
+    let newId;
+    try {
+      if (isExt) {
+        const res = await this._callWs(
+          "home_tasks/create_external_task",
+          { entity_id: this._colEntityId(colIdx), title, ...base },
+          { rethrow: true }
+        );
+        newId = res?.uid;
+      } else {
+        const payload = { list_id: this._colListId(colIdx), title, ...base };
+        if (draft.section_id) payload.section_id = draft.section_id;
+        const res = await this._callWs("home_tasks/add_task", payload, { rethrow: true });
+        newId = res?.id;
+      }
+    } catch (err) {
+      draft._saving = false;
+      this._showError(this._t("add_failed"));
+      return;
+    }
+    try {
+      if (newId && isExt && (draft.section_id || d.section_id)) {
+        await this._callWs(
+          "home_tasks/update_external_overlay",
+          { entity_id: this._colEntityId(colIdx), task_uid: newId, section_id: draft.section_id || null },
+          { rethrow: true }
+        );
+      }
+      if (newId && Object.keys(after).length) await this._updateTaskRouted(colIdx, newId, after, { rethrow: true });
+    } catch (err) {
+      this._showError(this._t("draft_details_failed"));
+    }
+    if (cs.draft === draft) cs.draft = null;
+    if (this._isExternalCol(colIdx)) this._reloadExternal(colIdx);
+    else await this._loadAllTasks();
+    this._render();
+  }
+  // Auto-assign: the one person active in the person filter, or else the
+  // column's one preset assignee unless this card doesn't offer them
+  // (hidden_persons). null when neither applies.
+  _autoAssignPerson(colIdx) {
+    const cs = this._columns[colIdx];
+    const col = this._config.columns[colIdx];
+    if (cs.personFilters.size === 1) return [...cs.personFilters][0];
+    if (cs.personFilters.size === 0 && col.filters?.assignees?.length === 1 && !(col.hidden_persons || []).includes(col.filters.assignees[0])) {
+      return col.filters.assignees[0];
+    }
+    return null;
+  }
+  // Due date chosen in the add row (issue #38) — only when the option is
+  // on and the column supports due dates; a time without a date is ignored.
+  _addRowDue(colIdx) {
+    const cs = this._columns[colIdx];
+    const col = this._config.columns[colIdx];
+    const addDue = col.show_add_due === true && this._colSupportsDue(colIdx) && cs.newTaskDue ? cs.newTaskDue : null;
+    const addDueTime = addDue && cs.newTaskDueTime && this._colSupportsDueTime(colIdx) ? cs.newTaskDueTime : null;
+    return { addDue, addDueTime };
+  }
+  async _addTask(colIdx) {
+    const cs = this._columns[colIdx];
+    const title = cs.newTaskTitle.trim();
+    if (!title) {
+      this._nudgeAddInput(colIdx);
+      return;
+    }
+    cs.taskSearchQuery = "";
+    if (!this._colListId(colIdx) && !this._colEntityId(colIdx)) return;
+    const addInput = this.shadowRoot.querySelector(`.add-input[data-focus-key="add_task_col_${colIdx}"]`);
+    const addInputRect = addInput ? addInput.getBoundingClientRect() : null;
+    const before = this._captureListFlip(colIdx);
+    const col = this._config.columns[colIdx];
+    const autoAssignPerson = this._autoAssignPerson(colIdx);
+    const { addDue, addDueTime } = this._addRowDue(colIdx);
+    const resetAddDue = () => {
+      cs.newTaskDue = "";
+      cs.newTaskDueTime = "";
+    };
+    let result;
+    if (this._isExternalCol(colIdx)) {
+      const tempId = "_pending_" + Date.now();
+      const listDefaults = this._sourceDefaults[this._colEntityId(colIdx)] || {};
+      cs.tasks.push({
+        id: tempId,
+        title,
+        completed: false,
+        notes: "",
+        due_date: addDue,
+        due_time: addDueTime,
+        sort_order: cs.tasks.length,
+        sub_items: [],
+        priority: listDefaults.priority ?? null,
+        tags: [...listDefaults.tags || []],
+        reminders: [...listDefaults.reminders || []],
+        section_id: listDefaults.section_id || null,
+        assigned_person: autoAssignPerson || listDefaults.assignee || null,
+        assigned_persons: autoAssignPerson ? [autoAssignPerson] : [...listDefaults.assignees || []],
+        recurrence_enabled: false,
+        _external: true
+      });
+      const typed = { title, due: cs.newTaskDue, dueTime: cs.newTaskDueTime };
+      cs.newTaskTitle = "";
+      resetAddDue();
+      this._justAddedTaskId = tempId;
+      this._addInputRect = addInputRect;
+      this._render();
+      this._justAddedTaskId = null;
+      this._addInputRect = null;
+      this._applyFlip(before, colIdx, 0.25);
+      let addError = null;
+      try {
+        const payload = { entity_id: this._colEntityId(colIdx), title };
+        if (autoAssignPerson) payload.assigned_person = autoAssignPerson;
+        if (addDue) {
+          payload.due_date = addDue;
+          if (addDueTime) payload.due_time = addDueTime;
+        }
+        result = await this._callWs("home_tasks/create_external_task", payload, { rethrow: true });
+      } catch (err) {
+        addError = err;
+      }
+      if (!result && !this._isWsTimeout(addError)) {
+        cs.tasks = cs.tasks.filter((t) => t.id !== tempId);
+        cs.newTaskTitle = typed.title;
+        cs.newTaskDue = typed.due;
+        cs.newTaskDueTime = typed.dueTime;
+        this._showError(this._t("add_failed"));
+        this._render();
+      }
+      this._reloadExternal(colIdx);
+      if (result?.uid && col.auto_generate_image && col.show_images === true && this._config.image_generation?.entity_id) {
+        this._autoGenerateExternalImage(colIdx, String(result.uid));
+      }
+    } else {
+      const payload = { list_id: this._colListId(colIdx), title };
+      if (autoAssignPerson) payload.assigned_person = autoAssignPerson;
+      if (addDue) {
+        payload.due_date = addDue;
+        if (addDueTime) payload.due_time = addDueTime;
+      }
+      let addError = null;
+      try {
+        result = await this._callWs("home_tasks/add_task", payload, { rethrow: true });
+      } catch (err) {
+        addError = err;
+      }
+      if (result) {
+        cs.newTaskTitle = "";
+        resetAddDue();
+        this._justAddedTaskId = result.id ? String(result.id) : null;
+        this._addInputRect = addInputRect;
+        await this._loadAllTasks();
+        this._justAddedTaskId = null;
+        this._addInputRect = null;
+        this._applyFlip(before, colIdx, 0.25);
+        if (result && col.auto_generate_image && col.show_images === true && this._config.image_generation?.entity_id) {
+          this._generateTaskImage(result, colIdx);
+        }
+      } else if (this._isWsTimeout(addError)) {
+        await this._loadAllTasks();
+      } else {
+        this._showError(this._t("add_failed"));
+      }
+    }
+  }
+  // --- Helpers ---
+  _getCompletedCount(colIdx) {
+    return this._columns[colIdx].tasks.filter((t) => t.completed).length;
+  }
+  // Per-column max_height (issues #33 / #34): cap only the task body and let
+  // it scroll internally. Header, add-task row, filters and chips are
+  // siblings above it and therefore stay put. 0 / unset = unlimited.
+  // Every path that builds a column body must go through this — a targeted
+  // refresh (see _refreshTaskListDOM) replaces that node, and without the cap
+  // the list grows out of the card, which clips it in an overflow-hidden or
+  // fixed-row layout.
+  _applyColumnMaxHeight(body, col) {
+    const maxH = this._columnMaxHeight(col);
+    if (maxH) {
+      body.classList.add("scrollable");
+      body.style.maxHeight = `${maxH}px`;
+    }
+  }
+  // Column max_height in px, or 0 when unset/invalid/non-positive.
+  _columnMaxHeight(col) {
+    const n = Number(col && col.max_height);
+    return Number.isFinite(n) && n > 0 ? Math.round(n) : 0;
+  }
+  _getListName(colIdx) {
+    const col = this._config.columns[colIdx];
+    if (col.title) return col.title;
+    if (col.entity_id) {
+      const ext = (this._externalLists || []).find((l) => l.entity_id === col.entity_id);
+      return ext ? ext.name : col.entity_id;
+    }
+    const list = this._lists.find((l) => l.id === col.list_id);
+    return list ? list.name : this._t("my_tasks");
+  }
+  _buildCardContent() {
+    const cols = this._config.columns;
+    if (cols.length === 1) {
+      return this._buildColumn(0);
+    }
+    const children = [];
+    if (this._config.title) {
+      const titleEl = document.createElement("h1");
+      titleEl.className = "card-global-title";
+      titleEl.textContent = this._config.title;
+      children.push(titleEl);
+    }
+    children.push(this._el("div", { className: "multi-columns" }, cols.map((_, i) => this._buildColumn(i))));
+    return this._el("div", {}, children);
+  }
+  _buildColumn(colIdx) {
+    const col = this._config.columns[colIdx];
+    const cs = this._columns[colIdx];
+    const filteredTasks = this._filteredTasks(colIdx);
+    const completedCount = this._getCompletedCount(colIdx);
+    const totalCount = cs.tasks.length;
+    const hideFilters = col.auto_delete_completed === true && col.show_due_soon_filter !== true || col.show_filters === false;
+    const header = this._buildColumnHeader(col, colIdx, completedCount, totalCount);
+    const addTask = this._buildColumnAddTask(cs, colIdx);
+    const sortBtnWrapper = col.show_sort !== false ? this._buildColumnSortControl(col, cs, colIdx) : null;
+    const tagChips = col.show_tag_chips === false ? null : this._buildColumnTagChips(col, cs, colIdx);
+    const personChips = this._personMode(colIdx, "filter") === "off" ? null : this._buildColumnPersonChips(col, cs, colIdx);
+    const sortInTagRow = hideFilters && tagChips !== null && sortBtnWrapper !== null;
+    const sortInPersonRow = hideFilters && tagChips === null && personChips !== null && sortBtnWrapper !== null;
+    const filters = this._buildColumnFilterRow(hideFilters, sortBtnWrapper, sortInTagRow, sortInPersonRow, colIdx);
+    const tagChipsEl = tagChips && sortInTagRow ? this._el("div", { className: "tag-chips-row" }, [tagChips, sortBtnWrapper]) : tagChips;
+    const personChipsEl = personChips && sortInPersonRow ? this._el("div", { className: "person-chips-row" }, [personChips, sortBtnWrapper]) : personChips;
+    const isTiles = col.view_mode === "tiles";
+    const taskList = this._buildColumnBody(filteredTasks, colIdx);
+    this._applyColumnMaxHeight(taskList, col);
+    const children = [];
+    if (header) children.push(header);
+    if (col.show_add_task !== false) children.push(addTask);
+    if (cs.draft) children.push(this._buildDraftPanel(cs, colIdx));
+    if (filters) children.push(filters);
+    if (tagChipsEl) children.push(tagChipsEl);
+    if (personChipsEl) children.push(personChipsEl);
+    children.push(taskList);
+    const listCols = _listColumns(col);
+    const className = "card-column" + (col.compact === true ? " compact" : "") + (isTiles ? " tiles-mode" : "") + (listCols > 1 ? " list-cols" : "");
+    const columnEl = this._el("div", { className }, children);
+    if (listCols > 1) {
+      columnEl.style.setProperty("--ht-list-cols", String(listCols));
+      const minW = _listMinWidth(col);
+      if (minW) columnEl.style.setProperty("--ht-list-min-width", `${minW}px`);
+    }
+    const tileMin = _tileMinWidth(col);
+    if (tileMin) columnEl.style.setProperty("--ht-tile-min", `${tileMin}px`);
+    return columnEl;
+  }
+  _buildColumnHeader(col, colIdx, completedCount, totalCount) {
+    const showTitle = col.show_title !== false;
+    const showProgress = col.show_progress !== false;
+    const headerChildren = [];
+    if (showTitle) {
+      const titleEl = document.createElement("h1");
+      titleEl.className = "title";
+      if (col.icon) {
+        const iconEl = document.createElement("ha-icon");
+        iconEl.setAttribute("icon", col.icon);
+        iconEl.style.cssText = "--mdc-icon-size:1em;width:1em;height:1em;flex-shrink:0;";
+        titleEl.appendChild(iconEl);
+      }
+      titleEl.appendChild(document.createTextNode(this._getListName(colIdx)));
+      headerChildren.push(titleEl);
+    }
+    if (showProgress) {
+      headerChildren.push(this._el("span", {
+        className: "progress",
+        textContent: this._t("progress", completedCount, totalCount)
+      }));
+    }
+    return headerChildren.length > 0 ? this._el("div", { className: "header" }, headerChildren) : null;
+  }
+  // Start voice input. colIdx identifies the column; inputEl is the <input>
+  // element to fill (list-row input or tile-dialog input). If omitted the
+  // column's newTaskTitle state is updated instead (legacy path).
+  // Voice capture needs a secure context: browser mic (getUserMedia) or the
+  // Web Speech API. Neither exists in e.g. the Home Assistant iOS app's webview
+  // or plain-HTTP contexts — hide the mic button there instead of showing a
+  // button that can only fail.
+  _voiceSupported() {
+    return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) || !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  }
+  _startVoiceInput(colIdx, inputEl = null) {
+    if (this._voiceActive.has(colIdx)) {
+      this._voiceActive.get(colIdx)();
+      return;
+    }
+    const setTranscript = (text) => {
+      const cs = this._columns[colIdx];
+      const draft = !inputEl && cs?.draft;
+      if (draft) draft.title = text;
+      else if (cs) cs.newTaskTitle = text;
+      if (inputEl) {
+        inputEl.value = text;
+      } else {
+        const inp = this.shadowRoot.querySelector(`.add-input[data-focus-key="add_task_col_${colIdx}"]`);
+        if (inp) inp.value = text;
+      }
+      if (cs && !draft && this._config.columns[colIdx]?.show_task_search !== false) {
+        cs.taskSearchQuery = text.trim();
+        this._refreshTaskListDOM(colIdx);
+      }
+    };
+    const stopRecording = () => {
+      const cleanup = this._voiceActive.get(colIdx);
+      if (cleanup) cleanup();
+    };
+    this._startHAStt(colIdx, inputEl, setTranscript, stopRecording).catch((err) => {
+      console.warn("Home Tasks voice: HA Assist STT failed.", err);
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SR) {
+        this._startWebSpeech(colIdx, inputEl, setTranscript);
+      } else {
+        const reason = err && err.message ? ": " + err.message : "";
+        this._showError(this._t("voice_failed") + reason);
+      }
+    });
+  }
+  // Primary: HA assist_pipeline/run STT (streams raw PCM to HA's STT backend)
+  async _startHAStt(colIdx, inputEl, setTranscript) {
+    if (!this._hass || !this._hass.connection) throw new Error("no hass");
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err) {
+      throw new Error("mic denied: " + err.message);
+    }
+    let audioRefs = null;
+    let sttHandlerId = null;
+    let unsub = null;
+    let cleaned = false;
+    const cleanup = () => {
+      if (cleaned) return;
+      cleaned = true;
+      if (audioRefs) {
+        try {
+          audioRefs.processor.disconnect();
+        } catch (_) {
+        }
+        try {
+          audioRefs.audioCtx.close();
+        } catch (_) {
+        }
+        try {
+          if (sttHandlerId != null) {
+            this._hass.connection.socket.send(new Uint8Array([sttHandlerId]).buffer);
+          }
+        } catch (_) {
+        }
+        audioRefs = null;
+      }
+      if (stream) {
+        stream.getTracks().forEach((t) => t.stop());
+        stream = null;
+      }
+      if (unsub) {
+        try {
+          unsub();
+        } catch (_) {
+        }
+        unsub = null;
+      }
+      this._voiceActive.delete(colIdx);
+      this._updateMicBtn(colIdx, inputEl, false);
+    };
+    this._voiceActive.set(colIdx, cleanup);
+    this._updateMicBtn(colIdx, inputEl, true);
+    try {
+      unsub = await this._hass.connection.subscribeMessage(
+        (event) => {
+          if (!event || !event.type) return;
+          if (event.type === "run-start") {
+            sttHandlerId = event.data?.runner_data?.stt_binary_handler_id ?? null;
+          } else if (event.type === "stt-start") {
+            if (sttHandlerId == null) {
+              console.warn("HA STT: missing stt_binary_handler_id, falling back to Web Speech");
+              cleanup();
+              this._startWebSpeech(colIdx, inputEl, setTranscript);
+              return;
+            }
+            audioRefs = this._streamPcmAudio(stream, cleanup, sttHandlerId);
+          } else if (event.type === "stt-end") {
+            const text = event.data?.stt_output?.text || "";
+            if (text) setTranscript(text);
+            cleanup();
+          } else if (event.type === "error") {
+            console.warn("HA STT error:", event.data);
+            cleanup();
+            this._startWebSpeech(colIdx, inputEl, setTranscript);
+          } else if (event.type === "run-end") {
+            cleanup();
+          }
+        },
+        {
+          type: "assist_pipeline/run",
+          start_stage: "stt",
+          end_stage: "stt",
+          input: { sample_rate: 16e3 }
+        }
+      );
+    } catch (err) {
+      cleanup();
+      throw err;
+    }
+  }
+  // Stream PCM audio from the MediaStream to HA via binary WebSocket frames.
+  // Returns { audioCtx, processor } for the caller to store and disconnect later.
+  _streamPcmAudio(stream, onError, handlerId) {
+    const SAMPLE_RATE = 16e3;
+    const BUFFER_SIZE = 4096;
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: SAMPLE_RATE });
+      const source = audioCtx.createMediaStreamSource(stream);
+      const processor = audioCtx.createScriptProcessor(BUFFER_SIZE, 1, 1);
+      processor.onaudioprocess = (e) => {
+        const float32 = e.inputBuffer.getChannelData(0);
+        const pcm16 = new Int16Array(float32.length);
+        for (let i = 0; i < float32.length; i++) {
+          pcm16[i] = Math.max(-32768, Math.min(32767, float32[i] * 32767));
+        }
+        const frame = new Uint8Array(1 + pcm16.byteLength);
+        frame[0] = handlerId;
+        frame.set(new Uint8Array(pcm16.buffer), 1);
+        try {
+          this._hass.connection.socket.send(frame.buffer);
+        } catch (err) {
+          if (onError) onError(err);
+        }
+      };
+      source.connect(processor);
+      processor.connect(audioCtx.destination);
+      return { audioCtx, processor };
+    } catch (err) {
+      console.warn("PCM stream setup failed:", err);
+      if (onError) onError(err);
+      return null;
+    }
+  }
+  // Fallback: Web Speech API (browser-native, less accurate)
+  _startWebSpeech(colIdx, inputEl, setTranscript) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      this._updateMicBtn(colIdx, inputEl, false);
+      console.warn("Home Tasks voice: no browser speech recognition available.");
+      this._showError(this._t("voice_failed"));
+      return;
+    }
+    if (!this._voiceActive.has(colIdx)) {
+    }
+    const recognition = new SR();
+    recognition.lang = this._config.voice_lang || "de-DE";
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 3;
+    recognition.continuous = false;
+    const cleanup = () => {
+      try {
+        recognition.abort();
+      } catch (_) {
+      }
+      this._voiceActive.delete(colIdx);
+      this._updateMicBtn(colIdx, inputEl, false);
+    };
+    this._voiceActive.set(colIdx, cleanup);
+    this._updateMicBtn(colIdx, inputEl, true);
+    recognition.onresult = (event) => {
+      const result = event.results[event.results.length - 1];
+      const transcript = result[0].transcript;
+      setTranscript(transcript);
+      if (result.isFinal) {
+        this._voiceActive.delete(colIdx);
+        this._updateMicBtn(colIdx, inputEl, false);
+      }
+    };
+    recognition.onerror = (e) => {
+      console.warn("Web Speech error:", e.error);
+      cleanup();
+    };
+    recognition.onend = () => {
+      if (this._voiceActive.has(colIdx)) cleanup();
+    };
+    try {
+      recognition.start();
+    } catch (err) {
+      cleanup();
+    }
+  }
+  // Update the mic button state without a full re-render.
+  // inputEl: if set, update a mic-btn inside the tile dialog; else find
+  // the column-level mic-btn via data attribute.
+  _updateMicBtn(colIdx, inputEl, recording) {
+    const MIC_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 15c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V6zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-2.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>`;
+    const STOP_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>`;
+    let btn;
+    if (inputEl) {
+      btn = inputEl.closest(".tile-dialog")?.querySelector(".mic-btn");
+    } else {
+      btn = this.shadowRoot.querySelector(`.mic-btn[data-col-idx="${colIdx}"]`);
+    }
+    if (!btn) {
+      this._render();
+      return;
+    }
+    btn.innerHTML = recording ? STOP_SVG : MIC_SVG;
+    btn.title = recording ? this._t("voice_stop") : this._t("voice_input");
+    if (recording) {
+      btn.classList.add("recording");
+    } else {
+      btn.classList.remove("recording");
+    }
+  }
+  // The scrollable body of a column: task list or tile grid. Both the full
+  // render and the targeted refresh below go through here, so a refresh
+  // produces exactly what a re-render would.
+  _buildColumnBody(filteredTasks, colIdx) {
+    const col = this._config.columns[colIdx];
+    if (col.view_mode === "tiles") {
+      const query = this._activeSearchQuery(colIdx);
+      return this._buildColumnTileGrid(
+        query ? this._searchMatches(query, colIdx) : filteredTasks,
+        colIdx
+      );
+    }
+    return this._buildColumnTaskList(filteredTasks, colIdx);
+  }
+  // Updates only the column body, leaving the add-task <input> untouched.
+  //
+  // A full this._render() rebuilds the whole card, and even though focus
+  // and caret position are restored afterwards via data-focus-key, the
+  // <input> DOM node is technically removed and recreated in the process.
+  // On mobile this makes the on-screen keyboard flicker closed and open
+  // again on every keystroke. Replacing only the body container avoids
+  // that, since the <input> is never touched.
+  _refreshTaskListDOM(colIdx) {
+    const col = this._config.columns[colIdx];
+    const selector = col.view_mode === "tiles" ? `.tile-grid-wrap[data-col-idx="${colIdx}"]` : `.task-list[data-col-idx="${colIdx}"]`;
+    const oldBody = this.shadowRoot.querySelector(selector);
+    if (!oldBody || !oldBody.parentNode) {
+      this._render();
+      return;
+    }
+    const before = this._captureListFlip(colIdx);
+    const newBody = this._buildColumnBody(this._filteredTasks(colIdx), colIdx);
+    this._applyColumnMaxHeight(newBody, col);
+    oldBody.replaceWith(newBody);
+    this._applyFlip(before, colIdx, 0.2);
+  }
+  _buildColumnAddTask(cs, colIdx) {
+    const col = this._config.columns[colIdx];
+    const searchEnabled = col.show_task_search !== false;
+    const draft = cs.draft;
+    const addInput = this._el("input", {
+      type: "text",
+      className: "add-input",
+      placeholder: this._t("add_placeholder"),
+      value: draft ? draft.title : cs.newTaskTitle,
+      "data-focus-key": `add_task_col_${colIdx}`,
+      autocomplete: "off"
+    });
+    addInput.addEventListener("input", (e) => {
+      if (draft) {
+        draft.title = e.target.value;
+        return;
+      }
+      cs.newTaskTitle = e.target.value;
+      if (searchEnabled) {
+        cs.taskSearchQuery = e.target.value.trim();
+        this._refreshTaskListDOM(colIdx);
+      }
+    });
+    addInput.addEventListener("keydown", (e) => {
+      if (draft) {
+        if (e.key === "Enter") this._saveDraft(colIdx);
+        else if (e.key === "Escape") {
+          e.preventDefault();
+          this._closeDraft(colIdx, true);
+        }
+        return;
+      }
+      if (e.key === "Enter") {
+        this._addTask(colIdx);
+      } else if (searchEnabled && e.key === "Escape" && cs.taskSearchQuery) {
+        e.preventDefault();
+        addInput.value = "";
+        cs.newTaskTitle = "";
+        cs.taskSearchQuery = "";
+        this._refreshTaskListDOM(colIdx);
+      }
+    });
+    const addBtn = this._el("button", { className: "add-btn", textContent: "+" });
+    addBtn.addEventListener("click", () => draft ? this._saveDraft(colIdx) : this._addTask(colIdx));
+    const clearBtn = this._el("button", {
+      className: "add-clear-btn",
+      textContent: "×",
+      title: this._t("add_clear")
+    });
+    clearBtn.type = "button";
+    clearBtn.setAttribute("aria-label", this._t("add_clear"));
+    if (!cs.newTaskTitle && !draft) clearBtn.style.display = "none";
+    addInput.addEventListener("input", () => {
+      clearBtn.style.display = addInput.value || draft ? "" : "none";
+    });
+    clearBtn.addEventListener("click", () => {
+      addInput.value = "";
+      cs.newTaskTitle = "";
+      clearBtn.style.display = "none";
+      if (draft) {
+        try {
+          addInput.focus();
+        } catch (_) {
+        }
+        this._closeDraft(colIdx, false);
+        return;
+      }
+      if (cs.taskSearchQuery) {
+        cs.taskSearchQuery = "";
+        this._refreshTaskListDOM(colIdx);
+      }
+      try {
+        addInput.focus();
+      } catch (_) {
+      }
+    });
+    const inputWrap = this._el("div", { className: "add-input-wrap" }, [addInput, clearBtn]);
+    const children = [inputWrap];
+    if (col.show_voice !== false && this._voiceSupported()) {
+      const isRecording = this._voiceActive.has(colIdx);
+      const micBtn = this._el("button", {
+        className: "mic-btn" + (isRecording ? " recording" : ""),
+        title: isRecording ? this._t("voice_stop") : this._t("voice_input"),
+        "data-col-idx": String(colIdx),
+        innerHTML: isRecording ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 15c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V6zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-2.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>`
+      });
+      micBtn.addEventListener("click", () => this._startVoiceInput(colIdx));
+      children.push(micBtn);
+    }
+    const showAddDue = col.show_add_due === true && this._colSupportsDue(colIdx) && !draft;
+    let dueRow = null;
+    if (showAddDue) {
+      const dateInput = this._el("input", {
+        type: "date",
+        className: "add-due-date",
+        value: cs.newTaskDue || "",
+        "data-focus-key": `add_due_col_${colIdx}`,
+        "aria-label": this._t("due_date_lbl")
+      });
+      dateInput.addEventListener("change", () => {
+        cs.newTaskDue = dateInput.value || "";
+      });
+      dateInput.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        cs.newTaskDue = dateInput.value || "";
+        this._addTaskFromDueRow(colIdx);
+      });
+      const rowChildren = [dateInput];
+      if (this._colSupportsDueTime(colIdx)) {
+        const timeInput = this._el("input", {
+          type: "time",
+          className: "add-due-time",
+          value: cs.newTaskDueTime || "",
+          "data-focus-key": `add_due_time_col_${colIdx}`,
+          "aria-label": this._t("due_time_lbl")
+        });
+        timeInput.addEventListener("change", () => {
+          cs.newTaskDueTime = timeInput.value || "";
+        });
+        timeInput.addEventListener("keydown", (e) => {
+          if (e.key !== "Enter") return;
+          e.preventDefault();
+          cs.newTaskDueTime = timeInput.value || "";
+          this._addTaskFromDueRow(colIdx);
+        });
+        rowChildren.push(timeInput);
+      }
+      dueRow = this._el("div", { className: "add-due-row" }, rowChildren);
+    }
+    if (col.show_add_details === true) {
+      const detailsLabel = this._t(draft ? "dialog_cancel" : "add_with_details");
+      const detailsBtn = this._el("button", {
+        className: "add-btn add-details-btn" + (draft ? " active" : ""),
+        textContent: "✎",
+        title: detailsLabel
+      });
+      detailsBtn.setAttribute("aria-label", detailsLabel);
+      detailsBtn.setAttribute("aria-pressed", draft ? "true" : "false");
+      detailsBtn.addEventListener("click", () => {
+        if (draft) this._closeDraft(colIdx, true);
+        else this._openDraft(colIdx);
+      });
+      children.push(detailsBtn);
+    }
+    children.push(addBtn);
+    const row = this._el("div", { className: "add-task" }, children);
+    if (!dueRow) return row;
+    return this._el("div", { className: "add-task-group" }, [row, dueRow]);
+  }
+  _buildColumnSortControl(col, cs, colIdx) {
+    const sortLabels = {
+      manual: this._t("sort_manual"),
+      due: this._t("sort_due"),
+      priority: this._t("sort_priority"),
+      title: this._t("sort_title"),
+      person: this._t("sort_person")
+    };
+    const sortKeys = ["manual"];
+    if (col.show_due_date !== false) sortKeys.push("due");
+    if (col.show_priority !== false) sortKeys.push("priority");
+    sortKeys.push("title");
+    if (col.show_assigned_person !== false) sortKeys.push("person");
+    const effectiveSortBy = sortKeys.includes(cs.sortBy) ? cs.sortBy : "manual";
+    const sortDropdown = this._el("div", { className: "sort-dropdown" + (cs.sortOpen ? "" : " hidden") });
+    for (const key of sortKeys) {
+      const opt = this._el("div", {
+        className: "sort-option" + (effectiveSortBy === key ? " active" : ""),
+        textContent: sortLabels[key]
+      });
+      opt.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const before = this._captureListFlip(colIdx);
+        cs.sortBy = key;
+        cs.sortOpen = false;
+        this._render();
+        this._applyFlip(before, colIdx, 0.3);
+      });
+      sortDropdown.appendChild(opt);
+    }
+    const sortBtnWrapper = this._el("div", { className: "sort-btn-wrapper" });
+    const sortBtn = this._el("button", {
+      className: "sort-btn" + (effectiveSortBy !== "manual" ? " active" : ""),
+      textContent: "↑ ↓",
+      title: sortLabels[effectiveSortBy]
+    });
+    sortBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const wasOpen = cs.sortOpen;
+      this._columns.forEach((c) => {
+        c.sortOpen = false;
+      });
+      cs.sortOpen = !wasOpen;
+      this._render();
+    });
+    sortBtnWrapper.appendChild(sortBtn);
+    sortBtnWrapper.appendChild(sortDropdown);
+    return sortBtnWrapper;
+  }
+  _buildColumnTagChips(col, cs, colIdx) {
+    if (col.show_tags === false) return null;
+    const allTags = /* @__PURE__ */ new Set();
+    const baseTasks = this._preFilteredTasks(colIdx);
+    for (const t of baseTasks) {
+      for (const tag of t.tags || []) allTags.add(tag);
+    }
+    for (const label of col.filters?.labels || []) allTags.delete(label);
+    if (allTags.size === 0) return null;
+    const chipChildren = [];
+    for (const tag of [...allTags].sort()) {
+      chipChildren.push(this._buildColumnTagChip(tag, cs, colIdx));
+    }
+    return this._el("div", { className: "tag-chips" }, chipChildren);
+  }
+  _buildColumnTagChip(tag, cs, colIdx) {
+    const isActive = cs.tagFilters.has(tag);
+    const chip = this._el("button", {
+      className: "tag-chip" + (isActive ? " active" : ""),
+      textContent: "#" + tag,
+      "data-tag": tag
+    });
+    chip.addEventListener("click", () => {
+      this._animateFilterChange(colIdx, () => {
+        if (cs.tagFilters.has(tag)) cs.tagFilters.delete(tag);
+        else cs.tagFilters.add(tag);
+      });
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            this.shadowRoot.querySelectorAll(`.tag-chip[data-tag="${CSS.escape(tag)}"]`).forEach((c) => {
+              c.classList.add("chip-anim");
+              c.addEventListener("animationend", () => c.classList.remove("chip-anim"), { once: true });
+            });
+          });
+        });
+      }, 0);
+    });
+    return chip;
+  }
+  _buildColumnPersonChips(col, cs, colIdx) {
+    if (col.show_assigned_person === false) return null;
+    const assignedPersons = /* @__PURE__ */ new Set();
+    const baseTasks = this._preFilteredTasks(colIdx);
+    for (const t of baseTasks) {
+      for (const p of _assignees(t)) assignedPersons.add(p);
+    }
+    for (const eid of col.filters?.assignees || []) assignedPersons.delete(eid);
+    if (assignedPersons.size === 0) return null;
+    const chipChildren = [];
+    for (const eid of [...assignedPersons].sort()) {
+      chipChildren.push(this._buildColumnPersonChip(eid, cs, colIdx));
+    }
+    return this._el("div", { className: "person-chips" }, chipChildren);
+  }
+  _buildColumnPersonChip(eid, cs, colIdx) {
+    const isActive = cs.personFilters.has(eid);
+    let name = eid;
+    if (this._hass && this._hass.states && this._hass.states[eid]) {
+      name = this._hass.states[eid].attributes?.friendly_name || eid;
+    }
+    const mode = this._personMode(colIdx, "filter");
+    const withAvatar = mode === "picture" || mode === "both";
+    const avatarOnly = mode === "picture";
+    const chip = this._el("button", {
+      className: "person-chip" + (isActive ? " active" : "") + (withAvatar ? " with-avatar" : "") + (avatarOnly ? " avatar-only" : ""),
+      "data-eid": eid,
+      title: name
+    });
+    if (avatarOnly) {
+      chip.appendChild(this._buildPersonAvatar(eid, name));
+    } else if (withAvatar) {
+      chip.append(this._buildPersonAvatar(eid, name), this._el("span", { textContent: name }));
+    } else {
+      chip.textContent = "👤 " + name;
+    }
+    chip.addEventListener("click", () => {
+      this._animateFilterChange(colIdx, () => {
+        if (cs.personFilters.has(eid)) cs.personFilters.delete(eid);
+        else cs.personFilters.add(eid);
+      });
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            this.shadowRoot.querySelectorAll(`.person-chip[data-eid="${CSS.escape(eid)}"]`).forEach((c) => {
+              c.classList.add("chip-anim");
+              c.addEventListener("animationend", () => c.classList.remove("chip-anim"), { once: true });
+            });
+          });
+        });
+      }, 0);
+    });
+    return chip;
+  }
+  _buildColumnFilterRow(hideFilters, sortBtnWrapper, sortInTagRow, sortInPersonRow, colIdx) {
+    const col = this._config.columns[colIdx];
+    const autoDelete = col.auto_delete_completed === true;
+    const dueSoonEnabled = col.show_due_soon_filter === true;
+    const children = [];
+    if (hideFilters) {
+      if (sortBtnWrapper && !sortInTagRow && !sortInPersonRow) {
+        children.push(this._el("div", { className: "filter-spacer" }));
+        children.push(sortBtnWrapper);
+      }
+    } else {
+      if (autoDelete) {
+        children.push(this._buildFilterBtn(this._t("filter_all"), "all", colIdx));
+      } else {
+        children.push(
+          this._buildFilterBtn(this._t("filter_all"), "all", colIdx),
+          this._buildFilterBtn(this._t("filter_open"), "open", colIdx),
+          this._buildFilterBtn(this._t("filter_done"), "done", colIdx)
+        );
+      }
+      if (dueSoonEnabled) {
+        children.push(this._buildFilterBtn(this._t("filter_due_soon"), "due_soon", colIdx));
+      }
+      children.push(this._el("div", { className: "filter-spacer" }));
+      if (sortBtnWrapper) children.push(sortBtnWrapper);
+    }
+    return children.length > 0 ? this._el("div", { className: "filters" }, children) : null;
+  }
+  // Tasks whose title contains the query, prefix matches first. Deliberately
+  // ignores the All/Open/Done filter and the tag/person chips: the point of
+  // the search is to find a task you already have, wherever it sits.
+  _searchMatches(query, colIdx) {
+    const cs = this._columns[colIdx];
+    const q = query.toLowerCase();
+    return (cs.tasks || []).filter((t) => t.title && t.title.toLowerCase().includes(q)).sort((a, b) => {
+      const aStarts = a.title.toLowerCase().startsWith(q) ? 0 : 1;
+      const bStarts = b.title.toLowerCase().startsWith(q) ? 0 : 1;
+      if (aStarts !== bStarts) return aStarts - bStarts;
+      return a.title.localeCompare(b.title);
+    });
+  }
+  // While searching, replaces the normal section-grouped view with a flat
+  // list of matches (open + completed, across all sections) so section
+  // headers don't eat the whole screen on mobile.
+  _buildTaskSearchResults(query, colIdx) {
+    const matches = this._searchMatches(query, colIdx);
+    const children = matches.length === 0 ? [this._el("div", { className: "empty-state", textContent: this._t("empty") })] : matches.map((task) => this._buildTask(task, colIdx));
+    return this._el("div", { className: "task-list", "data-col-idx": String(colIdx) }, children);
+  }
+  _buildColumnTaskList(filteredTasks, colIdx) {
+    const cs = this._columns[colIdx];
+    const col = this._config.columns[colIdx];
+    const activeQuery = this._activeSearchQuery(colIdx);
+    if (activeQuery) {
+      return this._buildTaskSearchResults(activeQuery, colIdx);
+    }
+    const sections = (cs.sections || []).slice().sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    const taskListChildren = [];
+    if (filteredTasks.length === 0) {
+      taskListChildren.push(
+        this._el("div", { className: "empty-state", textContent: this._t("empty") })
+      );
+    } else if (sections.length === 0) {
+      const openTasks = filteredTasks.filter((t) => !t.completed);
+      const doneTasks = filteredTasks.filter((t) => t.completed);
+      for (const task of openTasks) taskListChildren.push(this._buildTask(task, colIdx));
+      if (doneTasks.length > 0 && openTasks.length > 0) {
+        taskListChildren.push(this._buildDoneHeader(colIdx));
+        for (const task of doneTasks) {
+          if (!this._isSectionCollapsed(colIdx, "__done__")) {
+            taskListChildren.push(this._buildTask(task, colIdx));
+          }
+        }
+      } else {
+        for (const task of doneTasks) taskListChildren.push(this._buildTask(task, colIdx));
+      }
+    } else {
+      const knownIds = new Set(sections.map((s) => s.id));
+      const openTasks = filteredTasks.filter((t) => !t.completed);
+      const doneTasks = filteredTasks.filter((t) => t.completed);
+      const unsorted = openTasks.filter((t) => !t.section_id || !knownIds.has(t.section_id));
+      const bySection = new Map(sections.map((s) => [s.id, []]));
+      for (const t of openTasks) {
+        if (t.section_id && knownIds.has(t.section_id)) bySection.get(t.section_id).push(t);
+      }
+      for (const t of unsorted) taskListChildren.push(this._buildTask(t, colIdx));
+      for (const section of sections) {
+        const tasksIn = bySection.get(section.id) || [];
+        const collapsed = this._isSectionCollapsed(colIdx, section.id);
+        taskListChildren.push(this._buildSectionHeader(section, colIdx, { collapsed, count: tasksIn.length }));
+        taskListChildren.push(this._buildSectionBody(section.id, tasksIn, colIdx, collapsed));
+      }
+      if (doneTasks.length > 0) {
+        const collapsed = this._isSectionCollapsed(colIdx, "__done__");
+        taskListChildren.push(this._buildDoneHeader(colIdx, { collapsed, count: doneTasks.length }));
+        taskListChildren.push(this._buildSectionBody("__done__", doneTasks, colIdx, collapsed));
+      }
+    }
+    const taskList = this._el("div", {
+      className: "task-list",
+      "data-col-idx": String(colIdx)
+    }, taskListChildren);
+    taskList.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      if (!this._draggedTaskId) return;
+      const tgtColIdx = parseInt(taskList.dataset.colIdx);
+      if (tgtColIdx !== this._draggedColIdx) {
+        const draggedEl = this._taskDragElement();
+        if (draggedEl && draggedEl.parentNode !== taskList) {
+          if (draggedEl.parentElement) draggedEl.parentElement.removeChild(draggedEl);
+          taskList.appendChild(draggedEl);
+        }
+        taskList.closest(".card-column")?.classList.add("drag-target");
+      }
+    });
+    taskList.addEventListener("drop", (e) => {
+      e.preventDefault();
+      this._finishDrag();
+    });
+    return taskList;
+  }
+  // ── Tile / Kachel view ─────────────────────────────────────────────────────
+  _buildColumnTileGrid(filteredTasks, colIdx) {
+    const openTasks = filteredTasks.filter((t) => !t.completed);
+    const doneTasks = filteredTasks.filter((t) => t.completed);
+    const ordered = [...openTasks, ...doneTasks];
+    const tileEls = ordered.map((task) => this._buildTaskTile(task, colIdx));
+    if (tileEls.length === 0) {
+      const empty = this._el("div", { className: "empty-state", textContent: this._t("empty") });
+      return this._el("div", { className: "tile-grid-wrap", "data-col-idx": String(colIdx) }, [empty]);
+    }
+    const grid = this._el("div", { className: "tile-grid-inner" }, tileEls);
+    return this._el("div", { className: "tile-grid-wrap", "data-col-idx": String(colIdx) }, [grid]);
+  }
+  _buildFilterBtn(label, value, colIdx) {
+    const cs = this._columns[colIdx];
+    const btn = this._el("button", {
+      className: `filter-btn${cs.filter === value ? " active" : ""}`,
+      textContent: label
+    });
+    btn.addEventListener("click", () => {
+      this._animateFilterChange(colIdx, () => {
+        cs.filter = value;
+      });
+    });
+    return btn;
+  }
+  _isSectionCollapsed(colIdx, sectionId) {
+    try {
+      const key = `home_tasks_card:section_collapse:${this._columnStorageKey(colIdx)}:${sectionId}`;
+      return window.localStorage.getItem(key) === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+  _setSectionCollapsed(colIdx, sectionId, collapsed) {
+    try {
+      const key = `home_tasks_card:section_collapse:${this._columnStorageKey(colIdx)}:${sectionId}`;
+      if (collapsed) window.localStorage.setItem(key, "1");
+      else window.localStorage.removeItem(key);
+    } catch (e) {
+    }
+  }
+  _toggleSectionCollapsed(colIdx, sectionId) {
+    const currentlyCollapsed = this._isSectionCollapsed(colIdx, sectionId);
+    if (currentlyCollapsed) {
+      this._setSectionCollapsed(colIdx, sectionId, false);
+      this._expandingSection = sectionId;
+      this._render();
+      this._expandingSection = null;
+      this._animateSectionExpand(colIdx, sectionId);
+    } else {
+      const header = this._findSectionHeader(colIdx, sectionId);
+      if (header) header.classList.add("collapsed");
+      this._animateSectionCollapse(colIdx, sectionId, () => {
+        this._setSectionCollapsed(colIdx, sectionId, true);
+        this._render();
+      });
+    }
+  }
+  _buildSectionBody(sectionId, tasks, colIdx, collapsed) {
+    let cls = "section-body";
+    if (collapsed) cls += " collapsed";
+    if (!collapsed && this._expandingSection === sectionId) cls += " expanding";
+    const body = this._el("div", { className: cls });
+    body.dataset.sectionId = sectionId;
+    for (const t of tasks) body.appendChild(this._buildTask(t, colIdx));
+    return body;
+  }
+  _findSectionHeader(colIdx, sectionId) {
+    return this.shadowRoot.querySelector(
+      `.task-list[data-col-idx="${CSS.escape(String(colIdx))}"] .section-header[data-section-id="${CSS.escape(String(sectionId))}"]`
+    );
+  }
+  _findSectionBody(colIdx, sectionId) {
+    return this.shadowRoot.querySelector(
+      `.task-list[data-col-idx="${CSS.escape(String(colIdx))}"] .section-body[data-section-id="${CSS.escape(String(sectionId))}"]`
+    );
+  }
+  _animateSectionCollapse(colIdx, sectionId, done) {
+    const body = this._findSectionBody(colIdx, sectionId);
+    if (!body) {
+      done();
+      return;
+    }
+    if (document.hidden) {
+      done();
+      return;
+    }
+    const h = body.scrollHeight;
+    body.style.maxHeight = h + "px";
+    body.style.opacity = "1";
+    body.style.overflow = "hidden";
+    void body.offsetHeight;
+    let finished = false;
+    const finish = (e) => {
+      if (e && e.propertyName !== "max-height") return;
+      if (finished) return;
+      finished = true;
+      body.removeEventListener("transitionend", finish);
+      body.style.transition = "";
+      body.style.maxHeight = "";
+      body.style.opacity = "";
+      body.style.overflow = "";
+      done();
+    };
+    body.addEventListener("transitionend", finish);
+    setTimeout(() => finish(), 320);
+    requestAnimationFrame(() => {
+      if (finished) return;
+      body.style.transition = "max-height 0.22s ease, opacity 0.18s ease";
+      body.style.maxHeight = "0";
+      body.style.opacity = "0";
+    });
+  }
+  _animateSectionExpand(colIdx, sectionId) {
+    let cleared = false;
+    const clear = (e) => {
+      if (e && e.propertyName !== "max-height") return;
+      if (cleared) return;
+      cleared = true;
+      const body = this._findSectionBody(colIdx, sectionId);
+      if (!body) return;
+      body.removeEventListener("transitionend", clear);
+      body.classList.remove("expanding");
+      body.style.transition = "";
+      body.style.maxHeight = "";
+      body.style.opacity = "";
+      body.style.overflow = "";
+    };
+    setTimeout(() => clear(), 360);
+    if (document.hidden) {
+      clear();
+      return;
+    }
+    requestAnimationFrame(() => {
+      if (cleared) return;
+      const body = this._findSectionBody(colIdx, sectionId);
+      if (!body) return;
+      const targetH = body.scrollHeight;
+      body.classList.remove("expanding");
+      body.style.maxHeight = "0";
+      body.style.opacity = "0";
+      body.style.overflow = "hidden";
+      void body.offsetHeight;
+      body.addEventListener("transitionend", clear);
+      requestAnimationFrame(() => {
+        if (cleared) return;
+        body.style.transition = "max-height 0.22s ease, opacity 0.22s ease";
+        body.style.maxHeight = targetH + "px";
+        body.style.opacity = "1";
+      });
+    });
+  }
+  _buildSectionHeader(section, colIdx, opts = {}) {
+    const { collapsed = false, count = 0, isDone = false } = opts;
+    let className = "section-header";
+    if (collapsed) className += " collapsed";
+    if (isDone) className += " done-header";
+    const header = this._el("div", { className });
+    header.dataset.sectionId = section.id;
+    if (section.icon) {
+      const icon = document.createElement("ha-icon");
+      icon.setAttribute("icon", section.icon);
+      header.appendChild(icon);
+    }
+    const name = this._el("span", { className: "section-name", textContent: section.name });
+    header.appendChild(name);
+    if (count > 0) {
+      header.appendChild(this._el("span", { className: "sub-badge", textContent: String(count) }));
+    }
+    const caret = document.createElement("ha-icon");
+    caret.setAttribute("icon", "mdi:chevron-down");
+    caret.className = "section-caret";
+    header.appendChild(caret);
+    header.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this._toggleSectionCollapsed(colIdx, section.id);
+    });
+    this._attachDragToSectionHeader(header, section.id, colIdx, opts.isDone === true);
+    return header;
+  }
+  _attachDragToSectionHeader(headerEl, sectionId, colIdx, isDoneHeader) {
+    const onEnter = () => {
+      if (!this._draggedTaskId) return;
+      headerEl.classList.add("drop-target");
+      if (!isDoneHeader && this._isSectionCollapsed(colIdx, sectionId)) {
+        if (this._springLoadTimer) clearTimeout(this._springLoadTimer);
+        this._springLoadOriginallyCollapsed = sectionId;
+        this._springLoadTimer = setTimeout(() => {
+          this._setSectionCollapsed(colIdx, sectionId, false);
+          this._render();
+        }, 600);
+      }
+    };
+    const onLeave = () => {
+      headerEl.classList.remove("drop-target");
+      if (this._springLoadTimer) {
+        clearTimeout(this._springLoadTimer);
+        this._springLoadTimer = null;
+      }
+    };
+    const onOver = (e) => {
+      if (!this._draggedTaskId) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = isDoneHeader ? "none" : "move";
+      headerEl.classList.add("drop-target");
+      if (isDoneHeader) return;
+      const draggedEl = this.shadowRoot.querySelector(`.task[data-task-id="${CSS.escape(String(this._draggedTaskId))}"]`);
+      if (!draggedEl) return;
+      const body = headerEl.nextElementSibling;
+      const target = body && body.classList.contains("section-body") ? body : null;
+      if (target && draggedEl.parentNode === target && draggedEl === target.firstChild) return;
+      if (target) {
+        const list = headerEl.closest(".task-list");
+        const siblings = [...list.querySelectorAll(".task:not(.dragging), .section-header, .section-body")];
+        const before = new Map(siblings.map((el) => [el, el.getBoundingClientRect().top]));
+        target.insertBefore(draggedEl, target.firstChild);
+        siblings.forEach((el) => {
+          const dy = (before.get(el) ?? el.getBoundingClientRect().top) - el.getBoundingClientRect().top;
+          if (Math.abs(dy) < 1) return;
+          el.style.transition = "none";
+          el.style.transform = `translateY(${dy}px)`;
+          requestAnimationFrame(() => {
+            el.style.transition = "transform 0.18s ease";
+            el.style.transform = "";
+            el.addEventListener("transitionend", () => {
+              el.style.transition = "";
+              el.style.transform = "";
+            }, { once: true });
+          });
+        });
+      }
+    };
+    headerEl.addEventListener("dragenter", onEnter);
+    headerEl.addEventListener("dragleave", onLeave);
+    headerEl.addEventListener("dragover", onOver);
+    headerEl.addEventListener("drop", (e) => {
+      e.preventDefault();
+      headerEl.classList.remove("drop-target");
+      this._finishDrag();
+    });
+  }
+  _buildDoneHeader(colIdx, opts = {}) {
+    return this._buildSectionHeader(
+      { id: "__done__", name: this._t("done_section_header"), icon: "mdi:check-circle-outline" },
+      colIdx,
+      { ...opts, isDone: true }
+    );
+  }
+  _buildTask(task, colIdx) {
+    const cs = this._columns[colIdx];
+    const col = this._config.columns[colIdx];
+    const isExpanded = this._expandedTasks.has(task.id);
+    const isEditing = this._editingTaskId === task.id;
+    let className = "task";
+    if (task.completed) className += " completed";
+    if (isExpanded) className += " is-expanded";
+    const taskEl = this._el("div", { className, draggable: !isEditing && !isExpanded });
+    taskEl.dataset.taskId = task.id;
+    const checkboxEl = this._buildTaskCheckbox(task, colIdx);
+    const contentChildren = this._buildTaskContentChildren(task, colIdx, isEditing);
+    const metaBadges = this._buildTaskMetaBadges(task, col, cs, colIdx);
+    if (metaBadges.length > 0) {
+      contentChildren.push(this._el("div", { className: "task-meta" }, metaBadges));
+    }
+    const contentEl = this._el("div", { className: "task-content" }, contentChildren);
+    const expandBtn = this._buildTaskExpandButton(isExpanded);
+    const mainRowChildren = [checkboxEl, contentEl];
+    if (task.image_url && !isEditing && col.show_images === true) {
+      const _full = task.image_url;
+      const _small = this._thumbUrl(_full);
+      const thumb = this._el("img", {
+        className: "task-thumb",
+        src: _small,
+        alt: "",
+        title: task.title
+      });
+      if (_small !== _full) thumb.addEventListener("error", () => {
+        thumb.src = _full;
+      }, { once: true });
+      thumb.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (isExpanded) this._expandedTasks.delete(task.id);
+        else this._expandedTasks.add(task.id);
+        this._render();
+      });
+      mainRowChildren.push(thumb);
+    }
+    mainRowChildren.push(expandBtn);
+    const mainRow = this._el("div", { className: "task-main" }, mainRowChildren);
+    this._attachTaskExpandClickHandler(mainRow, task, taskEl, colIdx);
+    taskEl.appendChild(mainRow);
+    if (isExpanded) {
+      const detailsEl = this._buildTaskDetails(task, colIdx);
+      taskEl.appendChild(detailsEl);
+      this._animateExpandedDetails(detailsEl, task);
+    }
+    this._attachDragToTask(taskEl, task.id, colIdx);
+    this._attachTaskAppearanceAnimations(task, colIdx);
+    return taskEl;
+  }
+  _buildTaskCheckbox(task, colIdx) {
+    const checkbox = this._el("input", { type: "checkbox", checked: task.completed });
+    checkbox.addEventListener("click", (e) => {
+      if (Date.now() < (this._suppressRowTapUntil || 0)) e.preventDefault();
+    });
+    checkbox.addEventListener("change", () => this._toggleTask(task.id, task.completed, colIdx));
+    const checkmark = this._el("span", { className: "checkmark" });
+    return this._el("label", { className: "checkbox-container" }, [checkbox, checkmark]);
+  }
+  _attachTaskAppearanceAnimations(task, colIdx) {
+    if (this._justAppearedTaskIds && this._justAppearedTaskIds.has(String(task.id))) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const el = this.shadowRoot.querySelector(
+            `.task-list[data-col-idx="${colIdx}"] .task[data-task-id="${CSS.escape(String(task.id))}"]`
+          );
+          if (el) {
+            el.classList.add("task-anim-enter");
+            el.addEventListener("animationend", () => el.classList.remove("task-anim-enter"), { once: true });
+          }
+        });
+      });
+    }
+    if (this._justAddedTaskId && this._justAddedTaskId === String(task.id)) {
+      this._animateTaskEntry(task.id, colIdx);
+    }
+  }
+  // Auto-generation for an external column, waiting for the task the provider
+  // just created to reach the card. Polls rather than chaining onto
+  // _reloadExternal, which is a fire-and-forget timer. Gives up quietly: an
+  // automatic extra is not worth an error popup, and the button in the task
+  // details still works.
+  async _autoGenerateExternalImage(colIdx, uid) {
+    const sourceKey = this._colSourceKey(colIdx);
+    for (let attempt = 0; attempt < 12; attempt++) {
+      if (!this.isConnected) return;
+      if (this._colSourceKey(colIdx) !== sourceKey) return;
+      const task = this._columns[colIdx]?.tasks?.find((t) => String(t.id) === uid);
+      if (task) {
+        if (!task.image_url) await this._generateTaskImage(task, colIdx);
+        return;
+      }
+      await new Promise((r) => setTimeout(r, 500));
+    }
+  }
+  // --- "Plan for…" in a list ---
+  async _loadPlans() {
+    const r = await this._callWs("home_tasks/get_plans");
+    this._plans = r && Array.isArray(r.plans) ? r.plans : [];
+  }
+  // The plans a column's list belongs to, with the list's id in each.
+  _plansForCol(colIdx) {
+    const col = this._config.columns[colIdx];
+    if (!col) return [];
+    const found = [];
+    for (const plan of this._plans || []) {
+      const src = (plan.sources || []).find(
+        (s) => col.entity_id ? s.entity_id === col.entity_id : s.entry_id === col.list_id
+      );
+      if (src) found.push({ plan, entry_id: src.entry_id });
+    }
+    return found;
+  }
+  async _planTaskViaDialog(task, colIdx) {
+    await this._loadPlans();
+    const targets = this._plansForCol(colIdx);
+    if (targets.length === 0) return;
+    const planSel = this._el("select", { className: "ht-move-select plan-pick" }, targets.map(
+      (t, i) => this._el("option", { value: String(i), textContent: t.plan.name })
+    ));
+    const daySel = this._el("select", { className: "ht-move-select day-pick" });
+    const fillDays = () => {
+      const plan = targets[Number(planSel.value) || 0].plan;
+      const today = plan.today || this._localDateStr(/* @__PURE__ */ new Date());
+      daySel.replaceChildren(...(plan.horizon || []).map(
+        (d) => this._el("option", { value: d, textContent: this._planDayLabel(d, today) })
+      ));
+    };
+    planSel.addEventListener("change", fillDays);
+    fillDays();
+    const choice = await this._modalDialog({
+      message: this._t("plan_day_msg", task.title),
+      okLabel: this._t("plan_ok"),
+      body: targets.length > 1 ? [planSel, daySel] : [daySel],
+      resolveOk: () => ({ target: targets[Number(planSel.value) || 0], date: daySel.value })
+    });
+    if (!choice || !choice.date) return;
+    try {
+      await this._callWs("home_tasks/plan_task", {
+        plan: choice.target.plan.id,
+        task_id: String(task.id),
+        entry_id: choice.target.entry_id,
+        date: choice.date
+      }, { rethrow: true });
+    } catch (err) {
+      if (!this._isWsTimeout(err)) this._showError(err && err.message || String(err));
+    }
+  }
+  static getConfigElement() {
+    return document.createElement("home-tasks-card-editor");
+  }
+  static getStubConfig() {
+    return { columns: [{}] };
+  }
+  // ── TasksCardBase hooks ───────────────────────────────────────────────────
+  // The plans this card's lists belong to, for "Plan for…".
+  _loadOwnData() {
+    return this._loadPlans();
+  }
+  // During Home Assistant's start: a configured list the backend does not
+  // know yet.
+  _bootIncomplete() {
+    return this._config.columns.some(
+      (c) => c.list_id && !this._lists.some((l) => l.id === c.list_id)
+    );
+  }
+  async _afterListsLoaded() {
+    const hasAnyList = this._config.columns.some((c) => c.list_id || c.entity_id);
+    if (!hasAnyList && this._lists.length > 0) {
+      const newCols = [...this._config.columns];
+      newCols[0] = { ...newCols[0], list_id: this._lists[0].id };
+      this._config = { ...this._config, columns: newCols };
+      this._columns[0].filter = newCols[0].default_filter || "all";
+    }
+    await this._loadAllTasks();
+  }
+  // On a list that a day plan draws from: put the task on one of its days.
+  _extraTaskActions(task, colIdx) {
+    if (task.completed || this._plansForCol(colIdx).length === 0) return [];
+    const planBtn = this._el("button", {
+      className: "move-task-btn plan-for-btn",
+      textContent: this._t("plan_for")
+    });
+    planBtn.addEventListener("click", () => this._planTaskViaDialog(task, colIdx));
+    return [planBtn];
+  }
+};
+
+// src/views/day-plan-card.js
+var HomeTasksDayPlanCard = class extends TasksCardBase {
+  setConfig(config) {
+    this._setPlanConfig(config || {});
+  }
+  static getConfigElement() {
+    return document.createElement("home-tasks-day-plan-card-editor");
+  }
+  // What the picker starts a new card with: the first plan there is. With
+  // several plans a card has to name one, so it is named from the start.
+  static async getStubConfig(hass) {
+    const config = { days: 3 };
+    try {
+      const result = await hass.callWS({ type: "home_tasks/get_plans" });
+      const first = result && Array.isArray(result.plans) && result.plans[0];
+      if (first) config.plan = first.id;
+    } catch (_) {
+    }
+    return config;
+  }
+  // ── Day plan view ──────────────────────────────────────────────────────────
+  //
+  // The card shows the days of a plan. A plan only refers to tasks, so the
+  // card loads the lists the plan draws from - TasksCardBase's lists, made
+  // from the plan (_planCols), never drawn as columns. Every row is a task
+  // of one of them, and ticking it off, editing it or opening its details
+  // runs through TasksCardBase, as in the list card.
+  _setPlanConfig(config) {
+    const { type: _type, view: _view, plan, days, title: _title, columns: _c, list_id: _l, entity_id: _e, ...template } = config;
+    for (const key of ["tap_to_complete", "auto_delete_completed", "view_mode", "list_columns"]) delete template[key];
+    const wasPlan = this._planTemplate !== void 0;
+    this._planTemplate = template;
+    const n = parseInt(days, 10);
+    this._planDays = Number.isFinite(n) ? Math.min(7, Math.max(1, n)) : 1;
+    if (!wasPlan || (plan || null) !== this._planId) {
+      this._plan = null;
+      this._planError = null;
+      this._planLoaded = false;
+      this._planSensorId = null;
+    }
+    this._planId = plan || null;
+    this._config = { ...config };
+    if (!wasPlan) {
+      this._columns = [];
+      this._planCols = [];
+    }
+    this._applyPlanSources();
+    if (this._initialized) this._loadAllTasks();
+    else this._render();
+    this._ensureCardMod();
+  }
+  _planSourceKey(col) {
+    return col.entity_id ? `ext:${col.entity_id}` : `native:${col.list_id}`;
+  }
+  // The plan's lists as columns (never drawn). A list keeps the tasks it
+  // has loaded when the plan is read again.
+  _applyPlanSources() {
+    const sources = this._plan && this._plan.sources || [];
+    const kept = new Map(
+      (this._sourceCols() || []).map((c, i) => [this._planSourceKey(c), this._columns[i]])
+    );
+    const columns = sources.map((s) => ({
+      ...this._planTemplate,
+      ...s.kind === "external" ? { entity_id: s.entity_id } : { list_id: s.entry_id }
+    }));
+    this._planCols = columns;
+    this._columns = columns.map((c) => kept.get(this._planSourceKey(c)) || this._defaultColState());
+    this._planColByEntry = new Map(sources.map((s, i) => [s.entry_id, i]));
+  }
+  // What tells a day plan card to look again: the plan's sensor (it changes
+  // when the plan reads differently, and only then), and for a linked list
+  // its todo entity. Without the sensor - its entity disabled - the sensors
+  // of the native lists stand in.
+  _watchPlan(prev, hass) {
+    const changed = (id) => !!id && prev.states?.[id] !== hass.states?.[id];
+    const planSensor = this._planSensorId;
+    const sensorThere = !!(planSensor && hass.states?.[planSensor]);
+    let reload = changed(planSensor);
+    this._sourceCols().forEach((col, i) => {
+      const cs = this._columns[i];
+      if (!cs) return;
+      let watch = null;
+      if (col.entity_id) watch = col.entity_id;
+      else if (!sensorThere) watch = (this._lists || []).find((l) => l.id === col.list_id)?.sensor_entity_id;
+      if (changed(watch)) {
+        cs.stale = true;
+        reload = true;
+      }
+    });
+    if (!reload) return;
+    this._bgUpdates = (this._bgUpdates || 0) + 1;
+    this._loadAllTasks(true).finally(() => {
+      this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1);
+    });
+  }
+  // Doubt the card's copy of a list (of every linked list when none is
+  // named): the next load asks for it again.
+  _planDoubt(colIdx) {
+    this._columns.forEach((cs, i) => {
+      if (colIdx === void 0 ? !!this._sourceCol(i)?.entity_id : i === colIdx) cs.stale = true;
+    });
+  }
+  // The poll of a day plan: a provider can change what Home Assistant's own
+  // todo entity does not carry (labels, a priority). Asked only for linked
+  // lists that have a row on the days shown.
+  _planDoubtShown() {
+    const shown = /* @__PURE__ */ new Set();
+    for (const day of this._plan && this._plan.days || []) {
+      for (const row of day.items || []) shown.add(row.entry_id);
+    }
+    (this._plan && this._plan.sources || []).forEach((src, i) => {
+      if (src.kind === "external" && shown.has(src.entry_id) && this._columns[i]) this._columns[i].stale = true;
+    });
+  }
+  async _loadPlan() {
+    const msg = { days: this._planDays };
+    if (this._planId) msg.plan = this._planId;
+    let result = null;
+    let refused = null;
+    try {
+      result = await this._callWs("home_tasks/get_plan", msg, { rethrow: true });
+    } catch (err) {
+      if (this._isWsTimeout(err)) return;
+      refused = err && err.message || String(err);
+    }
+    if (result && Array.isArray(result.days)) {
+      const json = JSON.stringify(result);
+      if (!this._plan || json !== this._planJson) {
+        this._plan = result;
+        this._planJson = json;
+      }
+      this._planError = null;
+      if (result.sensor_entity_id) this._planSensorId = result.sensor_entity_id;
+    } else {
+      this._plan = null;
+      this._planJson = null;
+      this._planError = refused;
+      if (refused) this._scheduleListsRetry();
+    }
+    this._planLoaded = true;
+    this._applyPlanSources();
+  }
+  // A change to the plan itself. A refusal is a rule of the plan and is
+  // shown as the backend words it; the plan is read again either way.
+  async _planWrite(type, data) {
+    const msg = { ...data };
+    const planId = this._plan && this._plan.id || this._planId;
+    if (planId) msg.plan = planId;
+    try {
+      await this._callWs(type, msg, { rethrow: true });
+    } catch (err) {
+      if (!this._isWsTimeout(err)) this._showError(err && err.message || String(err));
+      this._planJson = null;
+    }
+    await this._loadPlan();
+    this._render();
+  }
+  _buildPlanView() {
+    const children = [];
+    if (this._config.title) {
+      children.push(this._el("h1", { className: "card-global-title", textContent: this._config.title }));
+    }
+    const plan = this._plan;
+    if (!plan) {
+      if (this._planLoaded) {
+        const lines = [this._el("div", { textContent: this._t("plan_none") })];
+        if (this._planError) {
+          lines.push(this._el("div", { className: "plan-missing-detail", textContent: this._planError }));
+        }
+        if (this._hass?.user?.is_admin === true) {
+          const link = this._el("a", {
+            className: "new-entry-link",
+            href: NEW_ENTRY_PATH,
+            textContent: `+ ${this._t("new_entry_link")}`
+          });
+          link.addEventListener("click", (e) => {
+            if (e.button || e.ctrlKey || e.metaKey || e.shiftKey) return;
+            e.preventDefault();
+            history.pushState(null, "", NEW_ENTRY_PATH);
+            window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: false } }));
+          });
+          lines.push(link);
+        }
+        children.push(this._el("div", { className: "plan-missing" }, lines));
+      }
+      return this._el("div", { className: "plan-view" }, children);
+    }
+    const days = plan.days || [];
+    children.push(this._el(
+      "div",
+      { className: "plan-days" + (days.length === 1 ? " single" : "") },
+      days.map((day, i) => this._buildPlanDay(day, i === 0))
+    ));
+    const compact = this._planTemplate.compact === true ? " compact" : "";
+    return this._el("div", { className: "plan-view" + compact }, children);
+  }
+  _buildPlanDay(day, isCurrent) {
+    const plan = this._plan;
+    const rows = day.items || [];
+    const done = rows.filter((r) => r.completed).length;
+    const opts = this._planTemplate || {};
+    const headLine = [
+      this._el("span", { className: "plan-day-name", textContent: this._planDayName(day.date, plan.today) })
+    ];
+    if (opts.show_date !== false) {
+      headLine.push(this._el("span", { className: "plan-day-date", textContent: this._planShortDate(day.date) }));
+    }
+    if (!isCurrent) {
+      headLine.push(this._el("span", { className: "plan-count", textContent: String(rows.length) }));
+    }
+    const head = [this._el("div", { className: "plan-head-line" }, headLine)];
+    if (opts.show_focus !== false) head.push(this._buildPlanNote(day));
+    if (isCurrent && opts.show_progress !== false) {
+      const fill = this._el("div", { className: "plan-bar-fill" });
+      fill.style.width = rows.length ? `${Math.round(done / rows.length * 100)}%` : "0%";
+      head.push(this._el("div", { className: "plan-progress" }, [
+        this._el("span", { className: "plan-progress-text", textContent: this._t("progress", done, rows.length) }),
+        this._el("div", { className: "plan-bar" }, [fill])
+      ]));
+    }
+    const showList = (plan.sources || []).length > 1;
+    const list = this._el("div", { className: "task-list plan-day-list", "data-plan-date": day.date }, [
+      ...rows.map((row, i) => this._buildPlanRow(row, i + 1, showList, day)),
+      // Hidden by CSS as soon as the day holds a row - also one dragged in.
+      this._el("div", { className: "plan-empty", textContent: this._t("plan_empty") })
+    ]);
+    list.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      if (!this._draggedTaskId || e.target.closest && e.target.closest(".task")) return;
+      this._planDropInto(list);
+    });
+    list.addEventListener("drop", (e) => {
+      e.preventDefault();
+      this._finishDrag();
+    });
+    const children = [this._el("div", { className: "plan-day-head" }, head), list];
+    const offer = day.carry_over;
+    if (offer && (offer.items || []).length) children.push(this._buildPlanCarryOver(day, offer));
+    children.push(this._buildPlanAdd(day));
+    return this._el("div", { className: "plan-day" + (isCurrent ? " plan-current" : "") }, children);
+  }
+  _planDropInto(list) {
+    const el = this._taskDragElement();
+    if (el && el.parentNode !== list) list.insertBefore(el, list.querySelector(".plan-empty"));
+  }
+  // The day's focus: a line of text, edited in place.
+  _buildPlanNote(day) {
+    if (this._planNoteEditing === day.date) {
+      const input = this._el("input", {
+        type: "text",
+        className: "plan-note-input",
+        value: day.note || "",
+        maxlength: "255",
+        placeholder: this._t("plan_note_placeholder")
+      });
+      let finished = false;
+      const finish = (save) => {
+        if (finished) return;
+        finished = true;
+        this._planNoteEditing = null;
+        const value = input.value.trim();
+        if (save && value !== (day.note || "")) {
+          this._planWrite("home_tasks/set_plan_day", { date: day.date, note: value || null });
+        } else {
+          this._render();
+        }
+      };
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          finish(true);
+        } else if (e.key === "Escape") finish(false);
+      });
+      input.addEventListener("blur", () => finish(true));
+      setTimeout(() => {
+        if (input.isConnected) input.focus();
+      }, 0);
+      return input;
+    }
+    const note = this._el("div", {
+      className: "plan-note" + (day.note ? "" : " empty"),
+      textContent: day.note || this._t("plan_note_placeholder")
+    });
+    note.addEventListener("click", () => {
+      this._planNoteEditing = day.date;
+      this._render();
+    });
+    return note;
+  }
+  _buildPlanCarryOver(day, offer) {
+    const btn = this._el("button", {
+      className: "plan-carry",
+      textContent: this._t("plan_carry_over", this._planShortDate(offer.date), offer.items.length)
+    });
+    btn.addEventListener("click", () => this._planWrite("home_tasks/set_plan_day", {
+      date: day.date,
+      items: offer.items.map((r) => ({ task_id: r.task_id, entry_id: r.entry_id }))
+    }));
+    return btn;
+  }
+  // One row of a day: a task of one of the plan's lists, with its place in
+  // the day's order where a list has the checkbox.
+  _buildPlanRow(row, number, showList, day) {
+    const colIdx = this._planColByEntry ? this._planColByEntry.get(row.entry_id) : void 0;
+    const cs = colIdx !== void 0 ? this._columns[colIdx] : null;
+    const task = cs ? (cs.tasks || []).find((t) => String(t.id) === String(row.task_id)) : null;
+    const listBadge = showList ? this._el("span", { className: "plan-list-badge", textContent: row.list_name }) : null;
+    const done = !!row.completed;
+    let className = `task plan-row plan-kind-${row.kind}`;
+    if (done) className += " completed";
+    if (!task) {
+      const meta2 = listBadge ? [this._el("div", { className: "task-meta" }, [listBadge])] : [];
+      return this._el("div", { className }, [
+        this._el("div", { className: "task-main" }, [
+          this._el("span", { className: "plan-num" + (done ? " done" : ""), textContent: done ? "✓" : String(number) }),
+          this._el("div", { className: "task-content" }, [
+            this._el("span", { className: "task-title", textContent: row.title }),
+            ...meta2
+          ])
+        ])
+      ]);
+    }
+    const col = this._sourceCol(colIdx);
+    const isExpanded = this._expandedTasks.has(task.id);
+    const isEditing = this._editingTaskId === task.id;
+    if (isExpanded) className += " is-expanded";
+    const taskEl = this._el("div", { className, draggable: !done && !isEditing && !isExpanded });
+    taskEl.dataset.taskId = task.id;
+    taskEl.dataset.planEntry = row.entry_id;
+    const contentChildren = this._buildTaskContentChildren(task, colIdx, isEditing);
+    const meta = this._buildTaskMetaBadges(task, col, cs, colIdx);
+    if (listBadge) meta.unshift(listBadge);
+    if (meta.length > 0) contentChildren.push(this._el("div", { className: "task-meta" }, meta));
+    const mainRow = this._el("div", { className: "task-main" }, [
+      this._buildPlanNumber(row, task, colIdx, number),
+      this._el("div", { className: "task-content" }, contentChildren),
+      this._buildTaskExpandButton(isExpanded)
+    ]);
+    this._attachTaskExpandClickHandler(mainRow, task, taskEl, colIdx);
+    taskEl.appendChild(mainRow);
+    if (isExpanded) {
+      const actions = this._buildPlanActions(task, day, row);
+      if (actions.length > 0) taskEl.appendChild(this._el("div", { className: "plan-actions" }, actions));
+      const detailsEl = this._buildTaskDetails(task, colIdx);
+      taskEl.appendChild(detailsEl);
+      this._animateExpandedDetails(detailsEl, task);
+    }
+    if (!done) this._attachDragToTask(taskEl, task.id, colIdx);
+    return taskEl;
+  }
+  _buildPlanNumber(row, task, colIdx, number) {
+    const done = !!row.completed;
+    const btn = this._el("button", { className: "plan-num" + (done ? " done" : ""), title: task.title });
+    if (done) {
+      const icon = document.createElement("ha-icon");
+      icon.setAttribute("icon", "mdi:check");
+      btn.appendChild(icon);
+    } else {
+      btn.textContent = String(number);
+    }
+    const rowKey = `${row.entry_id}|${task.id}`;
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (Date.now() < (this._suppressRowTapUntil || 0)) return;
+      const guard = this._planUntickGuard;
+      if (guard && guard.key === rowKey && Date.now() < guard.until) return;
+      if (done && !task.completed) {
+        row.completed = false;
+        this._planUntickGuard = { key: rowKey, until: Date.now() + 700 };
+        this._render();
+        this._planWrite("home_tasks/untick_plan_task", { task_id: String(task.id), entry_id: row.entry_id });
+        return;
+      }
+      this._planToggle(row, task, colIdx);
+    });
+    return btn;
+  }
+  // Tick a row off (or take the tick back). The row shows it at once; the
+  // task's list and the plan follow.
+  async _planToggle(row, task, colIdx) {
+    const col = this._sourceCol(colIdx);
+    const done = !task.completed;
+    if (done && col.confirm_complete === true) {
+      const ok = await this._confirmDialog(
+        this._t("confirm_complete_msg", task.title),
+        this._t("confirm_complete_ok")
+      );
+      if (!ok) return;
+    }
+    const was = { row: row.completed, task: task.completed };
+    row.completed = done;
+    const recurring = task.recurrence_enabled && task.recurrence_unit;
+    if (!(this._isExternalCol(colIdx) && recurring)) task.completed = done;
+    this._render();
+    try {
+      await this._updateTaskRouted(colIdx, task.id, { completed: done }, { rethrow: true });
+    } catch (err) {
+      row.completed = was.row;
+      task.completed = was.task;
+      if (this._columns[colIdx]) this._columns[colIdx].stale = true;
+      if (!this._isWsTimeout(err)) this._showError(err && err.message || String(err));
+    }
+    if (this._isExternalCol(colIdx)) this._reloadExternal(colIdx);
+    await this._loadAllTasks();
+  }
+  // "Plan a task" under a day: a search across the plan's lists.
+  _buildPlanAdd(day) {
+    const state = this._planAdd;
+    if (!state || state.date !== day.date) {
+      const icon = document.createElement("ha-icon");
+      icon.setAttribute("icon", "mdi:plus");
+      const btn = this._el("button", { className: "plan-add-btn" }, [icon, this._t("plan_add")]);
+      btn.addEventListener("click", () => {
+        this._planAdd = { date: day.date, query: "", fresh: true };
+        this._render();
+      });
+      return btn;
+    }
+    const input = this._el("input", {
+      type: "text",
+      className: "plan-add-input",
+      value: state.query,
+      placeholder: this._t("plan_search_placeholder"),
+      "data-focus-key": "plan_add"
+    });
+    const results = this._el("div", { className: "plan-add-results" });
+    if (!state.lists) state.lists = /* @__PURE__ */ new Set();
+    const fill = () => results.replaceChildren(...this._buildPlanCandidates(day, state.query, state.lists));
+    const withTasks = this._planCandidateLists(day);
+    for (const entryId of [...state.lists]) {
+      if (!withTasks.some((src) => src.entry_id === entryId)) state.lists.delete(entryId);
+    }
+    const chips = withTasks.length > 1 ? this._el("div", { className: "plan-add-lists" }, withTasks.map((src) => {
+      const chip = this._el("button", {
+        className: "plan-list-chip" + (state.lists.has(src.entry_id) ? " active" : ""),
+        textContent: src.name
+      });
+      chip.dataset.planEntry = src.entry_id;
+      chip.addEventListener("click", () => {
+        if (state.lists.has(src.entry_id)) state.lists.delete(src.entry_id);
+        else state.lists.add(src.entry_id);
+        chip.classList.toggle("active", state.lists.has(src.entry_id));
+        fill();
+      });
+      return chip;
+    })) : null;
+    input.addEventListener("input", () => {
+      state.query = input.value;
+      fill();
+    });
+    const close = () => {
+      this._planAdd = null;
+      this._render();
+    };
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") close();
+    });
+    fill();
+    if (state.fresh) {
+      state.fresh = false;
+      setTimeout(() => {
+        if (input.isConnected) input.focus();
+      }, 0);
+    }
+    const closeIcon = document.createElement("ha-icon");
+    closeIcon.setAttribute("icon", "mdi:close");
+    const closeBtn = this._el("button", { className: "plan-add-close", title: this._t("dialog_cancel") }, [closeIcon]);
+    closeBtn.addEventListener("click", close);
+    return this._el("div", { className: "plan-add" }, [
+      this._el("div", { className: "plan-add-row" }, [input, closeBtn]),
+      chips,
+      results
+    ]);
+  }
+  // The plan's lists that hold an open task not on *day* yet.
+  _planCandidateLists(day) {
+    const onDay = new Set((day.items || []).map((r) => `${r.entry_id}|${r.task_id}`));
+    return (this._plan.sources || []).filter((src, i) => (this._columns[i] && this._columns[i].tasks || []).some(
+      (task) => !task.completed && !onDay.has(`${src.entry_id}|${task.id}`)
+    ));
+  }
+  // Open tasks of the plan's lists that are not on *day* yet.
+  _buildPlanCandidates(day, query, lists = /* @__PURE__ */ new Set()) {
+    const onDay = new Set((day.items || []).map((r) => `${r.entry_id}|${r.task_id}`));
+    const q = String(query || "").trim().toLowerCase();
+    const sources = this._plan.sources || [];
+    const showList = sources.length > 1;
+    const found = [];
+    sources.forEach((src, i) => {
+      if (lists.size > 0 && !lists.has(src.entry_id)) return;
+      for (const task of this._columns[i] && this._columns[i].tasks || []) {
+        if (task.completed || onDay.has(`${src.entry_id}|${task.id}`)) continue;
+        if (q && !String(task.title || "").toLowerCase().includes(q)) continue;
+        found.push({ task, src });
+      }
+    });
+    if (found.length === 0) {
+      return [this._el("div", { className: "plan-no-results", textContent: this._t("plan_no_results") })];
+    }
+    return found.slice(0, 8).map(({ task, src }) => {
+      const children = [this._el("span", { className: "plan-candidate-title", textContent: task.title })];
+      if (task.due_date) children.push(this._buildDueDateBadge(task));
+      if (showList) children.push(this._el("span", { className: "plan-list-badge", textContent: src.name }));
+      const btn = this._el("button", { className: "plan-candidate" }, children);
+      btn.addEventListener("click", () => this._planWrite("home_tasks/plan_task", {
+        task_id: String(task.id),
+        entry_id: src.entry_id,
+        date: day.date
+      }));
+      return btn;
+    });
+  }
+  // Take a task's rows out of the plan as it is shown, ahead of the backend
+  // (which drops the reference to a deleted task on its own).
+  _planForget(taskId, colIdx) {
+    const src = this._plan && (this._plan.sources || [])[colIdx];
+    if (!src) return;
+    for (const day of this._plan.days || []) {
+      day.items = (day.items || []).filter(
+        (r) => !(r.entry_id === src.entry_id && String(r.task_id) === String(taskId))
+      );
+    }
+  }
+  // At the top of an open row: to the next day, to another day, off the
+  // plan. A task that is there through its due date can only be moved.
+  _buildPlanActions(task, day, row) {
+    if (row.completed) return [];
+    const plan = this._plan;
+    const ref = { task_id: String(task.id), entry_id: row.entry_id };
+    const others = (plan.horizon || []).filter((d) => d !== day.date);
+    const next = (plan.horizon || [])[(plan.horizon || []).indexOf(day.date) + 1];
+    const buttons = [];
+    const button = (cls, label, onClick) => {
+      const btn = this._el("button", { className: `move-task-btn ${cls}`, textContent: label });
+      btn.addEventListener("click", onClick);
+      buttons.push(btn);
+    };
+    if (next) {
+      button("plan-next-btn", `→ ${this._planDayName(next, plan.today)}`, () => this._planWrite("home_tasks/plan_task", { ...ref, date: next }));
+    }
+    if (others.length > 1) {
+      button("plan-move-btn", `→ ${this._t("plan_move_day")}`, async () => {
+        const date = await this._planDayDialog(task, others, plan.today, this._t("move_task"));
+        if (date) this._planWrite("home_tasks/plan_task", { ...ref, date });
+      });
+    }
+    if (row.kind === "planned") {
+      button("plan-remove-btn", this._t("plan_remove"), () => this._planWrite("home_tasks/unplan_task", { ...ref }));
+    } else {
+      buttons.push(this._el("span", { className: "plan-due-hint", textContent: this._t("plan_due_hint") }));
+    }
+    return buttons;
+  }
+  // Resolves with the day picked (an ISO date), or null.
+  _planDayDialog(task, dates, today, okLabel) {
+    const sel = this._el("select", { className: "ht-move-select" }, dates.map(
+      (d) => this._el("option", { value: d, textContent: this._planDayLabel(d, today) })
+    ));
+    return this._modalDialog({
+      message: this._t("plan_day_msg", task.title),
+      okLabel,
+      body: [sel],
+      resolveOk: () => sel.value
+    });
+  }
+  // A drag ended: the day the row lies in now gets its rows in the order
+  // they stand. That re-plans a row that came from another day.
+  async _finishPlanDrag(el) {
+    const list = el && el.closest(".plan-day-list");
+    if (!list) {
+      this._render();
+      return;
+    }
+    const date = list.dataset.planDate;
+    const items = [...list.querySelectorAll(".task[data-task-id]")].map((n) => ({
+      task_id: n.dataset.taskId,
+      entry_id: n.dataset.planEntry
+    }));
+    const day = (this._plan && this._plan.days || []).find((d) => d.date === date);
+    const was = (day && day.items || []).map((r) => `${r.entry_id}|${r.task_id}`).join("\n");
+    if (items.map((r) => `${r.entry_id}|${r.task_id}`).join("\n") === was) {
+      this._render();
+      return;
+    }
+    await this._planWrite("home_tasks/set_plan_day", { date, items });
+  }
+  // ── TasksCardBase hooks ───────────────────────────────────────────────────
+  // The lists of the plan, as columns made from it - not columns of the
+  // card's config.
+  _sourceCols() {
+    return this._planCols || [];
+  }
+  _sourceCol(i) {
+    return (this._planCols || [])[i];
+  }
+  _buildCardContent() {
+    return this._buildPlanView();
+  }
+  // The plan names the lists it draws from.
+  _loadOwnData() {
+    return this._loadPlan();
+  }
+  // During Home Assistant's start: the plan's entry may not be loaded yet.
+  _bootIncomplete() {
+    return !this._plan;
+  }
+  // The plan is read; now the tasks of its lists.
+  async _afterListsLoaded() {
+    await this._loadColumnTasks();
+    this._render();
+  }
+  // *quiet*: a look in the background (a sensor changed, the poll). One
+  // that finds nothing new leaves the card as it is - a rebuild under the
+  // pointer or mid-scroll for no change is only a flicker.
+  async _loadAllTasks(quiet = false) {
+    const before = this._planJson;
+    await this._loadPlan();
+    const changed = await this._loadColumnTasks();
+    if (quiet && changed === 0 && before !== void 0 && this._planJson === before) return;
+    this._render();
+  }
+  // A list is loaded again only when the plan says its tasks changed.
+  _sourceStamps() {
+    return this._plan && this._plan.sources || [];
+  }
+  // Its sensor changes whenever the plan reads differently (a row planned,
+  // a task of one of its lists changed, midnight).
+  _watchHass(prev, hass) {
+    this._watchPlan(prev, hass);
+    return false;
+  }
+  // A day plan asks the providers only about the lists it shows rows of.
+  _beforePoll() {
+    this._planDoubtShown();
+  }
+  // A day plan keeps its lists until they change; after a write to a linked
+  // list the provider's answer is what counts.
+  _beforeExternalReload(colIdx) {
+    this._planDoubt(colIdx);
+  }
+  // The row goes with the task; otherwise it would show for a moment as a
+  // row whose list has not answered.
+  _taskGoneLocally(taskId, colIdx) {
+    this._planForget(taskId, colIdx);
+  }
+  // The row was taken out of the card's copy of the plan. Deleted or not,
+  // the plan as it reads now replaces that copy.
+  _afterDeleteSent() {
+    this._planJson = null;
+  }
+  // Days, not lists: the row's new place is a place on the plan.
+  _dropDragged(draggedEl) {
+    this._finishPlanDrag(draggedEl);
+  }
+  // A day of the plan without a row under the finger.
+  _touchOverNothing(el) {
+    const dayList = el.closest(".plan-day-list");
+    if (dayList) this._planDropInto(dayList);
+  }
+  // A task can be on the plan twice (done today, open again tomorrow): the
+  // row is the one of the list *colIdx*.
+  _findTaskRow(taskId, colIdx) {
+    const src = this._plan?.sources?.[colIdx];
+    if (!src) return null;
+    return this.shadowRoot.querySelector(
+      `.task[data-task-id="${CSS.escape(String(taskId))}"][data-plan-entry="${CSS.escape(String(src.entry_id))}"]`
+    );
+  }
+  getCardSize() {
+    const days = this._plan && this._plan.days || [];
+    return 4 + Math.max(0, ...days.map((day) => (day.items || []).length));
+  }
+  _getStyles() {
+    return super._getStyles() + `
       /* ── Day plan view ── */
       .plan-view { display: flex; flex-direction: column; min-height: 0; }
       .plan-view.compact { padding: 0; }
@@ -13268,156 +13556,10 @@ var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
       }
     `;
   }
-  // --- Card config ---
-  connectedCallback() {
-    this._ensureCardMod();
-    if (!this._detailFoldHandler) {
-      this._detailFoldHandler = (e) => {
-        if (e.detail.source !== this) this._applyDetailFold(e.detail.list, e.detail.key, e.detail.folded);
-      };
-      window.addEventListener(DETAIL_FOLD_EVENT, this._detailFoldHandler);
-    }
-    this._updateFitRows();
-    if (this._initialized && this._listsRetryCount > 0 && !this._listsRetryTimer) {
-      this._listsRetryCount--;
-      this._scheduleListsRetry();
-    }
-  }
-  // HA's sections view sets --row-size on the card's grid cell wrapper when
-  // the Layout tab uses a fixed number of rows (inherited into our shadow
-  // DOM); it is empty/"auto" otherwise and in masonry views. Toggle a host
-  // class so the CSS can switch to fill-and-scroll mode (see ha-card rules).
-  _updateFitRows() {
-    let rows = "";
-    try {
-      rows = (getComputedStyle(this).getPropertyValue("--row-size") || "").trim();
-    } catch (_) {
-    }
-    this.classList.toggle("fit-rows", rows !== "" && rows !== "auto");
-  }
-  // card-mod compatibility (issues #31 / #34). card-mod normally styles us
-  // through its hui-card hook, but on a cold page load — while this (large)
-  // module is still being fetched — HA mounts a placeholder first and
-  // card-mod's application can get lost in the swap. card-mod's developer
-  // API exists for exactly this: ask it to apply to this element ourselves.
-  // apply_card_mod reuses an existing <card-mod> node of the same type, so
-  // calling it when the hook already ran is a no-op, and the node survives
-  // our re-renders (see _render's overlay preservation).
-  _ensureCardMod() {
-    if (!(this._config && this._config.card_mod)) return;
-    if (!("customElements" in window) || !customElements.whenDefined) return;
-    if (this._cardModPending) return;
-    this._cardModPending = true;
-    customElements.whenDefined("card-mod").then((cm) => {
-      this._cardModPending = false;
-      cm = cm || customElements.get("card-mod");
-      const cur = this._config && this._config.card_mod;
-      if (!this.isConnected || !cur) return;
-      if (!cm || typeof cm.applyToElement !== "function") return;
-      try {
-        cm.applyToElement(this, "card", cur, { config: this._config }, true, "type-custom-home-tasks-card");
-      } catch (_) {
-      }
-    });
-  }
-  disconnectedCallback() {
-    if (this._detailFoldHandler) {
-      window.removeEventListener(DETAIL_FOLD_EVENT, this._detailFoldHandler);
-      this._detailFoldHandler = null;
-    }
-    if (this._sortCloseHandler) {
-      document.removeEventListener("click", this._sortCloseHandler);
-      this._sortCloseHandler = null;
-    }
-    if (this._touchStartTimer) {
-      clearTimeout(this._touchStartTimer);
-      this._touchStartTimer = null;
-    }
-    if (this._subTouchStartTimer) {
-      clearTimeout(this._subTouchStartTimer);
-      this._subTouchStartTimer = null;
-    }
-    if (this._extPollTimer) {
-      clearInterval(this._extPollTimer);
-      this._extPollTimer = null;
-    }
-    if (this._listsRetryTimer) {
-      clearTimeout(this._listsRetryTimer);
-      this._listsRetryTimer = null;
-    }
-    if (this._voiceActive) {
-      for (const cleanup of this._voiceActive.values()) {
-        try {
-          cleanup();
-        } catch (_) {
-        }
-      }
-      this._voiceActive.clear();
-    }
-  }
-  static getConfigElement() {
-    return document.createElement("home-tasks-card-editor");
-  }
-  static getStubConfig() {
-    return { columns: [{}] };
-  }
-  getCardSize() {
-    if (this._planMode) {
-      const days = this._plan && this._plan.days || [];
-      return 4 + Math.max(0, ...days.map((day) => (day.items || []).length));
-    }
-    return 3 + this._columns.reduce((sum, cs) => sum + cs.tasks.length, 0);
-  }
-  getLayoutOptions() {
-    return {
-      grid_columns: "full",
-      grid_min_columns: 4,
-      grid_rows: "auto",
-      grid_min_rows: 2
-    };
-  }
-  // Current HA API (sections view Layout tab, 12-column grid — the legacy
-  // getLayoutOptions above speaks the old 4-column grid, HA migrates ×3).
-  // Rows default to "auto"; a fixed number makes the card fill the cell and
-  // scroll its body.
-  getGridOptions() {
-    return {
-      columns: "full",
-      min_columns: 12,
-      rows: "auto",
-      min_rows: 2
-    };
-  }
 };
 
-// src/views/day-plan-card.js
-var HomeTasksDayPlanCard = class extends HomeTasksCard {
-  setConfig(config) {
-    this._setPlanConfig(config || {});
-  }
-  static getConfigElement() {
-    return document.createElement("home-tasks-day-plan-card-editor");
-  }
-  // What the picker starts a new card with: the first plan there is. With
-  // several plans a card has to name one, so it is named from the start.
-  static async getStubConfig(hass) {
-    const config = { days: 3 };
-    try {
-      const result = await hass.callWS({ type: "home_tasks/get_plans" });
-      const first = result && Array.isArray(result.plans) && result.plans[0];
-      if (first) config.plan = first.id;
-    } catch (_) {
-    }
-    return config;
-  }
-};
-
-// src/editors/list-editor.js
-var HomeTasksCardEditor = class extends HTMLElement {
-  // The editor of the day plan card is this one with its plan part only.
-  get _isPlanEditor() {
-    return false;
-  }
+// src/editors/editor-base.js
+var EditorBase = class extends HTMLElement {
   // "Defaults" section (issues #44 / #46): list-level default assignee and
   // reminders, stored in the list itself so they apply to every creation
   // path (card, service, WS, voice, todo). Loaded/saved via WS.
@@ -13436,6 +13578,442 @@ var HomeTasksCardEditor = class extends HTMLElement {
     } catch (e) {
     }
   }
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    this._config = { columns: [{}] };
+    this._hass = null;
+    this._lists = [];
+    this._externalLists = [];
+    this._listsLoaded = false;
+    this._editorTab = 0;
+    this._editorCodeMode = {};
+    this._sectionOpen = this._loadSectionState();
+    this._ignoreNextSetConfig = false;
+    this._listSections = {};
+    this._listMeta = {};
+    this._listDefaults = {};
+  }
+  _t(key, ...args) {
+    return _htText(this._hass?.locale?.language || this._hass?.language, key, args);
+  }
+  _el(tag, attrs = {}, children = []) {
+    const el = document.createElement(tag);
+    for (const [key, val] of Object.entries(attrs)) {
+      if (key === "className") el.className = val;
+      else if (key === "textContent") el.textContent = val;
+      else if (key === "value") el.value = val;
+      else if (key === "selected") {
+        if (val) el.selected = true;
+      } else if (key === "placeholder") el.placeholder = val;
+      else if (key === "type") el.type = val;
+      else if (key === "id") el.id = val;
+      else if (key === "checked") el.checked = val;
+      else el.setAttribute(key, val);
+    }
+    for (const child of children) {
+      if (typeof child === "string") el.appendChild(document.createTextNode(child));
+      else if (child) el.appendChild(child);
+    }
+    return el;
+  }
+  set hass(hass) {
+    this._hass = hass;
+    if (!this._listsLoaded) {
+      this._loadLists();
+    }
+  }
+  async _loadLists() {
+    try {
+      const [nativeResult, externalResult, plansResult] = await Promise.all([
+        this._hass.callWS({ type: "home_tasks/get_lists" }),
+        this._hass.callWS({ type: "home_tasks/get_external_lists" }).catch(() => null),
+        this._hass.callWS({ type: "home_tasks/get_plans" }).catch(() => null)
+      ]);
+      if (nativeResult && Array.isArray(nativeResult.lists)) {
+        this._lists = nativeResult.lists;
+      }
+      this._plans = plansResult && Array.isArray(plansResult.plans) ? plansResult.plans : [];
+      this._planLists = plansResult && Array.isArray(plansResult.lists) ? plansResult.lists : [];
+      this._externalLists = externalResult && Array.isArray(externalResult.external_lists) ? externalResult.external_lists.filter((l) => l.linked) : [];
+      this._listsLoaded = true;
+      this._afterListsLoaded();
+      this._render();
+    } catch (e) {
+    }
+  }
+  _render() {
+    const root = this.shadowRoot;
+    root.innerHTML = "";
+    const style = document.createElement("style");
+    style.textContent = `
+      :host { display: block; }
+      .editor { display: flex; flex-direction: column; gap: 0; padding: 16px 0; }
+      .editor-card-title-row { margin-bottom: 12px; }
+      .editor-native-select {
+        width: 100%; box-sizing: border-box; padding: 8px;
+        background: var(--card-background-color); color: var(--primary-text-color);
+        border: 1px solid var(--divider-color); border-radius: 4px; font-size: 14px;
+      }
+      .editor-native-select:focus {
+        outline: none; border-color: var(--primary-color);
+      }
+      .editor-tabs-row {
+        display: flex; align-items: center;
+        border-bottom: 1px solid var(--divider-color, #e0e0e0);
+        margin-bottom: 0;
+      }
+      .editor-tabs { display: flex; gap: 0; align-items: center; flex: 1; }
+      .editor-tab {
+        min-width: 40px; height: 40px; padding: 0 14px;
+        border: none; border-bottom: 3px solid transparent;
+        background: transparent; cursor: pointer; font-size: 14px; font-weight: 500;
+        font-family: inherit; color: var(--secondary-text-color);
+        display: flex; align-items: center; justify-content: center;
+        transition: color 0.15s, border-color 0.15s;
+      }
+      .editor-tab.active { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); }
+      .editor-tab:hover:not(.active) { color: var(--primary-text-color); background: var(--secondary-background-color); }
+      .editor-tab-add {
+        width: 36px; height: 36px; border-radius: 50%; border: none;
+        background: transparent; cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--secondary-text-color); flex-shrink: 0; padding: 0; margin-left: 4px;
+        transition: background 0.15s, color 0.15s;
+      }
+      .editor-tab-add:hover { background: var(--secondary-background-color); color: var(--primary-color); }
+      .editor-col-controls {
+        display: flex; gap: 0; align-items: center;
+        padding: 4px 0 8px; margin-bottom: 8px;
+        border-bottom: 1px solid var(--divider-color, #e0e0e0);
+      }
+      .icon-btn {
+        width: 36px; height: 36px; border-radius: 50%; border: none;
+        background: transparent; cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: var(--secondary-text-color); flex-shrink: 0; padding: 0;
+        transition: background 0.15s, color 0.15s;
+      }
+      .icon-btn:hover:not(:disabled) { background: var(--secondary-background-color); }
+      .icon-btn.active { color: var(--primary-color); }
+      .icon-btn.del { color: var(--error-color, #db4437); }
+      .icon-btn:disabled { opacity: 0.3; cursor: default; }
+      .icon-btn-spacer { flex: 1; }
+      .toggle-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
+      .assignee-chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
+      .assignee-chip {
+        padding: 5px 10px; border-radius: 14px; font-size: 12px; font-family: inherit;
+        border: 1px solid var(--divider-color); background: none;
+        color: var(--secondary-text-color); cursor: pointer;
+      }
+      .assignee-chip.active {
+        background: color-mix(in srgb, var(--primary-color) 18%, transparent);
+        color: var(--primary-color); border-color: var(--primary-color);
+      }
+      .detail-field-row { gap: 4px; }
+      .detail-field-row > .toggle-label { flex: 1; display: flex; flex-direction: column; }
+      .detail-field-row.unavailable > .toggle-label { color: var(--secondary-text-color); }
+      .detail-field-row > ha-switch { margin-left: 8px; }
+      .group-label {
+        display: flex; align-items: center; gap: 10px; margin: 14px 0 2px;
+        font-size: 12px; font-weight: 500; color: var(--secondary-text-color, #888);
+        text-transform: uppercase; letter-spacing: 0.06em;
+      }
+      .group-label::before, .group-label::after {
+        content: ""; flex: 1; height: 1px;
+        background: var(--divider-color, rgba(127,127,127,0.3));
+      }
+      .visual-editor { display: flex; flex-direction: column; gap: 8px; }
+      .field { display: flex; flex-direction: column; gap: 6px; }
+      details { border: 1px solid var(--divider-color, rgba(255,255,255,0.12)); border-radius: 8px; overflow: hidden; }
+      summary { display: flex; align-items: center; gap: 8px; padding: 12px 16px; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--primary-text-color); user-select: none; list-style: none; }
+      summary::-webkit-details-marker { display: none; }
+      .sum-chevron { margin-left: auto; display: inline-flex; transition: transform 0.2s; color: var(--secondary-text-color); }
+      details[open] .sum-chevron { transform: rotate(180deg); }
+      .section-content { display: flex; flex-direction: column; gap: 16px; padding: 16px 16px; border-top: 1px solid var(--divider-color, rgba(255,255,255,0.12)); box-sizing: border-box; }
+      label { font-size: 12px; font-weight: 500; color: var(--secondary-text-color); text-transform: uppercase; letter-spacing: 0.5px; }
+      ha-icon-picker { width: 100%; }
+      select.editor-native-select { width: 100%; padding: 10px 12px; border: 1px solid var(--input-outlined-idle-border-color, var(--divider-color, rgba(0,0,0,0.38))); border-radius: 4px; background-color: var(--input-fill-color, var(--secondary-background-color, transparent)); color: var(--primary-text-color, #212121); font-size: 1rem; font-family: var(--mdc-typography-body1-font-family, Roboto, sans-serif); cursor: pointer; box-sizing: border-box; }
+      select.editor-native-select:hover { border-color: var(--input-outlined-hover-border-color, var(--primary-text-color, rgba(0,0,0,0.87))); }
+      select.editor-native-select:focus { outline: none; border-color: var(--primary-color, #03a9f4); border-width: 2px; padding: 9px 11px; }
+      select.editor-native-select option { background-color: var(--card-background-color, var(--ha-card-background, #fff)); color: var(--primary-text-color, #212121); }
+      .hint { font-size: 12px; color: var(--secondary-text-color); font-style: italic; margin-top: 2px; }
+      .hint.plan-lists-error { color: var(--error-color, #db4437); font-style: normal; }
+      .assignee-chip.plan-list-missing { font-style: italic; }
+      .new-entry-link { font-size: 13px; color: var(--primary-color); text-decoration: none; align-self: flex-start; }
+      .new-entry-link:hover { text-decoration: underline; }
+      /* A hint belongs to what stands right above it (a field, or a group
+         heading it introduces): pull it up to that instead of floating
+         halfway to the next setting. */
+      .section-content > * + .hint, .defaults-editor > * + .hint { margin-top: -12px; }
+      .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; min-height: 40px; }
+      .toggle-label { font-size: 14px; color: var(--primary-text-color); }
+      .queue-panel { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+      .queue-row {
+        display: flex; align-items: center; gap: 8px;
+        padding: 4px 8px; border-radius: 6px;
+        background: var(--secondary-background-color, rgba(127,127,127,0.08));
+      }
+      .queue-row.current { background: var(--primary-color, #03a9f4); background: color-mix(in srgb, var(--primary-color, #03a9f4) 14%, transparent); }
+      .queue-pos {
+        flex-shrink: 0; min-width: 18px; font-size: 12px;
+        color: var(--secondary-text-color); font-variant-numeric: tabular-nums;
+      }
+      .queue-title { flex: 1; min-width: 0; font-size: 13px; word-break: break-word; color: var(--primary-text-color); }
+      .queue-state { flex-shrink: 0; font-size: 12px; font-style: italic; color: var(--secondary-text-color); }
+      .queue-cancel {
+        border: none; background: transparent; cursor: pointer;
+        font-size: 18px; line-height: 1; color: var(--secondary-text-color);
+      }
+      .queue-cancel:hover { color: var(--error-color, #db4437); }
+      .queue-cancel:disabled { opacity: 0.4; cursor: default; }
+      .field-wrap { position: relative; width: 100%; }
+      .field-wrap input { width: 100%; box-sizing: border-box; padding: 20px 12px 6px; height: 48px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; background: var(--mdc-text-field-fill-color, var(--input-fill-color, transparent)); color: var(--primary-text-color); font-size: 0.875rem; font-family: inherit; outline: none; }
+      .field-wrap input:focus { border: 2px solid var(--primary-color); padding: 19px 11px 5px; }
+      .field-wrap input[type="number"] { padding-right: 28px; -moz-appearance: textfield; }
+      .field-wrap input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+      .field-wrap > span { position: absolute; top: 6px; left: 12px; font-size: 11px; font-weight: 400; color: var(--secondary-text-color); pointer-events: none; }
+      .field-wrap input:focus ~ span { color: var(--primary-color); }
+      .spin-btns { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; }
+      .spin-btn { background: none; border: none; padding: 2px 4px; cursor: pointer; color: var(--secondary-text-color); line-height: 1; font-size: 12px; }
+      .spin-btn:hover { color: var(--primary-color); }
+      ha-yaml-editor { display: block; }
+      .sections-editor-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; }
+      .sections-editor-row .field-wrap { flex: 1 1 0; min-width: 80px; }
+      .sections-editor-row ha-icon-picker { flex: 1 1 0; min-width: 0; }
+      .icon-btn { background: none; border: 1px solid var(--divider-color, rgba(255,255,255,0.12)); border-radius: 6px; padding: 6px; cursor: pointer; color: var(--primary-text-color); display: inline-flex; align-items: center; justify-content: center; }
+      .icon-btn:hover:not(:disabled) { background: var(--secondary-background-color, rgba(0,0,0,0.05)); }
+      .icon-btn:disabled { opacity: 0.4; cursor: default; }
+      .icon-btn.del { color: var(--error-color, #db4437); }
+      .icon-btn ha-icon { --mdc-icon-size: 18px; }
+      .add-section-btn { margin-top: 8px; padding: 8px 14px; border: 1px dashed var(--primary-color); border-radius: 6px; background: transparent; color: var(--primary-color); cursor: pointer; font-family: inherit; font-size: 14px; }
+      .add-section-btn:hover { background: rgba(3,169,244,0.08); }
+      .defaults-editor { display: flex; flex-direction: column; gap: 16px; }
+      .def-reminder-row { display: flex; align-items: center; gap: 8px; }
+      .def-reminder-row .field-wrap { flex: 1; min-width: 0; }
+      .def-reminder-row .icon-btn { font-size: 18px; line-height: 1; }
+      .def-lead-row { display: flex; gap: 8px; }
+      .def-lead-row .field-wrap { flex: 1; min-width: 0; }
+      .def-saved-flash { opacity: 0; transition: opacity 0.3s; color: var(--primary-color, #03a9f4); font-size: 12px; font-weight: 500; }
+      .def-saved-flash.show { opacity: 1; }
+      .def-saved-flash.err { color: var(--error-color, #db4437); }
+      /* In the heading, take up room only while shown — else the empty flash
+         shortens the line after the heading text. */
+      .group-label .def-saved-flash:not(.show) { display: none; }
+      .field-wrap select { width: 100%; box-sizing: border-box; padding: 20px 12px 6px; height: 48px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; background: var(--mdc-text-field-fill-color, var(--input-fill-color, transparent)); color: var(--primary-text-color); font-size: 0.875rem; font-family: inherit; outline: none; cursor: pointer; }
+      .field-wrap select:focus { border: 2px solid var(--primary-color); padding: 19px 11px 5px; }
+      .field-wrap select:focus ~ span { color: var(--primary-color); }
+      .ms-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-height: 48px; box-sizing: border-box; padding: 20px 10px 6px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; background: var(--mdc-text-field-fill-color, var(--input-fill-color, transparent)); }
+      .ms-chips:focus-within { border: 2px solid var(--primary-color); padding: 19px 9px 5px; }
+      .field-wrap .ms-chips:focus-within ~ span { color: var(--primary-color); }
+      .ms-chip { display: inline-flex; align-items: center; gap: 4px; background: var(--primary-color); color: var(--text-primary-color, #fff); border-radius: 12px; padding: 2px 4px 2px 10px; font-size: 13px; line-height: 1.7; }
+      .ms-chip-x { border: none; background: rgba(0,0,0,0.22); color: inherit; width: 18px; height: 18px; border-radius: 50%; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; line-height: 1; padding: 0; }
+      .ms-chip-x:hover { background: rgba(0,0,0,0.42); }
+      .ms-input { flex: 1 1 80px; min-width: 80px; border: none; outline: none; background: transparent; color: var(--primary-text-color); font-size: 14px; font-family: inherit; padding: 4px 2px; }
+      /* Reset the generic .field-wrap input box styles (border/height/full-width) for the chip-input */
+      .field-wrap .ms-input, .field-wrap .ms-input:focus { width: auto; height: auto; padding: 4px 2px; border: none; background: transparent; }
+    `;
+    root.appendChild(style);
+    const cardTitleInput = this._editorText(
+      "ed_card_title",
+      "ed_card_title_placeholder",
+      "card-title-input",
+      this._config.title,
+      (value) => {
+        this._config = { ...this._config, title: value || void 0 };
+        this._fireChanged();
+      }
+    );
+    const cardTitleRow = this._el("div", { className: "editor-card-title-row" }, [cardTitleInput]);
+    root.appendChild(this._el("div", { className: "editor" }, [cardTitleRow, ...this._buildEditorBody()]));
+  }
+  // The way to a new list or a new day plan: the integration's page, where
+  // Home Assistant adds an entry. In a new tab, so that this editor
+  // stays open with what was changed in it; when the user comes back, lists
+  // and plans are read again and the new one can be picked. Null for anyone
+  // who is not an administrator - nobody else may add an entry.
+  _newEntryLink() {
+    if (this._hass?.user?.is_admin !== true) return null;
+    const link = this._el("a", {
+      className: "new-entry-link",
+      href: NEW_ENTRY_PATH,
+      target: "_blank",
+      rel: "noopener",
+      textContent: `+ ${this._t("new_entry_link")}`
+    });
+    link.addEventListener("click", () => {
+      window.addEventListener("focus", () => {
+        if (this.isConnected) this._loadLists();
+      }, { once: true });
+    });
+    return link;
+  }
+  // A line of text with its label inside the box. An input of the editor's
+  // own: Home Assistant's ha-textfield is no longer there in 2026.11, and an
+  // element that is not defined takes no room - the field was simply gone.
+  _editorText(labelKey, placeholderKey, cls, value, onChange) {
+    const input = this._el("input", { type: "text", className: cls, value: value || "" });
+    input.placeholder = this._t(placeholderKey);
+    input.addEventListener("change", () => onChange(input.value));
+    return this._el("div", { className: "field-wrap title-field" }, [
+      input,
+      this._el("span", { textContent: this._t(labelKey) })
+    ]);
+  }
+  // A dropdown with its label inside the box, as the list editor's.
+  // *options* are [value, text] pairs.
+  _editorSelect(labelKey, cls, options, value, onChange) {
+    const sel = this._el("select", { className: `editor-native-select ${cls}` }, options.map(
+      ([val, text]) => this._el("option", { value: val, textContent: text })
+    ));
+    sel.value = value;
+    sel.addEventListener("change", () => onChange(sel.value));
+    return this._el("div", { className: "field-wrap" }, [
+      sel,
+      this._el("span", { textContent: this._t(labelKey) })
+    ]);
+  }
+  // The task-details fields as one list: switched on or off, and moved up or
+  // down to set the order they appear in (detail_order). *get* gives the
+  // config the options are in as it is now - a column, or the card itself
+  // for a day plan - and *update* writes to it.
+  _buildDetailFieldList({ get, update, noSections = false, onToggle = null }) {
+    const list = this._el("div", { className: "detail-field-list" });
+    const draw = () => {
+      const cur = get() || {};
+      const order = _detailOrder(cur);
+      list.replaceChildren();
+      order.forEach((key, i) => {
+        const [, labelKey, option, , legacy] = DETAIL_FIELD[key];
+        const move = (d) => {
+          const next = order.slice();
+          [next[i], next[i + d]] = [next[i + d], next[i]];
+          update({ detail_order: _shortDetailOrder(next) });
+          draw();
+        };
+        const label = this._el("span", { className: "toggle-label", textContent: this._t(labelKey) });
+        const unavailable = key === "section" && noSections;
+        if (unavailable) {
+          label.appendChild(this._el("span", { className: "hint", textContent: this._t("ed_section_field_no_sections") }));
+        }
+        const sw = document.createElement("ha-switch");
+        sw.checked = _detailFieldOn(cur, key);
+        sw.setAttribute("aria-label", this._t(labelKey));
+        sw.addEventListener("change", () => {
+          const updates = { [option]: sw.checked };
+          if (legacy && legacy in (get() || {})) updates[legacy] = void 0;
+          update(updates);
+          if (onToggle) onToggle(key, sw.checked);
+        });
+        list.appendChild(this._el("div", {
+          className: "toggle-row detail-field-row" + (unavailable ? " unavailable" : ""),
+          "data-key": key
+        }, [
+          label,
+          this._iconButton("mdi:arrow-up", "ed_move_up", i === 0, () => move(-1)),
+          this._iconButton("mdi:arrow-down", "ed_move_down", i === order.length - 1, () => move(1)),
+          sw
+        ]));
+      });
+    };
+    draw();
+    return list;
+  }
+  // A section that opens: icon, title, chevron, and the settings inside.
+  // Open or closed is remembered per section id.
+  _buildEditorSection(sectionId, icon, titleKey, nodes) {
+    const det = document.createElement("details");
+    const isOpen = this._sectionOpen[sectionId] === true;
+    if (isOpen) det.open = true;
+    const sum = document.createElement("summary");
+    const ico = document.createElement("ha-icon");
+    ico.setAttribute("icon", icon);
+    ico.style.cssText = "--mdc-icon-size:20px;width:20px;height:20px;flex-shrink:0;";
+    const chevWrap = document.createElement("span");
+    chevWrap.className = "sum-chevron";
+    const chev = document.createElement("ha-icon");
+    chev.setAttribute("icon", "mdi:chevron-down");
+    chev.style.cssText = "--mdc-icon-size:20px;width:20px;height:20px;";
+    chevWrap.appendChild(chev);
+    sum.appendChild(ico);
+    sum.appendChild(document.createTextNode(this._t(titleKey)));
+    sum.appendChild(chevWrap);
+    det.appendChild(sum);
+    const content = document.createElement("div");
+    content.className = "section-content";
+    for (const n of nodes) if (n) content.appendChild(n);
+    const wrap = document.createElement("div");
+    wrap.appendChild(content);
+    det.appendChild(wrap);
+    sum.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (det.open) {
+        this._sectionOpen[sectionId] = false;
+        this._saveSectionState();
+        const h = wrap.offsetHeight;
+        if (!h) {
+          det.open = false;
+          return;
+        }
+        wrap.style.cssText = `overflow:hidden;max-height:${h}px;`;
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            wrap.style.transition = "max-height 0.22s ease-in";
+            wrap.style.maxHeight = "0";
+            wrap.addEventListener("transitionend", () => {
+              det.open = false;
+              wrap.style.cssText = "";
+            }, { once: true });
+          });
+        });
+      } else {
+        this._sectionOpen[sectionId] = true;
+        this._saveSectionState();
+        det.open = true;
+        wrap.style.cssText = "overflow:hidden;max-height:0;";
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            wrap.style.transition = "max-height 0.28s ease-out";
+            wrap.style.maxHeight = "800px";
+            wrap.addEventListener("transitionend", () => {
+              wrap.style.cssText = "";
+            }, { once: true });
+          });
+        });
+      }
+    });
+    return det;
+  }
+  // An icon-only button, e.g. the up/down arrows in the editor's lists.
+  _iconButton(icon, titleKey, disabled, onClick) {
+    const btn = this._el("button", { className: "icon-btn", type: "button", title: this._t(titleKey) });
+    const ic = document.createElement("ha-icon");
+    ic.setAttribute("icon", icon);
+    btn.appendChild(ic);
+    btn.disabled = disabled;
+    btn.addEventListener("click", onClick);
+    return btn;
+  }
+  _fireChanged() {
+    this._ignoreNextSetConfig = true;
+    this.dispatchEvent(new CustomEvent("config-changed", {
+      detail: { config: this._config },
+      bubbles: true,
+      composed: true
+    }));
+  }
+  // ── What an editor fills in ───────────────────────────────────────────────
+  // What stands below the card title.
+  _buildEditorBody() {
+    return [];
+  }
+  // The lists and plans are known (and the config may need one of them).
+  _afterListsLoaded() {
+  }
+};
+
+// src/editors/list-editor.js
+var HomeTasksCardEditor = class extends EditorBase {
   _buildDefaultsEditor(col) {
     const container = this._el("div", { className: "defaults-editor" });
     const target = this._sectionsTargetPayload(col);
@@ -13797,22 +14375,6 @@ var HomeTasksCardEditor = class extends HTMLElement {
     };
     renderInto();
   }
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
-    this._config = { columns: [{}] };
-    this._hass = null;
-    this._lists = [];
-    this._externalLists = [];
-    this._listsLoaded = false;
-    this._editorTab = 0;
-    this._editorCodeMode = {};
-    this._sectionOpen = this._loadSectionState();
-    this._ignoreNextSetConfig = false;
-    this._listSections = {};
-    this._listMeta = {};
-    this._listDefaults = {};
-  }
   _sourceKeyForCol(col) {
     if (!col) return null;
     if (col.entity_id) return `ext:${col.entity_id}`;
@@ -13874,29 +14436,6 @@ var HomeTasksCardEditor = class extends HTMLElement {
     if (!target) throw new Error("No list selected");
     return this._hass.callWS({ type, ...target, ...extra });
   }
-  _t(key, ...args) {
-    return _htText(this._hass?.locale?.language || this._hass?.language, key, args);
-  }
-  _el(tag, attrs = {}, children = []) {
-    const el = document.createElement(tag);
-    for (const [key, val] of Object.entries(attrs)) {
-      if (key === "className") el.className = val;
-      else if (key === "textContent") el.textContent = val;
-      else if (key === "value") el.value = val;
-      else if (key === "selected") {
-        if (val) el.selected = true;
-      } else if (key === "placeholder") el.placeholder = val;
-      else if (key === "type") el.type = val;
-      else if (key === "id") el.id = val;
-      else if (key === "checked") el.checked = val;
-      else el.setAttribute(key, val);
-    }
-    for (const child of children) {
-      if (typeof child === "string") el.appendChild(document.createTextNode(child));
-      else if (child) el.appendChild(child);
-    }
-    return el;
-  }
   setConfig(config) {
     if (config.list_id && !config.columns) {
       const { type, columns: _c, ...colConfig } = config;
@@ -13921,535 +14460,8 @@ var HomeTasksCardEditor = class extends HTMLElement {
       this._render();
     }
   }
-  set hass(hass) {
-    this._hass = hass;
-    if (!this._listsLoaded) {
-      this._loadLists();
-    }
-  }
-  async _loadLists() {
-    try {
-      const [nativeResult, externalResult, plansResult] = await Promise.all([
-        this._hass.callWS({ type: "home_tasks/get_lists" }),
-        this._hass.callWS({ type: "home_tasks/get_external_lists" }).catch(() => null),
-        this._hass.callWS({ type: "home_tasks/get_plans" }).catch(() => null)
-      ]);
-      if (nativeResult && Array.isArray(nativeResult.lists)) {
-        this._lists = nativeResult.lists;
-      }
-      this._plans = plansResult && Array.isArray(plansResult.plans) ? plansResult.plans : [];
-      this._planLists = plansResult && Array.isArray(plansResult.lists) ? plansResult.lists : [];
-      this._externalLists = externalResult && Array.isArray(externalResult.external_lists) ? externalResult.external_lists.filter((l) => l.linked) : [];
-      this._listsLoaded = true;
-      if (this._isPlanEditor) {
-        if (!this._config.plan && this._plans.length > 1) {
-          this._config = { ...this._config, plan: this._plans[0].id };
-          this._fireChanged();
-        }
-      } else if (!this._config.columns[0]?.list_id && !this._config.columns[0]?.entity_id && this._lists.length > 0) {
-        const newCols = [...this._config.columns];
-        newCols[0] = { ...newCols[0], list_id: this._lists[0].id };
-        this._config = { ...this._config, columns: newCols };
-        this._fireChanged();
-      }
-      this._render();
-    } catch (e) {
-    }
-  }
   _clearCodeState() {
     this._editorCodeMode = {};
-  }
-  _render() {
-    const root = this.shadowRoot;
-    root.innerHTML = "";
-    const style = document.createElement("style");
-    style.textContent = `
-      :host { display: block; }
-      .editor { display: flex; flex-direction: column; gap: 0; padding: 16px 0; }
-      .editor-card-title-row { margin-bottom: 12px; }
-      .editor-native-select {
-        width: 100%; box-sizing: border-box; padding: 8px;
-        background: var(--card-background-color); color: var(--primary-text-color);
-        border: 1px solid var(--divider-color); border-radius: 4px; font-size: 14px;
-      }
-      .editor-native-select:focus {
-        outline: none; border-color: var(--primary-color);
-      }
-      .editor-tabs-row {
-        display: flex; align-items: center;
-        border-bottom: 1px solid var(--divider-color, #e0e0e0);
-        margin-bottom: 0;
-      }
-      .editor-tabs { display: flex; gap: 0; align-items: center; flex: 1; }
-      .editor-tab {
-        min-width: 40px; height: 40px; padding: 0 14px;
-        border: none; border-bottom: 3px solid transparent;
-        background: transparent; cursor: pointer; font-size: 14px; font-weight: 500;
-        font-family: inherit; color: var(--secondary-text-color);
-        display: flex; align-items: center; justify-content: center;
-        transition: color 0.15s, border-color 0.15s;
-      }
-      .editor-tab.active { color: var(--primary-color); border-bottom: 3px solid var(--primary-color); }
-      .editor-tab:hover:not(.active) { color: var(--primary-text-color); background: var(--secondary-background-color); }
-      .editor-tab-add {
-        width: 36px; height: 36px; border-radius: 50%; border: none;
-        background: transparent; cursor: pointer;
-        display: inline-flex; align-items: center; justify-content: center;
-        color: var(--secondary-text-color); flex-shrink: 0; padding: 0; margin-left: 4px;
-        transition: background 0.15s, color 0.15s;
-      }
-      .editor-tab-add:hover { background: var(--secondary-background-color); color: var(--primary-color); }
-      .editor-col-controls {
-        display: flex; gap: 0; align-items: center;
-        padding: 4px 0 8px; margin-bottom: 8px;
-        border-bottom: 1px solid var(--divider-color, #e0e0e0);
-      }
-      .icon-btn {
-        width: 36px; height: 36px; border-radius: 50%; border: none;
-        background: transparent; cursor: pointer;
-        display: inline-flex; align-items: center; justify-content: center;
-        color: var(--secondary-text-color); flex-shrink: 0; padding: 0;
-        transition: background 0.15s, color 0.15s;
-      }
-      .icon-btn:hover:not(:disabled) { background: var(--secondary-background-color); }
-      .icon-btn.active { color: var(--primary-color); }
-      .icon-btn.del { color: var(--error-color, #db4437); }
-      .icon-btn:disabled { opacity: 0.3; cursor: default; }
-      .icon-btn-spacer { flex: 1; }
-      .toggle-grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; }
-      .assignee-chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
-      .assignee-chip {
-        padding: 5px 10px; border-radius: 14px; font-size: 12px; font-family: inherit;
-        border: 1px solid var(--divider-color); background: none;
-        color: var(--secondary-text-color); cursor: pointer;
-      }
-      .assignee-chip.active {
-        background: color-mix(in srgb, var(--primary-color) 18%, transparent);
-        color: var(--primary-color); border-color: var(--primary-color);
-      }
-      .detail-field-row { gap: 4px; }
-      .detail-field-row > .toggle-label { flex: 1; display: flex; flex-direction: column; }
-      .detail-field-row.unavailable > .toggle-label { color: var(--secondary-text-color); }
-      .detail-field-row > ha-switch { margin-left: 8px; }
-      .group-label {
-        display: flex; align-items: center; gap: 10px; margin: 14px 0 2px;
-        font-size: 12px; font-weight: 500; color: var(--secondary-text-color, #888);
-        text-transform: uppercase; letter-spacing: 0.06em;
-      }
-      .group-label::before, .group-label::after {
-        content: ""; flex: 1; height: 1px;
-        background: var(--divider-color, rgba(127,127,127,0.3));
-      }
-      .visual-editor { display: flex; flex-direction: column; gap: 8px; }
-      .field { display: flex; flex-direction: column; gap: 6px; }
-      details { border: 1px solid var(--divider-color, rgba(255,255,255,0.12)); border-radius: 8px; overflow: hidden; }
-      summary { display: flex; align-items: center; gap: 8px; padding: 12px 16px; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--primary-text-color); user-select: none; list-style: none; }
-      summary::-webkit-details-marker { display: none; }
-      .sum-chevron { margin-left: auto; display: inline-flex; transition: transform 0.2s; color: var(--secondary-text-color); }
-      details[open] .sum-chevron { transform: rotate(180deg); }
-      .section-content { display: flex; flex-direction: column; gap: 16px; padding: 16px 16px; border-top: 1px solid var(--divider-color, rgba(255,255,255,0.12)); box-sizing: border-box; }
-      label { font-size: 12px; font-weight: 500; color: var(--secondary-text-color); text-transform: uppercase; letter-spacing: 0.5px; }
-      ha-icon-picker { width: 100%; }
-      select.editor-native-select { width: 100%; padding: 10px 12px; border: 1px solid var(--input-outlined-idle-border-color, var(--divider-color, rgba(0,0,0,0.38))); border-radius: 4px; background-color: var(--input-fill-color, var(--secondary-background-color, transparent)); color: var(--primary-text-color, #212121); font-size: 1rem; font-family: var(--mdc-typography-body1-font-family, Roboto, sans-serif); cursor: pointer; box-sizing: border-box; }
-      select.editor-native-select:hover { border-color: var(--input-outlined-hover-border-color, var(--primary-text-color, rgba(0,0,0,0.87))); }
-      select.editor-native-select:focus { outline: none; border-color: var(--primary-color, #03a9f4); border-width: 2px; padding: 9px 11px; }
-      select.editor-native-select option { background-color: var(--card-background-color, var(--ha-card-background, #fff)); color: var(--primary-text-color, #212121); }
-      .hint { font-size: 12px; color: var(--secondary-text-color); font-style: italic; margin-top: 2px; }
-      .hint.plan-lists-error { color: var(--error-color, #db4437); font-style: normal; }
-      .assignee-chip.plan-list-missing { font-style: italic; }
-      .new-entry-link { font-size: 13px; color: var(--primary-color); text-decoration: none; align-self: flex-start; }
-      .new-entry-link:hover { text-decoration: underline; }
-      /* A hint belongs to what stands right above it (a field, or a group
-         heading it introduces): pull it up to that instead of floating
-         halfway to the next setting. */
-      .section-content > * + .hint, .defaults-editor > * + .hint { margin-top: -12px; }
-      .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; min-height: 40px; }
-      .toggle-label { font-size: 14px; color: var(--primary-text-color); }
-      .queue-panel { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
-      .queue-row {
-        display: flex; align-items: center; gap: 8px;
-        padding: 4px 8px; border-radius: 6px;
-        background: var(--secondary-background-color, rgba(127,127,127,0.08));
-      }
-      .queue-row.current { background: var(--primary-color, #03a9f4); background: color-mix(in srgb, var(--primary-color, #03a9f4) 14%, transparent); }
-      .queue-pos {
-        flex-shrink: 0; min-width: 18px; font-size: 12px;
-        color: var(--secondary-text-color); font-variant-numeric: tabular-nums;
-      }
-      .queue-title { flex: 1; min-width: 0; font-size: 13px; word-break: break-word; color: var(--primary-text-color); }
-      .queue-state { flex-shrink: 0; font-size: 12px; font-style: italic; color: var(--secondary-text-color); }
-      .queue-cancel {
-        border: none; background: transparent; cursor: pointer;
-        font-size: 18px; line-height: 1; color: var(--secondary-text-color);
-      }
-      .queue-cancel:hover { color: var(--error-color, #db4437); }
-      .queue-cancel:disabled { opacity: 0.4; cursor: default; }
-      .field-wrap { position: relative; width: 100%; }
-      .field-wrap input { width: 100%; box-sizing: border-box; padding: 20px 12px 6px; height: 48px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; background: var(--mdc-text-field-fill-color, var(--input-fill-color, transparent)); color: var(--primary-text-color); font-size: 0.875rem; font-family: inherit; outline: none; }
-      .field-wrap input:focus { border: 2px solid var(--primary-color); padding: 19px 11px 5px; }
-      .field-wrap input[type="number"] { padding-right: 28px; -moz-appearance: textfield; }
-      .field-wrap input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
-      .field-wrap > span { position: absolute; top: 6px; left: 12px; font-size: 11px; font-weight: 400; color: var(--secondary-text-color); pointer-events: none; }
-      .field-wrap input:focus ~ span { color: var(--primary-color); }
-      .spin-btns { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; }
-      .spin-btn { background: none; border: none; padding: 2px 4px; cursor: pointer; color: var(--secondary-text-color); line-height: 1; font-size: 12px; }
-      .spin-btn:hover { color: var(--primary-color); }
-      ha-yaml-editor { display: block; }
-      .sections-editor-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; }
-      .sections-editor-row .field-wrap { flex: 1 1 0; min-width: 80px; }
-      .sections-editor-row ha-icon-picker { flex: 1 1 0; min-width: 0; }
-      .icon-btn { background: none; border: 1px solid var(--divider-color, rgba(255,255,255,0.12)); border-radius: 6px; padding: 6px; cursor: pointer; color: var(--primary-text-color); display: inline-flex; align-items: center; justify-content: center; }
-      .icon-btn:hover:not(:disabled) { background: var(--secondary-background-color, rgba(0,0,0,0.05)); }
-      .icon-btn:disabled { opacity: 0.4; cursor: default; }
-      .icon-btn.del { color: var(--error-color, #db4437); }
-      .icon-btn ha-icon { --mdc-icon-size: 18px; }
-      .add-section-btn { margin-top: 8px; padding: 8px 14px; border: 1px dashed var(--primary-color); border-radius: 6px; background: transparent; color: var(--primary-color); cursor: pointer; font-family: inherit; font-size: 14px; }
-      .add-section-btn:hover { background: rgba(3,169,244,0.08); }
-      .defaults-editor { display: flex; flex-direction: column; gap: 16px; }
-      .def-reminder-row { display: flex; align-items: center; gap: 8px; }
-      .def-reminder-row .field-wrap { flex: 1; min-width: 0; }
-      .def-reminder-row .icon-btn { font-size: 18px; line-height: 1; }
-      .def-lead-row { display: flex; gap: 8px; }
-      .def-lead-row .field-wrap { flex: 1; min-width: 0; }
-      .def-saved-flash { opacity: 0; transition: opacity 0.3s; color: var(--primary-color, #03a9f4); font-size: 12px; font-weight: 500; }
-      .def-saved-flash.show { opacity: 1; }
-      .def-saved-flash.err { color: var(--error-color, #db4437); }
-      /* In the heading, take up room only while shown — else the empty flash
-         shortens the line after the heading text. */
-      .group-label .def-saved-flash:not(.show) { display: none; }
-      .field-wrap select { width: 100%; box-sizing: border-box; padding: 20px 12px 6px; height: 48px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; background: var(--mdc-text-field-fill-color, var(--input-fill-color, transparent)); color: var(--primary-text-color); font-size: 0.875rem; font-family: inherit; outline: none; cursor: pointer; }
-      .field-wrap select:focus { border: 2px solid var(--primary-color); padding: 19px 11px 5px; }
-      .field-wrap select:focus ~ span { color: var(--primary-color); }
-      .ms-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-height: 48px; box-sizing: border-box; padding: 20px 10px 6px; border: 1px solid var(--outline-color, var(--divider-color, rgba(255,255,255,0.12))); border-radius: 4px; background: var(--mdc-text-field-fill-color, var(--input-fill-color, transparent)); }
-      .ms-chips:focus-within { border: 2px solid var(--primary-color); padding: 19px 9px 5px; }
-      .field-wrap .ms-chips:focus-within ~ span { color: var(--primary-color); }
-      .ms-chip { display: inline-flex; align-items: center; gap: 4px; background: var(--primary-color); color: var(--text-primary-color, #fff); border-radius: 12px; padding: 2px 4px 2px 10px; font-size: 13px; line-height: 1.7; }
-      .ms-chip-x { border: none; background: rgba(0,0,0,0.22); color: inherit; width: 18px; height: 18px; border-radius: 50%; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; line-height: 1; padding: 0; }
-      .ms-chip-x:hover { background: rgba(0,0,0,0.42); }
-      .ms-input { flex: 1 1 80px; min-width: 80px; border: none; outline: none; background: transparent; color: var(--primary-text-color); font-size: 14px; font-family: inherit; padding: 4px 2px; }
-      /* Reset the generic .field-wrap input box styles (border/height/full-width) for the chip-input */
-      .field-wrap .ms-input, .field-wrap .ms-input:focus { width: auto; height: auto; padding: 4px 2px; border: none; background: transparent; }
-    `;
-    root.appendChild(style);
-    const cols = this._config.columns || [];
-    const activeTab = Math.min(this._editorTab, cols.length - 1);
-    const cardTitleInput = this._editorText(
-      "ed_card_title",
-      "ed_card_title_placeholder",
-      "card-title-input",
-      this._config.title,
-      (value) => {
-        this._config = { ...this._config, title: value || void 0 };
-        this._fireChanged();
-      }
-    );
-    const cardTitleRow = this._el("div", { className: "editor-card-title-row" }, [cardTitleInput]);
-    if (this._isPlanEditor) {
-      root.appendChild(this._el("div", { className: "editor" }, [
-        cardTitleRow,
-        this._buildPlanEditor(this._plans || [])
-      ]));
-      return;
-    }
-    const tabsEl = this._el("div", { className: "editor-tabs" });
-    for (let i = 0; i < cols.length; i++) {
-      const colName = cols[i].title || this._lists.find((l) => l.id === cols[i].list_id)?.name || cols[i].entity_id && (this._externalLists || []).find((l) => l.entity_id === cols[i].entity_id)?.name || String(i + 1);
-      const tab = this._el("button", {
-        className: "editor-tab" + (i === activeTab ? " active" : ""),
-        textContent: String(i + 1),
-        title: colName
-      });
-      tab.addEventListener("click", () => {
-        this._editorTab = i;
-        this._render();
-      });
-      tabsEl.appendChild(tab);
-    }
-    const addTabBtn = document.createElement("button");
-    addTabBtn.className = "editor-tab-add";
-    addTabBtn.title = this._t("ed_add_column");
-    const _plusIcon = document.createElement("ha-icon");
-    _plusIcon.setAttribute("icon", "mdi:plus");
-    _plusIcon.style.setProperty("--mdc-icon-size", "20px");
-    addTabBtn.appendChild(_plusIcon);
-    addTabBtn.addEventListener("click", () => {
-      this._clearCodeState();
-      const newCols = [...cols, {}];
-      this._config = { ...this._config, columns: newCols };
-      this._editorTab = newCols.length - 1;
-      this._fireChanged();
-      this._render();
-    });
-    const tabsRow = this._el("div", { className: "editor-tabs-row" }, [tabsEl, addTabBtn]);
-    const isCodeMode = this._editorCodeMode[activeTab] === true;
-    const controls = this._el("div", { className: "editor-col-controls" });
-    const makeIconBtn = (icon, label, cls, handler, disabled = false) => {
-      const btn = document.createElement("button");
-      btn.className = "icon-btn" + (cls ? " " + cls : "");
-      btn.title = label;
-      btn.disabled = disabled;
-      const haIcon = document.createElement("ha-icon");
-      haIcon.setAttribute("icon", icon);
-      haIcon.style.setProperty("--mdc-icon-size", "20px");
-      btn.appendChild(haIcon);
-      btn.addEventListener("click", handler);
-      return btn;
-    };
-    controls.appendChild(makeIconBtn(
-      "mdi:code-braces",
-      isCodeMode ? this._t("ed_visual_editor") : this._t("ed_code_editor"),
-      isCodeMode ? "active" : "",
-      () => {
-        this._editorCodeMode[activeTab] = !isCodeMode;
-        this._render();
-      }
-    ));
-    const _btnSpacer = document.createElement("div");
-    _btnSpacer.className = "icon-btn-spacer";
-    controls.appendChild(_btnSpacer);
-    controls.appendChild(makeIconBtn("mdi:arrow-left", this._t("ed_move_left"), "", () => {
-      this._clearCodeState();
-      const newCols = [...cols];
-      [newCols[activeTab - 1], newCols[activeTab]] = [newCols[activeTab], newCols[activeTab - 1]];
-      this._config = { ...this._config, columns: newCols };
-      this._editorTab = activeTab - 1;
-      this._fireChanged();
-      this._render();
-    }, cols.length < 2 || activeTab === 0));
-    controls.appendChild(makeIconBtn("mdi:arrow-right", this._t("ed_move_right"), "", () => {
-      this._clearCodeState();
-      const newCols = [...cols];
-      [newCols[activeTab], newCols[activeTab + 1]] = [newCols[activeTab + 1], newCols[activeTab]];
-      this._config = { ...this._config, columns: newCols };
-      this._editorTab = activeTab + 1;
-      this._fireChanged();
-      this._render();
-    }, cols.length < 2 || activeTab === cols.length - 1));
-    if (cols.length > 1) {
-      controls.appendChild(makeIconBtn("mdi:content-copy", this._t("ed_duplicate"), "", () => {
-        this._clearCodeState();
-        const newCols = [...cols];
-        newCols.splice(activeTab + 1, 0, { ...cols[activeTab] });
-        this._config = { ...this._config, columns: newCols };
-        this._editorTab = activeTab + 1;
-        this._fireChanged();
-        this._render();
-      }));
-      controls.appendChild(makeIconBtn("mdi:delete", this._t("ed_delete_column"), "del", () => {
-        this._clearCodeState();
-        const newCols = cols.filter((_, i) => i !== activeTab);
-        this._config = { ...this._config, columns: newCols };
-        this._editorTab = Math.min(activeTab, newCols.length - 1);
-        this._fireChanged();
-        this._render();
-      }));
-    }
-    const tabContent = isCodeMode ? this._buildCodeEditor(activeTab) : this._buildVisualEditor(activeTab);
-    const editor = this._el("div", { className: "editor" }, [cardTitleRow, tabsRow, controls, tabContent]);
-    root.appendChild(editor);
-  }
-  // The way to a new list or a new day plan: the integration's page, where
-  // Home Assistant adds an entry. In a new tab, so that this editor
-  // stays open with what was changed in it; when the user comes back, lists
-  // and plans are read again and the new one can be picked. Null for anyone
-  // who is not an administrator - nobody else may add an entry.
-  _newEntryLink() {
-    if (this._hass?.user?.is_admin !== true) return null;
-    const link = this._el("a", {
-      className: "new-entry-link",
-      href: NEW_ENTRY_PATH,
-      target: "_blank",
-      rel: "noopener",
-      textContent: `+ ${this._t("new_entry_link")}`
-    });
-    link.addEventListener("click", () => {
-      window.addEventListener("focus", () => {
-        if (this.isConnected) this._loadLists();
-      }, { once: true });
-    });
-    return link;
-  }
-  // A line of text with its label inside the box. An input of the editor's
-  // own: Home Assistant's ha-textfield is no longer there in 2026.11, and an
-  // element that is not defined takes no room - the field was simply gone.
-  _editorText(labelKey, placeholderKey, cls, value, onChange) {
-    const input = this._el("input", { type: "text", className: cls, value: value || "" });
-    input.placeholder = this._t(placeholderKey);
-    input.addEventListener("change", () => onChange(input.value));
-    return this._el("div", { className: "field-wrap title-field" }, [
-      input,
-      this._el("span", { textContent: this._t(labelKey) })
-    ]);
-  }
-  // A dropdown with its label inside the box, as the list editor's.
-  // *options* are [value, text] pairs.
-  _editorSelect(labelKey, cls, options, value, onChange) {
-    const sel = this._el("select", { className: `editor-native-select ${cls}` }, options.map(
-      ([val, text]) => this._el("option", { value: val, textContent: text })
-    ));
-    sel.value = value;
-    sel.addEventListener("change", () => onChange(sel.value));
-    return this._el("div", { className: "field-wrap" }, [
-      sel,
-      this._el("span", { textContent: this._t(labelKey) })
-    ]);
-  }
-  // The day plan's settings, laid out like a list column's: the plan where a
-  // column has its list, then sections that open - what is shown, grouped by
-  // card and day header, the fields of an open task, and the lists the plan
-  // draws from.
-  _buildPlanEditor(plans) {
-    const set = (updates) => {
-      const next = { ...this._config };
-      for (const [key, value] of Object.entries(updates)) {
-        if (value === void 0) delete next[key];
-        else next[key] = value;
-      }
-      this._config = next;
-      this._fireChanged();
-    };
-    const groupLabel = (key) => this._el("div", { className: "group-label" }, [this._el("span", { textContent: this._t(key) })]);
-    const toggle = (cls, labelKey, key, defaultOn) => {
-      const sw = document.createElement("ha-switch");
-      sw.className = cls;
-      const now = this._config[key];
-      sw.checked = defaultOn ? now !== false : now === true;
-      sw.setAttribute("aria-label", this._t(labelKey));
-      sw.addEventListener("change", () => set({ [key]: sw.checked === defaultOn ? void 0 : sw.checked }));
-      return this._el("div", { className: "toggle-row" }, [
-        this._el("span", { className: "toggle-label", textContent: this._t(labelKey) }),
-        sw
-      ]);
-    };
-    const known = plans.some((p) => p.id === this._config.plan);
-    const planOptions = plans.map((p) => [p.id, p.name]);
-    if (this._config.plan && !known) planOptions.unshift([this._config.plan, this._config.plan]);
-    const planSelect = this._editorSelect(
-      "ed_view_day_plan",
-      "plan-select",
-      planOptions,
-      this._config.plan || plans[0] && plans[0].id || "",
-      (value) => {
-        set({ plan: value });
-        this._render();
-      }
-    );
-    const days = Math.min(7, Math.max(1, parseInt(this._config.days, 10) || 1));
-    const daysSelect = this._editorSelect(
-      "ed_plan_days",
-      "days-select",
-      [1, 2, 3, 4, 5, 6, 7].map((n) => [String(n), String(n)]),
-      String(days),
-      (value) => set({ days: Number(value) })
-    );
-    const planInfo = plans.find((p) => p.id === (this._config.plan || plans[0] && plans[0].id));
-    const weekendRow = [];
-    if (planInfo) {
-      const ALL = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-      const current = (planInfo.workdays || []).length ? planInfo.workdays : ALL;
-      const sw = document.createElement("ha-switch");
-      sw.className = "weekend-switch";
-      sw.checked = current.includes("sat") || current.includes("sun");
-      sw.setAttribute("aria-label", this._t("ed_plan_weekend"));
-      sw.addEventListener("change", () => {
-        const days2 = ALL.filter((d) => d === "sat" || d === "sun" ? sw.checked : current.includes(d));
-        const workdays = days2.length ? days2 : ALL.slice(0, 5);
-        this._planDaysError = null;
-        this._hass.callWS({ type: "home_tasks/set_plan_workdays", plan: planInfo.id, workdays }).then((info) => {
-          planInfo.workdays = info && info.workdays || (workdays.length === ALL.length ? [] : workdays);
-          this._render();
-        }).catch((err) => {
-          this._planDaysError = err && err.message || String(err);
-          this._render();
-        });
-      });
-      weekendRow.push(this._el("div", { className: "toggle-row" }, [
-        this._el("span", { className: "toggle-label", textContent: this._t("ed_plan_weekend") }),
-        sw
-      ]));
-    }
-    const sections = [
-      this._buildEditorSection("plan_view", "mdi:eye", "ed_sec_view", [
-        groupLabel("ed_group_card"),
-        daysSelect,
-        this._el("div", { className: "toggle-grid" }, [
-          toggle("compact-switch", "ed_compact", "compact", false),
-          ...weekendRow
-        ]),
-        ...this._planDaysError ? [this._el("div", { className: "hint plan-lists-error plan-days-error", textContent: this._planDaysError })] : [],
-        groupLabel("ed_group_header"),
-        this._el("div", { className: "toggle-grid" }, [
-          toggle("date-switch", "due_date_lbl", "show_date", true),
-          toggle("progress-switch", "ed_show_progress", "show_progress", true),
-          toggle("focus-switch", "plan_note_placeholder", "show_focus", true)
-        ])
-      ]),
-      // What an open row shows, and in which order: the options a column
-      // has for it, at the root of the card config - a plan's rows come
-      // from several lists and all follow the one setting.
-      this._buildEditorSection("plan_features", "mdi:tune", "ed_sec_display", [
-        this._buildDetailFieldList({ get: () => this._config, update: set }),
-        toggle("move-switch", "ed_show_move", "show_move", true)
-      ])
-    ];
-    const allLists = this._planLists || [];
-    if (planInfo && allLists.length > 0) {
-      const chosen = new Set(planInfo.source_lists || []);
-      const missing = [...chosen].filter((id) => !allLists.some((l) => l.entry_id === id));
-      const ordered = (ids) => [
-        ...allLists.map((x) => x.entry_id).filter((id) => ids.has(id)),
-        ...missing.filter((id) => ids.has(id))
-      ];
-      const save = (ids) => {
-        this._planListsError = null;
-        this._hass.callWS({ type: "home_tasks/set_plan_lists", plan: planInfo.id, source_lists: ids }).then((info) => {
-          planInfo.source_lists = info && info.source_lists || ids;
-          this._render();
-        }).catch((err) => {
-          this._planListsError = err && err.message || String(err);
-          this._render();
-        });
-      };
-      const chip = (label, active, cls, onClick) => {
-        const btn = this._el("button", { className: `assignee-chip ${cls}` + (active ? " active" : ""), textContent: label });
-        btn.type = "button";
-        btn.setAttribute("aria-pressed", String(active));
-        btn.addEventListener("click", onClick);
-        return btn;
-      };
-      const chips = [
-        chip(this._t("ed_plan_all_lists"), chosen.size === 0, "plan-all-lists", () => save([])),
-        ...allLists.map((l) => {
-          const btn = chip(l.name, chosen.has(l.entry_id), "plan-list", () => {
-            const next = new Set(chosen);
-            if (next.has(l.entry_id)) next.delete(l.entry_id);
-            else next.add(l.entry_id);
-            save(ordered(next));
-          });
-          btn.dataset.entryId = l.entry_id;
-          return btn;
-        }),
-        // Chosen, but not there: a tap takes it out of the choice.
-        ...missing.map((id) => {
-          const btn = chip(this._t("ed_plan_list_missing"), true, "plan-list plan-list-missing", () => {
-            const next = new Set(chosen);
-            next.delete(id);
-            save(ordered(next));
-          });
-          btn.dataset.entryId = id;
-          return btn;
-        })
-      ];
-      const nodes = [this._el("div", { className: "assignee-chip-row plan-lists" }, chips)];
-      if (this._planListsError) {
-        nodes.push(this._el("div", { className: "hint plan-lists-error", textContent: this._planListsError }));
-      }
-      sections.push(this._buildEditorSection("plan_lists", "mdi:format-list-checks", "ed_view_lists", nodes));
-    }
-    return this._el("div", { className: "visual-editor plan-editor" }, [
-      this._el("div", { className: "field" }, [planSelect, this._newEntryLink()]),
-      ...sections
-    ]);
   }
   // The card-level ai_task entity and prompt prefix, rendered inside the
   // column's Images section. Card-level, but shown where images are.
@@ -14507,117 +14519,6 @@ var HomeTasksCardEditor = class extends HTMLElement {
       }
     });
     return editor;
-  }
-  // The task-details fields as one list: switched on or off, and moved up or
-  // down to set the order they appear in (detail_order). *get* gives the
-  // config the options are in as it is now - a column, or the card itself
-  // for a day plan - and *update* writes to it.
-  _buildDetailFieldList({ get, update, noSections = false, onToggle = null }) {
-    const list = this._el("div", { className: "detail-field-list" });
-    const draw = () => {
-      const cur = get() || {};
-      const order = _detailOrder(cur);
-      list.replaceChildren();
-      order.forEach((key, i) => {
-        const [, labelKey, option, , legacy] = DETAIL_FIELD[key];
-        const move = (d) => {
-          const next = order.slice();
-          [next[i], next[i + d]] = [next[i + d], next[i]];
-          update({ detail_order: _shortDetailOrder(next) });
-          draw();
-        };
-        const label = this._el("span", { className: "toggle-label", textContent: this._t(labelKey) });
-        const unavailable = key === "section" && noSections;
-        if (unavailable) {
-          label.appendChild(this._el("span", { className: "hint", textContent: this._t("ed_section_field_no_sections") }));
-        }
-        const sw = document.createElement("ha-switch");
-        sw.checked = _detailFieldOn(cur, key);
-        sw.setAttribute("aria-label", this._t(labelKey));
-        sw.addEventListener("change", () => {
-          const updates = { [option]: sw.checked };
-          if (legacy && legacy in (get() || {})) updates[legacy] = void 0;
-          update(updates);
-          if (onToggle) onToggle(key, sw.checked);
-        });
-        list.appendChild(this._el("div", {
-          className: "toggle-row detail-field-row" + (unavailable ? " unavailable" : ""),
-          "data-key": key
-        }, [
-          label,
-          this._iconButton("mdi:arrow-up", "ed_move_up", i === 0, () => move(-1)),
-          this._iconButton("mdi:arrow-down", "ed_move_down", i === order.length - 1, () => move(1)),
-          sw
-        ]));
-      });
-    };
-    draw();
-    return list;
-  }
-  // A section that opens: icon, title, chevron, and the settings inside.
-  // Open or closed is remembered per section id.
-  _buildEditorSection(sectionId, icon, titleKey, nodes) {
-    const det = document.createElement("details");
-    const isOpen = this._sectionOpen[sectionId] === true;
-    if (isOpen) det.open = true;
-    const sum = document.createElement("summary");
-    const ico = document.createElement("ha-icon");
-    ico.setAttribute("icon", icon);
-    ico.style.cssText = "--mdc-icon-size:20px;width:20px;height:20px;flex-shrink:0;";
-    const chevWrap = document.createElement("span");
-    chevWrap.className = "sum-chevron";
-    const chev = document.createElement("ha-icon");
-    chev.setAttribute("icon", "mdi:chevron-down");
-    chev.style.cssText = "--mdc-icon-size:20px;width:20px;height:20px;";
-    chevWrap.appendChild(chev);
-    sum.appendChild(ico);
-    sum.appendChild(document.createTextNode(this._t(titleKey)));
-    sum.appendChild(chevWrap);
-    det.appendChild(sum);
-    const content = document.createElement("div");
-    content.className = "section-content";
-    for (const n of nodes) if (n) content.appendChild(n);
-    const wrap = document.createElement("div");
-    wrap.appendChild(content);
-    det.appendChild(wrap);
-    sum.addEventListener("click", (e) => {
-      e.preventDefault();
-      if (det.open) {
-        this._sectionOpen[sectionId] = false;
-        this._saveSectionState();
-        const h = wrap.offsetHeight;
-        if (!h) {
-          det.open = false;
-          return;
-        }
-        wrap.style.cssText = `overflow:hidden;max-height:${h}px;`;
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            wrap.style.transition = "max-height 0.22s ease-in";
-            wrap.style.maxHeight = "0";
-            wrap.addEventListener("transitionend", () => {
-              det.open = false;
-              wrap.style.cssText = "";
-            }, { once: true });
-          });
-        });
-      } else {
-        this._sectionOpen[sectionId] = true;
-        this._saveSectionState();
-        det.open = true;
-        wrap.style.cssText = "overflow:hidden;max-height:0;";
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            wrap.style.transition = "max-height 0.28s ease-out";
-            wrap.style.maxHeight = "800px";
-            wrap.addEventListener("transitionend", () => {
-              wrap.style.cssText = "";
-            }, { once: true });
-          });
-        });
-      }
-    });
-    return det;
   }
   _buildVisualEditor(tabIdx) {
     const col = this._config.columns[tabIdx] || {};
@@ -15154,16 +15055,6 @@ var HomeTasksCardEditor = class extends HTMLElement {
       datalist
     ]);
   }
-  // An icon-only button, e.g. the up/down arrows in the editor's lists.
-  _iconButton(icon, titleKey, disabled, onClick) {
-    const btn = this._el("button", { className: "icon-btn", type: "button", title: this._t(titleKey) });
-    const ic = document.createElement("ha-icon");
-    ic.setAttribute("icon", icon);
-    btn.appendChild(ic);
-    btn.disabled = disabled;
-    btn.addEventListener("click", onClick);
-    return btn;
-  }
   _buildSectionsEditor(col) {
     const key = this._sourceKeyForCol(col);
     const cached = key ? this._listSections[key] : null;
@@ -15284,21 +15175,120 @@ var HomeTasksCardEditor = class extends HTMLElement {
     det.appendChild(wrap);
     return det;
   }
-  _fireChanged() {
-    this._ignoreNextSetConfig = true;
-    this.dispatchEvent(new CustomEvent("config-changed", {
-      detail: { config: this._config },
-      bubbles: true,
-      composed: true
-    }));
+  // ── EditorBase hooks ──────────────────────────────────────────────────────
+  // Below the card title: a tab per column, its controls and its settings.
+  _buildEditorBody() {
+    const cols = this._config.columns || [];
+    const activeTab = Math.min(this._editorTab, cols.length - 1);
+    const tabsEl = this._el("div", { className: "editor-tabs" });
+    for (let i = 0; i < cols.length; i++) {
+      const colName = cols[i].title || this._lists.find((l) => l.id === cols[i].list_id)?.name || cols[i].entity_id && (this._externalLists || []).find((l) => l.entity_id === cols[i].entity_id)?.name || String(i + 1);
+      const tab = this._el("button", {
+        className: "editor-tab" + (i === activeTab ? " active" : ""),
+        textContent: String(i + 1),
+        title: colName
+      });
+      tab.addEventListener("click", () => {
+        this._editorTab = i;
+        this._render();
+      });
+      tabsEl.appendChild(tab);
+    }
+    const addTabBtn = document.createElement("button");
+    addTabBtn.className = "editor-tab-add";
+    addTabBtn.title = this._t("ed_add_column");
+    const _plusIcon = document.createElement("ha-icon");
+    _plusIcon.setAttribute("icon", "mdi:plus");
+    _plusIcon.style.setProperty("--mdc-icon-size", "20px");
+    addTabBtn.appendChild(_plusIcon);
+    addTabBtn.addEventListener("click", () => {
+      this._clearCodeState();
+      const newCols = [...cols, {}];
+      this._config = { ...this._config, columns: newCols };
+      this._editorTab = newCols.length - 1;
+      this._fireChanged();
+      this._render();
+    });
+    const tabsRow = this._el("div", { className: "editor-tabs-row" }, [tabsEl, addTabBtn]);
+    const isCodeMode = this._editorCodeMode[activeTab] === true;
+    const controls = this._el("div", { className: "editor-col-controls" });
+    const makeIconBtn = (icon, label, cls, handler, disabled = false) => {
+      const btn = document.createElement("button");
+      btn.className = "icon-btn" + (cls ? " " + cls : "");
+      btn.title = label;
+      btn.disabled = disabled;
+      const haIcon = document.createElement("ha-icon");
+      haIcon.setAttribute("icon", icon);
+      haIcon.style.setProperty("--mdc-icon-size", "20px");
+      btn.appendChild(haIcon);
+      btn.addEventListener("click", handler);
+      return btn;
+    };
+    controls.appendChild(makeIconBtn(
+      "mdi:code-braces",
+      isCodeMode ? this._t("ed_visual_editor") : this._t("ed_code_editor"),
+      isCodeMode ? "active" : "",
+      () => {
+        this._editorCodeMode[activeTab] = !isCodeMode;
+        this._render();
+      }
+    ));
+    const _btnSpacer = document.createElement("div");
+    _btnSpacer.className = "icon-btn-spacer";
+    controls.appendChild(_btnSpacer);
+    controls.appendChild(makeIconBtn("mdi:arrow-left", this._t("ed_move_left"), "", () => {
+      this._clearCodeState();
+      const newCols = [...cols];
+      [newCols[activeTab - 1], newCols[activeTab]] = [newCols[activeTab], newCols[activeTab - 1]];
+      this._config = { ...this._config, columns: newCols };
+      this._editorTab = activeTab - 1;
+      this._fireChanged();
+      this._render();
+    }, cols.length < 2 || activeTab === 0));
+    controls.appendChild(makeIconBtn("mdi:arrow-right", this._t("ed_move_right"), "", () => {
+      this._clearCodeState();
+      const newCols = [...cols];
+      [newCols[activeTab], newCols[activeTab + 1]] = [newCols[activeTab + 1], newCols[activeTab]];
+      this._config = { ...this._config, columns: newCols };
+      this._editorTab = activeTab + 1;
+      this._fireChanged();
+      this._render();
+    }, cols.length < 2 || activeTab === cols.length - 1));
+    if (cols.length > 1) {
+      controls.appendChild(makeIconBtn("mdi:content-copy", this._t("ed_duplicate"), "", () => {
+        this._clearCodeState();
+        const newCols = [...cols];
+        newCols.splice(activeTab + 1, 0, { ...cols[activeTab] });
+        this._config = { ...this._config, columns: newCols };
+        this._editorTab = activeTab + 1;
+        this._fireChanged();
+        this._render();
+      }));
+      controls.appendChild(makeIconBtn("mdi:delete", this._t("ed_delete_column"), "del", () => {
+        this._clearCodeState();
+        const newCols = cols.filter((_, i) => i !== activeTab);
+        this._config = { ...this._config, columns: newCols };
+        this._editorTab = Math.min(activeTab, newCols.length - 1);
+        this._fireChanged();
+        this._render();
+      }));
+    }
+    const tabContent = isCodeMode ? this._buildCodeEditor(activeTab) : this._buildVisualEditor(activeTab);
+    return [tabsRow, controls, tabContent];
+  }
+  // Auto-select first list for first column if none set
+  _afterListsLoaded() {
+    if (!this._config.columns[0]?.list_id && !this._config.columns[0]?.entity_id && this._lists.length > 0) {
+      const newCols = [...this._config.columns];
+      newCols[0] = { ...newCols[0], list_id: this._lists[0].id };
+      this._config = { ...this._config, columns: newCols };
+      this._fireChanged();
+    }
   }
 };
 
 // src/editors/plan-editor.js
-var HomeTasksDayPlanCardEditor = class extends HomeTasksCardEditor {
-  get _isPlanEditor() {
-    return true;
-  }
+var HomeTasksDayPlanCardEditor = class extends EditorBase {
   setConfig(config) {
     const { columns: _c, view: _v, ...rest } = config || {};
     this._config = rest;
@@ -15307,6 +15297,177 @@ var HomeTasksDayPlanCardEditor = class extends HomeTasksCardEditor {
       return;
     }
     if (this._listsLoaded) this._render();
+  }
+  // The day plan's settings, laid out like a list column's: the plan where a
+  // column has its list, then sections that open - what is shown, grouped by
+  // card and day header, the fields of an open task, and the lists the plan
+  // draws from.
+  _buildPlanEditor(plans) {
+    const set = (updates) => {
+      const next = { ...this._config };
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === void 0) delete next[key];
+        else next[key] = value;
+      }
+      this._config = next;
+      this._fireChanged();
+    };
+    const groupLabel = (key) => this._el("div", { className: "group-label" }, [this._el("span", { textContent: this._t(key) })]);
+    const toggle = (cls, labelKey, key, defaultOn) => {
+      const sw = document.createElement("ha-switch");
+      sw.className = cls;
+      const now = this._config[key];
+      sw.checked = defaultOn ? now !== false : now === true;
+      sw.setAttribute("aria-label", this._t(labelKey));
+      sw.addEventListener("change", () => set({ [key]: sw.checked === defaultOn ? void 0 : sw.checked }));
+      return this._el("div", { className: "toggle-row" }, [
+        this._el("span", { className: "toggle-label", textContent: this._t(labelKey) }),
+        sw
+      ]);
+    };
+    const known = plans.some((p) => p.id === this._config.plan);
+    const planOptions = plans.map((p) => [p.id, p.name]);
+    if (this._config.plan && !known) planOptions.unshift([this._config.plan, this._config.plan]);
+    const planSelect = this._editorSelect(
+      "ed_view_day_plan",
+      "plan-select",
+      planOptions,
+      this._config.plan || plans[0] && plans[0].id || "",
+      (value) => {
+        set({ plan: value });
+        this._render();
+      }
+    );
+    const days = Math.min(7, Math.max(1, parseInt(this._config.days, 10) || 1));
+    const daysSelect = this._editorSelect(
+      "ed_plan_days",
+      "days-select",
+      [1, 2, 3, 4, 5, 6, 7].map((n) => [String(n), String(n)]),
+      String(days),
+      (value) => set({ days: Number(value) })
+    );
+    const planInfo = plans.find((p) => p.id === (this._config.plan || plans[0] && plans[0].id));
+    const weekendRow = [];
+    if (planInfo) {
+      const ALL = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+      const current = (planInfo.workdays || []).length ? planInfo.workdays : ALL;
+      const sw = document.createElement("ha-switch");
+      sw.className = "weekend-switch";
+      sw.checked = current.includes("sat") || current.includes("sun");
+      sw.setAttribute("aria-label", this._t("ed_plan_weekend"));
+      sw.addEventListener("change", () => {
+        const days2 = ALL.filter((d) => d === "sat" || d === "sun" ? sw.checked : current.includes(d));
+        const workdays = days2.length ? days2 : ALL.slice(0, 5);
+        this._planDaysError = null;
+        this._hass.callWS({ type: "home_tasks/set_plan_workdays", plan: planInfo.id, workdays }).then((info) => {
+          planInfo.workdays = info && info.workdays || (workdays.length === ALL.length ? [] : workdays);
+          this._render();
+        }).catch((err) => {
+          this._planDaysError = err && err.message || String(err);
+          this._render();
+        });
+      });
+      weekendRow.push(this._el("div", { className: "toggle-row" }, [
+        this._el("span", { className: "toggle-label", textContent: this._t("ed_plan_weekend") }),
+        sw
+      ]));
+    }
+    const sections = [
+      this._buildEditorSection("plan_view", "mdi:eye", "ed_sec_view", [
+        groupLabel("ed_group_card"),
+        daysSelect,
+        this._el("div", { className: "toggle-grid" }, [
+          toggle("compact-switch", "ed_compact", "compact", false),
+          ...weekendRow
+        ]),
+        ...this._planDaysError ? [this._el("div", { className: "hint plan-lists-error plan-days-error", textContent: this._planDaysError })] : [],
+        groupLabel("ed_group_header"),
+        this._el("div", { className: "toggle-grid" }, [
+          toggle("date-switch", "due_date_lbl", "show_date", true),
+          toggle("progress-switch", "ed_show_progress", "show_progress", true),
+          toggle("focus-switch", "plan_note_placeholder", "show_focus", true)
+        ])
+      ]),
+      // What an open row shows, and in which order: the options a column
+      // has for it, at the root of the card config - a plan's rows come
+      // from several lists and all follow the one setting.
+      this._buildEditorSection("plan_features", "mdi:tune", "ed_sec_display", [
+        this._buildDetailFieldList({ get: () => this._config, update: set }),
+        toggle("move-switch", "ed_show_move", "show_move", true)
+      ])
+    ];
+    const allLists = this._planLists || [];
+    if (planInfo && allLists.length > 0) {
+      const chosen = new Set(planInfo.source_lists || []);
+      const missing = [...chosen].filter((id) => !allLists.some((l) => l.entry_id === id));
+      const ordered = (ids) => [
+        ...allLists.map((x) => x.entry_id).filter((id) => ids.has(id)),
+        ...missing.filter((id) => ids.has(id))
+      ];
+      const save = (ids) => {
+        this._planListsError = null;
+        this._hass.callWS({ type: "home_tasks/set_plan_lists", plan: planInfo.id, source_lists: ids }).then((info) => {
+          planInfo.source_lists = info && info.source_lists || ids;
+          this._render();
+        }).catch((err) => {
+          this._planListsError = err && err.message || String(err);
+          this._render();
+        });
+      };
+      const chip = (label, active, cls, onClick) => {
+        const btn = this._el("button", { className: `assignee-chip ${cls}` + (active ? " active" : ""), textContent: label });
+        btn.type = "button";
+        btn.setAttribute("aria-pressed", String(active));
+        btn.addEventListener("click", onClick);
+        return btn;
+      };
+      const chips = [
+        chip(this._t("ed_plan_all_lists"), chosen.size === 0, "plan-all-lists", () => save([])),
+        ...allLists.map((l) => {
+          const btn = chip(l.name, chosen.has(l.entry_id), "plan-list", () => {
+            const next = new Set(chosen);
+            if (next.has(l.entry_id)) next.delete(l.entry_id);
+            else next.add(l.entry_id);
+            save(ordered(next));
+          });
+          btn.dataset.entryId = l.entry_id;
+          return btn;
+        }),
+        // Chosen, but not there: a tap takes it out of the choice.
+        ...missing.map((id) => {
+          const btn = chip(this._t("ed_plan_list_missing"), true, "plan-list plan-list-missing", () => {
+            const next = new Set(chosen);
+            next.delete(id);
+            save(ordered(next));
+          });
+          btn.dataset.entryId = id;
+          return btn;
+        })
+      ];
+      const nodes = [this._el("div", { className: "assignee-chip-row plan-lists" }, chips)];
+      if (this._planListsError) {
+        nodes.push(this._el("div", { className: "hint plan-lists-error", textContent: this._planListsError }));
+      }
+      sections.push(this._buildEditorSection("plan_lists", "mdi:format-list-checks", "ed_view_lists", nodes));
+    }
+    return this._el("div", { className: "visual-editor plan-editor" }, [
+      this._el("div", { className: "field" }, [planSelect, this._newEntryLink()]),
+      ...sections
+    ]);
+  }
+  // ── EditorBase hooks ──────────────────────────────────────────────────────
+  // A day plan has no columns to set up: its rows come from the plan.
+  _buildEditorBody() {
+    return [this._buildPlanEditor(this._plans || [])];
+  }
+  // A new card names its plan from the start (see getStubConfig); one
+  // written by hand without a plan gets the first one once there is a
+  // choice to make.
+  _afterListsLoaded() {
+    if (!this._config.plan && this._plans.length > 1) {
+      this._config = { ...this._config, plan: this._plans[0].id };
+      this._fireChanged();
+    }
   }
 };
 

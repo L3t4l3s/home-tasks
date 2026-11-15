@@ -1,14 +1,8 @@
-import { HomeTasksCardEditor } from "./list-editor.js";
+// The editor of the day plan card: the plan, what is shown, the plan's lists.
 
-/**
- * The editor of the day plan card: the card title and the plan's settings.
- * A plan card has no columns, so its config is taken as it is.
- */
-export class HomeTasksDayPlanCardEditor extends HomeTasksCardEditor {
-  get _isPlanEditor() {
-    return true;
-  }
+import { EditorBase } from "./editor-base.js";
 
+export class HomeTasksDayPlanCardEditor extends EditorBase {
   setConfig(config) {
     // Left over from a config written when the plan was a view of the list
     // card: neither key means anything here.
@@ -20,5 +14,199 @@ export class HomeTasksDayPlanCardEditor extends HomeTasksCardEditor {
       return;
     }
     if (this._listsLoaded) this._render();
+  }
+
+  // The day plan's settings, laid out like a list column's: the plan where a
+  // column has its list, then sections that open - what is shown, grouped by
+  // card and day header, the fields of an open task, and the lists the plan
+  // draws from.
+  _buildPlanEditor(plans) {
+    const set = (updates) => {
+      const next = { ...this._config };
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === undefined) delete next[key];
+        else next[key] = value;
+      }
+      this._config = next;
+      this._fireChanged();
+    };
+    const groupLabel = (key) =>
+      this._el("div", { className: "group-label" }, [this._el("span", { textContent: this._t(key) })]);
+    // Only the state that differs from the default is written, so a card
+    // that changes nothing keeps a config of three lines.
+    const toggle = (cls, labelKey, key, defaultOn) => {
+      const sw = document.createElement("ha-switch");
+      sw.className = cls;
+      const now = this._config[key];
+      sw.checked = defaultOn ? now !== false : now === true;
+      sw.setAttribute("aria-label", this._t(labelKey));
+      sw.addEventListener("change", () => set({ [key]: sw.checked === defaultOn ? undefined : sw.checked }));
+      return this._el("div", { className: "toggle-row" }, [
+        this._el("span", { className: "toggle-label", textContent: this._t(labelKey) }),
+        sw,
+      ]);
+    };
+
+    const known = plans.some((p) => p.id === this._config.plan);
+    const planOptions = plans.map((p) => [p.id, p.name]);
+    // A plan the config names but that is not there (yet) stays selectable.
+    if (this._config.plan && !known) planOptions.unshift([this._config.plan, this._config.plan]);
+    const planSelect = this._editorSelect("ed_view_day_plan", "plan-select", planOptions,
+      this._config.plan || (plans[0] && plans[0].id) || "", (value) => {
+        set({ plan: value });
+        this._render();                       // the lists below are the chosen plan's
+      });
+
+    const days = Math.min(7, Math.max(1, parseInt(this._config.days, 10) || 1));
+    const daysSelect = this._editorSelect("ed_plan_days", "days-select",
+      [1, 2, 3, 4, 5, 6, 7].map((n) => [String(n), String(n)]), String(days),
+      (value) => set({ days: Number(value) }));
+
+    // Whether the plan has Saturday and Sunday. That is one of the plan's
+    // own settings (its workdays), written to the plan right away like its
+    // lists: every card showing the plan and its assistants follow.
+    const planInfo = plans.find((p) => p.id === (this._config.plan || (plans[0] && plans[0].id)));
+    const weekendRow = [];
+    if (planInfo) {
+      const ALL = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+      const current = (planInfo.workdays || []).length ? planInfo.workdays : ALL;
+      const sw = document.createElement("ha-switch");
+      sw.className = "weekend-switch";
+      sw.checked = current.includes("sat") || current.includes("sun");
+      sw.setAttribute("aria-label", this._t("ed_plan_weekend"));
+      sw.addEventListener("change", () => {
+        const days = ALL.filter((d) => (d === "sat" || d === "sun" ? sw.checked : current.includes(d)));
+        // A plan of the weekend only, switched off: the week instead of no day at all.
+        const workdays = days.length ? days : ALL.slice(0, 5);
+        this._planDaysError = null;
+        this._hass.callWS({ type: "home_tasks/set_plan_workdays", plan: planInfo.id, workdays })
+          .then((info) => {
+            planInfo.workdays = (info && info.workdays) || (workdays.length === ALL.length ? [] : workdays);
+            this._render();
+          })
+          .catch((err) => {
+            this._planDaysError = (err && err.message) || String(err);
+            this._render();
+          });
+      });
+      weekendRow.push(this._el("div", { className: "toggle-row" }, [
+        this._el("span", { className: "toggle-label", textContent: this._t("ed_plan_weekend") }),
+        sw,
+      ]));
+    }
+
+    const sections = [
+      this._buildEditorSection("plan_view", "mdi:eye", "ed_sec_view", [
+        groupLabel("ed_group_card"),
+        daysSelect,
+        this._el("div", { className: "toggle-grid" }, [
+          toggle("compact-switch", "ed_compact", "compact", false),
+          ...weekendRow,
+        ]),
+        ...(this._planDaysError
+          ? [this._el("div", { className: "hint plan-lists-error plan-days-error", textContent: this._planDaysError })]
+          : []),
+        groupLabel("ed_group_header"),
+        this._el("div", { className: "toggle-grid" }, [
+          toggle("date-switch", "due_date_lbl", "show_date", true),
+          toggle("progress-switch", "ed_show_progress", "show_progress", true),
+          toggle("focus-switch", "plan_note_placeholder", "show_focus", true),
+        ]),
+      ]),
+      // What an open row shows, and in which order: the options a column
+      // has for it, at the root of the card config - a plan's rows come
+      // from several lists and all follow the one setting.
+      this._buildEditorSection("plan_features", "mdi:tune", "ed_sec_display", [
+        this._buildDetailFieldList({ get: () => this._config, update: set }),
+        toggle("move-switch", "ed_show_move", "show_move", true),
+      ]),
+    ];
+
+    // The lists the plan draws from. That is a setting of the plan, not of
+    // this card - every card showing the plan and the plan's tools for
+    // assistants follow it - but this is where one looks for it.
+    const allLists = this._planLists || [];
+    if (planInfo && allLists.length > 0) {
+      // The whole choice, also lists that are not there right now (deleted,
+      // or their entry not loaded): they keep limiting the plan, so they
+      // show - as chips of their own - and are saved along. Dropping them
+      // without a word could leave nothing chosen, which means every list,
+      // for the plan's assistants too.
+      const chosen = new Set(planInfo.source_lists || []);
+      const missing = [...chosen].filter((id) => !allLists.some((l) => l.entry_id === id));
+      const ordered = (ids) => [
+        ...allLists.map((x) => x.entry_id).filter((id) => ids.has(id)),
+        ...missing.filter((id) => ids.has(id)),
+      ];
+      const save = (ids) => {
+        this._planListsError = null;
+        this._hass.callWS({ type: "home_tasks/set_plan_lists", plan: planInfo.id, source_lists: ids })
+          .then((info) => {
+            planInfo.source_lists = (info && info.source_lists) || ids;
+            this._render();
+          })
+          .catch((err) => {
+            this._planListsError = (err && err.message) || String(err);
+            this._render();
+          });
+      };
+      const chip = (label, active, cls, onClick) => {
+        const btn = this._el("button", { className: `assignee-chip ${cls}` + (active ? " active" : ""), textContent: label });
+        btn.type = "button";
+        btn.setAttribute("aria-pressed", String(active));
+        btn.addEventListener("click", onClick);
+        return btn;
+      };
+      const chips = [
+        chip(this._t("ed_plan_all_lists"), chosen.size === 0, "plan-all-lists", () => save([])),
+        ...allLists.map((l) => {
+          const btn = chip(l.name, chosen.has(l.entry_id), "plan-list", () => {
+            const next = new Set(chosen);
+            if (next.has(l.entry_id)) next.delete(l.entry_id);
+            else next.add(l.entry_id);
+            save(ordered(next));
+          });
+          btn.dataset.entryId = l.entry_id;
+          return btn;
+        }),
+        // Chosen, but not there: a tap takes it out of the choice.
+        ...missing.map((id) => {
+          const btn = chip(this._t("ed_plan_list_missing"), true, "plan-list plan-list-missing", () => {
+            const next = new Set(chosen);
+            next.delete(id);
+            save(ordered(next));
+          });
+          btn.dataset.entryId = id;
+          return btn;
+        }),
+      ];
+      const nodes = [this._el("div", { className: "assignee-chip-row plan-lists" }, chips)];
+      if (this._planListsError) {
+        nodes.push(this._el("div", { className: "hint plan-lists-error", textContent: this._planListsError }));
+      }
+      sections.push(this._buildEditorSection("plan_lists", "mdi:format-list-checks", "ed_view_lists", nodes));
+    }
+
+    return this._el("div", { className: "visual-editor plan-editor" }, [
+      this._el("div", { className: "field" }, [planSelect, this._newEntryLink()]),
+      ...sections,
+    ]);
+  }
+
+  // ── EditorBase hooks ──────────────────────────────────────────────────────
+
+  // A day plan has no columns to set up: its rows come from the plan.
+  _buildEditorBody() {
+    return [this._buildPlanEditor(this._plans || [])];
+  }
+
+  // A new card names its plan from the start (see getStubConfig); one
+  // written by hand without a plan gets the first one once there is a
+  // choice to make.
+  _afterListsLoaded() {
+    if (!this._config.plan && this._plans.length > 1) {
+      this._config = { ...this._config, plan: this._plans[0].id };
+      this._fireChanged();
+    }
   }
 }

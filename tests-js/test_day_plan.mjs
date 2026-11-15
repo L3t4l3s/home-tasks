@@ -224,7 +224,9 @@ describe('day plan: what it shows', () => {
     const Plan = window.customElements.get('home-tasks-day-plan-card');
     const List = window.customElements.get('home-tasks-card');
     assert.ok(Plan && List && Plan !== List);
-    assert.ok(Plan.prototype instanceof List, 'the list card\'s code, in its plan mode');
+    // Both are built on the same base; the plan card is no list card.
+    assert.equal(Object.getPrototypeOf(Plan), Object.getPrototypeOf(List));
+    assert.equal(Plan.prototype instanceof List, false);
     // Two entries in the card picker, each with a name of its own.
     const entries = window.customCards.filter((c) => c.type.startsWith('home-tasks'));
     same(entries.map((c) => [c.type, c.name]), [
@@ -263,7 +265,7 @@ describe('day plan: what it shows', () => {
       type: 'custom:home-tasks-day-plan-card', view: 'day_plan', plan: 'P1', days: 2,
       columns: [{ list_id: 'L1', show_priority: false }],
     });
-    assert.equal(card._planMode, true);
+    assert.equal(card._sourceCols().length, 0, 'its lists come from the plan, not from columns');
     assert.equal(card._planDays, 2);
     assert.equal('show_priority' in card._planTemplate, false);
     assert.equal('columns' in card._planTemplate || 'view' in card._planTemplate, false);

@@ -1094,9 +1094,10 @@ stay in `translations/`, following Home Assistant's config-flow schema.
 
 ### Working on the card
 
-The card's sources are in `src/`: `core/` (texts and shared helpers),
-`views/` (the list card and the day plan card), `editors/` and `index.js`,
-which defines the elements. `npm run build` bundles them with esbuild into
+The card's sources are in `src/`: `core/` (texts, shared helpers and
+`TasksCardBase`, what every card type is built on), `views/` (the list card
+and the day plan card), `editors/` (`EditorBase` and the editor of each
+card type) and `index.js`, which defines the elements. `npm run build` bundles them with esbuild into
 `custom_components/home_tasks/home-tasks-card.js` — the one file Home Assistant
 loads. Edit `src/`, never the built file: the next build writes over it. Commit
 the built file with your change; CI checks that it is what `src/` builds to.
