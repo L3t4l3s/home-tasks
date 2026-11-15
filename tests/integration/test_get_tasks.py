@@ -152,3 +152,96 @@ async def test_linked_list_in_the_cards_order(hass: HomeAssistant, patch_add_ext
 
     result = await _get(hass, entity_id=EXT)
     assert [t["title"] for t in result["tasks"]] == ["Moved up in the card", "First at the provider"]
+
+
+# ---------------------------------------------------------------------------
+# Several lists in one call
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+async def garden(hass: HomeAssistant, household) -> MockConfigEntry:
+    """A second native list next to the household one."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"name": "Garden"}, title="Garden")
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    task = await hass.data[DOMAIN][entry.entry_id].async_add_task("Mow")
+    await hass.data[DOMAIN][entry.entry_id].async_update_task(task["id"], assigned_person="person.kevin")
+    return entry
+
+
+async def test_each_task_names_its_list_and_its_last_change(
+    hass: HomeAssistant, household, mock_config_entry
+) -> None:
+    result = await _get(hass, list_name="Test List")
+    bins = result["tasks"][0]
+    assert (bins["list_name"], bins["entry_id"]) == ("Test List", mock_config_entry.entry_id)
+    assert bins["last_changed"].startswith("2026-09-28")
+    assert result["lists"] == [{
+        "list_name": "Test List",
+        "entry_id": mock_config_entry.entry_id,
+        "tag_catalog": result["tag_catalog"],
+    }]
+
+
+async def test_several_lists_come_back_in_the_order_named(
+    hass: HomeAssistant, household, garden, mock_config_entry
+) -> None:
+    result = await _get(hass, list_name=["Garden", "Test List"])
+    assert titles(result) == ["Mow", "Bins", "Dishes", "Taxes", "Plants"]
+    assert [entry["list_name"] for entry in result["lists"]] == ["Garden", "Test List"]
+    assert result["tasks"][0]["entry_id"] == garden.entry_id
+    assert result["tasks"][1]["entry_id"] == mock_config_entry.entry_id
+    # One list's name and tags at the top would be wrong for the other.
+    assert "list_name" not in result and "tag_catalog" not in result
+
+
+async def test_filters_apply_across_the_lists(
+    hass: HomeAssistant, household, garden, mock_config_entry
+) -> None:
+    result = await _get(
+        hass, entry_id=[mock_config_entry.entry_id, garden.entry_id], assigned_person="person.kevin",
+    )
+    assert titles(result) == ["Bins", "Taxes", "Mow"]
+
+
+async def test_a_list_named_twice_is_read_once(hass: HomeAssistant, household) -> None:
+    result = await _get(hass, list_name=["Test List", "Test List"])
+    assert titles(result) == ["Bins", "Dishes", "Taxes", "Plants"]
+    assert result["list_name"] == "Test List"
+
+
+async def test_an_unknown_list_among_several_is_an_error(hass: HomeAssistant, household) -> None:
+    import voluptuous as vol
+    with pytest.raises(vol.Invalid, match="Nowhere"):
+        await _get(hass, list_name=["Test List", "Nowhere"])
+
+
+async def test_native_and_linked_lists_together(hass: HomeAssistant, household) -> None:
+    from tests.integration.linked_list_helpers import LIST_NAME, setup_linked_list
+
+    linked, _adapter = await setup_linked_list(hass)
+    result = await _get(hass, list_name=["Test List", LIST_NAME])
+    assert titles(result) == ["Bins", "Dishes", "Taxes", "Plants", "Wipe bench"]
+    assert result["tasks"][-1]["entry_id"] == linked.entry_id
+
+
+async def test_an_unreadable_list_does_not_cost_the_others(
+    hass: HomeAssistant, household, mock_config_entry
+) -> None:
+    """A linked list whose provider is gone: the overview says so and goes on."""
+    from tests.integration.linked_list_helpers import EXT_ENTITY, LIST_NAME, setup_linked_list
+
+    linked, _adapter = await setup_linked_list(hass)
+    hass.states.async_remove(EXT_ENTITY)
+    await hass.async_block_till_done()
+
+    result = await _get(hass, entry_id=[mock_config_entry.entry_id, linked.entry_id])
+    assert titles(result) == ["Bins", "Dishes", "Taxes", "Plants"]
+    ok, broken = result["lists"]
+    assert "error" not in ok
+    assert broken["entry_id"] == linked.entry_id and "Entity not found" in broken["error"]
+
+    # Asked for alone, it is an error as before - there is nothing else to return.
+    with pytest.raises(Exception, match="Entity not found"):
+        await _get(hass, entry_id=linked.entry_id)

@@ -517,6 +517,12 @@ class HomeTasksStore:
         # original list after a failed move: re-arms timers, no created event.
         self.on_task_restored: Callable[[dict], None] | None = None
         self.on_task_reopened: Callable[[dict], None] | None = None
+        # Whether the reopen that on_task_reopened is being called for was
+        # the recurrence opening the task for its next occurrence (its timer)
+        # rather than somebody - a user, an automation, an assistant - taking
+        # a tick back. The history cannot tell: a reopen without a user is
+        # recorded as "recurrence" there either way.
+        self.reopened_by_recurrence = False
         self.on_reminders_changed: Callable[[dict], None] | None = None
         # Fired when due/recurrence fields of a task that is (and stays)
         # completed are edited — the persisted reopen_at and any armed reopen
@@ -1102,6 +1108,7 @@ class HomeTasksStore:
             # date the same update sets, which wins.
             self._rollback_advanced_due(
                 task, keep_due="due_date" in kwargs or "due_time" in kwargs)
+            self.reopened_by_recurrence = False
             if self.on_task_reopened:
                 self.on_task_reopened(task)
 
@@ -1224,6 +1231,7 @@ class HomeTasksStore:
         _trim_history(hist)
         await self._async_save()
 
+        self.reopened_by_recurrence = scheduled
         if self.on_task_reopened:
             self.on_task_reopened(task)
         return task

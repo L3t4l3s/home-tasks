@@ -6,7 +6,8 @@
         "description": "Escolha o que deseja configurar.",
         "menu_options": {
           "native": "Criar uma nova lista de tarefas",
-          "external": "Vincular uma lista de tarefas externa"
+          "external": "Vincular uma lista de tarefas externa",
+          "plan": "Criar um plano do dia"
         }
       },
       "native": {
@@ -22,6 +23,13 @@
         "data": {
           "entity_id": "Entidade de tarefas"
         }
+      },
+      "plan": {
+        "title": "Criar plano do dia",
+        "description": "Um plano do dia mostra as tarefas das suas listas previstas para hoje e para os próximos dias. As tarefas permanecem nas suas listas.",
+        "data": {
+          "name": "Nome do plano"
+        }
       }
     },
     "error": {
@@ -29,12 +37,51 @@
       "name_too_long": "O nome é muito longo (máximo de 100 caracteres).",
       "duplicate_name": "Já existe uma lista com esse nome.",
       "empty_entity": "Selecione uma entidade.",
-      "already_linked": "Esta entidade já está vinculada."
+      "already_linked": "Esta entidade já está vinculada.",
+      "duplicate_plan_name": "Já existe um plano com este nome."
     },
     "abort": {
       "already_configured": "Esta lista já está configurada.",
       "no_external_entities": "Nenhuma entidade de tarefas externa encontrada. Configure primeiro uma integração CalDAV, Google Tasks ou Todoist.",
       "max_lists_reached": "O número máximo de listas (50) foi atingido."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configurações do plano do dia",
+        "data": {
+          "source_lists": "Listas",
+          "workdays": "Dias úteis",
+          "include_due": "Mostrar tarefas com vencimento no seu dia",
+          "carry_over": "Tarefas não concluídas do último dia planejado"
+        },
+        "data_description": {
+          "source_lists": "As listas das quais este plano pode mostrar tarefas. Sem seleção, são todas as listas.",
+          "workdays": "Os dias que existem neste plano. Os outros dias são ignorados. Sem seleção, são todos os dias.",
+          "include_due": "Uma tarefa que vence em um dia de folga aparece no dia útil anterior; tarefas atrasadas aparecem hoje."
+        }
+      }
+    }
+  },
+  "selector": {
+    "plan_workdays": {
+      "options": {
+        "mon": "Segunda-feira",
+        "tue": "Terça-feira",
+        "wed": "Quarta-feira",
+        "thu": "Quinta-feira",
+        "fri": "Sexta-feira",
+        "sat": "Sábado",
+        "sun": "Domingo"
+      }
+    },
+    "plan_carry_over": {
+      "options": {
+        "off": "Deixar como estão",
+        "suggest": "Oferecer para transferir",
+        "auto": "Transferir automaticamente"
+      }
     }
   }
 }

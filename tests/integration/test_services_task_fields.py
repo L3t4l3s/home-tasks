@@ -206,3 +206,61 @@ async def test_position_on_a_linked_list_takes_the_card_s_route(
     await call(hass, "update_task", list_name=LIST_NAME, task_title="Wipe bench", position="bottom")
     store = overlay(hass, entry)
     assert store.get_overlay("uid-1")["sort_order"] > store.get_overlay("uid-2")["sort_order"]
+
+
+# ---------------------------------------------------------------------------
+# add_task says which task it created
+# ---------------------------------------------------------------------------
+
+async def _add_and_ask(hass: HomeAssistant, **data) -> dict:
+    return await hass.services.async_call(
+        DOMAIN, "add_task", data, blocking=True, return_response=True,
+    )
+
+
+async def test_add_task_returns_the_new_task_on_request(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    result = await _add_and_ask(hass, entry_id=mock_config_entry.entry_id, title="Bins")
+    (task,) = [t for t in store.tasks if t["title"] == "Bins"]
+    assert result == {"task_id": task["id"], "list_name": "Test List"}
+
+
+async def test_add_task_on_a_linked_list_returns_the_provider_s_id(
+    hass: HomeAssistant, linked_list
+) -> None:
+    result = await _add_and_ask(hass, list_name=LIST_NAME, title="Buy bread")
+    assert result["task_id"] == "uid-new"
+
+
+# ---------------------------------------------------------------------------
+# update_task: an empty due date removes it
+# ---------------------------------------------------------------------------
+
+async def test_an_empty_due_date_removes_date_and_time(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    task = await store.async_add_task("Rent", due_date="2026-12-01", due_time="09:00")
+    await _native(hass, mock_config_entry, "update_task", task_id=task["id"], due_date="")
+    t = store.get_task(task["id"])
+    assert (t["due_date"], t["due_time"]) == (None, None)
+
+
+async def test_an_empty_due_time_keeps_the_date(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    task = await store.async_add_task("Rent", due_date="2026-12-01", due_time="09:00")
+    await _native(hass, mock_config_entry, "update_task", task_id=task["id"], due_time="")
+    t = store.get_task(task["id"])
+    assert (t["due_date"], t["due_time"]) == ("2026-12-01", None)
+
+
+async def test_an_empty_due_date_reaches_a_provider_as_none(
+    hass: HomeAssistant, linked_list
+) -> None:
+    """A provider only understands None; "" would be sent to it as a date."""
+    _entry, adapter = linked_list
+    await call(hass, "update_task", list_name=LIST_NAME, task_title="Wipe bench", due_date="")
+    uid, fields = adapter.updated[-1]
+    assert uid == "uid-1"
+    assert fields == {"due_date": None, "due_time": None}

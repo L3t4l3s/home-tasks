@@ -6,7 +6,8 @@
         "description": "W\u00e4hle aus, was du einrichten m\u00f6chtest.",
         "menu_options": {
           "native": "Neue Aufgabenliste erstellen",
-          "external": "Externe Todo-Liste verkn\u00fcpfen"
+          "external": "Externe Todo-Liste verkn\u00fcpfen",
+          "plan": "Tagesplan erstellen"
         }
       },
       "native": {
@@ -22,6 +23,13 @@
         "data": {
           "entity_id": "Todo-Entity"
         }
+      },
+      "plan": {
+        "title": "Tagesplan erstellen",
+        "description": "Ein Tagesplan zeigt Aufgaben aus deinen Listen, die f\u00fcr heute und die n\u00e4chsten Tage vorgesehen sind. Die Aufgaben bleiben in ihren Listen.",
+        "data": {
+          "name": "Name des Plans"
+        }
       }
     },
     "error": {
@@ -29,12 +37,51 @@
       "name_too_long": "Der Name ist zu lang (max. 100 Zeichen).",
       "duplicate_name": "Eine Liste mit diesem Namen existiert bereits.",
       "empty_entity": "Bitte w\u00e4hle eine Entity aus.",
-      "already_linked": "Diese Entity ist bereits verkn\u00fcpft."
+      "already_linked": "Diese Entity ist bereits verkn\u00fcpft.",
+      "duplicate_plan_name": "Ein Plan mit diesem Namen existiert bereits."
     },
     "abort": {
       "already_configured": "Diese Liste ist bereits konfiguriert.",
       "no_external_entities": "Keine externen Todo-Entities gefunden. Bitte richte zuerst eine CalDAV-, Google Tasks- oder Todoist-Integration ein.",
       "max_lists_reached": "Maximale Anzahl an Listen (50) erreicht."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Einstellungen des Tagesplans",
+        "data": {
+          "source_lists": "Listen",
+          "workdays": "Arbeitstage",
+          "include_due": "Aufgaben mit F\u00e4lligkeit an ihrem Tag anzeigen",
+          "carry_over": "Unerledigte Aufgaben des letzten geplanten Tags"
+        },
+        "data_description": {
+          "source_lists": "Die Listen, aus denen dieser Plan Aufgaben zeigen darf. Ohne Auswahl sind es alle Listen.",
+          "workdays": "Die Tage, die es in diesem Plan gibt. Andere Tage werden \u00fcbersprungen. Ohne Auswahl ist es jeder Tag.",
+          "include_due": "Eine Aufgabe, die an einem freien Tag f\u00e4llig ist, erscheint am Arbeitstag davor; \u00fcberf\u00e4llige Aufgaben erscheinen heute."
+        }
+      }
+    }
+  },
+  "selector": {
+    "plan_workdays": {
+      "options": {
+        "mon": "Montag",
+        "tue": "Dienstag",
+        "wed": "Mittwoch",
+        "thu": "Donnerstag",
+        "fri": "Freitag",
+        "sat": "Samstag",
+        "sun": "Sonntag"
+      }
+    },
+    "plan_carry_over": {
+      "options": {
+        "off": "Stehen lassen",
+        "suggest": "\u00dcbernahme anbieten",
+        "auto": "Automatisch \u00fcbernehmen"
+      }
     }
   }
 }

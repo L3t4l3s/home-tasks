@@ -1,6 +1,8 @@
 add_task:
   name: Add Task
-  description: Create a new task in a task list.
+  description: >-
+    Create a new task in a task list. With response_variable it returns the
+    new task's ID and the list's name.
   fields:
     list_name:
       name: List Name
@@ -280,21 +282,26 @@ get_tasks:
     Return a list's tasks with every Home Tasks field — assignee, tags,
     priority, sub-tasks — which todo.get_items can't carry. Use it with
     response_variable in automations and trigger-based template sensors.
+    In YAML, the list can be several lists, for one overview across them.
   fields:
     list_name:
       name: List Name
-      description: The name of the task list.
+      description: The name of the task list. In YAML, a list of names reads several lists at once.
       example: "Household"
       selector:
         text:
     entry_id:
       name: Entry ID
-      description: The config entry ID of the list (alternative to list name).
+      description: >-
+        The config entry ID of the list (alternative to list name). In YAML,
+        a list of IDs reads several lists at once.
       selector:
         text:
     entity_id:
       name: Linked list entity
-      description: The todo entity of a linked external list.
+      description: >-
+        The todo entity of a linked external list. In YAML, a list of
+        entities reads several linked lists at once.
       example: "todo.all_tasks"
       selector:
         entity:
@@ -371,12 +378,14 @@ update_task:
         text:
     due_date:
       name: Due Date
-      description: Due date in YYYY-MM-DD format.
+      description: >-
+        Due date in YYYY-MM-DD format. In YAML, an empty value ("") removes
+        the due date, and the due time with it.
       selector:
         date:
     due_time:
       name: Due Time
-      description: Due time in HH:MM format.
+      description: Due time in HH:MM format. In YAML, an empty value ("") removes it.
       selector:
         time:
     notes:
@@ -903,5 +912,144 @@ remove_sub_task:
     sub_task_id:
       name: Sub-task ID
       description: ID of the sub-task, as get_tasks returns it (alternative to sub-task title).
+      selector:
+        text:
+
+get_day_plan:
+  name: Get Day Plan
+  description: >-
+    Return a day plan: per day its note and its tasks in working order, each
+    with its list, priority, tags, assignees and due date. Tasks with a due
+    date are on their day by themselves. Use it with response_variable.
+  fields:
+    plan:
+      name: Plan
+      description: Name or entry ID of the plan. Not needed when there is only one.
+      example: "Today"
+      selector:
+        text:
+    date:
+      name: Date
+      description: The first day to return. Left out, the plan's current day.
+      selector:
+        date:
+    days:
+      name: Days
+      description: How many plan days to return, days off skipped.
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 7
+
+set_day_plan:
+  name: Set Day Plan
+  description: >-
+    Set the tasks of a plan day and their order. The tasks stay in their
+    lists; a task that was planned for another day moves to this one.
+  fields:
+    plan:
+      name: Plan
+      description: Name or entry ID of the plan. Not needed when there is only one.
+      example: "Today"
+      selector:
+        text:
+    date:
+      name: Date
+      description: >-
+        The day to set, one of the plan's next seven days. Left out, the
+        plan's current day.
+      selector:
+        date:
+    items:
+      name: Tasks
+      description: >-
+        Task IDs in working order (first = do first), as get_tasks returns
+        them. In YAML an entry can also be task_id together with the
+        entry_id of its list.
+      required: true
+      example: '["4f6c…", "a91e…"]'
+      selector:
+        text:
+          multiple: true
+    note:
+      name: Note
+      description: A line for the day, e.g. what to focus on. Empty removes it.
+      selector:
+        text:
+    mode:
+      name: Mode
+      description: >-
+        merge keeps what is already on the day and puts it after the tasks
+        named here. replace takes the rest off the day, except what is done
+        and what is there through its due date.
+      default: merge
+      selector:
+        select:
+          options:
+            - merge
+            - replace
+
+plan_task:
+  name: Plan Task
+  description: >-
+    Put a task on a plan day. The task stays in its list; if it was planned
+    for another day, it moves.
+  fields:
+    plan:
+      name: Plan
+      description: Name or entry ID of the plan. Not needed when there is only one.
+      example: "Today"
+      selector:
+        text:
+    task_id:
+      name: Task ID
+      description: The ID of the task, as get_tasks returns it.
+      required: true
+      selector:
+        text:
+    entry_id:
+      name: List entry ID
+      description: The config entry ID of the task's list. Only needed when two lists use the same task ID.
+      selector:
+        text:
+    date:
+      name: Date
+      description: The day, one of the plan's next seven days. Left out, the plan's current day.
+      selector:
+        date:
+    position:
+      name: Position
+      description: Where on the day the task goes.
+      default: bottom
+      selector:
+        select:
+          options:
+            - top
+            - bottom
+
+unplan_task:
+  name: Unplan Task
+  description: >-
+    Take a task off the plan. The task itself is not changed. A task that is
+    on the plan through its due date can only be moved to another day.
+  fields:
+    plan:
+      name: Plan
+      description: Name or entry ID of the plan. Not needed when there is only one.
+      example: "Today"
+      selector:
+        text:
+    task_id:
+      name: Task ID
+      description: The ID of the task.
+      required: true
+      selector:
+        text:
+    entry_id:
+      name: List Entry ID
+      description: >-
+        Entry ID of the list the task is in. Only needed when two lists hold
+        a task with the same ID.
       selector:
         text:

@@ -14,6 +14,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Context, HassJob, HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 
 from .image_library import async_get_image_library, async_register_image_library
@@ -44,6 +45,14 @@ from .store import (
     validate_reminders,
     validate_text,
 )
+from .plan import (
+    SIGNAL_LISTS_CHANGED,
+    PlanStore,
+    async_setup_plan_entry,
+    async_unload_plan_entry,
+    is_plan,
+)
+from .plan_services import async_register_plan_services
 from .service_fields import recurrence_fields, resolve_section
 from .websocket_api import SAME_SECTION, async_move_task_any, async_register_websocket_commands
 
@@ -53,6 +62,8 @@ PLATFORMS = ["todo", "sensor", "binary_sensor", "calendar"]
 # A linked list gets the same entities as a native one, except the todo
 # entity - that one is the provider's own.
 EXTERNAL_PLATFORMS = ["calendar", "sensor", "binary_sensor"]
+# A plan holds no tasks of its own: it only counts what is on today.
+PLAN_PLATFORMS = ["sensor"]
 CARD_URL = "/home_tasks/home-tasks-card.js"
 DATA_SETUP_DONE = f"{DOMAIN}_setup_done"
 DATA_RESOURCE_UNSUB = f"{DOMAIN}_resource_unsub"
@@ -115,13 +126,15 @@ async def _async_load_image_library(hass: HomeAssistant) -> None:
         await library.async_backfill()
         if library.unread_lists and tries_left[0] > 0:
             tries_left[0] -= 1
-            async_call_later(hass, BACKFILL_RETRY_DELAY, _backfill)
+            async_call_later(hass, BACKFILL_RETRY_DELAY, _backfill_job)
 
     @callback
     def _backfill(_now) -> None:
         hass.async_create_task(_run())
 
-    async_call_later(hass, 60, _backfill)
+    # Nothing to learn while Home Assistant is shutting down.
+    _backfill_job = HassJob(_backfill, "image_library_backfill", cancel_on_shutdown=True)
+    async_call_later(hass, 60, _backfill_job)
 
 
 async def _async_register_card(hass: HomeAssistant) -> None:
@@ -498,7 +511,14 @@ def _on_task_deleted(hass: HomeAssistant, task_id: str) -> None:
 
 def _on_task_reopened(hass: HomeAssistant, entry_id: str, task: dict) -> None:
     """Fire event when a task is reopened and reschedule its reminders."""
-    hass.bus.async_fire(f"{DOMAIN}_task_reopened", _build_event_data(hass, entry_id, task))
+    data = _build_event_data(hass, entry_id, task)
+    # Say when it was the recurrence, opening the task for its next
+    # occurrence: to a listener (a day plan) that is not an un-tick. The
+    # store knows - it was its reopen timer or it was not.
+    store = hass.data.get(DOMAIN, {}).get(entry_id)
+    if getattr(store, "reopened_by_recurrence", False):
+        data["reopened_by"] = "recurrence"
+    hass.bus.async_fire(f"{DOMAIN}_task_reopened", data)
     _schedule_reminders(hass, entry_id, task)
 
 
@@ -1330,7 +1350,10 @@ def _schedule_recurrence(
         timers.pop(task_id, None)
         hass.async_create_task(_async_reopen_task(hass, entry_id, task_id))
 
-    cancel = async_call_later(hass, delay, _reopen_task)
+    # The reopen time is stored on the task: the next start picks it up.
+    cancel = async_call_later(
+        hass, delay, HassJob(_reopen_task, "recurrence_reopen", cancel_on_shutdown=True)
+    )
     timers[task_id] = cancel
     _LOGGER.debug("Scheduled recurrence for task %s in %.0f seconds", task_id, delay)
 
@@ -1451,7 +1474,9 @@ def _schedule_reminders(hass: HomeAssistant, entry_id: str, task: dict) -> None:
             }
             hass.bus.async_fire(f"{DOMAIN}_task_reminder", event_data)
 
-        cancel = async_call_later(hass, delay, _fire_reminder)
+        cancel = async_call_later(
+            hass, delay, HassJob(_fire_reminder, "task_reminder", cancel_on_shutdown=True)
+        )
         timers[f"{task_id}_r{offset}"] = cancel
         _LOGGER.debug(
             "Scheduled reminder for task %s (offset %d min) in %.0f s",
@@ -1720,7 +1745,10 @@ async def _async_reopen_external_task(
     task["completed"] = False
     task["completed_at"] = None
     task.update({k: fields[k] for k in ("due_date", "due_time") if k in fields})
-    hass.bus.async_fire(f"{DOMAIN}_task_reopened", _build_event_data(hass, entry_id, task))
+    hass.bus.async_fire(
+        f"{DOMAIN}_task_reopened",
+        {**_build_event_data(hass, entry_id, task), "reopened_by": "recurrence"},
+    )
     _schedule_reminders(hass, entry_id, task)
     _LOGGER.info("Recurring external task '%s' reopened", task.get("title", task_uid))
 
@@ -1778,7 +1806,10 @@ async def _async_recreate_external_task(
     reopened = {**task, "id": new_uid, "completed": False, "completed_at": None,
                 **{k: create[k] for k in ("due_date", "due_time") if k in create}}
     reopened.pop("_vanished", None)
-    hass.bus.async_fire(f"{DOMAIN}_task_reopened", _build_event_data(hass, entry_id, reopened))
+    hass.bus.async_fire(
+        f"{DOMAIN}_task_reopened",
+        {**_build_event_data(hass, entry_id, reopened), "reopened_by": "recurrence"},
+    )
     _schedule_reminders(hass, entry_id, reopened)
     _LOGGER.info("Recurring task '%s' was deleted on %s while it waited - put back as %s",
                  task.get("title"), entity_id, new_uid)
@@ -1851,7 +1882,8 @@ def _entry_for_name(hass: HomeAssistant, list_name: str):
     """
     matches = [
         entry for entry in hass.config_entries.async_entries(DOMAIN)
-        if (entry.data.get("name", entry.title) or "").lower() == list_name.lower()
+        if not is_plan(entry)
+        and (entry.data.get("name", entry.title) or "").lower() == list_name.lower()
     ]
     stores = hass.data.get(DOMAIN, {})
     for entry in matches:
@@ -1914,6 +1946,25 @@ def _resolve_target(hass: HomeAssistant, data: dict) -> tuple[str, str, object]:
         raise vol.Invalid(f"No list found with name: {list_name}")
 
     raise vol.Invalid("Either entry_id, list_name or entity_id must be provided")
+
+
+def _resolve_targets(hass: HomeAssistant, data: dict) -> list[tuple[str, str, object]]:
+    """As _resolve_target, for a call that may name several lists.
+
+    The one key the call gives (list_name, entry_id or entity_id) may hold a
+    list; each name resolves as it would alone, and a list named twice is
+    read once.
+    """
+    given = [key for key in ("list_name", "entry_id", "entity_id") if data.get(key)]
+    if len(given) != 1 or not isinstance(data[given[0]], list):
+        return [_resolve_target(hass, data)]
+    key = given[0]
+    targets: list[tuple[str, str, object]] = []
+    for value in data[key]:
+        target = _resolve_target(hass, {key: value})
+        if not any(target[2] is known[2] for known in targets):
+            targets.append(target)
+    return targets
 
 
 async def _resolve_external_task(hass: HomeAssistant, entity_id: str, data: dict) -> dict:
@@ -2257,8 +2308,22 @@ def _async_register_services(hass: HomeAssistant) -> None:
         await _async_service_image(hass, kind, ident, store, task["id"], data, force=False)
         return kind, ident, task["id"]
 
-    async def async_handle_add_task(call: ServiceCall) -> None:
-        await _async_add_task(call, call.data)
+    def _list_label(kind: str, ident: str) -> str:
+        """The name a list goes by: the entry's for a native list, the todo
+        entity's for a linked one."""
+        if kind == "native":
+            entry = hass.config_entries.async_get_entry(ident)
+            return (entry.data.get("name") or entry.title) if entry else ident
+        state = hass.states.get(ident)
+        return state.name if state else ident
+
+    async def async_handle_add_task(call: ServiceCall) -> ServiceResponse:
+        """Create a task; with response_variable, say which one it became,
+        so a script can go on working with it (plan it, add to it)."""
+        kind, ident, task_id = await _async_add_task(call, call.data)
+        if not call.return_response:
+            return None
+        return {"task_id": task_id, "list_name": _list_label(kind, ident)}
 
     async def async_handle_add_task_from_text(call: ServiceCall) -> ServiceResponse:
         """A spoken sentence → a task with the fields it names (issue #18)."""
@@ -2286,15 +2351,9 @@ def _async_register_services(hass: HomeAssistant) -> None:
             data["due_time"] = parsed.due_time
         kind, ident, task_id = await _async_add_task(call, data)
 
-        if kind == "native":
-            entry = hass.config_entries.async_get_entry(ident)
-            list_name = (entry.data.get("name") or entry.title) if entry else ident
-        else:
-            state = hass.states.get(ident)
-            list_name = state.name if state else ident
         return {
             "task_id": task_id,
-            "list_name": list_name,
+            "list_name": _list_label(kind, ident),
             "title": parsed.title,
             "assigned_person": parsed.person,
             "person_name": parsed.person_name,
@@ -2310,18 +2369,13 @@ def _async_register_services(hass: HomeAssistant) -> None:
 
         todo.get_items is bound to HA's TodoItem (no assignee, no tags); this
         is the same read with them, for automations and template sensors.
+
+        Several lists in one call come back as one run of tasks, list after
+        list in the order they were named, each task saying which list it is
+        from - one read for an overview across lists.
         """
-        kind, ident, store = _resolve_target(hass, call.data)
-        if kind == "native":
-            tasks = sorted(store.tasks, key=lambda t: t.get("sort_order", 0))
-            entry = hass.config_entries.async_get_entry(ident)
-            list_name = (entry.data.get("name") or entry.title) if entry else ident
-        else:
-            # The overlay's sort_order is the card's order where the provider
-            # can't reorder (shopping_list and other generic lists).
-            tasks = sorted(await _external_tasks(hass, ident), key=lambda t: t.get("sort_order", 0))
-            state = hass.states.get(ident)
-            list_name = state.name if state else ident
+        targets = _resolve_targets(hass, call.data)
+        stores = hass.data.get(DOMAIN, {})
 
         status = call.data.get("status", "open")
         person = call.data.get("assigned_person")
@@ -2349,12 +2403,38 @@ def _async_register_services(hass: HomeAssistant) -> None:
                     return False
             return True
 
-        return {
-            "list_name": list_name,
-            "tag_catalog": store.get_defaults()["tag_catalog"],
-            "tasks": [
+        def last_changed(task: dict) -> str | None:
+            """When the task's history last recorded something (its creation,
+            a field change, a completion); sub-task edits leave no entry."""
+            history = task.get("history") or []
+            return history[-1].get("ts") if history else None
+
+        lists: list[dict] = []
+        found: list[dict] = []
+        for kind, ident, store in targets:
+            list_name = _list_label(kind, ident)
+            entry_id = next((eid for eid, s in stores.items() if s is store), None)
+            info = {
+                "list_name": list_name,
+                "entry_id": entry_id,
+                "tag_catalog": store.get_defaults()["tag_catalog"],
+            }
+            lists.append(info)
+            try:
+                tasks = store.tasks if kind == "native" else await _external_tasks(hass, ident)
+            except Exception as err:  # noqa: BLE001
+                if len(targets) == 1:
+                    raise
+                # One linked list whose provider is away (or gone) must not
+                # cost the overview of all the others: say so and go on.
+                info["error"] = str(err) or type(err).__name__
+                continue
+            found.extend(
                 {
                     "id": t["id"],
+                    "list_name": list_name,
+                    "entry_id": entry_id,
+                    "last_changed": last_changed(t),
                     "title": t.get("title", ""),
                     "completed": bool(t.get("completed")),
                     "completed_at": t.get("completed_at"),
@@ -2376,9 +2456,18 @@ def _async_register_services(hass: HomeAssistant) -> None:
                     ],
                     "recurrence_enabled": bool(t.get("recurrence_enabled")),
                 }
-                for t in tasks if wanted(t)
-            ],
-        }
+                # The card's order. On a linked list that is the overlay's
+                # sort_order where the provider can't reorder (shopping_list
+                # and other generic lists).
+                for t in sorted(tasks, key=lambda t: t.get("sort_order", 0)) if wanted(t)
+            )
+
+        result: dict = {"lists": lists, "tasks": found}
+        if len(lists) == 1:
+            # What a call for one list has always returned.
+            result["list_name"] = lists[0]["list_name"]
+            result["tag_catalog"] = lists[0]["tag_catalog"]
+        return result
 
     async def async_handle_update_task(call: ServiceCall) -> None:
         """Update fields of an existing task (issue #42) — find it by task_id
@@ -2389,6 +2478,14 @@ def _async_register_services(hass: HomeAssistant) -> None:
         for key in ("title", "due_date", "due_time", "notes", "assigned_person", "priority"):
             if key in call.data:
                 kwargs[key] = call.data[key]
+        # An empty due date clears it, and the time with it. A native list's
+        # store reads "" that way itself; a provider only understands None
+        # and would be sent the empty string as a date.
+        for key in ("due_date", "due_time"):
+            if isinstance(kwargs.get(key), str) and not kwargs[key].strip():
+                kwargs[key] = None
+        if "due_date" in kwargs and kwargs["due_date"] is None:
+            kwargs["due_time"] = None
         if "tags" in call.data:
             kwargs["tags"] = _parse_service_tags(call.data["tags"])
         if "reminders" in call.data:
@@ -2691,6 +2788,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
             ),
             **task_extras,
         }),
+        supports_response=SupportsResponse.OPTIONAL,
     )
     hass.services.async_register(
         DOMAIN, "add_task_from_text", async_handle_add_task_from_text,
@@ -2706,9 +2804,10 @@ def _async_register_services(hass: HomeAssistant) -> None:
     hass.services.async_register(
         DOMAIN, "get_tasks", async_handle_get_tasks,
         schema=vol.Schema({
-            vol.Optional("entry_id"): cv.string,
-            vol.Optional("list_name"): cv.string,
-            vol.Optional("entity_id"): cv.string,
+            # One list, or several for an overview across lists.
+            vol.Optional("entry_id"): vol.Any(cv.string, [cv.string]),
+            vol.Optional("list_name"): vol.Any(cv.string, [cv.string]),
+            vol.Optional("entity_id"): vol.Any(cv.string, [cv.string]),
             vol.Optional("status", default="open"): vol.In(["open", "completed", "all"]),
             vol.Optional("assigned_person"): cv.string,
             vol.Optional("tag"): cv.string,
@@ -2816,6 +2915,8 @@ def _async_register_services(hass: HomeAssistant) -> None:
         }),
     )
 
+    async_register_plan_services(hass)
+
     _LOGGER.info("Home Tasks services registered")
 
 
@@ -2828,10 +2929,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await _async_register_card(hass)
     _async_register_services(hass)
 
-    if entry.data.get("type") == "external":
-        return await _async_setup_external_entry(hass, entry)
+    if is_plan(entry):
+        await async_setup_plan_entry(hass, entry)
+        await hass.config_entries.async_forward_entry_setups(entry, PLAN_PLATFORMS)
+        return True
 
-    return await _async_setup_native_entry(hass, entry)
+    if entry.data.get("type") == "external":
+        ok = await _async_setup_external_entry(hass, entry)
+    else:
+        ok = await _async_setup_native_entry(hass, entry)
+    # A plan drawing from "all lists" has one more to read now.
+    async_dispatcher_send(hass, SIGNAL_LISTS_CHANGED)
+    return ok
 
 
 async def _async_setup_native_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -2917,7 +3026,10 @@ async def _async_setup_external_entry(hass: HomeAssistant, entry: ConfigEntry) -
         _recover_external_reminder_timers(hass, entry.entry_id, entity_id)
         _recover_external_recurrence_timers(hass, entry.entry_id, entity_id)
 
-    async_call_later(hass, 120, _recover_external_timers)
+    async_call_later(
+        hass, 120,
+        HassJob(_recover_external_timers, "recover_external_timers", cancel_on_shutdown=True),
+    )
 
     # Ticks, reopens and deletions made in the provider's own app (#88).
     from .external_watch import async_watch_external
@@ -2927,6 +3039,12 @@ async def _async_setup_external_entry(hass: HomeAssistant, entry: ConfigEntry) -
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    if is_plan(entry):
+        unload_ok = await hass.config_entries.async_unload_platforms(entry, PLAN_PLATFORMS)
+        if unload_ok:
+            async_unload_plan_entry(hass, entry)
+        return unload_ok
+
     if entry.data.get("type") == "external":
         unload_ok = await hass.config_entries.async_unload_platforms(
             entry, EXTERNAL_PLATFORMS
@@ -2936,6 +3054,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             eid = entry.data.get("entity_id")
             if eid:
                 hass.data.get(f"{DOMAIN}_adapters", {}).pop(eid, None)
+            async_dispatcher_send(hass, SIGNAL_LISTS_CHANGED)
         return unload_ok
 
     store = hass.data.get(DOMAIN, {}).get(entry.entry_id)
@@ -2949,6 +3068,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id, None)
+        async_dispatcher_send(hass, SIGNAL_LISTS_CHANGED)
     return unload_ok
 
 
@@ -2962,6 +3082,10 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     extra_js_url registration (page-serve-time only, not persisted) need no
     cleanup.
     """
+    if is_plan(entry):
+        # A plan's days mean nothing without the plan.
+        await PlanStore(hass, entry.entry_id).async_remove()
+
     remaining = [
         e for e in hass.config_entries.async_entries(DOMAIN)
         if e.entry_id != entry.entry_id

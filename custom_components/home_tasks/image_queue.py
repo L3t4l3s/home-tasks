@@ -20,7 +20,7 @@ from __future__ import annotations
 import logging
 from datetime import timedelta
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.storage import Store
 
@@ -435,7 +435,10 @@ def async_register_image_queue(hass: HomeAssistant) -> None:
     def _periodic(_now) -> None:
         hass.async_create_task(queue.async_run())
 
-    async_call_later(hass, STARTUP_DELAY, _delayed_start)
+    async_call_later(
+        hass, STARTUP_DELAY,
+        HassJob(_delayed_start, "image_queue_start", cancel_on_shutdown=True),
+    )
     hass.bus.async_listen(f"{DOMAIN}_task_created", _on_task_created)
     async_track_time_interval(hass, _periodic, SCAN_INTERVAL, cancel_on_shutdown=True)
 

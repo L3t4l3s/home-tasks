@@ -3,9 +3,22 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import callback
+from homeassistant.helpers import entity_registry as er, selector
 
 from .const import DOMAIN, MAX_LIST_NAME_LENGTH, MAX_LISTS
+from .plan import (
+    CARRY_OVER_MODES,
+    CONF_CARRY_OVER,
+    CONF_INCLUDE_DUE,
+    CONF_SOURCE_LISTS,
+    CONF_WORKDAYS,
+    DEFAULT_CARRY_OVER,
+    ENTRY_TYPE_PLAN,
+    WEEKDAYS,
+    is_plan,
+    plan_name,
+)
 
 
 class HomeTasksConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -13,17 +26,59 @@ class HomeTasksConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        return PlanOptionsFlow()
+
+    @classmethod
+    @callback
+    def async_supports_options_flow(cls, config_entry) -> bool:
+        """Only a plan has settings here; a list has them in the card."""
+        return is_plan(config_entry)
+
+    def _lists(self) -> list:
+        """The entries that are lists - a plan is a view, not a list."""
+        return [entry for entry in self._async_current_entries() if not is_plan(entry)]
+
     async def async_step_user(self, user_input=None):
-        """Let the user choose between creating a native list or linking an external one."""
-        if len(self._async_current_entries()) >= MAX_LISTS:
-            return self.async_abort(reason="max_lists_reached")
+        """Let the user choose between a native list, a linked one, or a plan."""
         return self.async_show_menu(
             step_id="user",
-            menu_options=["native", "external"],
+            menu_options=["native", "external", "plan"],
+        )
+
+    async def async_step_plan(self, user_input=None):
+        """Create a day plan: a view across lists, with nothing in it yet."""
+        errors = {}
+
+        if user_input is not None:
+            name = user_input["name"].strip()
+            if not name:
+                errors["name"] = "empty_name"
+            elif len(name) > MAX_LIST_NAME_LENGTH:
+                errors["name"] = "name_too_long"
+            elif any(
+                is_plan(entry) and plan_name(entry).lower() == name.lower()
+                for entry in self._async_current_entries()
+            ):
+                errors["name"] = "duplicate_plan_name"
+
+            if not errors:
+                return self.async_create_entry(
+                    title=name, data={"type": ENTRY_TYPE_PLAN, "name": name},
+                )
+
+        return self.async_show_form(
+            step_id="plan",
+            data_schema=vol.Schema({vol.Required("name"): str}),
+            errors=errors,
         )
 
     async def async_step_native(self, user_input=None):
         """Handle creating a new native task list."""
+        if len(self._lists()) >= MAX_LISTS:
+            return self.async_abort(reason="max_lists_reached")
         errors = {}
 
         if user_input is not None:
@@ -33,7 +88,7 @@ class HomeTasksConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             elif len(name) > MAX_LIST_NAME_LENGTH:
                 errors["name"] = "name_too_long"
             else:
-                for entry in self._async_current_entries():
+                for entry in self._lists():
                     if entry.data.get("name", "").lower() == name.lower():
                         errors["name"] = "duplicate_name"
                         break
@@ -54,6 +109,8 @@ class HomeTasksConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_external(self, user_input=None):
         """Handle linking an external todo entity."""
+        if len(self._lists()) >= MAX_LISTS:
+            return self.async_abort(reason="max_lists_reached")
         errors = {}
 
         if user_input is not None:
@@ -130,3 +187,48 @@ class HomeTasksConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+
+class PlanOptionsFlow(config_entries.OptionsFlow):
+    """The settings of a day plan."""
+
+    async def async_step_init(self, user_input=None):
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        options = self.config_entry.options
+        lists = [
+            selector.SelectOptionDict(value=entry.entry_id, label=plan_name(entry))
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
+            if not is_plan(entry)
+        ]
+        known = {option["value"] for option in lists}
+        chosen = list(options.get(CONF_SOURCE_LISTS) or [])
+        # A chosen list that has been deleted still limits the plan - it does
+        # not fall back to all lists behind the user's back. So it has to
+        # show here as chosen too, until the user takes it out.
+        lists += [
+            selector.SelectOptionDict(value=entry_id, label="Deleted list")
+            for entry_id in chosen if entry_id not in known
+        ]
+        schema = vol.Schema({
+            # Nothing chosen means all lists, also those added later.
+            vol.Optional(CONF_SOURCE_LISTS, default=chosen): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=lists, multiple=True)
+            ),
+            # Nothing chosen means every day.
+            vol.Optional(
+                CONF_WORKDAYS, default=list(options.get(CONF_WORKDAYS) or []),
+            ): selector.SelectSelector(selector.SelectSelectorConfig(
+                options=list(WEEKDAYS), multiple=True, translation_key="plan_workdays",
+            )),
+            vol.Required(
+                CONF_INCLUDE_DUE, default=options.get(CONF_INCLUDE_DUE, True),
+            ): selector.BooleanSelector(),
+            vol.Required(
+                CONF_CARRY_OVER, default=options.get(CONF_CARRY_OVER, DEFAULT_CARRY_OVER),
+            ): selector.SelectSelector(selector.SelectSelectorConfig(
+                options=list(CARRY_OVER_MODES), translation_key="plan_carry_over",
+            )),
+        })
+        return self.async_show_form(step_id="init", data_schema=schema)

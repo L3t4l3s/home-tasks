@@ -47,6 +47,10 @@ _val_anniversary = vol.Any(
 @callback
 def async_register_websocket_commands(hass: HomeAssistant) -> None:
     """Register WebSocket commands."""
+    # Day plans
+    from .plan_ws import async_register_plan_websocket_commands
+
+    async_register_plan_websocket_commands(hass)
     # Native list commands
     websocket_api.async_register_command(hass, ws_get_lists)
     websocket_api.async_register_command(hass, ws_get_tasks)
@@ -148,8 +152,10 @@ async def ws_get_lists(hass, connection, msg):
         entity_reg = er.async_get(hass)
         lists = []
         for entry in entries:
-            if entry.data.get("type") == "external":
-                continue  # external lists handled by ws_get_external_lists
+            if entry.data.get("type") in ("external", "plan"):
+                # external lists are handled by ws_get_external_lists; a
+                # plan is a view across lists, not a list
+                continue
             store = stores.get(entry.entry_id)
             # Resolve the sensor entity ID so the frontend can subscribe to
             # state-changed events for real-time cross-device updates.
@@ -2076,6 +2082,19 @@ async def ws_reorder_external_tasks(hass, connection, msg):
 # ---------------------------------------------------------------------------
 
 
+async def async_delete_external_overlay(hass, entity_id: str, task_uid: str) -> None:
+    """What Home Tasks keeps for a linked task, gone with the task."""
+    overlay_store = _get_overlay_store(hass, entity_id)
+    old_image_url = overlay_store.get_overlay(task_uid).get("image_url")
+    await overlay_store.async_delete_overlay(task_uid)
+    await _cleanup_orphan_image(hass, old_image_url, None)
+    # Cancel any pending reminder/recurrence timers so they don't fire (and
+    # leak) for a task that no longer exists.
+    from . import _cancel_recurrence, _cancel_reminders
+    _cancel_reminders(hass, task_uid)
+    _cancel_recurrence(hass, task_uid)
+
+
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "home_tasks/delete_external_overlay",
@@ -2087,15 +2106,7 @@ async def ws_reorder_external_tasks(hass, connection, msg):
 async def ws_delete_external_overlay(hass, connection, msg):
     """Delete overlay data for an external task (cleanup after deletion)."""
     try:
-        overlay_store = _get_overlay_store(hass, msg["entity_id"])
-        old_image_url = overlay_store.get_overlay(msg["task_uid"]).get("image_url")
-        await overlay_store.async_delete_overlay(msg["task_uid"])
-        await _cleanup_orphan_image(hass, old_image_url, None)
-        # Cancel any pending reminder/recurrence timers so they don't fire (and
-        # leak) for a task that no longer exists.
-        from . import _cancel_recurrence, _cancel_reminders
-        _cancel_reminders(hass, msg["task_uid"])
-        _cancel_recurrence(hass, msg["task_uid"])
+        await async_delete_external_overlay(hass, msg["entity_id"], msg["task_uid"])
         connection.send_result(msg["id"])
     except Exception as err:
         _handle_error(connection, msg["id"], err)

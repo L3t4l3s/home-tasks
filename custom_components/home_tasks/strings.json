@@ -6,7 +6,8 @@
         "description": "Choose what you want to set up.",
         "menu_options": {
           "native": "Create a new task list",
-          "external": "Link an external todo list"
+          "external": "Link an external todo list",
+          "plan": "Create a day plan"
         }
       },
       "native": {
@@ -22,6 +23,13 @@
         "data": {
           "entity_id": "Todo entity"
         }
+      },
+      "plan": {
+        "title": "Create Day Plan",
+        "description": "A day plan shows tasks from your lists that are meant for today and the next days. The tasks stay in their lists.",
+        "data": {
+          "name": "Plan name"
+        }
       }
     },
     "error": {
@@ -29,12 +37,51 @@
       "name_too_long": "The name is too long (max 100 characters).",
       "duplicate_name": "A list with this name already exists.",
       "empty_entity": "Please select an entity.",
-      "already_linked": "This entity is already linked."
+      "already_linked": "This entity is already linked.",
+      "duplicate_plan_name": "A plan with this name already exists."
     },
     "abort": {
       "already_configured": "This list is already configured.",
       "no_external_entities": "No external todo entities found. Please set up a CalDAV, Google Tasks, or Microsoft ToDo integration first.",
       "max_lists_reached": "Maximum number of lists (50) reached."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Day plan settings",
+        "data": {
+          "source_lists": "Lists",
+          "workdays": "Workdays",
+          "include_due": "Show tasks with a due date on their day",
+          "carry_over": "Unfinished tasks of the last planned day"
+        },
+        "data_description": {
+          "source_lists": "The lists this plan may show tasks from. Nothing selected means all lists.",
+          "workdays": "The days this plan has. Other days are skipped. Nothing selected means every day.",
+          "include_due": "A task that is due on a day off appears on the workday before it; overdue tasks appear today."
+        }
+      }
+    }
+  },
+  "selector": {
+    "plan_workdays": {
+      "options": {
+        "mon": "Monday",
+        "tue": "Tuesday",
+        "wed": "Wednesday",
+        "thu": "Thursday",
+        "fri": "Friday",
+        "sat": "Saturday",
+        "sun": "Sunday"
+      }
+    },
+    "plan_carry_over": {
+      "options": {
+        "off": "Leave them",
+        "suggest": "Offer to carry them over",
+        "auto": "Carry them over automatically"
+      }
     }
   }
 }
