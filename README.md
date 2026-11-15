@@ -1085,9 +1085,19 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for detai
 ### Maintaining translations
 
 `custom_components/home_tasks/ui_translations.json` is the shared source for card,
-editor, and calendar description text. After changing it, run `npm run build:i18n`
+editor, and calendar description text. After changing it, run `npm run build`
 and commit the generated `home-tasks-card.js` too. The distributed card embeds
 these strings so it does not need a separate network request. The backend loads
 the same JSON once in an executor during setup. Translation tests check that the
-embedded card data and JSON remain identical. HA integration setup translations
+built card says what the JSON says. HA integration setup translations
 stay in `translations/`, following Home Assistant's config-flow schema.
+
+### Working on the card
+
+The card's sources are in `src/`: `core/` (texts and shared helpers),
+`views/` (the list card and the day plan card), `editors/` and `index.js`,
+which defines the elements. `npm run build` bundles them with esbuild into
+`custom_components/home_tasks/home-tasks-card.js` — the one file Home Assistant
+loads. Edit `src/`, never the built file: the next build writes over it. Commit
+the built file with your change; CI checks that it is what `src/` builds to.
+`npm test` builds first.

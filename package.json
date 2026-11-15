@@ -3,11 +3,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build:i18n": "node scripts/build-i18n.mjs",
+    "build": "node scripts/build-card.mjs",
+    "build:i18n": "npm run build",
+    "pretest": "npm run build",
+    "pretest:nocov": "npm run build",
     "test": "node --test --experimental-test-coverage tests-js/test_*.mjs",
     "test:nocov": "node --test tests-js/test_*.mjs"
   },
   "devDependencies": {
+    "esbuild": "0.28.2",
     "jsdom": "^25.0.0",
     "yaml": "^2.9.0"
   }

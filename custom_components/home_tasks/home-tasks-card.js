@@ -4,5165 +4,5180 @@
  *
  * Security: All user-controlled content is set via textContent or DOM properties,
  * never via innerHTML with unsanitized data.
+ *
+ * Built from src/ by scripts/build-card.mjs. Edit the sources there and run
+ * `npm run build` - this file is written over.
  */
 console.info("%c HOME-TASKS-CARD %c v2.5.3 ", "color: white; background: #03a9f4; font-weight: bold;", "color: #03a9f4; background: white; font-weight: bold;");
 
-const _TRANSLATIONS = {
-  "en": {
-    "ed_default_priority": "Default priority",
-    "ed_default_tags": "Default tags",
-    "ed_default_section": "Default section",
-    "ed_default_none": "– None –",
-    "ed_group_card": "Card",
-    "ed_person_off": "Off",
-    "ed_person_name": "Name",
-    "ed_person_both": "Picture and name",
-    "ed_group_header": "Header",
-    "ed_group_tasks": "Tasks",
-    "ed_show_person_avatar": "Profile picture",
-    "voice_failed": "Voice input failed",
-    "voice_input": "Voice input",
-    "voice_stop": "Stop recording",
-    "img_label": "Image",
-    "img_generate": "Generate",
-    "img_regenerate": "Regenerate",
-    "img_generating": "Generating…",
-    "img_from_media": "From media library",
-    "img_remove": "Remove image",
-    "img_generate_failed": "Image generation failed: ",
-    "img_save_failed": "Saving image failed: ",
-    "mb_title": "Media library",
-    "mb_loading": "Loading…",
-    "mb_root": "Media",
-    "mb_back": "Back",
-    "mb_empty": "No files",
-    "mb_error": "Error: ",
-    "my_tasks": "My Tasks",
-    "add_placeholder": "Add new task...",
-    "add_failed": "Could not add task",
-    "draft_details_failed": "Task added, but some of its details could not be saved",
-    "duplicate_failed": "Could not duplicate task",
-    "dialog_cancel": "Cancel",
-    "dialog_add": "Add",
-    "filter_all": "All",
-    "filter_open": "Open",
-    "filter_done": "Done",
-    "filter_due_soon": "Due Soon",
-    "ed_show_due_soon_filter": "Due soon filter",
-    "ed_due_soon_days": "Days ahead",
-    "ed_hide_overdue": "Hide overdue",
-    "progress": "{0} of {1} done",
-    "empty": "No tasks",
-    "drag_handle": "Drag to reorder",
-    "due_date": "Due",
-    "notes": "Notes",
-    "notes_placeholder": "Add notes here",
-    "notes_edit_hint": "Click to edit",
-    "sub_items": "Sub-tasks",
-    "add_sub_item": "+ Add sub-task",
-    "recurrence": "Recurrence",
-    "recurrence_enabled": "Enabled",
-    "recurrence_every": "Every",
-    "rec_minutes": "Minutes",
-    "rec_hours": "Hours",
-    "rec_days": "Days",
-    "rec_weeks": "Weeks",
-    "rec_months": "Months",
-    "rec_years": "Years",
-    "rec_short_h": "h",
-    "rec_short_d": "d",
-    "rec_short_w": "w",
-    "rec_short_m": "mo",
-    "rec_short_y": "y",
-    "priority": "Priority",
-    "pri_high": "High",
-    "pri_medium": "Medium",
-    "pri_low": "Low",
-    "rec_hourly": "Hourly",
-    "rec_daily": "Daily",
-    "rec_weekly": "Weekly",
-    "rec_monthly": "Monthly",
-    "rec_yearly": "Yearly",
-    "rec_type_interval": "Every …",
-    "rec_type_weekdays": "On weekdays",
-    "rec_wd_0": "Mon",
-    "rec_wd_1": "Tue",
-    "rec_wd_2": "Wed",
-    "rec_wd_3": "Thu",
-    "rec_wd_4": "Fri",
-    "rec_wd_5": "Sat",
-    "rec_wd_6": "Sun",
-    "assigned_to": "Assigned people",
-    "nobody": "– Nobody –",
-    "delete_task": "Delete task",
-    "duplicate_task": "Duplicate",
-    "move_task": "Move",
-    "move_task_msg": "Move \"{0}\" to:",
-    "ed_show_move": "Move button",
-    "delete_sub": "Delete",
-    "ed_default_filter": "Default filter",
-    "ed_list": "List",
-    "ed_title": "Title (optional)",
-    "ed_title_placeholder": "Default: List name",
-    "ed_display": "Display",
-    "ed_show_title": "Title",
-    "ed_show_progress": "Progress",
-    "ed_show_due_date": "Due dates",
-    "ed_show_notes": "Notes",
-    "ed_show_recurrence": "Recurrences",
-    "ed_show_sub_items": "Sub-tasks",
-    "ed_show_person": "Assignees",
-    "ed_auto_delete": "Delete completed immediately",
-    "ed_confirm_complete": "Confirm before completing",
-    "ed_tap_to_complete": "Tap row to complete",
-    "ed_show_add_due": "Due date when adding",
-    "ed_max_height": "Max height (px, 0 = unlimited)",
-    "ed_badge_priority": "Priority chips",
-    "ed_badge_progress": "Progress chips",
-    "ed_badge_due": "Due chips",
-    "ed_badge_recurrence": "Recurrence chips",
-    "ed_badge_person": "Person",
-    "ed_badge_tags": "Tag chips",
-    "ed_badge_reminders": "Reminder chips",
-    "ed_sec_defaults": "Defaults",
-    "ed_sec_images": "Images",
-    "ed_share_images": "Share images with other lists",
-    "ed_share_images_hint": "Off keeps this list's pictures to itself — the same task title on another list gets its own image.",
-    "ed_queue_empty": "Nothing waiting for a picture.",
-    "ed_queue_pending": "Waiting for a picture: {0}",
-    "ed_queue_cancel": "Cancel",
-    "ed_ai_image_hint": "Applies to the whole card, not just this column.",
-    "ed_queue_running": "generating…",
-    "ed_queue_title": "Generation queue",
-    "ed_default_assignee": "Default people",
-    "ed_defaults_saved": "Saved",
-    "ed_defaults_load_failed": "Could not load defaults",
-    "ed_defaults_save_failed": "Save failed",
-    "confirm_complete_msg": "Mark \"{0}\" as completed?",
-    "confirm_complete_ok": "Complete",
-    "ed_compact": "Compact",
-    "ed_show_tags": "Tags",
-    "ed_hint": "New lists can be created under Settings → Integrations → Home Tasks.",
-    "ed_external_lists": "External",
-    "tags": "Tags",
-    "add_tag": "+ Add tag",
-    "tag_placeholder": "New tag...",
-    "remove_tag": "Remove",
-    "tag_suggestions_label": "Existing tags",
-    "tag_no_matches": "No matching tags",
-    "new_sub_item": "New sub-task",
-    "remove_reminder": "Remove reminder",
-    "sort_label": "Sort",
-    "sort_manual": "Manual",
-    "sort_due": "Due date",
-    "sort_priority": "Priority",
-    "sort_title": "Title (A–Z)",
-    "sort_person": "Assigned",
-    "ed_show_sort": "Sort",
-    "ed_show_filters": "Status filter",
-    "ed_show_tag_chips": "Tag filter",
-    "ed_show_person_chips": "Person filter",
-    "ed_show_voice": "Voice input",
-    "ed_task_search": "Task search",
-    "ed_auto_image": "Auto-generate image",
-    "ed_show_priority": "Priorities",
-    "ed_default_sort": "Default sort",
-    "ed_tag_catalog": "Fixed tags",
-    "ed_tag_catalog_hint": "Always suggested when tagging a task in this list — other tags can still be added on the task.",
-    "ed_default_lead_hint": "Taken over by a task when its recurrence is switched on",
-    "tag_did_you_mean": "Did you mean {0}?",
-    "ed_overdue_first": "Overdue tasks first",
-    "reminder": "Reminders",
-    "rem_add": "+ Add reminder",
-    "rem_none": "No reminder",
-    "rem_at_due": "At due time",
-    "rem_5m": "5 min before",
-    "rem_15m": "15 min before",
-    "rem_30m": "30 min before",
-    "rem_1h": "1 hour before",
-    "rem_2h": "2 hours before",
-    "rem_1d": "1 day before",
-    "rem_2d": "2 days before",
-    "ed_show_reminders": "Reminders",
-    "ed_add_column": "Add column",
-    "ed_move_left": "Move left",
-    "ed_move_right": "Move right",
-    "ed_duplicate": "Duplicate column",
-    "ed_delete_column": "Delete column",
-    "ed_code_editor": "Code editor",
-    "ed_visual_editor": "Visual editor",
-    "ed_icon": "Icon (optional)",
-    "ed_card_title": "Card title (optional)",
-    "ed_card_title_placeholder": "Title shown above columns",
-    "ed_sec_view": "Display",
-    "ed_sec_display": "Task features",
-    "ed_tile_help": "Tile view:\n• Click = complete\n• Hold = edit\n• Drag = reorder",
-    "due_time_lbl": "Time",
-    "due_date_lbl": "Date",
-    "rec_mode_lbl": "Mode",
-    "rec_time": "Time",
-    "rec_end": "End",
-    "rec_end_never": "Never",
-    "rec_end_date": "Until",
-    "rec_end_count": "X times",
-    "rec_end_date_lbl": "Until",
-    "rec_max_count_lbl": "Count",
-    "rec_remaining": "{0} left",
-    "rec_start_date_lbl": "From",
-    "rec_pattern_dom": "Day of month",
-    "rec_pattern_nth": "Nth weekday",
-    "rec_pattern_none": "From completion",
-    "rec_pattern_due": "From due date",
-    "rec_dom_lbl": "Day",
-    "rec_dom_last": "Last day",
-    "rec_nth_lbl": "On the",
-    "rec_nth_1": "1st",
-    "rec_nth_2": "2nd",
-    "rec_nth_3": "3rd",
-    "rec_nth_4": "4th",
-    "rec_nth_last": "Last",
-    "rec_anniversary_lbl": "On",
-    "rec_dd": "Day",
-    "rec_mm": "Month",
-    "rec_dom_short": "th",
-    "rec_last_short": "last",
-    "rec_value_lbl": "Every",
-    "rec_unit_lbl": "Unit",
-    "rec_wd_lbl": "Weekday",
-    "rec_at_lbl": "At",
-    "rec_lead_lbl": "Reopen early",
-    "rec_lead_hint": "Reopens the task this long before it is due again, so it shows as upcoming. 0 = when it is due.",
-    "rec_todoist_pattern_unsupported": "Sub-patterns aren't supported when the interval is greater than 1.",
-    "history": "History",
-    "history_created": "Created",
-    "history_completed": "Completed",
-    "history_reopened": "Reopened",
-    "history_reset": "Auto-reset (recurrence)",
-    "history_changed": "changed",
-    "history_empty": "No history yet",
-    "hist_title": "Title",
-    "history_disabled": "Disabled",
-    "ed_show_history": "Histories",
-    "hist_by_user": "User",
-    "ed_show_images": "Images",
-    "ed_view_mode": "View mode",
-    "ed_view_mode_list": "List",
-    "ed_view_mode_tiles": "Tiles",
-    "ed_show_tile_title": "Title in tiles",
-    "ed_show_add_task": "Add task",
-    "assigned_unknown": "Unknown (%s)",
-    "recurrence_readonly": "Managed by %s",
-    "synced_with": "Synced with %s",
-    "due_today": "Today",
-    "due_tomorrow": "Tomorrow",
-    "due_yesterday": "Yesterday",
-    "due_day_after_tomorrow": "In 2 days",
-    "due_day_before_yesterday": "2 days ago",
-    "due_in_hours": "In {0}h {1}m",
-    "due_in_minutes": "In {0} min",
-    "due_in_seconds": "Now",
-    "due_ago_hours": "{0}h {1}m ago",
-    "due_ago_minutes": "{0} min ago",
-    "due_ago_seconds": "Just now",
-    "done_section_header": "Done",
-    "ed_sec_sections": "Sections",
-    "ed_section_name": "Name",
-    "ed_section_icon": "Icon",
-    "ed_add_section": "+ Add section",
-    "ed_delete_section": "Delete section",
-    "ed_section_name_prompt": "Section name:",
-    "ed_sections_select_list_hint": "Select a list first to manage its sections.",
-    "ed_sections_empty": "No sections yet — tasks will render flat.",
-    "ed_loading": "Loading…",
-    "ed_move_up": "Move up",
-    "ed_move_down": "Move down",
-    "confirm_delete_section": "Delete this section? Tasks inside will become unsorted.",
-    "ed_sec_filters": "Filters",
-    "ed_preset_assignees": "Limit to people",
-    "ed_preset_labels": "Limit to tags",
-    "ed_ms_add": "Add…",
-    "ed_ai_image_entity": "AI entity for image generation",
-    "ed_ai_image_entity_placeholder": "e.g. ai_task.openai",
-    "ed_ai_prompt_prefix": "Prompt prefix (optional)",
-    "ed_ai_prompt_prefix_placeholder": "e.g. Minimalist icon of",
-    "calendar_minutes_before": "{value} min before",
-    "calendar_hours_before": "{value}h before",
-    "calendar_days_before": "{value}d before",
-    "section_label": "Section",
-    "ed_show_section": "Section field",
-    "ed_section_field_no_sections": "Shows once the list has sections",
-    "ed_list_columns": "Task columns",
-    "ed_tile_size": "Tile size",
-    "ed_tile_size_small": "Small",
-    "ed_tile_size_compact": "Compact",
-    "ed_tile_size_medium": "Normal",
-    "ed_tile_size_large": "Large",
-    "due_quick_week": "In 1 week",
-    "due_quick_month": "In 1 month",
-    "due_quick_3months": "In 3 months",
-    "ed_offered_persons": "Selectable people",
-    "ed_offered_persons_hint": "Only highlighted people can be assigned in this card",
-    "add_with_details": "Add with details",
-    "add_clear": "Clear",
-    "ed_show_add_details": "Details when adding",
-    "plan_note_placeholder": "Focus for the day",
-    "plan_empty": "Nothing planned",
-    "plan_add": "Plan a task",
-    "plan_search_placeholder": "Search tasks…",
-    "plan_no_results": "No matching open tasks",
-    "plan_carry_over": "Carry over open tasks from {0} ({1})",
-    "plan_move_day": "Other day…",
-    "plan_day_msg": "Which day for \"{0}\"?",
-    "plan_remove": "Remove from plan",
-    "plan_for": "Plan for…",
-    "plan_ok": "Plan",
-    "plan_none": "No day plan found. Day plans can be created under Settings → Integrations → Home Tasks.",
-    "ed_view_lists": "Lists",
-    "ed_view_day_plan": "Day plan",
-    "ed_plan_days": "Days shown",
-    "ed_plan_all_lists": "All lists",
-    "plan_due_hint": "On the plan through its due date: move it, or change the date.",
-    "ed_plan_weekend": "Weekend",
-    "new_entry_link": "Create a new list or day plan",
-    "ed_plan_list_missing": "List not available",
-    "picker_list_name": "Home Tasks: List",
-    "picker_plan_name": "Home Tasks: Day plan",
-    "picker_list_desc": "Task lists in columns, with drag & drop, sub-tasks, notes and due dates.",
-    "picker_plan_desc": "The days of a day plan: tasks from several lists in the order you work on them."
+// custom_components/home_tasks/ui_translations.json
+var ui_translations_default = {
+  en: {
+    ed_default_priority: "Default priority",
+    ed_default_tags: "Default tags",
+    ed_default_section: "Default section",
+    ed_default_none: "– None –",
+    ed_group_card: "Card",
+    ed_person_off: "Off",
+    ed_person_name: "Name",
+    ed_person_both: "Picture and name",
+    ed_group_header: "Header",
+    ed_group_tasks: "Tasks",
+    ed_show_person_avatar: "Profile picture",
+    voice_failed: "Voice input failed",
+    voice_input: "Voice input",
+    voice_stop: "Stop recording",
+    img_label: "Image",
+    img_generate: "Generate",
+    img_regenerate: "Regenerate",
+    img_generating: "Generating…",
+    img_from_media: "From media library",
+    img_remove: "Remove image",
+    img_generate_failed: "Image generation failed: ",
+    img_save_failed: "Saving image failed: ",
+    mb_title: "Media library",
+    mb_loading: "Loading…",
+    mb_root: "Media",
+    mb_back: "Back",
+    mb_empty: "No files",
+    mb_error: "Error: ",
+    my_tasks: "My Tasks",
+    add_placeholder: "Add new task...",
+    add_failed: "Could not add task",
+    draft_details_failed: "Task added, but some of its details could not be saved",
+    duplicate_failed: "Could not duplicate task",
+    dialog_cancel: "Cancel",
+    dialog_add: "Add",
+    filter_all: "All",
+    filter_open: "Open",
+    filter_done: "Done",
+    filter_due_soon: "Due Soon",
+    ed_show_due_soon_filter: "Due soon filter",
+    ed_due_soon_days: "Days ahead",
+    ed_hide_overdue: "Hide overdue",
+    progress: "{0} of {1} done",
+    empty: "No tasks",
+    drag_handle: "Drag to reorder",
+    due_date: "Due",
+    notes: "Notes",
+    notes_placeholder: "Add notes here",
+    notes_edit_hint: "Click to edit",
+    sub_items: "Sub-tasks",
+    add_sub_item: "+ Add sub-task",
+    recurrence: "Recurrence",
+    recurrence_enabled: "Enabled",
+    recurrence_every: "Every",
+    rec_minutes: "Minutes",
+    rec_hours: "Hours",
+    rec_days: "Days",
+    rec_weeks: "Weeks",
+    rec_months: "Months",
+    rec_years: "Years",
+    rec_short_h: "h",
+    rec_short_d: "d",
+    rec_short_w: "w",
+    rec_short_m: "mo",
+    rec_short_y: "y",
+    priority: "Priority",
+    pri_high: "High",
+    pri_medium: "Medium",
+    pri_low: "Low",
+    rec_hourly: "Hourly",
+    rec_daily: "Daily",
+    rec_weekly: "Weekly",
+    rec_monthly: "Monthly",
+    rec_yearly: "Yearly",
+    rec_type_interval: "Every …",
+    rec_type_weekdays: "On weekdays",
+    rec_wd_0: "Mon",
+    rec_wd_1: "Tue",
+    rec_wd_2: "Wed",
+    rec_wd_3: "Thu",
+    rec_wd_4: "Fri",
+    rec_wd_5: "Sat",
+    rec_wd_6: "Sun",
+    assigned_to: "Assigned people",
+    nobody: "– Nobody –",
+    delete_task: "Delete task",
+    duplicate_task: "Duplicate",
+    move_task: "Move",
+    move_task_msg: 'Move "{0}" to:',
+    ed_show_move: "Move button",
+    delete_sub: "Delete",
+    ed_default_filter: "Default filter",
+    ed_list: "List",
+    ed_title: "Title (optional)",
+    ed_title_placeholder: "Default: List name",
+    ed_display: "Display",
+    ed_show_title: "Title",
+    ed_show_progress: "Progress",
+    ed_show_due_date: "Due dates",
+    ed_show_notes: "Notes",
+    ed_show_recurrence: "Recurrences",
+    ed_show_sub_items: "Sub-tasks",
+    ed_show_person: "Assignees",
+    ed_auto_delete: "Delete completed immediately",
+    ed_confirm_complete: "Confirm before completing",
+    ed_tap_to_complete: "Tap row to complete",
+    ed_show_add_due: "Due date when adding",
+    ed_max_height: "Max height (px, 0 = unlimited)",
+    ed_badge_priority: "Priority chips",
+    ed_badge_progress: "Progress chips",
+    ed_badge_due: "Due chips",
+    ed_badge_recurrence: "Recurrence chips",
+    ed_badge_person: "Person",
+    ed_badge_tags: "Tag chips",
+    ed_badge_reminders: "Reminder chips",
+    ed_sec_defaults: "Defaults",
+    ed_sec_images: "Images",
+    ed_share_images: "Share images with other lists",
+    ed_share_images_hint: "Off keeps this list's pictures to itself — the same task title on another list gets its own image.",
+    ed_queue_empty: "Nothing waiting for a picture.",
+    ed_queue_pending: "Waiting for a picture: {0}",
+    ed_queue_cancel: "Cancel",
+    ed_ai_image_hint: "Applies to the whole card, not just this column.",
+    ed_queue_running: "generating…",
+    ed_queue_title: "Generation queue",
+    ed_default_assignee: "Default people",
+    ed_defaults_saved: "Saved",
+    ed_defaults_load_failed: "Could not load defaults",
+    ed_defaults_save_failed: "Save failed",
+    confirm_complete_msg: 'Mark "{0}" as completed?',
+    confirm_complete_ok: "Complete",
+    ed_compact: "Compact",
+    ed_show_tags: "Tags",
+    ed_hint: "New lists can be created under Settings → Integrations → Home Tasks.",
+    ed_external_lists: "External",
+    tags: "Tags",
+    add_tag: "+ Add tag",
+    tag_placeholder: "New tag...",
+    remove_tag: "Remove",
+    tag_suggestions_label: "Existing tags",
+    tag_no_matches: "No matching tags",
+    new_sub_item: "New sub-task",
+    remove_reminder: "Remove reminder",
+    sort_label: "Sort",
+    sort_manual: "Manual",
+    sort_due: "Due date",
+    sort_priority: "Priority",
+    sort_title: "Title (A–Z)",
+    sort_person: "Assigned",
+    ed_show_sort: "Sort",
+    ed_show_filters: "Status filter",
+    ed_show_tag_chips: "Tag filter",
+    ed_show_person_chips: "Person filter",
+    ed_show_voice: "Voice input",
+    ed_task_search: "Task search",
+    ed_auto_image: "Auto-generate image",
+    ed_show_priority: "Priorities",
+    ed_default_sort: "Default sort",
+    ed_tag_catalog: "Fixed tags",
+    ed_tag_catalog_hint: "Always suggested when tagging a task in this list — other tags can still be added on the task.",
+    ed_default_lead_hint: "Taken over by a task when its recurrence is switched on",
+    tag_did_you_mean: "Did you mean {0}?",
+    ed_overdue_first: "Overdue tasks first",
+    reminder: "Reminders",
+    rem_add: "+ Add reminder",
+    rem_none: "No reminder",
+    rem_at_due: "At due time",
+    rem_5m: "5 min before",
+    rem_15m: "15 min before",
+    rem_30m: "30 min before",
+    rem_1h: "1 hour before",
+    rem_2h: "2 hours before",
+    rem_1d: "1 day before",
+    rem_2d: "2 days before",
+    ed_show_reminders: "Reminders",
+    ed_add_column: "Add column",
+    ed_move_left: "Move left",
+    ed_move_right: "Move right",
+    ed_duplicate: "Duplicate column",
+    ed_delete_column: "Delete column",
+    ed_code_editor: "Code editor",
+    ed_visual_editor: "Visual editor",
+    ed_icon: "Icon (optional)",
+    ed_card_title: "Card title (optional)",
+    ed_card_title_placeholder: "Title shown above columns",
+    ed_sec_view: "Display",
+    ed_sec_display: "Task features",
+    ed_tile_help: "Tile view:\n• Click = complete\n• Hold = edit\n• Drag = reorder",
+    due_time_lbl: "Time",
+    due_date_lbl: "Date",
+    rec_mode_lbl: "Mode",
+    rec_time: "Time",
+    rec_end: "End",
+    rec_end_never: "Never",
+    rec_end_date: "Until",
+    rec_end_count: "X times",
+    rec_end_date_lbl: "Until",
+    rec_max_count_lbl: "Count",
+    rec_remaining: "{0} left",
+    rec_start_date_lbl: "From",
+    rec_pattern_dom: "Day of month",
+    rec_pattern_nth: "Nth weekday",
+    rec_pattern_none: "From completion",
+    rec_pattern_due: "From due date",
+    rec_dom_lbl: "Day",
+    rec_dom_last: "Last day",
+    rec_nth_lbl: "On the",
+    rec_nth_1: "1st",
+    rec_nth_2: "2nd",
+    rec_nth_3: "3rd",
+    rec_nth_4: "4th",
+    rec_nth_last: "Last",
+    rec_anniversary_lbl: "On",
+    rec_dd: "Day",
+    rec_mm: "Month",
+    rec_dom_short: "th",
+    rec_last_short: "last",
+    rec_value_lbl: "Every",
+    rec_unit_lbl: "Unit",
+    rec_wd_lbl: "Weekday",
+    rec_at_lbl: "At",
+    rec_lead_lbl: "Reopen early",
+    rec_lead_hint: "Reopens the task this long before it is due again, so it shows as upcoming. 0 = when it is due.",
+    rec_todoist_pattern_unsupported: "Sub-patterns aren't supported when the interval is greater than 1.",
+    history: "History",
+    history_created: "Created",
+    history_completed: "Completed",
+    history_reopened: "Reopened",
+    history_reset: "Auto-reset (recurrence)",
+    history_changed: "changed",
+    history_empty: "No history yet",
+    hist_title: "Title",
+    history_disabled: "Disabled",
+    ed_show_history: "Histories",
+    hist_by_user: "User",
+    ed_show_images: "Images",
+    ed_view_mode: "View mode",
+    ed_view_mode_list: "List",
+    ed_view_mode_tiles: "Tiles",
+    ed_show_tile_title: "Title in tiles",
+    ed_show_add_task: "Add task",
+    assigned_unknown: "Unknown (%s)",
+    recurrence_readonly: "Managed by %s",
+    synced_with: "Synced with %s",
+    due_today: "Today",
+    due_tomorrow: "Tomorrow",
+    due_yesterday: "Yesterday",
+    due_day_after_tomorrow: "In 2 days",
+    due_day_before_yesterday: "2 days ago",
+    due_in_hours: "In {0}h {1}m",
+    due_in_minutes: "In {0} min",
+    due_in_seconds: "Now",
+    due_ago_hours: "{0}h {1}m ago",
+    due_ago_minutes: "{0} min ago",
+    due_ago_seconds: "Just now",
+    done_section_header: "Done",
+    ed_sec_sections: "Sections",
+    ed_section_name: "Name",
+    ed_section_icon: "Icon",
+    ed_add_section: "+ Add section",
+    ed_delete_section: "Delete section",
+    ed_section_name_prompt: "Section name:",
+    ed_sections_select_list_hint: "Select a list first to manage its sections.",
+    ed_sections_empty: "No sections yet — tasks will render flat.",
+    ed_loading: "Loading…",
+    ed_move_up: "Move up",
+    ed_move_down: "Move down",
+    confirm_delete_section: "Delete this section? Tasks inside will become unsorted.",
+    ed_sec_filters: "Filters",
+    ed_preset_assignees: "Limit to people",
+    ed_preset_labels: "Limit to tags",
+    ed_ms_add: "Add…",
+    ed_ai_image_entity: "AI entity for image generation",
+    ed_ai_image_entity_placeholder: "e.g. ai_task.openai",
+    ed_ai_prompt_prefix: "Prompt prefix (optional)",
+    ed_ai_prompt_prefix_placeholder: "e.g. Minimalist icon of",
+    calendar_minutes_before: "{value} min before",
+    calendar_hours_before: "{value}h before",
+    calendar_days_before: "{value}d before",
+    section_label: "Section",
+    ed_show_section: "Section field",
+    ed_section_field_no_sections: "Shows once the list has sections",
+    ed_list_columns: "Task columns",
+    ed_tile_size: "Tile size",
+    ed_tile_size_small: "Small",
+    ed_tile_size_compact: "Compact",
+    ed_tile_size_medium: "Normal",
+    ed_tile_size_large: "Large",
+    due_quick_week: "In 1 week",
+    due_quick_month: "In 1 month",
+    due_quick_3months: "In 3 months",
+    ed_offered_persons: "Selectable people",
+    ed_offered_persons_hint: "Only highlighted people can be assigned in this card",
+    add_with_details: "Add with details",
+    add_clear: "Clear",
+    ed_show_add_details: "Details when adding",
+    plan_note_placeholder: "Focus for the day",
+    plan_empty: "Nothing planned",
+    plan_add: "Plan a task",
+    plan_search_placeholder: "Search tasks…",
+    plan_no_results: "No matching open tasks",
+    plan_carry_over: "Carry over open tasks from {0} ({1})",
+    plan_move_day: "Other day…",
+    plan_day_msg: 'Which day for "{0}"?',
+    plan_remove: "Remove from plan",
+    plan_for: "Plan for…",
+    plan_ok: "Plan",
+    plan_none: "No day plan found. Day plans can be created under Settings → Integrations → Home Tasks.",
+    ed_view_lists: "Lists",
+    ed_view_day_plan: "Day plan",
+    ed_plan_days: "Days shown",
+    ed_plan_all_lists: "All lists",
+    plan_due_hint: "On the plan through its due date: move it, or change the date.",
+    ed_plan_weekend: "Weekend",
+    new_entry_link: "Create a new list or day plan",
+    ed_plan_list_missing: "List not available",
+    picker_list_name: "Home Tasks: List",
+    picker_plan_name: "Home Tasks: Day plan",
+    picker_list_desc: "Task lists in columns, with drag & drop, sub-tasks, notes and due dates.",
+    picker_plan_desc: "The days of a day plan: tasks from several lists in the order you work on them."
   },
-  "nl": {
-    "ed_default_priority": "Standaardprioriteit",
-    "ed_default_tags": "Standaardtags",
-    "ed_default_section": "Standaardsectie",
-    "ed_default_none": "– Geen –",
-    "ed_group_card": "Kaart",
-    "ed_person_off": "Uit",
-    "ed_person_name": "Naam",
-    "ed_person_both": "Foto en naam",
-    "ed_group_header": "Koptekst",
-    "ed_group_tasks": "Taken",
-    "ed_show_person_avatar": "Profielfoto",
-    "voice_failed": "Spraakinvoer mislukt",
-    "confirm_delete_section": "Deze sectie verwijderen? Taken erin worden ongesorteerd.",
-    "done_section_header": "Klaar",
-    "duplicate_task": "Dupliceren",
-    "move_task": "Verplaatsen",
-    "move_task_msg": "„{0}” verplaatsen naar:",
-    "ed_show_move": "Verplaatsknop",
-    "ed_add_section": "+ Sectie toevoegen",
-    "ed_ai_image_entity": "AI-entiteit voor beeldgeneratie",
-    "ed_ai_image_entity_placeholder": "bijv. ai_task.openai",
-    "ed_ai_prompt_prefix": "Prompt-prefix (optioneel)",
-    "ed_ai_prompt_prefix_placeholder": "bijv. Minimalistisch icoon van",
-    "ed_auto_image": "Afbeelding automatisch genereren",
-    "ed_delete_section": "Sectie verwijderen",
-    "ed_external_lists": "Extern",
-    "ed_loading": "Laden…",
-    "ed_move_down": "Omlaag verplaatsen",
-    "ed_move_up": "Omhoog verplaatsen",
-    "ed_sec_sections": "Secties",
-    "ed_section_icon": "Pictogram",
-    "ed_section_name": "Naam",
-    "ed_section_name_prompt": "Sectienaam:",
-    "ed_sections_empty": "Nog geen secties — taken worden plat weergegeven.",
-    "ed_sections_select_list_hint": "Selecteer eerst een lijst om de secties te beheren.",
-    "ed_show_filters": "Statusfilter",
-    "ed_show_images": "Afbeeldingen",
-    "ed_show_person_chips": "Persoonfilter",
-    "ed_show_tag_chips": "Tagfilter",
-    "ed_show_tile_title": "Titel in tegels",
-    "ed_show_voice": "Spraakinvoer",
-    "ed_task_search": "Taken zoeken",
-    "ed_tile_help": "Tegelweergave:\n• Klikken = voltooien\n• Vasthouden = bewerken\n• Slepen = volgorde wijzigen",
-    "ed_view_mode": "Weergavemodus",
-    "ed_view_mode_list": "Lijst",
-    "ed_view_mode_tiles": "Tegels",
-    "voice_input": "Spraakinvoer",
-    "voice_stop": "Opname stoppen",
-    "img_label": "Afbeelding",
-    "img_generate": "Genereren",
-    "img_regenerate": "Opnieuw genereren",
-    "img_generating": "Genereren…",
-    "img_from_media": "Uit mediabibliotheek",
-    "img_remove": "Afbeelding verwijderen",
-    "img_generate_failed": "Genereren van afbeelding mislukt: ",
-    "img_save_failed": "Afbeelding opslaan mislukt: ",
-    "mb_title": "Mediabibliotheek",
-    "mb_loading": "Laden…",
-    "mb_root": "Media",
-    "mb_back": "Terug",
-    "mb_empty": "Geen bestanden",
-    "mb_error": "Fout: ",
-    "my_tasks": "Mijn taken",
-    "add_placeholder": "Nieuwe taak toevoegen...",
-    "add_failed": "Taak kon niet worden toegevoegd",
-    "draft_details_failed": "Taak toegevoegd, maar sommige details konden niet worden opgeslagen",
-    "duplicate_failed": "Taak kon niet worden gedupliceerd",
-    "dialog_cancel": "Annuleren",
-    "dialog_add": "Toevoegen",
-    "filter_all": "Alle",
-    "filter_open": "Open",
-    "filter_done": "Klaar",
-    "filter_due_soon": "Binnenkort",
-    "ed_show_due_soon_filter": "Binnenkort-filter",
-    "ed_due_soon_days": "Dagen vooruit",
-    "ed_hide_overdue": "Verlopen verbergen",
-    "progress": "{0} van {1} klaar",
-    "empty": "Geen taken",
-    "drag_handle": "Slepen om te herordenen",
-    "due_date": "Deadline",
-    "notes": "Notities",
-    "notes_placeholder": "Voeg notities toe",
-    "notes_edit_hint": "Klik om te bewerken",
-    "sub_items": "Subtaken",
-    "add_sub_item": "+ Subtaak toevoegen",
-    "recurrence": "Herhaling",
-    "recurrence_enabled": "Ingeschakeld",
-    "recurrence_every": "Elke",
-    "rec_minutes": "Minuten",
-    "rec_hours": "Uren",
-    "rec_days": "Dagen",
-    "rec_weeks": "Weken",
-    "rec_months": "Maanden",
-    "rec_years": "Jaren",
-    "rec_short_h": "u",
-    "rec_short_d": "d",
-    "rec_short_w": "w",
-    "rec_short_m": "m",
-    "rec_short_y": "j",
-    "priority": "Prioriteit",
-    "pri_high": "Hoog",
-    "pri_medium": "Middel",
-    "pri_low": "Laag",
-    "ed_show_priority": "Prioriteiten",
-    "rec_hourly": "Uurlijks",
-    "rec_daily": "Dagelijks",
-    "rec_weekly": "Wekelijks",
-    "rec_monthly": "Maandelijks",
-    "rec_yearly": "Jaarlijks",
-    "rec_type_interval": "Elke …",
-    "rec_type_weekdays": "Op weekdagen",
-    "rec_wd_0": "Ma",
-    "rec_wd_1": "Di",
-    "rec_wd_2": "Wo",
-    "rec_wd_3": "Do",
-    "rec_wd_4": "Vr",
-    "rec_wd_5": "Za",
-    "rec_wd_6": "Zo",
-    "assigned_to": "Toegewezen personen",
-    "nobody": "– Niemand –",
-    "delete_task": "Taak verwijderen",
-    "delete_sub": "Verwijderen",
-    "ed_default_filter": "Standaardfilter",
-    "ed_list": "Lijst",
-    "ed_title": "Titel (optioneel)",
-    "ed_title_placeholder": "Standaard: lijstnaam",
-    "ed_display": "Weergave",
-    "ed_show_title": "Titel",
-    "ed_show_progress": "Voortgang",
-    "ed_show_due_date": "Deadlines",
-    "ed_show_notes": "Notities",
-    "ed_show_recurrence": "Herhalingen",
-    "ed_show_sub_items": "Subtaken",
-    "ed_show_person": "Personen",
-    "ed_auto_delete": "Voltooide meteen verwijderen",
-    "ed_compact": "Compact",
-    "ed_show_tags": "Tags",
-    "ed_confirm_complete": "Bevestigen voor afronden",
-    "ed_tap_to_complete": "Tik op rij om af te ronden",
-    "ed_show_add_due": "Vervaldatum bij toevoegen",
-    "ed_max_height": "Max. hoogte (px, 0 = onbeperkt)",
-    "ed_badge_priority": "Prioriteitschips",
-    "ed_badge_progress": "Voortgangschips",
-    "ed_badge_due": "Vervaldatumchips",
-    "ed_badge_recurrence": "Herhalingschips",
-    "ed_badge_person": "Persoon",
-    "ed_badge_tags": "Tagchips",
-    "ed_badge_reminders": "Herinneringschips",
-    "ed_sec_defaults": "Standaardwaarden",
-    "ed_sec_images": "Afbeeldingen",
-    "ed_share_images": "Afbeeldingen delen met andere lijsten",
-    "ed_share_images_hint": "Uit houdt de afbeeldingen van deze lijst apart — dezelfde taaktitel op een andere lijst krijgt een eigen afbeelding.",
-    "ed_queue_empty": "Niets wacht op een afbeelding.",
-    "ed_queue_pending": "Wacht op een afbeelding: {0}",
-    "ed_queue_cancel": "Annuleren",
-    "ed_ai_image_hint": "Geldt voor de hele kaart, niet alleen voor deze kolom.",
-    "ed_queue_running": "wordt gemaakt…",
-    "ed_queue_title": "Wachtrij",
-    "ed_default_assignee": "Standaardpersonen",
-    "ed_defaults_saved": "Opgeslagen",
-    "ed_defaults_load_failed": "Standaardwaarden konden niet worden geladen",
-    "ed_defaults_save_failed": "Opslaan mislukt",
-    "confirm_complete_msg": "„{0}” als afgerond markeren?",
-    "confirm_complete_ok": "Afronden",
-    "ed_hint": "Nieuwe lijsten kunnen worden aangemaakt via Instellingen → Integraties → Home Tasks.",
-    "tags": "Tags",
-    "add_tag": "+ Tag toevoegen",
-    "tag_placeholder": "Nieuwe tag...",
-    "remove_tag": "Verwijderen",
-    "tag_suggestions_label": "Bestaande tags",
-    "tag_no_matches": "Geen overeenkomende tags",
-    "new_sub_item": "Nieuwe subtaak",
-    "remove_reminder": "Herinnering verwijderen",
-    "sort_label": "Sorteren",
-    "sort_manual": "Handmatig",
-    "sort_due": "Deadline",
-    "sort_priority": "Prioriteit",
-    "sort_title": "Titel (A–Z)",
-    "sort_person": "Toegewezen",
-    "ed_show_sort": "Sorteren",
-    "ed_default_sort": "Standaard sortering",
-    "ed_tag_catalog": "Vaste tags",
-    "ed_tag_catalog_hint": "Altijd voorgesteld bij het taggen in deze lijst — andere tags kun je bij de taak nog toevoegen.",
-    "ed_default_lead_hint": "Wordt door een taak overgenomen wanneer de herhaling wordt ingeschakeld",
-    "tag_did_you_mean": "Bedoel je {0}?",
-    "ed_overdue_first": "Verlopen taken eerst",
-    "reminder": "Herinneringen",
-    "rem_add": "+ Herinnering toevoegen",
-    "rem_none": "Geen herinnering",
-    "rem_at_due": "Op vervaldatum",
-    "rem_5m": "5 min. eerder",
-    "rem_15m": "15 min. eerder",
-    "rem_30m": "30 min. eerder",
-    "rem_1h": "1 uur eerder",
-    "rem_2h": "2 uur eerder",
-    "rem_1d": "1 dag eerder",
-    "rem_2d": "2 dagen eerder",
-    "ed_show_reminders": "Herinneringen",
-    "ed_add_column": "Kolom toevoegen",
-    "ed_move_left": "Naar links",
-    "ed_move_right": "Naar rechts",
-    "ed_duplicate": "Kolom dupliceren",
-    "ed_delete_column": "Kolom verwijderen",
-    "ed_code_editor": "Code-editor",
-    "ed_visual_editor": "Visuele editor",
-    "ed_icon": "Pictogram (optioneel)",
-    "ed_card_title": "Kaarttitel (optioneel)",
-    "ed_card_title_placeholder": "Titel boven kolommen",
-    "ed_sec_view": "Weergave",
-    "ed_sec_display": "Configuratie",
-    "ed_sec_filters": "Filters",
-    "ed_preset_assignees": "Beperken tot personen",
-    "ed_preset_labels": "Beperken tot tags",
-    "ed_ms_add": "Toevoegen…",
-    "due_time_lbl": "Tijd",
-    "due_date_lbl": "Datum",
-    "rec_mode_lbl": "Modus",
-    "rec_time": "Tijdstip",
-    "rec_end": "Einde",
-    "rec_end_never": "Nooit",
-    "rec_end_date": "Tot",
-    "rec_end_count": "X keer",
-    "rec_end_date_lbl": "Tot",
-    "rec_max_count_lbl": "Aantal",
-    "rec_remaining": "nog {0}",
-    "rec_start_date_lbl": "Vanaf",
-    "rec_pattern_dom": "Dag van de maand",
-    "rec_pattern_nth": "Nde weekdag",
-    "rec_pattern_none": "Vanaf voltooiing",
-    "rec_pattern_due": "Vanaf vervaldatum",
-    "rec_dom_lbl": "Dag",
-    "rec_dom_last": "Laatste dag",
-    "rec_nth_lbl": "Op",
-    "rec_nth_1": "1e",
-    "rec_nth_2": "2e",
-    "rec_nth_3": "3e",
-    "rec_nth_4": "4e",
-    "rec_nth_last": "Laatste",
-    "rec_anniversary_lbl": "Op",
-    "rec_dd": "Dag",
-    "rec_mm": "Maand",
-    "rec_dom_short": "e",
-    "rec_last_short": "laatste",
-    "rec_value_lbl": "Elke",
-    "rec_unit_lbl": "Eenheid",
-    "rec_wd_lbl": "Weekdag",
-    "rec_at_lbl": "Om",
-    "rec_lead_lbl": "Eerder heropenen",
-    "rec_lead_hint": "De taak wordt al zo lang voor de nieuwe deadline weer geopend, zodat hij als ‘binnenkort’ wordt weergegeven. 0 = op de deadline zelf.",
-    "rec_todoist_pattern_unsupported": "Subpatronen werken niet als het interval groter is dan 1.",
-    "history": "Geschiedenis",
-    "history_created": "Aangemaakt",
-    "history_completed": "Voltooid",
-    "history_reopened": "Heropend",
-    "history_reset": "Automatisch teruggezet",
-    "history_changed": "gewijzigd",
-    "history_empty": "Geen geschiedenis",
-    "hist_title": "Titel",
-    "history_disabled": "Uitgeschakeld",
-    "ed_show_history": "Geschiedenissen",
-    "hist_by_user": "Gebruiker",
-    "ed_show_add_task": "Taak toevoegen",
-    "assigned_unknown": "Onbekend (%s)",
-    "recurrence_readonly": "Beheerd door %s",
-    "synced_with": "Gesynchroniseerd met %s",
-    "due_today": "Vandaag",
-    "due_tomorrow": "Morgen",
-    "due_yesterday": "Gisteren",
-    "due_day_after_tomorrow": "Overmorgen",
-    "due_day_before_yesterday": "Eergisteren",
-    "due_in_hours": "Over {0} u {1} min",
-    "due_in_minutes": "Over {0} min",
-    "due_in_seconds": "Nu",
-    "due_ago_hours": "{0} u {1} min geleden",
-    "due_ago_minutes": "{0} min geleden",
-    "due_ago_seconds": "Zojuist",
-    "calendar_minutes_before": "{value} min van tevoren",
-    "calendar_hours_before": "{value} uur van tevoren",
-    "calendar_days_before": "{value} dagen van tevoren",
-    "ed_show_section": "Sectieveld",
-    "ed_section_field_no_sections": "Verschijnt zodra de lijst secties heeft",
-    "section_label": "Sectie",
-    "ed_list_columns": "Takenkolommen",
-    "ed_tile_size": "Tegelgrootte",
-    "ed_tile_size_small": "Klein",
-    "ed_tile_size_compact": "Compact",
-    "ed_tile_size_medium": "Normaal",
-    "ed_tile_size_large": "Groot",
-    "due_quick_week": "Over 1 week",
-    "due_quick_month": "Over 1 maand",
-    "due_quick_3months": "Over 3 maanden",
-    "ed_offered_persons": "Selecteerbare personen",
-    "ed_offered_persons_hint": "Alleen gemarkeerde personen kunnen in deze kaart worden toegewezen",
-    "ed_show_add_details": "Details bij toevoegen",
-    "add_with_details": "Toevoegen met details",
-    "add_clear": "Wissen",
-    "plan_note_placeholder": "Focus voor de dag",
-    "plan_empty": "Niets gepland",
-    "plan_add": "Taak inplannen",
-    "plan_search_placeholder": "Taken zoeken…",
-    "plan_no_results": "Geen overeenkomende open taken",
-    "plan_carry_over": "Open taken van {0} overnemen ({1})",
-    "plan_move_day": "Andere dag…",
-    "plan_day_msg": "Welke dag voor „{0}”?",
-    "plan_remove": "Uit het plan halen",
-    "plan_for": "Inplannen voor…",
-    "plan_ok": "Inplannen",
-    "plan_none": "Geen dagplan gevonden. Dagplannen kunnen worden aangemaakt via Instellingen → Integraties → Home Tasks.",
-    "ed_view_lists": "Lijsten",
-    "ed_view_day_plan": "Dagplan",
-    "ed_plan_days": "Getoonde dagen",
-    "ed_plan_all_lists": "Alle lijsten",
-    "plan_due_hint": "Staat op het plan door de vervaldatum: verplaats de taak of wijzig de datum.",
-    "ed_plan_weekend": "Weekend",
-    "new_entry_link": "Nieuwe lijst of nieuw dagplan aanmaken",
-    "ed_plan_list_missing": "Lijst niet beschikbaar",
-    "picker_list_name": "Home Tasks: Lijst",
-    "picker_plan_name": "Home Tasks: Dagplan",
-    "picker_list_desc": "Takenlijsten in kolommen, met slepen, subtaken, notities en vervaldatums.",
-    "picker_plan_desc": "De dagen van een dagplan: taken uit meerdere lijsten in de volgorde waarin je ze afwerkt."
+  nl: {
+    ed_default_priority: "Standaardprioriteit",
+    ed_default_tags: "Standaardtags",
+    ed_default_section: "Standaardsectie",
+    ed_default_none: "– Geen –",
+    ed_group_card: "Kaart",
+    ed_person_off: "Uit",
+    ed_person_name: "Naam",
+    ed_person_both: "Foto en naam",
+    ed_group_header: "Koptekst",
+    ed_group_tasks: "Taken",
+    ed_show_person_avatar: "Profielfoto",
+    voice_failed: "Spraakinvoer mislukt",
+    confirm_delete_section: "Deze sectie verwijderen? Taken erin worden ongesorteerd.",
+    done_section_header: "Klaar",
+    duplicate_task: "Dupliceren",
+    move_task: "Verplaatsen",
+    move_task_msg: "„{0}” verplaatsen naar:",
+    ed_show_move: "Verplaatsknop",
+    ed_add_section: "+ Sectie toevoegen",
+    ed_ai_image_entity: "AI-entiteit voor beeldgeneratie",
+    ed_ai_image_entity_placeholder: "bijv. ai_task.openai",
+    ed_ai_prompt_prefix: "Prompt-prefix (optioneel)",
+    ed_ai_prompt_prefix_placeholder: "bijv. Minimalistisch icoon van",
+    ed_auto_image: "Afbeelding automatisch genereren",
+    ed_delete_section: "Sectie verwijderen",
+    ed_external_lists: "Extern",
+    ed_loading: "Laden…",
+    ed_move_down: "Omlaag verplaatsen",
+    ed_move_up: "Omhoog verplaatsen",
+    ed_sec_sections: "Secties",
+    ed_section_icon: "Pictogram",
+    ed_section_name: "Naam",
+    ed_section_name_prompt: "Sectienaam:",
+    ed_sections_empty: "Nog geen secties — taken worden plat weergegeven.",
+    ed_sections_select_list_hint: "Selecteer eerst een lijst om de secties te beheren.",
+    ed_show_filters: "Statusfilter",
+    ed_show_images: "Afbeeldingen",
+    ed_show_person_chips: "Persoonfilter",
+    ed_show_tag_chips: "Tagfilter",
+    ed_show_tile_title: "Titel in tegels",
+    ed_show_voice: "Spraakinvoer",
+    ed_task_search: "Taken zoeken",
+    ed_tile_help: "Tegelweergave:\n• Klikken = voltooien\n• Vasthouden = bewerken\n• Slepen = volgorde wijzigen",
+    ed_view_mode: "Weergavemodus",
+    ed_view_mode_list: "Lijst",
+    ed_view_mode_tiles: "Tegels",
+    voice_input: "Spraakinvoer",
+    voice_stop: "Opname stoppen",
+    img_label: "Afbeelding",
+    img_generate: "Genereren",
+    img_regenerate: "Opnieuw genereren",
+    img_generating: "Genereren…",
+    img_from_media: "Uit mediabibliotheek",
+    img_remove: "Afbeelding verwijderen",
+    img_generate_failed: "Genereren van afbeelding mislukt: ",
+    img_save_failed: "Afbeelding opslaan mislukt: ",
+    mb_title: "Mediabibliotheek",
+    mb_loading: "Laden…",
+    mb_root: "Media",
+    mb_back: "Terug",
+    mb_empty: "Geen bestanden",
+    mb_error: "Fout: ",
+    my_tasks: "Mijn taken",
+    add_placeholder: "Nieuwe taak toevoegen...",
+    add_failed: "Taak kon niet worden toegevoegd",
+    draft_details_failed: "Taak toegevoegd, maar sommige details konden niet worden opgeslagen",
+    duplicate_failed: "Taak kon niet worden gedupliceerd",
+    dialog_cancel: "Annuleren",
+    dialog_add: "Toevoegen",
+    filter_all: "Alle",
+    filter_open: "Open",
+    filter_done: "Klaar",
+    filter_due_soon: "Binnenkort",
+    ed_show_due_soon_filter: "Binnenkort-filter",
+    ed_due_soon_days: "Dagen vooruit",
+    ed_hide_overdue: "Verlopen verbergen",
+    progress: "{0} van {1} klaar",
+    empty: "Geen taken",
+    drag_handle: "Slepen om te herordenen",
+    due_date: "Deadline",
+    notes: "Notities",
+    notes_placeholder: "Voeg notities toe",
+    notes_edit_hint: "Klik om te bewerken",
+    sub_items: "Subtaken",
+    add_sub_item: "+ Subtaak toevoegen",
+    recurrence: "Herhaling",
+    recurrence_enabled: "Ingeschakeld",
+    recurrence_every: "Elke",
+    rec_minutes: "Minuten",
+    rec_hours: "Uren",
+    rec_days: "Dagen",
+    rec_weeks: "Weken",
+    rec_months: "Maanden",
+    rec_years: "Jaren",
+    rec_short_h: "u",
+    rec_short_d: "d",
+    rec_short_w: "w",
+    rec_short_m: "m",
+    rec_short_y: "j",
+    priority: "Prioriteit",
+    pri_high: "Hoog",
+    pri_medium: "Middel",
+    pri_low: "Laag",
+    ed_show_priority: "Prioriteiten",
+    rec_hourly: "Uurlijks",
+    rec_daily: "Dagelijks",
+    rec_weekly: "Wekelijks",
+    rec_monthly: "Maandelijks",
+    rec_yearly: "Jaarlijks",
+    rec_type_interval: "Elke …",
+    rec_type_weekdays: "Op weekdagen",
+    rec_wd_0: "Ma",
+    rec_wd_1: "Di",
+    rec_wd_2: "Wo",
+    rec_wd_3: "Do",
+    rec_wd_4: "Vr",
+    rec_wd_5: "Za",
+    rec_wd_6: "Zo",
+    assigned_to: "Toegewezen personen",
+    nobody: "– Niemand –",
+    delete_task: "Taak verwijderen",
+    delete_sub: "Verwijderen",
+    ed_default_filter: "Standaardfilter",
+    ed_list: "Lijst",
+    ed_title: "Titel (optioneel)",
+    ed_title_placeholder: "Standaard: lijstnaam",
+    ed_display: "Weergave",
+    ed_show_title: "Titel",
+    ed_show_progress: "Voortgang",
+    ed_show_due_date: "Deadlines",
+    ed_show_notes: "Notities",
+    ed_show_recurrence: "Herhalingen",
+    ed_show_sub_items: "Subtaken",
+    ed_show_person: "Personen",
+    ed_auto_delete: "Voltooide meteen verwijderen",
+    ed_compact: "Compact",
+    ed_show_tags: "Tags",
+    ed_confirm_complete: "Bevestigen voor afronden",
+    ed_tap_to_complete: "Tik op rij om af te ronden",
+    ed_show_add_due: "Vervaldatum bij toevoegen",
+    ed_max_height: "Max. hoogte (px, 0 = onbeperkt)",
+    ed_badge_priority: "Prioriteitschips",
+    ed_badge_progress: "Voortgangschips",
+    ed_badge_due: "Vervaldatumchips",
+    ed_badge_recurrence: "Herhalingschips",
+    ed_badge_person: "Persoon",
+    ed_badge_tags: "Tagchips",
+    ed_badge_reminders: "Herinneringschips",
+    ed_sec_defaults: "Standaardwaarden",
+    ed_sec_images: "Afbeeldingen",
+    ed_share_images: "Afbeeldingen delen met andere lijsten",
+    ed_share_images_hint: "Uit houdt de afbeeldingen van deze lijst apart — dezelfde taaktitel op een andere lijst krijgt een eigen afbeelding.",
+    ed_queue_empty: "Niets wacht op een afbeelding.",
+    ed_queue_pending: "Wacht op een afbeelding: {0}",
+    ed_queue_cancel: "Annuleren",
+    ed_ai_image_hint: "Geldt voor de hele kaart, niet alleen voor deze kolom.",
+    ed_queue_running: "wordt gemaakt…",
+    ed_queue_title: "Wachtrij",
+    ed_default_assignee: "Standaardpersonen",
+    ed_defaults_saved: "Opgeslagen",
+    ed_defaults_load_failed: "Standaardwaarden konden niet worden geladen",
+    ed_defaults_save_failed: "Opslaan mislukt",
+    confirm_complete_msg: "„{0}” als afgerond markeren?",
+    confirm_complete_ok: "Afronden",
+    ed_hint: "Nieuwe lijsten kunnen worden aangemaakt via Instellingen → Integraties → Home Tasks.",
+    tags: "Tags",
+    add_tag: "+ Tag toevoegen",
+    tag_placeholder: "Nieuwe tag...",
+    remove_tag: "Verwijderen",
+    tag_suggestions_label: "Bestaande tags",
+    tag_no_matches: "Geen overeenkomende tags",
+    new_sub_item: "Nieuwe subtaak",
+    remove_reminder: "Herinnering verwijderen",
+    sort_label: "Sorteren",
+    sort_manual: "Handmatig",
+    sort_due: "Deadline",
+    sort_priority: "Prioriteit",
+    sort_title: "Titel (A–Z)",
+    sort_person: "Toegewezen",
+    ed_show_sort: "Sorteren",
+    ed_default_sort: "Standaard sortering",
+    ed_tag_catalog: "Vaste tags",
+    ed_tag_catalog_hint: "Altijd voorgesteld bij het taggen in deze lijst — andere tags kun je bij de taak nog toevoegen.",
+    ed_default_lead_hint: "Wordt door een taak overgenomen wanneer de herhaling wordt ingeschakeld",
+    tag_did_you_mean: "Bedoel je {0}?",
+    ed_overdue_first: "Verlopen taken eerst",
+    reminder: "Herinneringen",
+    rem_add: "+ Herinnering toevoegen",
+    rem_none: "Geen herinnering",
+    rem_at_due: "Op vervaldatum",
+    rem_5m: "5 min. eerder",
+    rem_15m: "15 min. eerder",
+    rem_30m: "30 min. eerder",
+    rem_1h: "1 uur eerder",
+    rem_2h: "2 uur eerder",
+    rem_1d: "1 dag eerder",
+    rem_2d: "2 dagen eerder",
+    ed_show_reminders: "Herinneringen",
+    ed_add_column: "Kolom toevoegen",
+    ed_move_left: "Naar links",
+    ed_move_right: "Naar rechts",
+    ed_duplicate: "Kolom dupliceren",
+    ed_delete_column: "Kolom verwijderen",
+    ed_code_editor: "Code-editor",
+    ed_visual_editor: "Visuele editor",
+    ed_icon: "Pictogram (optioneel)",
+    ed_card_title: "Kaarttitel (optioneel)",
+    ed_card_title_placeholder: "Titel boven kolommen",
+    ed_sec_view: "Weergave",
+    ed_sec_display: "Configuratie",
+    ed_sec_filters: "Filters",
+    ed_preset_assignees: "Beperken tot personen",
+    ed_preset_labels: "Beperken tot tags",
+    ed_ms_add: "Toevoegen…",
+    due_time_lbl: "Tijd",
+    due_date_lbl: "Datum",
+    rec_mode_lbl: "Modus",
+    rec_time: "Tijdstip",
+    rec_end: "Einde",
+    rec_end_never: "Nooit",
+    rec_end_date: "Tot",
+    rec_end_count: "X keer",
+    rec_end_date_lbl: "Tot",
+    rec_max_count_lbl: "Aantal",
+    rec_remaining: "nog {0}",
+    rec_start_date_lbl: "Vanaf",
+    rec_pattern_dom: "Dag van de maand",
+    rec_pattern_nth: "Nde weekdag",
+    rec_pattern_none: "Vanaf voltooiing",
+    rec_pattern_due: "Vanaf vervaldatum",
+    rec_dom_lbl: "Dag",
+    rec_dom_last: "Laatste dag",
+    rec_nth_lbl: "Op",
+    rec_nth_1: "1e",
+    rec_nth_2: "2e",
+    rec_nth_3: "3e",
+    rec_nth_4: "4e",
+    rec_nth_last: "Laatste",
+    rec_anniversary_lbl: "Op",
+    rec_dd: "Dag",
+    rec_mm: "Maand",
+    rec_dom_short: "e",
+    rec_last_short: "laatste",
+    rec_value_lbl: "Elke",
+    rec_unit_lbl: "Eenheid",
+    rec_wd_lbl: "Weekdag",
+    rec_at_lbl: "Om",
+    rec_lead_lbl: "Eerder heropenen",
+    rec_lead_hint: "De taak wordt al zo lang voor de nieuwe deadline weer geopend, zodat hij als ‘binnenkort’ wordt weergegeven. 0 = op de deadline zelf.",
+    rec_todoist_pattern_unsupported: "Subpatronen werken niet als het interval groter is dan 1.",
+    history: "Geschiedenis",
+    history_created: "Aangemaakt",
+    history_completed: "Voltooid",
+    history_reopened: "Heropend",
+    history_reset: "Automatisch teruggezet",
+    history_changed: "gewijzigd",
+    history_empty: "Geen geschiedenis",
+    hist_title: "Titel",
+    history_disabled: "Uitgeschakeld",
+    ed_show_history: "Geschiedenissen",
+    hist_by_user: "Gebruiker",
+    ed_show_add_task: "Taak toevoegen",
+    assigned_unknown: "Onbekend (%s)",
+    recurrence_readonly: "Beheerd door %s",
+    synced_with: "Gesynchroniseerd met %s",
+    due_today: "Vandaag",
+    due_tomorrow: "Morgen",
+    due_yesterday: "Gisteren",
+    due_day_after_tomorrow: "Overmorgen",
+    due_day_before_yesterday: "Eergisteren",
+    due_in_hours: "Over {0} u {1} min",
+    due_in_minutes: "Over {0} min",
+    due_in_seconds: "Nu",
+    due_ago_hours: "{0} u {1} min geleden",
+    due_ago_minutes: "{0} min geleden",
+    due_ago_seconds: "Zojuist",
+    calendar_minutes_before: "{value} min van tevoren",
+    calendar_hours_before: "{value} uur van tevoren",
+    calendar_days_before: "{value} dagen van tevoren",
+    ed_show_section: "Sectieveld",
+    ed_section_field_no_sections: "Verschijnt zodra de lijst secties heeft",
+    section_label: "Sectie",
+    ed_list_columns: "Takenkolommen",
+    ed_tile_size: "Tegelgrootte",
+    ed_tile_size_small: "Klein",
+    ed_tile_size_compact: "Compact",
+    ed_tile_size_medium: "Normaal",
+    ed_tile_size_large: "Groot",
+    due_quick_week: "Over 1 week",
+    due_quick_month: "Over 1 maand",
+    due_quick_3months: "Over 3 maanden",
+    ed_offered_persons: "Selecteerbare personen",
+    ed_offered_persons_hint: "Alleen gemarkeerde personen kunnen in deze kaart worden toegewezen",
+    ed_show_add_details: "Details bij toevoegen",
+    add_with_details: "Toevoegen met details",
+    add_clear: "Wissen",
+    plan_note_placeholder: "Focus voor de dag",
+    plan_empty: "Niets gepland",
+    plan_add: "Taak inplannen",
+    plan_search_placeholder: "Taken zoeken…",
+    plan_no_results: "Geen overeenkomende open taken",
+    plan_carry_over: "Open taken van {0} overnemen ({1})",
+    plan_move_day: "Andere dag…",
+    plan_day_msg: "Welke dag voor „{0}”?",
+    plan_remove: "Uit het plan halen",
+    plan_for: "Inplannen voor…",
+    plan_ok: "Inplannen",
+    plan_none: "Geen dagplan gevonden. Dagplannen kunnen worden aangemaakt via Instellingen → Integraties → Home Tasks.",
+    ed_view_lists: "Lijsten",
+    ed_view_day_plan: "Dagplan",
+    ed_plan_days: "Getoonde dagen",
+    ed_plan_all_lists: "Alle lijsten",
+    plan_due_hint: "Staat op het plan door de vervaldatum: verplaats de taak of wijzig de datum.",
+    ed_plan_weekend: "Weekend",
+    new_entry_link: "Nieuwe lijst of nieuw dagplan aanmaken",
+    ed_plan_list_missing: "Lijst niet beschikbaar",
+    picker_list_name: "Home Tasks: Lijst",
+    picker_plan_name: "Home Tasks: Dagplan",
+    picker_list_desc: "Takenlijsten in kolommen, met slepen, subtaken, notities en vervaldatums.",
+    picker_plan_desc: "De dagen van een dagplan: taken uit meerdere lijsten in de volgorde waarin je ze afwerkt."
   },
-  "it": {
-    "ed_default_priority": "Priorità predefinita",
-    "ed_default_tags": "Tag predefiniti",
-    "ed_default_section": "Sezione predefinita",
-    "ed_default_none": "– Nessuna –",
-    "ed_group_card": "Scheda",
-    "ed_person_off": "Disattivato",
-    "ed_person_name": "Nome",
-    "ed_person_both": "Foto e nome",
-    "ed_group_header": "Intestazione",
-    "ed_group_tasks": "Attività",
-    "ed_show_person_avatar": "Foto del profilo",
-    "voice_failed": "Input vocale non riuscito",
-    "confirm_delete_section": "Eliminare questa sezione? Le attività al suo interno diventeranno non ordinate.",
-    "done_section_header": "Fatto",
-    "duplicate_task": "Duplica",
-    "move_task": "Sposta",
-    "move_task_msg": "Sposta “{0}” in:",
-    "ed_show_move": "Pulsante Sposta",
-    "ed_add_section": "+ Aggiungi sezione",
-    "ed_ai_image_entity": "Entità IA per la generazione di immagini",
-    "ed_ai_image_entity_placeholder": "es. ai_task.openai",
-    "ed_ai_prompt_prefix": "Prefisso prompt (facoltativo)",
-    "ed_ai_prompt_prefix_placeholder": "es. Icona minimalista di",
-    "ed_auto_image": "Genera immagine automaticamente",
-    "ed_delete_section": "Elimina sezione",
-    "ed_external_lists": "Esterna",
-    "ed_loading": "Caricamento…",
-    "ed_move_down": "Sposta giù",
-    "ed_move_up": "Sposta su",
-    "ed_sec_sections": "Sezioni",
-    "ed_section_icon": "Icona",
-    "ed_section_name": "Nome",
-    "ed_section_name_prompt": "Nome sezione:",
-    "ed_sections_empty": "Nessuna sezione — le attività verranno mostrate senza raggruppamenti.",
-    "ed_sections_select_list_hint": "Seleziona prima un elenco per gestirne le sezioni.",
-    "ed_show_filters": "Filtro stato",
-    "ed_show_images": "Immagini",
-    "ed_show_person_chips": "Filtro persone",
-    "ed_show_tag_chips": "Filtro tag",
-    "ed_show_tile_title": "Titolo nelle caselle",
-    "ed_show_voice": "Input vocale",
-    "ed_task_search": "Ricerca attività",
-    "ed_tile_help": "Vista a caselle:\n• Clic = completa\n• Tieni premuto = modifica\n• Trascina = riordina",
-    "ed_view_mode": "Modalità di visualizzazione",
-    "ed_view_mode_list": "Elenco",
-    "ed_view_mode_tiles": "Caselle",
-    "voice_input": "Input vocale",
-    "voice_stop": "Interrompi registrazione",
-    "img_label": "Immagine",
-    "img_generate": "Genera",
-    "img_regenerate": "Rigenera",
-    "img_generating": "Generazione…",
-    "img_from_media": "Dalla libreria multimediale",
-    "img_remove": "Rimuovi immagine",
-    "img_generate_failed": "Generazione immagine non riuscita: ",
-    "img_save_failed": "Salvataggio immagine non riuscito: ",
-    "mb_title": "Libreria multimediale",
-    "mb_loading": "Caricamento…",
-    "mb_root": "Media",
-    "mb_back": "Indietro",
-    "mb_empty": "Nessun file",
-    "mb_error": "Errore: ",
-    "my_tasks": "Le mie attività",
-    "add_placeholder": "Aggiungi nuova attività...",
-    "add_failed": "Impossibile aggiungere l'attività",
-    "draft_details_failed": "Attività creata, ma alcuni dettagli non sono stati salvati",
-    "duplicate_failed": "Impossibile duplicare l'attività",
-    "dialog_cancel": "Annulla",
-    "dialog_add": "Aggiungi",
-    "filter_all": "Tutte",
-    "filter_open": "Aperte",
-    "filter_done": "Completate",
-    "filter_due_soon": "In scadenza",
-    "ed_show_due_soon_filter": "Filtro in scadenza",
-    "ed_due_soon_days": "Giorni avanti",
-    "ed_hide_overdue": "Nascondi scadute",
-    "progress": "{0} di {1} completate",
-    "empty": "Nessuna attività",
-    "drag_handle": "Trascina per riordinare",
-    "due_date": "Scadenza",
-    "notes": "Note",
-    "notes_placeholder": "Aggiungi note qui",
-    "notes_edit_hint": "Clicca per modificare",
-    "sub_items": "Sotto-attività",
-    "add_sub_item": "+ Aggiungi sotto-attività",
-    "recurrence": "Ricorrenza",
-    "recurrence_enabled": "Attivata",
-    "recurrence_every": "Ogni",
-    "rec_minutes": "Minuti",
-    "rec_hours": "Ore",
-    "rec_days": "Giorni",
-    "rec_weeks": "Settimane",
-    "rec_months": "Mesi",
-    "rec_years": "Anni",
-    "rec_short_h": "h",
-    "rec_short_d": "g",
-    "rec_short_w": "s",
-    "rec_short_m": "m",
-    "rec_short_y": "a",
-    "priority": "Priorità",
-    "pri_high": "Alta",
-    "pri_medium": "Media",
-    "pri_low": "Bassa",
-    "ed_show_priority": "Priorità",
-    "rec_hourly": "Oraria",
-    "rec_daily": "Giornaliera",
-    "rec_weekly": "Settimanale",
-    "rec_monthly": "Mensile",
-    "rec_yearly": "Annuale",
-    "rec_type_interval": "Ogni …",
-    "rec_type_weekdays": "Nei giorni feriali",
-    "rec_wd_0": "Lun",
-    "rec_wd_1": "Mar",
-    "rec_wd_2": "Mer",
-    "rec_wd_3": "Gio",
-    "rec_wd_4": "Ven",
-    "rec_wd_5": "Sab",
-    "rec_wd_6": "Dom",
-    "assigned_to": "Persone assegnate",
-    "nobody": "– Nessuno –",
-    "delete_task": "Elimina attività",
-    "delete_sub": "Elimina",
-    "ed_default_filter": "Filtro predefinito",
-    "ed_list": "Lista",
-    "ed_title": "Titolo (opzionale)",
-    "ed_title_placeholder": "Predefinito: nome lista",
-    "ed_display": "Visualizzazione",
-    "ed_show_title": "Titolo",
-    "ed_show_progress": "Avanzamento",
-    "ed_show_due_date": "Scadenze",
-    "ed_show_notes": "Note",
-    "ed_show_recurrence": "Ricorrenze",
-    "ed_show_sub_items": "Sotto-attività",
-    "ed_show_person": "Persone",
-    "ed_auto_delete": "Elimina completate immediatamente",
-    "ed_compact": "Compatto",
-    "ed_show_tags": "Tag",
-    "ed_confirm_complete": "Conferma prima di completare",
-    "ed_tap_to_complete": "Tocca la riga per completare",
-    "ed_show_add_due": "Scadenza alla creazione",
-    "ed_max_height": "Altezza max (px, 0 = illimitata)",
-    "ed_badge_priority": "Chip priorità",
-    "ed_badge_progress": "Chip avanzamento",
-    "ed_badge_due": "Chip scadenza",
-    "ed_badge_recurrence": "Chip ricorrenza",
-    "ed_badge_person": "Persona",
-    "ed_badge_tags": "Chip tag",
-    "ed_badge_reminders": "Chip promemoria",
-    "ed_sec_defaults": "Predefiniti",
-    "ed_sec_images": "Immagini",
-    "ed_share_images": "Condividi le immagini con altri elenchi",
-    "ed_share_images_hint": "Disattivato mantiene le immagini di questo elenco separate — lo stesso titolo in un altro elenco riceve un'immagine propria.",
-    "ed_queue_empty": "Nessuna attesa di immagine.",
-    "ed_queue_pending": "In attesa di un'immagine: {0}",
-    "ed_queue_cancel": "Annulla",
-    "ed_ai_image_hint": "Vale per l'intera scheda, non solo per questa colonna.",
-    "ed_queue_running": "in creazione…",
-    "ed_queue_title": "Coda di generazione",
-    "ed_default_assignee": "Persone predefinite",
-    "ed_defaults_saved": "Salvato",
-    "ed_defaults_load_failed": "Impossibile caricare i valori predefiniti",
-    "ed_defaults_save_failed": "Salvataggio non riuscito",
-    "confirm_complete_msg": "Segnare “{0}” come completata?",
-    "confirm_complete_ok": "Completa",
-    "ed_hint": "Nuove liste possono essere create in Impostazioni → Integrazioni → Home Tasks.",
-    "tags": "Tag",
-    "add_tag": "+ Aggiungi tag",
-    "tag_placeholder": "Nuovo tag...",
-    "remove_tag": "Rimuovi",
-    "tag_suggestions_label": "Tag esistenti",
-    "tag_no_matches": "Nessun tag corrispondente",
-    "new_sub_item": "Nuova sotto-attività",
-    "remove_reminder": "Rimuovi promemoria",
-    "sort_label": "Ordina",
-    "sort_manual": "Manuale",
-    "sort_due": "Scadenza",
-    "sort_priority": "Priorità",
-    "sort_title": "Titolo (A–Z)",
-    "sort_person": "Assegnato",
-    "ed_show_sort": "Ordinamento",
-    "ed_default_sort": "Ordinamento predefinito",
-    "ed_tag_catalog": "Tag fissi",
-    "ed_tag_catalog_hint": "Sempre suggeriti quando assegni tag in questo elenco — altri tag si possono aggiungere nell'attività.",
-    "ed_default_lead_hint": "Viene adottato da un'attività quando se ne attiva la ripetizione",
-    "tag_did_you_mean": "Intendevi {0}?",
-    "ed_overdue_first": "Attività scadute per prime",
-    "reminder": "Promemoria",
-    "rem_add": "+ Aggiungi promemoria",
-    "rem_none": "Nessun promemoria",
-    "rem_at_due": "All’ora di scadenza",
-    "rem_5m": "5 min. prima",
-    "rem_15m": "15 min. prima",
-    "rem_30m": "30 min. prima",
-    "rem_1h": "1 ora prima",
-    "rem_2h": "2 ore prima",
-    "rem_1d": "1 giorno prima",
-    "rem_2d": "2 giorni prima",
-    "ed_show_reminders": "Promemoria",
-    "ed_add_column": "Aggiungi colonna",
-    "ed_move_left": "Sposta a sinistra",
-    "ed_move_right": "Sposta a destra",
-    "ed_duplicate": "Duplica colonna",
-    "ed_delete_column": "Elimina colonna",
-    "ed_code_editor": "Editor codice",
-    "ed_visual_editor": "Editor visuale",
-    "ed_icon": "Icona (opzionale)",
-    "ed_card_title": "Titolo scheda (opzionale)",
-    "ed_card_title_placeholder": "Titolo sopra le colonne",
-    "ed_sec_view": "Visualizzazione",
-    "ed_sec_display": "Configurazione",
-    "ed_sec_filters": "Filtri",
-    "ed_preset_assignees": "Limita alle persone",
-    "ed_preset_labels": "Limita ai tag",
-    "ed_ms_add": "Aggiungi…",
-    "due_time_lbl": "Ora",
-    "due_date_lbl": "Data",
-    "rec_mode_lbl": "Modalità",
-    "rec_time": "Orario",
-    "rec_end": "Fine",
-    "rec_end_never": "Mai",
-    "rec_end_date": "Fino al",
-    "rec_end_count": "X volte",
-    "rec_end_date_lbl": "Fino al",
-    "rec_max_count_lbl": "Numero",
-    "rec_remaining": "ancora {0}",
-    "rec_start_date_lbl": "Dal",
-    "rec_pattern_dom": "Giorno del mese",
-    "rec_pattern_nth": "Nº giorno",
-    "rec_pattern_none": "Dal completamento",
-    "rec_pattern_due": "Dalla scadenza",
-    "rec_dom_lbl": "Giorno",
-    "rec_dom_last": "Ultimo giorno",
-    "rec_nth_lbl": "Il",
-    "rec_nth_1": "1º",
-    "rec_nth_2": "2º",
-    "rec_nth_3": "3º",
-    "rec_nth_4": "4º",
-    "rec_nth_last": "Ultimo",
-    "rec_anniversary_lbl": "Il",
-    "rec_dd": "Giorno",
-    "rec_mm": "Mese",
-    "rec_dom_short": "º",
-    "rec_last_short": "ultimo",
-    "rec_value_lbl": "Ogni",
-    "rec_unit_lbl": "Unità",
-    "rec_wd_lbl": "Giorno",
-    "rec_at_lbl": "Alle",
-    "rec_lead_lbl": "Riapri in anticipo",
-    "rec_lead_hint": "Riapre l'attività con questo anticipo rispetto alla nuova scadenza, così viene visualizzata come \"in arrivo\". 0 = alla scadenza.",
-    "rec_todoist_pattern_unsupported": "I sottoschemi non sono supportati con intervallo maggiore di 1.",
-    "history": "Cronologia",
-    "history_created": "Creato",
-    "history_completed": "Completato",
-    "history_reopened": "Riaperto",
-    "history_reset": "Ripristino automatico",
-    "history_changed": "modificato",
-    "history_empty": "Nessuna cronologia",
-    "hist_title": "Titolo",
-    "history_disabled": "Disabilitato",
-    "ed_show_history": "Cronologie",
-    "hist_by_user": "Utente",
-    "ed_show_add_task": "Aggiungi attività",
-    "assigned_unknown": "Sconosciuto (%s)",
-    "recurrence_readonly": "Gestito da %s",
-    "synced_with": "Sincronizzato con %s",
-    "due_today": "Oggi",
-    "due_tomorrow": "Domani",
-    "due_yesterday": "Ieri",
-    "due_day_after_tomorrow": "Dopodomani",
-    "due_day_before_yesterday": "L'altroieri",
-    "due_in_hours": "Tra {0} h {1} min",
-    "due_in_minutes": "Tra {0} min",
-    "due_in_seconds": "Adesso",
-    "due_ago_hours": "{0} h {1} min fa",
-    "due_ago_minutes": "{0} min fa",
-    "due_ago_seconds": "Proprio ora",
-    "calendar_minutes_before": "{value} min prima",
-    "calendar_hours_before": "{value} ore prima",
-    "calendar_days_before": "{value} giorni prima",
-    "ed_show_section": "Campo sezione",
-    "ed_section_field_no_sections": "Compare quando l'elenco ha delle sezioni",
-    "section_label": "Sezione",
-    "ed_list_columns": "Colonne di attività",
-    "ed_tile_size": "Dimensione caselle",
-    "ed_tile_size_small": "Piccola",
-    "ed_tile_size_compact": "Compatta",
-    "ed_tile_size_medium": "Normale",
-    "ed_tile_size_large": "Grande",
-    "due_quick_week": "Tra 1 settimana",
-    "due_quick_month": "Tra 1 mese",
-    "due_quick_3months": "Tra 3 mesi",
-    "ed_offered_persons": "Persone selezionabili",
-    "ed_offered_persons_hint": "In questa scheda si possono assegnare solo le persone evidenziate",
-    "ed_show_add_details": "Dettagli alla creazione",
-    "add_with_details": "Crea con dettagli",
-    "add_clear": "Cancella",
-    "plan_note_placeholder": "Obiettivo della giornata",
-    "plan_empty": "Niente in programma",
-    "plan_add": "Pianifica un'attività",
-    "plan_search_placeholder": "Cerca attività…",
-    "plan_no_results": "Nessuna attività aperta corrispondente",
-    "plan_carry_over": "Riporta le attività aperte del {0} ({1})",
-    "plan_move_day": "Altro giorno…",
-    "plan_day_msg": "Quale giorno per “{0}”?",
-    "plan_remove": "Rimuovi dal piano",
-    "plan_for": "Pianifica per…",
-    "plan_ok": "Pianifica",
-    "plan_none": "Nessun piano giornaliero trovato. I piani giornalieri possono essere creati in Impostazioni → Integrazioni → Home Tasks.",
-    "ed_view_lists": "Liste",
-    "ed_view_day_plan": "Piano giornaliero",
-    "ed_plan_days": "Giorni mostrati",
-    "ed_plan_all_lists": "Tutte le liste",
-    "plan_due_hint": "È nel piano per la data di scadenza: spostala o cambia la data.",
-    "ed_plan_weekend": "Fine settimana",
-    "new_entry_link": "Crea una nuova lista o un nuovo piano giornaliero",
-    "ed_plan_list_missing": "Lista non disponibile",
-    "picker_list_name": "Home Tasks: Lista",
-    "picker_plan_name": "Home Tasks: Piano giornaliero",
-    "picker_list_desc": "Elenchi di attività in colonne, con trascinamento, sottoattività, note e scadenze.",
-    "picker_plan_desc": "I giorni di un piano giornaliero: attività di più liste nell'ordine in cui le svolgi."
+  it: {
+    ed_default_priority: "Priorità predefinita",
+    ed_default_tags: "Tag predefiniti",
+    ed_default_section: "Sezione predefinita",
+    ed_default_none: "– Nessuna –",
+    ed_group_card: "Scheda",
+    ed_person_off: "Disattivato",
+    ed_person_name: "Nome",
+    ed_person_both: "Foto e nome",
+    ed_group_header: "Intestazione",
+    ed_group_tasks: "Attività",
+    ed_show_person_avatar: "Foto del profilo",
+    voice_failed: "Input vocale non riuscito",
+    confirm_delete_section: "Eliminare questa sezione? Le attività al suo interno diventeranno non ordinate.",
+    done_section_header: "Fatto",
+    duplicate_task: "Duplica",
+    move_task: "Sposta",
+    move_task_msg: "Sposta “{0}” in:",
+    ed_show_move: "Pulsante Sposta",
+    ed_add_section: "+ Aggiungi sezione",
+    ed_ai_image_entity: "Entità IA per la generazione di immagini",
+    ed_ai_image_entity_placeholder: "es. ai_task.openai",
+    ed_ai_prompt_prefix: "Prefisso prompt (facoltativo)",
+    ed_ai_prompt_prefix_placeholder: "es. Icona minimalista di",
+    ed_auto_image: "Genera immagine automaticamente",
+    ed_delete_section: "Elimina sezione",
+    ed_external_lists: "Esterna",
+    ed_loading: "Caricamento…",
+    ed_move_down: "Sposta giù",
+    ed_move_up: "Sposta su",
+    ed_sec_sections: "Sezioni",
+    ed_section_icon: "Icona",
+    ed_section_name: "Nome",
+    ed_section_name_prompt: "Nome sezione:",
+    ed_sections_empty: "Nessuna sezione — le attività verranno mostrate senza raggruppamenti.",
+    ed_sections_select_list_hint: "Seleziona prima un elenco per gestirne le sezioni.",
+    ed_show_filters: "Filtro stato",
+    ed_show_images: "Immagini",
+    ed_show_person_chips: "Filtro persone",
+    ed_show_tag_chips: "Filtro tag",
+    ed_show_tile_title: "Titolo nelle caselle",
+    ed_show_voice: "Input vocale",
+    ed_task_search: "Ricerca attività",
+    ed_tile_help: "Vista a caselle:\n• Clic = completa\n• Tieni premuto = modifica\n• Trascina = riordina",
+    ed_view_mode: "Modalità di visualizzazione",
+    ed_view_mode_list: "Elenco",
+    ed_view_mode_tiles: "Caselle",
+    voice_input: "Input vocale",
+    voice_stop: "Interrompi registrazione",
+    img_label: "Immagine",
+    img_generate: "Genera",
+    img_regenerate: "Rigenera",
+    img_generating: "Generazione…",
+    img_from_media: "Dalla libreria multimediale",
+    img_remove: "Rimuovi immagine",
+    img_generate_failed: "Generazione immagine non riuscita: ",
+    img_save_failed: "Salvataggio immagine non riuscito: ",
+    mb_title: "Libreria multimediale",
+    mb_loading: "Caricamento…",
+    mb_root: "Media",
+    mb_back: "Indietro",
+    mb_empty: "Nessun file",
+    mb_error: "Errore: ",
+    my_tasks: "Le mie attività",
+    add_placeholder: "Aggiungi nuova attività...",
+    add_failed: "Impossibile aggiungere l'attività",
+    draft_details_failed: "Attività creata, ma alcuni dettagli non sono stati salvati",
+    duplicate_failed: "Impossibile duplicare l'attività",
+    dialog_cancel: "Annulla",
+    dialog_add: "Aggiungi",
+    filter_all: "Tutte",
+    filter_open: "Aperte",
+    filter_done: "Completate",
+    filter_due_soon: "In scadenza",
+    ed_show_due_soon_filter: "Filtro in scadenza",
+    ed_due_soon_days: "Giorni avanti",
+    ed_hide_overdue: "Nascondi scadute",
+    progress: "{0} di {1} completate",
+    empty: "Nessuna attività",
+    drag_handle: "Trascina per riordinare",
+    due_date: "Scadenza",
+    notes: "Note",
+    notes_placeholder: "Aggiungi note qui",
+    notes_edit_hint: "Clicca per modificare",
+    sub_items: "Sotto-attività",
+    add_sub_item: "+ Aggiungi sotto-attività",
+    recurrence: "Ricorrenza",
+    recurrence_enabled: "Attivata",
+    recurrence_every: "Ogni",
+    rec_minutes: "Minuti",
+    rec_hours: "Ore",
+    rec_days: "Giorni",
+    rec_weeks: "Settimane",
+    rec_months: "Mesi",
+    rec_years: "Anni",
+    rec_short_h: "h",
+    rec_short_d: "g",
+    rec_short_w: "s",
+    rec_short_m: "m",
+    rec_short_y: "a",
+    priority: "Priorità",
+    pri_high: "Alta",
+    pri_medium: "Media",
+    pri_low: "Bassa",
+    ed_show_priority: "Priorità",
+    rec_hourly: "Oraria",
+    rec_daily: "Giornaliera",
+    rec_weekly: "Settimanale",
+    rec_monthly: "Mensile",
+    rec_yearly: "Annuale",
+    rec_type_interval: "Ogni …",
+    rec_type_weekdays: "Nei giorni feriali",
+    rec_wd_0: "Lun",
+    rec_wd_1: "Mar",
+    rec_wd_2: "Mer",
+    rec_wd_3: "Gio",
+    rec_wd_4: "Ven",
+    rec_wd_5: "Sab",
+    rec_wd_6: "Dom",
+    assigned_to: "Persone assegnate",
+    nobody: "– Nessuno –",
+    delete_task: "Elimina attività",
+    delete_sub: "Elimina",
+    ed_default_filter: "Filtro predefinito",
+    ed_list: "Lista",
+    ed_title: "Titolo (opzionale)",
+    ed_title_placeholder: "Predefinito: nome lista",
+    ed_display: "Visualizzazione",
+    ed_show_title: "Titolo",
+    ed_show_progress: "Avanzamento",
+    ed_show_due_date: "Scadenze",
+    ed_show_notes: "Note",
+    ed_show_recurrence: "Ricorrenze",
+    ed_show_sub_items: "Sotto-attività",
+    ed_show_person: "Persone",
+    ed_auto_delete: "Elimina completate immediatamente",
+    ed_compact: "Compatto",
+    ed_show_tags: "Tag",
+    ed_confirm_complete: "Conferma prima di completare",
+    ed_tap_to_complete: "Tocca la riga per completare",
+    ed_show_add_due: "Scadenza alla creazione",
+    ed_max_height: "Altezza max (px, 0 = illimitata)",
+    ed_badge_priority: "Chip priorità",
+    ed_badge_progress: "Chip avanzamento",
+    ed_badge_due: "Chip scadenza",
+    ed_badge_recurrence: "Chip ricorrenza",
+    ed_badge_person: "Persona",
+    ed_badge_tags: "Chip tag",
+    ed_badge_reminders: "Chip promemoria",
+    ed_sec_defaults: "Predefiniti",
+    ed_sec_images: "Immagini",
+    ed_share_images: "Condividi le immagini con altri elenchi",
+    ed_share_images_hint: "Disattivato mantiene le immagini di questo elenco separate — lo stesso titolo in un altro elenco riceve un'immagine propria.",
+    ed_queue_empty: "Nessuna attesa di immagine.",
+    ed_queue_pending: "In attesa di un'immagine: {0}",
+    ed_queue_cancel: "Annulla",
+    ed_ai_image_hint: "Vale per l'intera scheda, non solo per questa colonna.",
+    ed_queue_running: "in creazione…",
+    ed_queue_title: "Coda di generazione",
+    ed_default_assignee: "Persone predefinite",
+    ed_defaults_saved: "Salvato",
+    ed_defaults_load_failed: "Impossibile caricare i valori predefiniti",
+    ed_defaults_save_failed: "Salvataggio non riuscito",
+    confirm_complete_msg: "Segnare “{0}” come completata?",
+    confirm_complete_ok: "Completa",
+    ed_hint: "Nuove liste possono essere create in Impostazioni → Integrazioni → Home Tasks.",
+    tags: "Tag",
+    add_tag: "+ Aggiungi tag",
+    tag_placeholder: "Nuovo tag...",
+    remove_tag: "Rimuovi",
+    tag_suggestions_label: "Tag esistenti",
+    tag_no_matches: "Nessun tag corrispondente",
+    new_sub_item: "Nuova sotto-attività",
+    remove_reminder: "Rimuovi promemoria",
+    sort_label: "Ordina",
+    sort_manual: "Manuale",
+    sort_due: "Scadenza",
+    sort_priority: "Priorità",
+    sort_title: "Titolo (A–Z)",
+    sort_person: "Assegnato",
+    ed_show_sort: "Ordinamento",
+    ed_default_sort: "Ordinamento predefinito",
+    ed_tag_catalog: "Tag fissi",
+    ed_tag_catalog_hint: "Sempre suggeriti quando assegni tag in questo elenco — altri tag si possono aggiungere nell'attività.",
+    ed_default_lead_hint: "Viene adottato da un'attività quando se ne attiva la ripetizione",
+    tag_did_you_mean: "Intendevi {0}?",
+    ed_overdue_first: "Attività scadute per prime",
+    reminder: "Promemoria",
+    rem_add: "+ Aggiungi promemoria",
+    rem_none: "Nessun promemoria",
+    rem_at_due: "All’ora di scadenza",
+    rem_5m: "5 min. prima",
+    rem_15m: "15 min. prima",
+    rem_30m: "30 min. prima",
+    rem_1h: "1 ora prima",
+    rem_2h: "2 ore prima",
+    rem_1d: "1 giorno prima",
+    rem_2d: "2 giorni prima",
+    ed_show_reminders: "Promemoria",
+    ed_add_column: "Aggiungi colonna",
+    ed_move_left: "Sposta a sinistra",
+    ed_move_right: "Sposta a destra",
+    ed_duplicate: "Duplica colonna",
+    ed_delete_column: "Elimina colonna",
+    ed_code_editor: "Editor codice",
+    ed_visual_editor: "Editor visuale",
+    ed_icon: "Icona (opzionale)",
+    ed_card_title: "Titolo scheda (opzionale)",
+    ed_card_title_placeholder: "Titolo sopra le colonne",
+    ed_sec_view: "Visualizzazione",
+    ed_sec_display: "Configurazione",
+    ed_sec_filters: "Filtri",
+    ed_preset_assignees: "Limita alle persone",
+    ed_preset_labels: "Limita ai tag",
+    ed_ms_add: "Aggiungi…",
+    due_time_lbl: "Ora",
+    due_date_lbl: "Data",
+    rec_mode_lbl: "Modalità",
+    rec_time: "Orario",
+    rec_end: "Fine",
+    rec_end_never: "Mai",
+    rec_end_date: "Fino al",
+    rec_end_count: "X volte",
+    rec_end_date_lbl: "Fino al",
+    rec_max_count_lbl: "Numero",
+    rec_remaining: "ancora {0}",
+    rec_start_date_lbl: "Dal",
+    rec_pattern_dom: "Giorno del mese",
+    rec_pattern_nth: "Nº giorno",
+    rec_pattern_none: "Dal completamento",
+    rec_pattern_due: "Dalla scadenza",
+    rec_dom_lbl: "Giorno",
+    rec_dom_last: "Ultimo giorno",
+    rec_nth_lbl: "Il",
+    rec_nth_1: "1º",
+    rec_nth_2: "2º",
+    rec_nth_3: "3º",
+    rec_nth_4: "4º",
+    rec_nth_last: "Ultimo",
+    rec_anniversary_lbl: "Il",
+    rec_dd: "Giorno",
+    rec_mm: "Mese",
+    rec_dom_short: "º",
+    rec_last_short: "ultimo",
+    rec_value_lbl: "Ogni",
+    rec_unit_lbl: "Unità",
+    rec_wd_lbl: "Giorno",
+    rec_at_lbl: "Alle",
+    rec_lead_lbl: "Riapri in anticipo",
+    rec_lead_hint: `Riapre l'attività con questo anticipo rispetto alla nuova scadenza, così viene visualizzata come "in arrivo". 0 = alla scadenza.`,
+    rec_todoist_pattern_unsupported: "I sottoschemi non sono supportati con intervallo maggiore di 1.",
+    history: "Cronologia",
+    history_created: "Creato",
+    history_completed: "Completato",
+    history_reopened: "Riaperto",
+    history_reset: "Ripristino automatico",
+    history_changed: "modificato",
+    history_empty: "Nessuna cronologia",
+    hist_title: "Titolo",
+    history_disabled: "Disabilitato",
+    ed_show_history: "Cronologie",
+    hist_by_user: "Utente",
+    ed_show_add_task: "Aggiungi attività",
+    assigned_unknown: "Sconosciuto (%s)",
+    recurrence_readonly: "Gestito da %s",
+    synced_with: "Sincronizzato con %s",
+    due_today: "Oggi",
+    due_tomorrow: "Domani",
+    due_yesterday: "Ieri",
+    due_day_after_tomorrow: "Dopodomani",
+    due_day_before_yesterday: "L'altroieri",
+    due_in_hours: "Tra {0} h {1} min",
+    due_in_minutes: "Tra {0} min",
+    due_in_seconds: "Adesso",
+    due_ago_hours: "{0} h {1} min fa",
+    due_ago_minutes: "{0} min fa",
+    due_ago_seconds: "Proprio ora",
+    calendar_minutes_before: "{value} min prima",
+    calendar_hours_before: "{value} ore prima",
+    calendar_days_before: "{value} giorni prima",
+    ed_show_section: "Campo sezione",
+    ed_section_field_no_sections: "Compare quando l'elenco ha delle sezioni",
+    section_label: "Sezione",
+    ed_list_columns: "Colonne di attività",
+    ed_tile_size: "Dimensione caselle",
+    ed_tile_size_small: "Piccola",
+    ed_tile_size_compact: "Compatta",
+    ed_tile_size_medium: "Normale",
+    ed_tile_size_large: "Grande",
+    due_quick_week: "Tra 1 settimana",
+    due_quick_month: "Tra 1 mese",
+    due_quick_3months: "Tra 3 mesi",
+    ed_offered_persons: "Persone selezionabili",
+    ed_offered_persons_hint: "In questa scheda si possono assegnare solo le persone evidenziate",
+    ed_show_add_details: "Dettagli alla creazione",
+    add_with_details: "Crea con dettagli",
+    add_clear: "Cancella",
+    plan_note_placeholder: "Obiettivo della giornata",
+    plan_empty: "Niente in programma",
+    plan_add: "Pianifica un'attività",
+    plan_search_placeholder: "Cerca attività…",
+    plan_no_results: "Nessuna attività aperta corrispondente",
+    plan_carry_over: "Riporta le attività aperte del {0} ({1})",
+    plan_move_day: "Altro giorno…",
+    plan_day_msg: "Quale giorno per “{0}”?",
+    plan_remove: "Rimuovi dal piano",
+    plan_for: "Pianifica per…",
+    plan_ok: "Pianifica",
+    plan_none: "Nessun piano giornaliero trovato. I piani giornalieri possono essere creati in Impostazioni → Integrazioni → Home Tasks.",
+    ed_view_lists: "Liste",
+    ed_view_day_plan: "Piano giornaliero",
+    ed_plan_days: "Giorni mostrati",
+    ed_plan_all_lists: "Tutte le liste",
+    plan_due_hint: "È nel piano per la data di scadenza: spostala o cambia la data.",
+    ed_plan_weekend: "Fine settimana",
+    new_entry_link: "Crea una nuova lista o un nuovo piano giornaliero",
+    ed_plan_list_missing: "Lista non disponibile",
+    picker_list_name: "Home Tasks: Lista",
+    picker_plan_name: "Home Tasks: Piano giornaliero",
+    picker_list_desc: "Elenchi di attività in colonne, con trascinamento, sottoattività, note e scadenze.",
+    picker_plan_desc: "I giorni di un piano giornaliero: attività di più liste nell'ordine in cui le svolgi."
   },
-  "pl": {
-    "ed_default_priority": "Domyślny priorytet",
-    "ed_default_tags": "Domyślne tagi",
-    "ed_default_section": "Domyślna sekcja",
-    "ed_default_none": "– Brak –",
-    "ed_group_card": "Karta",
-    "ed_person_off": "Wyłączone",
-    "ed_person_name": "Imię",
-    "ed_person_both": "Zdjęcie i imię",
-    "ed_group_header": "Nagłówek",
-    "ed_group_tasks": "Zadania",
-    "ed_show_person_avatar": "Zdjęcie profilowe",
-    "voice_failed": "Wprowadzanie głosowe nie powiodło się",
-    "confirm_delete_section": "Usunąć tę sekcję? Zadania w niej staną się nieposortowane.",
-    "done_section_header": "Gotowe",
-    "duplicate_task": "Duplikuj",
-    "move_task": "Przenieś",
-    "move_task_msg": "Przenieś „{0}” do:",
-    "ed_show_move": "Przycisk przenoszenia",
-    "ed_add_section": "+ Dodaj sekcję",
-    "ed_ai_image_entity": "Encja AI do generowania obrazów",
-    "ed_ai_image_entity_placeholder": "np. ai_task.openai",
-    "ed_ai_prompt_prefix": "Prefiks promptu (opcjonalnie)",
-    "ed_ai_prompt_prefix_placeholder": "np. Minimalistyczna ikona",
-    "ed_auto_image": "Automatycznie generuj obraz",
-    "ed_delete_section": "Usuń sekcję",
-    "ed_external_lists": "Zewnętrzna",
-    "ed_loading": "Ładowanie…",
-    "ed_move_down": "Przenieś w dół",
-    "ed_move_up": "Przenieś w górę",
-    "ed_sec_sections": "Sekcje",
-    "ed_section_icon": "Ikona",
-    "ed_section_name": "Nazwa",
-    "ed_section_name_prompt": "Nazwa sekcji:",
-    "ed_sections_empty": "Brak sekcji — zadania będą wyświetlane płasko.",
-    "ed_sections_select_list_hint": "Najpierw wybierz listę, aby zarządzać jej sekcjami.",
-    "ed_show_filters": "Filtr statusu",
-    "ed_show_images": "Obrazy",
-    "ed_show_person_chips": "Filtr osób",
-    "ed_show_tag_chips": "Filtr tagów",
-    "ed_show_tile_title": "Tytuł na kafelkach",
-    "ed_show_voice": "Wprowadzanie głosowe",
-    "ed_task_search": "Wyszukiwanie zadań",
-    "ed_tile_help": "Widok kafelków:\n• Kliknięcie = ukończ\n• Przytrzymanie = edycja\n• Przeciągnięcie = zmiana kolejności",
-    "ed_view_mode": "Tryb widoku",
-    "ed_view_mode_list": "Lista",
-    "ed_view_mode_tiles": "Kafelki",
-    "voice_input": "Wprowadzanie głosowe",
-    "voice_stop": "Zatrzymaj nagrywanie",
-    "img_label": "Obraz",
-    "img_generate": "Generuj",
-    "img_regenerate": "Generuj ponownie",
-    "img_generating": "Generowanie…",
-    "img_from_media": "Z biblioteki multimediów",
-    "img_remove": "Usuń obraz",
-    "img_generate_failed": "Generowanie obrazu nie powiodło się: ",
-    "img_save_failed": "Zapisywanie obrazu nie powiodło się: ",
-    "mb_title": "Biblioteka multimediów",
-    "mb_loading": "Ładowanie…",
-    "mb_root": "Multimedia",
-    "mb_back": "Wstecz",
-    "mb_empty": "Brak plików",
-    "mb_error": "Błąd: ",
-    "my_tasks": "Moje zadania",
-    "add_placeholder": "Dodaj nowe zadanie...",
-    "add_failed": "Nie udało się dodać zadania",
-    "draft_details_failed": "Zadanie dodano, ale nie udało się zapisać niektórych szczegółów",
-    "duplicate_failed": "Nie udało się zduplikować zadania",
-    "dialog_cancel": "Anuluj",
-    "dialog_add": "Dodaj",
-    "filter_all": "Wszystkie",
-    "filter_open": "Otwarte",
-    "filter_done": "Ukończone",
-    "filter_due_soon": "Wkrótce",
-    "ed_show_due_soon_filter": "Filtr wkrótce",
-    "ed_due_soon_days": "Dni naprzód",
-    "ed_hide_overdue": "Ukryj zaległe",
-    "progress": "{0} z {1} ukończono",
-    "empty": "Brak zadań",
-    "drag_handle": "Przeciągnij, aby zmienić kolejność",
-    "due_date": "Termin",
-    "notes": "Notatki",
-    "notes_placeholder": "Dodaj notatki tutaj",
-    "notes_edit_hint": "Kliknij, aby edytować",
-    "sub_items": "Podzadania",
-    "add_sub_item": "+ Dodaj podzadanie",
-    "recurrence": "Powtarzanie",
-    "recurrence_enabled": "Włączone",
-    "recurrence_every": "Co",
-    "rec_minutes": "Minuty",
-    "rec_hours": "Godziny",
-    "rec_days": "Dni",
-    "rec_weeks": "Tygodnie",
-    "rec_months": "Miesiące",
-    "rec_years": "Lata",
-    "rec_short_h": "g",
-    "rec_short_d": "d",
-    "rec_short_w": "t",
-    "rec_short_m": "m",
-    "rec_short_y": "r",
-    "priority": "Priorytet",
-    "pri_high": "Wysoki",
-    "pri_medium": "Średnij",
-    "pri_low": "Niski",
-    "ed_show_priority": "Priorytety",
-    "rec_hourly": "Co godz.",
-    "rec_daily": "Codziennie",
-    "rec_weekly": "Co tydz.",
-    "rec_monthly": "Co mies.",
-    "rec_yearly": "Rocznie",
-    "rec_type_interval": "Co …",
-    "rec_type_weekdays": "W dni robocze",
-    "rec_wd_0": "Pn",
-    "rec_wd_1": "Wt",
-    "rec_wd_2": "Śr",
-    "rec_wd_3": "Cz",
-    "rec_wd_4": "Pt",
-    "rec_wd_5": "So",
-    "rec_wd_6": "Nd",
-    "assigned_to": "Przypisane osoby",
-    "nobody": "– Nikt –",
-    "delete_task": "Usuń zadanie",
-    "delete_sub": "Usuń",
-    "ed_default_filter": "Domyślny filtr",
-    "ed_list": "Lista",
-    "ed_title": "Tytuł (opcjonalnie)",
-    "ed_title_placeholder": "Domyślnie: nazwa listy",
-    "ed_display": "Wyświetlanie",
-    "ed_show_title": "Tytuł",
-    "ed_show_progress": "Postęp",
-    "ed_show_due_date": "Terminy",
-    "ed_show_notes": "Notatki",
-    "ed_show_recurrence": "Powtórzenia",
-    "ed_show_sub_items": "Podzadania",
-    "ed_show_person": "Osoby",
-    "ed_auto_delete": "Natychmiast usuń ukończone",
-    "ed_compact": "Kompaktowy",
-    "ed_show_tags": "Tagi",
-    "ed_confirm_complete": "Potwierdź przed ukończeniem",
-    "ed_tap_to_complete": "Dotknij wiersz, aby ukończyć",
-    "ed_show_add_due": "Termin przy dodawaniu",
-    "ed_max_height": "Maks. wysokość (px, 0 = bez limitu)",
-    "ed_badge_priority": "Znaczniki priorytetu",
-    "ed_badge_progress": "Znaczniki postępu",
-    "ed_badge_due": "Znaczniki terminu",
-    "ed_badge_recurrence": "Znaczniki powtarzania",
-    "ed_badge_person": "Osoba",
-    "ed_badge_tags": "Znaczniki tagów",
-    "ed_badge_reminders": "Znaczniki przypomnień",
-    "ed_sec_defaults": "Domyślne",
-    "ed_sec_images": "Obrazy",
-    "ed_share_images": "Współdziel obrazy z innymi listami",
-    "ed_share_images_hint": "Wyłączone zachowuje obrazy tej listy osobno — ten sam tytuł na innej liście otrzyma własny obraz.",
-    "ed_queue_empty": "Nic nie czeka na obraz.",
-    "ed_queue_pending": "Czeka na obraz: {0}",
-    "ed_queue_cancel": "Anuluj",
-    "ed_ai_image_hint": "Dotyczy całej karty, nie tylko tej kolumny.",
-    "ed_queue_running": "generowanie…",
-    "ed_queue_title": "Kolejka generowania",
-    "ed_default_assignee": "Domyślne osoby",
-    "ed_defaults_saved": "Zapisano",
-    "ed_defaults_load_failed": "Nie udało się wczytać ustawień domyślnych",
-    "ed_defaults_save_failed": "Zapis nie powiódł się",
-    "confirm_complete_msg": "Oznaczyć „{0}” jako ukończone?",
-    "confirm_complete_ok": "Ukończ",
-    "ed_hint": "Nowe listy można tworzyć w Ustawienia → Integracje → Home Tasks.",
-    "tags": "Tagi",
-    "add_tag": "+ Dodaj tag",
-    "tag_placeholder": "Nowy tag...",
-    "remove_tag": "Usuń",
-    "tag_suggestions_label": "Istniejące tagi",
-    "tag_no_matches": "Brak pasujących tagów",
-    "new_sub_item": "Nowe podzadanie",
-    "remove_reminder": "Usuń przypomnienie",
-    "sort_label": "Sortuj",
-    "sort_manual": "Ręcznie",
-    "sort_due": "Termin",
-    "sort_priority": "Priorytet",
-    "sort_title": "Tytuł (A–Z)",
-    "sort_person": "Przypisany",
-    "ed_show_sort": "Sortowanie",
-    "ed_default_sort": "Domyślne sortowanie",
-    "ed_tag_catalog": "Stałe tagi",
-    "ed_tag_catalog_hint": "Zawsze podpowiadane przy tagowaniu w tej liście — inne tagi można dodać w zadaniu.",
-    "ed_default_lead_hint": "Przejmowane przez zadanie po włączeniu jego powtarzania",
-    "tag_did_you_mean": "Czy chodziło o {0}?",
-    "ed_overdue_first": "Zaległe zadania najpierw",
-    "reminder": "Przypomnienia",
-    "rem_add": "+ Dodaj przypomnienie",
-    "rem_none": "Brak przypomnienia",
-    "rem_at_due": "W czasie terminu",
-    "rem_5m": "5 min. wcześniej",
-    "rem_15m": "15 min. wcześniej",
-    "rem_30m": "30 min. wcześniej",
-    "rem_1h": "1 godz. wcześniej",
-    "rem_2h": "2 godz. wcześniej",
-    "rem_1d": "1 dzień wcześniej",
-    "rem_2d": "2 dni wcześniej",
-    "ed_show_reminders": "Przypomnienia",
-    "ed_add_column": "Dodaj kolumnę",
-    "ed_move_left": "Przesuń w lewo",
-    "ed_move_right": "Przesuń w prawo",
-    "ed_duplicate": "Duplikuj kolumnę",
-    "ed_delete_column": "Usuń kolumnę",
-    "ed_code_editor": "Edytor kodu",
-    "ed_visual_editor": "Edytor wizualny",
-    "ed_icon": "Ikona (opcjonalnie)",
-    "ed_card_title": "Tytuł karty (opcjonalnie)",
-    "ed_card_title_placeholder": "Tytuł nad kolumnami",
-    "ed_sec_view": "Wyświetlanie",
-    "ed_sec_display": "Konfiguracja",
-    "ed_sec_filters": "Filtry",
-    "ed_preset_assignees": "Ogranicz do osób",
-    "ed_preset_labels": "Ogranicz do tagów",
-    "ed_ms_add": "Dodaj…",
-    "due_time_lbl": "Czas",
-    "due_date_lbl": "Data",
-    "rec_mode_lbl": "Tryb",
-    "rec_time": "Godzina",
-    "rec_end": "Koniec",
-    "rec_end_never": "Nigdy",
-    "rec_end_date": "Do",
-    "rec_end_count": "X razy",
-    "rec_end_date_lbl": "Do",
-    "rec_max_count_lbl": "Liczba",
-    "rec_remaining": "jeszcze {0}",
-    "rec_start_date_lbl": "Od",
-    "rec_pattern_dom": "Dzień miesiąca",
-    "rec_pattern_nth": "N-ty dzień",
-    "rec_pattern_none": "Od wykonania",
-    "rec_pattern_due": "Od terminu",
-    "rec_dom_lbl": "Dzień",
-    "rec_dom_last": "Ostatni dzień",
-    "rec_nth_lbl": "W",
-    "rec_nth_1": "1.",
-    "rec_nth_2": "2.",
-    "rec_nth_3": "3.",
-    "rec_nth_4": "4.",
-    "rec_nth_last": "Ostatni",
-    "rec_anniversary_lbl": "W",
-    "rec_dd": "Dzień",
-    "rec_mm": "Miesiąc",
-    "rec_dom_short": ".",
-    "rec_last_short": "ostatni",
-    "rec_value_lbl": "Co",
-    "rec_unit_lbl": "Jednostka",
-    "rec_wd_lbl": "Dzień tygodnia",
-    "rec_at_lbl": "O",
-    "rec_lead_lbl": "Otwórz wcześniej",
-    "rec_lead_hint": "Ponownie otwiera zadanie na tyle wcześnie przed kolejnym terminem, że pojawia się ono jako „nadchodzące”. 0 = w momencie terminu.",
-    "rec_todoist_pattern_unsupported": "Podwzorce nie są obsługiwane, gdy interwał jest większy niż 1.",
-    "history": "Historia",
-    "history_created": "Utworzono",
-    "history_completed": "Ukończono",
-    "history_reopened": "Ponownie otwarto",
-    "history_reset": "Auto-reset",
-    "history_changed": "zmieniono",
-    "history_empty": "Brak historii",
-    "hist_title": "Tytuł",
-    "history_disabled": "Wyłączono",
-    "ed_show_history": "Historie",
-    "hist_by_user": "Użytkownik",
-    "ed_show_add_task": "Dodaj zadanie",
-    "assigned_unknown": "Nieznany (%s)",
-    "recurrence_readonly": "Zarządzane przez %s",
-    "synced_with": "Zsynchronizowane z %s",
-    "due_today": "Dzisiaj",
-    "due_tomorrow": "Jutro",
-    "due_yesterday": "Wczoraj",
-    "due_day_after_tomorrow": "Pojutrze",
-    "due_day_before_yesterday": "Przedwczoraj",
-    "due_in_hours": "Za {0} godz. {1} min",
-    "due_in_minutes": "Za {0} min",
-    "due_in_seconds": "Teraz",
-    "due_ago_hours": "{0} godz. {1} min temu",
-    "due_ago_minutes": "{0} min temu",
-    "due_ago_seconds": "Właśnie",
-    "calendar_minutes_before": "{value} min przed",
-    "calendar_hours_before": "{value} godz. przed",
-    "calendar_days_before": "{value} dni przed",
-    "ed_show_section": "Pole sekcji",
-    "ed_section_field_no_sections": "Pojawi się, gdy lista będzie mieć sekcje",
-    "section_label": "Sekcja",
-    "ed_list_columns": "Kolumny zadań",
-    "ed_tile_size": "Rozmiar kafelków",
-    "ed_tile_size_small": "Mały",
-    "ed_tile_size_compact": "Kompaktowy",
-    "ed_tile_size_medium": "Normalny",
-    "ed_tile_size_large": "Duży",
-    "due_quick_week": "Za 1 tydzień",
-    "due_quick_month": "Za 1 miesiąc",
-    "due_quick_3months": "Za 3 miesiące",
-    "ed_offered_persons": "Osoby do wyboru",
-    "ed_offered_persons_hint": "W tej karcie można przypisać tylko wyróżnione osoby",
-    "ed_show_add_details": "Szczegóły przy dodawaniu",
-    "add_with_details": "Dodaj ze szczegółami",
-    "add_clear": "Wyczyść",
-    "plan_note_placeholder": "Cel na ten dzień",
-    "plan_empty": "Nic nie zaplanowano",
-    "plan_add": "Zaplanuj zadanie",
-    "plan_search_placeholder": "Szukaj zadań…",
-    "plan_no_results": "Brak pasujących otwartych zadań",
-    "plan_carry_over": "Przenieś otwarte zadania z {0} ({1})",
-    "plan_move_day": "Inny dzień…",
-    "plan_day_msg": "Który dzień dla „{0}”?",
-    "plan_remove": "Usuń z planu",
-    "plan_for": "Zaplanuj na…",
-    "plan_ok": "Zaplanuj",
-    "plan_none": "Nie znaleziono planu dnia. Plany dnia można tworzyć w Ustawienia → Integracje → Home Tasks.",
-    "ed_view_lists": "Listy",
-    "ed_view_day_plan": "Plan dnia",
-    "ed_plan_days": "Wyświetlane dni",
-    "ed_plan_all_lists": "Wszystkie listy",
-    "plan_due_hint": "Jest w planie ze względu na termin: przenieś zadanie lub zmień datę.",
-    "ed_plan_weekend": "Weekend",
-    "new_entry_link": "Utwórz nową listę lub plan dnia",
-    "ed_plan_list_missing": "Lista niedostępna",
-    "picker_list_name": "Home Tasks: Lista",
-    "picker_plan_name": "Home Tasks: Plan dnia",
-    "picker_list_desc": "Listy zadań w kolumnach, z przeciąganiem, podzadaniami, notatkami i terminami.",
-    "picker_plan_desc": "Dni planu dnia: zadania z kilku list w kolejności, w jakiej je wykonujesz."
+  pl: {
+    ed_default_priority: "Domyślny priorytet",
+    ed_default_tags: "Domyślne tagi",
+    ed_default_section: "Domyślna sekcja",
+    ed_default_none: "– Brak –",
+    ed_group_card: "Karta",
+    ed_person_off: "Wyłączone",
+    ed_person_name: "Imię",
+    ed_person_both: "Zdjęcie i imię",
+    ed_group_header: "Nagłówek",
+    ed_group_tasks: "Zadania",
+    ed_show_person_avatar: "Zdjęcie profilowe",
+    voice_failed: "Wprowadzanie głosowe nie powiodło się",
+    confirm_delete_section: "Usunąć tę sekcję? Zadania w niej staną się nieposortowane.",
+    done_section_header: "Gotowe",
+    duplicate_task: "Duplikuj",
+    move_task: "Przenieś",
+    move_task_msg: "Przenieś „{0}” do:",
+    ed_show_move: "Przycisk przenoszenia",
+    ed_add_section: "+ Dodaj sekcję",
+    ed_ai_image_entity: "Encja AI do generowania obrazów",
+    ed_ai_image_entity_placeholder: "np. ai_task.openai",
+    ed_ai_prompt_prefix: "Prefiks promptu (opcjonalnie)",
+    ed_ai_prompt_prefix_placeholder: "np. Minimalistyczna ikona",
+    ed_auto_image: "Automatycznie generuj obraz",
+    ed_delete_section: "Usuń sekcję",
+    ed_external_lists: "Zewnętrzna",
+    ed_loading: "Ładowanie…",
+    ed_move_down: "Przenieś w dół",
+    ed_move_up: "Przenieś w górę",
+    ed_sec_sections: "Sekcje",
+    ed_section_icon: "Ikona",
+    ed_section_name: "Nazwa",
+    ed_section_name_prompt: "Nazwa sekcji:",
+    ed_sections_empty: "Brak sekcji — zadania będą wyświetlane płasko.",
+    ed_sections_select_list_hint: "Najpierw wybierz listę, aby zarządzać jej sekcjami.",
+    ed_show_filters: "Filtr statusu",
+    ed_show_images: "Obrazy",
+    ed_show_person_chips: "Filtr osób",
+    ed_show_tag_chips: "Filtr tagów",
+    ed_show_tile_title: "Tytuł na kafelkach",
+    ed_show_voice: "Wprowadzanie głosowe",
+    ed_task_search: "Wyszukiwanie zadań",
+    ed_tile_help: "Widok kafelków:\n• Kliknięcie = ukończ\n• Przytrzymanie = edycja\n• Przeciągnięcie = zmiana kolejności",
+    ed_view_mode: "Tryb widoku",
+    ed_view_mode_list: "Lista",
+    ed_view_mode_tiles: "Kafelki",
+    voice_input: "Wprowadzanie głosowe",
+    voice_stop: "Zatrzymaj nagrywanie",
+    img_label: "Obraz",
+    img_generate: "Generuj",
+    img_regenerate: "Generuj ponownie",
+    img_generating: "Generowanie…",
+    img_from_media: "Z biblioteki multimediów",
+    img_remove: "Usuń obraz",
+    img_generate_failed: "Generowanie obrazu nie powiodło się: ",
+    img_save_failed: "Zapisywanie obrazu nie powiodło się: ",
+    mb_title: "Biblioteka multimediów",
+    mb_loading: "Ładowanie…",
+    mb_root: "Multimedia",
+    mb_back: "Wstecz",
+    mb_empty: "Brak plików",
+    mb_error: "Błąd: ",
+    my_tasks: "Moje zadania",
+    add_placeholder: "Dodaj nowe zadanie...",
+    add_failed: "Nie udało się dodać zadania",
+    draft_details_failed: "Zadanie dodano, ale nie udało się zapisać niektórych szczegółów",
+    duplicate_failed: "Nie udało się zduplikować zadania",
+    dialog_cancel: "Anuluj",
+    dialog_add: "Dodaj",
+    filter_all: "Wszystkie",
+    filter_open: "Otwarte",
+    filter_done: "Ukończone",
+    filter_due_soon: "Wkrótce",
+    ed_show_due_soon_filter: "Filtr wkrótce",
+    ed_due_soon_days: "Dni naprzód",
+    ed_hide_overdue: "Ukryj zaległe",
+    progress: "{0} z {1} ukończono",
+    empty: "Brak zadań",
+    drag_handle: "Przeciągnij, aby zmienić kolejność",
+    due_date: "Termin",
+    notes: "Notatki",
+    notes_placeholder: "Dodaj notatki tutaj",
+    notes_edit_hint: "Kliknij, aby edytować",
+    sub_items: "Podzadania",
+    add_sub_item: "+ Dodaj podzadanie",
+    recurrence: "Powtarzanie",
+    recurrence_enabled: "Włączone",
+    recurrence_every: "Co",
+    rec_minutes: "Minuty",
+    rec_hours: "Godziny",
+    rec_days: "Dni",
+    rec_weeks: "Tygodnie",
+    rec_months: "Miesiące",
+    rec_years: "Lata",
+    rec_short_h: "g",
+    rec_short_d: "d",
+    rec_short_w: "t",
+    rec_short_m: "m",
+    rec_short_y: "r",
+    priority: "Priorytet",
+    pri_high: "Wysoki",
+    pri_medium: "Średnij",
+    pri_low: "Niski",
+    ed_show_priority: "Priorytety",
+    rec_hourly: "Co godz.",
+    rec_daily: "Codziennie",
+    rec_weekly: "Co tydz.",
+    rec_monthly: "Co mies.",
+    rec_yearly: "Rocznie",
+    rec_type_interval: "Co …",
+    rec_type_weekdays: "W dni robocze",
+    rec_wd_0: "Pn",
+    rec_wd_1: "Wt",
+    rec_wd_2: "Śr",
+    rec_wd_3: "Cz",
+    rec_wd_4: "Pt",
+    rec_wd_5: "So",
+    rec_wd_6: "Nd",
+    assigned_to: "Przypisane osoby",
+    nobody: "– Nikt –",
+    delete_task: "Usuń zadanie",
+    delete_sub: "Usuń",
+    ed_default_filter: "Domyślny filtr",
+    ed_list: "Lista",
+    ed_title: "Tytuł (opcjonalnie)",
+    ed_title_placeholder: "Domyślnie: nazwa listy",
+    ed_display: "Wyświetlanie",
+    ed_show_title: "Tytuł",
+    ed_show_progress: "Postęp",
+    ed_show_due_date: "Terminy",
+    ed_show_notes: "Notatki",
+    ed_show_recurrence: "Powtórzenia",
+    ed_show_sub_items: "Podzadania",
+    ed_show_person: "Osoby",
+    ed_auto_delete: "Natychmiast usuń ukończone",
+    ed_compact: "Kompaktowy",
+    ed_show_tags: "Tagi",
+    ed_confirm_complete: "Potwierdź przed ukończeniem",
+    ed_tap_to_complete: "Dotknij wiersz, aby ukończyć",
+    ed_show_add_due: "Termin przy dodawaniu",
+    ed_max_height: "Maks. wysokość (px, 0 = bez limitu)",
+    ed_badge_priority: "Znaczniki priorytetu",
+    ed_badge_progress: "Znaczniki postępu",
+    ed_badge_due: "Znaczniki terminu",
+    ed_badge_recurrence: "Znaczniki powtarzania",
+    ed_badge_person: "Osoba",
+    ed_badge_tags: "Znaczniki tagów",
+    ed_badge_reminders: "Znaczniki przypomnień",
+    ed_sec_defaults: "Domyślne",
+    ed_sec_images: "Obrazy",
+    ed_share_images: "Współdziel obrazy z innymi listami",
+    ed_share_images_hint: "Wyłączone zachowuje obrazy tej listy osobno — ten sam tytuł na innej liście otrzyma własny obraz.",
+    ed_queue_empty: "Nic nie czeka na obraz.",
+    ed_queue_pending: "Czeka na obraz: {0}",
+    ed_queue_cancel: "Anuluj",
+    ed_ai_image_hint: "Dotyczy całej karty, nie tylko tej kolumny.",
+    ed_queue_running: "generowanie…",
+    ed_queue_title: "Kolejka generowania",
+    ed_default_assignee: "Domyślne osoby",
+    ed_defaults_saved: "Zapisano",
+    ed_defaults_load_failed: "Nie udało się wczytać ustawień domyślnych",
+    ed_defaults_save_failed: "Zapis nie powiódł się",
+    confirm_complete_msg: "Oznaczyć „{0}” jako ukończone?",
+    confirm_complete_ok: "Ukończ",
+    ed_hint: "Nowe listy można tworzyć w Ustawienia → Integracje → Home Tasks.",
+    tags: "Tagi",
+    add_tag: "+ Dodaj tag",
+    tag_placeholder: "Nowy tag...",
+    remove_tag: "Usuń",
+    tag_suggestions_label: "Istniejące tagi",
+    tag_no_matches: "Brak pasujących tagów",
+    new_sub_item: "Nowe podzadanie",
+    remove_reminder: "Usuń przypomnienie",
+    sort_label: "Sortuj",
+    sort_manual: "Ręcznie",
+    sort_due: "Termin",
+    sort_priority: "Priorytet",
+    sort_title: "Tytuł (A–Z)",
+    sort_person: "Przypisany",
+    ed_show_sort: "Sortowanie",
+    ed_default_sort: "Domyślne sortowanie",
+    ed_tag_catalog: "Stałe tagi",
+    ed_tag_catalog_hint: "Zawsze podpowiadane przy tagowaniu w tej liście — inne tagi można dodać w zadaniu.",
+    ed_default_lead_hint: "Przejmowane przez zadanie po włączeniu jego powtarzania",
+    tag_did_you_mean: "Czy chodziło o {0}?",
+    ed_overdue_first: "Zaległe zadania najpierw",
+    reminder: "Przypomnienia",
+    rem_add: "+ Dodaj przypomnienie",
+    rem_none: "Brak przypomnienia",
+    rem_at_due: "W czasie terminu",
+    rem_5m: "5 min. wcześniej",
+    rem_15m: "15 min. wcześniej",
+    rem_30m: "30 min. wcześniej",
+    rem_1h: "1 godz. wcześniej",
+    rem_2h: "2 godz. wcześniej",
+    rem_1d: "1 dzień wcześniej",
+    rem_2d: "2 dni wcześniej",
+    ed_show_reminders: "Przypomnienia",
+    ed_add_column: "Dodaj kolumnę",
+    ed_move_left: "Przesuń w lewo",
+    ed_move_right: "Przesuń w prawo",
+    ed_duplicate: "Duplikuj kolumnę",
+    ed_delete_column: "Usuń kolumnę",
+    ed_code_editor: "Edytor kodu",
+    ed_visual_editor: "Edytor wizualny",
+    ed_icon: "Ikona (opcjonalnie)",
+    ed_card_title: "Tytuł karty (opcjonalnie)",
+    ed_card_title_placeholder: "Tytuł nad kolumnami",
+    ed_sec_view: "Wyświetlanie",
+    ed_sec_display: "Konfiguracja",
+    ed_sec_filters: "Filtry",
+    ed_preset_assignees: "Ogranicz do osób",
+    ed_preset_labels: "Ogranicz do tagów",
+    ed_ms_add: "Dodaj…",
+    due_time_lbl: "Czas",
+    due_date_lbl: "Data",
+    rec_mode_lbl: "Tryb",
+    rec_time: "Godzina",
+    rec_end: "Koniec",
+    rec_end_never: "Nigdy",
+    rec_end_date: "Do",
+    rec_end_count: "X razy",
+    rec_end_date_lbl: "Do",
+    rec_max_count_lbl: "Liczba",
+    rec_remaining: "jeszcze {0}",
+    rec_start_date_lbl: "Od",
+    rec_pattern_dom: "Dzień miesiąca",
+    rec_pattern_nth: "N-ty dzień",
+    rec_pattern_none: "Od wykonania",
+    rec_pattern_due: "Od terminu",
+    rec_dom_lbl: "Dzień",
+    rec_dom_last: "Ostatni dzień",
+    rec_nth_lbl: "W",
+    rec_nth_1: "1.",
+    rec_nth_2: "2.",
+    rec_nth_3: "3.",
+    rec_nth_4: "4.",
+    rec_nth_last: "Ostatni",
+    rec_anniversary_lbl: "W",
+    rec_dd: "Dzień",
+    rec_mm: "Miesiąc",
+    rec_dom_short: ".",
+    rec_last_short: "ostatni",
+    rec_value_lbl: "Co",
+    rec_unit_lbl: "Jednostka",
+    rec_wd_lbl: "Dzień tygodnia",
+    rec_at_lbl: "O",
+    rec_lead_lbl: "Otwórz wcześniej",
+    rec_lead_hint: "Ponownie otwiera zadanie na tyle wcześnie przed kolejnym terminem, że pojawia się ono jako „nadchodzące”. 0 = w momencie terminu.",
+    rec_todoist_pattern_unsupported: "Podwzorce nie są obsługiwane, gdy interwał jest większy niż 1.",
+    history: "Historia",
+    history_created: "Utworzono",
+    history_completed: "Ukończono",
+    history_reopened: "Ponownie otwarto",
+    history_reset: "Auto-reset",
+    history_changed: "zmieniono",
+    history_empty: "Brak historii",
+    hist_title: "Tytuł",
+    history_disabled: "Wyłączono",
+    ed_show_history: "Historie",
+    hist_by_user: "Użytkownik",
+    ed_show_add_task: "Dodaj zadanie",
+    assigned_unknown: "Nieznany (%s)",
+    recurrence_readonly: "Zarządzane przez %s",
+    synced_with: "Zsynchronizowane z %s",
+    due_today: "Dzisiaj",
+    due_tomorrow: "Jutro",
+    due_yesterday: "Wczoraj",
+    due_day_after_tomorrow: "Pojutrze",
+    due_day_before_yesterday: "Przedwczoraj",
+    due_in_hours: "Za {0} godz. {1} min",
+    due_in_minutes: "Za {0} min",
+    due_in_seconds: "Teraz",
+    due_ago_hours: "{0} godz. {1} min temu",
+    due_ago_minutes: "{0} min temu",
+    due_ago_seconds: "Właśnie",
+    calendar_minutes_before: "{value} min przed",
+    calendar_hours_before: "{value} godz. przed",
+    calendar_days_before: "{value} dni przed",
+    ed_show_section: "Pole sekcji",
+    ed_section_field_no_sections: "Pojawi się, gdy lista będzie mieć sekcje",
+    section_label: "Sekcja",
+    ed_list_columns: "Kolumny zadań",
+    ed_tile_size: "Rozmiar kafelków",
+    ed_tile_size_small: "Mały",
+    ed_tile_size_compact: "Kompaktowy",
+    ed_tile_size_medium: "Normalny",
+    ed_tile_size_large: "Duży",
+    due_quick_week: "Za 1 tydzień",
+    due_quick_month: "Za 1 miesiąc",
+    due_quick_3months: "Za 3 miesiące",
+    ed_offered_persons: "Osoby do wyboru",
+    ed_offered_persons_hint: "W tej karcie można przypisać tylko wyróżnione osoby",
+    ed_show_add_details: "Szczegóły przy dodawaniu",
+    add_with_details: "Dodaj ze szczegółami",
+    add_clear: "Wyczyść",
+    plan_note_placeholder: "Cel na ten dzień",
+    plan_empty: "Nic nie zaplanowano",
+    plan_add: "Zaplanuj zadanie",
+    plan_search_placeholder: "Szukaj zadań…",
+    plan_no_results: "Brak pasujących otwartych zadań",
+    plan_carry_over: "Przenieś otwarte zadania z {0} ({1})",
+    plan_move_day: "Inny dzień…",
+    plan_day_msg: "Który dzień dla „{0}”?",
+    plan_remove: "Usuń z planu",
+    plan_for: "Zaplanuj na…",
+    plan_ok: "Zaplanuj",
+    plan_none: "Nie znaleziono planu dnia. Plany dnia można tworzyć w Ustawienia → Integracje → Home Tasks.",
+    ed_view_lists: "Listy",
+    ed_view_day_plan: "Plan dnia",
+    ed_plan_days: "Wyświetlane dni",
+    ed_plan_all_lists: "Wszystkie listy",
+    plan_due_hint: "Jest w planie ze względu na termin: przenieś zadanie lub zmień datę.",
+    ed_plan_weekend: "Weekend",
+    new_entry_link: "Utwórz nową listę lub plan dnia",
+    ed_plan_list_missing: "Lista niedostępna",
+    picker_list_name: "Home Tasks: Lista",
+    picker_plan_name: "Home Tasks: Plan dnia",
+    picker_list_desc: "Listy zadań w kolumnach, z przeciąganiem, podzadaniami, notatkami i terminami.",
+    picker_plan_desc: "Dni planu dnia: zadania z kilku list w kolejności, w jakiej je wykonujesz."
   },
-  "sv": {
-    "ed_default_priority": "Standardprioritet",
-    "ed_default_tags": "Standardtaggar",
-    "ed_default_section": "Standardavsnitt",
-    "ed_default_none": "– Ingen –",
-    "ed_group_card": "Kort",
-    "ed_person_off": "Av",
-    "ed_person_name": "Namn",
-    "ed_person_both": "Bild och namn",
-    "ed_group_header": "Sidhuvud",
-    "ed_group_tasks": "Uppgifter",
-    "ed_show_person_avatar": "Profilbild",
-    "voice_failed": "Röstinmatning misslyckades",
-    "confirm_delete_section": "Ta bort det här avsnittet? Uppgifter i det blir osorterade.",
-    "done_section_header": "Klar",
-    "duplicate_task": "Duplicera",
-    "move_task": "Flytta",
-    "move_task_msg": "Flytta ”{0}” till:",
-    "ed_show_move": "Flytta-knapp",
-    "ed_add_section": "+ Lägg till avsnitt",
-    "ed_ai_image_entity": "AI-entitet för bildgenerering",
-    "ed_ai_image_entity_placeholder": "t.ex. ai_task.openai",
-    "ed_ai_prompt_prefix": "Promptprefix (valfritt)",
-    "ed_ai_prompt_prefix_placeholder": "t.ex. Minimalistisk ikon av",
-    "ed_auto_image": "Generera bild automatiskt",
-    "ed_delete_section": "Ta bort avsnitt",
-    "ed_external_lists": "Extern",
-    "ed_loading": "Läser in…",
-    "ed_move_down": "Flytta ned",
-    "ed_move_up": "Flytta upp",
-    "ed_sec_sections": "Avsnitt",
-    "ed_section_icon": "Ikon",
-    "ed_section_name": "Namn",
-    "ed_section_name_prompt": "Avsnittsnamn:",
-    "ed_sections_empty": "Inga avsnitt än — uppgifter visas platt.",
-    "ed_sections_select_list_hint": "Välj en lista först för att hantera dess avsnitt.",
-    "ed_show_filters": "Statusfilter",
-    "ed_show_images": "Bilder",
-    "ed_show_person_chips": "Personfilter",
-    "ed_show_tag_chips": "Taggfilter",
-    "ed_show_tile_title": "Titel i rutor",
-    "ed_show_voice": "Röstinmatning",
-    "ed_task_search": "Uppgiftssökning",
-    "ed_tile_help": "Rutvy:\n• Klick = slutför\n• Håll = redigera\n• Dra = ändra ordning",
-    "ed_view_mode": "Visningsläge",
-    "ed_view_mode_list": "Lista",
-    "ed_view_mode_tiles": "Rutor",
-    "voice_input": "Röstinmatning",
-    "voice_stop": "Stoppa inspelning",
-    "img_label": "Bild",
-    "img_generate": "Generera",
-    "img_regenerate": "Generera igen",
-    "img_generating": "Genererar…",
-    "img_from_media": "Från mediabibliotek",
-    "img_remove": "Ta bort bild",
-    "img_generate_failed": "Bildgenerering misslyckades: ",
-    "img_save_failed": "Det gick inte att spara bilden: ",
-    "mb_title": "Mediabibliotek",
-    "mb_loading": "Läser in…",
-    "mb_root": "Media",
-    "mb_back": "Tillbaka",
-    "mb_empty": "Inga filer",
-    "mb_error": "Fel: ",
-    "my_tasks": "Mina uppgifter",
-    "add_placeholder": "Lägg till ny uppgift...",
-    "add_failed": "Kunde inte lägga till uppgiften",
-    "draft_details_failed": "Uppgiften har lagts till, men vissa detaljer kunde inte sparas",
-    "duplicate_failed": "Kunde inte duplicera uppgiften",
-    "dialog_cancel": "Avbryt",
-    "dialog_add": "Lägg till",
-    "filter_all": "Alla",
-    "filter_open": "Öppna",
-    "filter_done": "Klara",
-    "filter_due_soon": "Snart",
-    "ed_show_due_soon_filter": "Snart-filter",
-    "ed_due_soon_days": "Dagar framåt",
-    "ed_hide_overdue": "Dölj försenade",
-    "progress": "{0} av {1} klara",
-    "empty": "Inga uppgifter",
-    "drag_handle": "Dra för att ändra ordning",
-    "due_date": "Förfallodatum",
-    "notes": "Anteckningar",
-    "notes_placeholder": "Lägg till anteckningar här",
-    "notes_edit_hint": "Klicka för att redigera",
-    "sub_items": "Deluppgifter",
-    "add_sub_item": "+ Lägg till deluppgift",
-    "recurrence": "Upprepning",
-    "recurrence_enabled": "Aktiverad",
-    "recurrence_every": "Var",
-    "rec_minutes": "Minuter",
-    "rec_hours": "Timmar",
-    "rec_days": "Dagar",
-    "rec_weeks": "Veckor",
-    "rec_months": "Månader",
-    "rec_years": "År",
-    "rec_short_h": "t",
-    "rec_short_d": "d",
-    "rec_short_w": "v",
-    "rec_short_m": "mån",
-    "rec_short_y": "år",
-    "priority": "Prioritet",
-    "pri_high": "Hög",
-    "pri_medium": "Medel",
-    "pri_low": "Låg",
-    "ed_show_priority": "Prioriteter",
-    "rec_hourly": "Varje timme",
-    "rec_daily": "Dagligen",
-    "rec_weekly": "Veckovis",
-    "rec_monthly": "Månadsvis",
-    "rec_yearly": "Årligen",
-    "rec_type_interval": "Var …",
-    "rec_type_weekdays": "På vardagar",
-    "rec_wd_0": "Mån",
-    "rec_wd_1": "Tis",
-    "rec_wd_2": "Ons",
-    "rec_wd_3": "Tor",
-    "rec_wd_4": "Fre",
-    "rec_wd_5": "Lör",
-    "rec_wd_6": "Sön",
-    "assigned_to": "Tilldelade personer",
-    "nobody": "– Ingen –",
-    "delete_task": "Ta bort uppgift",
-    "delete_sub": "Ta bort",
-    "ed_default_filter": "Standardfilter",
-    "ed_list": "Lista",
-    "ed_title": "Titel (valfritt)",
-    "ed_title_placeholder": "Standard: listnamn",
-    "ed_display": "Visning",
-    "ed_show_title": "Titel",
-    "ed_show_progress": "Framsteg",
-    "ed_show_due_date": "Förfallodatum",
-    "ed_show_notes": "Anteckningar",
-    "ed_show_recurrence": "Upprepningar",
-    "ed_show_sub_items": "Deluppgifter",
-    "ed_show_person": "Personer",
-    "ed_auto_delete": "Ta bort slutförda omedelbart",
-    "ed_compact": "Kompakt",
-    "ed_show_tags": "Taggar",
-    "ed_confirm_complete": "Bekräfta innan slutförande",
-    "ed_tap_to_complete": "Tryck på raden för att slutföra",
-    "ed_show_add_due": "Förfallodatum vid tillägg",
-    "ed_max_height": "Maxhöjd (px, 0 = obegränsad)",
-    "ed_badge_priority": "Prioritetschips",
-    "ed_badge_progress": "Förloppschips",
-    "ed_badge_due": "Förfallochips",
-    "ed_badge_recurrence": "Upprepningschips",
-    "ed_badge_person": "Person",
-    "ed_badge_tags": "Taggchips",
-    "ed_badge_reminders": "Påminnelsechips",
-    "ed_sec_defaults": "Standardvärden",
-    "ed_sec_images": "Bilder",
-    "ed_share_images": "Dela bilder med andra listor",
-    "ed_share_images_hint": "Av håller listans bilder för sig själv — samma uppgiftstitel i en annan lista får en egen bild.",
-    "ed_queue_empty": "Inget väntar på en bild.",
-    "ed_queue_pending": "Väntar på en bild: {0}",
-    "ed_queue_cancel": "Avbryt",
-    "ed_ai_image_hint": "Gäller hela kortet, inte bara den här kolumnen.",
-    "ed_queue_running": "skapas…",
-    "ed_queue_title": "Genereringskö",
-    "ed_default_assignee": "Standardpersoner",
-    "ed_defaults_saved": "Sparat",
-    "ed_defaults_load_failed": "Det gick inte att läsa in standardvärdena",
-    "ed_defaults_save_failed": "Det gick inte att spara",
-    "confirm_complete_msg": "Markera ”{0}” som slutförd?",
-    "confirm_complete_ok": "Slutför",
-    "ed_hint": "Nya listor kan skapas under Inställningar → Integrationer → Home Tasks.",
-    "tags": "Taggar",
-    "add_tag": "+ Lägg till tagg",
-    "tag_placeholder": "Ny tagg...",
-    "remove_tag": "Ta bort",
-    "tag_suggestions_label": "Befintliga taggar",
-    "tag_no_matches": "Inga matchande taggar",
-    "new_sub_item": "Ny deluppgift",
-    "remove_reminder": "Ta bort påminnelse",
-    "sort_label": "Sortera",
-    "sort_manual": "Manuell",
-    "sort_due": "Förfallodatum",
-    "sort_priority": "Prioritet",
-    "sort_title": "Titel (A–Ö)",
-    "sort_person": "Tilldelad",
-    "ed_show_sort": "Sortering",
-    "ed_default_sort": "Standardsortering",
-    "ed_tag_catalog": "Fasta taggar",
-    "ed_tag_catalog_hint": "Föreslås alltid när du taggar i den här listan — andra taggar kan läggas till på uppgiften.",
-    "ed_default_lead_hint": "Tas över av en uppgift när dess upprepning slås på",
-    "tag_did_you_mean": "Menade du {0}?",
-    "ed_overdue_first": "Försenade uppgifter först",
-    "reminder": "Påminnelser",
-    "rem_add": "+ Lägg till påminnelse",
-    "rem_none": "Ingen påminnelse",
-    "rem_at_due": "Vid förfallotid",
-    "rem_5m": "5 min. före",
-    "rem_15m": "15 min. före",
-    "rem_30m": "30 min. före",
-    "rem_1h": "1 timme före",
-    "rem_2h": "2 timmar före",
-    "rem_1d": "1 dag före",
-    "rem_2d": "2 dagar före",
-    "ed_show_reminders": "Påminnelser",
-    "ed_add_column": "Lägg till kolumn",
-    "ed_move_left": "Flytta vänster",
-    "ed_move_right": "Flytta höger",
-    "ed_duplicate": "Duplicera kolumn",
-    "ed_delete_column": "Ta bort kolumn",
-    "ed_code_editor": "Kodredigerare",
-    "ed_visual_editor": "Visuell redigerare",
-    "ed_icon": "Ikon (valfritt)",
-    "ed_card_title": "Korttitel (valfritt)",
-    "ed_card_title_placeholder": "Titel ovanför kolumner",
-    "ed_sec_view": "Visning",
-    "ed_sec_display": "Konfiguration",
-    "ed_sec_filters": "Filter",
-    "ed_preset_assignees": "Begränsa till personer",
-    "ed_preset_labels": "Begränsa till taggar",
-    "ed_ms_add": "Lägg till…",
-    "due_time_lbl": "Tid",
-    "due_date_lbl": "Datum",
-    "rec_mode_lbl": "Läge",
-    "rec_time": "Tid",
-    "rec_end": "Slut",
-    "rec_end_never": "Aldrig",
-    "rec_end_date": "Till",
-    "rec_end_count": "X gånger",
-    "rec_end_date_lbl": "Till",
-    "rec_max_count_lbl": "Antal",
-    "rec_remaining": "{0} kvar",
-    "rec_start_date_lbl": "Från",
-    "rec_pattern_dom": "Dag i månaden",
-    "rec_pattern_nth": "Nte veckodag",
-    "rec_pattern_none": "Från slutförande",
-    "rec_pattern_due": "Från förfallodatum",
-    "rec_dom_lbl": "Dag",
-    "rec_dom_last": "Sista dagen",
-    "rec_nth_lbl": "På",
-    "rec_nth_1": "1:a",
-    "rec_nth_2": "2:a",
-    "rec_nth_3": "3:e",
-    "rec_nth_4": "4:e",
-    "rec_nth_last": "Sista",
-    "rec_anniversary_lbl": "Den",
-    "rec_dd": "Dag",
-    "rec_mm": "Månad",
-    "rec_dom_short": ":a",
-    "rec_last_short": "sista",
-    "rec_value_lbl": "Var",
-    "rec_unit_lbl": "Enhet",
-    "rec_wd_lbl": "Veckodag",
-    "rec_at_lbl": "Kl.",
-    "rec_lead_lbl": "Öppna igen tidigt",
-    "rec_lead_hint": "Öppnar uppgiften på nytt så här långt innan den förfaller igen, så att den visas som kommande. 0 = när den förfaller.",
-    "rec_todoist_pattern_unsupported": "Undermönster stöds inte när intervallet är större än 1.",
-    "history": "Historik",
-    "history_created": "Skapad",
-    "history_completed": "Avklarad",
-    "history_reopened": "Öppnad igen",
-    "history_reset": "Auto-återställd",
-    "history_changed": "ändrad",
-    "history_empty": "Ingen historik",
-    "hist_title": "Titel",
-    "history_disabled": "Inaktiverad",
-    "ed_show_history": "Historiker",
-    "hist_by_user": "Användare",
-    "ed_show_add_task": "Lägg till uppgift",
-    "assigned_unknown": "Okänd (%s)",
-    "recurrence_readonly": "Hanteras av %s",
-    "synced_with": "Synkroniserat med %s",
-    "due_today": "Idag",
-    "due_tomorrow": "Imorgon",
-    "due_yesterday": "Igår",
-    "due_day_after_tomorrow": "Övermorgon",
-    "due_day_before_yesterday": "Förrgår",
-    "due_in_hours": "Om {0} tim {1} min",
-    "due_in_minutes": "Om {0} min",
-    "due_in_seconds": "Nu",
-    "due_ago_hours": "{0} tim {1} min sedan",
-    "due_ago_minutes": "{0} min sedan",
-    "due_ago_seconds": "Just nu",
-    "calendar_minutes_before": "{value} min innan",
-    "calendar_hours_before": "{value} tim innan",
-    "calendar_days_before": "{value} dagar innan",
-    "ed_show_section": "Avsnittsfält",
-    "ed_section_field_no_sections": "Visas när listan har avsnitt",
-    "section_label": "Avsnitt",
-    "ed_list_columns": "Uppgiftskolumner",
-    "ed_tile_size": "Rutstorlek",
-    "ed_tile_size_small": "Liten",
-    "ed_tile_size_compact": "Kompakt",
-    "ed_tile_size_medium": "Normal",
-    "ed_tile_size_large": "Stor",
-    "due_quick_week": "Om 1 vecka",
-    "due_quick_month": "Om 1 månad",
-    "due_quick_3months": "Om 3 månader",
-    "ed_offered_persons": "Valbara personer",
-    "ed_offered_persons_hint": "Endast markerade personer kan tilldelas i det här kortet",
-    "ed_show_add_details": "Detaljer vid tillägg",
-    "add_with_details": "Lägg till med detaljer",
-    "add_clear": "Rensa",
-    "plan_note_placeholder": "Fokus för dagen",
-    "plan_empty": "Inget planerat",
-    "plan_add": "Planera en uppgift",
-    "plan_search_placeholder": "Sök uppgifter…",
-    "plan_no_results": "Inga matchande öppna uppgifter",
-    "plan_carry_over": "Ta över öppna uppgifter från {0} ({1})",
-    "plan_move_day": "Annan dag…",
-    "plan_day_msg": "Vilken dag för ”{0}”?",
-    "plan_remove": "Ta bort från planen",
-    "plan_for": "Planera för…",
-    "plan_ok": "Planera",
-    "plan_none": "Ingen dagsplan hittades. Dagsplaner kan skapas under Inställningar → Integrationer → Home Tasks.",
-    "ed_view_lists": "Listor",
-    "ed_view_day_plan": "Dagsplan",
-    "ed_plan_days": "Visade dagar",
-    "ed_plan_all_lists": "Alla listor",
-    "plan_due_hint": "Står i planen genom sitt förfallodatum: flytta den eller ändra datumet.",
-    "ed_plan_weekend": "Helg",
-    "new_entry_link": "Skapa en ny lista eller dagsplan",
-    "ed_plan_list_missing": "Listan är inte tillgänglig",
-    "picker_list_name": "Home Tasks: Lista",
-    "picker_plan_name": "Home Tasks: Dagsplan",
-    "picker_list_desc": "Uppgiftslistor i kolumner, med dra och släpp, deluppgifter, anteckningar och förfallodatum.",
-    "picker_plan_desc": "Dagarna i en dagsplan: uppgifter från flera listor i den ordning du gör dem."
+  sv: {
+    ed_default_priority: "Standardprioritet",
+    ed_default_tags: "Standardtaggar",
+    ed_default_section: "Standardavsnitt",
+    ed_default_none: "– Ingen –",
+    ed_group_card: "Kort",
+    ed_person_off: "Av",
+    ed_person_name: "Namn",
+    ed_person_both: "Bild och namn",
+    ed_group_header: "Sidhuvud",
+    ed_group_tasks: "Uppgifter",
+    ed_show_person_avatar: "Profilbild",
+    voice_failed: "Röstinmatning misslyckades",
+    confirm_delete_section: "Ta bort det här avsnittet? Uppgifter i det blir osorterade.",
+    done_section_header: "Klar",
+    duplicate_task: "Duplicera",
+    move_task: "Flytta",
+    move_task_msg: "Flytta ”{0}” till:",
+    ed_show_move: "Flytta-knapp",
+    ed_add_section: "+ Lägg till avsnitt",
+    ed_ai_image_entity: "AI-entitet för bildgenerering",
+    ed_ai_image_entity_placeholder: "t.ex. ai_task.openai",
+    ed_ai_prompt_prefix: "Promptprefix (valfritt)",
+    ed_ai_prompt_prefix_placeholder: "t.ex. Minimalistisk ikon av",
+    ed_auto_image: "Generera bild automatiskt",
+    ed_delete_section: "Ta bort avsnitt",
+    ed_external_lists: "Extern",
+    ed_loading: "Läser in…",
+    ed_move_down: "Flytta ned",
+    ed_move_up: "Flytta upp",
+    ed_sec_sections: "Avsnitt",
+    ed_section_icon: "Ikon",
+    ed_section_name: "Namn",
+    ed_section_name_prompt: "Avsnittsnamn:",
+    ed_sections_empty: "Inga avsnitt än — uppgifter visas platt.",
+    ed_sections_select_list_hint: "Välj en lista först för att hantera dess avsnitt.",
+    ed_show_filters: "Statusfilter",
+    ed_show_images: "Bilder",
+    ed_show_person_chips: "Personfilter",
+    ed_show_tag_chips: "Taggfilter",
+    ed_show_tile_title: "Titel i rutor",
+    ed_show_voice: "Röstinmatning",
+    ed_task_search: "Uppgiftssökning",
+    ed_tile_help: "Rutvy:\n• Klick = slutför\n• Håll = redigera\n• Dra = ändra ordning",
+    ed_view_mode: "Visningsläge",
+    ed_view_mode_list: "Lista",
+    ed_view_mode_tiles: "Rutor",
+    voice_input: "Röstinmatning",
+    voice_stop: "Stoppa inspelning",
+    img_label: "Bild",
+    img_generate: "Generera",
+    img_regenerate: "Generera igen",
+    img_generating: "Genererar…",
+    img_from_media: "Från mediabibliotek",
+    img_remove: "Ta bort bild",
+    img_generate_failed: "Bildgenerering misslyckades: ",
+    img_save_failed: "Det gick inte att spara bilden: ",
+    mb_title: "Mediabibliotek",
+    mb_loading: "Läser in…",
+    mb_root: "Media",
+    mb_back: "Tillbaka",
+    mb_empty: "Inga filer",
+    mb_error: "Fel: ",
+    my_tasks: "Mina uppgifter",
+    add_placeholder: "Lägg till ny uppgift...",
+    add_failed: "Kunde inte lägga till uppgiften",
+    draft_details_failed: "Uppgiften har lagts till, men vissa detaljer kunde inte sparas",
+    duplicate_failed: "Kunde inte duplicera uppgiften",
+    dialog_cancel: "Avbryt",
+    dialog_add: "Lägg till",
+    filter_all: "Alla",
+    filter_open: "Öppna",
+    filter_done: "Klara",
+    filter_due_soon: "Snart",
+    ed_show_due_soon_filter: "Snart-filter",
+    ed_due_soon_days: "Dagar framåt",
+    ed_hide_overdue: "Dölj försenade",
+    progress: "{0} av {1} klara",
+    empty: "Inga uppgifter",
+    drag_handle: "Dra för att ändra ordning",
+    due_date: "Förfallodatum",
+    notes: "Anteckningar",
+    notes_placeholder: "Lägg till anteckningar här",
+    notes_edit_hint: "Klicka för att redigera",
+    sub_items: "Deluppgifter",
+    add_sub_item: "+ Lägg till deluppgift",
+    recurrence: "Upprepning",
+    recurrence_enabled: "Aktiverad",
+    recurrence_every: "Var",
+    rec_minutes: "Minuter",
+    rec_hours: "Timmar",
+    rec_days: "Dagar",
+    rec_weeks: "Veckor",
+    rec_months: "Månader",
+    rec_years: "År",
+    rec_short_h: "t",
+    rec_short_d: "d",
+    rec_short_w: "v",
+    rec_short_m: "mån",
+    rec_short_y: "år",
+    priority: "Prioritet",
+    pri_high: "Hög",
+    pri_medium: "Medel",
+    pri_low: "Låg",
+    ed_show_priority: "Prioriteter",
+    rec_hourly: "Varje timme",
+    rec_daily: "Dagligen",
+    rec_weekly: "Veckovis",
+    rec_monthly: "Månadsvis",
+    rec_yearly: "Årligen",
+    rec_type_interval: "Var …",
+    rec_type_weekdays: "På vardagar",
+    rec_wd_0: "Mån",
+    rec_wd_1: "Tis",
+    rec_wd_2: "Ons",
+    rec_wd_3: "Tor",
+    rec_wd_4: "Fre",
+    rec_wd_5: "Lör",
+    rec_wd_6: "Sön",
+    assigned_to: "Tilldelade personer",
+    nobody: "– Ingen –",
+    delete_task: "Ta bort uppgift",
+    delete_sub: "Ta bort",
+    ed_default_filter: "Standardfilter",
+    ed_list: "Lista",
+    ed_title: "Titel (valfritt)",
+    ed_title_placeholder: "Standard: listnamn",
+    ed_display: "Visning",
+    ed_show_title: "Titel",
+    ed_show_progress: "Framsteg",
+    ed_show_due_date: "Förfallodatum",
+    ed_show_notes: "Anteckningar",
+    ed_show_recurrence: "Upprepningar",
+    ed_show_sub_items: "Deluppgifter",
+    ed_show_person: "Personer",
+    ed_auto_delete: "Ta bort slutförda omedelbart",
+    ed_compact: "Kompakt",
+    ed_show_tags: "Taggar",
+    ed_confirm_complete: "Bekräfta innan slutförande",
+    ed_tap_to_complete: "Tryck på raden för att slutföra",
+    ed_show_add_due: "Förfallodatum vid tillägg",
+    ed_max_height: "Maxhöjd (px, 0 = obegränsad)",
+    ed_badge_priority: "Prioritetschips",
+    ed_badge_progress: "Förloppschips",
+    ed_badge_due: "Förfallochips",
+    ed_badge_recurrence: "Upprepningschips",
+    ed_badge_person: "Person",
+    ed_badge_tags: "Taggchips",
+    ed_badge_reminders: "Påminnelsechips",
+    ed_sec_defaults: "Standardvärden",
+    ed_sec_images: "Bilder",
+    ed_share_images: "Dela bilder med andra listor",
+    ed_share_images_hint: "Av håller listans bilder för sig själv — samma uppgiftstitel i en annan lista får en egen bild.",
+    ed_queue_empty: "Inget väntar på en bild.",
+    ed_queue_pending: "Väntar på en bild: {0}",
+    ed_queue_cancel: "Avbryt",
+    ed_ai_image_hint: "Gäller hela kortet, inte bara den här kolumnen.",
+    ed_queue_running: "skapas…",
+    ed_queue_title: "Genereringskö",
+    ed_default_assignee: "Standardpersoner",
+    ed_defaults_saved: "Sparat",
+    ed_defaults_load_failed: "Det gick inte att läsa in standardvärdena",
+    ed_defaults_save_failed: "Det gick inte att spara",
+    confirm_complete_msg: "Markera ”{0}” som slutförd?",
+    confirm_complete_ok: "Slutför",
+    ed_hint: "Nya listor kan skapas under Inställningar → Integrationer → Home Tasks.",
+    tags: "Taggar",
+    add_tag: "+ Lägg till tagg",
+    tag_placeholder: "Ny tagg...",
+    remove_tag: "Ta bort",
+    tag_suggestions_label: "Befintliga taggar",
+    tag_no_matches: "Inga matchande taggar",
+    new_sub_item: "Ny deluppgift",
+    remove_reminder: "Ta bort påminnelse",
+    sort_label: "Sortera",
+    sort_manual: "Manuell",
+    sort_due: "Förfallodatum",
+    sort_priority: "Prioritet",
+    sort_title: "Titel (A–Ö)",
+    sort_person: "Tilldelad",
+    ed_show_sort: "Sortering",
+    ed_default_sort: "Standardsortering",
+    ed_tag_catalog: "Fasta taggar",
+    ed_tag_catalog_hint: "Föreslås alltid när du taggar i den här listan — andra taggar kan läggas till på uppgiften.",
+    ed_default_lead_hint: "Tas över av en uppgift när dess upprepning slås på",
+    tag_did_you_mean: "Menade du {0}?",
+    ed_overdue_first: "Försenade uppgifter först",
+    reminder: "Påminnelser",
+    rem_add: "+ Lägg till påminnelse",
+    rem_none: "Ingen påminnelse",
+    rem_at_due: "Vid förfallotid",
+    rem_5m: "5 min. före",
+    rem_15m: "15 min. före",
+    rem_30m: "30 min. före",
+    rem_1h: "1 timme före",
+    rem_2h: "2 timmar före",
+    rem_1d: "1 dag före",
+    rem_2d: "2 dagar före",
+    ed_show_reminders: "Påminnelser",
+    ed_add_column: "Lägg till kolumn",
+    ed_move_left: "Flytta vänster",
+    ed_move_right: "Flytta höger",
+    ed_duplicate: "Duplicera kolumn",
+    ed_delete_column: "Ta bort kolumn",
+    ed_code_editor: "Kodredigerare",
+    ed_visual_editor: "Visuell redigerare",
+    ed_icon: "Ikon (valfritt)",
+    ed_card_title: "Korttitel (valfritt)",
+    ed_card_title_placeholder: "Titel ovanför kolumner",
+    ed_sec_view: "Visning",
+    ed_sec_display: "Konfiguration",
+    ed_sec_filters: "Filter",
+    ed_preset_assignees: "Begränsa till personer",
+    ed_preset_labels: "Begränsa till taggar",
+    ed_ms_add: "Lägg till…",
+    due_time_lbl: "Tid",
+    due_date_lbl: "Datum",
+    rec_mode_lbl: "Läge",
+    rec_time: "Tid",
+    rec_end: "Slut",
+    rec_end_never: "Aldrig",
+    rec_end_date: "Till",
+    rec_end_count: "X gånger",
+    rec_end_date_lbl: "Till",
+    rec_max_count_lbl: "Antal",
+    rec_remaining: "{0} kvar",
+    rec_start_date_lbl: "Från",
+    rec_pattern_dom: "Dag i månaden",
+    rec_pattern_nth: "Nte veckodag",
+    rec_pattern_none: "Från slutförande",
+    rec_pattern_due: "Från förfallodatum",
+    rec_dom_lbl: "Dag",
+    rec_dom_last: "Sista dagen",
+    rec_nth_lbl: "På",
+    rec_nth_1: "1:a",
+    rec_nth_2: "2:a",
+    rec_nth_3: "3:e",
+    rec_nth_4: "4:e",
+    rec_nth_last: "Sista",
+    rec_anniversary_lbl: "Den",
+    rec_dd: "Dag",
+    rec_mm: "Månad",
+    rec_dom_short: ":a",
+    rec_last_short: "sista",
+    rec_value_lbl: "Var",
+    rec_unit_lbl: "Enhet",
+    rec_wd_lbl: "Veckodag",
+    rec_at_lbl: "Kl.",
+    rec_lead_lbl: "Öppna igen tidigt",
+    rec_lead_hint: "Öppnar uppgiften på nytt så här långt innan den förfaller igen, så att den visas som kommande. 0 = när den förfaller.",
+    rec_todoist_pattern_unsupported: "Undermönster stöds inte när intervallet är större än 1.",
+    history: "Historik",
+    history_created: "Skapad",
+    history_completed: "Avklarad",
+    history_reopened: "Öppnad igen",
+    history_reset: "Auto-återställd",
+    history_changed: "ändrad",
+    history_empty: "Ingen historik",
+    hist_title: "Titel",
+    history_disabled: "Inaktiverad",
+    ed_show_history: "Historiker",
+    hist_by_user: "Användare",
+    ed_show_add_task: "Lägg till uppgift",
+    assigned_unknown: "Okänd (%s)",
+    recurrence_readonly: "Hanteras av %s",
+    synced_with: "Synkroniserat med %s",
+    due_today: "Idag",
+    due_tomorrow: "Imorgon",
+    due_yesterday: "Igår",
+    due_day_after_tomorrow: "Övermorgon",
+    due_day_before_yesterday: "Förrgår",
+    due_in_hours: "Om {0} tim {1} min",
+    due_in_minutes: "Om {0} min",
+    due_in_seconds: "Nu",
+    due_ago_hours: "{0} tim {1} min sedan",
+    due_ago_minutes: "{0} min sedan",
+    due_ago_seconds: "Just nu",
+    calendar_minutes_before: "{value} min innan",
+    calendar_hours_before: "{value} tim innan",
+    calendar_days_before: "{value} dagar innan",
+    ed_show_section: "Avsnittsfält",
+    ed_section_field_no_sections: "Visas när listan har avsnitt",
+    section_label: "Avsnitt",
+    ed_list_columns: "Uppgiftskolumner",
+    ed_tile_size: "Rutstorlek",
+    ed_tile_size_small: "Liten",
+    ed_tile_size_compact: "Kompakt",
+    ed_tile_size_medium: "Normal",
+    ed_tile_size_large: "Stor",
+    due_quick_week: "Om 1 vecka",
+    due_quick_month: "Om 1 månad",
+    due_quick_3months: "Om 3 månader",
+    ed_offered_persons: "Valbara personer",
+    ed_offered_persons_hint: "Endast markerade personer kan tilldelas i det här kortet",
+    ed_show_add_details: "Detaljer vid tillägg",
+    add_with_details: "Lägg till med detaljer",
+    add_clear: "Rensa",
+    plan_note_placeholder: "Fokus för dagen",
+    plan_empty: "Inget planerat",
+    plan_add: "Planera en uppgift",
+    plan_search_placeholder: "Sök uppgifter…",
+    plan_no_results: "Inga matchande öppna uppgifter",
+    plan_carry_over: "Ta över öppna uppgifter från {0} ({1})",
+    plan_move_day: "Annan dag…",
+    plan_day_msg: "Vilken dag för ”{0}”?",
+    plan_remove: "Ta bort från planen",
+    plan_for: "Planera för…",
+    plan_ok: "Planera",
+    plan_none: "Ingen dagsplan hittades. Dagsplaner kan skapas under Inställningar → Integrationer → Home Tasks.",
+    ed_view_lists: "Listor",
+    ed_view_day_plan: "Dagsplan",
+    ed_plan_days: "Visade dagar",
+    ed_plan_all_lists: "Alla listor",
+    plan_due_hint: "Står i planen genom sitt förfallodatum: flytta den eller ändra datumet.",
+    ed_plan_weekend: "Helg",
+    new_entry_link: "Skapa en ny lista eller dagsplan",
+    ed_plan_list_missing: "Listan är inte tillgänglig",
+    picker_list_name: "Home Tasks: Lista",
+    picker_plan_name: "Home Tasks: Dagsplan",
+    picker_list_desc: "Uppgiftslistor i kolumner, med dra och släpp, deluppgifter, anteckningar och förfallodatum.",
+    picker_plan_desc: "Dagarna i en dagsplan: uppgifter från flera listor i den ordning du gör dem."
   },
-  "fr": {
-    "ed_default_priority": "Priorité par défaut",
-    "ed_default_tags": "Étiquettes par défaut",
-    "ed_default_section": "Section par défaut",
-    "ed_default_none": "– Aucune –",
-    "ed_group_card": "Carte",
-    "ed_person_off": "Désactivé",
-    "ed_person_name": "Nom",
-    "ed_person_both": "Photo et nom",
-    "ed_group_header": "En-tête",
-    "ed_group_tasks": "Tâches",
-    "ed_show_person_avatar": "Photo de profil",
-    "voice_failed": "Échec de la saisie vocale",
-    "confirm_delete_section": "Supprimer cette section ? Les tâches qu'elle contient ne seront plus triées.",
-    "done_section_header": "Terminé",
-    "duplicate_task": "Dupliquer",
-    "move_task": "Déplacer",
-    "move_task_msg": "Déplacer « {0} » vers :",
-    "ed_show_move": "Bouton Déplacer",
-    "ed_add_section": "+ Ajouter une section",
-    "ed_ai_image_entity": "Entité IA pour la génération d'images",
-    "ed_ai_image_entity_placeholder": "ex. ai_task.openai",
-    "ed_ai_prompt_prefix": "Préfixe d'invite (facultatif)",
-    "ed_ai_prompt_prefix_placeholder": "ex. Icône minimaliste de",
-    "ed_auto_image": "Générer l'image automatiquement",
-    "ed_delete_section": "Supprimer la section",
-    "ed_external_lists": "Externe",
-    "ed_loading": "Chargement…",
-    "ed_move_down": "Déplacer vers le bas",
-    "ed_move_up": "Déplacer vers le haut",
-    "ed_sec_sections": "Sections",
-    "ed_section_icon": "Icône",
-    "ed_section_name": "Nom",
-    "ed_section_name_prompt": "Nom de la section :",
-    "ed_sections_empty": "Aucune section pour l'instant — les tâches s'affichent à plat.",
-    "ed_sections_select_list_hint": "Sélectionnez d'abord une liste pour gérer ses sections.",
-    "ed_show_filters": "Filtre d'état",
-    "ed_show_images": "Images",
-    "ed_show_person_chips": "Filtre de personnes",
-    "ed_show_tag_chips": "Filtre d'étiquettes",
-    "ed_show_tile_title": "Titre sur les tuiles",
-    "ed_show_voice": "Saisie vocale",
-    "ed_task_search": "Recherche de tâches",
-    "ed_tile_help": "Vue en tuiles :\n• Clic = terminer\n• Maintenir = modifier\n• Glisser = réorganiser",
-    "ed_view_mode": "Mode d'affichage",
-    "ed_view_mode_list": "Liste",
-    "ed_view_mode_tiles": "Tuiles",
-    "voice_input": "Saisie vocale",
-    "voice_stop": "Arrêter l'enregistrement",
-    "img_label": "Image",
-    "img_generate": "Générer",
-    "img_regenerate": "Régénérer",
-    "img_generating": "Génération…",
-    "img_from_media": "Depuis la médiathèque",
-    "img_remove": "Supprimer l'image",
-    "img_generate_failed": "Échec de la génération de l'image : ",
-    "img_save_failed": "Échec de l'enregistrement de l'image : ",
-    "mb_title": "Médiathèque",
-    "mb_loading": "Chargement…",
-    "mb_root": "Médias",
-    "mb_back": "Retour",
-    "mb_empty": "Aucun fichier",
-    "mb_error": "Erreur : ",
-    "my_tasks": "Mes tâches",
-    "add_placeholder": "Ajouter une nouvelle tâche...",
-    "add_failed": "Impossible d'ajouter la tâche",
-    "draft_details_failed": "Tâche créée, mais certains détails n'ont pas pu être enregistrés",
-    "duplicate_failed": "Impossible de dupliquer la tâche",
-    "dialog_cancel": "Annuler",
-    "dialog_add": "Ajouter",
-    "filter_all": "Toutes",
-    "filter_open": "Ouvertes",
-    "filter_done": "Terminées",
-    "filter_due_soon": "Bientôt",
-    "ed_show_due_soon_filter": "Filtre bientôt",
-    "ed_due_soon_days": "Jours à venir",
-    "ed_hide_overdue": "Masquer en retard",
-    "progress": "{0} sur {1} terminées",
-    "empty": "Aucune tâche",
-    "drag_handle": "Glisser pour réorganiser",
-    "due_date": "Échéance",
-    "notes": "Notes",
-    "notes_placeholder": "Ajouter des notes ici",
-    "notes_edit_hint": "Cliquer pour modifier",
-    "sub_items": "Sous-tâches",
-    "add_sub_item": "+ Ajouter une sous-tâche",
-    "recurrence": "Récurrence",
-    "recurrence_enabled": "Activée",
-    "recurrence_every": "Tous les",
-    "rec_minutes": "Minutes",
-    "rec_hours": "Heures",
-    "rec_days": "Jours",
-    "rec_weeks": "Semaines",
-    "rec_months": "Mois",
-    "rec_years": "Années",
-    "rec_short_h": "h",
-    "rec_short_d": "j",
-    "rec_short_w": "s",
-    "rec_short_m": "m",
-    "rec_short_y": "a",
-    "priority": "Priorité",
-    "pri_high": "Haute",
-    "pri_medium": "Moyenne",
-    "pri_low": "Basse",
-    "ed_show_priority": "Priorités",
-    "rec_hourly": "Horaire",
-    "rec_daily": "Quotidien",
-    "rec_weekly": "Hebdomadaire",
-    "rec_monthly": "Mensuel",
-    "rec_yearly": "Annuel",
-    "rec_type_interval": "Tous les …",
-    "rec_type_weekdays": "Les jours de semaine",
-    "rec_wd_0": "Lun",
-    "rec_wd_1": "Mar",
-    "rec_wd_2": "Mer",
-    "rec_wd_3": "Jeu",
-    "rec_wd_4": "Ven",
-    "rec_wd_5": "Sam",
-    "rec_wd_6": "Dim",
-    "assigned_to": "Personnes assignées",
-    "nobody": "– Personne –",
-    "delete_task": "Supprimer la tâche",
-    "delete_sub": "Supprimer",
-    "ed_default_filter": "Filtre par défaut",
-    "ed_list": "Liste",
-    "ed_title": "Titre (optionnel)",
-    "ed_title_placeholder": "Par défaut : nom de la liste",
-    "ed_display": "Affichage",
-    "ed_show_title": "Titre",
-    "ed_show_progress": "Progression",
-    "ed_show_due_date": "Échéances",
-    "ed_show_notes": "Notes",
-    "ed_show_recurrence": "Récurrences",
-    "ed_show_sub_items": "Sous-tâches",
-    "ed_show_person": "Personnes",
-    "ed_auto_delete": "Supprimer les terminées immédiatement",
-    "ed_compact": "Compact",
-    "ed_show_tags": "Étiquettes",
-    "ed_confirm_complete": "Confirmer avant de terminer",
-    "ed_tap_to_complete": "Toucher la ligne pour terminer",
-    "ed_show_add_due": "Échéance à la création",
-    "ed_max_height": "Hauteur max (px, 0 = illimitée)",
-    "ed_badge_priority": "Puces priorité",
-    "ed_badge_progress": "Puces progression",
-    "ed_badge_due": "Puces échéance",
-    "ed_badge_recurrence": "Puces récurrence",
-    "ed_badge_person": "Personne",
-    "ed_badge_tags": "Puces étiquettes",
-    "ed_badge_reminders": "Puces rappel",
-    "ed_sec_defaults": "Valeurs par défaut",
-    "ed_sec_images": "Images",
-    "ed_share_images": "Partager les images avec d'autres listes",
-    "ed_share_images_hint": "Désactivé garde les images de cette liste pour elle — le même titre dans une autre liste obtient sa propre image.",
-    "ed_queue_empty": "Rien n'attend d'image.",
-    "ed_queue_pending": "En attente d'une image : {0}",
-    "ed_queue_cancel": "Annuler",
-    "ed_ai_image_hint": "S'applique à toute la carte, pas seulement à cette colonne.",
-    "ed_queue_running": "en cours…",
-    "ed_queue_title": "File de génération",
-    "ed_default_assignee": "Personnes par défaut",
-    "ed_defaults_saved": "Enregistré",
-    "ed_defaults_load_failed": "Impossible de charger les valeurs par défaut",
-    "ed_defaults_save_failed": "Échec de l'enregistrement",
-    "confirm_complete_msg": "Marquer « {0} » comme terminée ?",
-    "confirm_complete_ok": "Terminer",
-    "ed_hint": "De nouvelles listes peuvent être créées dans Paramètres → Intégrations → Home Tasks.",
-    "tags": "Étiquettes",
-    "add_tag": "+ Ajouter une étiquette",
-    "tag_placeholder": "Nouvelle étiquette...",
-    "remove_tag": "Supprimer",
-    "tag_suggestions_label": "Étiquettes existantes",
-    "tag_no_matches": "Aucune étiquette correspondante",
-    "new_sub_item": "Nouvelle sous-tâche",
-    "remove_reminder": "Supprimer le rappel",
-    "sort_label": "Trier",
-    "sort_manual": "Manuel",
-    "sort_due": "Échéance",
-    "sort_priority": "Priorité",
-    "sort_title": "Titre (A–Z)",
-    "sort_person": "Assigné",
-    "ed_show_sort": "Tri",
-    "ed_default_sort": "Tri par défaut",
-    "ed_tag_catalog": "Étiquettes fixes",
-    "ed_tag_catalog_hint": "Toujours proposées lors de l'étiquetage dans cette liste — d'autres étiquettes peuvent être ajoutées dans la tâche.",
-    "ed_default_lead_hint": "Repris par une tâche lorsque sa répétition est activée",
-    "tag_did_you_mean": "Vouliez-vous dire {0} ?",
-    "ed_overdue_first": "Tâches en retard en premier",
-    "reminder": "Rappels",
-    "rem_add": "+ Ajouter un rappel",
-    "rem_none": "Aucun rappel",
-    "rem_at_due": "À l’heure d’échéance",
-    "rem_5m": "5 min. avant",
-    "rem_15m": "15 min. avant",
-    "rem_30m": "30 min. avant",
-    "rem_1h": "1 heure avant",
-    "rem_2h": "2 heures avant",
-    "rem_1d": "1 jour avant",
-    "rem_2d": "2 jours avant",
-    "ed_show_reminders": "Rappels",
-    "ed_add_column": "Ajouter une colonne",
-    "ed_move_left": "Déplacer à gauche",
-    "ed_move_right": "Déplacer à droite",
-    "ed_duplicate": "Dupliquer la colonne",
-    "ed_delete_column": "Supprimer la colonne",
-    "ed_code_editor": "Éditeur de code",
-    "ed_visual_editor": "Éditeur visuel",
-    "ed_icon": "Icône (optionnel)",
-    "ed_card_title": "Titre de la carte (optionnel)",
-    "ed_card_title_placeholder": "Titre au-dessus des colonnes",
-    "ed_sec_view": "Affichage",
-    "ed_sec_display": "Configuration",
-    "ed_sec_filters": "Filtres",
-    "ed_preset_assignees": "Limiter aux personnes",
-    "ed_preset_labels": "Limiter aux étiquettes",
-    "ed_ms_add": "Ajouter…",
-    "due_time_lbl": "Heure",
-    "due_date_lbl": "Date",
-    "rec_mode_lbl": "Mode",
-    "rec_time": "Heure",
-    "rec_end": "Fin",
-    "rec_end_never": "Jamais",
-    "rec_end_date": "Jusqu'au",
-    "rec_end_count": "X fois",
-    "rec_end_date_lbl": "Jusqu'au",
-    "rec_max_count_lbl": "Nombre",
-    "rec_remaining": "encore {0}",
-    "rec_start_date_lbl": "À partir du",
-    "rec_pattern_dom": "Jour du mois",
-    "rec_pattern_nth": "Nième jour",
-    "rec_pattern_none": "Depuis l'achèvement",
-    "rec_pattern_due": "Depuis l'échéance",
-    "rec_dom_lbl": "Jour",
-    "rec_dom_last": "Dernier jour",
-    "rec_nth_lbl": "Le",
-    "rec_nth_1": "1er",
-    "rec_nth_2": "2e",
-    "rec_nth_3": "3e",
-    "rec_nth_4": "4e",
-    "rec_nth_last": "Dernier",
-    "rec_anniversary_lbl": "Le",
-    "rec_dd": "Jour",
-    "rec_mm": "Mois",
-    "rec_dom_short": "e",
-    "rec_last_short": "dernier",
-    "rec_value_lbl": "Tous les",
-    "rec_unit_lbl": "Unité",
-    "rec_wd_lbl": "Jour",
-    "rec_at_lbl": "À",
-    "rec_lead_lbl": "Réouverture anticipée",
-    "rec_lead_hint": "Rouvre la tâche ce délai avant sa prochaine échéance, pour qu'elle apparaisse « à venir ». 0 = à l'échéance.",
-    "rec_todoist_pattern_unsupported": "Les sous-modèles ne sont pas pris en charge si l'intervalle est supérieur à 1.",
-    "history": "Historique",
-    "history_created": "Créé",
-    "history_completed": "Terminé",
-    "history_reopened": "Réouvert",
-    "history_reset": "Réinitialisation auto.",
-    "history_changed": "modifié",
-    "history_empty": "Aucun historique",
-    "hist_title": "Titre",
-    "history_disabled": "Désactivé",
-    "ed_show_history": "Historiques",
-    "hist_by_user": "Utilisateur",
-    "ed_show_add_task": "Ajouter tâche",
-    "assigned_unknown": "Inconnu (%s)",
-    "recurrence_readonly": "Géré par %s",
-    "synced_with": "Synchronisé avec %s",
-    "due_today": "Aujourd'hui",
-    "due_tomorrow": "Demain",
-    "due_yesterday": "Hier",
-    "due_day_after_tomorrow": "Après-demain",
-    "due_day_before_yesterday": "Avant-hier",
-    "due_in_hours": "Dans {0} h {1} min",
-    "due_in_minutes": "Dans {0} min",
-    "due_in_seconds": "Maintenant",
-    "due_ago_hours": "Il y a {0} h {1} min",
-    "due_ago_minutes": "Il y a {0} min",
-    "due_ago_seconds": "À l'instant",
-    "calendar_minutes_before": "{value} min avant",
-    "calendar_hours_before": "{value} h avant",
-    "calendar_days_before": "{value} j avant",
-    "ed_show_section": "Champ de section",
-    "ed_section_field_no_sections": "Apparaît dès que la liste a des sections",
-    "section_label": "Section",
-    "ed_list_columns": "Colonnes de tâches",
-    "ed_tile_size": "Taille des tuiles",
-    "ed_tile_size_small": "Petite",
-    "ed_tile_size_compact": "Compacte",
-    "ed_tile_size_medium": "Normale",
-    "ed_tile_size_large": "Grande",
-    "due_quick_week": "Dans 1 semaine",
-    "due_quick_month": "Dans 1 mois",
-    "due_quick_3months": "Dans 3 mois",
-    "ed_offered_persons": "Personnes sélectionnables",
-    "ed_offered_persons_hint": "Seules les personnes en surbrillance peuvent être assignées dans cette carte",
-    "ed_show_add_details": "Détails à la création",
-    "add_with_details": "Créer avec détails",
-    "add_clear": "Effacer",
-    "plan_note_placeholder": "Objectif du jour",
-    "plan_empty": "Rien de prévu",
-    "plan_add": "Planifier une tâche",
-    "plan_search_placeholder": "Rechercher des tâches…",
-    "plan_no_results": "Aucune tâche ouverte correspondante",
-    "plan_carry_over": "Reprendre les tâches ouvertes du {0} ({1})",
-    "plan_move_day": "Autre jour…",
-    "plan_day_msg": "Quel jour pour « {0} » ?",
-    "plan_remove": "Retirer du plan",
-    "plan_for": "Planifier pour…",
-    "plan_ok": "Planifier",
-    "plan_none": "Aucun plan du jour trouvé. Les plans du jour peuvent être créés dans Paramètres → Intégrations → Home Tasks.",
-    "ed_view_lists": "Listes",
-    "ed_view_day_plan": "Plan du jour",
-    "ed_plan_days": "Jours affichés",
-    "ed_plan_all_lists": "Toutes les listes",
-    "plan_due_hint": "Figure dans le plan par sa date d'échéance : déplacez-la ou modifiez la date.",
-    "ed_plan_weekend": "Week-end",
-    "new_entry_link": "Créer une nouvelle liste ou un plan du jour",
-    "ed_plan_list_missing": "Liste indisponible",
-    "picker_list_name": "Home Tasks : Liste",
-    "picker_plan_name": "Home Tasks : Plan du jour",
-    "picker_list_desc": "Listes de tâches en colonnes, avec glisser-déposer, sous-tâches, notes et échéances.",
-    "picker_plan_desc": "Les jours d'un plan du jour : des tâches de plusieurs listes dans l'ordre où vous les traitez."
+  fr: {
+    ed_default_priority: "Priorité par défaut",
+    ed_default_tags: "Étiquettes par défaut",
+    ed_default_section: "Section par défaut",
+    ed_default_none: "– Aucune –",
+    ed_group_card: "Carte",
+    ed_person_off: "Désactivé",
+    ed_person_name: "Nom",
+    ed_person_both: "Photo et nom",
+    ed_group_header: "En-tête",
+    ed_group_tasks: "Tâches",
+    ed_show_person_avatar: "Photo de profil",
+    voice_failed: "Échec de la saisie vocale",
+    confirm_delete_section: "Supprimer cette section ? Les tâches qu'elle contient ne seront plus triées.",
+    done_section_header: "Terminé",
+    duplicate_task: "Dupliquer",
+    move_task: "Déplacer",
+    move_task_msg: "Déplacer « {0} » vers :",
+    ed_show_move: "Bouton Déplacer",
+    ed_add_section: "+ Ajouter une section",
+    ed_ai_image_entity: "Entité IA pour la génération d'images",
+    ed_ai_image_entity_placeholder: "ex. ai_task.openai",
+    ed_ai_prompt_prefix: "Préfixe d'invite (facultatif)",
+    ed_ai_prompt_prefix_placeholder: "ex. Icône minimaliste de",
+    ed_auto_image: "Générer l'image automatiquement",
+    ed_delete_section: "Supprimer la section",
+    ed_external_lists: "Externe",
+    ed_loading: "Chargement…",
+    ed_move_down: "Déplacer vers le bas",
+    ed_move_up: "Déplacer vers le haut",
+    ed_sec_sections: "Sections",
+    ed_section_icon: "Icône",
+    ed_section_name: "Nom",
+    ed_section_name_prompt: "Nom de la section :",
+    ed_sections_empty: "Aucune section pour l'instant — les tâches s'affichent à plat.",
+    ed_sections_select_list_hint: "Sélectionnez d'abord une liste pour gérer ses sections.",
+    ed_show_filters: "Filtre d'état",
+    ed_show_images: "Images",
+    ed_show_person_chips: "Filtre de personnes",
+    ed_show_tag_chips: "Filtre d'étiquettes",
+    ed_show_tile_title: "Titre sur les tuiles",
+    ed_show_voice: "Saisie vocale",
+    ed_task_search: "Recherche de tâches",
+    ed_tile_help: "Vue en tuiles :\n• Clic = terminer\n• Maintenir = modifier\n• Glisser = réorganiser",
+    ed_view_mode: "Mode d'affichage",
+    ed_view_mode_list: "Liste",
+    ed_view_mode_tiles: "Tuiles",
+    voice_input: "Saisie vocale",
+    voice_stop: "Arrêter l'enregistrement",
+    img_label: "Image",
+    img_generate: "Générer",
+    img_regenerate: "Régénérer",
+    img_generating: "Génération…",
+    img_from_media: "Depuis la médiathèque",
+    img_remove: "Supprimer l'image",
+    img_generate_failed: "Échec de la génération de l'image : ",
+    img_save_failed: "Échec de l'enregistrement de l'image : ",
+    mb_title: "Médiathèque",
+    mb_loading: "Chargement…",
+    mb_root: "Médias",
+    mb_back: "Retour",
+    mb_empty: "Aucun fichier",
+    mb_error: "Erreur : ",
+    my_tasks: "Mes tâches",
+    add_placeholder: "Ajouter une nouvelle tâche...",
+    add_failed: "Impossible d'ajouter la tâche",
+    draft_details_failed: "Tâche créée, mais certains détails n'ont pas pu être enregistrés",
+    duplicate_failed: "Impossible de dupliquer la tâche",
+    dialog_cancel: "Annuler",
+    dialog_add: "Ajouter",
+    filter_all: "Toutes",
+    filter_open: "Ouvertes",
+    filter_done: "Terminées",
+    filter_due_soon: "Bientôt",
+    ed_show_due_soon_filter: "Filtre bientôt",
+    ed_due_soon_days: "Jours à venir",
+    ed_hide_overdue: "Masquer en retard",
+    progress: "{0} sur {1} terminées",
+    empty: "Aucune tâche",
+    drag_handle: "Glisser pour réorganiser",
+    due_date: "Échéance",
+    notes: "Notes",
+    notes_placeholder: "Ajouter des notes ici",
+    notes_edit_hint: "Cliquer pour modifier",
+    sub_items: "Sous-tâches",
+    add_sub_item: "+ Ajouter une sous-tâche",
+    recurrence: "Récurrence",
+    recurrence_enabled: "Activée",
+    recurrence_every: "Tous les",
+    rec_minutes: "Minutes",
+    rec_hours: "Heures",
+    rec_days: "Jours",
+    rec_weeks: "Semaines",
+    rec_months: "Mois",
+    rec_years: "Années",
+    rec_short_h: "h",
+    rec_short_d: "j",
+    rec_short_w: "s",
+    rec_short_m: "m",
+    rec_short_y: "a",
+    priority: "Priorité",
+    pri_high: "Haute",
+    pri_medium: "Moyenne",
+    pri_low: "Basse",
+    ed_show_priority: "Priorités",
+    rec_hourly: "Horaire",
+    rec_daily: "Quotidien",
+    rec_weekly: "Hebdomadaire",
+    rec_monthly: "Mensuel",
+    rec_yearly: "Annuel",
+    rec_type_interval: "Tous les …",
+    rec_type_weekdays: "Les jours de semaine",
+    rec_wd_0: "Lun",
+    rec_wd_1: "Mar",
+    rec_wd_2: "Mer",
+    rec_wd_3: "Jeu",
+    rec_wd_4: "Ven",
+    rec_wd_5: "Sam",
+    rec_wd_6: "Dim",
+    assigned_to: "Personnes assignées",
+    nobody: "– Personne –",
+    delete_task: "Supprimer la tâche",
+    delete_sub: "Supprimer",
+    ed_default_filter: "Filtre par défaut",
+    ed_list: "Liste",
+    ed_title: "Titre (optionnel)",
+    ed_title_placeholder: "Par défaut : nom de la liste",
+    ed_display: "Affichage",
+    ed_show_title: "Titre",
+    ed_show_progress: "Progression",
+    ed_show_due_date: "Échéances",
+    ed_show_notes: "Notes",
+    ed_show_recurrence: "Récurrences",
+    ed_show_sub_items: "Sous-tâches",
+    ed_show_person: "Personnes",
+    ed_auto_delete: "Supprimer les terminées immédiatement",
+    ed_compact: "Compact",
+    ed_show_tags: "Étiquettes",
+    ed_confirm_complete: "Confirmer avant de terminer",
+    ed_tap_to_complete: "Toucher la ligne pour terminer",
+    ed_show_add_due: "Échéance à la création",
+    ed_max_height: "Hauteur max (px, 0 = illimitée)",
+    ed_badge_priority: "Puces priorité",
+    ed_badge_progress: "Puces progression",
+    ed_badge_due: "Puces échéance",
+    ed_badge_recurrence: "Puces récurrence",
+    ed_badge_person: "Personne",
+    ed_badge_tags: "Puces étiquettes",
+    ed_badge_reminders: "Puces rappel",
+    ed_sec_defaults: "Valeurs par défaut",
+    ed_sec_images: "Images",
+    ed_share_images: "Partager les images avec d'autres listes",
+    ed_share_images_hint: "Désactivé garde les images de cette liste pour elle — le même titre dans une autre liste obtient sa propre image.",
+    ed_queue_empty: "Rien n'attend d'image.",
+    ed_queue_pending: "En attente d'une image : {0}",
+    ed_queue_cancel: "Annuler",
+    ed_ai_image_hint: "S'applique à toute la carte, pas seulement à cette colonne.",
+    ed_queue_running: "en cours…",
+    ed_queue_title: "File de génération",
+    ed_default_assignee: "Personnes par défaut",
+    ed_defaults_saved: "Enregistré",
+    ed_defaults_load_failed: "Impossible de charger les valeurs par défaut",
+    ed_defaults_save_failed: "Échec de l'enregistrement",
+    confirm_complete_msg: "Marquer « {0} » comme terminée ?",
+    confirm_complete_ok: "Terminer",
+    ed_hint: "De nouvelles listes peuvent être créées dans Paramètres → Intégrations → Home Tasks.",
+    tags: "Étiquettes",
+    add_tag: "+ Ajouter une étiquette",
+    tag_placeholder: "Nouvelle étiquette...",
+    remove_tag: "Supprimer",
+    tag_suggestions_label: "Étiquettes existantes",
+    tag_no_matches: "Aucune étiquette correspondante",
+    new_sub_item: "Nouvelle sous-tâche",
+    remove_reminder: "Supprimer le rappel",
+    sort_label: "Trier",
+    sort_manual: "Manuel",
+    sort_due: "Échéance",
+    sort_priority: "Priorité",
+    sort_title: "Titre (A–Z)",
+    sort_person: "Assigné",
+    ed_show_sort: "Tri",
+    ed_default_sort: "Tri par défaut",
+    ed_tag_catalog: "Étiquettes fixes",
+    ed_tag_catalog_hint: "Toujours proposées lors de l'étiquetage dans cette liste — d'autres étiquettes peuvent être ajoutées dans la tâche.",
+    ed_default_lead_hint: "Repris par une tâche lorsque sa répétition est activée",
+    tag_did_you_mean: "Vouliez-vous dire {0} ?",
+    ed_overdue_first: "Tâches en retard en premier",
+    reminder: "Rappels",
+    rem_add: "+ Ajouter un rappel",
+    rem_none: "Aucun rappel",
+    rem_at_due: "À l’heure d’échéance",
+    rem_5m: "5 min. avant",
+    rem_15m: "15 min. avant",
+    rem_30m: "30 min. avant",
+    rem_1h: "1 heure avant",
+    rem_2h: "2 heures avant",
+    rem_1d: "1 jour avant",
+    rem_2d: "2 jours avant",
+    ed_show_reminders: "Rappels",
+    ed_add_column: "Ajouter une colonne",
+    ed_move_left: "Déplacer à gauche",
+    ed_move_right: "Déplacer à droite",
+    ed_duplicate: "Dupliquer la colonne",
+    ed_delete_column: "Supprimer la colonne",
+    ed_code_editor: "Éditeur de code",
+    ed_visual_editor: "Éditeur visuel",
+    ed_icon: "Icône (optionnel)",
+    ed_card_title: "Titre de la carte (optionnel)",
+    ed_card_title_placeholder: "Titre au-dessus des colonnes",
+    ed_sec_view: "Affichage",
+    ed_sec_display: "Configuration",
+    ed_sec_filters: "Filtres",
+    ed_preset_assignees: "Limiter aux personnes",
+    ed_preset_labels: "Limiter aux étiquettes",
+    ed_ms_add: "Ajouter…",
+    due_time_lbl: "Heure",
+    due_date_lbl: "Date",
+    rec_mode_lbl: "Mode",
+    rec_time: "Heure",
+    rec_end: "Fin",
+    rec_end_never: "Jamais",
+    rec_end_date: "Jusqu'au",
+    rec_end_count: "X fois",
+    rec_end_date_lbl: "Jusqu'au",
+    rec_max_count_lbl: "Nombre",
+    rec_remaining: "encore {0}",
+    rec_start_date_lbl: "À partir du",
+    rec_pattern_dom: "Jour du mois",
+    rec_pattern_nth: "Nième jour",
+    rec_pattern_none: "Depuis l'achèvement",
+    rec_pattern_due: "Depuis l'échéance",
+    rec_dom_lbl: "Jour",
+    rec_dom_last: "Dernier jour",
+    rec_nth_lbl: "Le",
+    rec_nth_1: "1er",
+    rec_nth_2: "2e",
+    rec_nth_3: "3e",
+    rec_nth_4: "4e",
+    rec_nth_last: "Dernier",
+    rec_anniversary_lbl: "Le",
+    rec_dd: "Jour",
+    rec_mm: "Mois",
+    rec_dom_short: "e",
+    rec_last_short: "dernier",
+    rec_value_lbl: "Tous les",
+    rec_unit_lbl: "Unité",
+    rec_wd_lbl: "Jour",
+    rec_at_lbl: "À",
+    rec_lead_lbl: "Réouverture anticipée",
+    rec_lead_hint: "Rouvre la tâche ce délai avant sa prochaine échéance, pour qu'elle apparaisse « à venir ». 0 = à l'échéance.",
+    rec_todoist_pattern_unsupported: "Les sous-modèles ne sont pas pris en charge si l'intervalle est supérieur à 1.",
+    history: "Historique",
+    history_created: "Créé",
+    history_completed: "Terminé",
+    history_reopened: "Réouvert",
+    history_reset: "Réinitialisation auto.",
+    history_changed: "modifié",
+    history_empty: "Aucun historique",
+    hist_title: "Titre",
+    history_disabled: "Désactivé",
+    ed_show_history: "Historiques",
+    hist_by_user: "Utilisateur",
+    ed_show_add_task: "Ajouter tâche",
+    assigned_unknown: "Inconnu (%s)",
+    recurrence_readonly: "Géré par %s",
+    synced_with: "Synchronisé avec %s",
+    due_today: "Aujourd'hui",
+    due_tomorrow: "Demain",
+    due_yesterday: "Hier",
+    due_day_after_tomorrow: "Après-demain",
+    due_day_before_yesterday: "Avant-hier",
+    due_in_hours: "Dans {0} h {1} min",
+    due_in_minutes: "Dans {0} min",
+    due_in_seconds: "Maintenant",
+    due_ago_hours: "Il y a {0} h {1} min",
+    due_ago_minutes: "Il y a {0} min",
+    due_ago_seconds: "À l'instant",
+    calendar_minutes_before: "{value} min avant",
+    calendar_hours_before: "{value} h avant",
+    calendar_days_before: "{value} j avant",
+    ed_show_section: "Champ de section",
+    ed_section_field_no_sections: "Apparaît dès que la liste a des sections",
+    section_label: "Section",
+    ed_list_columns: "Colonnes de tâches",
+    ed_tile_size: "Taille des tuiles",
+    ed_tile_size_small: "Petite",
+    ed_tile_size_compact: "Compacte",
+    ed_tile_size_medium: "Normale",
+    ed_tile_size_large: "Grande",
+    due_quick_week: "Dans 1 semaine",
+    due_quick_month: "Dans 1 mois",
+    due_quick_3months: "Dans 3 mois",
+    ed_offered_persons: "Personnes sélectionnables",
+    ed_offered_persons_hint: "Seules les personnes en surbrillance peuvent être assignées dans cette carte",
+    ed_show_add_details: "Détails à la création",
+    add_with_details: "Créer avec détails",
+    add_clear: "Effacer",
+    plan_note_placeholder: "Objectif du jour",
+    plan_empty: "Rien de prévu",
+    plan_add: "Planifier une tâche",
+    plan_search_placeholder: "Rechercher des tâches…",
+    plan_no_results: "Aucune tâche ouverte correspondante",
+    plan_carry_over: "Reprendre les tâches ouvertes du {0} ({1})",
+    plan_move_day: "Autre jour…",
+    plan_day_msg: "Quel jour pour « {0} » ?",
+    plan_remove: "Retirer du plan",
+    plan_for: "Planifier pour…",
+    plan_ok: "Planifier",
+    plan_none: "Aucun plan du jour trouvé. Les plans du jour peuvent être créés dans Paramètres → Intégrations → Home Tasks.",
+    ed_view_lists: "Listes",
+    ed_view_day_plan: "Plan du jour",
+    ed_plan_days: "Jours affichés",
+    ed_plan_all_lists: "Toutes les listes",
+    plan_due_hint: "Figure dans le plan par sa date d'échéance : déplacez-la ou modifiez la date.",
+    ed_plan_weekend: "Week-end",
+    new_entry_link: "Créer une nouvelle liste ou un plan du jour",
+    ed_plan_list_missing: "Liste indisponible",
+    picker_list_name: "Home Tasks : Liste",
+    picker_plan_name: "Home Tasks : Plan du jour",
+    picker_list_desc: "Listes de tâches en colonnes, avec glisser-déposer, sous-tâches, notes et échéances.",
+    picker_plan_desc: "Les jours d'un plan du jour : des tâches de plusieurs listes dans l'ordre où vous les traitez."
   },
-  "pt": {
-    "ed_default_priority": "Prioridade padrão",
-    "ed_default_tags": "Etiquetas padrão",
-    "ed_default_section": "Seção padrão",
-    "ed_default_none": "– Nenhuma –",
-    "ed_group_card": "Cartão",
-    "ed_person_off": "Desativado",
-    "ed_person_name": "Nome",
-    "ed_person_both": "Foto e nome",
-    "ed_group_header": "Cabeçalho",
-    "ed_group_tasks": "Tarefas",
-    "ed_show_person_avatar": "Foto do perfil",
-    "voice_failed": "Falha na entrada de voz",
-    "confirm_delete_section": "Excluir esta seção? As tarefas dentro dela ficarão sem ordenação.",
-    "done_section_header": "Concluído",
-    "duplicate_task": "Duplicar",
-    "move_task": "Mover",
-    "move_task_msg": "Mover “{0}” para:",
-    "ed_show_move": "Botão Mover",
-    "ed_add_section": "+ Adicionar seção",
-    "ed_ai_image_entity": "Entidade de IA para geração de imagens",
-    "ed_ai_image_entity_placeholder": "ex. ai_task.openai",
-    "ed_ai_prompt_prefix": "Prefixo do prompt (opcional)",
-    "ed_ai_prompt_prefix_placeholder": "ex. Ícone minimalista de",
-    "ed_auto_image": "Gerar imagem automaticamente",
-    "ed_delete_section": "Excluir seção",
-    "ed_external_lists": "Externa",
-    "ed_loading": "Carregando…",
-    "ed_move_down": "Mover para baixo",
-    "ed_move_up": "Mover para cima",
-    "ed_sec_sections": "Seções",
-    "ed_section_icon": "Ícone",
-    "ed_section_name": "Nome",
-    "ed_section_name_prompt": "Nome da seção:",
-    "ed_sections_empty": "Nenhuma seção ainda — as tarefas serão exibidas sem agrupamento.",
-    "ed_sections_select_list_hint": "Selecione uma lista primeiro para gerenciar suas seções.",
-    "ed_show_filters": "Filtro de estado",
-    "ed_show_images": "Imagens",
-    "ed_show_person_chips": "Filtro de pessoas",
-    "ed_show_tag_chips": "Filtro de etiquetas",
-    "ed_show_tile_title": "Título nos blocos",
-    "ed_show_voice": "Entrada de voz",
-    "ed_task_search": "Pesquisa de tarefas",
-    "ed_tile_help": "Visualização em blocos:\n• Clique = concluir\n• Segurar = editar\n• Arrastar = reordenar",
-    "ed_view_mode": "Modo de exibição",
-    "ed_view_mode_list": "Lista",
-    "ed_view_mode_tiles": "Blocos",
-    "voice_input": "Entrada de voz",
-    "voice_stop": "Parar gravação",
-    "img_label": "Imagem",
-    "img_generate": "Gerar",
-    "img_regenerate": "Gerar novamente",
-    "img_generating": "Gerando…",
-    "img_from_media": "Da biblioteca de mídia",
-    "img_remove": "Remover imagem",
-    "img_generate_failed": "Falha ao gerar imagem: ",
-    "img_save_failed": "Falha ao salvar imagem: ",
-    "mb_title": "Biblioteca de mídia",
-    "mb_loading": "Carregando…",
-    "mb_root": "Mídia",
-    "mb_back": "Voltar",
-    "mb_empty": "Sem arquivos",
-    "mb_error": "Erro: ",
-    "my_tasks": "Minhas tarefas",
-    "add_placeholder": "Adicionar nova tarefa...",
-    "add_failed": "Não foi possível adicionar a tarefa",
-    "draft_details_failed": "Tarefa adicionada, mas não foi possível guardar alguns detalhes",
-    "duplicate_failed": "Não foi possível duplicar a tarefa",
-    "dialog_cancel": "Cancelar",
-    "dialog_add": "Adicionar",
-    "filter_all": "Todas",
-    "filter_open": "Abertas",
-    "filter_done": "Concluídas",
-    "filter_due_soon": "Em breve",
-    "ed_show_due_soon_filter": "Filtro em breve",
-    "ed_due_soon_days": "Dias à frente",
-    "ed_hide_overdue": "Ocultar atrasadas",
-    "progress": "{0} de {1} concluídas",
-    "empty": "Nenhuma tarefa",
-    "drag_handle": "Arrastar para reordenar",
-    "due_date": "Prazo",
-    "notes": "Notas",
-    "notes_placeholder": "Adicionar notas aqui",
-    "notes_edit_hint": "Clique para editar",
-    "sub_items": "Subtarefas",
-    "add_sub_item": "+ Adicionar subtarefa",
-    "recurrence": "Recorrência",
-    "recurrence_enabled": "Ativada",
-    "recurrence_every": "A cada",
-    "rec_minutes": "Minutos",
-    "rec_hours": "Horas",
-    "rec_days": "Dias",
-    "rec_weeks": "Semanas",
-    "rec_months": "Meses",
-    "rec_years": "Anos",
-    "rec_short_h": "h",
-    "rec_short_d": "d",
-    "rec_short_w": "s",
-    "rec_short_m": "m",
-    "rec_short_y": "a",
-    "priority": "Prioridade",
-    "pri_high": "Alta",
-    "pri_medium": "Média",
-    "pri_low": "Baixa",
-    "ed_show_priority": "Prioridades",
-    "rec_hourly": "Por hora",
-    "rec_daily": "Diário",
-    "rec_weekly": "Semanal",
-    "rec_monthly": "Mensal",
-    "rec_yearly": "Anual",
-    "rec_type_interval": "A cada …",
-    "rec_type_weekdays": "Nos dias úteis",
-    "rec_wd_0": "Seg",
-    "rec_wd_1": "Ter",
-    "rec_wd_2": "Qua",
-    "rec_wd_3": "Qui",
-    "rec_wd_4": "Sex",
-    "rec_wd_5": "Sáb",
-    "rec_wd_6": "Dom",
-    "assigned_to": "Pessoas atribuídas",
-    "nobody": "– Ninguém –",
-    "delete_task": "Excluir tarefa",
-    "delete_sub": "Excluir",
-    "ed_default_filter": "Filtro padrão",
-    "ed_list": "Lista",
-    "ed_title": "Título (opcional)",
-    "ed_title_placeholder": "Padrão: nome da lista",
-    "ed_display": "Exibição",
-    "ed_show_title": "Título",
-    "ed_show_progress": "Progresso",
-    "ed_show_due_date": "Prazos",
-    "ed_show_notes": "Notas",
-    "ed_show_recurrence": "Recorrências",
-    "ed_show_sub_items": "Subtarefas",
-    "ed_show_person": "Pessoas",
-    "ed_auto_delete": "Excluir concluídas imediatamente",
-    "ed_compact": "Compacto",
-    "ed_show_tags": "Etiquetas",
-    "ed_confirm_complete": "Confirmar antes de concluir",
-    "ed_tap_to_complete": "Toque na linha para concluir",
-    "ed_show_add_due": "Prazo ao adicionar",
-    "ed_max_height": "Altura máx. (px, 0 = ilimitada)",
-    "ed_badge_priority": "Chips de prioridade",
-    "ed_badge_progress": "Chips de progresso",
-    "ed_badge_due": "Chips de prazo",
-    "ed_badge_recurrence": "Chips de recorrência",
-    "ed_badge_person": "Pessoa",
-    "ed_badge_tags": "Chips de etiquetas",
-    "ed_badge_reminders": "Chips de lembrete",
-    "ed_sec_defaults": "Padrões",
-    "ed_sec_images": "Imagens",
-    "ed_share_images": "Partilhar imagens com outras listas",
-    "ed_share_images_hint": "Desligado mantém as imagens desta lista separadas — o mesmo título noutra lista recebe a sua própria imagem.",
-    "ed_queue_empty": "Nada à espera de imagem.",
-    "ed_queue_pending": "À espera de uma imagem: {0}",
-    "ed_queue_cancel": "Cancelar",
-    "ed_ai_image_hint": "Aplica-se a todo o cartão, não apenas a esta coluna.",
-    "ed_queue_running": "a gerar…",
-    "ed_queue_title": "Fila de geração",
-    "ed_default_assignee": "Pessoas padrão",
-    "ed_defaults_saved": "Guardado",
-    "ed_defaults_load_failed": "Não foi possível carregar as predefinições",
-    "ed_defaults_save_failed": "Falha ao guardar",
-    "confirm_complete_msg": "Marcar “{0}” como concluída?",
-    "confirm_complete_ok": "Concluir",
-    "ed_hint": "Novas listas podem ser criadas em Configurações → Integrações → Home Tasks.",
-    "tags": "Etiquetas",
-    "add_tag": "+ Adicionar etiqueta",
-    "tag_placeholder": "Nova etiqueta...",
-    "remove_tag": "Remover",
-    "tag_suggestions_label": "Etiquetas existentes",
-    "tag_no_matches": "Nenhuma etiqueta correspondente",
-    "new_sub_item": "Nova subtarefa",
-    "remove_reminder": "Remover lembrete",
-    "sort_label": "Ordenar",
-    "sort_manual": "Manual",
-    "sort_due": "Prazo",
-    "sort_priority": "Prioridade",
-    "sort_title": "Título (A–Z)",
-    "sort_person": "Atribuído",
-    "ed_show_sort": "Ordenação",
-    "ed_default_sort": "Ordenação padrão",
-    "ed_tag_catalog": "Tags fixas",
-    "ed_tag_catalog_hint": "Sempre sugeridas ao etiquetar nesta lista — outras tags podem ser adicionadas na tarefa.",
-    "ed_default_lead_hint": "Assumido por uma tarefa quando a sua repetição é ativada",
-    "tag_did_you_mean": "Queria dizer {0}?",
-    "ed_overdue_first": "Tarefas atrasadas primeiro",
-    "reminder": "Lembretes",
-    "rem_add": "+ Adicionar lembrete",
-    "rem_none": "Sem lembrete",
-    "rem_at_due": "No prazo",
-    "rem_5m": "5 min. antes",
-    "rem_15m": "15 min. antes",
-    "rem_30m": "30 min. antes",
-    "rem_1h": "1 hora antes",
-    "rem_2h": "2 horas antes",
-    "rem_1d": "1 dia antes",
-    "rem_2d": "2 dias antes",
-    "ed_show_reminders": "Lembretes",
-    "ed_add_column": "Adicionar coluna",
-    "ed_move_left": "Mover para esquerda",
-    "ed_move_right": "Mover para direita",
-    "ed_duplicate": "Duplicar coluna",
-    "ed_delete_column": "Excluir coluna",
-    "ed_code_editor": "Editor de código",
-    "ed_visual_editor": "Editor visual",
-    "ed_icon": "Ícone (opcional)",
-    "ed_card_title": "Título do cartão (opcional)",
-    "ed_card_title_placeholder": "Título acima das colunas",
-    "ed_sec_view": "Exibição",
-    "ed_sec_display": "Configuração",
-    "ed_sec_filters": "Filtros",
-    "ed_preset_assignees": "Limitar a pessoas",
-    "ed_preset_labels": "Limitar a etiquetas",
-    "ed_ms_add": "Adicionar…",
-    "due_time_lbl": "Hora",
-    "due_date_lbl": "Data",
-    "rec_mode_lbl": "Modo",
-    "rec_time": "Hora",
-    "rec_end": "Fim",
-    "rec_end_never": "Nunca",
-    "rec_end_date": "Até",
-    "rec_end_count": "X vezes",
-    "rec_end_date_lbl": "Até",
-    "rec_max_count_lbl": "Quantidade",
-    "rec_remaining": "ainda {0}",
-    "rec_start_date_lbl": "De",
-    "rec_pattern_dom": "Dia do mês",
-    "rec_pattern_nth": "Nº dia",
-    "rec_pattern_none": "Desde a conclusão",
-    "rec_pattern_due": "Desde o vencimento",
-    "rec_dom_lbl": "Dia",
-    "rec_dom_last": "Último dia",
-    "rec_nth_lbl": "No",
-    "rec_nth_1": "1º",
-    "rec_nth_2": "2º",
-    "rec_nth_3": "3º",
-    "rec_nth_4": "4º",
-    "rec_nth_last": "Último",
-    "rec_anniversary_lbl": "No",
-    "rec_dd": "Dia",
-    "rec_mm": "Mês",
-    "rec_dom_short": "º",
-    "rec_last_short": "último",
-    "rec_value_lbl": "A cada",
-    "rec_unit_lbl": "Unidade",
-    "rec_wd_lbl": "Dia da semana",
-    "rec_at_lbl": "Às",
-    "rec_lead_lbl": "Reabrir mais cedo",
-    "rec_lead_hint": "Reabre a tarefa com esta antecedência em relação à data de vencimento, para que apareça como «em breve». 0 = na data de vencimento.",
-    "rec_todoist_pattern_unsupported": "Subpadrões não são suportados quando o intervalo é maior que 1.",
-    "history": "Histórico",
-    "history_created": "Criado",
-    "history_completed": "Concluído",
-    "history_reopened": "Reaberto",
-    "history_reset": "Reiniciado automaticamente",
-    "history_changed": "alterado",
-    "history_empty": "Sem histórico",
-    "hist_title": "Título",
-    "history_disabled": "Desativado",
-    "ed_show_history": "Históricos",
-    "hist_by_user": "Utilizador",
-    "ed_show_add_task": "Adicionar tarefa",
-    "assigned_unknown": "Desconhecido (%s)",
-    "recurrence_readonly": "Gerenciado por %s",
-    "synced_with": "Sincronizado com %s",
-    "due_today": "Hoje",
-    "due_tomorrow": "Amanhã",
-    "due_yesterday": "Ontem",
-    "due_day_after_tomorrow": "Depois de amanhã",
-    "due_day_before_yesterday": "Anteontem",
-    "due_in_hours": "Em {0} h {1} min",
-    "due_in_minutes": "Em {0} min",
-    "due_in_seconds": "Agora",
-    "due_ago_hours": "Há {0} h {1} min",
-    "due_ago_minutes": "Há {0} min",
-    "due_ago_seconds": "Agora mesmo",
-    "calendar_minutes_before": "{value} min antes",
-    "calendar_hours_before": "{value}h antes",
-    "calendar_days_before": "{value}d antes",
-    "ed_show_section": "Campo de seção",
-    "ed_section_field_no_sections": "Aparece quando a lista tiver seções",
-    "section_label": "Seção",
-    "ed_list_columns": "Colunas de tarefas",
-    "ed_tile_size": "Tamanho dos blocos",
-    "ed_tile_size_small": "Pequeno",
-    "ed_tile_size_compact": "Compacto",
-    "ed_tile_size_medium": "Normal",
-    "ed_tile_size_large": "Grande",
-    "due_quick_week": "Daqui a 1 semana",
-    "due_quick_month": "Daqui a 1 mês",
-    "due_quick_3months": "Daqui a 3 meses",
-    "ed_offered_persons": "Pessoas selecionáveis",
-    "ed_offered_persons_hint": "Só as pessoas destacadas podem ser atribuídas neste cartão",
-    "ed_show_add_details": "Detalhes ao adicionar",
-    "add_with_details": "Adicionar com detalhes",
-    "add_clear": "Limpar",
-    "plan_note_placeholder": "Foco do dia",
-    "plan_empty": "Nada planeado",
-    "plan_add": "Planear uma tarefa",
-    "plan_search_placeholder": "Pesquisar tarefas…",
-    "plan_no_results": "Nenhuma tarefa aberta correspondente",
-    "plan_carry_over": "Transferir tarefas abertas de {0} ({1})",
-    "plan_move_day": "Outro dia…",
-    "plan_day_msg": "Que dia para “{0}”?",
-    "plan_remove": "Remover do plano",
-    "plan_for": "Planear para…",
-    "plan_ok": "Planear",
-    "plan_none": "Nenhum plano diário encontrado. Os planos diários podem ser criados em Configurações → Integrações → Home Tasks.",
-    "ed_view_lists": "Listas",
-    "ed_view_day_plan": "Plano diário",
-    "ed_plan_days": "Dias apresentados",
-    "ed_plan_all_lists": "Todas as listas",
-    "plan_due_hint": "Está no plano pela data de vencimento: mova-a ou altere a data.",
-    "ed_plan_weekend": "Fim de semana",
-    "new_entry_link": "Criar uma nova lista ou um plano diário",
-    "ed_plan_list_missing": "Lista indisponível",
-    "picker_list_name": "Home Tasks: Lista",
-    "picker_plan_name": "Home Tasks: Plano diário",
-    "picker_list_desc": "Listas de tarefas em colunas, com arrastar e largar, subtarefas, notas e prazos.",
-    "picker_plan_desc": "Os dias de um plano diário: tarefas de várias listas pela ordem em que as realiza."
+  pt: {
+    ed_default_priority: "Prioridade padrão",
+    ed_default_tags: "Etiquetas padrão",
+    ed_default_section: "Seção padrão",
+    ed_default_none: "– Nenhuma –",
+    ed_group_card: "Cartão",
+    ed_person_off: "Desativado",
+    ed_person_name: "Nome",
+    ed_person_both: "Foto e nome",
+    ed_group_header: "Cabeçalho",
+    ed_group_tasks: "Tarefas",
+    ed_show_person_avatar: "Foto do perfil",
+    voice_failed: "Falha na entrada de voz",
+    confirm_delete_section: "Excluir esta seção? As tarefas dentro dela ficarão sem ordenação.",
+    done_section_header: "Concluído",
+    duplicate_task: "Duplicar",
+    move_task: "Mover",
+    move_task_msg: "Mover “{0}” para:",
+    ed_show_move: "Botão Mover",
+    ed_add_section: "+ Adicionar seção",
+    ed_ai_image_entity: "Entidade de IA para geração de imagens",
+    ed_ai_image_entity_placeholder: "ex. ai_task.openai",
+    ed_ai_prompt_prefix: "Prefixo do prompt (opcional)",
+    ed_ai_prompt_prefix_placeholder: "ex. Ícone minimalista de",
+    ed_auto_image: "Gerar imagem automaticamente",
+    ed_delete_section: "Excluir seção",
+    ed_external_lists: "Externa",
+    ed_loading: "Carregando…",
+    ed_move_down: "Mover para baixo",
+    ed_move_up: "Mover para cima",
+    ed_sec_sections: "Seções",
+    ed_section_icon: "Ícone",
+    ed_section_name: "Nome",
+    ed_section_name_prompt: "Nome da seção:",
+    ed_sections_empty: "Nenhuma seção ainda — as tarefas serão exibidas sem agrupamento.",
+    ed_sections_select_list_hint: "Selecione uma lista primeiro para gerenciar suas seções.",
+    ed_show_filters: "Filtro de estado",
+    ed_show_images: "Imagens",
+    ed_show_person_chips: "Filtro de pessoas",
+    ed_show_tag_chips: "Filtro de etiquetas",
+    ed_show_tile_title: "Título nos blocos",
+    ed_show_voice: "Entrada de voz",
+    ed_task_search: "Pesquisa de tarefas",
+    ed_tile_help: "Visualização em blocos:\n• Clique = concluir\n• Segurar = editar\n• Arrastar = reordenar",
+    ed_view_mode: "Modo de exibição",
+    ed_view_mode_list: "Lista",
+    ed_view_mode_tiles: "Blocos",
+    voice_input: "Entrada de voz",
+    voice_stop: "Parar gravação",
+    img_label: "Imagem",
+    img_generate: "Gerar",
+    img_regenerate: "Gerar novamente",
+    img_generating: "Gerando…",
+    img_from_media: "Da biblioteca de mídia",
+    img_remove: "Remover imagem",
+    img_generate_failed: "Falha ao gerar imagem: ",
+    img_save_failed: "Falha ao salvar imagem: ",
+    mb_title: "Biblioteca de mídia",
+    mb_loading: "Carregando…",
+    mb_root: "Mídia",
+    mb_back: "Voltar",
+    mb_empty: "Sem arquivos",
+    mb_error: "Erro: ",
+    my_tasks: "Minhas tarefas",
+    add_placeholder: "Adicionar nova tarefa...",
+    add_failed: "Não foi possível adicionar a tarefa",
+    draft_details_failed: "Tarefa adicionada, mas não foi possível guardar alguns detalhes",
+    duplicate_failed: "Não foi possível duplicar a tarefa",
+    dialog_cancel: "Cancelar",
+    dialog_add: "Adicionar",
+    filter_all: "Todas",
+    filter_open: "Abertas",
+    filter_done: "Concluídas",
+    filter_due_soon: "Em breve",
+    ed_show_due_soon_filter: "Filtro em breve",
+    ed_due_soon_days: "Dias à frente",
+    ed_hide_overdue: "Ocultar atrasadas",
+    progress: "{0} de {1} concluídas",
+    empty: "Nenhuma tarefa",
+    drag_handle: "Arrastar para reordenar",
+    due_date: "Prazo",
+    notes: "Notas",
+    notes_placeholder: "Adicionar notas aqui",
+    notes_edit_hint: "Clique para editar",
+    sub_items: "Subtarefas",
+    add_sub_item: "+ Adicionar subtarefa",
+    recurrence: "Recorrência",
+    recurrence_enabled: "Ativada",
+    recurrence_every: "A cada",
+    rec_minutes: "Minutos",
+    rec_hours: "Horas",
+    rec_days: "Dias",
+    rec_weeks: "Semanas",
+    rec_months: "Meses",
+    rec_years: "Anos",
+    rec_short_h: "h",
+    rec_short_d: "d",
+    rec_short_w: "s",
+    rec_short_m: "m",
+    rec_short_y: "a",
+    priority: "Prioridade",
+    pri_high: "Alta",
+    pri_medium: "Média",
+    pri_low: "Baixa",
+    ed_show_priority: "Prioridades",
+    rec_hourly: "Por hora",
+    rec_daily: "Diário",
+    rec_weekly: "Semanal",
+    rec_monthly: "Mensal",
+    rec_yearly: "Anual",
+    rec_type_interval: "A cada …",
+    rec_type_weekdays: "Nos dias úteis",
+    rec_wd_0: "Seg",
+    rec_wd_1: "Ter",
+    rec_wd_2: "Qua",
+    rec_wd_3: "Qui",
+    rec_wd_4: "Sex",
+    rec_wd_5: "Sáb",
+    rec_wd_6: "Dom",
+    assigned_to: "Pessoas atribuídas",
+    nobody: "– Ninguém –",
+    delete_task: "Excluir tarefa",
+    delete_sub: "Excluir",
+    ed_default_filter: "Filtro padrão",
+    ed_list: "Lista",
+    ed_title: "Título (opcional)",
+    ed_title_placeholder: "Padrão: nome da lista",
+    ed_display: "Exibição",
+    ed_show_title: "Título",
+    ed_show_progress: "Progresso",
+    ed_show_due_date: "Prazos",
+    ed_show_notes: "Notas",
+    ed_show_recurrence: "Recorrências",
+    ed_show_sub_items: "Subtarefas",
+    ed_show_person: "Pessoas",
+    ed_auto_delete: "Excluir concluídas imediatamente",
+    ed_compact: "Compacto",
+    ed_show_tags: "Etiquetas",
+    ed_confirm_complete: "Confirmar antes de concluir",
+    ed_tap_to_complete: "Toque na linha para concluir",
+    ed_show_add_due: "Prazo ao adicionar",
+    ed_max_height: "Altura máx. (px, 0 = ilimitada)",
+    ed_badge_priority: "Chips de prioridade",
+    ed_badge_progress: "Chips de progresso",
+    ed_badge_due: "Chips de prazo",
+    ed_badge_recurrence: "Chips de recorrência",
+    ed_badge_person: "Pessoa",
+    ed_badge_tags: "Chips de etiquetas",
+    ed_badge_reminders: "Chips de lembrete",
+    ed_sec_defaults: "Padrões",
+    ed_sec_images: "Imagens",
+    ed_share_images: "Partilhar imagens com outras listas",
+    ed_share_images_hint: "Desligado mantém as imagens desta lista separadas — o mesmo título noutra lista recebe a sua própria imagem.",
+    ed_queue_empty: "Nada à espera de imagem.",
+    ed_queue_pending: "À espera de uma imagem: {0}",
+    ed_queue_cancel: "Cancelar",
+    ed_ai_image_hint: "Aplica-se a todo o cartão, não apenas a esta coluna.",
+    ed_queue_running: "a gerar…",
+    ed_queue_title: "Fila de geração",
+    ed_default_assignee: "Pessoas padrão",
+    ed_defaults_saved: "Guardado",
+    ed_defaults_load_failed: "Não foi possível carregar as predefinições",
+    ed_defaults_save_failed: "Falha ao guardar",
+    confirm_complete_msg: "Marcar “{0}” como concluída?",
+    confirm_complete_ok: "Concluir",
+    ed_hint: "Novas listas podem ser criadas em Configurações → Integrações → Home Tasks.",
+    tags: "Etiquetas",
+    add_tag: "+ Adicionar etiqueta",
+    tag_placeholder: "Nova etiqueta...",
+    remove_tag: "Remover",
+    tag_suggestions_label: "Etiquetas existentes",
+    tag_no_matches: "Nenhuma etiqueta correspondente",
+    new_sub_item: "Nova subtarefa",
+    remove_reminder: "Remover lembrete",
+    sort_label: "Ordenar",
+    sort_manual: "Manual",
+    sort_due: "Prazo",
+    sort_priority: "Prioridade",
+    sort_title: "Título (A–Z)",
+    sort_person: "Atribuído",
+    ed_show_sort: "Ordenação",
+    ed_default_sort: "Ordenação padrão",
+    ed_tag_catalog: "Tags fixas",
+    ed_tag_catalog_hint: "Sempre sugeridas ao etiquetar nesta lista — outras tags podem ser adicionadas na tarefa.",
+    ed_default_lead_hint: "Assumido por uma tarefa quando a sua repetição é ativada",
+    tag_did_you_mean: "Queria dizer {0}?",
+    ed_overdue_first: "Tarefas atrasadas primeiro",
+    reminder: "Lembretes",
+    rem_add: "+ Adicionar lembrete",
+    rem_none: "Sem lembrete",
+    rem_at_due: "No prazo",
+    rem_5m: "5 min. antes",
+    rem_15m: "15 min. antes",
+    rem_30m: "30 min. antes",
+    rem_1h: "1 hora antes",
+    rem_2h: "2 horas antes",
+    rem_1d: "1 dia antes",
+    rem_2d: "2 dias antes",
+    ed_show_reminders: "Lembretes",
+    ed_add_column: "Adicionar coluna",
+    ed_move_left: "Mover para esquerda",
+    ed_move_right: "Mover para direita",
+    ed_duplicate: "Duplicar coluna",
+    ed_delete_column: "Excluir coluna",
+    ed_code_editor: "Editor de código",
+    ed_visual_editor: "Editor visual",
+    ed_icon: "Ícone (opcional)",
+    ed_card_title: "Título do cartão (opcional)",
+    ed_card_title_placeholder: "Título acima das colunas",
+    ed_sec_view: "Exibição",
+    ed_sec_display: "Configuração",
+    ed_sec_filters: "Filtros",
+    ed_preset_assignees: "Limitar a pessoas",
+    ed_preset_labels: "Limitar a etiquetas",
+    ed_ms_add: "Adicionar…",
+    due_time_lbl: "Hora",
+    due_date_lbl: "Data",
+    rec_mode_lbl: "Modo",
+    rec_time: "Hora",
+    rec_end: "Fim",
+    rec_end_never: "Nunca",
+    rec_end_date: "Até",
+    rec_end_count: "X vezes",
+    rec_end_date_lbl: "Até",
+    rec_max_count_lbl: "Quantidade",
+    rec_remaining: "ainda {0}",
+    rec_start_date_lbl: "De",
+    rec_pattern_dom: "Dia do mês",
+    rec_pattern_nth: "Nº dia",
+    rec_pattern_none: "Desde a conclusão",
+    rec_pattern_due: "Desde o vencimento",
+    rec_dom_lbl: "Dia",
+    rec_dom_last: "Último dia",
+    rec_nth_lbl: "No",
+    rec_nth_1: "1º",
+    rec_nth_2: "2º",
+    rec_nth_3: "3º",
+    rec_nth_4: "4º",
+    rec_nth_last: "Último",
+    rec_anniversary_lbl: "No",
+    rec_dd: "Dia",
+    rec_mm: "Mês",
+    rec_dom_short: "º",
+    rec_last_short: "último",
+    rec_value_lbl: "A cada",
+    rec_unit_lbl: "Unidade",
+    rec_wd_lbl: "Dia da semana",
+    rec_at_lbl: "Às",
+    rec_lead_lbl: "Reabrir mais cedo",
+    rec_lead_hint: "Reabre a tarefa com esta antecedência em relação à data de vencimento, para que apareça como «em breve». 0 = na data de vencimento.",
+    rec_todoist_pattern_unsupported: "Subpadrões não são suportados quando o intervalo é maior que 1.",
+    history: "Histórico",
+    history_created: "Criado",
+    history_completed: "Concluído",
+    history_reopened: "Reaberto",
+    history_reset: "Reiniciado automaticamente",
+    history_changed: "alterado",
+    history_empty: "Sem histórico",
+    hist_title: "Título",
+    history_disabled: "Desativado",
+    ed_show_history: "Históricos",
+    hist_by_user: "Utilizador",
+    ed_show_add_task: "Adicionar tarefa",
+    assigned_unknown: "Desconhecido (%s)",
+    recurrence_readonly: "Gerenciado por %s",
+    synced_with: "Sincronizado com %s",
+    due_today: "Hoje",
+    due_tomorrow: "Amanhã",
+    due_yesterday: "Ontem",
+    due_day_after_tomorrow: "Depois de amanhã",
+    due_day_before_yesterday: "Anteontem",
+    due_in_hours: "Em {0} h {1} min",
+    due_in_minutes: "Em {0} min",
+    due_in_seconds: "Agora",
+    due_ago_hours: "Há {0} h {1} min",
+    due_ago_minutes: "Há {0} min",
+    due_ago_seconds: "Agora mesmo",
+    calendar_minutes_before: "{value} min antes",
+    calendar_hours_before: "{value}h antes",
+    calendar_days_before: "{value}d antes",
+    ed_show_section: "Campo de seção",
+    ed_section_field_no_sections: "Aparece quando a lista tiver seções",
+    section_label: "Seção",
+    ed_list_columns: "Colunas de tarefas",
+    ed_tile_size: "Tamanho dos blocos",
+    ed_tile_size_small: "Pequeno",
+    ed_tile_size_compact: "Compacto",
+    ed_tile_size_medium: "Normal",
+    ed_tile_size_large: "Grande",
+    due_quick_week: "Daqui a 1 semana",
+    due_quick_month: "Daqui a 1 mês",
+    due_quick_3months: "Daqui a 3 meses",
+    ed_offered_persons: "Pessoas selecionáveis",
+    ed_offered_persons_hint: "Só as pessoas destacadas podem ser atribuídas neste cartão",
+    ed_show_add_details: "Detalhes ao adicionar",
+    add_with_details: "Adicionar com detalhes",
+    add_clear: "Limpar",
+    plan_note_placeholder: "Foco do dia",
+    plan_empty: "Nada planeado",
+    plan_add: "Planear uma tarefa",
+    plan_search_placeholder: "Pesquisar tarefas…",
+    plan_no_results: "Nenhuma tarefa aberta correspondente",
+    plan_carry_over: "Transferir tarefas abertas de {0} ({1})",
+    plan_move_day: "Outro dia…",
+    plan_day_msg: "Que dia para “{0}”?",
+    plan_remove: "Remover do plano",
+    plan_for: "Planear para…",
+    plan_ok: "Planear",
+    plan_none: "Nenhum plano diário encontrado. Os planos diários podem ser criados em Configurações → Integrações → Home Tasks.",
+    ed_view_lists: "Listas",
+    ed_view_day_plan: "Plano diário",
+    ed_plan_days: "Dias apresentados",
+    ed_plan_all_lists: "Todas as listas",
+    plan_due_hint: "Está no plano pela data de vencimento: mova-a ou altere a data.",
+    ed_plan_weekend: "Fim de semana",
+    new_entry_link: "Criar uma nova lista ou um plano diário",
+    ed_plan_list_missing: "Lista indisponível",
+    picker_list_name: "Home Tasks: Lista",
+    picker_plan_name: "Home Tasks: Plano diário",
+    picker_list_desc: "Listas de tarefas em colunas, com arrastar e largar, subtarefas, notas e prazos.",
+    picker_plan_desc: "Os dias de um plano diário: tarefas de várias listas pela ordem em que as realiza."
   },
   "pt-BR": {
-    "ed_default_priority": "Prioridade padrão",
-    "ed_default_tags": "Etiquetas padrão",
-    "ed_default_section": "Seção padrão",
-    "ed_default_none": "– Nenhuma –",
-    "ed_group_card": "Cartão",
-    "ed_person_off": "Desativado",
-    "ed_person_name": "Nome",
-    "ed_person_both": "Foto e nome",
-    "ed_group_header": "Cabeçalho",
-    "ed_group_tasks": "Tarefas",
-    "ed_show_person_avatar": "Foto do perfil",
-    "voice_failed": "Falha na entrada de voz",
-    "confirm_delete_section": "Excluir esta seção? As tarefas dentro dela ficarão sem ordenação.",
-    "done_section_header": "Concluídas",
-    "duplicate_task": "Duplicar",
-    "move_task": "Mover",
-    "move_task_msg": "Mover “{0}” para:",
-    "ed_show_move": "Botão Mover",
-    "ed_add_section": "+ Adicionar seção",
-    "ed_ai_image_entity": "Entidade de IA para geração de imagens",
-    "ed_ai_image_entity_placeholder": "ex. ai_task.openai",
-    "ed_ai_prompt_prefix": "Prefixo do prompt (opcional)",
-    "ed_ai_prompt_prefix_placeholder": "ex. Ícone minimalista de",
-    "ed_auto_image": "Gerar imagem automaticamente",
-    "ed_delete_section": "Excluir seção",
-    "ed_external_lists": "Externas",
-    "ed_loading": "Carregando…",
-    "ed_move_down": "Mover para baixo",
-    "ed_move_up": "Mover para cima",
-    "ed_sec_sections": "Seções",
-    "ed_section_icon": "Ícone",
-    "ed_section_name": "Nome",
-    "ed_section_name_prompt": "Nome da seção:",
-    "ed_sections_empty": "Nenhuma seção ainda — as tarefas serão exibidas sem agrupamento.",
-    "ed_sections_select_list_hint": "Selecione uma lista primeiro para gerenciar suas seções.",
-    "ed_show_filters": "Filtro de estado",
-    "ed_show_images": "Imagens",
-    "ed_show_person_chips": "Filtro de pessoas",
-    "ed_show_tag_chips": "Filtro de etiquetas",
-    "ed_show_tile_title": "Título nos blocos",
-    "ed_show_voice": "Entrada de voz",
-    "ed_task_search": "Pesquisa de tarefas",
-    "ed_tile_help": "Visualização em blocos:\n• Clique = concluir\n• Segurar = editar\n• Arrastar = reordenar",
-    "ed_view_mode": "Modo de exibição",
-    "ed_view_mode_list": "Lista",
-    "ed_view_mode_tiles": "Blocos",
-    "voice_input": "Entrada de voz",
-    "voice_stop": "Parar gravação",
-    "img_label": "Imagem",
-    "img_generate": "Gerar",
-    "img_regenerate": "Gerar novamente",
-    "img_generating": "Gerando…",
-    "img_from_media": "Da biblioteca de mídia",
-    "img_remove": "Remover imagem",
-    "img_generate_failed": "Falha ao gerar imagem: ",
-    "img_save_failed": "Falha ao salvar imagem: ",
-    "mb_title": "Biblioteca de mídia",
-    "mb_loading": "Carregando…",
-    "mb_root": "Mídia",
-    "mb_back": "Voltar",
-    "mb_empty": "Sem arquivos",
-    "mb_error": "Erro: ",
-    "my_tasks": "Minhas tarefas",
-    "add_placeholder": "Adicionar nova tarefa...",
-    "add_failed": "Não foi possível adicionar a tarefa",
-    "draft_details_failed": "Tarefa adicionada, mas não foi possível salvar alguns detalhes",
-    "duplicate_failed": "Não foi possível duplicar a tarefa",
-    "dialog_cancel": "Cancelar",
-    "dialog_add": "Adicionar",
-    "filter_all": "Todas",
-    "filter_open": "Abertas",
-    "filter_done": "Concluídas",
-    "filter_due_soon": "Em breve",
-    "ed_show_due_soon_filter": "Filtro em breve",
-    "ed_due_soon_days": "Dias à frente",
-    "ed_hide_overdue": "Ocultar atrasadas",
-    "progress": "{0} de {1} concluídas",
-    "empty": "Nenhuma tarefa",
-    "drag_handle": "Arrastar para reordenar",
-    "due_date": "Prazo",
-    "notes": "Notas",
-    "notes_placeholder": "Adicionar notas aqui",
-    "notes_edit_hint": "Clique para editar",
-    "sub_items": "Subtarefas",
-    "add_sub_item": "+ Adicionar subtarefa",
-    "recurrence": "Recorrência",
-    "recurrence_enabled": "Ativada",
-    "recurrence_every": "A cada",
-    "rec_minutes": "Minutos",
-    "rec_hours": "Horas",
-    "rec_days": "Dias",
-    "rec_weeks": "Semanas",
-    "rec_months": "Meses",
-    "rec_years": "Anos",
-    "rec_short_h": "h",
-    "rec_short_d": "d",
-    "rec_short_w": "sem",
-    "rec_short_m": "mês",
-    "rec_short_y": "a",
-    "priority": "Prioridade",
-    "pri_high": "Alta",
-    "pri_medium": "Média",
-    "pri_low": "Baixa",
-    "ed_show_priority": "Prioridades",
-    "rec_hourly": "Por hora",
-    "rec_daily": "Diário",
-    "rec_weekly": "Semanal",
-    "rec_monthly": "Mensal",
-    "rec_yearly": "Anual",
-    "rec_type_interval": "A cada …",
-    "rec_type_weekdays": "Em dias da semana",
-    "rec_wd_0": "Seg",
-    "rec_wd_1": "Ter",
-    "rec_wd_2": "Qua",
-    "rec_wd_3": "Qui",
-    "rec_wd_4": "Sex",
-    "rec_wd_5": "Sáb",
-    "rec_wd_6": "Dom",
-    "assigned_to": "Pessoas atribuídas",
-    "nobody": "– Ninguém –",
-    "delete_task": "Excluir tarefa",
-    "delete_sub": "Excluir",
-    "ed_default_filter": "Filtro padrão",
-    "ed_list": "Lista",
-    "ed_title": "Título (opcional)",
-    "ed_title_placeholder": "Padrão: nome da lista",
-    "ed_display": "Exibição",
-    "ed_show_title": "Título",
-    "ed_show_progress": "Progresso",
-    "ed_show_due_date": "Prazos",
-    "ed_show_notes": "Notas",
-    "ed_show_recurrence": "Recorrências",
-    "ed_show_sub_items": "Subtarefas",
-    "ed_show_person": "Responsáveis",
-    "ed_auto_delete": "Excluir concluídas imediatamente",
-    "ed_compact": "Compacto",
-    "ed_show_tags": "Etiquetas",
-    "ed_confirm_complete": "Confirmar antes de concluir",
-    "ed_tap_to_complete": "Toque na linha para concluir",
-    "ed_show_add_due": "Prazo ao adicionar",
-    "ed_max_height": "Altura máx. (px, 0 = ilimitada)",
-    "ed_badge_priority": "Chips de prioridade",
-    "ed_badge_progress": "Chips de progresso",
-    "ed_badge_due": "Chips de prazo",
-    "ed_badge_recurrence": "Chips de recorrência",
-    "ed_badge_person": "Pessoa",
-    "ed_badge_tags": "Chips de etiquetas",
-    "ed_badge_reminders": "Chips de lembrete",
-    "ed_sec_defaults": "Padrões",
-    "ed_sec_images": "Imagens",
-    "ed_share_images": "Compartilhar imagens com outras listas",
-    "ed_share_images_hint": "Quando desativado, mantém as imagens exclusivas desta lista — uma tarefa com o mesmo título em outra lista recebe sua própria imagem.",
-    "ed_queue_empty": "Nenhuma imagem aguardando geração.",
-    "ed_queue_pending": "Aguardando imagem: {0}",
-    "ed_queue_cancel": "Cancelar",
-    "ed_ai_image_hint": "Aplica-se a todo o cartão, não apenas a esta coluna.",
-    "ed_queue_running": "gerando…",
-    "ed_queue_title": "Fila de geração",
-    "ed_default_assignee": "Pessoas padrão",
-    "ed_defaults_saved": "Salvo",
-    "ed_defaults_load_failed": "Não foi possível carregar os padrões",
-    "ed_defaults_save_failed": "Falha ao salvar",
-    "confirm_complete_msg": "Marcar “{0}” como concluída?",
-    "confirm_complete_ok": "Concluir",
-    "ed_hint": "Novas listas podem ser criadas em Configurações → Integrações → Home Tasks.",
-    "tags": "Etiquetas",
-    "add_tag": "+ Adicionar etiqueta",
-    "tag_placeholder": "Nova etiqueta...",
-    "remove_tag": "Remover",
-    "tag_suggestions_label": "Etiquetas existentes",
-    "tag_no_matches": "Nenhuma etiqueta correspondente",
-    "new_sub_item": "Nova subtarefa",
-    "remove_reminder": "Remover lembrete",
-    "sort_label": "Ordenar",
-    "sort_manual": "Manual",
-    "sort_due": "Prazo",
-    "sort_priority": "Prioridade",
-    "sort_title": "Título (A–Z)",
-    "sort_person": "Responsável",
-    "ed_show_sort": "Ordenação",
-    "ed_default_sort": "Ordenação padrão",
-    "ed_tag_catalog": "Etiquetas fixas",
-    "ed_tag_catalog_hint": "Sempre sugeridas ao adicionar etiquetas às tarefas desta lista — outras etiquetas também podem ser adicionadas à tarefa.",
-    "ed_default_lead_hint": "Assumido por uma tarefa quando a repetição dela é ativada",
-    "tag_did_you_mean": "Você quis dizer {0}?",
-    "ed_overdue_first": "Tarefas atrasadas primeiro",
-    "reminder": "Lembretes",
-    "rem_add": "+ Adicionar lembrete",
-    "rem_none": "Sem lembrete",
-    "rem_at_due": "No horário de vencimento",
-    "rem_5m": "5 min. antes",
-    "rem_15m": "15 min. antes",
-    "rem_30m": "30 min. antes",
-    "rem_1h": "1 hora antes",
-    "rem_2h": "2 horas antes",
-    "rem_1d": "1 dia antes",
-    "rem_2d": "2 dias antes",
-    "ed_show_reminders": "Lembretes",
-    "ed_add_column": "Adicionar coluna",
-    "ed_move_left": "Mover para esquerda",
-    "ed_move_right": "Mover para direita",
-    "ed_duplicate": "Duplicar coluna",
-    "ed_delete_column": "Excluir coluna",
-    "ed_code_editor": "Editor de código",
-    "ed_visual_editor": "Editor visual",
-    "ed_icon": "Ícone (opcional)",
-    "ed_card_title": "Título do cartão (opcional)",
-    "ed_card_title_placeholder": "Título acima das colunas",
-    "ed_sec_view": "Exibição",
-    "ed_sec_display": "Recursos das tarefas",
-    "ed_sec_filters": "Filtros",
-    "ed_preset_assignees": "Limitar a pessoas",
-    "ed_preset_labels": "Limitar a etiquetas",
-    "ed_ms_add": "Adicionar…",
-    "due_time_lbl": "Hora",
-    "due_date_lbl": "Data",
-    "rec_mode_lbl": "Modo",
-    "rec_time": "Hora",
-    "rec_end": "Fim",
-    "rec_end_never": "Nunca",
-    "rec_end_date": "Até",
-    "rec_end_count": "X vezes",
-    "rec_end_date_lbl": "Até",
-    "rec_max_count_lbl": "Quantidade",
-    "rec_remaining": "{0} restantes",
-    "rec_start_date_lbl": "De",
-    "rec_pattern_dom": "Dia do mês",
-    "rec_pattern_nth": "Ocorrência do dia da semana",
-    "rec_pattern_none": "A partir da conclusão",
-    "rec_pattern_due": "A partir do vencimento",
-    "rec_dom_lbl": "Dia",
-    "rec_dom_last": "Último dia",
-    "rec_nth_lbl": "No",
-    "rec_nth_1": "1º",
-    "rec_nth_2": "2º",
-    "rec_nth_3": "3º",
-    "rec_nth_4": "4º",
-    "rec_nth_last": "Último",
-    "rec_anniversary_lbl": "No",
-    "rec_dd": "Dia",
-    "rec_mm": "Mês",
-    "rec_dom_short": "º",
-    "rec_last_short": "último",
-    "rec_value_lbl": "A cada",
-    "rec_unit_lbl": "Unidade",
-    "rec_wd_lbl": "Dia da semana",
-    "rec_at_lbl": "Às",
-    "rec_lead_lbl": "Reabrir mais cedo",
-    "rec_lead_hint": "Reabre a tarefa com essa antecedência em relação ao novo prazo, de modo que ela apareça como “em breve”. 0 = quando for o prazo.",
-    "rec_todoist_pattern_unsupported": "Subpadrões não são suportados quando o intervalo é maior que 1.",
-    "history": "Histórico",
-    "history_created": "Criado",
-    "history_completed": "Concluído",
-    "history_reopened": "Reaberto",
-    "history_reset": "Reiniciado automaticamente",
-    "history_changed": "alterado",
-    "history_empty": "Sem histórico",
-    "hist_title": "Título",
-    "history_disabled": "Desativado",
-    "ed_show_history": "Históricos",
-    "hist_by_user": "Usuário",
-    "ed_show_add_task": "Adicionar tarefa",
-    "assigned_unknown": "Desconhecido (%s)",
-    "recurrence_readonly": "Gerenciado por %s",
-    "synced_with": "Sincronizado com %s",
-    "due_today": "Hoje",
-    "due_tomorrow": "Amanhã",
-    "due_yesterday": "Ontem",
-    "due_day_after_tomorrow": "Depois de amanhã",
-    "due_day_before_yesterday": "Anteontem",
-    "due_in_hours": "Em {0} h {1} min",
-    "due_in_minutes": "Em {0} min",
-    "due_in_seconds": "Agora",
-    "due_ago_hours": "Há {0} h {1} min",
-    "due_ago_minutes": "Há {0} min",
-    "due_ago_seconds": "Agora mesmo",
-    "calendar_minutes_before": "{value} min antes",
-    "calendar_hours_before": "{value}h antes",
-    "calendar_days_before": "{value}d antes",
-    "ed_show_section": "Campo de seção",
-    "ed_section_field_no_sections": "Aparece quando a lista tiver seções",
-    "section_label": "Seção",
-    "ed_list_columns": "Colunas de tarefas",
-    "ed_tile_size": "Tamanho dos blocos",
-    "ed_tile_size_small": "Pequeno",
-    "ed_tile_size_compact": "Compacto",
-    "ed_tile_size_medium": "Normal",
-    "ed_tile_size_large": "Grande",
-    "due_quick_week": "Em 1 semana",
-    "due_quick_month": "Em 1 mês",
-    "due_quick_3months": "Em 3 meses",
-    "ed_offered_persons": "Pessoas selecionáveis",
-    "ed_offered_persons_hint": "Somente as pessoas destacadas podem ser atribuídas neste cartão",
-    "ed_show_add_details": "Detalhes ao adicionar",
-    "add_with_details": "Adicionar com detalhes",
-    "add_clear": "Limpar",
-    "plan_note_placeholder": "Foco do dia",
-    "plan_empty": "Nada planejado",
-    "plan_add": "Planejar uma tarefa",
-    "plan_search_placeholder": "Pesquisar tarefas…",
-    "plan_no_results": "Nenhuma tarefa aberta correspondente",
-    "plan_carry_over": "Trazer tarefas abertas de {0} ({1})",
-    "plan_move_day": "Outro dia…",
-    "plan_day_msg": "Qual dia para “{0}”?",
-    "plan_remove": "Remover do plano",
-    "plan_for": "Planejar para…",
-    "plan_ok": "Planejar",
-    "plan_none": "Nenhum plano diário encontrado. Os planos diários podem ser criados em Configurações → Integrações → Home Tasks.",
-    "ed_view_lists": "Listas",
-    "ed_view_day_plan": "Plano diário",
-    "ed_plan_days": "Dias exibidos",
-    "ed_plan_all_lists": "Todas as listas",
-    "plan_due_hint": "Está no plano pela data de vencimento: mova-a ou altere a data.",
-    "ed_plan_weekend": "Fim de semana",
-    "new_entry_link": "Criar uma nova lista ou um plano diário",
-    "ed_plan_list_missing": "Lista indisponível",
-    "picker_list_name": "Home Tasks: Lista",
-    "picker_plan_name": "Home Tasks: Plano diário",
-    "picker_list_desc": "Listas de tarefas em colunas, com arrastar e soltar, subtarefas, notas e prazos.",
-    "picker_plan_desc": "Os dias de um plano diário: tarefas de várias listas na ordem em que você as realiza."
+    ed_default_priority: "Prioridade padrão",
+    ed_default_tags: "Etiquetas padrão",
+    ed_default_section: "Seção padrão",
+    ed_default_none: "– Nenhuma –",
+    ed_group_card: "Cartão",
+    ed_person_off: "Desativado",
+    ed_person_name: "Nome",
+    ed_person_both: "Foto e nome",
+    ed_group_header: "Cabeçalho",
+    ed_group_tasks: "Tarefas",
+    ed_show_person_avatar: "Foto do perfil",
+    voice_failed: "Falha na entrada de voz",
+    confirm_delete_section: "Excluir esta seção? As tarefas dentro dela ficarão sem ordenação.",
+    done_section_header: "Concluídas",
+    duplicate_task: "Duplicar",
+    move_task: "Mover",
+    move_task_msg: "Mover “{0}” para:",
+    ed_show_move: "Botão Mover",
+    ed_add_section: "+ Adicionar seção",
+    ed_ai_image_entity: "Entidade de IA para geração de imagens",
+    ed_ai_image_entity_placeholder: "ex. ai_task.openai",
+    ed_ai_prompt_prefix: "Prefixo do prompt (opcional)",
+    ed_ai_prompt_prefix_placeholder: "ex. Ícone minimalista de",
+    ed_auto_image: "Gerar imagem automaticamente",
+    ed_delete_section: "Excluir seção",
+    ed_external_lists: "Externas",
+    ed_loading: "Carregando…",
+    ed_move_down: "Mover para baixo",
+    ed_move_up: "Mover para cima",
+    ed_sec_sections: "Seções",
+    ed_section_icon: "Ícone",
+    ed_section_name: "Nome",
+    ed_section_name_prompt: "Nome da seção:",
+    ed_sections_empty: "Nenhuma seção ainda — as tarefas serão exibidas sem agrupamento.",
+    ed_sections_select_list_hint: "Selecione uma lista primeiro para gerenciar suas seções.",
+    ed_show_filters: "Filtro de estado",
+    ed_show_images: "Imagens",
+    ed_show_person_chips: "Filtro de pessoas",
+    ed_show_tag_chips: "Filtro de etiquetas",
+    ed_show_tile_title: "Título nos blocos",
+    ed_show_voice: "Entrada de voz",
+    ed_task_search: "Pesquisa de tarefas",
+    ed_tile_help: "Visualização em blocos:\n• Clique = concluir\n• Segurar = editar\n• Arrastar = reordenar",
+    ed_view_mode: "Modo de exibição",
+    ed_view_mode_list: "Lista",
+    ed_view_mode_tiles: "Blocos",
+    voice_input: "Entrada de voz",
+    voice_stop: "Parar gravação",
+    img_label: "Imagem",
+    img_generate: "Gerar",
+    img_regenerate: "Gerar novamente",
+    img_generating: "Gerando…",
+    img_from_media: "Da biblioteca de mídia",
+    img_remove: "Remover imagem",
+    img_generate_failed: "Falha ao gerar imagem: ",
+    img_save_failed: "Falha ao salvar imagem: ",
+    mb_title: "Biblioteca de mídia",
+    mb_loading: "Carregando…",
+    mb_root: "Mídia",
+    mb_back: "Voltar",
+    mb_empty: "Sem arquivos",
+    mb_error: "Erro: ",
+    my_tasks: "Minhas tarefas",
+    add_placeholder: "Adicionar nova tarefa...",
+    add_failed: "Não foi possível adicionar a tarefa",
+    draft_details_failed: "Tarefa adicionada, mas não foi possível salvar alguns detalhes",
+    duplicate_failed: "Não foi possível duplicar a tarefa",
+    dialog_cancel: "Cancelar",
+    dialog_add: "Adicionar",
+    filter_all: "Todas",
+    filter_open: "Abertas",
+    filter_done: "Concluídas",
+    filter_due_soon: "Em breve",
+    ed_show_due_soon_filter: "Filtro em breve",
+    ed_due_soon_days: "Dias à frente",
+    ed_hide_overdue: "Ocultar atrasadas",
+    progress: "{0} de {1} concluídas",
+    empty: "Nenhuma tarefa",
+    drag_handle: "Arrastar para reordenar",
+    due_date: "Prazo",
+    notes: "Notas",
+    notes_placeholder: "Adicionar notas aqui",
+    notes_edit_hint: "Clique para editar",
+    sub_items: "Subtarefas",
+    add_sub_item: "+ Adicionar subtarefa",
+    recurrence: "Recorrência",
+    recurrence_enabled: "Ativada",
+    recurrence_every: "A cada",
+    rec_minutes: "Minutos",
+    rec_hours: "Horas",
+    rec_days: "Dias",
+    rec_weeks: "Semanas",
+    rec_months: "Meses",
+    rec_years: "Anos",
+    rec_short_h: "h",
+    rec_short_d: "d",
+    rec_short_w: "sem",
+    rec_short_m: "mês",
+    rec_short_y: "a",
+    priority: "Prioridade",
+    pri_high: "Alta",
+    pri_medium: "Média",
+    pri_low: "Baixa",
+    ed_show_priority: "Prioridades",
+    rec_hourly: "Por hora",
+    rec_daily: "Diário",
+    rec_weekly: "Semanal",
+    rec_monthly: "Mensal",
+    rec_yearly: "Anual",
+    rec_type_interval: "A cada …",
+    rec_type_weekdays: "Em dias da semana",
+    rec_wd_0: "Seg",
+    rec_wd_1: "Ter",
+    rec_wd_2: "Qua",
+    rec_wd_3: "Qui",
+    rec_wd_4: "Sex",
+    rec_wd_5: "Sáb",
+    rec_wd_6: "Dom",
+    assigned_to: "Pessoas atribuídas",
+    nobody: "– Ninguém –",
+    delete_task: "Excluir tarefa",
+    delete_sub: "Excluir",
+    ed_default_filter: "Filtro padrão",
+    ed_list: "Lista",
+    ed_title: "Título (opcional)",
+    ed_title_placeholder: "Padrão: nome da lista",
+    ed_display: "Exibição",
+    ed_show_title: "Título",
+    ed_show_progress: "Progresso",
+    ed_show_due_date: "Prazos",
+    ed_show_notes: "Notas",
+    ed_show_recurrence: "Recorrências",
+    ed_show_sub_items: "Subtarefas",
+    ed_show_person: "Responsáveis",
+    ed_auto_delete: "Excluir concluídas imediatamente",
+    ed_compact: "Compacto",
+    ed_show_tags: "Etiquetas",
+    ed_confirm_complete: "Confirmar antes de concluir",
+    ed_tap_to_complete: "Toque na linha para concluir",
+    ed_show_add_due: "Prazo ao adicionar",
+    ed_max_height: "Altura máx. (px, 0 = ilimitada)",
+    ed_badge_priority: "Chips de prioridade",
+    ed_badge_progress: "Chips de progresso",
+    ed_badge_due: "Chips de prazo",
+    ed_badge_recurrence: "Chips de recorrência",
+    ed_badge_person: "Pessoa",
+    ed_badge_tags: "Chips de etiquetas",
+    ed_badge_reminders: "Chips de lembrete",
+    ed_sec_defaults: "Padrões",
+    ed_sec_images: "Imagens",
+    ed_share_images: "Compartilhar imagens com outras listas",
+    ed_share_images_hint: "Quando desativado, mantém as imagens exclusivas desta lista — uma tarefa com o mesmo título em outra lista recebe sua própria imagem.",
+    ed_queue_empty: "Nenhuma imagem aguardando geração.",
+    ed_queue_pending: "Aguardando imagem: {0}",
+    ed_queue_cancel: "Cancelar",
+    ed_ai_image_hint: "Aplica-se a todo o cartão, não apenas a esta coluna.",
+    ed_queue_running: "gerando…",
+    ed_queue_title: "Fila de geração",
+    ed_default_assignee: "Pessoas padrão",
+    ed_defaults_saved: "Salvo",
+    ed_defaults_load_failed: "Não foi possível carregar os padrões",
+    ed_defaults_save_failed: "Falha ao salvar",
+    confirm_complete_msg: "Marcar “{0}” como concluída?",
+    confirm_complete_ok: "Concluir",
+    ed_hint: "Novas listas podem ser criadas em Configurações → Integrações → Home Tasks.",
+    tags: "Etiquetas",
+    add_tag: "+ Adicionar etiqueta",
+    tag_placeholder: "Nova etiqueta...",
+    remove_tag: "Remover",
+    tag_suggestions_label: "Etiquetas existentes",
+    tag_no_matches: "Nenhuma etiqueta correspondente",
+    new_sub_item: "Nova subtarefa",
+    remove_reminder: "Remover lembrete",
+    sort_label: "Ordenar",
+    sort_manual: "Manual",
+    sort_due: "Prazo",
+    sort_priority: "Prioridade",
+    sort_title: "Título (A–Z)",
+    sort_person: "Responsável",
+    ed_show_sort: "Ordenação",
+    ed_default_sort: "Ordenação padrão",
+    ed_tag_catalog: "Etiquetas fixas",
+    ed_tag_catalog_hint: "Sempre sugeridas ao adicionar etiquetas às tarefas desta lista — outras etiquetas também podem ser adicionadas à tarefa.",
+    ed_default_lead_hint: "Assumido por uma tarefa quando a repetição dela é ativada",
+    tag_did_you_mean: "Você quis dizer {0}?",
+    ed_overdue_first: "Tarefas atrasadas primeiro",
+    reminder: "Lembretes",
+    rem_add: "+ Adicionar lembrete",
+    rem_none: "Sem lembrete",
+    rem_at_due: "No horário de vencimento",
+    rem_5m: "5 min. antes",
+    rem_15m: "15 min. antes",
+    rem_30m: "30 min. antes",
+    rem_1h: "1 hora antes",
+    rem_2h: "2 horas antes",
+    rem_1d: "1 dia antes",
+    rem_2d: "2 dias antes",
+    ed_show_reminders: "Lembretes",
+    ed_add_column: "Adicionar coluna",
+    ed_move_left: "Mover para esquerda",
+    ed_move_right: "Mover para direita",
+    ed_duplicate: "Duplicar coluna",
+    ed_delete_column: "Excluir coluna",
+    ed_code_editor: "Editor de código",
+    ed_visual_editor: "Editor visual",
+    ed_icon: "Ícone (opcional)",
+    ed_card_title: "Título do cartão (opcional)",
+    ed_card_title_placeholder: "Título acima das colunas",
+    ed_sec_view: "Exibição",
+    ed_sec_display: "Recursos das tarefas",
+    ed_sec_filters: "Filtros",
+    ed_preset_assignees: "Limitar a pessoas",
+    ed_preset_labels: "Limitar a etiquetas",
+    ed_ms_add: "Adicionar…",
+    due_time_lbl: "Hora",
+    due_date_lbl: "Data",
+    rec_mode_lbl: "Modo",
+    rec_time: "Hora",
+    rec_end: "Fim",
+    rec_end_never: "Nunca",
+    rec_end_date: "Até",
+    rec_end_count: "X vezes",
+    rec_end_date_lbl: "Até",
+    rec_max_count_lbl: "Quantidade",
+    rec_remaining: "{0} restantes",
+    rec_start_date_lbl: "De",
+    rec_pattern_dom: "Dia do mês",
+    rec_pattern_nth: "Ocorrência do dia da semana",
+    rec_pattern_none: "A partir da conclusão",
+    rec_pattern_due: "A partir do vencimento",
+    rec_dom_lbl: "Dia",
+    rec_dom_last: "Último dia",
+    rec_nth_lbl: "No",
+    rec_nth_1: "1º",
+    rec_nth_2: "2º",
+    rec_nth_3: "3º",
+    rec_nth_4: "4º",
+    rec_nth_last: "Último",
+    rec_anniversary_lbl: "No",
+    rec_dd: "Dia",
+    rec_mm: "Mês",
+    rec_dom_short: "º",
+    rec_last_short: "último",
+    rec_value_lbl: "A cada",
+    rec_unit_lbl: "Unidade",
+    rec_wd_lbl: "Dia da semana",
+    rec_at_lbl: "Às",
+    rec_lead_lbl: "Reabrir mais cedo",
+    rec_lead_hint: "Reabre a tarefa com essa antecedência em relação ao novo prazo, de modo que ela apareça como “em breve”. 0 = quando for o prazo.",
+    rec_todoist_pattern_unsupported: "Subpadrões não são suportados quando o intervalo é maior que 1.",
+    history: "Histórico",
+    history_created: "Criado",
+    history_completed: "Concluído",
+    history_reopened: "Reaberto",
+    history_reset: "Reiniciado automaticamente",
+    history_changed: "alterado",
+    history_empty: "Sem histórico",
+    hist_title: "Título",
+    history_disabled: "Desativado",
+    ed_show_history: "Históricos",
+    hist_by_user: "Usuário",
+    ed_show_add_task: "Adicionar tarefa",
+    assigned_unknown: "Desconhecido (%s)",
+    recurrence_readonly: "Gerenciado por %s",
+    synced_with: "Sincronizado com %s",
+    due_today: "Hoje",
+    due_tomorrow: "Amanhã",
+    due_yesterday: "Ontem",
+    due_day_after_tomorrow: "Depois de amanhã",
+    due_day_before_yesterday: "Anteontem",
+    due_in_hours: "Em {0} h {1} min",
+    due_in_minutes: "Em {0} min",
+    due_in_seconds: "Agora",
+    due_ago_hours: "Há {0} h {1} min",
+    due_ago_minutes: "Há {0} min",
+    due_ago_seconds: "Agora mesmo",
+    calendar_minutes_before: "{value} min antes",
+    calendar_hours_before: "{value}h antes",
+    calendar_days_before: "{value}d antes",
+    ed_show_section: "Campo de seção",
+    ed_section_field_no_sections: "Aparece quando a lista tiver seções",
+    section_label: "Seção",
+    ed_list_columns: "Colunas de tarefas",
+    ed_tile_size: "Tamanho dos blocos",
+    ed_tile_size_small: "Pequeno",
+    ed_tile_size_compact: "Compacto",
+    ed_tile_size_medium: "Normal",
+    ed_tile_size_large: "Grande",
+    due_quick_week: "Em 1 semana",
+    due_quick_month: "Em 1 mês",
+    due_quick_3months: "Em 3 meses",
+    ed_offered_persons: "Pessoas selecionáveis",
+    ed_offered_persons_hint: "Somente as pessoas destacadas podem ser atribuídas neste cartão",
+    ed_show_add_details: "Detalhes ao adicionar",
+    add_with_details: "Adicionar com detalhes",
+    add_clear: "Limpar",
+    plan_note_placeholder: "Foco do dia",
+    plan_empty: "Nada planejado",
+    plan_add: "Planejar uma tarefa",
+    plan_search_placeholder: "Pesquisar tarefas…",
+    plan_no_results: "Nenhuma tarefa aberta correspondente",
+    plan_carry_over: "Trazer tarefas abertas de {0} ({1})",
+    plan_move_day: "Outro dia…",
+    plan_day_msg: "Qual dia para “{0}”?",
+    plan_remove: "Remover do plano",
+    plan_for: "Planejar para…",
+    plan_ok: "Planejar",
+    plan_none: "Nenhum plano diário encontrado. Os planos diários podem ser criados em Configurações → Integrações → Home Tasks.",
+    ed_view_lists: "Listas",
+    ed_view_day_plan: "Plano diário",
+    ed_plan_days: "Dias exibidos",
+    ed_plan_all_lists: "Todas as listas",
+    plan_due_hint: "Está no plano pela data de vencimento: mova-a ou altere a data.",
+    ed_plan_weekend: "Fim de semana",
+    new_entry_link: "Criar uma nova lista ou um plano diário",
+    ed_plan_list_missing: "Lista indisponível",
+    picker_list_name: "Home Tasks: Lista",
+    picker_plan_name: "Home Tasks: Plano diário",
+    picker_list_desc: "Listas de tarefas em colunas, com arrastar e soltar, subtarefas, notas e prazos.",
+    picker_plan_desc: "Os dias de um plano diário: tarefas de várias listas na ordem em que você as realiza."
   },
-  "es": {
-    "ed_default_priority": "Prioridad predeterminada",
-    "ed_default_tags": "Etiquetas predeterminadas",
-    "ed_default_section": "Sección predeterminada",
-    "ed_default_none": "– Ninguna –",
-    "ed_group_card": "Tarjeta",
-    "ed_person_off": "Desactivado",
-    "ed_person_name": "Nombre",
-    "ed_person_both": "Foto y nombre",
-    "ed_group_header": "Encabezado",
-    "ed_group_tasks": "Tareas",
-    "ed_show_person_avatar": "Foto de perfil",
-    "voice_failed": "Error en la entrada de voz",
-    "confirm_delete_section": "¿Eliminar esta sección? Las tareas que contiene quedarán sin ordenar.",
-    "done_section_header": "Hecho",
-    "duplicate_task": "Duplicar",
-    "move_task": "Mover",
-    "move_task_msg": "Mover “{0}” a:",
-    "ed_show_move": "Botón Mover",
-    "ed_add_section": "+ Añadir sección",
-    "ed_ai_image_entity": "Entidad de IA para la generación de imágenes",
-    "ed_ai_image_entity_placeholder": "p. ej. ai_task.openai",
-    "ed_ai_prompt_prefix": "Prefijo del prompt (opcional)",
-    "ed_ai_prompt_prefix_placeholder": "p. ej. Icono minimalista de",
-    "ed_auto_image": "Generar imagen automáticamente",
-    "ed_delete_section": "Eliminar sección",
-    "ed_external_lists": "Externa",
-    "ed_loading": "Cargando…",
-    "ed_move_down": "Mover abajo",
-    "ed_move_up": "Mover arriba",
-    "ed_sec_sections": "Secciones",
-    "ed_section_icon": "Icono",
-    "ed_section_name": "Nombre",
-    "ed_section_name_prompt": "Nombre de la sección:",
-    "ed_sections_empty": "Aún no hay secciones: las tareas se mostrarán sin agrupar.",
-    "ed_sections_select_list_hint": "Selecciona primero una lista para gestionar sus secciones.",
-    "ed_show_filters": "Filtro de estado",
-    "ed_show_images": "Imágenes",
-    "ed_show_person_chips": "Filtro de personas",
-    "ed_show_tag_chips": "Filtro de etiquetas",
-    "ed_show_tile_title": "Título en mosaicos",
-    "ed_show_voice": "Entrada de voz",
-    "ed_task_search": "Búsqueda de tareas",
-    "ed_tile_help": "Vista de mosaicos:\n• Clic = completar\n• Mantener = editar\n• Arrastrar = reordenar",
-    "ed_view_mode": "Modo de vista",
-    "ed_view_mode_list": "Lista",
-    "ed_view_mode_tiles": "Mosaicos",
-    "voice_input": "Entrada de voz",
-    "voice_stop": "Detener grabación",
-    "img_label": "Imagen",
-    "img_generate": "Generar",
-    "img_regenerate": "Regenerar",
-    "img_generating": "Generando…",
-    "img_from_media": "Desde la biblioteca multimedia",
-    "img_remove": "Eliminar imagen",
-    "img_generate_failed": "Error al generar la imagen: ",
-    "img_save_failed": "Error al guardar la imagen: ",
-    "mb_title": "Biblioteca multimedia",
-    "mb_loading": "Cargando…",
-    "mb_root": "Multimedia",
-    "mb_back": "Atrás",
-    "mb_empty": "Sin archivos",
-    "mb_error": "Error: ",
-    "my_tasks": "Mis tareas",
-    "add_placeholder": "Añadir nueva tarea...",
-    "add_failed": "No se pudo añadir la tarea",
-    "draft_details_failed": "Tarea añadida, pero no se pudieron guardar algunos detalles",
-    "duplicate_failed": "No se pudo duplicar la tarea",
-    "dialog_cancel": "Cancelar",
-    "dialog_add": "Agregar",
-    "filter_all": "Todas",
-    "filter_open": "Abiertas",
-    "filter_done": "Completadas",
-    "filter_due_soon": "Próximamente",
-    "ed_show_due_soon_filter": "Filtro próximo",
-    "ed_due_soon_days": "Días adelante",
-    "ed_hide_overdue": "Ocultar vencidas",
-    "progress": "{0} de {1} completadas",
-    "empty": "Sin tareas",
-    "drag_handle": "Arrastrar para reordenar",
-    "due_date": "Vencimiento",
-    "notes": "Notas",
-    "notes_placeholder": "Añadir notas aquí",
-    "notes_edit_hint": "Haz clic para editar",
-    "sub_items": "Subtareas",
-    "add_sub_item": "+ Añadir subtarea",
-    "recurrence": "Recurrencia",
-    "recurrence_enabled": "Activada",
-    "recurrence_every": "Cada",
-    "rec_minutes": "Minutos",
-    "rec_hours": "Horas",
-    "rec_days": "Días",
-    "rec_weeks": "Semanas",
-    "rec_months": "Meses",
-    "rec_years": "Años",
-    "rec_short_h": "h",
-    "rec_short_d": "d",
-    "rec_short_w": "s",
-    "rec_short_m": "m",
-    "rec_short_y": "a",
-    "priority": "Prioridad",
-    "pri_high": "Alta",
-    "pri_medium": "Media",
-    "pri_low": "Baja",
-    "ed_show_priority": "Prioridades",
-    "rec_hourly": "Por hora",
-    "rec_daily": "Diaria",
-    "rec_weekly": "Semanal",
-    "rec_monthly": "Mensual",
-    "rec_yearly": "Anual",
-    "rec_type_interval": "Cada …",
-    "rec_type_weekdays": "En días laborables",
-    "rec_wd_0": "Lun",
-    "rec_wd_1": "Mar",
-    "rec_wd_2": "Mié",
-    "rec_wd_3": "Jue",
-    "rec_wd_4": "Vie",
-    "rec_wd_5": "Sáb",
-    "rec_wd_6": "Dom",
-    "assigned_to": "Personas asignadas",
-    "nobody": "– Nadie –",
-    "delete_task": "Eliminar tarea",
-    "delete_sub": "Eliminar",
-    "ed_default_filter": "Filtro predeterminado",
-    "ed_list": "Lista",
-    "ed_title": "Título (opcional)",
-    "ed_title_placeholder": "Predeterminado: nombre de lista",
-    "ed_display": "Visualización",
-    "ed_show_title": "Título",
-    "ed_show_progress": "Progreso",
-    "ed_show_due_date": "Vencimientos",
-    "ed_show_notes": "Notas",
-    "ed_show_recurrence": "Recurrencias",
-    "ed_show_sub_items": "Subtareas",
-    "ed_show_person": "Personas",
-    "ed_auto_delete": "Eliminar completadas inmediatamente",
-    "ed_compact": "Compacto",
-    "ed_show_tags": "Etiquetas",
-    "ed_confirm_complete": "Confirmar antes de completar",
-    "ed_tap_to_complete": "Toca la fila para completar",
-    "ed_show_add_due": "Fecha límite al añadir",
-    "ed_max_height": "Altura máx. (px, 0 = ilimitada)",
-    "ed_badge_priority": "Chips de prioridad",
-    "ed_badge_progress": "Chips de progreso",
-    "ed_badge_due": "Chips de vencimiento",
-    "ed_badge_recurrence": "Chips de repetición",
-    "ed_badge_person": "Persona",
-    "ed_badge_tags": "Chips de etiquetas",
-    "ed_badge_reminders": "Chips de recordatorio",
-    "ed_sec_defaults": "Predeterminados",
-    "ed_sec_images": "Imágenes",
-    "ed_share_images": "Compartir imágenes con otras listas",
-    "ed_share_images_hint": "Desactivado mantiene las imágenes de esta lista aparte: el mismo título en otra lista obtiene su propia imagen.",
-    "ed_queue_empty": "Nada esperando imagen.",
-    "ed_queue_pending": "Esperando una imagen: {0}",
-    "ed_queue_cancel": "Cancelar",
-    "ed_ai_image_hint": "Se aplica a toda la tarjeta, no solo a esta columna.",
-    "ed_queue_running": "generando…",
-    "ed_queue_title": "Cola de generación",
-    "ed_default_assignee": "Personas predeterminadas",
-    "ed_defaults_saved": "Guardado",
-    "ed_defaults_load_failed": "No se pudieron cargar los valores predeterminados",
-    "ed_defaults_save_failed": "Error al guardar",
-    "confirm_complete_msg": "¿Marcar «{0}» como completada?",
-    "confirm_complete_ok": "Completar",
-    "ed_hint": "Se pueden crear nuevas listas en Configuración → Integraciones → Home Tasks.",
-    "tags": "Etiquetas",
-    "add_tag": "+ Añadir etiqueta",
-    "tag_placeholder": "Nueva etiqueta...",
-    "remove_tag": "Eliminar",
-    "tag_suggestions_label": "Etiquetas existentes",
-    "tag_no_matches": "No hay etiquetas coincidentes",
-    "new_sub_item": "Nueva subtarea",
-    "remove_reminder": "Eliminar recordatorio",
-    "sort_label": "Ordenar",
-    "sort_manual": "Manual",
-    "sort_due": "Vencimiento",
-    "sort_priority": "Prioridad",
-    "sort_title": "Título (A–Z)",
-    "sort_person": "Asignado",
-    "ed_show_sort": "Ordenación",
-    "ed_default_sort": "Ordenación predeterminada",
-    "ed_tag_catalog": "Etiquetas fijas",
-    "ed_tag_catalog_hint": "Siempre sugeridas al etiquetar en esta lista; se pueden añadir otras etiquetas en la tarea.",
-    "ed_default_lead_hint": "Lo adopta una tarea cuando se activa su repetición",
-    "tag_did_you_mean": "¿Quisiste decir {0}?",
-    "ed_overdue_first": "Tareas vencidas primero",
-    "reminder": "Recordatorios",
-    "rem_add": "+ Añadir recordatorio",
-    "rem_none": "Sin recordatorio",
-    "rem_at_due": "A la hora de vencimiento",
-    "rem_5m": "5 min. antes",
-    "rem_15m": "15 min. antes",
-    "rem_30m": "30 min. antes",
-    "rem_1h": "1 hora antes",
-    "rem_2h": "2 horas antes",
-    "rem_1d": "1 día antes",
-    "rem_2d": "2 días antes",
-    "ed_show_reminders": "Recordatorios",
-    "ed_add_column": "Añadir columna",
-    "ed_move_left": "Mover a la izquierda",
-    "ed_move_right": "Mover a la derecha",
-    "ed_duplicate": "Duplicar columna",
-    "ed_delete_column": "Eliminar columna",
-    "ed_code_editor": "Editor de código",
-    "ed_visual_editor": "Editor visual",
-    "ed_icon": "Icono (opcional)",
-    "ed_card_title": "Título de la tarjeta (opcional)",
-    "ed_card_title_placeholder": "Título sobre las columnas",
-    "ed_sec_view": "Visualización",
-    "ed_sec_display": "Configuración",
-    "ed_sec_filters": "Filtros",
-    "ed_preset_assignees": "Limitar a personas",
-    "ed_preset_labels": "Limitar a etiquetas",
-    "ed_ms_add": "Añadir…",
-    "due_time_lbl": "Hora",
-    "due_date_lbl": "Fecha",
-    "rec_mode_lbl": "Modo",
-    "rec_time": "Hora",
-    "rec_end": "Fin",
-    "rec_end_never": "Nunca",
-    "rec_end_date": "Hasta",
-    "rec_end_count": "X veces",
-    "rec_end_date_lbl": "Hasta",
-    "rec_max_count_lbl": "Cantidad",
-    "rec_remaining": "aún {0}",
-    "rec_start_date_lbl": "Desde",
-    "rec_pattern_dom": "Día del mes",
-    "rec_pattern_nth": "Día Nº",
-    "rec_pattern_none": "Desde la finalización",
-    "rec_pattern_due": "Desde el vencimiento",
-    "rec_dom_lbl": "Día",
-    "rec_dom_last": "Último día",
-    "rec_nth_lbl": "El",
-    "rec_nth_1": "1º",
-    "rec_nth_2": "2º",
-    "rec_nth_3": "3º",
-    "rec_nth_4": "4º",
-    "rec_nth_last": "Último",
-    "rec_anniversary_lbl": "El",
-    "rec_dd": "Día",
-    "rec_mm": "Mes",
-    "rec_dom_short": "º",
-    "rec_last_short": "último",
-    "rec_value_lbl": "Cada",
-    "rec_unit_lbl": "Unidad",
-    "rec_wd_lbl": "Día",
-    "rec_at_lbl": "A las",
-    "rec_lead_lbl": "Reabrir antes",
-    "rec_lead_hint": "Vuelve a abrir la tarea con esta antelación respecto a la nueva fecha de vencimiento, para que aparezca como «próxima». 0 = cuando vence.",
-    "rec_todoist_pattern_unsupported": "Los subpatrones no son compatibles cuando el intervalo es mayor que 1.",
-    "history": "Historial",
-    "history_created": "Creado",
-    "history_completed": "Completado",
-    "history_reopened": "Reabierto",
-    "history_reset": "Restablecimiento autom.",
-    "history_changed": "modificado",
-    "history_empty": "Sin historial",
-    "hist_title": "Título",
-    "history_disabled": "Desactivado",
-    "ed_show_history": "Historiales",
-    "hist_by_user": "Usuario",
-    "ed_show_add_task": "Agregar tarea",
-    "assigned_unknown": "Desconocido (%s)",
-    "recurrence_readonly": "Gestionado por %s",
-    "synced_with": "Sincronizado con %s",
-    "due_today": "Hoy",
-    "due_tomorrow": "Mañana",
-    "due_yesterday": "Ayer",
-    "due_day_after_tomorrow": "Pasado mañana",
-    "due_day_before_yesterday": "Anteayer",
-    "due_in_hours": "En {0} h {1} min",
-    "due_in_minutes": "En {0} min",
-    "due_in_seconds": "Ahora",
-    "due_ago_hours": "Hace {0} h {1} min",
-    "due_ago_minutes": "Hace {0} min",
-    "due_ago_seconds": "Ahora mismo",
-    "calendar_minutes_before": "{value} min antes",
-    "calendar_hours_before": "{value} h antes",
-    "calendar_days_before": "{value} d antes",
-    "ed_show_section": "Campo de sección",
-    "ed_section_field_no_sections": "Aparece cuando la lista tenga secciones",
-    "section_label": "Sección",
-    "ed_list_columns": "Columnas de tareas",
-    "ed_tile_size": "Tamaño de mosaicos",
-    "ed_tile_size_small": "Pequeño",
-    "ed_tile_size_compact": "Compacto",
-    "ed_tile_size_medium": "Normal",
-    "ed_tile_size_large": "Grande",
-    "due_quick_week": "En 1 semana",
-    "due_quick_month": "En 1 mes",
-    "due_quick_3months": "En 3 meses",
-    "ed_offered_persons": "Personas seleccionables",
-    "ed_offered_persons_hint": "En esta tarjeta solo se pueden asignar las personas resaltadas",
-    "ed_show_add_details": "Detalles al añadir",
-    "add_with_details": "Añadir con detalles",
-    "add_clear": "Borrar",
-    "plan_note_placeholder": "Enfoque del día",
-    "plan_empty": "Nada planificado",
-    "plan_add": "Planificar una tarea",
-    "plan_search_placeholder": "Buscar tareas…",
-    "plan_no_results": "No hay tareas abiertas coincidentes",
-    "plan_carry_over": "Traer las tareas abiertas del {0} ({1})",
-    "plan_move_day": "Otro día…",
-    "plan_day_msg": "¿Qué día para «{0}»?",
-    "plan_remove": "Quitar del plan",
-    "plan_for": "Planificar para…",
-    "plan_ok": "Planificar",
-    "plan_none": "No se encontró ningún plan diario. Los planes diarios se pueden crear en Configuración → Integraciones → Home Tasks.",
-    "ed_view_lists": "Listas",
-    "ed_view_day_plan": "Plan diario",
-    "ed_plan_days": "Días mostrados",
-    "ed_plan_all_lists": "Todas las listas",
-    "plan_due_hint": "Está en el plan por su fecha de vencimiento: muévela o cambia la fecha.",
-    "ed_plan_weekend": "Fin de semana",
-    "new_entry_link": "Crear una nueva lista o un plan diario",
-    "ed_plan_list_missing": "Lista no disponible",
-    "picker_list_name": "Home Tasks: Lista",
-    "picker_plan_name": "Home Tasks: Plan diario",
-    "picker_list_desc": "Listas de tareas en columnas, con arrastrar y soltar, subtareas, notas y vencimientos.",
-    "picker_plan_desc": "Los días de un plan diario: tareas de varias listas en el orden en que las haces."
+  es: {
+    ed_default_priority: "Prioridad predeterminada",
+    ed_default_tags: "Etiquetas predeterminadas",
+    ed_default_section: "Sección predeterminada",
+    ed_default_none: "– Ninguna –",
+    ed_group_card: "Tarjeta",
+    ed_person_off: "Desactivado",
+    ed_person_name: "Nombre",
+    ed_person_both: "Foto y nombre",
+    ed_group_header: "Encabezado",
+    ed_group_tasks: "Tareas",
+    ed_show_person_avatar: "Foto de perfil",
+    voice_failed: "Error en la entrada de voz",
+    confirm_delete_section: "¿Eliminar esta sección? Las tareas que contiene quedarán sin ordenar.",
+    done_section_header: "Hecho",
+    duplicate_task: "Duplicar",
+    move_task: "Mover",
+    move_task_msg: "Mover “{0}” a:",
+    ed_show_move: "Botón Mover",
+    ed_add_section: "+ Añadir sección",
+    ed_ai_image_entity: "Entidad de IA para la generación de imágenes",
+    ed_ai_image_entity_placeholder: "p. ej. ai_task.openai",
+    ed_ai_prompt_prefix: "Prefijo del prompt (opcional)",
+    ed_ai_prompt_prefix_placeholder: "p. ej. Icono minimalista de",
+    ed_auto_image: "Generar imagen automáticamente",
+    ed_delete_section: "Eliminar sección",
+    ed_external_lists: "Externa",
+    ed_loading: "Cargando…",
+    ed_move_down: "Mover abajo",
+    ed_move_up: "Mover arriba",
+    ed_sec_sections: "Secciones",
+    ed_section_icon: "Icono",
+    ed_section_name: "Nombre",
+    ed_section_name_prompt: "Nombre de la sección:",
+    ed_sections_empty: "Aún no hay secciones: las tareas se mostrarán sin agrupar.",
+    ed_sections_select_list_hint: "Selecciona primero una lista para gestionar sus secciones.",
+    ed_show_filters: "Filtro de estado",
+    ed_show_images: "Imágenes",
+    ed_show_person_chips: "Filtro de personas",
+    ed_show_tag_chips: "Filtro de etiquetas",
+    ed_show_tile_title: "Título en mosaicos",
+    ed_show_voice: "Entrada de voz",
+    ed_task_search: "Búsqueda de tareas",
+    ed_tile_help: "Vista de mosaicos:\n• Clic = completar\n• Mantener = editar\n• Arrastrar = reordenar",
+    ed_view_mode: "Modo de vista",
+    ed_view_mode_list: "Lista",
+    ed_view_mode_tiles: "Mosaicos",
+    voice_input: "Entrada de voz",
+    voice_stop: "Detener grabación",
+    img_label: "Imagen",
+    img_generate: "Generar",
+    img_regenerate: "Regenerar",
+    img_generating: "Generando…",
+    img_from_media: "Desde la biblioteca multimedia",
+    img_remove: "Eliminar imagen",
+    img_generate_failed: "Error al generar la imagen: ",
+    img_save_failed: "Error al guardar la imagen: ",
+    mb_title: "Biblioteca multimedia",
+    mb_loading: "Cargando…",
+    mb_root: "Multimedia",
+    mb_back: "Atrás",
+    mb_empty: "Sin archivos",
+    mb_error: "Error: ",
+    my_tasks: "Mis tareas",
+    add_placeholder: "Añadir nueva tarea...",
+    add_failed: "No se pudo añadir la tarea",
+    draft_details_failed: "Tarea añadida, pero no se pudieron guardar algunos detalles",
+    duplicate_failed: "No se pudo duplicar la tarea",
+    dialog_cancel: "Cancelar",
+    dialog_add: "Agregar",
+    filter_all: "Todas",
+    filter_open: "Abiertas",
+    filter_done: "Completadas",
+    filter_due_soon: "Próximamente",
+    ed_show_due_soon_filter: "Filtro próximo",
+    ed_due_soon_days: "Días adelante",
+    ed_hide_overdue: "Ocultar vencidas",
+    progress: "{0} de {1} completadas",
+    empty: "Sin tareas",
+    drag_handle: "Arrastrar para reordenar",
+    due_date: "Vencimiento",
+    notes: "Notas",
+    notes_placeholder: "Añadir notas aquí",
+    notes_edit_hint: "Haz clic para editar",
+    sub_items: "Subtareas",
+    add_sub_item: "+ Añadir subtarea",
+    recurrence: "Recurrencia",
+    recurrence_enabled: "Activada",
+    recurrence_every: "Cada",
+    rec_minutes: "Minutos",
+    rec_hours: "Horas",
+    rec_days: "Días",
+    rec_weeks: "Semanas",
+    rec_months: "Meses",
+    rec_years: "Años",
+    rec_short_h: "h",
+    rec_short_d: "d",
+    rec_short_w: "s",
+    rec_short_m: "m",
+    rec_short_y: "a",
+    priority: "Prioridad",
+    pri_high: "Alta",
+    pri_medium: "Media",
+    pri_low: "Baja",
+    ed_show_priority: "Prioridades",
+    rec_hourly: "Por hora",
+    rec_daily: "Diaria",
+    rec_weekly: "Semanal",
+    rec_monthly: "Mensual",
+    rec_yearly: "Anual",
+    rec_type_interval: "Cada …",
+    rec_type_weekdays: "En días laborables",
+    rec_wd_0: "Lun",
+    rec_wd_1: "Mar",
+    rec_wd_2: "Mié",
+    rec_wd_3: "Jue",
+    rec_wd_4: "Vie",
+    rec_wd_5: "Sáb",
+    rec_wd_6: "Dom",
+    assigned_to: "Personas asignadas",
+    nobody: "– Nadie –",
+    delete_task: "Eliminar tarea",
+    delete_sub: "Eliminar",
+    ed_default_filter: "Filtro predeterminado",
+    ed_list: "Lista",
+    ed_title: "Título (opcional)",
+    ed_title_placeholder: "Predeterminado: nombre de lista",
+    ed_display: "Visualización",
+    ed_show_title: "Título",
+    ed_show_progress: "Progreso",
+    ed_show_due_date: "Vencimientos",
+    ed_show_notes: "Notas",
+    ed_show_recurrence: "Recurrencias",
+    ed_show_sub_items: "Subtareas",
+    ed_show_person: "Personas",
+    ed_auto_delete: "Eliminar completadas inmediatamente",
+    ed_compact: "Compacto",
+    ed_show_tags: "Etiquetas",
+    ed_confirm_complete: "Confirmar antes de completar",
+    ed_tap_to_complete: "Toca la fila para completar",
+    ed_show_add_due: "Fecha límite al añadir",
+    ed_max_height: "Altura máx. (px, 0 = ilimitada)",
+    ed_badge_priority: "Chips de prioridad",
+    ed_badge_progress: "Chips de progreso",
+    ed_badge_due: "Chips de vencimiento",
+    ed_badge_recurrence: "Chips de repetición",
+    ed_badge_person: "Persona",
+    ed_badge_tags: "Chips de etiquetas",
+    ed_badge_reminders: "Chips de recordatorio",
+    ed_sec_defaults: "Predeterminados",
+    ed_sec_images: "Imágenes",
+    ed_share_images: "Compartir imágenes con otras listas",
+    ed_share_images_hint: "Desactivado mantiene las imágenes de esta lista aparte: el mismo título en otra lista obtiene su propia imagen.",
+    ed_queue_empty: "Nada esperando imagen.",
+    ed_queue_pending: "Esperando una imagen: {0}",
+    ed_queue_cancel: "Cancelar",
+    ed_ai_image_hint: "Se aplica a toda la tarjeta, no solo a esta columna.",
+    ed_queue_running: "generando…",
+    ed_queue_title: "Cola de generación",
+    ed_default_assignee: "Personas predeterminadas",
+    ed_defaults_saved: "Guardado",
+    ed_defaults_load_failed: "No se pudieron cargar los valores predeterminados",
+    ed_defaults_save_failed: "Error al guardar",
+    confirm_complete_msg: "¿Marcar «{0}» como completada?",
+    confirm_complete_ok: "Completar",
+    ed_hint: "Se pueden crear nuevas listas en Configuración → Integraciones → Home Tasks.",
+    tags: "Etiquetas",
+    add_tag: "+ Añadir etiqueta",
+    tag_placeholder: "Nueva etiqueta...",
+    remove_tag: "Eliminar",
+    tag_suggestions_label: "Etiquetas existentes",
+    tag_no_matches: "No hay etiquetas coincidentes",
+    new_sub_item: "Nueva subtarea",
+    remove_reminder: "Eliminar recordatorio",
+    sort_label: "Ordenar",
+    sort_manual: "Manual",
+    sort_due: "Vencimiento",
+    sort_priority: "Prioridad",
+    sort_title: "Título (A–Z)",
+    sort_person: "Asignado",
+    ed_show_sort: "Ordenación",
+    ed_default_sort: "Ordenación predeterminada",
+    ed_tag_catalog: "Etiquetas fijas",
+    ed_tag_catalog_hint: "Siempre sugeridas al etiquetar en esta lista; se pueden añadir otras etiquetas en la tarea.",
+    ed_default_lead_hint: "Lo adopta una tarea cuando se activa su repetición",
+    tag_did_you_mean: "¿Quisiste decir {0}?",
+    ed_overdue_first: "Tareas vencidas primero",
+    reminder: "Recordatorios",
+    rem_add: "+ Añadir recordatorio",
+    rem_none: "Sin recordatorio",
+    rem_at_due: "A la hora de vencimiento",
+    rem_5m: "5 min. antes",
+    rem_15m: "15 min. antes",
+    rem_30m: "30 min. antes",
+    rem_1h: "1 hora antes",
+    rem_2h: "2 horas antes",
+    rem_1d: "1 día antes",
+    rem_2d: "2 días antes",
+    ed_show_reminders: "Recordatorios",
+    ed_add_column: "Añadir columna",
+    ed_move_left: "Mover a la izquierda",
+    ed_move_right: "Mover a la derecha",
+    ed_duplicate: "Duplicar columna",
+    ed_delete_column: "Eliminar columna",
+    ed_code_editor: "Editor de código",
+    ed_visual_editor: "Editor visual",
+    ed_icon: "Icono (opcional)",
+    ed_card_title: "Título de la tarjeta (opcional)",
+    ed_card_title_placeholder: "Título sobre las columnas",
+    ed_sec_view: "Visualización",
+    ed_sec_display: "Configuración",
+    ed_sec_filters: "Filtros",
+    ed_preset_assignees: "Limitar a personas",
+    ed_preset_labels: "Limitar a etiquetas",
+    ed_ms_add: "Añadir…",
+    due_time_lbl: "Hora",
+    due_date_lbl: "Fecha",
+    rec_mode_lbl: "Modo",
+    rec_time: "Hora",
+    rec_end: "Fin",
+    rec_end_never: "Nunca",
+    rec_end_date: "Hasta",
+    rec_end_count: "X veces",
+    rec_end_date_lbl: "Hasta",
+    rec_max_count_lbl: "Cantidad",
+    rec_remaining: "aún {0}",
+    rec_start_date_lbl: "Desde",
+    rec_pattern_dom: "Día del mes",
+    rec_pattern_nth: "Día Nº",
+    rec_pattern_none: "Desde la finalización",
+    rec_pattern_due: "Desde el vencimiento",
+    rec_dom_lbl: "Día",
+    rec_dom_last: "Último día",
+    rec_nth_lbl: "El",
+    rec_nth_1: "1º",
+    rec_nth_2: "2º",
+    rec_nth_3: "3º",
+    rec_nth_4: "4º",
+    rec_nth_last: "Último",
+    rec_anniversary_lbl: "El",
+    rec_dd: "Día",
+    rec_mm: "Mes",
+    rec_dom_short: "º",
+    rec_last_short: "último",
+    rec_value_lbl: "Cada",
+    rec_unit_lbl: "Unidad",
+    rec_wd_lbl: "Día",
+    rec_at_lbl: "A las",
+    rec_lead_lbl: "Reabrir antes",
+    rec_lead_hint: "Vuelve a abrir la tarea con esta antelación respecto a la nueva fecha de vencimiento, para que aparezca como «próxima». 0 = cuando vence.",
+    rec_todoist_pattern_unsupported: "Los subpatrones no son compatibles cuando el intervalo es mayor que 1.",
+    history: "Historial",
+    history_created: "Creado",
+    history_completed: "Completado",
+    history_reopened: "Reabierto",
+    history_reset: "Restablecimiento autom.",
+    history_changed: "modificado",
+    history_empty: "Sin historial",
+    hist_title: "Título",
+    history_disabled: "Desactivado",
+    ed_show_history: "Historiales",
+    hist_by_user: "Usuario",
+    ed_show_add_task: "Agregar tarea",
+    assigned_unknown: "Desconocido (%s)",
+    recurrence_readonly: "Gestionado por %s",
+    synced_with: "Sincronizado con %s",
+    due_today: "Hoy",
+    due_tomorrow: "Mañana",
+    due_yesterday: "Ayer",
+    due_day_after_tomorrow: "Pasado mañana",
+    due_day_before_yesterday: "Anteayer",
+    due_in_hours: "En {0} h {1} min",
+    due_in_minutes: "En {0} min",
+    due_in_seconds: "Ahora",
+    due_ago_hours: "Hace {0} h {1} min",
+    due_ago_minutes: "Hace {0} min",
+    due_ago_seconds: "Ahora mismo",
+    calendar_minutes_before: "{value} min antes",
+    calendar_hours_before: "{value} h antes",
+    calendar_days_before: "{value} d antes",
+    ed_show_section: "Campo de sección",
+    ed_section_field_no_sections: "Aparece cuando la lista tenga secciones",
+    section_label: "Sección",
+    ed_list_columns: "Columnas de tareas",
+    ed_tile_size: "Tamaño de mosaicos",
+    ed_tile_size_small: "Pequeño",
+    ed_tile_size_compact: "Compacto",
+    ed_tile_size_medium: "Normal",
+    ed_tile_size_large: "Grande",
+    due_quick_week: "En 1 semana",
+    due_quick_month: "En 1 mes",
+    due_quick_3months: "En 3 meses",
+    ed_offered_persons: "Personas seleccionables",
+    ed_offered_persons_hint: "En esta tarjeta solo se pueden asignar las personas resaltadas",
+    ed_show_add_details: "Detalles al añadir",
+    add_with_details: "Añadir con detalles",
+    add_clear: "Borrar",
+    plan_note_placeholder: "Enfoque del día",
+    plan_empty: "Nada planificado",
+    plan_add: "Planificar una tarea",
+    plan_search_placeholder: "Buscar tareas…",
+    plan_no_results: "No hay tareas abiertas coincidentes",
+    plan_carry_over: "Traer las tareas abiertas del {0} ({1})",
+    plan_move_day: "Otro día…",
+    plan_day_msg: "¿Qué día para «{0}»?",
+    plan_remove: "Quitar del plan",
+    plan_for: "Planificar para…",
+    plan_ok: "Planificar",
+    plan_none: "No se encontró ningún plan diario. Los planes diarios se pueden crear en Configuración → Integraciones → Home Tasks.",
+    ed_view_lists: "Listas",
+    ed_view_day_plan: "Plan diario",
+    ed_plan_days: "Días mostrados",
+    ed_plan_all_lists: "Todas las listas",
+    plan_due_hint: "Está en el plan por su fecha de vencimiento: muévela o cambia la fecha.",
+    ed_plan_weekend: "Fin de semana",
+    new_entry_link: "Crear una nueva lista o un plan diario",
+    ed_plan_list_missing: "Lista no disponible",
+    picker_list_name: "Home Tasks: Lista",
+    picker_plan_name: "Home Tasks: Plan diario",
+    picker_list_desc: "Listas de tareas en columnas, con arrastrar y soltar, subtareas, notas y vencimientos.",
+    picker_plan_desc: "Los días de un plan diario: tareas de varias listas en el orden en que las haces."
   },
-  "ru": {
-    "ed_default_priority": "Приоритет по умолчанию",
-    "ed_default_tags": "Теги по умолчанию",
-    "ed_default_section": "Раздел по умолчанию",
-    "ed_default_none": "– Нет –",
-    "ed_group_card": "Карточка",
-    "ed_person_off": "Выкл.",
-    "ed_person_name": "Имя",
-    "ed_person_both": "Фото и имя",
-    "ed_group_header": "Заголовок",
-    "ed_group_tasks": "Задачи",
-    "ed_show_person_avatar": "Фото профиля",
-    "voice_failed": "Сбой голосового ввода",
-    "confirm_delete_section": "Удалить этот раздел? Задачи в нём станут несортированными.",
-    "done_section_header": "Готово",
-    "duplicate_task": "Дублировать",
-    "move_task": "Переместить",
-    "move_task_msg": "Переместить «{0}» в:",
-    "ed_show_move": "Кнопка перемещения",
-    "ed_add_section": "+ Добавить раздел",
-    "ed_ai_image_entity": "ИИ-сущность для генерации изображений",
-    "ed_ai_image_entity_placeholder": "напр. ai_task.openai",
-    "ed_ai_prompt_prefix": "Префикс запроса (необязательно)",
-    "ed_ai_prompt_prefix_placeholder": "напр. Минималистичная иконка",
-    "ed_auto_image": "Автоматически генерировать изображение",
-    "ed_delete_section": "Удалить раздел",
-    "ed_external_lists": "Внешний",
-    "ed_loading": "Загрузка…",
-    "ed_move_down": "Переместить вниз",
-    "ed_move_up": "Переместить вверх",
-    "ed_sec_sections": "Разделы",
-    "ed_section_icon": "Значок",
-    "ed_section_name": "Имя",
-    "ed_section_name_prompt": "Название раздела:",
-    "ed_sections_empty": "Разделов пока нет — задачи отображаются списком.",
-    "ed_sections_select_list_hint": "Сначала выберите список, чтобы управлять его разделами.",
-    "ed_show_filters": "Фильтр статуса",
-    "ed_show_images": "Изображения",
-    "ed_show_person_chips": "Фильтр людей",
-    "ed_show_tag_chips": "Фильтр тегов",
-    "ed_show_tile_title": "Заголовок на плитках",
-    "ed_show_voice": "Голосовой ввод",
-    "ed_task_search": "Поиск задач",
-    "ed_tile_help": "Режим плиток:\n• Клик = выполнить\n• Удержание = редактировать\n• Перетаскивание = изменить порядок",
-    "ed_view_mode": "Режим отображения",
-    "ed_view_mode_list": "Список",
-    "ed_view_mode_tiles": "Плитки",
-    "voice_input": "Голосовой ввод",
-    "voice_stop": "Остановить запись",
-    "img_label": "Изображение",
-    "img_generate": "Сгенерировать",
-    "img_regenerate": "Сгенерировать заново",
-    "img_generating": "Генерация…",
-    "img_from_media": "Из медиатеки",
-    "img_remove": "Удалить изображение",
-    "img_generate_failed": "Не удалось сгенерировать изображение: ",
-    "img_save_failed": "Не удалось сохранить изображение: ",
-    "mb_title": "Медиатека",
-    "mb_loading": "Загрузка…",
-    "mb_root": "Медиа",
-    "mb_back": "Назад",
-    "mb_empty": "Нет файлов",
-    "mb_error": "Ошибка: ",
-    "my_tasks": "Мои задачи",
-    "add_placeholder": "Добавить новую задачу...",
-    "add_failed": "Не удалось добавить задачу",
-    "draft_details_failed": "Задача добавлена, но некоторые детали не удалось сохранить",
-    "duplicate_failed": "Не удалось дублировать задачу",
-    "dialog_cancel": "Отмена",
-    "dialog_add": "Добавить",
-    "filter_all": "Все",
-    "filter_open": "Открытые",
-    "filter_done": "Выполненные",
-    "filter_due_soon": "Скоро",
-    "ed_show_due_soon_filter": "Фильтр скоро",
-    "ed_due_soon_days": "Дней вперёд",
-    "ed_hide_overdue": "Скрыть просроченные",
-    "progress": "{0} из {1} выполнено",
-    "empty": "Нет задач",
-    "drag_handle": "Перетащить для изменения порядка",
-    "due_date": "Срок",
-    "notes": "Заметки",
-    "notes_placeholder": "Добавить заметки здесь",
-    "notes_edit_hint": "Нажмите для редактирования",
-    "sub_items": "Подзадачи",
-    "add_sub_item": "+ Добавить подзадачу",
-    "recurrence": "Повторение",
-    "recurrence_enabled": "Включено",
-    "recurrence_every": "Каждые",
-    "rec_minutes": "Минуты",
-    "rec_hours": "Часы",
-    "rec_days": "Дни",
-    "rec_weeks": "Недели",
-    "rec_months": "Месяцы",
-    "rec_years": "Годы",
-    "rec_short_h": "ч",
-    "rec_short_d": "д",
-    "rec_short_w": "н",
-    "rec_short_m": "м",
-    "rec_short_y": "г",
-    "priority": "Приоритет",
-    "pri_high": "Высокий",
-    "pri_medium": "Средний",
-    "pri_low": "Низкий",
-    "ed_show_priority": "Приоритеты",
-    "rec_hourly": "Ежечасно",
-    "rec_daily": "Ежедневно",
-    "rec_weekly": "Еженедельно",
-    "rec_monthly": "Ежемесячно",
-    "rec_yearly": "Ежегодно",
-    "rec_type_interval": "Каждые …",
-    "rec_type_weekdays": "По будням",
-    "rec_wd_0": "Пн",
-    "rec_wd_1": "Вт",
-    "rec_wd_2": "Ср",
-    "rec_wd_3": "Чт",
-    "rec_wd_4": "Пт",
-    "rec_wd_5": "Сб",
-    "rec_wd_6": "Вс",
-    "assigned_to": "Назначенные люди",
-    "nobody": "– Никто –",
-    "delete_task": "Удалить задачу",
-    "delete_sub": "Удалить",
-    "ed_default_filter": "Фильтр по умолчанию",
-    "ed_list": "Список",
-    "ed_title": "Заголовок (необязательно)",
-    "ed_title_placeholder": "По умолчанию: название списка",
-    "ed_display": "Отображение",
-    "ed_show_title": "Заголовок",
-    "ed_show_progress": "Прогресс",
-    "ed_show_due_date": "Сроки",
-    "ed_show_notes": "Заметки",
-    "ed_show_recurrence": "Повторения",
-    "ed_show_sub_items": "Подзадачи",
-    "ed_show_person": "Исполнители",
-    "ed_auto_delete": "Сразу удалять выполненные",
-    "ed_compact": "Компактный",
-    "ed_show_tags": "Теги",
-    "ed_confirm_complete": "Подтверждать перед завершением",
-    "ed_tap_to_complete": "Нажатие на строку завершает",
-    "ed_show_add_due": "Срок при добавлении",
-    "ed_max_height": "Макс. высота (px, 0 = без ограничения)",
-    "ed_badge_priority": "Чипы приоритета",
-    "ed_badge_progress": "Чипы прогресса",
-    "ed_badge_due": "Чипы срока",
-    "ed_badge_recurrence": "Чипы повторения",
-    "ed_badge_person": "Человек",
-    "ed_badge_tags": "Чипы тегов",
-    "ed_badge_reminders": "Чипы напоминаний",
-    "ed_sec_defaults": "Значения по умолчанию",
-    "ed_sec_images": "Изображения",
-    "ed_share_images": "Делиться изображениями с другими списками",
-    "ed_share_images_hint": "Выключено — изображения этого списка остаются только в нём: одинаковое название в другом списке получит своё изображение.",
-    "ed_queue_empty": "Ничто не ждёт изображения.",
-    "ed_queue_pending": "Ждут изображения: {0}",
-    "ed_queue_cancel": "Отмена",
-    "ed_ai_image_hint": "Действует для всей карточки, а не только для этого столбца.",
-    "ed_queue_running": "создаётся…",
-    "ed_queue_title": "Очередь генерации",
-    "ed_default_assignee": "Люди по умолчанию",
-    "ed_defaults_saved": "Сохранено",
-    "ed_defaults_load_failed": "Не удалось загрузить значения по умолчанию",
-    "ed_defaults_save_failed": "Не удалось сохранить",
-    "confirm_complete_msg": "Отметить «{0}» как выполненную?",
-    "confirm_complete_ok": "Выполнить",
-    "ed_hint": "Новые списки можно создать в Настройки → Интеграции → Home Tasks.",
-    "tags": "Теги",
-    "add_tag": "+ Добавить тег",
-    "tag_placeholder": "Новый тег...",
-    "remove_tag": "Удалить",
-    "tag_suggestions_label": "Существующие теги",
-    "tag_no_matches": "Нет совпадающих тегов",
-    "new_sub_item": "Новая подзадача",
-    "remove_reminder": "Удалить напоминание",
-    "sort_label": "Сортировка",
-    "sort_manual": "Вручную",
-    "sort_due": "Срок",
-    "sort_priority": "Приоритет",
-    "sort_title": "Заголовок (А–Я)",
-    "sort_person": "Назначено",
-    "ed_show_sort": "Сортировка",
-    "ed_default_sort": "Сортировка по умолчанию",
-    "ed_tag_catalog": "Постоянные теги",
-    "ed_tag_catalog_hint": "Всегда предлагаются при добавлении тега в этом списке — другие теги можно добавить в самой задаче.",
-    "ed_default_lead_hint": "Применяется к задаче при включении её повторения",
-    "tag_did_you_mean": "Вы имели в виду {0}?",
-    "ed_overdue_first": "Просроченные сначала",
-    "reminder": "Напоминания",
-    "rem_add": "+ Добавить напоминание",
-    "rem_none": "Нет напоминания",
-    "rem_at_due": "В срок",
-    "rem_5m": "За 5 мин.",
-    "rem_15m": "За 15 мин.",
-    "rem_30m": "За 30 мин.",
-    "rem_1h": "За 1 час",
-    "rem_2h": "За 2 часа",
-    "rem_1d": "За 1 день",
-    "rem_2d": "За 2 дня",
-    "ed_show_reminders": "Напоминания",
-    "ed_add_column": "Добавить столбец",
-    "ed_move_left": "Влево",
-    "ed_move_right": "Вправо",
-    "ed_duplicate": "Дублировать столбец",
-    "ed_delete_column": "Удалить столбец",
-    "ed_code_editor": "Редактор кода",
-    "ed_visual_editor": "Визуальный редактор",
-    "ed_icon": "Иконка (необязательно)",
-    "ed_card_title": "Заголовок карточки (необязательно)",
-    "ed_card_title_placeholder": "Заголовок над столбцами",
-    "ed_sec_view": "Отображение",
-    "ed_sec_display": "Конфигурация",
-    "ed_sec_filters": "Фильтры",
-    "ed_preset_assignees": "Ограничить по людям",
-    "ed_preset_labels": "Ограничить по тегам",
-    "ed_ms_add": "Добавить…",
-    "due_time_lbl": "Время",
-    "due_date_lbl": "Дата",
-    "rec_mode_lbl": "Режим",
-    "rec_time": "Время",
-    "rec_end": "Окончание",
-    "rec_end_never": "Никогда",
-    "rec_end_date": "До",
-    "rec_end_count": "X раз",
-    "rec_end_date_lbl": "До",
-    "rec_max_count_lbl": "Количество",
-    "rec_remaining": "ещё {0}",
-    "rec_start_date_lbl": "С",
-    "rec_pattern_dom": "День месяца",
-    "rec_pattern_nth": "N-й день",
-    "rec_pattern_none": "От выполнения",
-    "rec_pattern_due": "От срока",
-    "rec_dom_lbl": "День",
-    "rec_dom_last": "Последний день",
-    "rec_nth_lbl": "В",
-    "rec_nth_1": "1-й",
-    "rec_nth_2": "2-й",
-    "rec_nth_3": "3-й",
-    "rec_nth_4": "4-й",
-    "rec_nth_last": "Последний",
-    "rec_anniversary_lbl": "В",
-    "rec_dd": "День",
-    "rec_mm": "Месяц",
-    "rec_dom_short": "-й",
-    "rec_last_short": "последний",
-    "rec_value_lbl": "Каждые",
-    "rec_unit_lbl": "Единица",
-    "rec_wd_lbl": "День недели",
-    "rec_at_lbl": "В",
-    "rec_lead_lbl": "Открыть заранее",
-    "rec_lead_hint": "Снова открывает задачу за указанное время до срока, чтобы она отображалась как «предстоящая». 0 = в момент срока.",
-    "rec_todoist_pattern_unsupported": "Субшаблоны не поддерживаются при интервале больше 1.",
-    "history": "История",
-    "history_created": "Создано",
-    "history_completed": "Выполнено",
-    "history_reopened": "Переоткрыто",
-    "history_reset": "Автосброс",
-    "history_changed": "изменено",
-    "history_empty": "Нет истории",
-    "hist_title": "Заголовок",
-    "history_disabled": "Отключено",
-    "ed_show_history": "Истории",
-    "hist_by_user": "Пользователь",
-    "ed_show_add_task": "Добавить задачу",
-    "assigned_unknown": "Неизвестный (%s)",
-    "recurrence_readonly": "Управляется %s",
-    "synced_with": "Синхронизировано с %s",
-    "due_today": "Сегодня",
-    "due_tomorrow": "Завтра",
-    "due_yesterday": "Вчера",
-    "due_day_after_tomorrow": "Послезавтра",
-    "due_day_before_yesterday": "Позавчера",
-    "due_in_hours": "Через {0} ч {1} мин",
-    "due_in_minutes": "Через {0} мин",
-    "due_in_seconds": "Сейчас",
-    "due_ago_hours": "{0} ч {1} мин назад",
-    "due_ago_minutes": "{0} мин назад",
-    "due_ago_seconds": "Только что",
-    "calendar_minutes_before": "за {value} мин",
-    "calendar_hours_before": "за {value} ч",
-    "calendar_days_before": "за {value} дн.",
-    "ed_show_section": "Поле раздела",
-    "ed_section_field_no_sections": "Появится, когда в списке будут разделы",
-    "section_label": "Раздел",
-    "ed_list_columns": "Колонки задач",
-    "ed_tile_size": "Размер плиток",
-    "ed_tile_size_small": "Маленький",
-    "ed_tile_size_compact": "Компактный",
-    "ed_tile_size_medium": "Обычный",
-    "ed_tile_size_large": "Большой",
-    "due_quick_week": "Через 1 неделю",
-    "due_quick_month": "Через 1 месяц",
-    "due_quick_3months": "Через 3 месяца",
-    "ed_offered_persons": "Доступные люди",
-    "ed_offered_persons_hint": "В этой карточке можно назначать только выделенных людей",
-    "ed_show_add_details": "Детали при добавлении",
-    "add_with_details": "Добавить с деталями",
-    "add_clear": "Очистить",
-    "plan_note_placeholder": "Фокус дня",
-    "plan_empty": "Ничего не запланировано",
-    "plan_add": "Запланировать задачу",
-    "plan_search_placeholder": "Поиск задач…",
-    "plan_no_results": "Нет подходящих открытых задач",
-    "plan_carry_over": "Перенести открытые задачи с {0} ({1})",
-    "plan_move_day": "Другой день…",
-    "plan_day_msg": "Какой день для «{0}»?",
-    "plan_remove": "Убрать из плана",
-    "plan_for": "Запланировать на…",
-    "plan_ok": "Запланировать",
-    "plan_none": "План дня не найден. Планы дня можно создать в Настройки → Интеграции → Home Tasks.",
-    "ed_view_lists": "Списки",
-    "ed_view_day_plan": "План дня",
-    "ed_plan_days": "Показываемые дни",
-    "ed_plan_all_lists": "Все списки",
-    "plan_due_hint": "В плане из-за срока выполнения: перенесите задачу или измените дату.",
-    "ed_plan_weekend": "Выходные",
-    "new_entry_link": "Создать новый список или план дня",
-    "ed_plan_list_missing": "Список недоступен",
-    "picker_list_name": "Home Tasks: Список",
-    "picker_plan_name": "Home Tasks: План дня",
-    "picker_list_desc": "Списки задач в колонках: перетаскивание, подзадачи, заметки и сроки.",
-    "picker_plan_desc": "Дни плана дня: задачи из нескольких списков в том порядке, в котором вы их выполняете."
+  ru: {
+    ed_default_priority: "Приоритет по умолчанию",
+    ed_default_tags: "Теги по умолчанию",
+    ed_default_section: "Раздел по умолчанию",
+    ed_default_none: "– Нет –",
+    ed_group_card: "Карточка",
+    ed_person_off: "Выкл.",
+    ed_person_name: "Имя",
+    ed_person_both: "Фото и имя",
+    ed_group_header: "Заголовок",
+    ed_group_tasks: "Задачи",
+    ed_show_person_avatar: "Фото профиля",
+    voice_failed: "Сбой голосового ввода",
+    confirm_delete_section: "Удалить этот раздел? Задачи в нём станут несортированными.",
+    done_section_header: "Готово",
+    duplicate_task: "Дублировать",
+    move_task: "Переместить",
+    move_task_msg: "Переместить «{0}» в:",
+    ed_show_move: "Кнопка перемещения",
+    ed_add_section: "+ Добавить раздел",
+    ed_ai_image_entity: "ИИ-сущность для генерации изображений",
+    ed_ai_image_entity_placeholder: "напр. ai_task.openai",
+    ed_ai_prompt_prefix: "Префикс запроса (необязательно)",
+    ed_ai_prompt_prefix_placeholder: "напр. Минималистичная иконка",
+    ed_auto_image: "Автоматически генерировать изображение",
+    ed_delete_section: "Удалить раздел",
+    ed_external_lists: "Внешний",
+    ed_loading: "Загрузка…",
+    ed_move_down: "Переместить вниз",
+    ed_move_up: "Переместить вверх",
+    ed_sec_sections: "Разделы",
+    ed_section_icon: "Значок",
+    ed_section_name: "Имя",
+    ed_section_name_prompt: "Название раздела:",
+    ed_sections_empty: "Разделов пока нет — задачи отображаются списком.",
+    ed_sections_select_list_hint: "Сначала выберите список, чтобы управлять его разделами.",
+    ed_show_filters: "Фильтр статуса",
+    ed_show_images: "Изображения",
+    ed_show_person_chips: "Фильтр людей",
+    ed_show_tag_chips: "Фильтр тегов",
+    ed_show_tile_title: "Заголовок на плитках",
+    ed_show_voice: "Голосовой ввод",
+    ed_task_search: "Поиск задач",
+    ed_tile_help: "Режим плиток:\n• Клик = выполнить\n• Удержание = редактировать\n• Перетаскивание = изменить порядок",
+    ed_view_mode: "Режим отображения",
+    ed_view_mode_list: "Список",
+    ed_view_mode_tiles: "Плитки",
+    voice_input: "Голосовой ввод",
+    voice_stop: "Остановить запись",
+    img_label: "Изображение",
+    img_generate: "Сгенерировать",
+    img_regenerate: "Сгенерировать заново",
+    img_generating: "Генерация…",
+    img_from_media: "Из медиатеки",
+    img_remove: "Удалить изображение",
+    img_generate_failed: "Не удалось сгенерировать изображение: ",
+    img_save_failed: "Не удалось сохранить изображение: ",
+    mb_title: "Медиатека",
+    mb_loading: "Загрузка…",
+    mb_root: "Медиа",
+    mb_back: "Назад",
+    mb_empty: "Нет файлов",
+    mb_error: "Ошибка: ",
+    my_tasks: "Мои задачи",
+    add_placeholder: "Добавить новую задачу...",
+    add_failed: "Не удалось добавить задачу",
+    draft_details_failed: "Задача добавлена, но некоторые детали не удалось сохранить",
+    duplicate_failed: "Не удалось дублировать задачу",
+    dialog_cancel: "Отмена",
+    dialog_add: "Добавить",
+    filter_all: "Все",
+    filter_open: "Открытые",
+    filter_done: "Выполненные",
+    filter_due_soon: "Скоро",
+    ed_show_due_soon_filter: "Фильтр скоро",
+    ed_due_soon_days: "Дней вперёд",
+    ed_hide_overdue: "Скрыть просроченные",
+    progress: "{0} из {1} выполнено",
+    empty: "Нет задач",
+    drag_handle: "Перетащить для изменения порядка",
+    due_date: "Срок",
+    notes: "Заметки",
+    notes_placeholder: "Добавить заметки здесь",
+    notes_edit_hint: "Нажмите для редактирования",
+    sub_items: "Подзадачи",
+    add_sub_item: "+ Добавить подзадачу",
+    recurrence: "Повторение",
+    recurrence_enabled: "Включено",
+    recurrence_every: "Каждые",
+    rec_minutes: "Минуты",
+    rec_hours: "Часы",
+    rec_days: "Дни",
+    rec_weeks: "Недели",
+    rec_months: "Месяцы",
+    rec_years: "Годы",
+    rec_short_h: "ч",
+    rec_short_d: "д",
+    rec_short_w: "н",
+    rec_short_m: "м",
+    rec_short_y: "г",
+    priority: "Приоритет",
+    pri_high: "Высокий",
+    pri_medium: "Средний",
+    pri_low: "Низкий",
+    ed_show_priority: "Приоритеты",
+    rec_hourly: "Ежечасно",
+    rec_daily: "Ежедневно",
+    rec_weekly: "Еженедельно",
+    rec_monthly: "Ежемесячно",
+    rec_yearly: "Ежегодно",
+    rec_type_interval: "Каждые …",
+    rec_type_weekdays: "По будням",
+    rec_wd_0: "Пн",
+    rec_wd_1: "Вт",
+    rec_wd_2: "Ср",
+    rec_wd_3: "Чт",
+    rec_wd_4: "Пт",
+    rec_wd_5: "Сб",
+    rec_wd_6: "Вс",
+    assigned_to: "Назначенные люди",
+    nobody: "– Никто –",
+    delete_task: "Удалить задачу",
+    delete_sub: "Удалить",
+    ed_default_filter: "Фильтр по умолчанию",
+    ed_list: "Список",
+    ed_title: "Заголовок (необязательно)",
+    ed_title_placeholder: "По умолчанию: название списка",
+    ed_display: "Отображение",
+    ed_show_title: "Заголовок",
+    ed_show_progress: "Прогресс",
+    ed_show_due_date: "Сроки",
+    ed_show_notes: "Заметки",
+    ed_show_recurrence: "Повторения",
+    ed_show_sub_items: "Подзадачи",
+    ed_show_person: "Исполнители",
+    ed_auto_delete: "Сразу удалять выполненные",
+    ed_compact: "Компактный",
+    ed_show_tags: "Теги",
+    ed_confirm_complete: "Подтверждать перед завершением",
+    ed_tap_to_complete: "Нажатие на строку завершает",
+    ed_show_add_due: "Срок при добавлении",
+    ed_max_height: "Макс. высота (px, 0 = без ограничения)",
+    ed_badge_priority: "Чипы приоритета",
+    ed_badge_progress: "Чипы прогресса",
+    ed_badge_due: "Чипы срока",
+    ed_badge_recurrence: "Чипы повторения",
+    ed_badge_person: "Человек",
+    ed_badge_tags: "Чипы тегов",
+    ed_badge_reminders: "Чипы напоминаний",
+    ed_sec_defaults: "Значения по умолчанию",
+    ed_sec_images: "Изображения",
+    ed_share_images: "Делиться изображениями с другими списками",
+    ed_share_images_hint: "Выключено — изображения этого списка остаются только в нём: одинаковое название в другом списке получит своё изображение.",
+    ed_queue_empty: "Ничто не ждёт изображения.",
+    ed_queue_pending: "Ждут изображения: {0}",
+    ed_queue_cancel: "Отмена",
+    ed_ai_image_hint: "Действует для всей карточки, а не только для этого столбца.",
+    ed_queue_running: "создаётся…",
+    ed_queue_title: "Очередь генерации",
+    ed_default_assignee: "Люди по умолчанию",
+    ed_defaults_saved: "Сохранено",
+    ed_defaults_load_failed: "Не удалось загрузить значения по умолчанию",
+    ed_defaults_save_failed: "Не удалось сохранить",
+    confirm_complete_msg: "Отметить «{0}» как выполненную?",
+    confirm_complete_ok: "Выполнить",
+    ed_hint: "Новые списки можно создать в Настройки → Интеграции → Home Tasks.",
+    tags: "Теги",
+    add_tag: "+ Добавить тег",
+    tag_placeholder: "Новый тег...",
+    remove_tag: "Удалить",
+    tag_suggestions_label: "Существующие теги",
+    tag_no_matches: "Нет совпадающих тегов",
+    new_sub_item: "Новая подзадача",
+    remove_reminder: "Удалить напоминание",
+    sort_label: "Сортировка",
+    sort_manual: "Вручную",
+    sort_due: "Срок",
+    sort_priority: "Приоритет",
+    sort_title: "Заголовок (А–Я)",
+    sort_person: "Назначено",
+    ed_show_sort: "Сортировка",
+    ed_default_sort: "Сортировка по умолчанию",
+    ed_tag_catalog: "Постоянные теги",
+    ed_tag_catalog_hint: "Всегда предлагаются при добавлении тега в этом списке — другие теги можно добавить в самой задаче.",
+    ed_default_lead_hint: "Применяется к задаче при включении её повторения",
+    tag_did_you_mean: "Вы имели в виду {0}?",
+    ed_overdue_first: "Просроченные сначала",
+    reminder: "Напоминания",
+    rem_add: "+ Добавить напоминание",
+    rem_none: "Нет напоминания",
+    rem_at_due: "В срок",
+    rem_5m: "За 5 мин.",
+    rem_15m: "За 15 мин.",
+    rem_30m: "За 30 мин.",
+    rem_1h: "За 1 час",
+    rem_2h: "За 2 часа",
+    rem_1d: "За 1 день",
+    rem_2d: "За 2 дня",
+    ed_show_reminders: "Напоминания",
+    ed_add_column: "Добавить столбец",
+    ed_move_left: "Влево",
+    ed_move_right: "Вправо",
+    ed_duplicate: "Дублировать столбец",
+    ed_delete_column: "Удалить столбец",
+    ed_code_editor: "Редактор кода",
+    ed_visual_editor: "Визуальный редактор",
+    ed_icon: "Иконка (необязательно)",
+    ed_card_title: "Заголовок карточки (необязательно)",
+    ed_card_title_placeholder: "Заголовок над столбцами",
+    ed_sec_view: "Отображение",
+    ed_sec_display: "Конфигурация",
+    ed_sec_filters: "Фильтры",
+    ed_preset_assignees: "Ограничить по людям",
+    ed_preset_labels: "Ограничить по тегам",
+    ed_ms_add: "Добавить…",
+    due_time_lbl: "Время",
+    due_date_lbl: "Дата",
+    rec_mode_lbl: "Режим",
+    rec_time: "Время",
+    rec_end: "Окончание",
+    rec_end_never: "Никогда",
+    rec_end_date: "До",
+    rec_end_count: "X раз",
+    rec_end_date_lbl: "До",
+    rec_max_count_lbl: "Количество",
+    rec_remaining: "ещё {0}",
+    rec_start_date_lbl: "С",
+    rec_pattern_dom: "День месяца",
+    rec_pattern_nth: "N-й день",
+    rec_pattern_none: "От выполнения",
+    rec_pattern_due: "От срока",
+    rec_dom_lbl: "День",
+    rec_dom_last: "Последний день",
+    rec_nth_lbl: "В",
+    rec_nth_1: "1-й",
+    rec_nth_2: "2-й",
+    rec_nth_3: "3-й",
+    rec_nth_4: "4-й",
+    rec_nth_last: "Последний",
+    rec_anniversary_lbl: "В",
+    rec_dd: "День",
+    rec_mm: "Месяц",
+    rec_dom_short: "-й",
+    rec_last_short: "последний",
+    rec_value_lbl: "Каждые",
+    rec_unit_lbl: "Единица",
+    rec_wd_lbl: "День недели",
+    rec_at_lbl: "В",
+    rec_lead_lbl: "Открыть заранее",
+    rec_lead_hint: "Снова открывает задачу за указанное время до срока, чтобы она отображалась как «предстоящая». 0 = в момент срока.",
+    rec_todoist_pattern_unsupported: "Субшаблоны не поддерживаются при интервале больше 1.",
+    history: "История",
+    history_created: "Создано",
+    history_completed: "Выполнено",
+    history_reopened: "Переоткрыто",
+    history_reset: "Автосброс",
+    history_changed: "изменено",
+    history_empty: "Нет истории",
+    hist_title: "Заголовок",
+    history_disabled: "Отключено",
+    ed_show_history: "Истории",
+    hist_by_user: "Пользователь",
+    ed_show_add_task: "Добавить задачу",
+    assigned_unknown: "Неизвестный (%s)",
+    recurrence_readonly: "Управляется %s",
+    synced_with: "Синхронизировано с %s",
+    due_today: "Сегодня",
+    due_tomorrow: "Завтра",
+    due_yesterday: "Вчера",
+    due_day_after_tomorrow: "Послезавтра",
+    due_day_before_yesterday: "Позавчера",
+    due_in_hours: "Через {0} ч {1} мин",
+    due_in_minutes: "Через {0} мин",
+    due_in_seconds: "Сейчас",
+    due_ago_hours: "{0} ч {1} мин назад",
+    due_ago_minutes: "{0} мин назад",
+    due_ago_seconds: "Только что",
+    calendar_minutes_before: "за {value} мин",
+    calendar_hours_before: "за {value} ч",
+    calendar_days_before: "за {value} дн.",
+    ed_show_section: "Поле раздела",
+    ed_section_field_no_sections: "Появится, когда в списке будут разделы",
+    section_label: "Раздел",
+    ed_list_columns: "Колонки задач",
+    ed_tile_size: "Размер плиток",
+    ed_tile_size_small: "Маленький",
+    ed_tile_size_compact: "Компактный",
+    ed_tile_size_medium: "Обычный",
+    ed_tile_size_large: "Большой",
+    due_quick_week: "Через 1 неделю",
+    due_quick_month: "Через 1 месяц",
+    due_quick_3months: "Через 3 месяца",
+    ed_offered_persons: "Доступные люди",
+    ed_offered_persons_hint: "В этой карточке можно назначать только выделенных людей",
+    ed_show_add_details: "Детали при добавлении",
+    add_with_details: "Добавить с деталями",
+    add_clear: "Очистить",
+    plan_note_placeholder: "Фокус дня",
+    plan_empty: "Ничего не запланировано",
+    plan_add: "Запланировать задачу",
+    plan_search_placeholder: "Поиск задач…",
+    plan_no_results: "Нет подходящих открытых задач",
+    plan_carry_over: "Перенести открытые задачи с {0} ({1})",
+    plan_move_day: "Другой день…",
+    plan_day_msg: "Какой день для «{0}»?",
+    plan_remove: "Убрать из плана",
+    plan_for: "Запланировать на…",
+    plan_ok: "Запланировать",
+    plan_none: "План дня не найден. Планы дня можно создать в Настройки → Интеграции → Home Tasks.",
+    ed_view_lists: "Списки",
+    ed_view_day_plan: "План дня",
+    ed_plan_days: "Показываемые дни",
+    ed_plan_all_lists: "Все списки",
+    plan_due_hint: "В плане из-за срока выполнения: перенесите задачу или измените дату.",
+    ed_plan_weekend: "Выходные",
+    new_entry_link: "Создать новый список или план дня",
+    ed_plan_list_missing: "Список недоступен",
+    picker_list_name: "Home Tasks: Список",
+    picker_plan_name: "Home Tasks: План дня",
+    picker_list_desc: "Списки задач в колонках: перетаскивание, подзадачи, заметки и сроки.",
+    picker_plan_desc: "Дни плана дня: задачи из нескольких списков в том порядке, в котором вы их выполняете."
   },
-  "cs": {
-    "ed_default_priority": "Výchozí priorita",
-    "ed_default_tags": "Výchozí štítky",
-    "ed_default_section": "Výchozí sekce",
-    "ed_default_none": "– Žádná –",
-    "ed_group_card": "Karta",
-    "ed_person_off": "Vypnuto",
-    "ed_person_name": "Jméno",
-    "ed_person_both": "Fotka a jméno",
-    "ed_group_header": "Záhlaví",
-    "ed_group_tasks": "Úkoly",
-    "ed_show_person_avatar": "Profilová fotka",
-    "voice_failed": "Hlasový vstup selhal",
-    "confirm_delete_section": "Odstranit tuto sekci? Úkoly v ní zůstanou neseřazené.",
-    "done_section_header": "Hotovo",
-    "duplicate_task": "Duplikovat",
-    "move_task": "Přesunout",
-    "move_task_msg": "Přesunout „{0}“ do:",
-    "ed_show_move": "Tlačítko přesunutí",
-    "ed_add_section": "+ Přidat sekci",
-    "ed_ai_image_entity": "Entita AI pro generování obrázků",
-    "ed_ai_image_entity_placeholder": "např. ai_task.openai",
-    "ed_ai_prompt_prefix": "Předpona promptu (volitelné)",
-    "ed_ai_prompt_prefix_placeholder": "např. Minimalistická ikona",
-    "ed_auto_image": "Automaticky generovat obrázek",
-    "ed_delete_section": "Odstranit sekci",
-    "ed_external_lists": "Externí",
-    "ed_loading": "Načítání…",
-    "ed_move_down": "Posunout dolů",
-    "ed_move_up": "Posunout nahoru",
-    "ed_sec_sections": "Sekce",
-    "ed_section_icon": "Ikona",
-    "ed_section_name": "Název",
-    "ed_section_name_prompt": "Název sekce:",
-    "ed_sections_empty": "Zatím žádné sekce — úkoly se zobrazí bez seskupení.",
-    "ed_sections_select_list_hint": "Nejprve vyberte seznam pro správu jeho sekcí.",
-    "ed_show_filters": "Filtr stavu",
-    "ed_show_images": "Obrázky",
-    "ed_show_person_chips": "Filtr osob",
-    "ed_show_tag_chips": "Filtr štítků",
-    "ed_show_tile_title": "Název na dlaždicích",
-    "ed_show_voice": "Hlasový vstup",
-    "ed_task_search": "Hledání úkolů",
-    "ed_tile_help": "Zobrazení dlaždic:\n• Kliknutí = dokončit\n• Podržení = upravit\n• Přetažení = změnit pořadí",
-    "ed_view_mode": "Režim zobrazení",
-    "ed_view_mode_list": "Seznam",
-    "ed_view_mode_tiles": "Dlaždice",
-    "voice_input": "Hlasový vstup",
-    "voice_stop": "Zastavit nahrávání",
-    "img_label": "Obrázek",
-    "img_generate": "Vygenerovat",
-    "img_regenerate": "Vygenerovat znovu",
-    "img_generating": "Generování…",
-    "img_from_media": "Z knihovny médií",
-    "img_remove": "Odebrat obrázek",
-    "img_generate_failed": "Generování obrázku se nezdařilo: ",
-    "img_save_failed": "Uložení obrázku se nezdařilo: ",
-    "mb_title": "Knihovna médií",
-    "mb_loading": "Načítání…",
-    "mb_root": "Média",
-    "mb_back": "Zpět",
-    "mb_empty": "Žádné soubory",
-    "mb_error": "Chyba: ",
-    "my_tasks": "Moje úkoly",
-    "add_placeholder": "Přidat nový úkol...",
-    "add_failed": "Úkol se nepodařilo přidat",
-    "draft_details_failed": "Úkol byl přidán, ale některé podrobnosti se nepodařilo uložit",
-    "duplicate_failed": "Úkol se nepodařilo duplikovat",
-    "dialog_cancel": "Zrušit",
-    "dialog_add": "Přidat",
-    "filter_all": "Vše",
-    "filter_open": "Otevřené",
-    "filter_done": "Dokončené",
-    "filter_due_soon": "Brzy",
-    "ed_show_due_soon_filter": "Filtr brzy",
-    "ed_due_soon_days": "Dnů dopředu",
-    "ed_hide_overdue": "Skrýt po termínu",
-    "progress": "{0} z {1} dokončeno",
-    "empty": "Žádné úkoly",
-    "drag_handle": "Přetáhnout pro změnu pořadí",
-    "due_date": "Termín",
-    "notes": "Poznámky",
-    "notes_placeholder": "Přidat poznámky zde",
-    "notes_edit_hint": "Klikněte pro úpravu",
-    "sub_items": "Podúkoly",
-    "add_sub_item": "+ Přidat podúkol",
-    "recurrence": "Opakování",
-    "recurrence_enabled": "Povoleno",
-    "recurrence_every": "Každý",
-    "rec_minutes": "Minuty",
-    "rec_hours": "Hodiny",
-    "rec_days": "Dny",
-    "rec_weeks": "Týdny",
-    "rec_months": "Měsíce",
-    "rec_years": "Roky",
-    "rec_short_h": "h",
-    "rec_short_d": "d",
-    "rec_short_w": "t",
-    "rec_short_m": "m",
-    "rec_short_y": "r",
-    "priority": "Priorita",
-    "pri_high": "Vysoká",
-    "pri_medium": "Střední",
-    "pri_low": "Nízká",
-    "ed_show_priority": "Priority",
-    "rec_hourly": "Hodinově",
-    "rec_daily": "Denně",
-    "rec_weekly": "Týdně",
-    "rec_monthly": "Měsíčně",
-    "rec_yearly": "Ročně",
-    "rec_type_interval": "Každý …",
-    "rec_type_weekdays": "Ve všední dny",
-    "rec_wd_0": "Po",
-    "rec_wd_1": "Út",
-    "rec_wd_2": "St",
-    "rec_wd_3": "Čt",
-    "rec_wd_4": "Pá",
-    "rec_wd_5": "So",
-    "rec_wd_6": "Ne",
-    "assigned_to": "Přiřazené osoby",
-    "nobody": "– Nikdo –",
-    "delete_task": "Smazat úkol",
-    "delete_sub": "Smazat",
-    "ed_default_filter": "Výchozí filtr",
-    "ed_list": "Seznam",
-    "ed_title": "Název (volitelně)",
-    "ed_title_placeholder": "Výchozí: název seznamu",
-    "ed_display": "Zobrazení",
-    "ed_show_title": "Název",
-    "ed_show_progress": "Pokrok",
-    "ed_show_due_date": "Termíny",
-    "ed_show_notes": "Poznámky",
-    "ed_show_recurrence": "Opakování",
-    "ed_show_sub_items": "Podúkoly",
-    "ed_show_person": "Osoby",
-    "ed_auto_delete": "Okamžitě smazat dokončené",
-    "ed_compact": "Kompaktní",
-    "ed_show_tags": "Štítky",
-    "ed_confirm_complete": "Potvrdit před dokončením",
-    "ed_tap_to_complete": "Klepnutím na řádek dokončit",
-    "ed_show_add_due": "Termín při přidání",
-    "ed_max_height": "Max. výška (px, 0 = bez limitu)",
-    "ed_badge_priority": "Čipy priority",
-    "ed_badge_progress": "Čipy průběhu",
-    "ed_badge_due": "Čipy termínu",
-    "ed_badge_recurrence": "Čipy opakování",
-    "ed_badge_person": "Osoba",
-    "ed_badge_tags": "Čipy štítků",
-    "ed_badge_reminders": "Čipy připomenutí",
-    "ed_sec_defaults": "Výchozí hodnoty",
-    "ed_sec_images": "Obrázky",
-    "ed_share_images": "Sdílet obrázky s jinými seznamy",
-    "ed_share_images_hint": "Vypnuto ponechá obrázky tohoto seznamu jen jemu — stejný název v jiném seznamu dostane vlastní obrázek.",
-    "ed_queue_empty": "Nic nečeká na obrázek.",
-    "ed_queue_pending": "Čeká na obrázek: {0}",
-    "ed_queue_cancel": "Zrušit",
-    "ed_ai_image_hint": "Platí pro celou kartu, nejen pro tento sloupec.",
-    "ed_queue_running": "generuje se…",
-    "ed_queue_title": "Fronta generování",
-    "ed_default_assignee": "Výchozí osoby",
-    "ed_defaults_saved": "Uloženo",
-    "ed_defaults_load_failed": "Výchozí hodnoty se nepodařilo načíst",
-    "ed_defaults_save_failed": "Uložení se nezdařilo",
-    "confirm_complete_msg": "Označit „{0}“ jako dokončené?",
-    "confirm_complete_ok": "Dokončit",
-    "ed_hint": "Nové seznamy lze vytvořit v Nastavení → Integrace → Home Tasks.",
-    "tags": "Štítky",
-    "add_tag": "+ Přidat štítek",
-    "tag_placeholder": "Nový štítek...",
-    "remove_tag": "Odebrat",
-    "tag_suggestions_label": "Existující štítky",
-    "tag_no_matches": "Žádné odpovídající štítky",
-    "new_sub_item": "Nový podúkol",
-    "remove_reminder": "Odebrat připomínku",
-    "sort_label": "Řadit",
-    "sort_manual": "Ručně",
-    "sort_due": "Termín",
-    "sort_priority": "Priorita",
-    "sort_title": "Název (A–Z)",
-    "sort_person": "Přiřazeno",
-    "ed_show_sort": "Řazení",
-    "ed_default_sort": "Výchozí řazení",
-    "ed_tag_catalog": "Pevné štítky",
-    "ed_tag_catalog_hint": "Vždy nabízeny při štítkování v tomto seznamu — další štítky lze přidat přímo v úkolu.",
-    "ed_default_lead_hint": "Úkol jej převezme, když se zapne jeho opakování",
-    "tag_did_you_mean": "Mysleli jste {0}?",
-    "ed_overdue_first": "Úkoly po termínu nahoře",
-    "reminder": "Připomínky",
-    "rem_add": "+ Přidat připomínku",
-    "rem_none": "Bez připomínky",
-    "rem_at_due": "V čas termínu",
-    "rem_5m": "5 min. před",
-    "rem_15m": "15 min. před",
-    "rem_30m": "30 min. před",
-    "rem_1h": "1 hod. před",
-    "rem_2h": "2 hod. před",
-    "rem_1d": "1 den před",
-    "rem_2d": "2 dny před",
-    "ed_show_reminders": "Připomínky",
-    "ed_add_column": "Přidat sloupec",
-    "ed_move_left": "Přesunout vlevo",
-    "ed_move_right": "Přesunout vpravo",
-    "ed_duplicate": "Duplikovat sloupec",
-    "ed_delete_column": "Smazat sloupec",
-    "ed_code_editor": "Editor kódu",
-    "ed_visual_editor": "Vizuální editor",
-    "ed_icon": "Ikona (volitelně)",
-    "ed_card_title": "Název karty (volitelně)",
-    "ed_card_title_placeholder": "Název nad sloupci",
-    "ed_sec_view": "Zobrazení",
-    "ed_sec_display": "Konfigurace",
-    "ed_sec_filters": "Filtry",
-    "ed_preset_assignees": "Omezit na osoby",
-    "ed_preset_labels": "Omezit na štítky",
-    "ed_ms_add": "Přidat…",
-    "due_time_lbl": "Čas",
-    "due_date_lbl": "Datum",
-    "rec_mode_lbl": "Režim",
-    "rec_time": "Čas",
-    "rec_end": "Konec",
-    "rec_end_never": "Nikdy",
-    "rec_end_date": "Do",
-    "rec_end_count": "X krát",
-    "rec_end_date_lbl": "Do",
-    "rec_max_count_lbl": "Počet",
-    "rec_remaining": "ještě {0}",
-    "rec_start_date_lbl": "Od",
-    "rec_pattern_dom": "Den v měsíci",
-    "rec_pattern_nth": "N-tý den",
-    "rec_pattern_none": "Od dokončení",
-    "rec_pattern_due": "Od termínu",
-    "rec_dom_lbl": "Den",
-    "rec_dom_last": "Poslední den",
-    "rec_nth_lbl": "V",
-    "rec_nth_1": "1.",
-    "rec_nth_2": "2.",
-    "rec_nth_3": "3.",
-    "rec_nth_4": "4.",
-    "rec_nth_last": "Poslední",
-    "rec_anniversary_lbl": "V",
-    "rec_dd": "Den",
-    "rec_mm": "Měsíc",
-    "rec_dom_short": ".",
-    "rec_last_short": "poslední",
-    "rec_value_lbl": "Každý",
-    "rec_unit_lbl": "Jednotka",
-    "rec_wd_lbl": "Den v týdnu",
-    "rec_at_lbl": "V",
-    "rec_lead_lbl": "Otevřít dříve",
-    "rec_lead_hint": "Úkol se znovu otevře s tímto časovým předstihem před novým termínem splnění, takže se zobrazí jako nadcházející. 0 = v termínu splnění.",
-    "rec_todoist_pattern_unsupported": "Podvzory nejsou podporovány, pokud je interval větší než 1.",
-    "history": "Historie",
-    "history_created": "Vytvořeno",
-    "history_completed": "Dokončeno",
-    "history_reopened": "Znovu otevřeno",
-    "history_reset": "Automaticky obnoveno",
-    "history_changed": "změněno",
-    "history_empty": "Žádná historie",
-    "hist_title": "Název",
-    "history_disabled": "Deaktivováno",
-    "ed_show_history": "Historie",
-    "hist_by_user": "Uživatel",
-    "ed_show_add_task": "Přidat úkol",
-    "assigned_unknown": "Neznámý (%s)",
-    "recurrence_readonly": "Spravováno %s",
-    "synced_with": "Synchronizováno s %s",
-    "due_today": "Dnes",
-    "due_tomorrow": "Zítra",
-    "due_yesterday": "Včera",
-    "due_day_after_tomorrow": "Pozítří",
-    "due_day_before_yesterday": "Předevčírem",
-    "due_in_hours": "Za {0} hod {1} min",
-    "due_in_minutes": "Za {0} min",
-    "due_in_seconds": "Nyní",
-    "due_ago_hours": "Před {0} hod {1} min",
-    "due_ago_minutes": "Před {0} min",
-    "due_ago_seconds": "Právě teď",
-    "calendar_minutes_before": "{value} min předem",
-    "calendar_hours_before": "{value} h předem",
-    "calendar_days_before": "{value} d předem",
-    "ed_show_section": "Pole sekce",
-    "ed_section_field_no_sections": "Zobrazí se, jakmile bude mít seznam sekce",
-    "section_label": "Sekce",
-    "ed_list_columns": "Sloupce úkolů",
-    "ed_tile_size": "Velikost dlaždic",
-    "ed_tile_size_small": "Malá",
-    "ed_tile_size_compact": "Kompaktní",
-    "ed_tile_size_medium": "Normální",
-    "ed_tile_size_large": "Velká",
-    "due_quick_week": "Za 1 týden",
-    "due_quick_month": "Za 1 měsíc",
-    "due_quick_3months": "Za 3 měsíce",
-    "ed_offered_persons": "Volitelné osoby",
-    "ed_offered_persons_hint": "V této kartě lze přiřadit jen zvýrazněné osoby",
-    "ed_show_add_details": "Podrobnosti při přidání",
-    "add_with_details": "Přidat s podrobnostmi",
-    "add_clear": "Vymazat",
-    "plan_note_placeholder": "Zaměření dne",
-    "plan_empty": "Nic naplánováno",
-    "plan_add": "Naplánovat úkol",
-    "plan_search_placeholder": "Hledat úkoly…",
-    "plan_no_results": "Žádné odpovídající otevřené úkoly",
-    "plan_carry_over": "Převzít otevřené úkoly z {0} ({1})",
-    "plan_move_day": "Jiný den…",
-    "plan_day_msg": "Který den pro „{0}“?",
-    "plan_remove": "Odebrat z plánu",
-    "plan_for": "Naplánovat na…",
-    "plan_ok": "Naplánovat",
-    "plan_none": "Nebyl nalezen žádný denní plán. Denní plány lze vytvořit v Nastavení → Integrace → Home Tasks.",
-    "ed_view_lists": "Seznamy",
-    "ed_view_day_plan": "Denní plán",
-    "ed_plan_days": "Zobrazené dny",
-    "ed_plan_all_lists": "Všechny seznamy",
-    "plan_due_hint": "Je v plánu kvůli termínu: přesuňte úkol nebo změňte datum.",
-    "ed_plan_weekend": "Víkend",
-    "new_entry_link": "Vytvořit nový seznam nebo denní plán",
-    "ed_plan_list_missing": "Seznam není dostupný",
-    "picker_list_name": "Home Tasks: Seznam",
-    "picker_plan_name": "Home Tasks: Denní plán",
-    "picker_list_desc": "Seznamy úkolů ve sloupcích, s přetahováním, podúkoly, poznámkami a termíny.",
-    "picker_plan_desc": "Dny denního plánu: úkoly z několika seznamů v pořadí, v jakém na nich pracujete."
+  cs: {
+    ed_default_priority: "Výchozí priorita",
+    ed_default_tags: "Výchozí štítky",
+    ed_default_section: "Výchozí sekce",
+    ed_default_none: "– Žádná –",
+    ed_group_card: "Karta",
+    ed_person_off: "Vypnuto",
+    ed_person_name: "Jméno",
+    ed_person_both: "Fotka a jméno",
+    ed_group_header: "Záhlaví",
+    ed_group_tasks: "Úkoly",
+    ed_show_person_avatar: "Profilová fotka",
+    voice_failed: "Hlasový vstup selhal",
+    confirm_delete_section: "Odstranit tuto sekci? Úkoly v ní zůstanou neseřazené.",
+    done_section_header: "Hotovo",
+    duplicate_task: "Duplikovat",
+    move_task: "Přesunout",
+    move_task_msg: "Přesunout „{0}“ do:",
+    ed_show_move: "Tlačítko přesunutí",
+    ed_add_section: "+ Přidat sekci",
+    ed_ai_image_entity: "Entita AI pro generování obrázků",
+    ed_ai_image_entity_placeholder: "např. ai_task.openai",
+    ed_ai_prompt_prefix: "Předpona promptu (volitelné)",
+    ed_ai_prompt_prefix_placeholder: "např. Minimalistická ikona",
+    ed_auto_image: "Automaticky generovat obrázek",
+    ed_delete_section: "Odstranit sekci",
+    ed_external_lists: "Externí",
+    ed_loading: "Načítání…",
+    ed_move_down: "Posunout dolů",
+    ed_move_up: "Posunout nahoru",
+    ed_sec_sections: "Sekce",
+    ed_section_icon: "Ikona",
+    ed_section_name: "Název",
+    ed_section_name_prompt: "Název sekce:",
+    ed_sections_empty: "Zatím žádné sekce — úkoly se zobrazí bez seskupení.",
+    ed_sections_select_list_hint: "Nejprve vyberte seznam pro správu jeho sekcí.",
+    ed_show_filters: "Filtr stavu",
+    ed_show_images: "Obrázky",
+    ed_show_person_chips: "Filtr osob",
+    ed_show_tag_chips: "Filtr štítků",
+    ed_show_tile_title: "Název na dlaždicích",
+    ed_show_voice: "Hlasový vstup",
+    ed_task_search: "Hledání úkolů",
+    ed_tile_help: "Zobrazení dlaždic:\n• Kliknutí = dokončit\n• Podržení = upravit\n• Přetažení = změnit pořadí",
+    ed_view_mode: "Režim zobrazení",
+    ed_view_mode_list: "Seznam",
+    ed_view_mode_tiles: "Dlaždice",
+    voice_input: "Hlasový vstup",
+    voice_stop: "Zastavit nahrávání",
+    img_label: "Obrázek",
+    img_generate: "Vygenerovat",
+    img_regenerate: "Vygenerovat znovu",
+    img_generating: "Generování…",
+    img_from_media: "Z knihovny médií",
+    img_remove: "Odebrat obrázek",
+    img_generate_failed: "Generování obrázku se nezdařilo: ",
+    img_save_failed: "Uložení obrázku se nezdařilo: ",
+    mb_title: "Knihovna médií",
+    mb_loading: "Načítání…",
+    mb_root: "Média",
+    mb_back: "Zpět",
+    mb_empty: "Žádné soubory",
+    mb_error: "Chyba: ",
+    my_tasks: "Moje úkoly",
+    add_placeholder: "Přidat nový úkol...",
+    add_failed: "Úkol se nepodařilo přidat",
+    draft_details_failed: "Úkol byl přidán, ale některé podrobnosti se nepodařilo uložit",
+    duplicate_failed: "Úkol se nepodařilo duplikovat",
+    dialog_cancel: "Zrušit",
+    dialog_add: "Přidat",
+    filter_all: "Vše",
+    filter_open: "Otevřené",
+    filter_done: "Dokončené",
+    filter_due_soon: "Brzy",
+    ed_show_due_soon_filter: "Filtr brzy",
+    ed_due_soon_days: "Dnů dopředu",
+    ed_hide_overdue: "Skrýt po termínu",
+    progress: "{0} z {1} dokončeno",
+    empty: "Žádné úkoly",
+    drag_handle: "Přetáhnout pro změnu pořadí",
+    due_date: "Termín",
+    notes: "Poznámky",
+    notes_placeholder: "Přidat poznámky zde",
+    notes_edit_hint: "Klikněte pro úpravu",
+    sub_items: "Podúkoly",
+    add_sub_item: "+ Přidat podúkol",
+    recurrence: "Opakování",
+    recurrence_enabled: "Povoleno",
+    recurrence_every: "Každý",
+    rec_minutes: "Minuty",
+    rec_hours: "Hodiny",
+    rec_days: "Dny",
+    rec_weeks: "Týdny",
+    rec_months: "Měsíce",
+    rec_years: "Roky",
+    rec_short_h: "h",
+    rec_short_d: "d",
+    rec_short_w: "t",
+    rec_short_m: "m",
+    rec_short_y: "r",
+    priority: "Priorita",
+    pri_high: "Vysoká",
+    pri_medium: "Střední",
+    pri_low: "Nízká",
+    ed_show_priority: "Priority",
+    rec_hourly: "Hodinově",
+    rec_daily: "Denně",
+    rec_weekly: "Týdně",
+    rec_monthly: "Měsíčně",
+    rec_yearly: "Ročně",
+    rec_type_interval: "Každý …",
+    rec_type_weekdays: "Ve všední dny",
+    rec_wd_0: "Po",
+    rec_wd_1: "Út",
+    rec_wd_2: "St",
+    rec_wd_3: "Čt",
+    rec_wd_4: "Pá",
+    rec_wd_5: "So",
+    rec_wd_6: "Ne",
+    assigned_to: "Přiřazené osoby",
+    nobody: "– Nikdo –",
+    delete_task: "Smazat úkol",
+    delete_sub: "Smazat",
+    ed_default_filter: "Výchozí filtr",
+    ed_list: "Seznam",
+    ed_title: "Název (volitelně)",
+    ed_title_placeholder: "Výchozí: název seznamu",
+    ed_display: "Zobrazení",
+    ed_show_title: "Název",
+    ed_show_progress: "Pokrok",
+    ed_show_due_date: "Termíny",
+    ed_show_notes: "Poznámky",
+    ed_show_recurrence: "Opakování",
+    ed_show_sub_items: "Podúkoly",
+    ed_show_person: "Osoby",
+    ed_auto_delete: "Okamžitě smazat dokončené",
+    ed_compact: "Kompaktní",
+    ed_show_tags: "Štítky",
+    ed_confirm_complete: "Potvrdit před dokončením",
+    ed_tap_to_complete: "Klepnutím na řádek dokončit",
+    ed_show_add_due: "Termín při přidání",
+    ed_max_height: "Max. výška (px, 0 = bez limitu)",
+    ed_badge_priority: "Čipy priority",
+    ed_badge_progress: "Čipy průběhu",
+    ed_badge_due: "Čipy termínu",
+    ed_badge_recurrence: "Čipy opakování",
+    ed_badge_person: "Osoba",
+    ed_badge_tags: "Čipy štítků",
+    ed_badge_reminders: "Čipy připomenutí",
+    ed_sec_defaults: "Výchozí hodnoty",
+    ed_sec_images: "Obrázky",
+    ed_share_images: "Sdílet obrázky s jinými seznamy",
+    ed_share_images_hint: "Vypnuto ponechá obrázky tohoto seznamu jen jemu — stejný název v jiném seznamu dostane vlastní obrázek.",
+    ed_queue_empty: "Nic nečeká na obrázek.",
+    ed_queue_pending: "Čeká na obrázek: {0}",
+    ed_queue_cancel: "Zrušit",
+    ed_ai_image_hint: "Platí pro celou kartu, nejen pro tento sloupec.",
+    ed_queue_running: "generuje se…",
+    ed_queue_title: "Fronta generování",
+    ed_default_assignee: "Výchozí osoby",
+    ed_defaults_saved: "Uloženo",
+    ed_defaults_load_failed: "Výchozí hodnoty se nepodařilo načíst",
+    ed_defaults_save_failed: "Uložení se nezdařilo",
+    confirm_complete_msg: "Označit „{0}“ jako dokončené?",
+    confirm_complete_ok: "Dokončit",
+    ed_hint: "Nové seznamy lze vytvořit v Nastavení → Integrace → Home Tasks.",
+    tags: "Štítky",
+    add_tag: "+ Přidat štítek",
+    tag_placeholder: "Nový štítek...",
+    remove_tag: "Odebrat",
+    tag_suggestions_label: "Existující štítky",
+    tag_no_matches: "Žádné odpovídající štítky",
+    new_sub_item: "Nový podúkol",
+    remove_reminder: "Odebrat připomínku",
+    sort_label: "Řadit",
+    sort_manual: "Ručně",
+    sort_due: "Termín",
+    sort_priority: "Priorita",
+    sort_title: "Název (A–Z)",
+    sort_person: "Přiřazeno",
+    ed_show_sort: "Řazení",
+    ed_default_sort: "Výchozí řazení",
+    ed_tag_catalog: "Pevné štítky",
+    ed_tag_catalog_hint: "Vždy nabízeny při štítkování v tomto seznamu — další štítky lze přidat přímo v úkolu.",
+    ed_default_lead_hint: "Úkol jej převezme, když se zapne jeho opakování",
+    tag_did_you_mean: "Mysleli jste {0}?",
+    ed_overdue_first: "Úkoly po termínu nahoře",
+    reminder: "Připomínky",
+    rem_add: "+ Přidat připomínku",
+    rem_none: "Bez připomínky",
+    rem_at_due: "V čas termínu",
+    rem_5m: "5 min. před",
+    rem_15m: "15 min. před",
+    rem_30m: "30 min. před",
+    rem_1h: "1 hod. před",
+    rem_2h: "2 hod. před",
+    rem_1d: "1 den před",
+    rem_2d: "2 dny před",
+    ed_show_reminders: "Připomínky",
+    ed_add_column: "Přidat sloupec",
+    ed_move_left: "Přesunout vlevo",
+    ed_move_right: "Přesunout vpravo",
+    ed_duplicate: "Duplikovat sloupec",
+    ed_delete_column: "Smazat sloupec",
+    ed_code_editor: "Editor kódu",
+    ed_visual_editor: "Vizuální editor",
+    ed_icon: "Ikona (volitelně)",
+    ed_card_title: "Název karty (volitelně)",
+    ed_card_title_placeholder: "Název nad sloupci",
+    ed_sec_view: "Zobrazení",
+    ed_sec_display: "Konfigurace",
+    ed_sec_filters: "Filtry",
+    ed_preset_assignees: "Omezit na osoby",
+    ed_preset_labels: "Omezit na štítky",
+    ed_ms_add: "Přidat…",
+    due_time_lbl: "Čas",
+    due_date_lbl: "Datum",
+    rec_mode_lbl: "Režim",
+    rec_time: "Čas",
+    rec_end: "Konec",
+    rec_end_never: "Nikdy",
+    rec_end_date: "Do",
+    rec_end_count: "X krát",
+    rec_end_date_lbl: "Do",
+    rec_max_count_lbl: "Počet",
+    rec_remaining: "ještě {0}",
+    rec_start_date_lbl: "Od",
+    rec_pattern_dom: "Den v měsíci",
+    rec_pattern_nth: "N-tý den",
+    rec_pattern_none: "Od dokončení",
+    rec_pattern_due: "Od termínu",
+    rec_dom_lbl: "Den",
+    rec_dom_last: "Poslední den",
+    rec_nth_lbl: "V",
+    rec_nth_1: "1.",
+    rec_nth_2: "2.",
+    rec_nth_3: "3.",
+    rec_nth_4: "4.",
+    rec_nth_last: "Poslední",
+    rec_anniversary_lbl: "V",
+    rec_dd: "Den",
+    rec_mm: "Měsíc",
+    rec_dom_short: ".",
+    rec_last_short: "poslední",
+    rec_value_lbl: "Každý",
+    rec_unit_lbl: "Jednotka",
+    rec_wd_lbl: "Den v týdnu",
+    rec_at_lbl: "V",
+    rec_lead_lbl: "Otevřít dříve",
+    rec_lead_hint: "Úkol se znovu otevře s tímto časovým předstihem před novým termínem splnění, takže se zobrazí jako nadcházející. 0 = v termínu splnění.",
+    rec_todoist_pattern_unsupported: "Podvzory nejsou podporovány, pokud je interval větší než 1.",
+    history: "Historie",
+    history_created: "Vytvořeno",
+    history_completed: "Dokončeno",
+    history_reopened: "Znovu otevřeno",
+    history_reset: "Automaticky obnoveno",
+    history_changed: "změněno",
+    history_empty: "Žádná historie",
+    hist_title: "Název",
+    history_disabled: "Deaktivováno",
+    ed_show_history: "Historie",
+    hist_by_user: "Uživatel",
+    ed_show_add_task: "Přidat úkol",
+    assigned_unknown: "Neznámý (%s)",
+    recurrence_readonly: "Spravováno %s",
+    synced_with: "Synchronizováno s %s",
+    due_today: "Dnes",
+    due_tomorrow: "Zítra",
+    due_yesterday: "Včera",
+    due_day_after_tomorrow: "Pozítří",
+    due_day_before_yesterday: "Předevčírem",
+    due_in_hours: "Za {0} hod {1} min",
+    due_in_minutes: "Za {0} min",
+    due_in_seconds: "Nyní",
+    due_ago_hours: "Před {0} hod {1} min",
+    due_ago_minutes: "Před {0} min",
+    due_ago_seconds: "Právě teď",
+    calendar_minutes_before: "{value} min předem",
+    calendar_hours_before: "{value} h předem",
+    calendar_days_before: "{value} d předem",
+    ed_show_section: "Pole sekce",
+    ed_section_field_no_sections: "Zobrazí se, jakmile bude mít seznam sekce",
+    section_label: "Sekce",
+    ed_list_columns: "Sloupce úkolů",
+    ed_tile_size: "Velikost dlaždic",
+    ed_tile_size_small: "Malá",
+    ed_tile_size_compact: "Kompaktní",
+    ed_tile_size_medium: "Normální",
+    ed_tile_size_large: "Velká",
+    due_quick_week: "Za 1 týden",
+    due_quick_month: "Za 1 měsíc",
+    due_quick_3months: "Za 3 měsíce",
+    ed_offered_persons: "Volitelné osoby",
+    ed_offered_persons_hint: "V této kartě lze přiřadit jen zvýrazněné osoby",
+    ed_show_add_details: "Podrobnosti při přidání",
+    add_with_details: "Přidat s podrobnostmi",
+    add_clear: "Vymazat",
+    plan_note_placeholder: "Zaměření dne",
+    plan_empty: "Nic naplánováno",
+    plan_add: "Naplánovat úkol",
+    plan_search_placeholder: "Hledat úkoly…",
+    plan_no_results: "Žádné odpovídající otevřené úkoly",
+    plan_carry_over: "Převzít otevřené úkoly z {0} ({1})",
+    plan_move_day: "Jiný den…",
+    plan_day_msg: "Který den pro „{0}“?",
+    plan_remove: "Odebrat z plánu",
+    plan_for: "Naplánovat na…",
+    plan_ok: "Naplánovat",
+    plan_none: "Nebyl nalezen žádný denní plán. Denní plány lze vytvořit v Nastavení → Integrace → Home Tasks.",
+    ed_view_lists: "Seznamy",
+    ed_view_day_plan: "Denní plán",
+    ed_plan_days: "Zobrazené dny",
+    ed_plan_all_lists: "Všechny seznamy",
+    plan_due_hint: "Je v plánu kvůli termínu: přesuňte úkol nebo změňte datum.",
+    ed_plan_weekend: "Víkend",
+    new_entry_link: "Vytvořit nový seznam nebo denní plán",
+    ed_plan_list_missing: "Seznam není dostupný",
+    picker_list_name: "Home Tasks: Seznam",
+    picker_plan_name: "Home Tasks: Denní plán",
+    picker_list_desc: "Seznamy úkolů ve sloupcích, s přetahováním, podúkoly, poznámkami a termíny.",
+    picker_plan_desc: "Dny denního plánu: úkoly z několika seznamů v pořadí, v jakém na nich pracujete."
   },
-  "da": {
-    "ed_default_priority": "Standardprioritet",
-    "ed_default_tags": "Standardtags",
-    "ed_default_section": "Standardafsnit",
-    "ed_default_none": "– Ingen –",
-    "ed_group_card": "Kort",
-    "ed_person_off": "Fra",
-    "ed_person_name": "Navn",
-    "ed_person_both": "Billede og navn",
-    "ed_group_header": "Sidehoved",
-    "ed_group_tasks": "Opgaver",
-    "ed_show_person_avatar": "Profilbillede",
-    "voice_failed": "Stemmeinput mislykkedes",
-    "confirm_delete_section": "Slet dette afsnit? Opgaver i det bliver usorterede.",
-    "done_section_header": "Færdig",
-    "duplicate_task": "Dupliker",
-    "move_task": "Flyt",
-    "move_task_msg": "Flyt ”{0}” til:",
-    "ed_show_move": "Flyt-knap",
-    "ed_add_section": "+ Tilføj afsnit",
-    "ed_ai_image_entity": "AI-entitet til billedgenerering",
-    "ed_ai_image_entity_placeholder": "f.eks. ai_task.openai",
-    "ed_ai_prompt_prefix": "Prompt-præfiks (valgfrit)",
-    "ed_ai_prompt_prefix_placeholder": "f.eks. Minimalistisk ikon af",
-    "ed_auto_image": "Generér billede automatisk",
-    "ed_delete_section": "Slet afsnit",
-    "ed_external_lists": "Ekstern",
-    "ed_loading": "Indlæser…",
-    "ed_move_down": "Flyt ned",
-    "ed_move_up": "Flyt op",
-    "ed_sec_sections": "Afsnit",
-    "ed_section_icon": "Ikon",
-    "ed_section_name": "Navn",
-    "ed_section_name_prompt": "Afsnitsnavn:",
-    "ed_sections_empty": "Ingen afsnit endnu — opgaver vises fladt.",
-    "ed_sections_select_list_hint": "Vælg først en liste for at administrere dens afsnit.",
-    "ed_show_filters": "Statusfilter",
-    "ed_show_images": "Billeder",
-    "ed_show_person_chips": "Personfilter",
-    "ed_show_tag_chips": "Tagfilter",
-    "ed_show_tile_title": "Titel i fliser",
-    "ed_show_voice": "Stemmeinput",
-    "ed_task_search": "Opgavesøgning",
-    "ed_tile_help": "Flisevisning:\n• Klik = fuldfør\n• Hold = rediger\n• Træk = omarrangér",
-    "ed_view_mode": "Visningstilstand",
-    "ed_view_mode_list": "Liste",
-    "ed_view_mode_tiles": "Fliser",
-    "voice_input": "Stemmeinput",
-    "voice_stop": "Stop optagelse",
-    "img_label": "Billede",
-    "img_generate": "Generér",
-    "img_regenerate": "Generér igen",
-    "img_generating": "Genererer…",
-    "img_from_media": "Fra mediebibliotek",
-    "img_remove": "Fjern billede",
-    "img_generate_failed": "Billedgenerering mislykkedes: ",
-    "img_save_failed": "Kunne ikke gemme billede: ",
-    "mb_title": "Mediebibliotek",
-    "mb_loading": "Indlæser…",
-    "mb_root": "Medier",
-    "mb_back": "Tilbage",
-    "mb_empty": "Ingen filer",
-    "mb_error": "Fejl: ",
-    "my_tasks": "Mine opgaver",
-    "add_placeholder": "Tilføj ny opgave...",
-    "add_failed": "Opgaven kunne ikke tilføjes",
-    "draft_details_failed": "Opgaven er tilføjet, men nogle detaljer kunne ikke gemmes",
-    "duplicate_failed": "Opgaven kunne ikke duplikeres",
-    "dialog_cancel": "Annullér",
-    "dialog_add": "Tilføj",
-    "filter_all": "Alle",
-    "filter_open": "Åbne",
-    "filter_done": "Færdige",
-    "filter_due_soon": "Snart",
-    "ed_show_due_soon_filter": "Snart-filter",
-    "ed_due_soon_days": "Dage frem",
-    "ed_hide_overdue": "Skjul forfaldne",
-    "progress": "{0} af {1} færdige",
-    "empty": "Ingen opgaver",
-    "drag_handle": "Træk for at sortere",
-    "due_date": "Forfald",
-    "notes": "Noter",
-    "notes_placeholder": "Tilføj noter her",
-    "notes_edit_hint": "Klik for at redigere",
-    "sub_items": "Delopgaver",
-    "add_sub_item": "+ Tilføj delopgave",
-    "recurrence": "Gentagelse",
-    "recurrence_enabled": "Aktiveret",
-    "recurrence_every": "Hver",
-    "rec_minutes": "Minutter",
-    "rec_hours": "Timer",
-    "rec_days": "Dage",
-    "rec_weeks": "Uger",
-    "rec_months": "Måneder",
-    "rec_years": "År",
-    "rec_short_h": "t",
-    "rec_short_d": "d",
-    "rec_short_w": "u",
-    "rec_short_m": "md",
-    "rec_short_y": "år",
-    "priority": "Prioritet",
-    "pri_high": "Høj",
-    "pri_medium": "Mellem",
-    "pri_low": "Lav",
-    "ed_show_priority": "Prioriteter",
-    "rec_hourly": "Hver time",
-    "rec_daily": "Dagligt",
-    "rec_weekly": "Ugentligt",
-    "rec_monthly": "Månedligt",
-    "rec_yearly": "Årligt",
-    "rec_type_interval": "Hver …",
-    "rec_type_weekdays": "På hverdage",
-    "rec_wd_0": "Man",
-    "rec_wd_1": "Tir",
-    "rec_wd_2": "Ons",
-    "rec_wd_3": "Tor",
-    "rec_wd_4": "Fre",
-    "rec_wd_5": "Lør",
-    "rec_wd_6": "Søn",
-    "assigned_to": "Tildelte personer",
-    "nobody": "– Ingen –",
-    "delete_task": "Slet opgave",
-    "delete_sub": "Slet",
-    "ed_default_filter": "Standardfilter",
-    "ed_list": "Liste",
-    "ed_title": "Titel (valgfrit)",
-    "ed_title_placeholder": "Standard: listenavn",
-    "ed_display": "Visning",
-    "ed_show_title": "Titel",
-    "ed_show_progress": "Fremgang",
-    "ed_show_due_date": "Forfaldsdatoer",
-    "ed_show_notes": "Noter",
-    "ed_show_recurrence": "Gentagelser",
-    "ed_show_sub_items": "Delopgaver",
-    "ed_show_person": "Personer",
-    "ed_auto_delete": "Slet færdige øjeblikkeligt",
-    "ed_compact": "Kompakt",
-    "ed_show_tags": "Tags",
-    "ed_confirm_complete": "Bekræft før fuldførelse",
-    "ed_tap_to_complete": "Tryk på rækken for at fuldføre",
-    "ed_show_add_due": "Forfaldsdato ved tilføjelse",
-    "ed_max_height": "Maks. højde (px, 0 = ubegrænset)",
-    "ed_badge_priority": "Prioritetschips",
-    "ed_badge_progress": "Fremdriftschips",
-    "ed_badge_due": "Forfaldschips",
-    "ed_badge_recurrence": "Gentagelseschips",
-    "ed_badge_person": "Person",
-    "ed_badge_tags": "Tagchips",
-    "ed_badge_reminders": "Påmindelseschips",
-    "ed_sec_defaults": "Standarder",
-    "ed_sec_images": "Billeder",
-    "ed_share_images": "Del billeder med andre lister",
-    "ed_share_images_hint": "Fra holder listens billeder for sig selv — samme opgavetitel på en anden liste får sit eget billede.",
-    "ed_queue_empty": "Intet venter på et billede.",
-    "ed_queue_pending": "Venter på et billede: {0}",
-    "ed_queue_cancel": "Annullér",
-    "ed_ai_image_hint": "Gælder hele kortet, ikke kun denne kolonne.",
-    "ed_queue_running": "genereres…",
-    "ed_queue_title": "Genereringskø",
-    "ed_default_assignee": "Standardpersoner",
-    "ed_defaults_saved": "Gemt",
-    "ed_defaults_load_failed": "Standardværdierne kunne ikke indlæses",
-    "ed_defaults_save_failed": "Kunne ikke gemme",
-    "confirm_complete_msg": "Markér ”{0}” som fuldført?",
-    "confirm_complete_ok": "Fuldfør",
-    "ed_hint": "Nye lister kan oprettes under Indstillinger → Integrationer → Home Tasks.",
-    "tags": "Tags",
-    "add_tag": "+ Tilføj tag",
-    "tag_placeholder": "Nyt tag...",
-    "remove_tag": "Fjern",
-    "tag_suggestions_label": "Eksisterende tags",
-    "tag_no_matches": "Ingen matchende tags",
-    "new_sub_item": "Ny delopgave",
-    "remove_reminder": "Fjern påmindelse",
-    "sort_label": "Sorter",
-    "sort_manual": "Manuel",
-    "sort_due": "Forfald",
-    "sort_priority": "Prioritet",
-    "sort_title": "Titel (A–Z)",
-    "sort_person": "Tildelt",
-    "ed_show_sort": "Sortering",
-    "ed_default_sort": "Standardsortering",
-    "ed_tag_catalog": "Faste tags",
-    "ed_tag_catalog_hint": "Foreslås altid, når du tagger i denne liste — andre tags kan tilføjes på opgaven.",
-    "ed_default_lead_hint": "Overtages af en opgave, når dens gentagelse slås til",
-    "tag_did_you_mean": "Mente du {0}?",
-    "ed_overdue_first": "Forfaldne opgaver først",
-    "reminder": "Påmindelser",
-    "rem_add": "+ Tilføj påmindelse",
-    "rem_none": "Ingen påmindelse",
-    "rem_at_due": "Ved forfaldstid",
-    "rem_5m": "5 min. før",
-    "rem_15m": "15 min. før",
-    "rem_30m": "30 min. før",
-    "rem_1h": "1 time før",
-    "rem_2h": "2 timer før",
-    "rem_1d": "1 dag før",
-    "rem_2d": "2 dage før",
-    "ed_show_reminders": "Påmindelser",
-    "ed_add_column": "Tilføj kolonne",
-    "ed_move_left": "Flyt til venstre",
-    "ed_move_right": "Flyt til højre",
-    "ed_duplicate": "Dupliker kolonne",
-    "ed_delete_column": "Slet kolonne",
-    "ed_code_editor": "Kodeeditor",
-    "ed_visual_editor": "Visuel editor",
-    "ed_icon": "Ikon (valgfrit)",
-    "ed_card_title": "Korttitel (valgfrit)",
-    "ed_card_title_placeholder": "Titel over kolonner",
-    "ed_sec_view": "Visning",
-    "ed_sec_display": "Konfiguration",
-    "ed_sec_filters": "Filtre",
-    "ed_preset_assignees": "Begræns til personer",
-    "ed_preset_labels": "Begræns til tags",
-    "ed_ms_add": "Tilføj…",
-    "due_time_lbl": "Tid",
-    "due_date_lbl": "Dato",
-    "rec_mode_lbl": "Tilstand",
-    "rec_time": "Tidspunkt",
-    "rec_end": "Slut",
-    "rec_end_never": "Aldrig",
-    "rec_end_date": "Til",
-    "rec_end_count": "X gange",
-    "rec_end_date_lbl": "Til",
-    "rec_max_count_lbl": "Antal",
-    "rec_remaining": "{0} tilbage",
-    "rec_start_date_lbl": "Fra",
-    "rec_pattern_dom": "Dag i måneden",
-    "rec_pattern_nth": "Nte ugedag",
-    "rec_pattern_none": "Fra fuldførelse",
-    "rec_pattern_due": "Fra forfaldsdato",
-    "rec_dom_lbl": "Dag",
-    "rec_dom_last": "Sidste dag",
-    "rec_nth_lbl": "Den",
-    "rec_nth_1": "1.",
-    "rec_nth_2": "2.",
-    "rec_nth_3": "3.",
-    "rec_nth_4": "4.",
-    "rec_nth_last": "Sidste",
-    "rec_anniversary_lbl": "Den",
-    "rec_dd": "Dag",
-    "rec_mm": "Måned",
-    "rec_dom_short": ".",
-    "rec_last_short": "sidste",
-    "rec_value_lbl": "Hver",
-    "rec_unit_lbl": "Enhed",
-    "rec_wd_lbl": "Ugedag",
-    "rec_at_lbl": "Kl.",
-    "rec_lead_lbl": "Genåbn tidligt",
-    "rec_lead_hint": "Genåbner opgaven så længe før den forfalder igen, at den vises som »kommende«. 0 = når den forfalder.",
-    "rec_todoist_pattern_unsupported": "Undermønstre understøttes ikke, når intervallet er større end 1.",
-    "history": "Historik",
-    "history_created": "Oprettet",
-    "history_completed": "Færdiggjort",
-    "history_reopened": "Åbnet igen",
-    "history_reset": "Auto-nulstillet",
-    "history_changed": "ændret",
-    "history_empty": "Ingen historik",
-    "hist_title": "Titel",
-    "history_disabled": "Deaktiveret",
-    "ed_show_history": "Historikker",
-    "hist_by_user": "Bruger",
-    "ed_show_add_task": "Tilføj opgave",
-    "assigned_unknown": "Ukendt (%s)",
-    "recurrence_readonly": "Styret af %s",
-    "synced_with": "Synkroniseret med %s",
-    "due_today": "I dag",
-    "due_tomorrow": "I morgen",
-    "due_yesterday": "I går",
-    "due_day_after_tomorrow": "I overmorgen",
-    "due_day_before_yesterday": "I forgårs",
-    "due_in_hours": "Om {0} t {1} min",
-    "due_in_minutes": "Om {0} min",
-    "due_in_seconds": "Nu",
-    "due_ago_hours": "{0} t {1} min siden",
-    "due_ago_minutes": "{0} min siden",
-    "due_ago_seconds": "Lige nu",
-    "calendar_minutes_before": "{value} min før",
-    "calendar_hours_before": "{value} timer før",
-    "calendar_days_before": "{value} dage før",
-    "ed_show_section": "Afsnitsfelt",
-    "ed_section_field_no_sections": "Vises, når listen har afsnit",
-    "section_label": "Afsnit",
-    "ed_list_columns": "Opgavekolonner",
-    "ed_tile_size": "Flisestørrelse",
-    "ed_tile_size_small": "Lille",
-    "ed_tile_size_compact": "Kompakt",
-    "ed_tile_size_medium": "Normal",
-    "ed_tile_size_large": "Stor",
-    "due_quick_week": "Om 1 uge",
-    "due_quick_month": "Om 1 måned",
-    "due_quick_3months": "Om 3 måneder",
-    "ed_offered_persons": "Valgbare personer",
-    "ed_offered_persons_hint": "Kun fremhævede personer kan tildeles i dette kort",
-    "ed_show_add_details": "Detaljer ved tilføjelse",
-    "add_with_details": "Tilføj med detaljer",
-    "add_clear": "Ryd",
-    "plan_note_placeholder": "Fokus for dagen",
-    "plan_empty": "Intet planlagt",
-    "plan_add": "Planlæg en opgave",
-    "plan_search_placeholder": "Søg opgaver…",
-    "plan_no_results": "Ingen matchende åbne opgaver",
-    "plan_carry_over": "Overfør åbne opgaver fra {0} ({1})",
-    "plan_move_day": "Anden dag…",
-    "plan_day_msg": "Hvilken dag til ”{0}”?",
-    "plan_remove": "Fjern fra planen",
-    "plan_for": "Planlæg til…",
-    "plan_ok": "Planlæg",
-    "plan_none": "Ingen dagsplan fundet. Dagsplaner kan oprettes under Indstillinger → Integrationer → Home Tasks.",
-    "ed_view_lists": "Lister",
-    "ed_view_day_plan": "Dagsplan",
-    "ed_plan_days": "Viste dage",
-    "ed_plan_all_lists": "Alle lister",
-    "plan_due_hint": "Står i planen på grund af forfaldsdatoen: flyt den, eller ændr datoen.",
-    "ed_plan_weekend": "Weekend",
-    "new_entry_link": "Opret en ny liste eller dagsplan",
-    "ed_plan_list_missing": "Listen er ikke tilgængelig",
-    "picker_list_name": "Home Tasks: Liste",
-    "picker_plan_name": "Home Tasks: Dagsplan",
-    "picker_list_desc": "Opgavelister i kolonner, med træk og slip, underopgaver, noter og forfaldsdatoer.",
-    "picker_plan_desc": "Dagene i en dagsplan: opgaver fra flere lister i den rækkefølge, du løser dem."
+  da: {
+    ed_default_priority: "Standardprioritet",
+    ed_default_tags: "Standardtags",
+    ed_default_section: "Standardafsnit",
+    ed_default_none: "– Ingen –",
+    ed_group_card: "Kort",
+    ed_person_off: "Fra",
+    ed_person_name: "Navn",
+    ed_person_both: "Billede og navn",
+    ed_group_header: "Sidehoved",
+    ed_group_tasks: "Opgaver",
+    ed_show_person_avatar: "Profilbillede",
+    voice_failed: "Stemmeinput mislykkedes",
+    confirm_delete_section: "Slet dette afsnit? Opgaver i det bliver usorterede.",
+    done_section_header: "Færdig",
+    duplicate_task: "Dupliker",
+    move_task: "Flyt",
+    move_task_msg: "Flyt ”{0}” til:",
+    ed_show_move: "Flyt-knap",
+    ed_add_section: "+ Tilføj afsnit",
+    ed_ai_image_entity: "AI-entitet til billedgenerering",
+    ed_ai_image_entity_placeholder: "f.eks. ai_task.openai",
+    ed_ai_prompt_prefix: "Prompt-præfiks (valgfrit)",
+    ed_ai_prompt_prefix_placeholder: "f.eks. Minimalistisk ikon af",
+    ed_auto_image: "Generér billede automatisk",
+    ed_delete_section: "Slet afsnit",
+    ed_external_lists: "Ekstern",
+    ed_loading: "Indlæser…",
+    ed_move_down: "Flyt ned",
+    ed_move_up: "Flyt op",
+    ed_sec_sections: "Afsnit",
+    ed_section_icon: "Ikon",
+    ed_section_name: "Navn",
+    ed_section_name_prompt: "Afsnitsnavn:",
+    ed_sections_empty: "Ingen afsnit endnu — opgaver vises fladt.",
+    ed_sections_select_list_hint: "Vælg først en liste for at administrere dens afsnit.",
+    ed_show_filters: "Statusfilter",
+    ed_show_images: "Billeder",
+    ed_show_person_chips: "Personfilter",
+    ed_show_tag_chips: "Tagfilter",
+    ed_show_tile_title: "Titel i fliser",
+    ed_show_voice: "Stemmeinput",
+    ed_task_search: "Opgavesøgning",
+    ed_tile_help: "Flisevisning:\n• Klik = fuldfør\n• Hold = rediger\n• Træk = omarrangér",
+    ed_view_mode: "Visningstilstand",
+    ed_view_mode_list: "Liste",
+    ed_view_mode_tiles: "Fliser",
+    voice_input: "Stemmeinput",
+    voice_stop: "Stop optagelse",
+    img_label: "Billede",
+    img_generate: "Generér",
+    img_regenerate: "Generér igen",
+    img_generating: "Genererer…",
+    img_from_media: "Fra mediebibliotek",
+    img_remove: "Fjern billede",
+    img_generate_failed: "Billedgenerering mislykkedes: ",
+    img_save_failed: "Kunne ikke gemme billede: ",
+    mb_title: "Mediebibliotek",
+    mb_loading: "Indlæser…",
+    mb_root: "Medier",
+    mb_back: "Tilbage",
+    mb_empty: "Ingen filer",
+    mb_error: "Fejl: ",
+    my_tasks: "Mine opgaver",
+    add_placeholder: "Tilføj ny opgave...",
+    add_failed: "Opgaven kunne ikke tilføjes",
+    draft_details_failed: "Opgaven er tilføjet, men nogle detaljer kunne ikke gemmes",
+    duplicate_failed: "Opgaven kunne ikke duplikeres",
+    dialog_cancel: "Annullér",
+    dialog_add: "Tilføj",
+    filter_all: "Alle",
+    filter_open: "Åbne",
+    filter_done: "Færdige",
+    filter_due_soon: "Snart",
+    ed_show_due_soon_filter: "Snart-filter",
+    ed_due_soon_days: "Dage frem",
+    ed_hide_overdue: "Skjul forfaldne",
+    progress: "{0} af {1} færdige",
+    empty: "Ingen opgaver",
+    drag_handle: "Træk for at sortere",
+    due_date: "Forfald",
+    notes: "Noter",
+    notes_placeholder: "Tilføj noter her",
+    notes_edit_hint: "Klik for at redigere",
+    sub_items: "Delopgaver",
+    add_sub_item: "+ Tilføj delopgave",
+    recurrence: "Gentagelse",
+    recurrence_enabled: "Aktiveret",
+    recurrence_every: "Hver",
+    rec_minutes: "Minutter",
+    rec_hours: "Timer",
+    rec_days: "Dage",
+    rec_weeks: "Uger",
+    rec_months: "Måneder",
+    rec_years: "År",
+    rec_short_h: "t",
+    rec_short_d: "d",
+    rec_short_w: "u",
+    rec_short_m: "md",
+    rec_short_y: "år",
+    priority: "Prioritet",
+    pri_high: "Høj",
+    pri_medium: "Mellem",
+    pri_low: "Lav",
+    ed_show_priority: "Prioriteter",
+    rec_hourly: "Hver time",
+    rec_daily: "Dagligt",
+    rec_weekly: "Ugentligt",
+    rec_monthly: "Månedligt",
+    rec_yearly: "Årligt",
+    rec_type_interval: "Hver …",
+    rec_type_weekdays: "På hverdage",
+    rec_wd_0: "Man",
+    rec_wd_1: "Tir",
+    rec_wd_2: "Ons",
+    rec_wd_3: "Tor",
+    rec_wd_4: "Fre",
+    rec_wd_5: "Lør",
+    rec_wd_6: "Søn",
+    assigned_to: "Tildelte personer",
+    nobody: "– Ingen –",
+    delete_task: "Slet opgave",
+    delete_sub: "Slet",
+    ed_default_filter: "Standardfilter",
+    ed_list: "Liste",
+    ed_title: "Titel (valgfrit)",
+    ed_title_placeholder: "Standard: listenavn",
+    ed_display: "Visning",
+    ed_show_title: "Titel",
+    ed_show_progress: "Fremgang",
+    ed_show_due_date: "Forfaldsdatoer",
+    ed_show_notes: "Noter",
+    ed_show_recurrence: "Gentagelser",
+    ed_show_sub_items: "Delopgaver",
+    ed_show_person: "Personer",
+    ed_auto_delete: "Slet færdige øjeblikkeligt",
+    ed_compact: "Kompakt",
+    ed_show_tags: "Tags",
+    ed_confirm_complete: "Bekræft før fuldførelse",
+    ed_tap_to_complete: "Tryk på rækken for at fuldføre",
+    ed_show_add_due: "Forfaldsdato ved tilføjelse",
+    ed_max_height: "Maks. højde (px, 0 = ubegrænset)",
+    ed_badge_priority: "Prioritetschips",
+    ed_badge_progress: "Fremdriftschips",
+    ed_badge_due: "Forfaldschips",
+    ed_badge_recurrence: "Gentagelseschips",
+    ed_badge_person: "Person",
+    ed_badge_tags: "Tagchips",
+    ed_badge_reminders: "Påmindelseschips",
+    ed_sec_defaults: "Standarder",
+    ed_sec_images: "Billeder",
+    ed_share_images: "Del billeder med andre lister",
+    ed_share_images_hint: "Fra holder listens billeder for sig selv — samme opgavetitel på en anden liste får sit eget billede.",
+    ed_queue_empty: "Intet venter på et billede.",
+    ed_queue_pending: "Venter på et billede: {0}",
+    ed_queue_cancel: "Annullér",
+    ed_ai_image_hint: "Gælder hele kortet, ikke kun denne kolonne.",
+    ed_queue_running: "genereres…",
+    ed_queue_title: "Genereringskø",
+    ed_default_assignee: "Standardpersoner",
+    ed_defaults_saved: "Gemt",
+    ed_defaults_load_failed: "Standardværdierne kunne ikke indlæses",
+    ed_defaults_save_failed: "Kunne ikke gemme",
+    confirm_complete_msg: "Markér ”{0}” som fuldført?",
+    confirm_complete_ok: "Fuldfør",
+    ed_hint: "Nye lister kan oprettes under Indstillinger → Integrationer → Home Tasks.",
+    tags: "Tags",
+    add_tag: "+ Tilføj tag",
+    tag_placeholder: "Nyt tag...",
+    remove_tag: "Fjern",
+    tag_suggestions_label: "Eksisterende tags",
+    tag_no_matches: "Ingen matchende tags",
+    new_sub_item: "Ny delopgave",
+    remove_reminder: "Fjern påmindelse",
+    sort_label: "Sorter",
+    sort_manual: "Manuel",
+    sort_due: "Forfald",
+    sort_priority: "Prioritet",
+    sort_title: "Titel (A–Z)",
+    sort_person: "Tildelt",
+    ed_show_sort: "Sortering",
+    ed_default_sort: "Standardsortering",
+    ed_tag_catalog: "Faste tags",
+    ed_tag_catalog_hint: "Foreslås altid, når du tagger i denne liste — andre tags kan tilføjes på opgaven.",
+    ed_default_lead_hint: "Overtages af en opgave, når dens gentagelse slås til",
+    tag_did_you_mean: "Mente du {0}?",
+    ed_overdue_first: "Forfaldne opgaver først",
+    reminder: "Påmindelser",
+    rem_add: "+ Tilføj påmindelse",
+    rem_none: "Ingen påmindelse",
+    rem_at_due: "Ved forfaldstid",
+    rem_5m: "5 min. før",
+    rem_15m: "15 min. før",
+    rem_30m: "30 min. før",
+    rem_1h: "1 time før",
+    rem_2h: "2 timer før",
+    rem_1d: "1 dag før",
+    rem_2d: "2 dage før",
+    ed_show_reminders: "Påmindelser",
+    ed_add_column: "Tilføj kolonne",
+    ed_move_left: "Flyt til venstre",
+    ed_move_right: "Flyt til højre",
+    ed_duplicate: "Dupliker kolonne",
+    ed_delete_column: "Slet kolonne",
+    ed_code_editor: "Kodeeditor",
+    ed_visual_editor: "Visuel editor",
+    ed_icon: "Ikon (valgfrit)",
+    ed_card_title: "Korttitel (valgfrit)",
+    ed_card_title_placeholder: "Titel over kolonner",
+    ed_sec_view: "Visning",
+    ed_sec_display: "Konfiguration",
+    ed_sec_filters: "Filtre",
+    ed_preset_assignees: "Begræns til personer",
+    ed_preset_labels: "Begræns til tags",
+    ed_ms_add: "Tilføj…",
+    due_time_lbl: "Tid",
+    due_date_lbl: "Dato",
+    rec_mode_lbl: "Tilstand",
+    rec_time: "Tidspunkt",
+    rec_end: "Slut",
+    rec_end_never: "Aldrig",
+    rec_end_date: "Til",
+    rec_end_count: "X gange",
+    rec_end_date_lbl: "Til",
+    rec_max_count_lbl: "Antal",
+    rec_remaining: "{0} tilbage",
+    rec_start_date_lbl: "Fra",
+    rec_pattern_dom: "Dag i måneden",
+    rec_pattern_nth: "Nte ugedag",
+    rec_pattern_none: "Fra fuldførelse",
+    rec_pattern_due: "Fra forfaldsdato",
+    rec_dom_lbl: "Dag",
+    rec_dom_last: "Sidste dag",
+    rec_nth_lbl: "Den",
+    rec_nth_1: "1.",
+    rec_nth_2: "2.",
+    rec_nth_3: "3.",
+    rec_nth_4: "4.",
+    rec_nth_last: "Sidste",
+    rec_anniversary_lbl: "Den",
+    rec_dd: "Dag",
+    rec_mm: "Måned",
+    rec_dom_short: ".",
+    rec_last_short: "sidste",
+    rec_value_lbl: "Hver",
+    rec_unit_lbl: "Enhed",
+    rec_wd_lbl: "Ugedag",
+    rec_at_lbl: "Kl.",
+    rec_lead_lbl: "Genåbn tidligt",
+    rec_lead_hint: "Genåbner opgaven så længe før den forfalder igen, at den vises som »kommende«. 0 = når den forfalder.",
+    rec_todoist_pattern_unsupported: "Undermønstre understøttes ikke, når intervallet er større end 1.",
+    history: "Historik",
+    history_created: "Oprettet",
+    history_completed: "Færdiggjort",
+    history_reopened: "Åbnet igen",
+    history_reset: "Auto-nulstillet",
+    history_changed: "ændret",
+    history_empty: "Ingen historik",
+    hist_title: "Titel",
+    history_disabled: "Deaktiveret",
+    ed_show_history: "Historikker",
+    hist_by_user: "Bruger",
+    ed_show_add_task: "Tilføj opgave",
+    assigned_unknown: "Ukendt (%s)",
+    recurrence_readonly: "Styret af %s",
+    synced_with: "Synkroniseret med %s",
+    due_today: "I dag",
+    due_tomorrow: "I morgen",
+    due_yesterday: "I går",
+    due_day_after_tomorrow: "I overmorgen",
+    due_day_before_yesterday: "I forgårs",
+    due_in_hours: "Om {0} t {1} min",
+    due_in_minutes: "Om {0} min",
+    due_in_seconds: "Nu",
+    due_ago_hours: "{0} t {1} min siden",
+    due_ago_minutes: "{0} min siden",
+    due_ago_seconds: "Lige nu",
+    calendar_minutes_before: "{value} min før",
+    calendar_hours_before: "{value} timer før",
+    calendar_days_before: "{value} dage før",
+    ed_show_section: "Afsnitsfelt",
+    ed_section_field_no_sections: "Vises, når listen har afsnit",
+    section_label: "Afsnit",
+    ed_list_columns: "Opgavekolonner",
+    ed_tile_size: "Flisestørrelse",
+    ed_tile_size_small: "Lille",
+    ed_tile_size_compact: "Kompakt",
+    ed_tile_size_medium: "Normal",
+    ed_tile_size_large: "Stor",
+    due_quick_week: "Om 1 uge",
+    due_quick_month: "Om 1 måned",
+    due_quick_3months: "Om 3 måneder",
+    ed_offered_persons: "Valgbare personer",
+    ed_offered_persons_hint: "Kun fremhævede personer kan tildeles i dette kort",
+    ed_show_add_details: "Detaljer ved tilføjelse",
+    add_with_details: "Tilføj med detaljer",
+    add_clear: "Ryd",
+    plan_note_placeholder: "Fokus for dagen",
+    plan_empty: "Intet planlagt",
+    plan_add: "Planlæg en opgave",
+    plan_search_placeholder: "Søg opgaver…",
+    plan_no_results: "Ingen matchende åbne opgaver",
+    plan_carry_over: "Overfør åbne opgaver fra {0} ({1})",
+    plan_move_day: "Anden dag…",
+    plan_day_msg: "Hvilken dag til ”{0}”?",
+    plan_remove: "Fjern fra planen",
+    plan_for: "Planlæg til…",
+    plan_ok: "Planlæg",
+    plan_none: "Ingen dagsplan fundet. Dagsplaner kan oprettes under Indstillinger → Integrationer → Home Tasks.",
+    ed_view_lists: "Lister",
+    ed_view_day_plan: "Dagsplan",
+    ed_plan_days: "Viste dage",
+    ed_plan_all_lists: "Alle lister",
+    plan_due_hint: "Står i planen på grund af forfaldsdatoen: flyt den, eller ændr datoen.",
+    ed_plan_weekend: "Weekend",
+    new_entry_link: "Opret en ny liste eller dagsplan",
+    ed_plan_list_missing: "Listen er ikke tilgængelig",
+    picker_list_name: "Home Tasks: Liste",
+    picker_plan_name: "Home Tasks: Dagsplan",
+    picker_list_desc: "Opgavelister i kolonner, med træk og slip, underopgaver, noter og forfaldsdatoer.",
+    picker_plan_desc: "Dagene i en dagsplan: opgaver fra flere lister i den rækkefølge, du løser dem."
   },
-  "no": {
-    "ed_default_priority": "Standardprioritet",
-    "ed_default_tags": "Standardtagger",
-    "ed_default_section": "Standardseksjon",
-    "ed_default_none": "– Ingen –",
-    "ed_group_card": "Kort",
-    "ed_person_off": "Av",
-    "ed_person_name": "Navn",
-    "ed_person_both": "Bilde og navn",
-    "ed_group_header": "Topptekst",
-    "ed_group_tasks": "Oppgaver",
-    "ed_show_person_avatar": "Profilbilde",
-    "voice_failed": "Taleinndata mislyktes",
-    "confirm_delete_section": "Slette denne seksjonen? Oppgaver i den blir usorterte.",
-    "done_section_header": "Ferdig",
-    "duplicate_task": "Dupliser",
-    "move_task": "Flytt",
-    "move_task_msg": "Flytt ”{0}” til:",
-    "ed_show_move": "Flytt-knapp",
-    "ed_add_section": "+ Legg til seksjon",
-    "ed_ai_image_entity": "AI-entitet for bildegenerering",
-    "ed_ai_image_entity_placeholder": "f.eks. ai_task.openai",
-    "ed_ai_prompt_prefix": "Ledetekst-prefiks (valgfritt)",
-    "ed_ai_prompt_prefix_placeholder": "f.eks. Minimalistisk ikon av",
-    "ed_auto_image": "Generer bilde automatisk",
-    "ed_delete_section": "Slett seksjon",
-    "ed_external_lists": "Ekstern",
-    "ed_loading": "Laster…",
-    "ed_move_down": "Flytt ned",
-    "ed_move_up": "Flytt opp",
-    "ed_sec_sections": "Seksjoner",
-    "ed_section_icon": "Ikon",
-    "ed_section_name": "Navn",
-    "ed_section_name_prompt": "Seksjonsnavn:",
-    "ed_sections_empty": "Ingen seksjoner ennå — oppgaver vises flatt.",
-    "ed_sections_select_list_hint": "Velg en liste først for å administrere seksjonene.",
-    "ed_show_filters": "Statusfilter",
-    "ed_show_images": "Bilder",
-    "ed_show_person_chips": "Personfilter",
-    "ed_show_tag_chips": "Taggfilter",
-    "ed_show_tile_title": "Tittel i fliser",
-    "ed_show_voice": "Taleinndata",
-    "ed_task_search": "Oppgavesøk",
-    "ed_tile_help": "Flisevisning:\n• Klikk = fullfør\n• Hold = rediger\n• Dra = endre rekkefølge",
-    "ed_view_mode": "Visningsmodus",
-    "ed_view_mode_list": "Liste",
-    "ed_view_mode_tiles": "Fliser",
-    "voice_input": "Taleinndata",
-    "voice_stop": "Stopp opptak",
-    "img_label": "Bilde",
-    "img_generate": "Generer",
-    "img_regenerate": "Generer på nytt",
-    "img_generating": "Genererer…",
-    "img_from_media": "Fra mediebibliotek",
-    "img_remove": "Fjern bilde",
-    "img_generate_failed": "Bildegenerering mislyktes: ",
-    "img_save_failed": "Kunne ikke lagre bilde: ",
-    "mb_title": "Mediebibliotek",
-    "mb_loading": "Laster…",
-    "mb_root": "Medier",
-    "mb_back": "Tilbake",
-    "mb_empty": "Ingen filer",
-    "mb_error": "Feil: ",
-    "my_tasks": "Mine oppgaver",
-    "add_placeholder": "Legg til ny oppgave...",
-    "add_failed": "Kunne ikke legge til oppgaven",
-    "draft_details_failed": "Oppgaven er lagt til, men noen detaljer kunne ikke lagres",
-    "duplicate_failed": "Oppgaven kunne ikke dupliseres",
-    "dialog_cancel": "Avbryt",
-    "dialog_add": "Legg til",
-    "filter_all": "Alle",
-    "filter_open": "Åpne",
-    "filter_done": "Ferdige",
-    "filter_due_soon": "Snart",
-    "ed_show_due_soon_filter": "Snart-filter",
-    "ed_due_soon_days": "Dager fremover",
-    "ed_hide_overdue": "Skjul forfalte",
-    "progress": "{0} av {1} ferdige",
-    "empty": "Ingen oppgaver",
-    "drag_handle": "Dra for å endre rekkeflølge",
-    "due_date": "Frist",
-    "notes": "Notater",
-    "notes_placeholder": "Legg til notater her",
-    "notes_edit_hint": "Klikk for å redigere",
-    "sub_items": "Deloppgaver",
-    "add_sub_item": "+ Legg til deloppgave",
-    "recurrence": "Gjentakelse",
-    "recurrence_enabled": "Aktivert",
-    "recurrence_every": "Hver",
-    "rec_minutes": "Minutter",
-    "rec_hours": "Timer",
-    "rec_days": "Dager",
-    "rec_weeks": "Uker",
-    "rec_months": "Måneder",
-    "rec_years": "År",
-    "rec_short_h": "t",
-    "rec_short_d": "d",
-    "rec_short_w": "u",
-    "rec_short_m": "md",
-    "rec_short_y": "år",
-    "priority": "Prioritet",
-    "pri_high": "Høy",
-    "pri_medium": "Middels",
-    "pri_low": "Lav",
-    "ed_show_priority": "Prioriteter",
-    "rec_hourly": "Hver time",
-    "rec_daily": "Daglig",
-    "rec_weekly": "Ukentlig",
-    "rec_monthly": "Månedlig",
-    "rec_yearly": "Årlig",
-    "rec_type_interval": "Hver …",
-    "rec_type_weekdays": "På hverdager",
-    "rec_wd_0": "Man",
-    "rec_wd_1": "Tir",
-    "rec_wd_2": "Ons",
-    "rec_wd_3": "Tor",
-    "rec_wd_4": "Fre",
-    "rec_wd_5": "Lør",
-    "rec_wd_6": "Søn",
-    "assigned_to": "Tildelte personer",
-    "nobody": "– Ingen –",
-    "delete_task": "Slett oppgave",
-    "delete_sub": "Slett",
-    "ed_default_filter": "Standardfilter",
-    "ed_list": "Liste",
-    "ed_title": "Tittel (valgfritt)",
-    "ed_title_placeholder": "Standard: listenavn",
-    "ed_display": "Visning",
-    "ed_show_title": "Tittel",
-    "ed_show_progress": "Fremgang",
-    "ed_show_due_date": "Frister",
-    "ed_show_notes": "Notater",
-    "ed_show_recurrence": "Gjentakelser",
-    "ed_show_sub_items": "Deloppgaver",
-    "ed_show_person": "Personer",
-    "ed_auto_delete": "Slett ferdige umiddelbart",
-    "ed_compact": "Kompakt",
-    "ed_show_tags": "Tagger",
-    "ed_confirm_complete": "Bekreft før fullføring",
-    "ed_tap_to_complete": "Trykk på raden for å fullføre",
-    "ed_show_add_due": "Forfallsdato ved tillegg",
-    "ed_max_height": "Maks. høyde (px, 0 = ubegrenset)",
-    "ed_badge_priority": "Prioritetschips",
-    "ed_badge_progress": "Fremdriftschips",
-    "ed_badge_due": "Forfallschips",
-    "ed_badge_recurrence": "Gjentakelseschips",
-    "ed_badge_person": "Person",
-    "ed_badge_tags": "Taggchips",
-    "ed_badge_reminders": "Påminnelseschips",
-    "ed_sec_defaults": "Standarder",
-    "ed_sec_images": "Bilder",
-    "ed_share_images": "Del bilder med andre lister",
-    "ed_share_images_hint": "Av holder listens bilder for seg selv — samme oppgavetittel i en annen liste får sitt eget bilde.",
-    "ed_queue_empty": "Ingenting venter på et bilde.",
-    "ed_queue_pending": "Venter på et bilde: {0}",
-    "ed_queue_cancel": "Avbryt",
-    "ed_ai_image_hint": "Gjelder hele kortet, ikke bare denne kolonnen.",
-    "ed_queue_running": "genereres…",
-    "ed_queue_title": "Genereringskø",
-    "ed_default_assignee": "Standardpersoner",
-    "ed_defaults_saved": "Lagret",
-    "ed_defaults_load_failed": "Kunne ikke laste standardverdiene",
-    "ed_defaults_save_failed": "Kunne ikke lagre",
-    "confirm_complete_msg": "Merke «{0}» som fullført?",
-    "confirm_complete_ok": "Fullfør",
-    "ed_hint": "Nye lister kan opprettes under Innstillinger → Integrasjoner → Home Tasks.",
-    "tags": "Tagger",
-    "add_tag": "+ Legg til tagg",
-    "tag_placeholder": "Ny tagg...",
-    "remove_tag": "Fjern",
-    "tag_suggestions_label": "Eksisterende tagger",
-    "tag_no_matches": "Ingen samsvarende tagger",
-    "new_sub_item": "Ny deloppgave",
-    "remove_reminder": "Fjern påminnelse",
-    "sort_label": "Sorter",
-    "sort_manual": "Manuell",
-    "sort_due": "Frist",
-    "sort_priority": "Prioritet",
-    "sort_title": "Tittel (A–Z)",
-    "sort_person": "Tildelt",
-    "ed_show_sort": "Sortering",
-    "ed_default_sort": "Standardsortering",
-    "ed_tag_catalog": "Faste tagger",
-    "ed_tag_catalog_hint": "Foreslås alltid når du tagger i denne listen — andre tagger kan legges til på oppgaven.",
-    "ed_default_lead_hint": "Overtas av en oppgave når gjentakelsen slås på",
-    "tag_did_you_mean": "Mente du {0}?",
-    "ed_overdue_first": "Forfalte oppgaver først",
-    "reminder": "Påminnelser",
-    "rem_add": "+ Legg til påminnelse",
-    "rem_none": "Ingen påminnelse",
-    "rem_at_due": "Ved fristen",
-    "rem_5m": "5 min. før",
-    "rem_15m": "15 min. før",
-    "rem_30m": "30 min. før",
-    "rem_1h": "1 time før",
-    "rem_2h": "2 timer før",
-    "rem_1d": "1 dag før",
-    "rem_2d": "2 dager før",
-    "ed_show_reminders": "Påminnelser",
-    "ed_add_column": "Legg til kolonne",
-    "ed_move_left": "Flytt til venstre",
-    "ed_move_right": "Flytt til høyre",
-    "ed_duplicate": "Dupliser kolonne",
-    "ed_delete_column": "Slett kolonne",
-    "ed_code_editor": "Kodeeditor",
-    "ed_visual_editor": "Visuell editor",
-    "ed_icon": "Ikon (valgfritt)",
-    "ed_card_title": "Korttittel (valgfritt)",
-    "ed_card_title_placeholder": "Tittel over kolonner",
-    "ed_sec_view": "Visning",
-    "ed_sec_display": "Konfigurasjon",
-    "ed_sec_filters": "Filtre",
-    "ed_preset_assignees": "Begrens til personer",
-    "ed_preset_labels": "Begrens til tagger",
-    "ed_ms_add": "Legg til…",
-    "due_time_lbl": "Tid",
-    "due_date_lbl": "Dato",
-    "rec_mode_lbl": "Modus",
-    "rec_time": "Klokkeslett",
-    "rec_end": "Slutt",
-    "rec_end_never": "Aldri",
-    "rec_end_date": "Til",
-    "rec_end_count": "X ganger",
-    "rec_end_date_lbl": "Til",
-    "rec_max_count_lbl": "Antall",
-    "rec_remaining": "{0} igjen",
-    "rec_start_date_lbl": "Fra",
-    "rec_pattern_dom": "Dag i måneden",
-    "rec_pattern_nth": "Nte ukedag",
-    "rec_pattern_none": "Fra fullføring",
-    "rec_pattern_due": "Fra forfallsdato",
-    "rec_dom_lbl": "Dag",
-    "rec_dom_last": "Siste dag",
-    "rec_nth_lbl": "Den",
-    "rec_nth_1": "1.",
-    "rec_nth_2": "2.",
-    "rec_nth_3": "3.",
-    "rec_nth_4": "4.",
-    "rec_nth_last": "Siste",
-    "rec_anniversary_lbl": "Den",
-    "rec_dd": "Dag",
-    "rec_mm": "Måned",
-    "rec_dom_short": ".",
-    "rec_last_short": "siste",
-    "rec_value_lbl": "Hver",
-    "rec_unit_lbl": "Enhet",
-    "rec_wd_lbl": "Ukedag",
-    "rec_at_lbl": "Kl.",
-    "rec_lead_lbl": "Åpne igjen tidlig",
-    "rec_lead_hint": "Åpner oppgaven på nytt så lenge før den forfaller igjen, slik at den vises som «kommende». 0 = når den forfaller.",
-    "rec_todoist_pattern_unsupported": "Undermønstre støttes ikke når intervallet er større enn 1.",
-    "history": "Historikk",
-    "history_created": "Opprettet",
-    "history_completed": "Fullført",
-    "history_reopened": "Åpnet igjen",
-    "history_reset": "Auto-tilbakestilt",
-    "history_changed": "endret",
-    "history_empty": "Ingen historikk",
-    "hist_title": "Tittel",
-    "history_disabled": "Deaktivert",
-    "ed_show_history": "Historikker",
-    "hist_by_user": "Bruker",
-    "ed_show_add_task": "Legg til oppgave",
-    "assigned_unknown": "Ukjent (%s)",
-    "recurrence_readonly": "Administrert av %s",
-    "synced_with": "Synkronisert med %s",
-    "due_today": "I dag",
-    "due_tomorrow": "I morgen",
-    "due_yesterday": "I går",
-    "due_day_after_tomorrow": "I overmorgen",
-    "due_day_before_yesterday": "I forgårs",
-    "due_in_hours": "Om {0} t {1} min",
-    "due_in_minutes": "Om {0} min",
-    "due_in_seconds": "Nå",
-    "due_ago_hours": "{0} t {1} min siden",
-    "due_ago_minutes": "{0} min siden",
-    "due_ago_seconds": "Akkurat nå",
-    "calendar_minutes_before": "{value} min før",
-    "calendar_hours_before": "{value} timer før",
-    "calendar_days_before": "{value} dager før",
-    "ed_show_section": "Seksjonsfelt",
-    "ed_section_field_no_sections": "Vises når listen har seksjoner",
-    "section_label": "Seksjon",
-    "ed_list_columns": "Oppgavekolonner",
-    "ed_tile_size": "Flisestørrelse",
-    "ed_tile_size_small": "Liten",
-    "ed_tile_size_compact": "Kompakt",
-    "ed_tile_size_medium": "Normal",
-    "ed_tile_size_large": "Stor",
-    "due_quick_week": "Om 1 uke",
-    "due_quick_month": "Om 1 måned",
-    "due_quick_3months": "Om 3 måneder",
-    "ed_offered_persons": "Valgbare personer",
-    "ed_offered_persons_hint": "Bare uthevede personer kan tildeles i dette kortet",
-    "ed_show_add_details": "Detaljer ved tillegg",
-    "add_with_details": "Legg til med detaljer",
-    "add_clear": "Tøm",
-    "plan_note_placeholder": "Fokus for dagen",
-    "plan_empty": "Ingenting planlagt",
-    "plan_add": "Planlegg en oppgave",
-    "plan_search_placeholder": "Søk i oppgaver…",
-    "plan_no_results": "Ingen samsvarende åpne oppgaver",
-    "plan_carry_over": "Overfør åpne oppgaver fra {0} ({1})",
-    "plan_move_day": "Annen dag…",
-    "plan_day_msg": "Hvilken dag for «{0}»?",
-    "plan_remove": "Fjern fra planen",
-    "plan_for": "Planlegg for…",
-    "plan_ok": "Planlegg",
-    "plan_none": "Fant ingen dagsplan. Dagsplaner kan opprettes under Innstillinger → Integrasjoner → Home Tasks.",
-    "ed_view_lists": "Lister",
-    "ed_view_day_plan": "Dagsplan",
-    "ed_plan_days": "Viste dager",
-    "ed_plan_all_lists": "Alle lister",
-    "plan_due_hint": "Står i planen på grunn av forfallsdatoen: flytt den, eller endre datoen.",
-    "ed_plan_weekend": "Helg",
-    "new_entry_link": "Opprett en ny liste eller dagsplan",
-    "ed_plan_list_missing": "Listen er ikke tilgjengelig",
-    "picker_list_name": "Home Tasks: Liste",
-    "picker_plan_name": "Home Tasks: Dagsplan",
-    "picker_list_desc": "Oppgavelister i kolonner, med dra og slipp, underoppgaver, notater og forfallsdatoer.",
-    "picker_plan_desc": "Dagene i en dagsplan: oppgaver fra flere lister i den rekkefølgen du gjør dem."
+  no: {
+    ed_default_priority: "Standardprioritet",
+    ed_default_tags: "Standardtagger",
+    ed_default_section: "Standardseksjon",
+    ed_default_none: "– Ingen –",
+    ed_group_card: "Kort",
+    ed_person_off: "Av",
+    ed_person_name: "Navn",
+    ed_person_both: "Bilde og navn",
+    ed_group_header: "Topptekst",
+    ed_group_tasks: "Oppgaver",
+    ed_show_person_avatar: "Profilbilde",
+    voice_failed: "Taleinndata mislyktes",
+    confirm_delete_section: "Slette denne seksjonen? Oppgaver i den blir usorterte.",
+    done_section_header: "Ferdig",
+    duplicate_task: "Dupliser",
+    move_task: "Flytt",
+    move_task_msg: "Flytt ”{0}” til:",
+    ed_show_move: "Flytt-knapp",
+    ed_add_section: "+ Legg til seksjon",
+    ed_ai_image_entity: "AI-entitet for bildegenerering",
+    ed_ai_image_entity_placeholder: "f.eks. ai_task.openai",
+    ed_ai_prompt_prefix: "Ledetekst-prefiks (valgfritt)",
+    ed_ai_prompt_prefix_placeholder: "f.eks. Minimalistisk ikon av",
+    ed_auto_image: "Generer bilde automatisk",
+    ed_delete_section: "Slett seksjon",
+    ed_external_lists: "Ekstern",
+    ed_loading: "Laster…",
+    ed_move_down: "Flytt ned",
+    ed_move_up: "Flytt opp",
+    ed_sec_sections: "Seksjoner",
+    ed_section_icon: "Ikon",
+    ed_section_name: "Navn",
+    ed_section_name_prompt: "Seksjonsnavn:",
+    ed_sections_empty: "Ingen seksjoner ennå — oppgaver vises flatt.",
+    ed_sections_select_list_hint: "Velg en liste først for å administrere seksjonene.",
+    ed_show_filters: "Statusfilter",
+    ed_show_images: "Bilder",
+    ed_show_person_chips: "Personfilter",
+    ed_show_tag_chips: "Taggfilter",
+    ed_show_tile_title: "Tittel i fliser",
+    ed_show_voice: "Taleinndata",
+    ed_task_search: "Oppgavesøk",
+    ed_tile_help: "Flisevisning:\n• Klikk = fullfør\n• Hold = rediger\n• Dra = endre rekkefølge",
+    ed_view_mode: "Visningsmodus",
+    ed_view_mode_list: "Liste",
+    ed_view_mode_tiles: "Fliser",
+    voice_input: "Taleinndata",
+    voice_stop: "Stopp opptak",
+    img_label: "Bilde",
+    img_generate: "Generer",
+    img_regenerate: "Generer på nytt",
+    img_generating: "Genererer…",
+    img_from_media: "Fra mediebibliotek",
+    img_remove: "Fjern bilde",
+    img_generate_failed: "Bildegenerering mislyktes: ",
+    img_save_failed: "Kunne ikke lagre bilde: ",
+    mb_title: "Mediebibliotek",
+    mb_loading: "Laster…",
+    mb_root: "Medier",
+    mb_back: "Tilbake",
+    mb_empty: "Ingen filer",
+    mb_error: "Feil: ",
+    my_tasks: "Mine oppgaver",
+    add_placeholder: "Legg til ny oppgave...",
+    add_failed: "Kunne ikke legge til oppgaven",
+    draft_details_failed: "Oppgaven er lagt til, men noen detaljer kunne ikke lagres",
+    duplicate_failed: "Oppgaven kunne ikke dupliseres",
+    dialog_cancel: "Avbryt",
+    dialog_add: "Legg til",
+    filter_all: "Alle",
+    filter_open: "Åpne",
+    filter_done: "Ferdige",
+    filter_due_soon: "Snart",
+    ed_show_due_soon_filter: "Snart-filter",
+    ed_due_soon_days: "Dager fremover",
+    ed_hide_overdue: "Skjul forfalte",
+    progress: "{0} av {1} ferdige",
+    empty: "Ingen oppgaver",
+    drag_handle: "Dra for å endre rekkeflølge",
+    due_date: "Frist",
+    notes: "Notater",
+    notes_placeholder: "Legg til notater her",
+    notes_edit_hint: "Klikk for å redigere",
+    sub_items: "Deloppgaver",
+    add_sub_item: "+ Legg til deloppgave",
+    recurrence: "Gjentakelse",
+    recurrence_enabled: "Aktivert",
+    recurrence_every: "Hver",
+    rec_minutes: "Minutter",
+    rec_hours: "Timer",
+    rec_days: "Dager",
+    rec_weeks: "Uker",
+    rec_months: "Måneder",
+    rec_years: "År",
+    rec_short_h: "t",
+    rec_short_d: "d",
+    rec_short_w: "u",
+    rec_short_m: "md",
+    rec_short_y: "år",
+    priority: "Prioritet",
+    pri_high: "Høy",
+    pri_medium: "Middels",
+    pri_low: "Lav",
+    ed_show_priority: "Prioriteter",
+    rec_hourly: "Hver time",
+    rec_daily: "Daglig",
+    rec_weekly: "Ukentlig",
+    rec_monthly: "Månedlig",
+    rec_yearly: "Årlig",
+    rec_type_interval: "Hver …",
+    rec_type_weekdays: "På hverdager",
+    rec_wd_0: "Man",
+    rec_wd_1: "Tir",
+    rec_wd_2: "Ons",
+    rec_wd_3: "Tor",
+    rec_wd_4: "Fre",
+    rec_wd_5: "Lør",
+    rec_wd_6: "Søn",
+    assigned_to: "Tildelte personer",
+    nobody: "– Ingen –",
+    delete_task: "Slett oppgave",
+    delete_sub: "Slett",
+    ed_default_filter: "Standardfilter",
+    ed_list: "Liste",
+    ed_title: "Tittel (valgfritt)",
+    ed_title_placeholder: "Standard: listenavn",
+    ed_display: "Visning",
+    ed_show_title: "Tittel",
+    ed_show_progress: "Fremgang",
+    ed_show_due_date: "Frister",
+    ed_show_notes: "Notater",
+    ed_show_recurrence: "Gjentakelser",
+    ed_show_sub_items: "Deloppgaver",
+    ed_show_person: "Personer",
+    ed_auto_delete: "Slett ferdige umiddelbart",
+    ed_compact: "Kompakt",
+    ed_show_tags: "Tagger",
+    ed_confirm_complete: "Bekreft før fullføring",
+    ed_tap_to_complete: "Trykk på raden for å fullføre",
+    ed_show_add_due: "Forfallsdato ved tillegg",
+    ed_max_height: "Maks. høyde (px, 0 = ubegrenset)",
+    ed_badge_priority: "Prioritetschips",
+    ed_badge_progress: "Fremdriftschips",
+    ed_badge_due: "Forfallschips",
+    ed_badge_recurrence: "Gjentakelseschips",
+    ed_badge_person: "Person",
+    ed_badge_tags: "Taggchips",
+    ed_badge_reminders: "Påminnelseschips",
+    ed_sec_defaults: "Standarder",
+    ed_sec_images: "Bilder",
+    ed_share_images: "Del bilder med andre lister",
+    ed_share_images_hint: "Av holder listens bilder for seg selv — samme oppgavetittel i en annen liste får sitt eget bilde.",
+    ed_queue_empty: "Ingenting venter på et bilde.",
+    ed_queue_pending: "Venter på et bilde: {0}",
+    ed_queue_cancel: "Avbryt",
+    ed_ai_image_hint: "Gjelder hele kortet, ikke bare denne kolonnen.",
+    ed_queue_running: "genereres…",
+    ed_queue_title: "Genereringskø",
+    ed_default_assignee: "Standardpersoner",
+    ed_defaults_saved: "Lagret",
+    ed_defaults_load_failed: "Kunne ikke laste standardverdiene",
+    ed_defaults_save_failed: "Kunne ikke lagre",
+    confirm_complete_msg: "Merke «{0}» som fullført?",
+    confirm_complete_ok: "Fullfør",
+    ed_hint: "Nye lister kan opprettes under Innstillinger → Integrasjoner → Home Tasks.",
+    tags: "Tagger",
+    add_tag: "+ Legg til tagg",
+    tag_placeholder: "Ny tagg...",
+    remove_tag: "Fjern",
+    tag_suggestions_label: "Eksisterende tagger",
+    tag_no_matches: "Ingen samsvarende tagger",
+    new_sub_item: "Ny deloppgave",
+    remove_reminder: "Fjern påminnelse",
+    sort_label: "Sorter",
+    sort_manual: "Manuell",
+    sort_due: "Frist",
+    sort_priority: "Prioritet",
+    sort_title: "Tittel (A–Z)",
+    sort_person: "Tildelt",
+    ed_show_sort: "Sortering",
+    ed_default_sort: "Standardsortering",
+    ed_tag_catalog: "Faste tagger",
+    ed_tag_catalog_hint: "Foreslås alltid når du tagger i denne listen — andre tagger kan legges til på oppgaven.",
+    ed_default_lead_hint: "Overtas av en oppgave når gjentakelsen slås på",
+    tag_did_you_mean: "Mente du {0}?",
+    ed_overdue_first: "Forfalte oppgaver først",
+    reminder: "Påminnelser",
+    rem_add: "+ Legg til påminnelse",
+    rem_none: "Ingen påminnelse",
+    rem_at_due: "Ved fristen",
+    rem_5m: "5 min. før",
+    rem_15m: "15 min. før",
+    rem_30m: "30 min. før",
+    rem_1h: "1 time før",
+    rem_2h: "2 timer før",
+    rem_1d: "1 dag før",
+    rem_2d: "2 dager før",
+    ed_show_reminders: "Påminnelser",
+    ed_add_column: "Legg til kolonne",
+    ed_move_left: "Flytt til venstre",
+    ed_move_right: "Flytt til høyre",
+    ed_duplicate: "Dupliser kolonne",
+    ed_delete_column: "Slett kolonne",
+    ed_code_editor: "Kodeeditor",
+    ed_visual_editor: "Visuell editor",
+    ed_icon: "Ikon (valgfritt)",
+    ed_card_title: "Korttittel (valgfritt)",
+    ed_card_title_placeholder: "Tittel over kolonner",
+    ed_sec_view: "Visning",
+    ed_sec_display: "Konfigurasjon",
+    ed_sec_filters: "Filtre",
+    ed_preset_assignees: "Begrens til personer",
+    ed_preset_labels: "Begrens til tagger",
+    ed_ms_add: "Legg til…",
+    due_time_lbl: "Tid",
+    due_date_lbl: "Dato",
+    rec_mode_lbl: "Modus",
+    rec_time: "Klokkeslett",
+    rec_end: "Slutt",
+    rec_end_never: "Aldri",
+    rec_end_date: "Til",
+    rec_end_count: "X ganger",
+    rec_end_date_lbl: "Til",
+    rec_max_count_lbl: "Antall",
+    rec_remaining: "{0} igjen",
+    rec_start_date_lbl: "Fra",
+    rec_pattern_dom: "Dag i måneden",
+    rec_pattern_nth: "Nte ukedag",
+    rec_pattern_none: "Fra fullføring",
+    rec_pattern_due: "Fra forfallsdato",
+    rec_dom_lbl: "Dag",
+    rec_dom_last: "Siste dag",
+    rec_nth_lbl: "Den",
+    rec_nth_1: "1.",
+    rec_nth_2: "2.",
+    rec_nth_3: "3.",
+    rec_nth_4: "4.",
+    rec_nth_last: "Siste",
+    rec_anniversary_lbl: "Den",
+    rec_dd: "Dag",
+    rec_mm: "Måned",
+    rec_dom_short: ".",
+    rec_last_short: "siste",
+    rec_value_lbl: "Hver",
+    rec_unit_lbl: "Enhet",
+    rec_wd_lbl: "Ukedag",
+    rec_at_lbl: "Kl.",
+    rec_lead_lbl: "Åpne igjen tidlig",
+    rec_lead_hint: "Åpner oppgaven på nytt så lenge før den forfaller igjen, slik at den vises som «kommende». 0 = når den forfaller.",
+    rec_todoist_pattern_unsupported: "Undermønstre støttes ikke når intervallet er større enn 1.",
+    history: "Historikk",
+    history_created: "Opprettet",
+    history_completed: "Fullført",
+    history_reopened: "Åpnet igjen",
+    history_reset: "Auto-tilbakestilt",
+    history_changed: "endret",
+    history_empty: "Ingen historikk",
+    hist_title: "Tittel",
+    history_disabled: "Deaktivert",
+    ed_show_history: "Historikker",
+    hist_by_user: "Bruker",
+    ed_show_add_task: "Legg til oppgave",
+    assigned_unknown: "Ukjent (%s)",
+    recurrence_readonly: "Administrert av %s",
+    synced_with: "Synkronisert med %s",
+    due_today: "I dag",
+    due_tomorrow: "I morgen",
+    due_yesterday: "I går",
+    due_day_after_tomorrow: "I overmorgen",
+    due_day_before_yesterday: "I forgårs",
+    due_in_hours: "Om {0} t {1} min",
+    due_in_minutes: "Om {0} min",
+    due_in_seconds: "Nå",
+    due_ago_hours: "{0} t {1} min siden",
+    due_ago_minutes: "{0} min siden",
+    due_ago_seconds: "Akkurat nå",
+    calendar_minutes_before: "{value} min før",
+    calendar_hours_before: "{value} timer før",
+    calendar_days_before: "{value} dager før",
+    ed_show_section: "Seksjonsfelt",
+    ed_section_field_no_sections: "Vises når listen har seksjoner",
+    section_label: "Seksjon",
+    ed_list_columns: "Oppgavekolonner",
+    ed_tile_size: "Flisestørrelse",
+    ed_tile_size_small: "Liten",
+    ed_tile_size_compact: "Kompakt",
+    ed_tile_size_medium: "Normal",
+    ed_tile_size_large: "Stor",
+    due_quick_week: "Om 1 uke",
+    due_quick_month: "Om 1 måned",
+    due_quick_3months: "Om 3 måneder",
+    ed_offered_persons: "Valgbare personer",
+    ed_offered_persons_hint: "Bare uthevede personer kan tildeles i dette kortet",
+    ed_show_add_details: "Detaljer ved tillegg",
+    add_with_details: "Legg til med detaljer",
+    add_clear: "Tøm",
+    plan_note_placeholder: "Fokus for dagen",
+    plan_empty: "Ingenting planlagt",
+    plan_add: "Planlegg en oppgave",
+    plan_search_placeholder: "Søk i oppgaver…",
+    plan_no_results: "Ingen samsvarende åpne oppgaver",
+    plan_carry_over: "Overfør åpne oppgaver fra {0} ({1})",
+    plan_move_day: "Annen dag…",
+    plan_day_msg: "Hvilken dag for «{0}»?",
+    plan_remove: "Fjern fra planen",
+    plan_for: "Planlegg for…",
+    plan_ok: "Planlegg",
+    plan_none: "Fant ingen dagsplan. Dagsplaner kan opprettes under Innstillinger → Integrasjoner → Home Tasks.",
+    ed_view_lists: "Lister",
+    ed_view_day_plan: "Dagsplan",
+    ed_plan_days: "Viste dager",
+    ed_plan_all_lists: "Alle lister",
+    plan_due_hint: "Står i planen på grunn av forfallsdatoen: flytt den, eller endre datoen.",
+    ed_plan_weekend: "Helg",
+    new_entry_link: "Opprett en ny liste eller dagsplan",
+    ed_plan_list_missing: "Listen er ikke tilgjengelig",
+    picker_list_name: "Home Tasks: Liste",
+    picker_plan_name: "Home Tasks: Dagsplan",
+    picker_list_desc: "Oppgavelister i kolonner, med dra og slipp, underoppgaver, notater og forfallsdatoer.",
+    picker_plan_desc: "Dagene i en dagsplan: oppgaver fra flere lister i den rekkefølgen du gjør dem."
   },
-  "fi": {
-    "ed_default_priority": "Oletusprioriteetti",
-    "ed_default_tags": "Oletustunnisteet",
-    "ed_default_section": "Oletusosio",
-    "ed_default_none": "– Ei mitään –",
-    "ed_group_card": "Kortti",
-    "ed_person_off": "Pois",
-    "ed_person_name": "Nimi",
-    "ed_person_both": "Kuva ja nimi",
-    "ed_group_header": "Yläosa",
-    "ed_group_tasks": "Tehtävät",
-    "ed_show_person_avatar": "Profiilikuva",
-    "voice_failed": "Puhesyöttö epäonnistui",
-    "confirm_delete_section": "Poistetaanko tämä osio? Sen tehtävät muuttuvat lajittelemattomiksi.",
-    "done_section_header": "Valmis",
-    "duplicate_task": "Monista",
-    "move_task": "Siirrä",
-    "move_task_msg": "Siirrä ”{0}” kohteeseen:",
-    "ed_show_move": "Siirrä-painike",
-    "ed_add_section": "+ Lisää osio",
-    "ed_ai_image_entity": "Tekoälyentiteetti kuvien luontiin",
-    "ed_ai_image_entity_placeholder": "esim. ai_task.openai",
-    "ed_ai_prompt_prefix": "Kehotteen etuliite (valinnainen)",
-    "ed_ai_prompt_prefix_placeholder": "esim. Minimalistinen kuvake",
-    "ed_auto_image": "Luo kuva automaattisesti",
-    "ed_delete_section": "Poista osio",
-    "ed_external_lists": "Ulkoinen",
-    "ed_loading": "Ladataan…",
-    "ed_move_down": "Siirrä alas",
-    "ed_move_up": "Siirrä ylös",
-    "ed_sec_sections": "Osiot",
-    "ed_section_icon": "Kuvake",
-    "ed_section_name": "Nimi",
-    "ed_section_name_prompt": "Osion nimi:",
-    "ed_sections_empty": "Ei vielä osioita — tehtävät näytetään listana.",
-    "ed_sections_select_list_hint": "Valitse ensin lista hallitaksesi sen osioita.",
-    "ed_show_filters": "Tilasuodatin",
-    "ed_show_images": "Kuvat",
-    "ed_show_person_chips": "Henkilösuodatin",
-    "ed_show_tag_chips": "Tunnistesuodatin",
-    "ed_show_tile_title": "Otsikko ruuduissa",
-    "ed_show_voice": "Puhesyöttö",
-    "ed_task_search": "Tehtävähaku",
-    "ed_tile_help": "Ruutunäkymä:\n• Napsautus = valmis\n• Pidä = muokkaa\n• Vedä = järjestä uudelleen",
-    "ed_view_mode": "Näkymätila",
-    "ed_view_mode_list": "Lista",
-    "ed_view_mode_tiles": "Ruudut",
-    "voice_input": "Puhesyöttö",
-    "voice_stop": "Lopeta nauhoitus",
-    "img_label": "Kuva",
-    "img_generate": "Luo",
-    "img_regenerate": "Luo uudelleen",
-    "img_generating": "Luodaan…",
-    "img_from_media": "Mediakirjastosta",
-    "img_remove": "Poista kuva",
-    "img_generate_failed": "Kuvan luonti epäonnistui: ",
-    "img_save_failed": "Kuvan tallennus epäonnistui: ",
-    "mb_title": "Mediakirjasto",
-    "mb_loading": "Ladataan…",
-    "mb_root": "Media",
-    "mb_back": "Takaisin",
-    "mb_empty": "Ei tiedostoja",
-    "mb_error": "Virhe: ",
-    "my_tasks": "Omat tehtävät",
-    "add_placeholder": "Lisää uusi tehtävä...",
-    "add_failed": "Tehtävän lisääminen epäonnistui",
-    "draft_details_failed": "Tehtävä lisättiin, mutta joitakin tietoja ei voitu tallentaa",
-    "duplicate_failed": "Tehtävän monistaminen epäonnistui",
-    "dialog_cancel": "Peruuta",
-    "dialog_add": "Lisää",
-    "filter_all": "Kaikki",
-    "filter_open": "Avoimet",
-    "filter_done": "Valmiit",
-    "filter_due_soon": "Pian",
-    "ed_show_due_soon_filter": "Pian-suodatin",
-    "ed_due_soon_days": "Päiviä eteenpäin",
-    "ed_hide_overdue": "Piilota myöhässä olevat",
-    "progress": "{0} / {1} valmis",
-    "empty": "Ei tehtäviä",
-    "drag_handle": "Vetää järjestääksesi",
-    "due_date": "Eräpäivä",
-    "notes": "Muistiinpanot",
-    "notes_placeholder": "Lisää muistiinpanoja tähän",
-    "notes_edit_hint": "Muokkaa napsauttamalla",
-    "sub_items": "Alitehtävät",
-    "add_sub_item": "+ Lisää alitehtävä",
-    "recurrence": "Toistuvuus",
-    "recurrence_enabled": "Käytössä",
-    "recurrence_every": "Joka",
-    "rec_minutes": "Minuutit",
-    "rec_hours": "Tunnit",
-    "rec_days": "Päivät",
-    "rec_weeks": "Viikot",
-    "rec_months": "Kuukaudet",
-    "rec_years": "Vuodet",
-    "rec_short_h": "t",
-    "rec_short_d": "p",
-    "rec_short_w": "v",
-    "rec_short_m": "kk",
-    "rec_short_y": "v",
-    "priority": "Prioriteetti",
-    "pri_high": "Korkea",
-    "pri_medium": "Keskitaso",
-    "pri_low": "Matala",
-    "ed_show_priority": "Prioriteetit",
-    "rec_hourly": "Tunneittain",
-    "rec_daily": "Päivittäin",
-    "rec_weekly": "Viikoittain",
-    "rec_monthly": "Kuukausittain",
-    "rec_yearly": "Vuosittain",
-    "rec_type_interval": "Joka …",
-    "rec_type_weekdays": "Arkipäivinä",
-    "rec_wd_0": "Ma",
-    "rec_wd_1": "Ti",
-    "rec_wd_2": "Ke",
-    "rec_wd_3": "To",
-    "rec_wd_4": "Pe",
-    "rec_wd_5": "La",
-    "rec_wd_6": "Su",
-    "assigned_to": "Määritetyt henkilöt",
-    "nobody": "– Ei ketään –",
-    "delete_task": "Poista tehtävä",
-    "delete_sub": "Poista",
-    "ed_default_filter": "Oletussuodatin",
-    "ed_list": "Lista",
-    "ed_title": "Otsikko (valinnainen)",
-    "ed_title_placeholder": "Oletus: listan nimi",
-    "ed_display": "Näyttö",
-    "ed_show_title": "Otsikko",
-    "ed_show_progress": "Edistyminen",
-    "ed_show_due_date": "Eräpäivät",
-    "ed_show_notes": "Muistiinpanot",
-    "ed_show_recurrence": "Toistot",
-    "ed_show_sub_items": "Alitehtävät",
-    "ed_show_person": "Henkilöt",
-    "ed_auto_delete": "Poista valmiit välittömästi",
-    "ed_compact": "Kompakti",
-    "ed_show_tags": "Tunnisteet",
-    "ed_confirm_complete": "Vahvista ennen valmiiksi merkitsemistä",
-    "ed_tap_to_complete": "Merkitse valmiiksi napauttamalla riviä",
-    "ed_show_add_due": "Eräpäivä lisättäessä",
-    "ed_max_height": "Enimmäiskorkeus (px, 0 = rajaton)",
-    "ed_badge_priority": "Prioriteettimerkit",
-    "ed_badge_progress": "Edistymismerkit",
-    "ed_badge_due": "Eräpäivämerkit",
-    "ed_badge_recurrence": "Toistomerkit",
-    "ed_badge_person": "Henkilö",
-    "ed_badge_tags": "Tunnistemerkit",
-    "ed_badge_reminders": "Muistutusmerkit",
-    "ed_sec_defaults": "Oletukset",
-    "ed_sec_images": "Kuvat",
-    "ed_share_images": "Jaa kuvat muiden listojen kanssa",
-    "ed_share_images_hint": "Pois pitää tämän listan kuvat omanaan — sama tehtävän nimi toisessa listassa saa oman kuvansa.",
-    "ed_queue_empty": "Mikään ei odota kuvaa.",
-    "ed_queue_pending": "Odottaa kuvaa: {0}",
-    "ed_queue_cancel": "Peruuta",
-    "ed_ai_image_hint": "Koskee koko korttia, ei vain tätä saraketta.",
-    "ed_queue_running": "luodaan…",
-    "ed_queue_title": "Luontijono",
-    "ed_default_assignee": "Oletushenkilöt",
-    "ed_defaults_saved": "Tallennettu",
-    "ed_defaults_load_failed": "Oletuksia ei voitu ladata",
-    "ed_defaults_save_failed": "Tallennus epäonnistui",
-    "confirm_complete_msg": "Merkitäänkö ”{0}” valmiiksi?",
-    "confirm_complete_ok": "Merkitse valmiiksi",
-    "ed_hint": "Uusia listoja voi luoda kohdassa Asetukset → Integraatiot → Home Tasks.",
-    "tags": "Tunnisteet",
-    "add_tag": "+ Lisää tunniste",
-    "tag_placeholder": "Uusi tunniste...",
-    "remove_tag": "Poista",
-    "tag_suggestions_label": "Olemassa olevat tunnisteet",
-    "tag_no_matches": "Ei vastaavia tunnisteita",
-    "new_sub_item": "Uusi alitehtävä",
-    "remove_reminder": "Poista muistutus",
-    "sort_label": "Lajittele",
-    "sort_manual": "Manuaalinen",
-    "sort_due": "Eräpäivä",
-    "sort_priority": "Prioriteetti",
-    "sort_title": "Otsikko (A–Ö)",
-    "sort_person": "Määritetty",
-    "ed_show_sort": "Lajittelu",
-    "ed_default_sort": "Oletuslajittelu",
-    "ed_tag_catalog": "Kiinteät tagit",
-    "ed_tag_catalog_hint": "Ehdotetaan aina tagattaessa tässä listassa — muita tageja voi lisätä tehtävässä.",
-    "ed_default_lead_hint": "Tehtävä ottaa sen käyttöön, kun sen toisto kytketään päälle",
-    "tag_did_you_mean": "Tarkoititko {0}?",
-    "ed_overdue_first": "Myöhässä olevat ensin",
-    "reminder": "Muistutukset",
-    "rem_add": "+ Lisää muistutus",
-    "rem_none": "Ei muistutusta",
-    "rem_at_due": "Eräajalla",
-    "rem_5m": "5 min. ennen",
-    "rem_15m": "15 min. ennen",
-    "rem_30m": "30 min. ennen",
-    "rem_1h": "1 tunti ennen",
-    "rem_2h": "2 tuntia ennen",
-    "rem_1d": "1 päivä ennen",
-    "rem_2d": "2 päivää ennen",
-    "ed_show_reminders": "Muistutukset",
-    "ed_add_column": "Lisää sarake",
-    "ed_move_left": "Siirrä vasemmalle",
-    "ed_move_right": "Siirrä oikealle",
-    "ed_duplicate": "Kopioi sarake",
-    "ed_delete_column": "Poista sarake",
-    "ed_code_editor": "Koodieditori",
-    "ed_visual_editor": "Visuaalinen editori",
-    "ed_icon": "Kuvake (valinnainen)",
-    "ed_card_title": "Kortin otsikko (valinnainen)",
-    "ed_card_title_placeholder": "Otsikko sarakkeiden yläpuolella",
-    "ed_sec_view": "Näyttö",
-    "ed_sec_display": "Konfiguraatio",
-    "ed_sec_filters": "Suodattimet",
-    "ed_preset_assignees": "Rajaa henkilöihin",
-    "ed_preset_labels": "Rajaa tunnisteisiin",
-    "ed_ms_add": "Lisää…",
-    "due_time_lbl": "Aika",
-    "due_date_lbl": "Päivämäärä",
-    "rec_mode_lbl": "Tila",
-    "rec_time": "Aika",
-    "rec_end": "Loppu",
-    "rec_end_never": "Ei koskaan",
-    "rec_end_date": "Asti",
-    "rec_end_count": "X kertaa",
-    "rec_end_date_lbl": "Asti",
-    "rec_max_count_lbl": "Määrä",
-    "rec_remaining": "{0} jäljellä",
-    "rec_start_date_lbl": "Alkaen",
-    "rec_pattern_dom": "Kuukauden päivä",
-    "rec_pattern_nth": "N. viikonpäivä",
-    "rec_pattern_none": "Valmistumisesta",
-    "rec_pattern_due": "Eräpäivästä",
-    "rec_dom_lbl": "Päivä",
-    "rec_dom_last": "Viimeinen päivä",
-    "rec_nth_lbl": "Numero",
-    "rec_nth_1": "1.",
-    "rec_nth_2": "2.",
-    "rec_nth_3": "3.",
-    "rec_nth_4": "4.",
-    "rec_nth_last": "Viimeinen",
-    "rec_anniversary_lbl": "Pvm",
-    "rec_dd": "Päivä",
-    "rec_mm": "Kuukausi",
-    "rec_dom_short": ".",
-    "rec_last_short": "viimeinen",
-    "rec_value_lbl": "Joka",
-    "rec_unit_lbl": "Yksikkö",
-    "rec_wd_lbl": "Viikonpäivä",
-    "rec_at_lbl": "Klo",
-    "rec_lead_lbl": "Avaa uudelleen aikaisemmin",
-    "rec_lead_hint": "Avaa tehtävän uudelleen näin kauan ennen sen uutta määräaikaa, jolloin se näkyy tulevana. 0 = kun se erääntyy.",
-    "rec_todoist_pattern_unsupported": "Alikaavat eivät ole tuettuja, kun aikaväli on suurempi kuin 1.",
-    "history": "Historia",
-    "history_created": "Luotu",
-    "history_completed": "Valmis",
-    "history_reopened": "Avattu uudelleen",
-    "history_reset": "Automaattinen palautus",
-    "history_changed": "muutettu",
-    "history_empty": "Ei historiaa",
-    "hist_title": "Otsikko",
-    "history_disabled": "Käytössä poistettu",
-    "ed_show_history": "Historiat",
-    "hist_by_user": "Käyttäjä",
-    "ed_show_add_task": "Lisää tehtävä",
-    "assigned_unknown": "Tuntematon (%s)",
-    "recurrence_readonly": "Hallinnoi %s",
-    "synced_with": "Synkronoitu %s kanssa",
-    "due_today": "Tänään",
-    "due_tomorrow": "Huomenna",
-    "due_yesterday": "Eilen",
-    "due_day_after_tomorrow": "Ylihuomenna",
-    "due_day_before_yesterday": "Toissapäivänä",
-    "due_in_hours": "{0} t {1} min päästä",
-    "due_in_minutes": "{0} min päästä",
-    "due_in_seconds": "Nyt",
-    "due_ago_hours": "{0} t {1} min sitten",
-    "due_ago_minutes": "{0} min sitten",
-    "due_ago_seconds": "Juuri nyt",
-    "calendar_minutes_before": "{value} min ennen",
-    "calendar_hours_before": "{value} h ennen",
-    "calendar_days_before": "{value} pv ennen",
-    "ed_show_section": "Osiokenttä",
-    "ed_section_field_no_sections": "Näkyy, kun listalla on osioita",
-    "section_label": "Osio",
-    "ed_list_columns": "Tehtäväsarakkeet",
-    "ed_tile_size": "Ruutujen koko",
-    "ed_tile_size_small": "Pieni",
-    "ed_tile_size_compact": "Kompakti",
-    "ed_tile_size_medium": "Normaali",
-    "ed_tile_size_large": "Suuri",
-    "due_quick_week": "1 viikon päästä",
-    "due_quick_month": "1 kuukauden päästä",
-    "due_quick_3months": "3 kuukauden päästä",
-    "ed_offered_persons": "Valittavat henkilöt",
-    "ed_offered_persons_hint": "Tässä kortissa voi määrittää vain korostettuja henkilöitä",
-    "ed_show_add_details": "Tiedot lisättäessä",
-    "add_with_details": "Lisää tietojen kanssa",
-    "add_clear": "Tyhjennä",
-    "plan_note_placeholder": "Päivän painopiste",
-    "plan_empty": "Ei mitään suunniteltu",
-    "plan_add": "Suunnittele tehtävä",
-    "plan_search_placeholder": "Hae tehtäviä…",
-    "plan_no_results": "Ei vastaavia avoimia tehtäviä",
-    "plan_carry_over": "Siirrä avoimet tehtävät päivältä {0} ({1})",
-    "plan_move_day": "Toinen päivä…",
-    "plan_day_msg": "Mille päivälle ”{0}”?",
-    "plan_remove": "Poista suunnitelmasta",
-    "plan_for": "Suunnittele päivälle…",
-    "plan_ok": "Suunnittele",
-    "plan_none": "Päiväsuunnitelmaa ei löytynyt. Päiväsuunnitelmia voi luoda kohdassa Asetukset → Integraatiot → Home Tasks.",
-    "ed_view_lists": "Listat",
-    "ed_view_day_plan": "Päiväsuunnitelma",
-    "ed_plan_days": "Näytettävät päivät",
-    "ed_plan_all_lists": "Kaikki listat",
-    "plan_due_hint": "On suunnitelmassa eräpäivänsä vuoksi: siirrä tehtävä tai muuta päivämäärää.",
-    "ed_plan_weekend": "Viikonloppu",
-    "new_entry_link": "Luo uusi lista tai päiväsuunnitelma",
-    "ed_plan_list_missing": "Lista ei ole käytettävissä",
-    "picker_list_name": "Home Tasks: Lista",
-    "picker_plan_name": "Home Tasks: Päiväsuunnitelma",
-    "picker_list_desc": "Tehtävälistat sarakkeina: vedä ja pudota, alitehtävät, muistiinpanot ja eräpäivät.",
-    "picker_plan_desc": "Päiväsuunnitelman päivät: tehtävät useista listoista siinä järjestyksessä, jossa teet ne."
+  fi: {
+    ed_default_priority: "Oletusprioriteetti",
+    ed_default_tags: "Oletustunnisteet",
+    ed_default_section: "Oletusosio",
+    ed_default_none: "– Ei mitään –",
+    ed_group_card: "Kortti",
+    ed_person_off: "Pois",
+    ed_person_name: "Nimi",
+    ed_person_both: "Kuva ja nimi",
+    ed_group_header: "Yläosa",
+    ed_group_tasks: "Tehtävät",
+    ed_show_person_avatar: "Profiilikuva",
+    voice_failed: "Puhesyöttö epäonnistui",
+    confirm_delete_section: "Poistetaanko tämä osio? Sen tehtävät muuttuvat lajittelemattomiksi.",
+    done_section_header: "Valmis",
+    duplicate_task: "Monista",
+    move_task: "Siirrä",
+    move_task_msg: "Siirrä ”{0}” kohteeseen:",
+    ed_show_move: "Siirrä-painike",
+    ed_add_section: "+ Lisää osio",
+    ed_ai_image_entity: "Tekoälyentiteetti kuvien luontiin",
+    ed_ai_image_entity_placeholder: "esim. ai_task.openai",
+    ed_ai_prompt_prefix: "Kehotteen etuliite (valinnainen)",
+    ed_ai_prompt_prefix_placeholder: "esim. Minimalistinen kuvake",
+    ed_auto_image: "Luo kuva automaattisesti",
+    ed_delete_section: "Poista osio",
+    ed_external_lists: "Ulkoinen",
+    ed_loading: "Ladataan…",
+    ed_move_down: "Siirrä alas",
+    ed_move_up: "Siirrä ylös",
+    ed_sec_sections: "Osiot",
+    ed_section_icon: "Kuvake",
+    ed_section_name: "Nimi",
+    ed_section_name_prompt: "Osion nimi:",
+    ed_sections_empty: "Ei vielä osioita — tehtävät näytetään listana.",
+    ed_sections_select_list_hint: "Valitse ensin lista hallitaksesi sen osioita.",
+    ed_show_filters: "Tilasuodatin",
+    ed_show_images: "Kuvat",
+    ed_show_person_chips: "Henkilösuodatin",
+    ed_show_tag_chips: "Tunnistesuodatin",
+    ed_show_tile_title: "Otsikko ruuduissa",
+    ed_show_voice: "Puhesyöttö",
+    ed_task_search: "Tehtävähaku",
+    ed_tile_help: "Ruutunäkymä:\n• Napsautus = valmis\n• Pidä = muokkaa\n• Vedä = järjestä uudelleen",
+    ed_view_mode: "Näkymätila",
+    ed_view_mode_list: "Lista",
+    ed_view_mode_tiles: "Ruudut",
+    voice_input: "Puhesyöttö",
+    voice_stop: "Lopeta nauhoitus",
+    img_label: "Kuva",
+    img_generate: "Luo",
+    img_regenerate: "Luo uudelleen",
+    img_generating: "Luodaan…",
+    img_from_media: "Mediakirjastosta",
+    img_remove: "Poista kuva",
+    img_generate_failed: "Kuvan luonti epäonnistui: ",
+    img_save_failed: "Kuvan tallennus epäonnistui: ",
+    mb_title: "Mediakirjasto",
+    mb_loading: "Ladataan…",
+    mb_root: "Media",
+    mb_back: "Takaisin",
+    mb_empty: "Ei tiedostoja",
+    mb_error: "Virhe: ",
+    my_tasks: "Omat tehtävät",
+    add_placeholder: "Lisää uusi tehtävä...",
+    add_failed: "Tehtävän lisääminen epäonnistui",
+    draft_details_failed: "Tehtävä lisättiin, mutta joitakin tietoja ei voitu tallentaa",
+    duplicate_failed: "Tehtävän monistaminen epäonnistui",
+    dialog_cancel: "Peruuta",
+    dialog_add: "Lisää",
+    filter_all: "Kaikki",
+    filter_open: "Avoimet",
+    filter_done: "Valmiit",
+    filter_due_soon: "Pian",
+    ed_show_due_soon_filter: "Pian-suodatin",
+    ed_due_soon_days: "Päiviä eteenpäin",
+    ed_hide_overdue: "Piilota myöhässä olevat",
+    progress: "{0} / {1} valmis",
+    empty: "Ei tehtäviä",
+    drag_handle: "Vetää järjestääksesi",
+    due_date: "Eräpäivä",
+    notes: "Muistiinpanot",
+    notes_placeholder: "Lisää muistiinpanoja tähän",
+    notes_edit_hint: "Muokkaa napsauttamalla",
+    sub_items: "Alitehtävät",
+    add_sub_item: "+ Lisää alitehtävä",
+    recurrence: "Toistuvuus",
+    recurrence_enabled: "Käytössä",
+    recurrence_every: "Joka",
+    rec_minutes: "Minuutit",
+    rec_hours: "Tunnit",
+    rec_days: "Päivät",
+    rec_weeks: "Viikot",
+    rec_months: "Kuukaudet",
+    rec_years: "Vuodet",
+    rec_short_h: "t",
+    rec_short_d: "p",
+    rec_short_w: "v",
+    rec_short_m: "kk",
+    rec_short_y: "v",
+    priority: "Prioriteetti",
+    pri_high: "Korkea",
+    pri_medium: "Keskitaso",
+    pri_low: "Matala",
+    ed_show_priority: "Prioriteetit",
+    rec_hourly: "Tunneittain",
+    rec_daily: "Päivittäin",
+    rec_weekly: "Viikoittain",
+    rec_monthly: "Kuukausittain",
+    rec_yearly: "Vuosittain",
+    rec_type_interval: "Joka …",
+    rec_type_weekdays: "Arkipäivinä",
+    rec_wd_0: "Ma",
+    rec_wd_1: "Ti",
+    rec_wd_2: "Ke",
+    rec_wd_3: "To",
+    rec_wd_4: "Pe",
+    rec_wd_5: "La",
+    rec_wd_6: "Su",
+    assigned_to: "Määritetyt henkilöt",
+    nobody: "– Ei ketään –",
+    delete_task: "Poista tehtävä",
+    delete_sub: "Poista",
+    ed_default_filter: "Oletussuodatin",
+    ed_list: "Lista",
+    ed_title: "Otsikko (valinnainen)",
+    ed_title_placeholder: "Oletus: listan nimi",
+    ed_display: "Näyttö",
+    ed_show_title: "Otsikko",
+    ed_show_progress: "Edistyminen",
+    ed_show_due_date: "Eräpäivät",
+    ed_show_notes: "Muistiinpanot",
+    ed_show_recurrence: "Toistot",
+    ed_show_sub_items: "Alitehtävät",
+    ed_show_person: "Henkilöt",
+    ed_auto_delete: "Poista valmiit välittömästi",
+    ed_compact: "Kompakti",
+    ed_show_tags: "Tunnisteet",
+    ed_confirm_complete: "Vahvista ennen valmiiksi merkitsemistä",
+    ed_tap_to_complete: "Merkitse valmiiksi napauttamalla riviä",
+    ed_show_add_due: "Eräpäivä lisättäessä",
+    ed_max_height: "Enimmäiskorkeus (px, 0 = rajaton)",
+    ed_badge_priority: "Prioriteettimerkit",
+    ed_badge_progress: "Edistymismerkit",
+    ed_badge_due: "Eräpäivämerkit",
+    ed_badge_recurrence: "Toistomerkit",
+    ed_badge_person: "Henkilö",
+    ed_badge_tags: "Tunnistemerkit",
+    ed_badge_reminders: "Muistutusmerkit",
+    ed_sec_defaults: "Oletukset",
+    ed_sec_images: "Kuvat",
+    ed_share_images: "Jaa kuvat muiden listojen kanssa",
+    ed_share_images_hint: "Pois pitää tämän listan kuvat omanaan — sama tehtävän nimi toisessa listassa saa oman kuvansa.",
+    ed_queue_empty: "Mikään ei odota kuvaa.",
+    ed_queue_pending: "Odottaa kuvaa: {0}",
+    ed_queue_cancel: "Peruuta",
+    ed_ai_image_hint: "Koskee koko korttia, ei vain tätä saraketta.",
+    ed_queue_running: "luodaan…",
+    ed_queue_title: "Luontijono",
+    ed_default_assignee: "Oletushenkilöt",
+    ed_defaults_saved: "Tallennettu",
+    ed_defaults_load_failed: "Oletuksia ei voitu ladata",
+    ed_defaults_save_failed: "Tallennus epäonnistui",
+    confirm_complete_msg: "Merkitäänkö ”{0}” valmiiksi?",
+    confirm_complete_ok: "Merkitse valmiiksi",
+    ed_hint: "Uusia listoja voi luoda kohdassa Asetukset → Integraatiot → Home Tasks.",
+    tags: "Tunnisteet",
+    add_tag: "+ Lisää tunniste",
+    tag_placeholder: "Uusi tunniste...",
+    remove_tag: "Poista",
+    tag_suggestions_label: "Olemassa olevat tunnisteet",
+    tag_no_matches: "Ei vastaavia tunnisteita",
+    new_sub_item: "Uusi alitehtävä",
+    remove_reminder: "Poista muistutus",
+    sort_label: "Lajittele",
+    sort_manual: "Manuaalinen",
+    sort_due: "Eräpäivä",
+    sort_priority: "Prioriteetti",
+    sort_title: "Otsikko (A–Ö)",
+    sort_person: "Määritetty",
+    ed_show_sort: "Lajittelu",
+    ed_default_sort: "Oletuslajittelu",
+    ed_tag_catalog: "Kiinteät tagit",
+    ed_tag_catalog_hint: "Ehdotetaan aina tagattaessa tässä listassa — muita tageja voi lisätä tehtävässä.",
+    ed_default_lead_hint: "Tehtävä ottaa sen käyttöön, kun sen toisto kytketään päälle",
+    tag_did_you_mean: "Tarkoititko {0}?",
+    ed_overdue_first: "Myöhässä olevat ensin",
+    reminder: "Muistutukset",
+    rem_add: "+ Lisää muistutus",
+    rem_none: "Ei muistutusta",
+    rem_at_due: "Eräajalla",
+    rem_5m: "5 min. ennen",
+    rem_15m: "15 min. ennen",
+    rem_30m: "30 min. ennen",
+    rem_1h: "1 tunti ennen",
+    rem_2h: "2 tuntia ennen",
+    rem_1d: "1 päivä ennen",
+    rem_2d: "2 päivää ennen",
+    ed_show_reminders: "Muistutukset",
+    ed_add_column: "Lisää sarake",
+    ed_move_left: "Siirrä vasemmalle",
+    ed_move_right: "Siirrä oikealle",
+    ed_duplicate: "Kopioi sarake",
+    ed_delete_column: "Poista sarake",
+    ed_code_editor: "Koodieditori",
+    ed_visual_editor: "Visuaalinen editori",
+    ed_icon: "Kuvake (valinnainen)",
+    ed_card_title: "Kortin otsikko (valinnainen)",
+    ed_card_title_placeholder: "Otsikko sarakkeiden yläpuolella",
+    ed_sec_view: "Näyttö",
+    ed_sec_display: "Konfiguraatio",
+    ed_sec_filters: "Suodattimet",
+    ed_preset_assignees: "Rajaa henkilöihin",
+    ed_preset_labels: "Rajaa tunnisteisiin",
+    ed_ms_add: "Lisää…",
+    due_time_lbl: "Aika",
+    due_date_lbl: "Päivämäärä",
+    rec_mode_lbl: "Tila",
+    rec_time: "Aika",
+    rec_end: "Loppu",
+    rec_end_never: "Ei koskaan",
+    rec_end_date: "Asti",
+    rec_end_count: "X kertaa",
+    rec_end_date_lbl: "Asti",
+    rec_max_count_lbl: "Määrä",
+    rec_remaining: "{0} jäljellä",
+    rec_start_date_lbl: "Alkaen",
+    rec_pattern_dom: "Kuukauden päivä",
+    rec_pattern_nth: "N. viikonpäivä",
+    rec_pattern_none: "Valmistumisesta",
+    rec_pattern_due: "Eräpäivästä",
+    rec_dom_lbl: "Päivä",
+    rec_dom_last: "Viimeinen päivä",
+    rec_nth_lbl: "Numero",
+    rec_nth_1: "1.",
+    rec_nth_2: "2.",
+    rec_nth_3: "3.",
+    rec_nth_4: "4.",
+    rec_nth_last: "Viimeinen",
+    rec_anniversary_lbl: "Pvm",
+    rec_dd: "Päivä",
+    rec_mm: "Kuukausi",
+    rec_dom_short: ".",
+    rec_last_short: "viimeinen",
+    rec_value_lbl: "Joka",
+    rec_unit_lbl: "Yksikkö",
+    rec_wd_lbl: "Viikonpäivä",
+    rec_at_lbl: "Klo",
+    rec_lead_lbl: "Avaa uudelleen aikaisemmin",
+    rec_lead_hint: "Avaa tehtävän uudelleen näin kauan ennen sen uutta määräaikaa, jolloin se näkyy tulevana. 0 = kun se erääntyy.",
+    rec_todoist_pattern_unsupported: "Alikaavat eivät ole tuettuja, kun aikaväli on suurempi kuin 1.",
+    history: "Historia",
+    history_created: "Luotu",
+    history_completed: "Valmis",
+    history_reopened: "Avattu uudelleen",
+    history_reset: "Automaattinen palautus",
+    history_changed: "muutettu",
+    history_empty: "Ei historiaa",
+    hist_title: "Otsikko",
+    history_disabled: "Käytössä poistettu",
+    ed_show_history: "Historiat",
+    hist_by_user: "Käyttäjä",
+    ed_show_add_task: "Lisää tehtävä",
+    assigned_unknown: "Tuntematon (%s)",
+    recurrence_readonly: "Hallinnoi %s",
+    synced_with: "Synkronoitu %s kanssa",
+    due_today: "Tänään",
+    due_tomorrow: "Huomenna",
+    due_yesterday: "Eilen",
+    due_day_after_tomorrow: "Ylihuomenna",
+    due_day_before_yesterday: "Toissapäivänä",
+    due_in_hours: "{0} t {1} min päästä",
+    due_in_minutes: "{0} min päästä",
+    due_in_seconds: "Nyt",
+    due_ago_hours: "{0} t {1} min sitten",
+    due_ago_minutes: "{0} min sitten",
+    due_ago_seconds: "Juuri nyt",
+    calendar_minutes_before: "{value} min ennen",
+    calendar_hours_before: "{value} h ennen",
+    calendar_days_before: "{value} pv ennen",
+    ed_show_section: "Osiokenttä",
+    ed_section_field_no_sections: "Näkyy, kun listalla on osioita",
+    section_label: "Osio",
+    ed_list_columns: "Tehtäväsarakkeet",
+    ed_tile_size: "Ruutujen koko",
+    ed_tile_size_small: "Pieni",
+    ed_tile_size_compact: "Kompakti",
+    ed_tile_size_medium: "Normaali",
+    ed_tile_size_large: "Suuri",
+    due_quick_week: "1 viikon päästä",
+    due_quick_month: "1 kuukauden päästä",
+    due_quick_3months: "3 kuukauden päästä",
+    ed_offered_persons: "Valittavat henkilöt",
+    ed_offered_persons_hint: "Tässä kortissa voi määrittää vain korostettuja henkilöitä",
+    ed_show_add_details: "Tiedot lisättäessä",
+    add_with_details: "Lisää tietojen kanssa",
+    add_clear: "Tyhjennä",
+    plan_note_placeholder: "Päivän painopiste",
+    plan_empty: "Ei mitään suunniteltu",
+    plan_add: "Suunnittele tehtävä",
+    plan_search_placeholder: "Hae tehtäviä…",
+    plan_no_results: "Ei vastaavia avoimia tehtäviä",
+    plan_carry_over: "Siirrä avoimet tehtävät päivältä {0} ({1})",
+    plan_move_day: "Toinen päivä…",
+    plan_day_msg: "Mille päivälle ”{0}”?",
+    plan_remove: "Poista suunnitelmasta",
+    plan_for: "Suunnittele päivälle…",
+    plan_ok: "Suunnittele",
+    plan_none: "Päiväsuunnitelmaa ei löytynyt. Päiväsuunnitelmia voi luoda kohdassa Asetukset → Integraatiot → Home Tasks.",
+    ed_view_lists: "Listat",
+    ed_view_day_plan: "Päiväsuunnitelma",
+    ed_plan_days: "Näytettävät päivät",
+    ed_plan_all_lists: "Kaikki listat",
+    plan_due_hint: "On suunnitelmassa eräpäivänsä vuoksi: siirrä tehtävä tai muuta päivämäärää.",
+    ed_plan_weekend: "Viikonloppu",
+    new_entry_link: "Luo uusi lista tai päiväsuunnitelma",
+    ed_plan_list_missing: "Lista ei ole käytettävissä",
+    picker_list_name: "Home Tasks: Lista",
+    picker_plan_name: "Home Tasks: Päiväsuunnitelma",
+    picker_list_desc: "Tehtävälistat sarakkeina: vedä ja pudota, alitehtävät, muistiinpanot ja eräpäivät.",
+    picker_plan_desc: "Päiväsuunnitelman päivät: tehtävät useista listoista siinä järjestyksessä, jossa teet ne."
   },
-  "hu": {
-    "ed_default_priority": "Alapértelmezett prioritás",
-    "ed_default_tags": "Alapértelmezett címkék",
-    "ed_default_section": "Alapértelmezett szakasz",
-    "ed_default_none": "– Nincs –",
-    "ed_group_card": "Kártya",
-    "ed_person_off": "Ki",
-    "ed_person_name": "Név",
-    "ed_person_both": "Kép és név",
-    "ed_group_header": "Fejléc",
-    "ed_group_tasks": "Feladatok",
-    "ed_show_person_avatar": "Profilkép",
-    "voice_failed": "A hangbevitel sikertelen",
-    "confirm_delete_section": "Törli ezt a szakaszt? A benne lévő feladatok rendezetlenné válnak.",
-    "done_section_header": "Kész",
-    "duplicate_task": "Másolat",
-    "move_task": "Áthelyezés",
-    "move_task_msg": "„{0}” áthelyezése ide:",
-    "ed_show_move": "Áthelyezés gomb",
-    "ed_add_section": "+ Szakasz hozzáadása",
-    "ed_ai_image_entity": "MI-entitás képgeneráláshoz",
-    "ed_ai_image_entity_placeholder": "pl. ai_task.openai",
-    "ed_ai_prompt_prefix": "Prompt előtag (opcionális)",
-    "ed_ai_prompt_prefix_placeholder": "pl. Minimalista ikon",
-    "ed_auto_image": "Kép automatikus generálása",
-    "ed_delete_section": "Szakasz törlése",
-    "ed_external_lists": "Külső",
-    "ed_loading": "Betöltés…",
-    "ed_move_down": "Mozgatás le",
-    "ed_move_up": "Mozgatás fel",
-    "ed_sec_sections": "Szakaszok",
-    "ed_section_icon": "Ikon",
-    "ed_section_name": "Név",
-    "ed_section_name_prompt": "Szakasz neve:",
-    "ed_sections_empty": "Még nincsenek szakaszok — a feladatok csoportosítás nélkül jelennek meg.",
-    "ed_sections_select_list_hint": "Először válassz egy listát a szakaszok kezeléséhez.",
-    "ed_show_filters": "Állapotszűrő",
-    "ed_show_images": "Képek",
-    "ed_show_person_chips": "Személyszűrő",
-    "ed_show_tag_chips": "Címkeszűrő",
-    "ed_show_tile_title": "Cím a csempéken",
-    "ed_show_voice": "Hangbevitel",
-    "ed_task_search": "Feladatkeresés",
-    "ed_tile_help": "Csempenézet:\n• Kattintás = kész\n• Nyomva tartás = szerkesztés\n• Húzás = átrendezés",
-    "ed_view_mode": "Nézet mód",
-    "ed_view_mode_list": "Lista",
-    "ed_view_mode_tiles": "Csempék",
-    "voice_input": "Hangbevitel",
-    "voice_stop": "Felvétel leállítása",
-    "img_label": "Kép",
-    "img_generate": "Generálás",
-    "img_regenerate": "Újragenerálás",
-    "img_generating": "Generálás…",
-    "img_from_media": "Médiatárból",
-    "img_remove": "Kép eltávolítása",
-    "img_generate_failed": "A képgenerálás sikertelen: ",
-    "img_save_failed": "A kép mentése sikertelen: ",
-    "mb_title": "Médiatár",
-    "mb_loading": "Betöltés…",
-    "mb_root": "Média",
-    "mb_back": "Vissza",
-    "mb_empty": "Nincsenek fájlok",
-    "mb_error": "Hiba: ",
-    "my_tasks": "Feladataim",
-    "add_placeholder": "Új feladat hozzáadása...",
-    "add_failed": "A feladat hozzáadása nem sikerült",
-    "draft_details_failed": "A feladat hozzáadva, de néhány részletet nem sikerült menteni",
-    "duplicate_failed": "A feladat nem másolható",
-    "dialog_cancel": "Mégse",
-    "dialog_add": "Hozzáad",
-    "filter_all": "Összes",
-    "filter_open": "Nyitott",
-    "filter_done": "Kész",
-    "filter_due_soon": "Hamarosan",
-    "ed_show_due_soon_filter": "Hamarosan szűrő",
-    "ed_due_soon_days": "Napok előre",
-    "ed_hide_overdue": "Lejártak elrejtése",
-    "progress": "{0} / {1} kész",
-    "empty": "Nincsenek feladatok",
-    "drag_handle": "Húzza az átrendezéshez",
-    "due_date": "Határidő",
-    "notes": "Megjegyzések",
-    "notes_placeholder": "Megjegyzések hozzáadása",
-    "notes_edit_hint": "Kattints a szerkesztéshez",
-    "sub_items": "Alfeladatok",
-    "add_sub_item": "+ Alfeladat hozzáadása",
-    "recurrence": "Ismétlés",
-    "recurrence_enabled": "Engedélyezve",
-    "recurrence_every": "Minden",
-    "rec_minutes": "Perc",
-    "rec_hours": "Óra",
-    "rec_days": "Nap",
-    "rec_weeks": "Hét",
-    "rec_months": "Hónap",
-    "rec_years": "Év",
-    "rec_short_h": "ó",
-    "rec_short_d": "n",
-    "rec_short_w": "h",
-    "rec_short_m": "hó",
-    "rec_short_y": "év",
-    "priority": "Prioritás",
-    "pri_high": "Magas",
-    "pri_medium": "Közepes",
-    "pri_low": "Alacsony",
-    "ed_show_priority": "Prioritások",
-    "rec_hourly": "Óránként",
-    "rec_daily": "Naponta",
-    "rec_weekly": "Hetente",
-    "rec_monthly": "Havonta",
-    "rec_yearly": "Évente",
-    "rec_type_interval": "Minden …",
-    "rec_type_weekdays": "Munkanapokon",
-    "rec_wd_0": "H",
-    "rec_wd_1": "K",
-    "rec_wd_2": "Sze",
-    "rec_wd_3": "Cs",
-    "rec_wd_4": "P",
-    "rec_wd_5": "Szo",
-    "rec_wd_6": "V",
-    "assigned_to": "Hozzárendelt személyek",
-    "nobody": "– Senki –",
-    "delete_task": "Feladat törlése",
-    "delete_sub": "Törlés",
-    "ed_default_filter": "Alapértelmezett szűrő",
-    "ed_list": "Lista",
-    "ed_title": "Cím (nem kötelező)",
-    "ed_title_placeholder": "Alapértelmezett: lista neve",
-    "ed_display": "Megjelenítés",
-    "ed_show_title": "Cím",
-    "ed_show_progress": "Haladás",
-    "ed_show_due_date": "Határidők",
-    "ed_show_notes": "Megjegyzések",
-    "ed_show_recurrence": "Ismétlések",
-    "ed_show_sub_items": "Alfeladatok",
-    "ed_show_person": "Személyek",
-    "ed_auto_delete": "Kész feladatok azonnali törlése",
-    "ed_compact": "Kompakt",
-    "ed_show_tags": "Címkék",
-    "ed_confirm_complete": "Megerősítés befejezés előtt",
-    "ed_tap_to_complete": "Koppintás a sorra befejezi",
-    "ed_show_add_due": "Határidő hozzáadáskor",
-    "ed_max_height": "Max. magasság (px, 0 = korlátlan)",
-    "ed_badge_priority": "Prioritás-címkék",
-    "ed_badge_progress": "Folyamat-címkék",
-    "ed_badge_due": "Határidő-címkék",
-    "ed_badge_recurrence": "Ismétlés-címkék",
-    "ed_badge_person": "Személy",
-    "ed_badge_tags": "Címke-chipek",
-    "ed_badge_reminders": "Emlékeztető-címkék",
-    "ed_sec_defaults": "Alapértelmezések",
-    "ed_sec_images": "Képek",
-    "ed_share_images": "Képek megosztása más listákkal",
-    "ed_share_images_hint": "Kikapcsolva a lista képei csak ehhez a listához tartoznak — ugyanaz a cím egy másik listán saját képet kap.",
-    "ed_queue_empty": "Semmi sem vár képre.",
-    "ed_queue_pending": "Képre vár: {0}",
-    "ed_queue_cancel": "Mégse",
-    "ed_ai_image_hint": "Az egész kártyára vonatkozik, nem csak erre az oszlopra.",
-    "ed_queue_running": "készül…",
-    "ed_queue_title": "Generálási sor",
-    "ed_default_assignee": "Alapértelmezett személyek",
-    "ed_defaults_saved": "Mentve",
-    "ed_defaults_load_failed": "Az alapértelmezések betöltése sikertelen",
-    "ed_defaults_save_failed": "A mentés sikertelen",
-    "confirm_complete_msg": "Megjelölöd „{0}”-t készként?",
-    "confirm_complete_ok": "Kész",
-    "ed_hint": "Új listák a Beállítások → Integrációk → Home Tasks alatt hozhatók létre.",
-    "tags": "Címkék",
-    "add_tag": "+ Címke hozzáadása",
-    "tag_placeholder": "Új címke...",
-    "remove_tag": "Eltávolítás",
-    "tag_suggestions_label": "Létező címkék",
-    "tag_no_matches": "Nincs egyező címke",
-    "new_sub_item": "Új alfeladat",
-    "remove_reminder": "Emlékeztető eltávolítása",
-    "sort_label": "Rendezés",
-    "sort_manual": "Manuális",
-    "sort_due": "Határidő",
-    "sort_priority": "Prioritás",
-    "sort_title": "Cím (A–Z)",
-    "sort_person": "Hozzárendelve",
-    "ed_show_sort": "Rendezés",
-    "ed_default_sort": "Alapértelmezett rendezés",
-    "ed_tag_catalog": "Rögzített címkék",
-    "ed_tag_catalog_hint": "Mindig felajánlva címkézéskor ebben a listában — további címkék a feladatnál adhatók hozzá.",
-    "ed_default_lead_hint": "A feladat átveszi, amikor bekapcsolják az ismétlését",
-    "tag_did_you_mean": "Erre gondoltál: {0}?",
-    "ed_overdue_first": "Lejárt feladatok elöl",
-    "reminder": "Emlékeztetők",
-    "rem_add": "+ Emlékeztető hozzáadása",
-    "rem_none": "Nincs emlékeztető",
-    "rem_at_due": "A határidőkor",
-    "rem_5m": "5 perccel előtte",
-    "rem_15m": "15 perccel előtte",
-    "rem_30m": "30 perccel előtte",
-    "rem_1h": "1 órával előtte",
-    "rem_2h": "2 órával előtte",
-    "rem_1d": "1 nappal előtte",
-    "rem_2d": "2 nappal előtte",
-    "ed_show_reminders": "Emlékeztetők",
-    "ed_add_column": "Oszlop hozzáadása",
-    "ed_move_left": "Mozgatás balra",
-    "ed_move_right": "Mozgatás jobbra",
-    "ed_duplicate": "Oszlop duplikálása",
-    "ed_delete_column": "Oszlop törlése",
-    "ed_code_editor": "Kódszerkesztő",
-    "ed_visual_editor": "Vizuális szerkesztő",
-    "ed_icon": "Ikon (nem kötelező)",
-    "ed_card_title": "Kártya címe (nem kötelező)",
-    "ed_card_title_placeholder": "Cím az oszlopok felett",
-    "ed_sec_view": "Megjelenítés",
-    "ed_sec_display": "Konfiguráció",
-    "ed_sec_filters": "Szűrők",
-    "ed_preset_assignees": "Személyekre szűkítés",
-    "ed_preset_labels": "Korlátozás címkékre",
-    "ed_ms_add": "Hozzáadás…",
-    "due_time_lbl": "Időpont",
-    "due_date_lbl": "Dátum",
-    "rec_mode_lbl": "Mód",
-    "rec_time": "Időpont",
-    "rec_end": "Vége",
-    "rec_end_never": "Soha",
-    "rec_end_date": "Eddig",
-    "rec_end_count": "X alkalom",
-    "rec_end_date_lbl": "Eddig",
-    "rec_max_count_lbl": "Darabszám",
-    "rec_remaining": "még {0}",
-    "rec_start_date_lbl": "Ettől",
-    "rec_pattern_dom": "Hónap napja",
-    "rec_pattern_nth": "N-edik nap",
-    "rec_pattern_none": "Befejezéstől",
-    "rec_pattern_due": "Határidőtől",
-    "rec_dom_lbl": "Nap",
-    "rec_dom_last": "Utolsó nap",
-    "rec_nth_lbl": "Sorszám",
-    "rec_nth_1": "1.",
-    "rec_nth_2": "2.",
-    "rec_nth_3": "3.",
-    "rec_nth_4": "4.",
-    "rec_nth_last": "Utolsó",
-    "rec_anniversary_lbl": "Dátum",
-    "rec_dd": "Nap",
-    "rec_mm": "Hónap",
-    "rec_dom_short": ".",
-    "rec_last_short": "utolsó",
-    "rec_value_lbl": "Minden",
-    "rec_unit_lbl": "Egység",
-    "rec_wd_lbl": "Hét napja",
-    "rec_at_lbl": "Időpont",
-    "rec_lead_lbl": "Korábbi újranyitás",
-    "rec_lead_hint": "Ennyivel a következő esedékesség előtt újra megnyitja a feladatot, így az hamarosan esedékesként jelenik meg. 0 = az esedékesség időpontjában.",
-    "rec_todoist_pattern_unsupported": "Az almintázatok nem támogatottak, ha az időköz nagyobb mint 1.",
-    "history": "Előzmények",
-    "history_created": "Létrehozva",
-    "history_completed": "Teljesítve",
-    "history_reopened": "Újranyitva",
-    "history_reset": "Automatikus visszavonas",
-    "history_changed": "módosítva",
-    "history_empty": "Nincs előzmény",
-    "hist_title": "Cím",
-    "history_disabled": "Letiltva",
-    "ed_show_history": "Előzmények",
-    "hist_by_user": "Felhasználó",
-    "ed_show_add_task": "Feladat hozzáadása",
-    "assigned_unknown": "Ismeretlen (%s)",
-    "recurrence_readonly": "Kezeli: %s",
-    "synced_with": "Szinkronizálva: %s",
-    "due_today": "Ma",
-    "due_tomorrow": "Holnap",
-    "due_yesterday": "Tegnap",
-    "due_day_after_tomorrow": "Holnapután",
-    "due_day_before_yesterday": "Tegnapelőtt",
-    "due_in_hours": "{0} ó {1} perc múlva",
-    "due_in_minutes": "{0} perc múlva",
-    "due_in_seconds": "Most",
-    "due_ago_hours": "{0} ó {1} perccel ezelőtt",
-    "due_ago_minutes": "{0} perccel ezelőtt",
-    "due_ago_seconds": "Épp most",
-    "calendar_minutes_before": "{value} perccel előtte",
-    "calendar_hours_before": "{value} órával előtte",
-    "calendar_days_before": "{value} nappal előtte",
-    "ed_show_section": "Szakasz mező",
-    "ed_section_field_no_sections": "Akkor jelenik meg, ha a listának vannak szakaszai",
-    "section_label": "Szakasz",
-    "ed_list_columns": "Feladatoszlopok",
-    "ed_tile_size": "Csempeméret",
-    "ed_tile_size_small": "Kicsi",
-    "ed_tile_size_compact": "Kompakt",
-    "ed_tile_size_medium": "Normál",
-    "ed_tile_size_large": "Nagy",
-    "due_quick_week": "1 hét múlva",
-    "due_quick_month": "1 hónap múlva",
-    "due_quick_3months": "3 hónap múlva",
-    "ed_offered_persons": "Választható személyek",
-    "ed_offered_persons_hint": "Ebben a kártyában csak a kiemelt személyek rendelhetők hozzá",
-    "ed_show_add_details": "Részletek hozzáadáskor",
-    "add_with_details": "Hozzáadás részletekkel",
-    "add_clear": "Törlés",
-    "plan_note_placeholder": "A nap fókusza",
-    "plan_empty": "Nincs semmi betervezve",
-    "plan_add": "Feladat betervezése",
-    "plan_search_placeholder": "Feladatok keresése…",
-    "plan_no_results": "Nincs egyező nyitott feladat",
-    "plan_carry_over": "Nyitott feladatok átvétele innen: {0} ({1})",
-    "plan_move_day": "Másik nap…",
-    "plan_day_msg": "Melyik napra kerüljön: „{0}”?",
-    "plan_remove": "Eltávolítás a tervből",
-    "plan_for": "Betervezés…",
-    "plan_ok": "Betervezés",
-    "plan_none": "Nem található napi terv. Napi tervek a Beállítások → Integrációk → Home Tasks alatt hozhatók létre.",
-    "ed_view_lists": "Listák",
-    "ed_view_day_plan": "Napi terv",
-    "ed_plan_days": "Megjelenített napok",
-    "ed_plan_all_lists": "Minden lista",
-    "plan_due_hint": "A határideje miatt van a tervben: helyezd át, vagy módosítsd a dátumot.",
-    "ed_plan_weekend": "Hétvége",
-    "new_entry_link": "Új lista vagy napi terv létrehozása",
-    "ed_plan_list_missing": "A lista nem érhető el",
-    "picker_list_name": "Home Tasks: Lista",
-    "picker_plan_name": "Home Tasks: Napi terv",
-    "picker_list_desc": "Feladatlisták oszlopokban, húzással, alfeladatokkal, jegyzetekkel és határidőkkel.",
-    "picker_plan_desc": "Egy napi terv napjai: több lista feladatai abban a sorrendben, ahogy dolgozol rajtuk."
+  hu: {
+    ed_default_priority: "Alapértelmezett prioritás",
+    ed_default_tags: "Alapértelmezett címkék",
+    ed_default_section: "Alapértelmezett szakasz",
+    ed_default_none: "– Nincs –",
+    ed_group_card: "Kártya",
+    ed_person_off: "Ki",
+    ed_person_name: "Név",
+    ed_person_both: "Kép és név",
+    ed_group_header: "Fejléc",
+    ed_group_tasks: "Feladatok",
+    ed_show_person_avatar: "Profilkép",
+    voice_failed: "A hangbevitel sikertelen",
+    confirm_delete_section: "Törli ezt a szakaszt? A benne lévő feladatok rendezetlenné válnak.",
+    done_section_header: "Kész",
+    duplicate_task: "Másolat",
+    move_task: "Áthelyezés",
+    move_task_msg: "„{0}” áthelyezése ide:",
+    ed_show_move: "Áthelyezés gomb",
+    ed_add_section: "+ Szakasz hozzáadása",
+    ed_ai_image_entity: "MI-entitás képgeneráláshoz",
+    ed_ai_image_entity_placeholder: "pl. ai_task.openai",
+    ed_ai_prompt_prefix: "Prompt előtag (opcionális)",
+    ed_ai_prompt_prefix_placeholder: "pl. Minimalista ikon",
+    ed_auto_image: "Kép automatikus generálása",
+    ed_delete_section: "Szakasz törlése",
+    ed_external_lists: "Külső",
+    ed_loading: "Betöltés…",
+    ed_move_down: "Mozgatás le",
+    ed_move_up: "Mozgatás fel",
+    ed_sec_sections: "Szakaszok",
+    ed_section_icon: "Ikon",
+    ed_section_name: "Név",
+    ed_section_name_prompt: "Szakasz neve:",
+    ed_sections_empty: "Még nincsenek szakaszok — a feladatok csoportosítás nélkül jelennek meg.",
+    ed_sections_select_list_hint: "Először válassz egy listát a szakaszok kezeléséhez.",
+    ed_show_filters: "Állapotszűrő",
+    ed_show_images: "Képek",
+    ed_show_person_chips: "Személyszűrő",
+    ed_show_tag_chips: "Címkeszűrő",
+    ed_show_tile_title: "Cím a csempéken",
+    ed_show_voice: "Hangbevitel",
+    ed_task_search: "Feladatkeresés",
+    ed_tile_help: "Csempenézet:\n• Kattintás = kész\n• Nyomva tartás = szerkesztés\n• Húzás = átrendezés",
+    ed_view_mode: "Nézet mód",
+    ed_view_mode_list: "Lista",
+    ed_view_mode_tiles: "Csempék",
+    voice_input: "Hangbevitel",
+    voice_stop: "Felvétel leállítása",
+    img_label: "Kép",
+    img_generate: "Generálás",
+    img_regenerate: "Újragenerálás",
+    img_generating: "Generálás…",
+    img_from_media: "Médiatárból",
+    img_remove: "Kép eltávolítása",
+    img_generate_failed: "A képgenerálás sikertelen: ",
+    img_save_failed: "A kép mentése sikertelen: ",
+    mb_title: "Médiatár",
+    mb_loading: "Betöltés…",
+    mb_root: "Média",
+    mb_back: "Vissza",
+    mb_empty: "Nincsenek fájlok",
+    mb_error: "Hiba: ",
+    my_tasks: "Feladataim",
+    add_placeholder: "Új feladat hozzáadása...",
+    add_failed: "A feladat hozzáadása nem sikerült",
+    draft_details_failed: "A feladat hozzáadva, de néhány részletet nem sikerült menteni",
+    duplicate_failed: "A feladat nem másolható",
+    dialog_cancel: "Mégse",
+    dialog_add: "Hozzáad",
+    filter_all: "Összes",
+    filter_open: "Nyitott",
+    filter_done: "Kész",
+    filter_due_soon: "Hamarosan",
+    ed_show_due_soon_filter: "Hamarosan szűrő",
+    ed_due_soon_days: "Napok előre",
+    ed_hide_overdue: "Lejártak elrejtése",
+    progress: "{0} / {1} kész",
+    empty: "Nincsenek feladatok",
+    drag_handle: "Húzza az átrendezéshez",
+    due_date: "Határidő",
+    notes: "Megjegyzések",
+    notes_placeholder: "Megjegyzések hozzáadása",
+    notes_edit_hint: "Kattints a szerkesztéshez",
+    sub_items: "Alfeladatok",
+    add_sub_item: "+ Alfeladat hozzáadása",
+    recurrence: "Ismétlés",
+    recurrence_enabled: "Engedélyezve",
+    recurrence_every: "Minden",
+    rec_minutes: "Perc",
+    rec_hours: "Óra",
+    rec_days: "Nap",
+    rec_weeks: "Hét",
+    rec_months: "Hónap",
+    rec_years: "Év",
+    rec_short_h: "ó",
+    rec_short_d: "n",
+    rec_short_w: "h",
+    rec_short_m: "hó",
+    rec_short_y: "év",
+    priority: "Prioritás",
+    pri_high: "Magas",
+    pri_medium: "Közepes",
+    pri_low: "Alacsony",
+    ed_show_priority: "Prioritások",
+    rec_hourly: "Óránként",
+    rec_daily: "Naponta",
+    rec_weekly: "Hetente",
+    rec_monthly: "Havonta",
+    rec_yearly: "Évente",
+    rec_type_interval: "Minden …",
+    rec_type_weekdays: "Munkanapokon",
+    rec_wd_0: "H",
+    rec_wd_1: "K",
+    rec_wd_2: "Sze",
+    rec_wd_3: "Cs",
+    rec_wd_4: "P",
+    rec_wd_5: "Szo",
+    rec_wd_6: "V",
+    assigned_to: "Hozzárendelt személyek",
+    nobody: "– Senki –",
+    delete_task: "Feladat törlése",
+    delete_sub: "Törlés",
+    ed_default_filter: "Alapértelmezett szűrő",
+    ed_list: "Lista",
+    ed_title: "Cím (nem kötelező)",
+    ed_title_placeholder: "Alapértelmezett: lista neve",
+    ed_display: "Megjelenítés",
+    ed_show_title: "Cím",
+    ed_show_progress: "Haladás",
+    ed_show_due_date: "Határidők",
+    ed_show_notes: "Megjegyzések",
+    ed_show_recurrence: "Ismétlések",
+    ed_show_sub_items: "Alfeladatok",
+    ed_show_person: "Személyek",
+    ed_auto_delete: "Kész feladatok azonnali törlése",
+    ed_compact: "Kompakt",
+    ed_show_tags: "Címkék",
+    ed_confirm_complete: "Megerősítés befejezés előtt",
+    ed_tap_to_complete: "Koppintás a sorra befejezi",
+    ed_show_add_due: "Határidő hozzáadáskor",
+    ed_max_height: "Max. magasság (px, 0 = korlátlan)",
+    ed_badge_priority: "Prioritás-címkék",
+    ed_badge_progress: "Folyamat-címkék",
+    ed_badge_due: "Határidő-címkék",
+    ed_badge_recurrence: "Ismétlés-címkék",
+    ed_badge_person: "Személy",
+    ed_badge_tags: "Címke-chipek",
+    ed_badge_reminders: "Emlékeztető-címkék",
+    ed_sec_defaults: "Alapértelmezések",
+    ed_sec_images: "Képek",
+    ed_share_images: "Képek megosztása más listákkal",
+    ed_share_images_hint: "Kikapcsolva a lista képei csak ehhez a listához tartoznak — ugyanaz a cím egy másik listán saját képet kap.",
+    ed_queue_empty: "Semmi sem vár képre.",
+    ed_queue_pending: "Képre vár: {0}",
+    ed_queue_cancel: "Mégse",
+    ed_ai_image_hint: "Az egész kártyára vonatkozik, nem csak erre az oszlopra.",
+    ed_queue_running: "készül…",
+    ed_queue_title: "Generálási sor",
+    ed_default_assignee: "Alapértelmezett személyek",
+    ed_defaults_saved: "Mentve",
+    ed_defaults_load_failed: "Az alapértelmezések betöltése sikertelen",
+    ed_defaults_save_failed: "A mentés sikertelen",
+    confirm_complete_msg: "Megjelölöd „{0}”-t készként?",
+    confirm_complete_ok: "Kész",
+    ed_hint: "Új listák a Beállítások → Integrációk → Home Tasks alatt hozhatók létre.",
+    tags: "Címkék",
+    add_tag: "+ Címke hozzáadása",
+    tag_placeholder: "Új címke...",
+    remove_tag: "Eltávolítás",
+    tag_suggestions_label: "Létező címkék",
+    tag_no_matches: "Nincs egyező címke",
+    new_sub_item: "Új alfeladat",
+    remove_reminder: "Emlékeztető eltávolítása",
+    sort_label: "Rendezés",
+    sort_manual: "Manuális",
+    sort_due: "Határidő",
+    sort_priority: "Prioritás",
+    sort_title: "Cím (A–Z)",
+    sort_person: "Hozzárendelve",
+    ed_show_sort: "Rendezés",
+    ed_default_sort: "Alapértelmezett rendezés",
+    ed_tag_catalog: "Rögzített címkék",
+    ed_tag_catalog_hint: "Mindig felajánlva címkézéskor ebben a listában — további címkék a feladatnál adhatók hozzá.",
+    ed_default_lead_hint: "A feladat átveszi, amikor bekapcsolják az ismétlését",
+    tag_did_you_mean: "Erre gondoltál: {0}?",
+    ed_overdue_first: "Lejárt feladatok elöl",
+    reminder: "Emlékeztetők",
+    rem_add: "+ Emlékeztető hozzáadása",
+    rem_none: "Nincs emlékeztető",
+    rem_at_due: "A határidőkor",
+    rem_5m: "5 perccel előtte",
+    rem_15m: "15 perccel előtte",
+    rem_30m: "30 perccel előtte",
+    rem_1h: "1 órával előtte",
+    rem_2h: "2 órával előtte",
+    rem_1d: "1 nappal előtte",
+    rem_2d: "2 nappal előtte",
+    ed_show_reminders: "Emlékeztetők",
+    ed_add_column: "Oszlop hozzáadása",
+    ed_move_left: "Mozgatás balra",
+    ed_move_right: "Mozgatás jobbra",
+    ed_duplicate: "Oszlop duplikálása",
+    ed_delete_column: "Oszlop törlése",
+    ed_code_editor: "Kódszerkesztő",
+    ed_visual_editor: "Vizuális szerkesztő",
+    ed_icon: "Ikon (nem kötelező)",
+    ed_card_title: "Kártya címe (nem kötelező)",
+    ed_card_title_placeholder: "Cím az oszlopok felett",
+    ed_sec_view: "Megjelenítés",
+    ed_sec_display: "Konfiguráció",
+    ed_sec_filters: "Szűrők",
+    ed_preset_assignees: "Személyekre szűkítés",
+    ed_preset_labels: "Korlátozás címkékre",
+    ed_ms_add: "Hozzáadás…",
+    due_time_lbl: "Időpont",
+    due_date_lbl: "Dátum",
+    rec_mode_lbl: "Mód",
+    rec_time: "Időpont",
+    rec_end: "Vége",
+    rec_end_never: "Soha",
+    rec_end_date: "Eddig",
+    rec_end_count: "X alkalom",
+    rec_end_date_lbl: "Eddig",
+    rec_max_count_lbl: "Darabszám",
+    rec_remaining: "még {0}",
+    rec_start_date_lbl: "Ettől",
+    rec_pattern_dom: "Hónap napja",
+    rec_pattern_nth: "N-edik nap",
+    rec_pattern_none: "Befejezéstől",
+    rec_pattern_due: "Határidőtől",
+    rec_dom_lbl: "Nap",
+    rec_dom_last: "Utolsó nap",
+    rec_nth_lbl: "Sorszám",
+    rec_nth_1: "1.",
+    rec_nth_2: "2.",
+    rec_nth_3: "3.",
+    rec_nth_4: "4.",
+    rec_nth_last: "Utolsó",
+    rec_anniversary_lbl: "Dátum",
+    rec_dd: "Nap",
+    rec_mm: "Hónap",
+    rec_dom_short: ".",
+    rec_last_short: "utolsó",
+    rec_value_lbl: "Minden",
+    rec_unit_lbl: "Egység",
+    rec_wd_lbl: "Hét napja",
+    rec_at_lbl: "Időpont",
+    rec_lead_lbl: "Korábbi újranyitás",
+    rec_lead_hint: "Ennyivel a következő esedékesség előtt újra megnyitja a feladatot, így az hamarosan esedékesként jelenik meg. 0 = az esedékesség időpontjában.",
+    rec_todoist_pattern_unsupported: "Az almintázatok nem támogatottak, ha az időköz nagyobb mint 1.",
+    history: "Előzmények",
+    history_created: "Létrehozva",
+    history_completed: "Teljesítve",
+    history_reopened: "Újranyitva",
+    history_reset: "Automatikus visszavonas",
+    history_changed: "módosítva",
+    history_empty: "Nincs előzmény",
+    hist_title: "Cím",
+    history_disabled: "Letiltva",
+    ed_show_history: "Előzmények",
+    hist_by_user: "Felhasználó",
+    ed_show_add_task: "Feladat hozzáadása",
+    assigned_unknown: "Ismeretlen (%s)",
+    recurrence_readonly: "Kezeli: %s",
+    synced_with: "Szinkronizálva: %s",
+    due_today: "Ma",
+    due_tomorrow: "Holnap",
+    due_yesterday: "Tegnap",
+    due_day_after_tomorrow: "Holnapután",
+    due_day_before_yesterday: "Tegnapelőtt",
+    due_in_hours: "{0} ó {1} perc múlva",
+    due_in_minutes: "{0} perc múlva",
+    due_in_seconds: "Most",
+    due_ago_hours: "{0} ó {1} perccel ezelőtt",
+    due_ago_minutes: "{0} perccel ezelőtt",
+    due_ago_seconds: "Épp most",
+    calendar_minutes_before: "{value} perccel előtte",
+    calendar_hours_before: "{value} órával előtte",
+    calendar_days_before: "{value} nappal előtte",
+    ed_show_section: "Szakasz mező",
+    ed_section_field_no_sections: "Akkor jelenik meg, ha a listának vannak szakaszai",
+    section_label: "Szakasz",
+    ed_list_columns: "Feladatoszlopok",
+    ed_tile_size: "Csempeméret",
+    ed_tile_size_small: "Kicsi",
+    ed_tile_size_compact: "Kompakt",
+    ed_tile_size_medium: "Normál",
+    ed_tile_size_large: "Nagy",
+    due_quick_week: "1 hét múlva",
+    due_quick_month: "1 hónap múlva",
+    due_quick_3months: "3 hónap múlva",
+    ed_offered_persons: "Választható személyek",
+    ed_offered_persons_hint: "Ebben a kártyában csak a kiemelt személyek rendelhetők hozzá",
+    ed_show_add_details: "Részletek hozzáadáskor",
+    add_with_details: "Hozzáadás részletekkel",
+    add_clear: "Törlés",
+    plan_note_placeholder: "A nap fókusza",
+    plan_empty: "Nincs semmi betervezve",
+    plan_add: "Feladat betervezése",
+    plan_search_placeholder: "Feladatok keresése…",
+    plan_no_results: "Nincs egyező nyitott feladat",
+    plan_carry_over: "Nyitott feladatok átvétele innen: {0} ({1})",
+    plan_move_day: "Másik nap…",
+    plan_day_msg: "Melyik napra kerüljön: „{0}”?",
+    plan_remove: "Eltávolítás a tervből",
+    plan_for: "Betervezés…",
+    plan_ok: "Betervezés",
+    plan_none: "Nem található napi terv. Napi tervek a Beállítások → Integrációk → Home Tasks alatt hozhatók létre.",
+    ed_view_lists: "Listák",
+    ed_view_day_plan: "Napi terv",
+    ed_plan_days: "Megjelenített napok",
+    ed_plan_all_lists: "Minden lista",
+    plan_due_hint: "A határideje miatt van a tervben: helyezd át, vagy módosítsd a dátumot.",
+    ed_plan_weekend: "Hétvége",
+    new_entry_link: "Új lista vagy napi terv létrehozása",
+    ed_plan_list_missing: "A lista nem érhető el",
+    picker_list_name: "Home Tasks: Lista",
+    picker_plan_name: "Home Tasks: Napi terv",
+    picker_list_desc: "Feladatlisták oszlopokban, húzással, alfeladatokkal, jegyzetekkel és határidőkkel.",
+    picker_plan_desc: "Egy napi terv napjai: több lista feladatai abban a sorrendben, ahogy dolgozol rajtuk."
   },
-  "de": {
-    "ed_default_priority": "Standard-Priorität",
-    "ed_default_tags": "Standard-Tags",
-    "ed_default_section": "Standard-Bereich",
-    "ed_default_none": "– Keine –",
-    "ed_group_card": "Karte",
-    "ed_person_off": "Aus",
-    "ed_person_name": "Name",
-    "ed_person_both": "Bild und Name",
-    "ed_group_header": "Kopfzeile",
-    "ed_group_tasks": "Aufgaben",
-    "ed_show_person_avatar": "Profilbild",
-    "voice_failed": "Spracheingabe fehlgeschlagen",
-    "ed_external_lists": "Extern",
-    "voice_input": "Spracheingabe",
-    "voice_stop": "Aufnahme stoppen",
-    "img_label": "Bild",
-    "img_generate": "Generieren",
-    "img_regenerate": "Neu generieren",
-    "img_generating": "Generiere…",
-    "img_from_media": "Aus Mediathek",
-    "img_remove": "Bild entfernen",
-    "img_generate_failed": "Bildgenerierung fehlgeschlagen: ",
-    "img_save_failed": "Bild speichern fehlgeschlagen: ",
-    "mb_title": "Mediathek",
-    "mb_loading": "Lädt…",
-    "mb_root": "Medien",
-    "mb_back": "Zurück",
-    "mb_empty": "Keine Dateien",
-    "mb_error": "Fehler: ",
-    "my_tasks": "Meine Aufgaben",
-    "add_placeholder": "Neue Aufgabe hinzufügen...",
-    "add_failed": "Aufgabe konnte nicht hinzugefügt werden",
-    "draft_details_failed": "Aufgabe angelegt, aber einige Details konnten nicht gespeichert werden",
-    "duplicate_failed": "Aufgabe konnte nicht dupliziert werden",
-    "dialog_cancel": "Abbrechen",
-    "dialog_add": "Hinzufügen",
-    "filter_all": "Alle",
-    "filter_open": "Offen",
-    "filter_done": "Erledigt",
-    "filter_due_soon": "Bald fällig",
-    "ed_show_due_soon_filter": "Bald-fällig-Filter",
-    "ed_due_soon_days": "Tage voraus",
-    "ed_hide_overdue": "Überfällige ausblenden",
-    "progress": "{0} von {1} erledigt",
-    "empty": "Keine Aufgaben vorhanden",
-    "drag_handle": "Verschieben",
-    "due_date": "Fälligkeit",
-    "notes": "Notizen",
-    "notes_placeholder": "Hier kannst du Notizen hinzufügen",
-    "notes_edit_hint": "Zum Bearbeiten klicken",
-    "sub_items": "Unteraufgaben",
-    "add_sub_item": "+ Unteraufgabe hinzufügen",
-    "recurrence": "Wiederholung",
-    "recurrence_enabled": "Aktiviert",
-    "recurrence_every": "Alle",
-    "rec_minutes": "Minuten",
-    "rec_hours": "Stunden",
-    "rec_days": "Tage",
-    "rec_weeks": "Wochen",
-    "rec_months": "Monate",
-    "rec_years": "Jahre",
-    "rec_short_h": "Std.",
-    "rec_short_d": "T.",
-    "rec_short_w": "Wo.",
-    "rec_short_m": "Mon.",
-    "rec_short_y": "J.",
-    "priority": "Priorität",
-    "pri_high": "Hoch",
-    "pri_medium": "Mittel",
-    "pri_low": "Niedrig",
-    "ed_show_priority": "Prioritäten",
-    "rec_hourly": "Stündl.",
-    "rec_daily": "Täglich",
-    "rec_weekly": "Wöchentl.",
-    "rec_monthly": "Monatl.",
-    "rec_yearly": "Jährl.",
-    "rec_type_interval": "Alle …",
-    "rec_type_weekdays": "An Wochentagen",
-    "rec_wd_0": "Mo",
-    "rec_wd_1": "Di",
-    "rec_wd_2": "Mi",
-    "rec_wd_3": "Do",
-    "rec_wd_4": "Fr",
-    "rec_wd_5": "Sa",
-    "rec_wd_6": "So",
-    "assigned_to": "Zugewiesene Personen",
-    "nobody": "– Niemand –",
-    "delete_task": "Aufgabe löschen",
-    "duplicate_task": "Duplizieren",
-    "move_task": "Verschieben",
-    "move_task_msg": "„{0}“ verschieben nach:",
-    "ed_show_move": "Verschieben-Button",
-    "delete_sub": "Löschen",
-    "ed_default_filter": "Standardfilter",
-    "ed_list": "Liste",
-    "ed_title": "Titel (optional)",
-    "ed_title_placeholder": "Standard: Listenname",
-    "ed_display": "Anzeige",
-    "ed_show_title": "Titel",
-    "ed_show_progress": "Fortschritt",
-    "ed_show_due_date": "Fälligkeiten",
-    "ed_show_notes": "Notizen",
-    "ed_show_recurrence": "Wiederholungen",
-    "ed_show_sub_items": "Unteraufgaben",
-    "ed_show_person": "Personen",
-    "ed_auto_delete": "Erledigte sofort löschen",
-    "ed_confirm_complete": "Vor dem Erledigen nachfragen",
-    "ed_tap_to_complete": "Zeile antippen zum Erledigen",
-    "ed_show_add_due": "Fälligkeit beim Anlegen",
-    "ed_max_height": "Max. Höhe (px, 0 = unbegrenzt)",
-    "ed_badge_priority": "Prioritäts-Chips",
-    "ed_badge_progress": "Fortschritts-Chips",
-    "ed_badge_due": "Fälligkeits-Chips",
-    "ed_badge_recurrence": "Wiederholungs-Chips",
-    "ed_badge_person": "Person",
-    "ed_badge_tags": "Tag-Chips",
-    "ed_badge_reminders": "Erinnerungs-Chips",
-    "ed_sec_defaults": "Standardwerte",
-    "ed_sec_images": "Bilder",
-    "ed_share_images": "Bilder mit anderen Listen teilen",
-    "ed_share_images_hint": "Aus behält die Bilder dieser Liste für sich — der gleiche Aufgabentitel auf einer anderen Liste bekommt ein eigenes Bild.",
-    "ed_queue_empty": "Nichts wartet auf ein Bild.",
-    "ed_queue_pending": "Wartet auf ein Bild: {0}",
-    "ed_queue_cancel": "Abbrechen",
-    "ed_ai_image_hint": "Gilt für die ganze Karte, nicht nur für diese Spalte.",
-    "ed_queue_running": "wird erzeugt…",
-    "ed_queue_title": "Warteschlange",
-    "ed_default_assignee": "Standard-Personen",
-    "ed_defaults_saved": "Gespeichert",
-    "ed_defaults_load_failed": "Defaults konnten nicht geladen werden",
-    "ed_defaults_save_failed": "Speichern fehlgeschlagen",
-    "confirm_complete_msg": "„{0}“ als erledigt markieren?",
-    "confirm_complete_ok": "Erledigen",
-    "ed_compact": "Kompakt",
-    "ed_show_tags": "Tags",
-    "ed_hint": "Neue Listen können unter Einstellungen → Integrationen → Home Tasks erstellt werden.",
-    "tags": "Tags",
-    "add_tag": "+ Tag hinzufügen",
-    "tag_placeholder": "Neues Tag...",
-    "remove_tag": "Entfernen",
-    "tag_suggestions_label": "Vorhandene Tags",
-    "tag_no_matches": "Keine passenden Tags",
-    "new_sub_item": "Neue Unteraufgabe",
-    "remove_reminder": "Erinnerung entfernen",
-    "sort_label": "Sortierung",
-    "sort_manual": "Manuell",
-    "sort_due": "Fälligkeit",
-    "sort_priority": "Priorität",
-    "sort_title": "Titel (A–Z)",
-    "sort_person": "Zugewiesen",
-    "ed_show_sort": "Sortierung",
-    "ed_show_filters": "Status-Filter",
-    "ed_show_tag_chips": "Tag-Filter",
-    "ed_show_person_chips": "Personen-Filter",
-    "ed_show_voice": "Spracheingabe",
-    "ed_task_search": "Aufgaben-Suche",
-    "ed_auto_image": "Bild automatisch generieren",
-    "ed_default_sort": "Standard-Sortierung",
-    "ed_tag_catalog": "Feste Tags",
-    "ed_tag_catalog_hint": "Werden beim Taggen in dieser Liste immer vorgeschlagen — weitere Tags können in der Aufgabe ergänzt werden.",
-    "ed_default_lead_hint": "Wird von einer Aufgabe übernommen, wenn ihre Wiederholung eingeschaltet wird",
-    "tag_did_you_mean": "Meintest du {0}?",
-    "ed_overdue_first": "Überfällige Aufgaben zuerst",
-    "reminder": "Erinnerungen",
-    "rem_add": "+ Erinnerung hinzufügen",
-    "rem_none": "Keine Erinnerung",
-    "rem_at_due": "Zur Fälligkeit",
-    "rem_5m": "5 Min. vorher",
-    "rem_15m": "15 Min. vorher",
-    "rem_30m": "30 Min. vorher",
-    "rem_1h": "1 Std. vorher",
-    "rem_2h": "2 Std. vorher",
-    "rem_1d": "1 Tag vorher",
-    "rem_2d": "2 Tage vorher",
-    "ed_show_reminders": "Erinnerungen",
-    "ed_add_column": "Spalte hinzufügen",
-    "ed_move_left": "Nach links",
-    "ed_move_right": "Nach rechts",
-    "ed_duplicate": "Spalte duplizieren",
-    "ed_delete_column": "Spalte löschen",
-    "ed_code_editor": "Code-Editor",
-    "ed_visual_editor": "Visueller Editor",
-    "ed_icon": "Symbol (optional)",
-    "ed_card_title": "Kartentitel (optional)",
-    "ed_card_title_placeholder": "Titel über den Spalten",
-    "ed_sec_view": "Darstellung",
-    "ed_sec_display": "Aufgaben-Funktionen",
-    "ed_tile_help": "Kachelansicht:\n• Klicken = erledigen\n• Gedrückt halten = editieren\n• Ziehen = Position ändern",
-    "due_time_lbl": "Uhrzeit",
-    "due_date_lbl": "Datum",
-    "rec_mode_lbl": "Modus",
-    "rec_time": "Uhrzeit",
-    "rec_end": "Ende",
-    "rec_end_never": "Nie",
-    "rec_end_date": "Bis",
-    "rec_end_count": "X mal",
-    "rec_end_date_lbl": "Bis",
-    "rec_max_count_lbl": "Anzahl",
-    "rec_remaining": "noch {0}",
-    "rec_start_date_lbl": "Ab",
-    "rec_pattern_dom": "Tag im Monat",
-    "rec_pattern_nth": "N-ter Wochentag",
-    "rec_pattern_none": "Ab Erledigung",
-    "rec_pattern_due": "Ab Fälligkeit",
-    "rec_dom_lbl": "Tag",
-    "rec_dom_last": "letzten Tag",
-    "rec_nth_lbl": "Am",
-    "rec_nth_1": "1.",
-    "rec_nth_2": "2.",
-    "rec_nth_3": "3.",
-    "rec_nth_4": "4.",
-    "rec_nth_last": "letzten",
-    "rec_anniversary_lbl": "Am",
-    "rec_dd": "Tag",
-    "rec_mm": "Monat",
-    "rec_dom_short": ".",
-    "rec_last_short": "letzter",
-    "rec_value_lbl": "Alle",
-    "rec_unit_lbl": "Einheit",
-    "rec_wd_lbl": "Wochentag",
-    "rec_at_lbl": "Um",
-    "rec_lead_lbl": "Früher öffnen",
-    "rec_lead_hint": "Öffnet die Aufgabe um diese Zeit vor der nächsten Fälligkeit wieder, damit sie als anstehend erscheint. 0 = erst bei Fälligkeit.",
-    "rec_todoist_pattern_unsupported": "Untermuster sind nicht möglich, wenn das Intervall größer als 1 ist.",
-    "history": "Verlauf",
-    "history_created": "Erstellt",
-    "history_completed": "Erledigt",
-    "history_reopened": "Wieder geöffnet",
-    "history_reset": "Automatisch zurückgesetzt",
-    "history_changed": "geändert",
-    "history_empty": "Noch kein Verlauf",
-    "hist_title": "Titel",
-    "history_disabled": "Deaktiviert",
-    "ed_show_history": "Verläufe",
-    "hist_by_user": "Benutzer",
-    "ed_show_images": "Bilder",
-    "ed_view_mode": "Ansichtsmodus",
-    "ed_view_mode_list": "Liste",
-    "ed_view_mode_tiles": "Kacheln",
-    "ed_show_tile_title": "Titel in Kacheln",
-    "ed_show_add_task": "Aufgabe hinzufügen",
-    "assigned_unknown": "Unbekannt (%s)",
-    "recurrence_readonly": "Verwaltet von %s",
-    "synced_with": "Synchronisiert mit %s",
-    "due_today": "Heute",
-    "due_tomorrow": "Morgen",
-    "due_yesterday": "Gestern",
-    "due_day_after_tomorrow": "Übermorgen",
-    "due_day_before_yesterday": "Vorgestern",
-    "due_in_hours": "In {0} Std {1} Min",
-    "due_in_minutes": "In {0} Min",
-    "due_in_seconds": "Jetzt",
-    "due_ago_hours": "Vor {0} Std {1} Min",
-    "due_ago_minutes": "Vor {0} Min",
-    "due_ago_seconds": "Gerade eben",
-    "done_section_header": "Erledigt",
-    "ed_sec_sections": "Bereiche",
-    "ed_section_name": "Name",
-    "ed_section_icon": "Symbol",
-    "ed_add_section": "+ Bereich hinzufügen",
-    "ed_delete_section": "Bereich löschen",
-    "ed_section_name_prompt": "Name des Bereichs:",
-    "ed_sections_select_list_hint": "Erst eine Liste wählen, dann Bereiche verwalten.",
-    "ed_sections_empty": "Noch keine Bereiche – Aufgaben werden flach angezeigt.",
-    "ed_loading": "Lädt…",
-    "ed_move_up": "Nach oben",
-    "ed_move_down": "Nach unten",
-    "confirm_delete_section": "Diesen Bereich wirklich löschen? Enthaltene Aufgaben werden unsortiert.",
-    "ed_sec_filters": "Filter",
-    "ed_preset_assignees": "Auf Personen begrenzen",
-    "ed_preset_labels": "Auf Tags begrenzen",
-    "ed_ms_add": "Hinzufügen…",
-    "ed_ai_image_entity": "KI-Entität für Bildgenerierung",
-    "ed_ai_image_entity_placeholder": "z.B. ai_task.openai",
-    "ed_ai_prompt_prefix": "Prompt-Präfix (optional)",
-    "ed_ai_prompt_prefix_placeholder": "z.B. Minimalistisches Icon von",
-    "calendar_minutes_before": "{value} Min. vorher",
-    "calendar_hours_before": "{value} Std. vorher",
-    "calendar_days_before": "{value} Tage vorher",
-    "ed_show_section": "Bereichsfeld",
-    "ed_section_field_no_sections": "Erscheint, sobald die Liste Bereiche hat",
-    "section_label": "Bereich",
-    "ed_list_columns": "Aufgabenspalten",
-    "ed_tile_size": "Kachelgröße",
-    "ed_tile_size_small": "Klein",
-    "ed_tile_size_compact": "Kompakt",
-    "ed_tile_size_medium": "Normal",
-    "ed_tile_size_large": "Groß",
-    "due_quick_week": "In 1 Woche",
-    "due_quick_month": "In 1 Monat",
-    "due_quick_3months": "In 3 Monaten",
-    "ed_offered_persons": "Auswählbare Personen",
-    "ed_offered_persons_hint": "Nur markierte Personen können in dieser Karte zugewiesen werden",
-    "add_with_details": "Mit Details anlegen",
-    "add_clear": "Leeren",
-    "ed_show_add_details": "Details beim Anlegen",
-    "plan_note_placeholder": "Fokus für den Tag",
-    "plan_empty": "Nichts geplant",
-    "plan_add": "Aufgabe einplanen",
-    "plan_search_placeholder": "Aufgaben suchen…",
-    "plan_no_results": "Keine passenden offenen Aufgaben",
-    "plan_carry_over": "Offene Aufgaben vom {0} übernehmen ({1})",
-    "plan_move_day": "Anderer Tag…",
-    "plan_day_msg": "Welcher Tag für „{0}“?",
-    "plan_remove": "Aus dem Plan nehmen",
-    "plan_for": "Einplanen für…",
-    "plan_ok": "Einplanen",
-    "plan_none": "Kein Tagesplan gefunden. Tagespläne können unter Einstellungen → Integrationen → Home Tasks erstellt werden.",
-    "ed_view_lists": "Listen",
-    "ed_view_day_plan": "Tagesplan",
-    "ed_plan_days": "Angezeigte Tage",
-    "ed_plan_all_lists": "Alle Listen",
-    "plan_due_hint": "Steht über das Fälligkeitsdatum im Plan: verschieben oder das Datum ändern.",
-    "ed_plan_weekend": "Wochenende",
-    "new_entry_link": "Neue Liste oder neuen Tagesplan anlegen",
-    "ed_plan_list_missing": "Liste nicht verfügbar",
-    "picker_list_name": "Home Tasks: Liste",
-    "picker_plan_name": "Home Tasks: Tagesplan",
-    "picker_list_desc": "Aufgabenlisten in Spalten, mit Drag & Drop, Unteraufgaben, Notizen und Fälligkeiten.",
-    "picker_plan_desc": "Die Tage eines Tagesplans: Aufgaben aus mehreren Listen in der Reihenfolge, in der du sie erledigst."
+  de: {
+    ed_default_priority: "Standard-Priorität",
+    ed_default_tags: "Standard-Tags",
+    ed_default_section: "Standard-Bereich",
+    ed_default_none: "– Keine –",
+    ed_group_card: "Karte",
+    ed_person_off: "Aus",
+    ed_person_name: "Name",
+    ed_person_both: "Bild und Name",
+    ed_group_header: "Kopfzeile",
+    ed_group_tasks: "Aufgaben",
+    ed_show_person_avatar: "Profilbild",
+    voice_failed: "Spracheingabe fehlgeschlagen",
+    ed_external_lists: "Extern",
+    voice_input: "Spracheingabe",
+    voice_stop: "Aufnahme stoppen",
+    img_label: "Bild",
+    img_generate: "Generieren",
+    img_regenerate: "Neu generieren",
+    img_generating: "Generiere…",
+    img_from_media: "Aus Mediathek",
+    img_remove: "Bild entfernen",
+    img_generate_failed: "Bildgenerierung fehlgeschlagen: ",
+    img_save_failed: "Bild speichern fehlgeschlagen: ",
+    mb_title: "Mediathek",
+    mb_loading: "Lädt…",
+    mb_root: "Medien",
+    mb_back: "Zurück",
+    mb_empty: "Keine Dateien",
+    mb_error: "Fehler: ",
+    my_tasks: "Meine Aufgaben",
+    add_placeholder: "Neue Aufgabe hinzufügen...",
+    add_failed: "Aufgabe konnte nicht hinzugefügt werden",
+    draft_details_failed: "Aufgabe angelegt, aber einige Details konnten nicht gespeichert werden",
+    duplicate_failed: "Aufgabe konnte nicht dupliziert werden",
+    dialog_cancel: "Abbrechen",
+    dialog_add: "Hinzufügen",
+    filter_all: "Alle",
+    filter_open: "Offen",
+    filter_done: "Erledigt",
+    filter_due_soon: "Bald fällig",
+    ed_show_due_soon_filter: "Bald-fällig-Filter",
+    ed_due_soon_days: "Tage voraus",
+    ed_hide_overdue: "Überfällige ausblenden",
+    progress: "{0} von {1} erledigt",
+    empty: "Keine Aufgaben vorhanden",
+    drag_handle: "Verschieben",
+    due_date: "Fälligkeit",
+    notes: "Notizen",
+    notes_placeholder: "Hier kannst du Notizen hinzufügen",
+    notes_edit_hint: "Zum Bearbeiten klicken",
+    sub_items: "Unteraufgaben",
+    add_sub_item: "+ Unteraufgabe hinzufügen",
+    recurrence: "Wiederholung",
+    recurrence_enabled: "Aktiviert",
+    recurrence_every: "Alle",
+    rec_minutes: "Minuten",
+    rec_hours: "Stunden",
+    rec_days: "Tage",
+    rec_weeks: "Wochen",
+    rec_months: "Monate",
+    rec_years: "Jahre",
+    rec_short_h: "Std.",
+    rec_short_d: "T.",
+    rec_short_w: "Wo.",
+    rec_short_m: "Mon.",
+    rec_short_y: "J.",
+    priority: "Priorität",
+    pri_high: "Hoch",
+    pri_medium: "Mittel",
+    pri_low: "Niedrig",
+    ed_show_priority: "Prioritäten",
+    rec_hourly: "Stündl.",
+    rec_daily: "Täglich",
+    rec_weekly: "Wöchentl.",
+    rec_monthly: "Monatl.",
+    rec_yearly: "Jährl.",
+    rec_type_interval: "Alle …",
+    rec_type_weekdays: "An Wochentagen",
+    rec_wd_0: "Mo",
+    rec_wd_1: "Di",
+    rec_wd_2: "Mi",
+    rec_wd_3: "Do",
+    rec_wd_4: "Fr",
+    rec_wd_5: "Sa",
+    rec_wd_6: "So",
+    assigned_to: "Zugewiesene Personen",
+    nobody: "– Niemand –",
+    delete_task: "Aufgabe löschen",
+    duplicate_task: "Duplizieren",
+    move_task: "Verschieben",
+    move_task_msg: "„{0}“ verschieben nach:",
+    ed_show_move: "Verschieben-Button",
+    delete_sub: "Löschen",
+    ed_default_filter: "Standardfilter",
+    ed_list: "Liste",
+    ed_title: "Titel (optional)",
+    ed_title_placeholder: "Standard: Listenname",
+    ed_display: "Anzeige",
+    ed_show_title: "Titel",
+    ed_show_progress: "Fortschritt",
+    ed_show_due_date: "Fälligkeiten",
+    ed_show_notes: "Notizen",
+    ed_show_recurrence: "Wiederholungen",
+    ed_show_sub_items: "Unteraufgaben",
+    ed_show_person: "Personen",
+    ed_auto_delete: "Erledigte sofort löschen",
+    ed_confirm_complete: "Vor dem Erledigen nachfragen",
+    ed_tap_to_complete: "Zeile antippen zum Erledigen",
+    ed_show_add_due: "Fälligkeit beim Anlegen",
+    ed_max_height: "Max. Höhe (px, 0 = unbegrenzt)",
+    ed_badge_priority: "Prioritäts-Chips",
+    ed_badge_progress: "Fortschritts-Chips",
+    ed_badge_due: "Fälligkeits-Chips",
+    ed_badge_recurrence: "Wiederholungs-Chips",
+    ed_badge_person: "Person",
+    ed_badge_tags: "Tag-Chips",
+    ed_badge_reminders: "Erinnerungs-Chips",
+    ed_sec_defaults: "Standardwerte",
+    ed_sec_images: "Bilder",
+    ed_share_images: "Bilder mit anderen Listen teilen",
+    ed_share_images_hint: "Aus behält die Bilder dieser Liste für sich — der gleiche Aufgabentitel auf einer anderen Liste bekommt ein eigenes Bild.",
+    ed_queue_empty: "Nichts wartet auf ein Bild.",
+    ed_queue_pending: "Wartet auf ein Bild: {0}",
+    ed_queue_cancel: "Abbrechen",
+    ed_ai_image_hint: "Gilt für die ganze Karte, nicht nur für diese Spalte.",
+    ed_queue_running: "wird erzeugt…",
+    ed_queue_title: "Warteschlange",
+    ed_default_assignee: "Standard-Personen",
+    ed_defaults_saved: "Gespeichert",
+    ed_defaults_load_failed: "Defaults konnten nicht geladen werden",
+    ed_defaults_save_failed: "Speichern fehlgeschlagen",
+    confirm_complete_msg: "„{0}“ als erledigt markieren?",
+    confirm_complete_ok: "Erledigen",
+    ed_compact: "Kompakt",
+    ed_show_tags: "Tags",
+    ed_hint: "Neue Listen können unter Einstellungen → Integrationen → Home Tasks erstellt werden.",
+    tags: "Tags",
+    add_tag: "+ Tag hinzufügen",
+    tag_placeholder: "Neues Tag...",
+    remove_tag: "Entfernen",
+    tag_suggestions_label: "Vorhandene Tags",
+    tag_no_matches: "Keine passenden Tags",
+    new_sub_item: "Neue Unteraufgabe",
+    remove_reminder: "Erinnerung entfernen",
+    sort_label: "Sortierung",
+    sort_manual: "Manuell",
+    sort_due: "Fälligkeit",
+    sort_priority: "Priorität",
+    sort_title: "Titel (A–Z)",
+    sort_person: "Zugewiesen",
+    ed_show_sort: "Sortierung",
+    ed_show_filters: "Status-Filter",
+    ed_show_tag_chips: "Tag-Filter",
+    ed_show_person_chips: "Personen-Filter",
+    ed_show_voice: "Spracheingabe",
+    ed_task_search: "Aufgaben-Suche",
+    ed_auto_image: "Bild automatisch generieren",
+    ed_default_sort: "Standard-Sortierung",
+    ed_tag_catalog: "Feste Tags",
+    ed_tag_catalog_hint: "Werden beim Taggen in dieser Liste immer vorgeschlagen — weitere Tags können in der Aufgabe ergänzt werden.",
+    ed_default_lead_hint: "Wird von einer Aufgabe übernommen, wenn ihre Wiederholung eingeschaltet wird",
+    tag_did_you_mean: "Meintest du {0}?",
+    ed_overdue_first: "Überfällige Aufgaben zuerst",
+    reminder: "Erinnerungen",
+    rem_add: "+ Erinnerung hinzufügen",
+    rem_none: "Keine Erinnerung",
+    rem_at_due: "Zur Fälligkeit",
+    rem_5m: "5 Min. vorher",
+    rem_15m: "15 Min. vorher",
+    rem_30m: "30 Min. vorher",
+    rem_1h: "1 Std. vorher",
+    rem_2h: "2 Std. vorher",
+    rem_1d: "1 Tag vorher",
+    rem_2d: "2 Tage vorher",
+    ed_show_reminders: "Erinnerungen",
+    ed_add_column: "Spalte hinzufügen",
+    ed_move_left: "Nach links",
+    ed_move_right: "Nach rechts",
+    ed_duplicate: "Spalte duplizieren",
+    ed_delete_column: "Spalte löschen",
+    ed_code_editor: "Code-Editor",
+    ed_visual_editor: "Visueller Editor",
+    ed_icon: "Symbol (optional)",
+    ed_card_title: "Kartentitel (optional)",
+    ed_card_title_placeholder: "Titel über den Spalten",
+    ed_sec_view: "Darstellung",
+    ed_sec_display: "Aufgaben-Funktionen",
+    ed_tile_help: "Kachelansicht:\n• Klicken = erledigen\n• Gedrückt halten = editieren\n• Ziehen = Position ändern",
+    due_time_lbl: "Uhrzeit",
+    due_date_lbl: "Datum",
+    rec_mode_lbl: "Modus",
+    rec_time: "Uhrzeit",
+    rec_end: "Ende",
+    rec_end_never: "Nie",
+    rec_end_date: "Bis",
+    rec_end_count: "X mal",
+    rec_end_date_lbl: "Bis",
+    rec_max_count_lbl: "Anzahl",
+    rec_remaining: "noch {0}",
+    rec_start_date_lbl: "Ab",
+    rec_pattern_dom: "Tag im Monat",
+    rec_pattern_nth: "N-ter Wochentag",
+    rec_pattern_none: "Ab Erledigung",
+    rec_pattern_due: "Ab Fälligkeit",
+    rec_dom_lbl: "Tag",
+    rec_dom_last: "letzten Tag",
+    rec_nth_lbl: "Am",
+    rec_nth_1: "1.",
+    rec_nth_2: "2.",
+    rec_nth_3: "3.",
+    rec_nth_4: "4.",
+    rec_nth_last: "letzten",
+    rec_anniversary_lbl: "Am",
+    rec_dd: "Tag",
+    rec_mm: "Monat",
+    rec_dom_short: ".",
+    rec_last_short: "letzter",
+    rec_value_lbl: "Alle",
+    rec_unit_lbl: "Einheit",
+    rec_wd_lbl: "Wochentag",
+    rec_at_lbl: "Um",
+    rec_lead_lbl: "Früher öffnen",
+    rec_lead_hint: "Öffnet die Aufgabe um diese Zeit vor der nächsten Fälligkeit wieder, damit sie als anstehend erscheint. 0 = erst bei Fälligkeit.",
+    rec_todoist_pattern_unsupported: "Untermuster sind nicht möglich, wenn das Intervall größer als 1 ist.",
+    history: "Verlauf",
+    history_created: "Erstellt",
+    history_completed: "Erledigt",
+    history_reopened: "Wieder geöffnet",
+    history_reset: "Automatisch zurückgesetzt",
+    history_changed: "geändert",
+    history_empty: "Noch kein Verlauf",
+    hist_title: "Titel",
+    history_disabled: "Deaktiviert",
+    ed_show_history: "Verläufe",
+    hist_by_user: "Benutzer",
+    ed_show_images: "Bilder",
+    ed_view_mode: "Ansichtsmodus",
+    ed_view_mode_list: "Liste",
+    ed_view_mode_tiles: "Kacheln",
+    ed_show_tile_title: "Titel in Kacheln",
+    ed_show_add_task: "Aufgabe hinzufügen",
+    assigned_unknown: "Unbekannt (%s)",
+    recurrence_readonly: "Verwaltet von %s",
+    synced_with: "Synchronisiert mit %s",
+    due_today: "Heute",
+    due_tomorrow: "Morgen",
+    due_yesterday: "Gestern",
+    due_day_after_tomorrow: "Übermorgen",
+    due_day_before_yesterday: "Vorgestern",
+    due_in_hours: "In {0} Std {1} Min",
+    due_in_minutes: "In {0} Min",
+    due_in_seconds: "Jetzt",
+    due_ago_hours: "Vor {0} Std {1} Min",
+    due_ago_minutes: "Vor {0} Min",
+    due_ago_seconds: "Gerade eben",
+    done_section_header: "Erledigt",
+    ed_sec_sections: "Bereiche",
+    ed_section_name: "Name",
+    ed_section_icon: "Symbol",
+    ed_add_section: "+ Bereich hinzufügen",
+    ed_delete_section: "Bereich löschen",
+    ed_section_name_prompt: "Name des Bereichs:",
+    ed_sections_select_list_hint: "Erst eine Liste wählen, dann Bereiche verwalten.",
+    ed_sections_empty: "Noch keine Bereiche – Aufgaben werden flach angezeigt.",
+    ed_loading: "Lädt…",
+    ed_move_up: "Nach oben",
+    ed_move_down: "Nach unten",
+    confirm_delete_section: "Diesen Bereich wirklich löschen? Enthaltene Aufgaben werden unsortiert.",
+    ed_sec_filters: "Filter",
+    ed_preset_assignees: "Auf Personen begrenzen",
+    ed_preset_labels: "Auf Tags begrenzen",
+    ed_ms_add: "Hinzufügen…",
+    ed_ai_image_entity: "KI-Entität für Bildgenerierung",
+    ed_ai_image_entity_placeholder: "z.B. ai_task.openai",
+    ed_ai_prompt_prefix: "Prompt-Präfix (optional)",
+    ed_ai_prompt_prefix_placeholder: "z.B. Minimalistisches Icon von",
+    calendar_minutes_before: "{value} Min. vorher",
+    calendar_hours_before: "{value} Std. vorher",
+    calendar_days_before: "{value} Tage vorher",
+    ed_show_section: "Bereichsfeld",
+    ed_section_field_no_sections: "Erscheint, sobald die Liste Bereiche hat",
+    section_label: "Bereich",
+    ed_list_columns: "Aufgabenspalten",
+    ed_tile_size: "Kachelgröße",
+    ed_tile_size_small: "Klein",
+    ed_tile_size_compact: "Kompakt",
+    ed_tile_size_medium: "Normal",
+    ed_tile_size_large: "Groß",
+    due_quick_week: "In 1 Woche",
+    due_quick_month: "In 1 Monat",
+    due_quick_3months: "In 3 Monaten",
+    ed_offered_persons: "Auswählbare Personen",
+    ed_offered_persons_hint: "Nur markierte Personen können in dieser Karte zugewiesen werden",
+    add_with_details: "Mit Details anlegen",
+    add_clear: "Leeren",
+    ed_show_add_details: "Details beim Anlegen",
+    plan_note_placeholder: "Fokus für den Tag",
+    plan_empty: "Nichts geplant",
+    plan_add: "Aufgabe einplanen",
+    plan_search_placeholder: "Aufgaben suchen…",
+    plan_no_results: "Keine passenden offenen Aufgaben",
+    plan_carry_over: "Offene Aufgaben vom {0} übernehmen ({1})",
+    plan_move_day: "Anderer Tag…",
+    plan_day_msg: "Welcher Tag für „{0}“?",
+    plan_remove: "Aus dem Plan nehmen",
+    plan_for: "Einplanen für…",
+    plan_ok: "Einplanen",
+    plan_none: "Kein Tagesplan gefunden. Tagespläne können unter Einstellungen → Integrationen → Home Tasks erstellt werden.",
+    ed_view_lists: "Listen",
+    ed_view_day_plan: "Tagesplan",
+    ed_plan_days: "Angezeigte Tage",
+    ed_plan_all_lists: "Alle Listen",
+    plan_due_hint: "Steht über das Fälligkeitsdatum im Plan: verschieben oder das Datum ändern.",
+    ed_plan_weekend: "Wochenende",
+    new_entry_link: "Neue Liste oder neuen Tagesplan anlegen",
+    ed_plan_list_missing: "Liste nicht verfügbar",
+    picker_list_name: "Home Tasks: Liste",
+    picker_plan_name: "Home Tasks: Tagesplan",
+    picker_list_desc: "Aufgabenlisten in Spalten, mit Drag & Drop, Unteraufgaben, Notizen und Fälligkeiten.",
+    picker_plan_desc: "Die Tage eines Tagesplans: Aufgaben aus mehreren Listen in der Reihenfolge, in der du sie erledigst."
   }
 };
 
-const REMINDER_OFFSETS = [
+// src/core/i18n.js
+var _TRANSLATIONS = ui_translations_default;
+function _htText(lang, key, args = []) {
+  lang = String(lang || "en");
+  if (lang === "nb" || lang === "nn") lang = "no";
+  const table = _TRANSLATIONS[lang] || _TRANSLATIONS[lang.split("-")[0]] || _TRANSLATIONS.en;
+  const str = table[key] || _TRANSLATIONS.en[key] || key;
+  return args.length ? str.replace(/\{(\d+)\}/g, (_, i) => args[i] ?? "") : str;
+}
+
+// src/core/helpers.js
+var REMINDER_OFFSETS = [
   [0, "rem_at_due"],
   [5, "rem_5m"],
   [15, "rem_15m"],
@@ -5170,26 +5185,21 @@ const REMINDER_OFFSETS = [
   [60, "rem_1h"],
   [120, "rem_2h"],
   [1440, "rem_1d"],
-  [2880, "rem_2d"],
+  [2880, "rem_2d"]
 ];
-
-// Reminder editing shared by the task detail sheet and the editor's Defaults
-// section (host provides _el/_t). MAX_REMINDERS mirrors the backend's
-// MAX_REMINDERS_PER_TASK.
-const MAX_REMINDERS = 5;
-// Mirrors the backend's MAX_REOPEN_LEAD_MINUTES: a year ahead at most.
-const MAX_REOPEN_LEAD_MINUTES = 365 * 24 * 60;
-const reminderOffsetOptions = (host, offset) => {
+var MAX_REMINDERS = 5;
+var MAX_REOPEN_LEAD_MINUTES = 365 * 24 * 60;
+var reminderOffsetOptions = (host, offset) => {
   const opts = [];
   let matched = false;
   for (const [val, key] of REMINDER_OFFSETS) {
     const opt = host._el("option", { value: String(val), textContent: host._t(key) });
-    if (val === offset) { opt.selected = true; matched = true; }
+    if (val === offset) {
+      opt.selected = true;
+      matched = true;
+    }
     opts.push(opt);
   }
-  // Offsets set via WS/service can be any 0..43200 minutes: give them their
-  // own option instead of silently displaying (and rewriting them to) the
-  // first preset.
   if (!matched && Number.isFinite(offset)) {
     const opt = host._el("option", { value: String(offset), textContent: offset + " min" });
     opt.selected = true;
@@ -5197,86 +5207,51 @@ const reminderOffsetOptions = (host, offset) => {
   }
   return opts;
 };
-const nextFreeReminderOffset = (used) =>
-  (REMINDER_OFFSETS.find(([v]) => !used.has(v)) || REMINDER_OFFSETS[0])[0];
-
-// Person options shared by the detail sheet's assignee chips and the
-// editor (the "nobody" entry stays with the callers). People in *hidden*
-// are left out.
-const personEntries = (hass, hidden = []) =>
-  Object.keys((hass && hass.states) || {})
-    .filter((eid) => eid.startsWith("person.") && !hidden.includes(eid))
-    .sort()
-    .map((eid) => ({
-      value: eid,
-      label: (hass.states[eid] && hass.states[eid].attributes && hass.states[eid].attributes.friendly_name) || eid,
-    }));
-
-// How a person is shown, in the task row and in the filter row above it.
-// Two switches (chip on/off, picture on/off) could say the same four things,
-// but only if you found both of them - they sat nine rows apart in one grid.
-const PERSON_MODES = ["off", "picture", "name", "both"];
-
-// Initials-circle colours, picked by a hash of the person so the same face
-// keeps the same colour on every card and after every reload. Dark enough
-// for white text in either theme.
-const PERSON_COLORS = [
-  "#185fa5", "#0f6e56", "#993c1d", "#993556", "#534ab7",
-  "#3b6d11", "#854f0b", "#a32d2d", "#5f5e5a",
+var nextFreeReminderOffset = (used) => (REMINDER_OFFSETS.find(([v]) => !used.has(v)) || REMINDER_OFFSETS[0])[0];
+var personEntries = (hass, hidden = []) => Object.keys(hass && hass.states || {}).filter((eid) => eid.startsWith("person.") && !hidden.includes(eid)).sort().map((eid) => ({
+  value: eid,
+  label: hass.states[eid] && hass.states[eid].attributes && hass.states[eid].attributes.friendly_name || eid
+}));
+var PERSON_MODES = ["off", "picture", "name", "both"];
+var PERSON_COLORS = [
+  "#185fa5",
+  "#0f6e56",
+  "#993c1d",
+  "#993556",
+  "#534ab7",
+  "#3b6d11",
+  "#854f0b",
+  "#a32d2d",
+  "#5f5e5a"
 ];
-
-// Marker for "we stopped waiting", as opposed to "the backend said no".
-const WS_TIMEOUT = "timeout";
-
-// HA todo entity feature bits (TodoListEntityFeature) used for capability gating.
-const TODO_FEATURE = { SET_DUE_DATE: 16, SET_DUE_DATETIME: 32, SET_DESCRIPTION: 64 };
-
-// Can tasks of an external list carry a due date / a due time? `info` is an
-// entry of the get_external_lists result ({supported_features, capabilities}).
-// One definition shared by the card (add row, detail panel) and the editor so
-// the three places can't drift apart.
-// The ai_task entity and prefix a card hands to every list it shows, or
-// null when it has no entity. Shared by the card and its editor.
+var WS_TIMEOUT = "timeout";
+var TODO_FEATURE = { SET_DUE_DATE: 16, SET_DUE_DATETIME: 32, SET_DESCRIPTION: 64 };
 function imageSettingsForLists(host) {
   const imgCfg = host._config?.image_generation || {};
   if (!imgCfg.entity_id) return null;
   return { ai_task_entity_id: imgCfg.entity_id, prompt_prefix: imgCfg.prompt_prefix || "" };
 }
-
 function listInfoFor(host, col) {
-  return col.entity_id
-    ? (host._externalLists || []).find(l => l.entity_id === col.entity_id)
-    : (host._lists || []).find(l => l.id === col.list_id);
+  return col.entity_id ? (host._externalLists || []).find((l) => l.entity_id === col.entity_id) : (host._lists || []).find((l) => l.id === col.list_id);
 }
-
 function listSupportsDue(info) {
-  const features = (info && info.supported_features) || 0;
-  const caps = (info && info.capabilities) || {};
-  return !!((features & TODO_FEATURE.SET_DUE_DATE) || (features & TODO_FEATURE.SET_DUE_DATETIME) || caps.can_sync_due_time);
+  const features = info && info.supported_features || 0;
+  const caps = info && info.capabilities || {};
+  return !!(features & TODO_FEATURE.SET_DUE_DATE || features & TODO_FEATURE.SET_DUE_DATETIME || caps.can_sync_due_time);
 }
 function listSupportsDueTime(info) {
-  const features = (info && info.supported_features) || 0;
+  const features = info && info.supported_features || 0;
   return !!(features & TODO_FEATURE.SET_DUE_DATETIME);
 }
-
-// list_columns: 1-4 columns of tasks in list view (default 1).
 function _listColumns(col) {
   const n = parseInt(col && col.list_columns, 10);
   return Number.isFinite(n) ? Math.max(1, Math.min(4, n)) : 1;
 }
-
-// list_column_min_width: px a list column must keep before the card drops
-// to fewer columns (80-600, default 160 - two columns fit on a phone).
 function _listMinWidth(col) {
   const n = parseInt(col && col.list_column_min_width, 10);
   return Number.isFinite(n) ? Math.max(80, Math.min(600, n)) : null;
 }
-
-// tile_size: "small" | "compact" | "medium" | "large", or a minimum tile
-// width in px (60-400). Medium ("Normal") is the built-in size and the
-// default (140px), so it sets nothing - same as leaving tile_size unset.
-// The compact switch doesn't change the tile size.
-const _TILE_SIZES = { small: 80, compact: 100, large: 200 };
+var _TILE_SIZES = { small: 80, compact: 100, large: 200 };
 function _tileMinWidth(col) {
   const v = col && col.tile_size;
   if (v == null || v === "" || v === "medium") return null;
@@ -5284,15 +5259,9 @@ function _tileMinWidth(col) {
   const n = parseInt(v, 10);
   return Number.isFinite(n) ? Math.max(60, Math.min(400, n)) : null;
 }
-
-// Task-details fields folded by the user (by key), per list - like the
-// folded sections of a list - and kept in localStorage. One Set per list for
-// every card on the page, loaded once, so two cards showing the same list
-// never write back each other's stale copy; a card that folds a field tells
-// the others with DETAIL_FOLD_EVENT.
-const DETAIL_FOLD_STORAGE_KEY = "home_tasks_card:detail_fold";
-const DETAIL_FOLD_EVENT = "home-tasks-detail-fold";
-const _foldedDetailSets = new Map();
+var DETAIL_FOLD_STORAGE_KEY = "home_tasks_card:detail_fold";
+var DETAIL_FOLD_EVENT = "home-tasks-detail-fold";
+var _foldedDetailSets = /* @__PURE__ */ new Map();
 function _foldedDetailKeys(list) {
   let keys = _foldedDetailSets.get(list);
   if (!keys) {
@@ -5301,26 +5270,19 @@ function _foldedDetailKeys(list) {
       const parsed = raw ? JSON.parse(raw) : [];
       keys = new Set(Array.isArray(parsed) ? parsed : []);
     } catch (e) {
-      keys = new Set();  // storage blocked: folding lasts this session
+      keys = /* @__PURE__ */ new Set();
     }
     _foldedDetailSets.set(list, keys);
   }
   return keys;
 }
-
-// Everyone a task is assigned to (issue #75), primary first. Older tasks
-// (and providers) only carry assigned_person.
-
 function _assignees(task) {
   const people = Array.isArray(task && task.assigned_persons) ? task.assigned_persons.filter(Boolean) : [];
   const primary = task && task.assigned_person;
   if (primary && !people.includes(primary)) people.unshift(primary);
   return people;
 }
-
-// The task-details fields in their default order: [key, editor label,
-// show_* option, shown by default, older name of the option].
-const DETAIL_FIELDS = [
+var DETAIL_FIELDS = [
   ["notes", "ed_show_notes", "show_notes", true],
   ["sub_tasks", "ed_show_sub_items", "show_sub_tasks", true, "show_sub_items"],
   ["person", "ed_show_person", "show_assigned_person", true],
@@ -5331,55 +5293,29 @@ const DETAIL_FIELDS = [
   ["reminders", "ed_show_reminders", "show_reminders", true],
   ["recurrence", "ed_show_recurrence", "show_recurrence", true],
   ["history", "ed_show_history", "show_history", false],
-  ["images", "ed_show_images", "show_images", false],
+  ["images", "ed_show_images", "show_images", false]
 ];
-const DETAIL_FIELD = Object.fromEntries(DETAIL_FIELDS.map((f) => [f[0], f]));
-const DETAIL_KEYS = DETAIL_FIELDS.map((f) => f[0]);
-
-// Whether a column has the task-details field *key* switched on.
+var DETAIL_FIELD = Object.fromEntries(DETAIL_FIELDS.map((f) => [f[0], f]));
+var DETAIL_KEYS = DETAIL_FIELDS.map((f) => f[0]);
 function _detailFieldOn(col, key) {
   const [, , option, defaultOn, legacy] = DETAIL_FIELD[key];
-  const v = col[option] ?? (legacy ? col[legacy] : undefined);
+  const v = col[option] ?? (legacy ? col[legacy] : void 0);
   return defaultOn ? v !== false : v === true;
 }
-
-// detail_order: the task-details fields in the order given; unknown keys
-// are ignored and fields not listed follow in the default order.
 function _detailOrder(col, defaults = DETAIL_KEYS) {
   const wanted = Array.isArray(col && col.detail_order) ? col.detail_order : [];
   const listed = wanted.filter((k, i) => defaults.includes(k) && wanted.indexOf(k) === i);
   return [...listed, ...defaults.filter((k) => !listed.includes(k))];
 }
-
-// The shortest detail_order giving *order*: fields at the end that already
-// follow in the default order are left out, so a field a later version adds
-// still lands in its default place.
 function _shortDetailOrder(order) {
   let n = order.length;
   while (n > 0 && _detailOrder({ detail_order: order.slice(0, n - 1) }).join() === order.join()) n--;
-  return n ? order.slice(0, n) : undefined;
+  return n ? order.slice(0, n) : void 0;
 }
+var NEW_ENTRY_PATH = "/config/integrations/integration/home_tasks";
 
-// Where a list, a linked list or a day plan is added: the integration's page
-// in Home Assistant's settings, with its "Add service" button. Adding one is
-// Home Assistant's job, not the card's: the card only takes the user there.
-// The card exists only once Home Tasks is set up, so the address that starts
-// the dialog directly (/config/integrations/dashboard/add?domain=…) is the
-// wrong one - it first asks whether to "set up" what is already there.
-const NEW_ENTRY_PATH = "/config/integrations/integration/home_tasks";
-
-// One lookup for every text of the card, its editors and the card picker:
-// the language's own table, else its base language's ("de-CH" reads "de"),
-// else English. Norwegian's two written forms share one table.
-function _htText(lang, key, args = []) {
-  lang = String(lang || "en");
-  if (lang === "nb" || lang === "nn") lang = "no";
-  const table = _TRANSLATIONS[lang] || _TRANSLATIONS[lang.split("-")[0]] || _TRANSLATIONS.en;
-  const str = table[key] || _TRANSLATIONS.en[key] || key;
-  return args.length ? str.replace(/\{(\d+)\}/g, (_, i) => args[i] ?? "") : str;
-}
-
-class HomeTasksCard extends HTMLElement {
+// src/views/list-card.js
+var HomeTasksCard = class _HomeTasksCard extends HTMLElement {
   // The shortest gap between two occurrences, in minutes — what a reopen
   // lead must stay below.  Must match _recurrence_interval_minutes in
   // __init__.py; tests/fixtures/recurrence_interval_cases.json is checked
@@ -5398,22 +5334,16 @@ class HomeTasksCard extends HTMLElement {
     }
     return n * days * 1440;
   }
-
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
     this.shadowRoot.addEventListener("focusout", () => {
-      // After focus leaves all inputs, flush any deferred render — unless a
-      // press is still held: then its release flushes (after the click).
-      // The timeout lets the field's own blur handling go first (the notes
-      // switch back to their read view in one).
       requestAnimationFrame(() => setTimeout(() => {
         if (!this._pendingRender || this.shadowRoot.activeElement) return;
         if (this._pointerIsDown) this._flushOnRelease = true;
         else this._render();
       }, 0));
     });
-    // Whether a press inside the card is still held (see _deferRenderUntilBlur).
     this._pointerIsDown = false;
     this.shadowRoot.addEventListener("pointerdown", () => {
       this._pointerIsDown = true;
@@ -5423,7 +5353,6 @@ class HomeTasksCard extends HTMLElement {
         window.removeEventListener("pointercancel", release, true);
         if (this._flushOnRelease) {
           this._flushOnRelease = false;
-          // After the click that follows this release.
           setTimeout(() => {
             if (this._pendingRender && !this.shadowRoot.activeElement) this._render();
           }, 0);
@@ -5436,10 +5365,9 @@ class HomeTasksCard extends HTMLElement {
     this._hass = null;
     this._lists = [];
     this._externalLists = [];
-    // Per-column state: [{filter, sortBy, sortOpen, tagFilters, personFilters, tasks, newTaskTitle}]
     this._columns = [];
-    this._sourceDefaults = {};    // { entityId: defaults|null } — for the optimistic row
-    this._expandedTasks = new Set();
+    this._sourceDefaults = {};
+    this._expandedTasks = /* @__PURE__ */ new Set();
     this._editingTaskId = null;
     this._editingSubTaskId = null;
     this._draggedTaskId = null;
@@ -5461,28 +5389,17 @@ class HomeTasksCard extends HTMLElement {
     this._addInputRect = null;
     this._justAppearedTaskIds = null;
     this._filterAnimPending = false;
-    // Sticky UI state for radios that don't yet have backing data.  When
-    // the user picks "Am" but hasn't entered the actual values, we don't
-    // save anything (avoids snap-back on reload), so the next render would
-    // otherwise re-derive "Ab Erledigung" from the empty data.  These maps
-    // remember the user's pick until either real data is entered (which
-    // takes over) or they pick "Ab Erledigung" (which clears the override).
-    this._weekPatternOverride = new Map();   // task.id → "on"
-    this._yearPatternOverride = new Map();   // task.id → "on"
-    this._generatingImage = new Set();       // task IDs currently generating
-    this._voiceActive = new Map();           // colIdx → cleanup function
+    this._weekPatternOverride = /* @__PURE__ */ new Map();
+    this._yearPatternOverride = /* @__PURE__ */ new Map();
+    this._generatingImage = /* @__PURE__ */ new Set();
+    this._voiceActive = /* @__PURE__ */ new Map();
   }
-
   _defaultColState() {
-    // taskSearchQuery holds the text currently typed into the add-task
-    // field (see _buildColumnAddTask / _buildColumnTaskList).
-    return { filter: "all", sortBy: "manual", sortOpen: false, tagFilters: new Set(), personFilters: new Set(), tasks: [], sections: [], newTaskTitle: "", newTaskDue: "", newTaskDueTime: "", taskSearchQuery: "", draft: null };
+    return { filter: "all", sortBy: "manual", sortOpen: false, tagFilters: /* @__PURE__ */ new Set(), personFilters: /* @__PURE__ */ new Set(), tasks: [], sections: [], newTaskTitle: "", newTaskDue: "", newTaskDueTime: "", taskSearchQuery: "", draft: null };
   }
-
   _t(key, ...args) {
     return _htText(this._localeCode(), key, args);
   }
-
   // After the user picks an option in a <select>, drop focus right away.
   // Otherwise the dropdown stays "highlighted" and the very next click
   // on a sibling control is consumed by the implicit focus transition
@@ -5494,7 +5411,6 @@ class HomeTasksCard extends HTMLElement {
       Promise.resolve().then(() => select.blur());
     });
   }
-
   // Format an ordinal day-of-month in the user's language: "1." in
   // German/most European, "1st"/"2nd"/"3rd"/"4th" in English.
   _domOrdinal(d) {
@@ -5508,58 +5424,41 @@ class HomeTasksCard extends HTMLElement {
     }
     return `${d}.`;
   }
-
   setConfig(config) {
-    // The days of a plan are a card of their own (HomeTasksDayPlanCard,
-    // below). Said plainly, for a config written while they were a view of
-    // this card.
     if (config.view === "day_plan") {
       throw new Error(
         "The day plan is a card of its own: use type custom:home-tasks-day-plan-card (and drop view)"
       );
     }
-    // Normalize old single-list format to columns format
-    // Keep HA card-level keys (type, etc.) at root, not inside column objects
     if (config.list_id && !config.columns) {
       const { type, columns: _c, ...colConfig } = config;
-      config = { ...(type ? { type } : {}), columns: [colConfig] };
+      config = { ...type ? { type } : {}, columns: [colConfig] };
     }
     if (!config.columns || !Array.isArray(config.columns) || config.columns.length === 0) {
       config = { ...config, columns: [{}] };
     }
-    // Strip any stray type keys from column objects (e.g. from previously broken saves)
     config = {
       ...config,
-      columns: config.columns.map(({ type: _t, ...col }) => col),
+      columns: config.columns.map(({ type: _t, ...col }) => col)
     };
-
     const prevConfig = this._config || { columns: [] };
     this._config = config;
-
-    // Sync _columns array length
     while (this._columns.length < config.columns.length) {
       this._columns.push(this._defaultColState());
     }
     this._columns.length = config.columns.length;
-    // Clean up stale expanded/editing state when columns are removed
     if (this._editingTaskId) {
-      const taskStillExists = this._columns.some(cs => cs.tasks?.some(t => t.id === this._editingTaskId));
+      const taskStillExists = this._columns.some((cs) => cs.tasks?.some((t) => t.id === this._editingTaskId));
       if (!taskStillExists) this._editingTaskId = null;
     }
-    // Clean up expanded task IDs no longer in any column
-    const allTaskIds = new Set(this._columns.flatMap(cs => (cs.tasks || []).map(t => t.id)));
+    const allTaskIds = new Set(this._columns.flatMap((cs) => (cs.tasks || []).map((t) => t.id)));
     for (const id of this._expandedTasks) {
       if (!allTaskIds.has(id)) this._expandedTasks.delete(id);
     }
-
-    // Reset per-column filter/sort when list or defaults change
     for (let i = 0; i < config.columns.length; i++) {
       const col = config.columns[i];
       const prevCol = prevConfig.columns?.[i];
       const colSourceChanged = col.list_id !== prevCol?.list_id || col.entity_id !== prevCol?.entity_id;
-      // A search (and the draft title it mirrors) belongs to the list it was
-      // typed against. Carrying it over to a different list would silently
-      // filter the new list by text the user never typed for it.
       if (colSourceChanged) {
         this._columns[i].taskSearchQuery = "";
         this._columns[i].newTaskTitle = "";
@@ -5569,31 +5468,27 @@ class HomeTasksCard extends HTMLElement {
         if (this._columns[i].filter === "due_soon" && col.show_due_soon_filter !== true) {
           this._columns[i].filter = "all";
         }
-        this._columns[i].tagFilters = new Set();
-        this._columns[i].personFilters = new Set();
+        this._columns[i].tagFilters = /* @__PURE__ */ new Set();
+        this._columns[i].personFilters = /* @__PURE__ */ new Set();
       }
       if (col.show_tags === false && prevCol?.show_tags !== false) {
-        this._columns[i].tagFilters = new Set();
+        this._columns[i].tagFilters = /* @__PURE__ */ new Set();
       }
       if (col.show_assigned_person === false && prevCol?.show_assigned_person !== false) {
-        this._columns[i].personFilters = new Set();
+        this._columns[i].personFilters = /* @__PURE__ */ new Set();
       }
       if (colSourceChanged || col.default_sort !== prevCol?.default_sort) {
         this._columns[i].sortBy = col.default_sort || "manual";
       }
     }
-
     if (this._initialized) {
       this._loadAllTasks();
     } else {
       this._render();
     }
     this._syncImageGenerationConfig();
-    // Config may arrive after we're already connected (editor preview);
-    // connectedCallback covers the other order. No-op when not connected.
     this._ensureCardMod();
   }
-
   set hass(hass) {
     const prev = this._hass;
     this._hass = hass;
@@ -5602,60 +5497,55 @@ class HomeTasksCard extends HTMLElement {
       this._loadLists();
       return;
     }
-    // Reload when any watched entity's state object changes (new reference = entity updated).
-    // Covers both external todo entities and native-list sensor entities (for cross-device sync).
     if (prev && hass) {
-      // --- Day plan: its sensor changes whenever the plan reads differently
-      //     (a row planned, a task of one of its lists changed, midnight) ---
       if (this._planMode) {
         this._watchPlan(prev, hass);
         this._syncExtPollTimer();
         return;
       }
       for (const col of this._config.columns) {
-        // --- External list: watch the todo entity directly ---
         if (col.entity_id) {
           if (prev.states?.[col.entity_id] !== hass.states?.[col.entity_id]) {
             this._bgUpdates = (this._bgUpdates || 0) + 1;
-            this._loadAllTasks().finally(() => { this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1); });
+            this._loadAllTasks().finally(() => {
+              this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1);
+            });
             return;
           }
         }
-        // --- Native list: watch its open-tasks sensor so changes on other
-        //     devices/tabs propagate here without manual refresh ---
         if (col.list_id) {
-          const list = (this._lists || []).find(l => l.id === col.list_id);
+          const list = (this._lists || []).find((l) => l.id === col.list_id);
           const seid = list?.sensor_entity_id;
           if (seid && prev.states?.[seid] !== hass.states?.[seid]) {
             this._bgUpdates = (this._bgUpdates || 0) + 1;
-            this._loadAllTasks().finally(() => { this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1); });
+            this._loadAllTasks().finally(() => {
+              this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1);
+            });
             return;
           }
         }
       }
     }
-    // Start/stop periodic polling for external detail changes (notes, due dates, etc.)
-    // that don't update the entity state (which is just the active item count).
     this._syncExtPollTimer();
   }
-
   _syncExtPollTimer() {
-    const hasExternal = this._config.columns.some(c => c.entity_id);
+    const hasExternal = this._config.columns.some((c) => c.entity_id);
     if (hasExternal && !this._extPollTimer) {
       this._extPollTimer = setInterval(async () => {
-        // A day plan asks the providers only about the lists it shows rows of.
         if (this._planMode) this._planDoubtShown();
         this._bgUpdates = (this._bgUpdates || 0) + 1;
-        try { await this._loadAllTasks(true); } finally { this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1); }
-      }, 30000);
+        try {
+          await this._loadAllTasks(true);
+        } finally {
+          this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1);
+        }
+      }, 3e4);
     } else if (!hasExternal && this._extPollTimer) {
       clearInterval(this._extPollTimer);
       this._extPollTimer = null;
     }
   }
-
   // --- Safe DOM helpers ---
-
   _el(tag, attrs = {}, children = []) {
     const el = document.createElement(tag);
     for (const [key, val] of Object.entries(attrs)) {
@@ -5698,25 +5588,22 @@ class HomeTasksCard extends HTMLElement {
     }
     return el;
   }
-
   _text(str) {
     return document.createTextNode(str);
   }
-
   // --- Data methods ---
-
   // `rethrow` is for callers that have to tell a refusal from our own 5s
   // race: the backend saying no means the action did not happen, a timeout
   // means we stopped waiting and it may well have happened anyway.
   async _callWs(type, data = {}, { rethrow = false } = {}) {
     if (!this._hass) return null;
     try {
-      const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(WS_TIMEOUT)), 5000)
+      const timeout = new Promise(
+        (_, reject) => setTimeout(() => reject(new Error(WS_TIMEOUT)), 5e3)
       );
       return await Promise.race([
         this._hass.callWS({ type, ...data }),
-        timeout,
+        timeout
       ]);
     } catch (err) {
       console.warn(`WS call ${type} failed:`, err.message);
@@ -5724,13 +5611,10 @@ class HomeTasksCard extends HTMLElement {
       return null;
     }
   }
-
   _isWsTimeout(err) {
     return !!err && err.message === WS_TIMEOUT;
   }
-
   // --- External entity routing helpers ---
-
   /**
    * Schedule a delayed reload for an external column.
    * External providers have latency — the entity may not reflect changes
@@ -5740,27 +5624,21 @@ class HomeTasksCard extends HTMLElement {
    */
   _reloadExternal(colIdx) {
     setTimeout(() => {
-      // A day plan keeps its lists until they change; after a write to a
-      // linked list the provider's answer is what counts.
       if (this._planMode) this._planDoubt(colIdx);
       this._loadAllTasks();
     }, 1500);
   }
-
   _isExternalCol(colIdx) {
     return !!this._config.columns[colIdx]?.entity_id;
   }
-
   _colEntityId(colIdx) {
     return this._config.columns[colIdx]?.entity_id;
   }
-
   _getExternalListInfo(colIdx) {
     if (!this._isExternalCol(colIdx)) return null;
     const entityId = this._colEntityId(colIdx);
-    return (this._externalLists || []).find(l => l.entity_id === entityId) || null;
+    return (this._externalLists || []).find((l) => l.entity_id === entityId) || null;
   }
-
   // Can tasks in this column carry a due date / a due time? Native lists
   // always; external lists per provider capability (see listSupportsDue /
   // listSupportsDueTime at module level).
@@ -5768,25 +5646,20 @@ class HomeTasksCard extends HTMLElement {
     if (!this._isExternalCol(colIdx)) return true;
     return listSupportsDue(this._getExternalListInfo(colIdx));
   }
-
   _colSupportsDueTime(colIdx) {
     if (!this._isExternalCol(colIdx)) return true;
     return listSupportsDueTime(this._getExternalListInfo(colIdx));
   }
-
   _colSupportedFeatures(colIdx) {
-    if (!this._isExternalCol(colIdx)) return -1; // native: all features
+    if (!this._isExternalCol(colIdx)) return -1;
     return this._getExternalListInfo(colIdx)?.supported_features ?? 0;
   }
-
   _colProviderType(colIdx) {
     return this._getExternalListInfo(colIdx)?.provider_type ?? (this._isExternalCol(colIdx) ? "generic" : "native");
   }
-
   _colCapabilities(colIdx) {
     return this._getExternalListInfo(colIdx)?.capabilities ?? (this._isExternalCol(colIdx) ? {} : null);
   }
-
   /**
    * Route a task update to the correct backend.
    * For native columns: single WS call to home_tasks/update_task.
@@ -5794,7 +5667,6 @@ class HomeTasksCard extends HTMLElement {
    * provider-specific sync + overlay for unsynced fields).
    */
   async _updateTaskRouted(colIdx, taskId, fields, { rethrow = false } = {}) {
-    // A draft (show_add_details) isn't created yet: edits stay on it until Add.
     const draft = this._draftFor(colIdx, taskId);
     if (draft) {
       Object.assign(draft, fields);
@@ -5806,49 +5678,42 @@ class HomeTasksCard extends HTMLElement {
       return this._callWs("home_tasks/update_task", {
         list_id: this._colListId(colIdx),
         task_id: taskId,
-        ...fields,
+        ...fields
       }, { rethrow });
     }
-
-    // External: send all fields to the backend — the adapter decides what
-    // goes to the provider API and what goes to the overlay.
     await this._callWs("home_tasks/update_external_task", {
       entity_id: this._colEntityId(colIdx),
       task_uid: taskId,
-      ...fields,
+      ...fields
     }, { rethrow });
   }
-
   // The column's draft (show_add_details) when taskId is its id, else null.
   // A detail field that saves on its own must keep a draft's edits on it.
   _draftFor(colIdx, taskId) {
     const draft = this._columns[colIdx]?.draft;
     return draft && taskId === draft.id ? draft : null;
   }
-
   async _deleteTaskCmd(colIdx, taskId) {
     if (this._isExternalCol(colIdx)) {
       try {
         await this._hass.callService("todo", "remove_item", {
-          item: taskId,
+          item: taskId
         }, { entity_id: this._colEntityId(colIdx) });
       } catch (err) {
         console.warn("Failed to delete external task:", err);
-        return; // Don't clean up overlay if deletion failed
+        return;
       }
-      // Clean up overlay data only on successful deletion
       await this._callWs("home_tasks/delete_external_overlay", {
         entity_id: this._colEntityId(colIdx),
-        task_uid: taskId,
+        task_uid: taskId
       });
     } else {
       await this._callWs("home_tasks/delete_task", {
         list_id: this._colListId(colIdx),
-        task_id: taskId,
+        task_id: taskId
       });
     }
   }
-
   _showError(message) {
     const root = this.shadowRoot;
     if (!root) return;
@@ -5856,9 +5721,8 @@ class HomeTasksCard extends HTMLElement {
     if (existing) existing.remove();
     const toast = this._el("div", { className: "toast-error", textContent: message });
     root.appendChild(toast);
-    setTimeout(() => toast.remove(), 4000);
+    setTimeout(() => toast.remove(), 4e3);
   }
-
   // A card is the only place auto_generate_image and the ai_task entity are
   // configured, but the background queue has to work without one being open.
   // Whenever a card with the option loads, it hands both to the backend:
@@ -5868,7 +5732,7 @@ class HomeTasksCard extends HTMLElement {
   async _syncImageGenerationConfig() {
     if (!this._hass || !this._config) return;
     const wanted = (this._config.columns || []).filter(
-      c => c.auto_generate_image === true && c.show_images === true && (c.list_id || c.entity_id)
+      (c) => c.auto_generate_image === true && c.show_images === true && (c.list_id || c.entity_id)
     );
     if (!wanted.length) return;
     const own = imageSettingsForLists(this);
@@ -5880,15 +5744,14 @@ class HomeTasksCard extends HTMLElement {
         const info = listInfoFor(this, col);
         const change = {};
         if (!(info && info.auto_generate_images === true)) change.auto_generate_images = true;
-        if (own && !(info && info.ai_task_entity_id === own.ai_task_entity_id
-                     && info.prompt_prefix === own.prompt_prefix)) {
+        if (own && !(info && info.ai_task_entity_id === own.ai_task_entity_id && info.prompt_prefix === own.prompt_prefix)) {
           Object.assign(change, own);
         }
-        if (!Object.keys(change).length) continue;  // the list already knows all this
+        if (!Object.keys(change).length) continue;
         await this._hass.callWS({
           type: "home_tasks/set_list_settings",
-          ...(col.entity_id ? { entity_id: col.entity_id } : { list_id: col.list_id }),
-          ...change,
+          ...col.entity_id ? { entity_id: col.entity_id } : { list_id: col.list_id },
+          ...change
         });
         if (info) Object.assign(info, change);
       }
@@ -5896,33 +5759,21 @@ class HomeTasksCard extends HTMLElement {
       console.warn("Could not sync automatic image generation:", e);
     }
   }
-
   async _loadLists() {
     const [nativeResult, externalResult] = await Promise.all([
       this._callWs("home_tasks/get_lists"),
       this._callWs("home_tasks/get_external_lists"),
       // A day plan names the lists it draws from; a list card asks which
       // plans there are, for "Plan for…".
-      this._planMode ? this._loadPlan() : this._loadPlans(),
+      this._planMode ? this._loadPlan() : this._loadPlans()
     ]);
     if (nativeResult && Array.isArray(nativeResult.lists)) {
       this._lists = nativeResult.lists;
     }
-    this._externalLists = (externalResult && Array.isArray(externalResult.external_lists))
-      ? externalResult.external_lists.filter(l => l.linked)
-      : [];
-
-    // Boot-window self-heal (#37 family): during HA startup this card — now
-    // served reliably from the browser cache — can initialize before the
-    // integration has registered its WS commands or loaded every store. The
-    // initial fetch then fails (null) or misses configured lists, and
-    // nothing else re-triggers it: the cross-device state watcher needs the
-    // very list metadata that just failed to load. Retry with backoff until
-    // the backend answers completely.
+    this._externalLists = externalResult && Array.isArray(externalResult.external_lists) ? externalResult.external_lists.filter((l) => l.linked) : [];
     const missingConfigured = !this._planMode && this._config.columns.some(
       (c) => c.list_id && !this._lists.some((l) => l.id === c.list_id)
     );
-    // Same boot window for a day plan: its entry may not be loaded yet.
     const missingPlan = this._planMode && !this._plan;
     if (nativeResult === null || externalResult === null || missingConfigured || missingPlan) {
       this._scheduleListsRetry();
@@ -5933,19 +5784,13 @@ class HomeTasksCard extends HTMLElement {
         this._listsRetryTimer = null;
       }
     }
-
-    // The list metadata the sync needs (share/auto flags) is only here now.
     this._syncImageGenerationConfig();
-
     if (this._planMode) {
-      // The plan is read; now the tasks of its lists.
       await this._loadColumnTasks();
       this._render();
       return;
     }
-
-    // Auto-select first list if no column has a list configured
-    const hasAnyList = this._config.columns.some(c => c.list_id || c.entity_id);
+    const hasAnyList = this._config.columns.some((c) => c.list_id || c.entity_id);
     if (!hasAnyList && this._lists.length > 0) {
       const newCols = [...this._config.columns];
       newCols[0] = { ...newCols[0], list_id: this._lists[0].id };
@@ -5954,12 +5799,8 @@ class HomeTasksCard extends HTMLElement {
     }
     await this._loadAllTasks();
   }
-
   _scheduleListsRetry() {
-    // 2s → 5s → 10s → 30s, then once a minute; give up after ~5 minutes
-    // (matches the register block's watch horizon). Runs as a background
-    // update so a retry never steals focus from an input mid-typing.
-    const delays = [2000, 5000, 10000, 30000, 60000, 60000, 60000, 60000];
+    const delays = [2e3, 5e3, 1e4, 3e4, 6e4, 6e4, 6e4, 6e4];
     const attempt = this._listsRetryCount || 0;
     if (attempt >= delays.length || this._listsRetryTimer) return;
     this._listsRetryCount = attempt + 1;
@@ -5967,21 +5808,21 @@ class HomeTasksCard extends HTMLElement {
       this._listsRetryTimer = null;
       if (!this.isConnected) return;
       this._bgUpdates = (this._bgUpdates || 0) + 1;
-      this._loadLists().finally(() => { this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1); });
+      this._loadLists().finally(() => {
+        this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1);
+      });
     }, delays[attempt]);
   }
-
   // What a new task on this list starts with. Only external columns need it:
   // the native path draws the task the store hands back, while the external
   // one shows a placeholder for a moment and would otherwise show a task
   // without the tags and priority it is about to get.
   async _loadListDefaults(entityId) {
-    if (this._sourceDefaults[entityId] !== undefined) return;
-    this._sourceDefaults[entityId] = null;  // in flight, ask once
+    if (this._sourceDefaults[entityId] !== void 0) return;
+    this._sourceDefaults[entityId] = null;
     const r = await this._callWs("home_tasks/get_defaults", { entity_id: entityId });
-    this._sourceDefaults[entityId] = (r && r.defaults) || null;
+    this._sourceDefaults[entityId] = r && r.defaults || null;
   }
-
   // *quiet*: a look in the background (a sensor changed, the poll). In a
   // day plan one that finds nothing new leaves the card as it is - a
   // rebuild under the pointer or mid-scroll for no change is only a flicker.
@@ -5991,41 +5832,28 @@ class HomeTasksCard extends HTMLElement {
       this._render();
       return;
     }
-    // A day plan first reads the plan: it says which lists there are, and
-    // which of them changed.
     const before = this._planJson;
     await this._loadPlan();
     const changed = await this._loadColumnTasks();
-    if (quiet && changed === 0 && before !== undefined && this._planJson === before) return;
+    if (quiet && changed === 0 && before !== void 0 && this._planJson === before) return;
     this._render();
   }
-
   // Returns how many of a day plan's lists came back different from what
   // the card held (0 for a card of lists, which renders after every load).
   async _loadColumnTasks() {
-    // The states as they are now: a day plan swaps the array when its lists
-    // change, and an answer must land in the list it was asked for.
     const states = this._columns;
-    const sources = this._planMode ? ((this._plan && this._plan.sources) || []) : null;
+    const sources = this._planMode ? this._plan && this._plan.sources || [] : null;
     let changed = 0;
     const content = (cs) => JSON.stringify([cs.tasks, cs.sections, cs.tagCatalog]);
     await Promise.all(this._config.columns.map(async (col, i) => {
       const cs = states[i];
       if (!cs) return;
-      // A day plan can draw from dozens of lists, many of them kept by a
-      // provider that takes its time. Each list is loaded again only when
-      // the plan says its tasks changed (a stamp per list), or when the card
-      // has a reason of its own to doubt its copy (cs.stale).
-      const stamp = sources ? (sources[i] && sources[i].stamp) : undefined;
-      if (sources && cs.loaded && !cs.stale && stamp !== undefined && cs.stamp === stamp) return;
+      const stamp = sources ? sources[i] && sources[i].stamp : void 0;
+      if (sources && cs.loaded && !cs.stale && stamp !== void 0 && cs.stamp === stamp) return;
       cs.stale = false;
-      // As the card holds it now - with what it changed on its own ahead of
-      // the answer (a tick shown at once), so that a refused change counts
-      // as a difference too.
       const held = sources ? content(cs) : null;
       const kept = sources ? { tasks: cs.tasks, sections: cs.sections, tagCatalog: cs.tagCatalog } : null;
       if (col.entity_id) {
-        // External column — fetch from external entity + overlay
         this._loadListDefaults(col.entity_id);
         const r = await this._callWs("home_tasks/get_external_tasks", { entity_id: col.entity_id });
         cs.tasks = r?.tasks ?? [];
@@ -6033,7 +5861,6 @@ class HomeTasksCard extends HTMLElement {
         cs.tagCatalog = r?.tag_catalog ?? [];
         cs.loaded = !!r;
       } else if (col.list_id) {
-        // Native column
         const r = await this._callWs("home_tasks/get_tasks", { list_id: col.list_id });
         cs.tasks = r?.tasks ?? [];
         cs.sections = r?.sections ?? [];
@@ -6046,32 +5873,24 @@ class HomeTasksCard extends HTMLElement {
       }
       if (sources) {
         cs.stamp = stamp;
-        // Asked again is not changed: the poll asks a provider every 30 s,
-        // and the same tasks back must not rebuild the card under the pointer.
         if (content(cs) !== held) changed += 1;
-        // The same tasks again: the objects stay, as with the plan above.
         else Object.assign(cs, kept);
       }
     }));
     return changed;
   }
-
   _colListId(colIdx) {
     return this._config.columns[colIdx]?.list_id;
   }
-
   // Whether the column's list takes part in the cross-list image pool. The
   // backend decides what is actually stored; the card asks the same question
   // so its optimistic update does not show an image that will never arrive.
   _colSharesImages(colIdx) {
     const col = this._config.columns[colIdx];
     if (!col) return false;
-    const info = col.entity_id
-      ? (this._externalLists || []).find(l => l.entity_id === col.entity_id)
-      : (this._lists || []).find(l => l.id === col.list_id);
+    const info = col.entity_id ? (this._externalLists || []).find((l) => l.entity_id === col.entity_id) : (this._lists || []).find((l) => l.id === col.list_id);
     return info ? info.share_images !== false : true;
   }
-
   // Identity of the list a column shows, for deciding which columns hold the
   // same task. Task ids are only unique within a list — external providers
   // hand out their own uids and two of them can collide — so anything that
@@ -6083,7 +5902,6 @@ class HomeTasksCard extends HTMLElement {
     if (col.list_id) return `native:${col.list_id}`;
     return null;
   }
-
   // Enter inside the add-row date/time inputs: _render defers rebuilds while
   // a date/time input has focus (its segment state would be lost), which
   // would swallow the render that shows the new task. Hand focus to the
@@ -6091,67 +5909,82 @@ class HomeTasksCard extends HTMLElement {
   _addTaskFromDueRow(colIdx) {
     const titleInput = this.shadowRoot.querySelector(`.add-input[data-focus-key="add_task_col_${colIdx}"]`);
     if (titleInput) {
-      try { titleInput.focus(); } catch (_) { /* best-effort */ }
+      try {
+        titleInput.focus();
+      } catch (_) {
+      }
     } else {
       const active = this.shadowRoot.activeElement;
       if (active && active.blur) active.blur();
     }
     return this._addTask(colIdx);
   }
-
   _nudgeAddInput(colIdx) {
     const el = this.shadowRoot?.querySelector(
       `.add-input[data-focus-key="add_task_col_${colIdx}"]`
     );
     if (!el) return;
-    try { el.focus(); } catch (_) { /* focus is a nicety, never a failure */ }
+    try {
+      el.focus();
+    } catch (_) {
+    }
     el.classList.remove("nudge");
-    void el.offsetWidth;  // restart the animation if it is already running
+    void el.offsetWidth;
     el.classList.add("nudge");
     setTimeout(() => el.classList.remove("nudge"), 700);
   }
-
   // show_add_details: a new task is drafted under the add row with the same
   // detail fields as an existing one, and only created on Add.
   async _openDraft(colIdx) {
     const cs = this._columns[colIdx];
-    // An empty field is fine: the title can follow in it (Add nudges if not).
     const title = (cs.newTaskTitle || "").trim();
     const isExt = this._isExternalCol(colIdx);
-    // The list's defaults as they are now, so the draft shows what the task
-    // will get (a linked list's cached ones may be stale, or not loaded).
-    const r = await this._callWs("home_tasks/get_defaults",
-      isExt ? { entity_id: this._colEntityId(colIdx) } : { list_id: this._colListId(colIdx) });
-    const defaults = (r && r.defaults) || {};
+    const r = await this._callWs(
+      "home_tasks/get_defaults",
+      isExt ? { entity_id: this._colEntityId(colIdx) } : { list_id: this._colListId(colIdx) }
+    );
+    const defaults = r && r.defaults || {};
     if (isExt && r) this._sourceDefaults[this._colEntityId(colIdx)] = r.defaults || null;
     const person = this._autoAssignPerson(colIdx);
-    const people = person ? [person] : [...(defaults.assignees || (defaults.assignee ? [defaults.assignee] : []))];
+    const people = person ? [person] : [...defaults.assignees || (defaults.assignee ? [defaults.assignee] : [])];
     const { addDue, addDueTime } = this._addRowDue(colIdx);
     cs.draft = {
-      id: `__draft__${colIdx}`, _draft: true, title, completed: false, notes: "", sub_items: [],
-      due_date: addDue, due_time: addDueTime, priority: defaults.priority ?? null,
-      tags: [...(defaults.tags || [])], reminders: [...(defaults.reminders || [])],
-      section_id: defaults.section_id || null, assigned_person: people[0] || null,
+      id: `__draft__${colIdx}`,
+      _draft: true,
+      title,
+      completed: false,
+      notes: "",
+      sub_items: [],
+      due_date: addDue,
+      due_time: addDueTime,
+      priority: defaults.priority ?? null,
+      tags: [...defaults.tags || []],
+      reminders: [...defaults.reminders || []],
+      section_id: defaults.section_id || null,
+      assigned_person: people[0] || null,
       assigned_persons: people,
-      recurrence_enabled: false, recurrence_value: 1, recurrence_unit: null, recurrence_type: "interval",
+      recurrence_enabled: false,
+      recurrence_value: 1,
+      recurrence_unit: null,
+      recurrence_type: "interval",
       recurrence_weekdays: [],
       // What the list fills in by itself: a field the draft empties is
       // cleared again once the task exists (see _saveDraft).
-      _defaults: defaults,
+      _defaults: defaults
     };
     cs.newTaskTitle = "";
     cs.newTaskDue = "";
     cs.newTaskDueTime = "";
     cs.taskSearchQuery = "";
     this._render();
-    // The field is now the draft's title: ready for typing it. A frame later,
-    // as the browser ignores focus() on the freshly rebuilt card.
     requestAnimationFrame(() => {
       const input = this.shadowRoot?.querySelector(`.add-input[data-focus-key="add_task_col_${colIdx}"]`);
-      try { input?.focus(); } catch (_) { /* focus is a nicety, never a failure */ }
+      try {
+        input?.focus();
+      } catch (_) {
+      }
     });
   }
-
   // Closes the draft. With giveBack, its title and due date stay in the add
   // row (Cancel, Escape, or the pencil again); without, the draft is dropped
   // (the add row's clear).
@@ -6161,7 +5994,6 @@ class HomeTasksCard extends HTMLElement {
     if (!draft) return;
     if (giveBack) {
       cs.newTaskTitle = draft.title || "";
-      // Text in the field searches, as typed or dictated text does.
       if (this._config.columns[colIdx].show_task_search !== false) cs.taskSearchQuery = cs.newTaskTitle.trim();
       if (this._config.columns[colIdx].show_add_due === true) {
         cs.newTaskDue = draft.due_date || "";
@@ -6171,7 +6003,6 @@ class HomeTasksCard extends HTMLElement {
     cs.draft = null;
     this._render();
   }
-
   // The draft's title is the add row's field (see _buildColumnAddTask); the
   // panel holds its detail fields.
   _buildDraftPanel(cs, colIdx) {
@@ -6182,26 +6013,24 @@ class HomeTasksCard extends HTMLElement {
     cancelBtn.addEventListener("click", () => this._closeDraft(colIdx, true));
     return this._el("div", { className: "task-draft" }, [
       this._buildTaskDetails(draft, colIdx, { draft: true }),
-      this._el("div", { className: "draft-actions" }, [cancelBtn, addBtn]),
+      this._el("div", { className: "draft-actions" }, [cancelBtn, addBtn])
     ]);
   }
-
   async _saveDraft(colIdx) {
     const cs = this._columns[colIdx];
     const draft = cs.draft;
     if (!draft || draft._saving) return;
     const title = (draft.title || "").trim();
-    if (!title) { this._nudgeAddInput(colIdx); return; }
+    if (!title) {
+      this._nudgeAddInput(colIdx);
+      return;
+    }
     const base = {};
     for (const k of ["due_date", "due_time", "notes", "priority", "tags", "reminders", "assigned_persons"]) {
       const v = draft[k];
-      if (v !== null && v !== undefined && v !== "" && !(Array.isArray(v) && !v.length)) base[k] = v;
+      if (v !== null && v !== void 0 && v !== "" && !(Array.isArray(v) && !v.length)) base[k] = v;
     }
     if (!base.due_date) delete base.due_time;
-    // After creating: what the list would fill in by itself but the draft
-    // left empty is cleared again, and recurrence is set - one routed update,
-    // which takes every recurrence field on both kinds of list (creating an
-    // external task does not).
     const d = draft._defaults || {};
     const after = {};
     if (draft.priority == null && d.priority) after.priority = null;
@@ -6220,8 +6049,11 @@ class HomeTasksCard extends HTMLElement {
     let newId;
     try {
       if (isExt) {
-        const res = await this._callWs("home_tasks/create_external_task",
-          { entity_id: this._colEntityId(colIdx), title, ...base }, { rethrow: true });
+        const res = await this._callWs(
+          "home_tasks/create_external_task",
+          { entity_id: this._colEntityId(colIdx), title, ...base },
+          { rethrow: true }
+        );
         newId = res?.uid;
       } else {
         const payload = { list_id: this._colListId(colIdx), title, ...base };
@@ -6230,31 +6062,27 @@ class HomeTasksCard extends HTMLElement {
         newId = res?.id;
       }
     } catch (err) {
-      // Nothing was created: the draft stays for another try.
       draft._saving = false;
       this._showError(this._t("add_failed"));
       return;
     }
-    // The task exists from here on, so the draft closes even if what follows
-    // fails - Add again would create it twice. A failure is reported instead.
     try {
       if (newId && isExt && (draft.section_id || d.section_id)) {
-        // Sections of an external list live in the overlay only.
-        await this._callWs("home_tasks/update_external_overlay",
+        await this._callWs(
+          "home_tasks/update_external_overlay",
           { entity_id: this._colEntityId(colIdx), task_uid: newId, section_id: draft.section_id || null },
-          { rethrow: true });
+          { rethrow: true }
+        );
       }
       if (newId && Object.keys(after).length) await this._updateTaskRouted(colIdx, newId, after, { rethrow: true });
     } catch (err) {
       this._showError(this._t("draft_details_failed"));
     }
-    // Only this draft: one opened while it was saving stays.
     if (cs.draft === draft) cs.draft = null;
     if (this._isExternalCol(colIdx)) this._reloadExternal(colIdx);
     else await this._loadAllTasks();
     this._render();
   }
-
   // Auto-assign: the one person active in the person filter, or else the
   // column's one preset assignee unless this card doesn't offer them
   // (hidden_persons). null when neither applies.
@@ -6262,67 +6090,60 @@ class HomeTasksCard extends HTMLElement {
     const cs = this._columns[colIdx];
     const col = this._config.columns[colIdx];
     if (cs.personFilters.size === 1) return [...cs.personFilters][0];
-    if (cs.personFilters.size === 0 && col.filters?.assignees?.length === 1
-        && !(col.hidden_persons || []).includes(col.filters.assignees[0])) {
+    if (cs.personFilters.size === 0 && col.filters?.assignees?.length === 1 && !(col.hidden_persons || []).includes(col.filters.assignees[0])) {
       return col.filters.assignees[0];
     }
     return null;
   }
-
   // Due date chosen in the add row (issue #38) — only when the option is
   // on and the column supports due dates; a time without a date is ignored.
   _addRowDue(colIdx) {
     const cs = this._columns[colIdx];
     const col = this._config.columns[colIdx];
-    const addDue = (col.show_add_due === true && this._colSupportsDue(colIdx) && cs.newTaskDue) ? cs.newTaskDue : null;
-    const addDueTime = (addDue && cs.newTaskDueTime && this._colSupportsDueTime(colIdx)) ? cs.newTaskDueTime : null;
+    const addDue = col.show_add_due === true && this._colSupportsDue(colIdx) && cs.newTaskDue ? cs.newTaskDue : null;
+    const addDueTime = addDue && cs.newTaskDueTime && this._colSupportsDueTime(colIdx) ? cs.newTaskDueTime : null;
     return { addDue, addDueTime };
   }
-
   async _addTask(colIdx) {
     const cs = this._columns[colIdx];
     const title = cs.newTaskTitle.trim();
     if (!title) {
-      // Pressing + with an empty field used to do nothing at all, which
-      // reads as a dead button (issue #59). Put the cursor where the text
-      // belongs and nudge the field so the eye follows it.
       this._nudgeAddInput(colIdx);
       return;
     }
-    // Adding a task clears any active search.
     cs.taskSearchQuery = "";
     if (!this._colListId(colIdx) && !this._colEntityId(colIdx)) return;
-
-    // Capture add-input position for the entry animation
     const addInput = this.shadowRoot.querySelector(`.add-input[data-focus-key="add_task_col_${colIdx}"]`);
     const addInputRect = addInput ? addInput.getBoundingClientRect() : null;
-
-    // Snapshot existing task positions (they may shift when new task is inserted)
     const before = this._captureListFlip(colIdx);
-
     const col = this._config.columns[colIdx];
     const autoAssignPerson = this._autoAssignPerson(colIdx);
     const { addDue, addDueTime } = this._addRowDue(colIdx);
-    const resetAddDue = () => { cs.newTaskDue = ""; cs.newTaskDueTime = ""; };
-
+    const resetAddDue = () => {
+      cs.newTaskDue = "";
+      cs.newTaskDueTime = "";
+    };
     let result;
     if (this._isExternalCol(colIdx)) {
-      // Optimistic: insert a placeholder task immediately so the user
-      // sees it appear without waiting for the API round-trip.
       const tempId = "_pending_" + Date.now();
-      // The list's own defaults, so the row that appears is the row that will
-      // be there after the reload rather than a barer version of it.
       const listDefaults = this._sourceDefaults[this._colEntityId(colIdx)] || {};
       cs.tasks.push({
-        id: tempId, title, completed: false, notes: "", due_date: addDue,
-        due_time: addDueTime, sort_order: cs.tasks.length, sub_items: [],
+        id: tempId,
+        title,
+        completed: false,
+        notes: "",
+        due_date: addDue,
+        due_time: addDueTime,
+        sort_order: cs.tasks.length,
+        sub_items: [],
         priority: listDefaults.priority ?? null,
-        tags: [...(listDefaults.tags || [])],
-        reminders: [...(listDefaults.reminders || [])],
+        tags: [...listDefaults.tags || []],
+        reminders: [...listDefaults.reminders || []],
         section_id: listDefaults.section_id || null,
         assigned_person: autoAssignPerson || listDefaults.assignee || null,
-        assigned_persons: autoAssignPerson ? [autoAssignPerson] : [...(listDefaults.assignees || [])],
-        recurrence_enabled: false, _external: true,
+        assigned_persons: autoAssignPerson ? [autoAssignPerson] : [...listDefaults.assignees || []],
+        recurrence_enabled: false,
+        _external: true
       });
       const typed = { title, due: cs.newTaskDue, dueTime: cs.newTaskDueTime };
       cs.newTaskTitle = "";
@@ -6333,21 +6154,18 @@ class HomeTasksCard extends HTMLElement {
       this._justAddedTaskId = null;
       this._addInputRect = null;
       this._applyFlip(before, colIdx, 0.25);
-
-      // Send to API in background, then reload to get the real ID
       let addError = null;
       try {
         const payload = { entity_id: this._colEntityId(colIdx), title };
         if (autoAssignPerson) payload.assigned_person = autoAssignPerson;
-        if (addDue) { payload.due_date = addDue; if (addDueTime) payload.due_time = addDueTime; }
+        if (addDue) {
+          payload.due_date = addDue;
+          if (addDueTime) payload.due_time = addDueTime;
+        }
         result = await this._callWs("home_tasks/create_external_task", payload, { rethrow: true });
       } catch (err) {
         addError = err;
       }
-      // Refused: say so, take the placeholder row back off and hand the
-      // typed text back, so the next attempt is one keypress and not a
-      // retype (issue #59). A timeout is not a refusal - the provider may
-      // have created the task, and the reload below will show it.
       if (!result && !this._isWsTimeout(addError)) {
         cs.tasks = cs.tasks.filter((t) => t.id !== tempId);
         cs.newTaskTitle = typed.title;
@@ -6357,18 +6175,16 @@ class HomeTasksCard extends HTMLElement {
         this._render();
       }
       this._reloadExternal(colIdx);
-      // C12 for external lists: the provider assigns the uid, and the card
-      // only sees the real task after the reload above — the row on screen is
-      // still the placeholder with a temporary id. Hand the generation the
-      // uid and let it wait for the task to arrive.
-      if (result?.uid && col.auto_generate_image && col.show_images === true
-          && this._config.image_generation?.entity_id) {
+      if (result?.uid && col.auto_generate_image && col.show_images === true && this._config.image_generation?.entity_id) {
         this._autoGenerateExternalImage(colIdx, String(result.uid));
       }
     } else {
       const payload = { list_id: this._colListId(colIdx), title };
       if (autoAssignPerson) payload.assigned_person = autoAssignPerson;
-      if (addDue) { payload.due_date = addDue; if (addDueTime) payload.due_time = addDueTime; }
+      if (addDue) {
+        payload.due_date = addDue;
+        if (addDueTime) payload.due_time = addDueTime;
+      }
       let addError = null;
       try {
         result = await this._callWs("home_tasks/add_task", payload, { rethrow: true });
@@ -6384,21 +6200,16 @@ class HomeTasksCard extends HTMLElement {
         this._justAddedTaskId = null;
         this._addInputRect = null;
         this._applyFlip(before, colIdx, 0.25);
-        // C12: optionally auto-generate an AI image for the new task.
-        if (result && col.auto_generate_image && col.show_images === true
-            && this._config.image_generation?.entity_id) {
+        if (result && col.auto_generate_image && col.show_images === true && this._config.image_generation?.entity_id) {
           this._generateTaskImage(result, colIdx);
         }
       } else if (this._isWsTimeout(addError)) {
-        // We stopped waiting, the store may still have it: show what is
-        // there rather than claiming a failure. The typed title stays.
         await this._loadAllTasks();
       } else {
         this._showError(this._t("add_failed"));
       }
     }
   }
-
   // Wrapper around the toggle logic: ticking off a task you searched for
   // ends the search, so the section view comes back instead of leaving you
   // on a result that is now done. Only when the task was really completed —
@@ -6416,57 +6227,36 @@ class HomeTasksCard extends HTMLElement {
       this._render();
     }
   }
-
   // Returns whether the task actually changed state (false = the user
   // cancelled the confirm_complete prompt).
   async _toggleTaskCore(taskId, completed, colIdx) {
     const col = this._config.columns[colIdx];
     const cs = this._columns[colIdx];
     const newCompleted = !completed;
-    const task = cs.tasks.find(t => t.id === taskId);
+    const task = cs.tasks.find((t) => t.id === taskId);
     const hasRecurrence = task && task.recurrence_enabled && task.recurrence_unit;
-
-    // Opt-in guard against accidental taps (issue #29). Default off; the
-    // checkbox/swipe/long-press paths all funnel through here, so one
-    // prompt covers them all. On cancel, re-render to restore the checkbox
-    // the click already flipped.
     if (newCompleted && col.confirm_complete === true) {
       const ok = await this._confirmDialog(
         this._t("confirm_complete_msg", task ? task.title : ""),
-        this._t("confirm_complete_ok"),
+        this._t("confirm_complete_ok")
       );
       if (!ok) {
         this._render();
         return false;
       }
     }
-
-    // auto_delete path → route through _deleteTask to reuse exit animation
     if (newCompleted && col.auto_delete_completed && !hasRecurrence) {
       await this._deleteTask(taskId, colIdx);
       return true;
     }
-
-    // Snapshot all visible task positions for FLIP (completion/reopen moves the task)
     const before = this._captureListFlip(colIdx);
-
     if (this._isExternalCol(colIdx) && task) {
-      // Recurring tasks: providers like Todoist DON'T close a recurring task
-      // on complete — they advance the due_date to the next occurrence and
-      // leave the task open.  Rendering "completed=true" locally would make
-      // the task flash as ticked and then jump back to open on the next reload.
-      // Skip the optimistic flip and let the post-write reload show the real
-      // (advanced) state.
       if (newCompleted && hasRecurrence) {
         await this._updateTaskRouted(colIdx, taskId, { completed: newCompleted });
         await this._reloadExternal(colIdx);
         this._applyFlip(before, colIdx, 0.28);
         return true;
       }
-
-      // Optimistic update for non-recurring external tasks: render new state
-      // immediately, then sync to provider.  External service calls have
-      // latency; the entity may not reflect the change right away.
       task.completed = newCompleted;
       this._render();
       this._applyFlip(before, colIdx, 0.28);
@@ -6479,128 +6269,94 @@ class HomeTasksCard extends HTMLElement {
     }
     return true;
   }
-
   async _updateTaskTitle(taskId, title, colIdx) {
     if (!title.trim()) return;
-    const task = this._columns[colIdx]?.tasks?.find(t => t.id === taskId);
+    const task = this._columns[colIdx]?.tasks?.find((t) => t.id === taskId);
     if (task) task.title = title.trim();
     this._editingTaskId = null;
     this._render();
     await this._updateTaskRouted(colIdx, taskId, { title: title.trim() });
     if (this._isExternalCol(colIdx)) this._reloadExternal(colIdx);
   }
-
   async _updateTaskNotes(taskId, notes, colIdx) {
-    // Optimistic local update — must happen before the await so a deferred
-    // render (triggered by focusout) picks up the user's value, not stale poll data.
-    const task = this._columns[colIdx]?.tasks?.find(t => t.id === taskId);
+    const task = this._columns[colIdx]?.tasks?.find((t) => t.id === taskId);
     if (task) task.notes = notes;
     await this._updateTaskRouted(colIdx, taskId, { notes });
   }
-
   async _updateTaskDue(taskId, dueDate, dueTime, colIdx) {
-    // Optimistic local update
-    const task = this._columns[colIdx]?.tasks?.find(t => t.id === taskId);
+    const task = this._columns[colIdx]?.tasks?.find((t) => t.id === taskId);
     if (task) {
       task.due_date = dueDate || null;
-      task.due_time = dueDate ? (dueTime || null) : null;
+      task.due_time = dueDate ? dueTime || null : null;
     }
     await this._updateTaskRouted(colIdx, taskId, {
       due_date: dueDate || null,
-      due_time: dueDate ? (dueTime || null) : null,
+      due_time: dueDate ? dueTime || null : null
     });
     if (this._isExternalCol(colIdx)) {
       this._reloadExternal();
     }
   }
-
   async _deleteTask(taskId, colIdx) {
     const taskEl = this.shadowRoot.querySelector(
       `.task[data-task-id="${CSS.escape(String(taskId))}"]`
     );
-
     if (taskEl) {
-      // Snapshot positions of all OTHER tasks (deleted task still occupies layout space)
       const before = this._captureListFlip(colIdx);
-      before.delete(String(taskId)); // exclude the task being deleted
-
-      // Animate the task out
-      await new Promise(resolve => {
+      before.delete(String(taskId));
+      await new Promise((resolve) => {
         taskEl.style.transition = "opacity 0.18s ease, transform 0.18s ease";
         taskEl.style.opacity = "0";
         taskEl.style.transform = "scale(0.95)";
         taskEl.addEventListener("transitionend", resolve, { once: true });
-        setTimeout(resolve, 250); // safety fallback
+        setTimeout(resolve, 250);
       });
-
-      // Optimistic: remove locally so surviving tasks animate up immediately,
-      // without waiting for the server round-trip.
       const cs = this._columns[colIdx];
-      if (cs?.tasks) cs.tasks = cs.tasks.filter(t => String(t.id) !== String(taskId));
-      // On a day plan the row goes with the task; otherwise it would show
-      // for a moment as a row whose list has not answered.
+      if (cs?.tasks) cs.tasks = cs.tasks.filter((t) => String(t.id) !== String(taskId));
       if (this._planMode) this._planForget(taskId, colIdx);
       this._expandedTasks.delete(taskId);
       this._render();
       this._applyFlip(before, colIdx, 0.22);
-
-      // Sync with server in the background (re-render after reload is harmless
-      // since the FLIP animation will have completed by then).
       await this._deleteTaskCmd(colIdx, taskId);
-      // The row was taken out of the card's copy of the plan above. Deleted
-      // or not, the plan as it reads now replaces that copy.
       if (this._planMode) this._planJson = null;
       await this._loadAllTasks();
-
     } else {
-      // Fallback: task not in DOM, delete without animation
       await this._deleteTaskCmd(colIdx, taskId);
       this._expandedTasks.delete(taskId);
       await this._loadAllTasks();
     }
   }
-
   async _addSubTask(taskId, colIdx) {
     const title = this._t("new_sub_item");
     const tempId = "_pending_sub_" + Date.now();
-
-    // Optimistic: insert placeholder sub-task immediately
     const cs = this._columns[colIdx];
-    const task = cs.tasks.find(t => t.id === taskId);
+    const task = cs.tasks.find((t) => t.id === taskId);
     if (task) {
       if (!task.sub_items) task.sub_items = [];
       task.sub_items.push({ id: tempId, title, completed: false });
       this._editingSubTaskId = tempId;
       this._render();
     }
-
-    // Send to backend in background, then swap temp ID for real ID
-    // without a full reload (which would destroy the active input).
     let result;
     if (this._isExternalCol(colIdx)) {
       result = await this._callWs("home_tasks/add_external_sub_task", {
         entity_id: this._colEntityId(colIdx),
         task_uid: taskId,
-        title,
+        title
       });
     } else {
       result = await this._callWs("home_tasks/add_sub_task", {
         list_id: this._colListId(colIdx),
         task_id: taskId,
-        title,
+        title
       });
     }
     if (result && task) {
-      // Replace temp ID with real ID in local data — no DOM rebuild needed
-      const sub = task.sub_items.find(s => s.id === tempId);
+      const sub = task.sub_items.find((s) => s.id === tempId);
       if (sub) sub.id = result.id;
       if (this._editingSubTaskId === tempId) {
         this._editingSubTaskId = result.id;
       }
-      // Keep DOM identifiers in sync so a later unrelated _render's
-      // focus-restore can find the element: data-focus-key on the
-      // input (format "sub_title_<id>") and data-sub-task-id on the
-      // .sub-task wrapper both carried the temp id.
       const root = this.shadowRoot;
       const editedInput = root?.querySelector(`[data-focus-key="sub_title_${CSS.escape(tempId)}"]`);
       if (editedInput) editedInput.setAttribute("data-focus-key", `sub_title_${result.id}`);
@@ -6608,11 +6364,9 @@ class HomeTasksCard extends HTMLElement {
       if (subEl) subEl.dataset.subTaskId = result.id;
     }
   }
-
   async _toggleSubTask(taskId, subItemId, completed, colIdx) {
-    // Optimistic local update
-    const task = this._columns[colIdx]?.tasks?.find(t => t.id === taskId);
-    const sub = task?.sub_items?.find(s => s.id === subItemId);
+    const task = this._columns[colIdx]?.tasks?.find((t) => t.id === taskId);
+    const sub = task?.sub_items?.find((s) => s.id === subItemId);
     if (sub) sub.completed = !completed;
     this._render();
     if (this._isExternalCol(colIdx)) {
@@ -6620,22 +6374,21 @@ class HomeTasksCard extends HTMLElement {
         entity_id: this._colEntityId(colIdx),
         task_uid: taskId,
         sub_task_id: subItemId,
-        completed: !completed,
+        completed: !completed
       });
     } else {
       await this._callWs("home_tasks/update_sub_task", {
         list_id: this._colListId(colIdx),
         task_id: taskId,
         sub_task_id: subItemId,
-        completed: !completed,
+        completed: !completed
       });
     }
   }
-
   async _updateSubTaskTitle(taskId, subItemId, title, colIdx) {
     if (!title.trim()) return;
-    const task = this._columns[colIdx]?.tasks?.find(t => t.id === taskId);
-    const sub = task?.sub_items?.find(s => s.id === subItemId);
+    const task = this._columns[colIdx]?.tasks?.find((t) => t.id === taskId);
+    const sub = task?.sub_items?.find((s) => s.id === subItemId);
     if (sub) sub.title = title.trim();
     this._editingSubTaskId = null;
     this._render();
@@ -6644,64 +6397,60 @@ class HomeTasksCard extends HTMLElement {
         entity_id: this._colEntityId(colIdx),
         task_uid: taskId,
         sub_task_id: subItemId,
-        title: title.trim(),
+        title: title.trim()
       });
     } else {
       await this._callWs("home_tasks/update_sub_task", {
         list_id: this._colListId(colIdx),
         task_id: taskId,
         sub_task_id: subItemId,
-        title: title.trim(),
+        title: title.trim()
       });
     }
   }
-
   async _deleteSubTask(taskId, subItemId, colIdx) {
-    // Optimistic local update
-    const task = this._columns[colIdx]?.tasks?.find(t => t.id === taskId);
+    const task = this._columns[colIdx]?.tasks?.find((t) => t.id === taskId);
     if (task?.sub_items) {
-      task.sub_items = task.sub_items.filter(s => s.id !== subItemId);
+      task.sub_items = task.sub_items.filter((s) => s.id !== subItemId);
     }
     this._render();
     if (this._isExternalCol(colIdx)) {
       await this._callWs("home_tasks/delete_external_sub_task", {
         entity_id: this._colEntityId(colIdx),
         task_uid: taskId,
-        sub_task_id: subItemId,
+        sub_task_id: subItemId
       });
     } else {
       await this._callWs("home_tasks/delete_sub_task", {
         list_id: this._colListId(colIdx),
         task_id: taskId,
-        sub_task_id: subItemId,
+        sub_task_id: subItemId
       });
     }
   }
-
   async _reorderSubTasks(taskId, subTaskIds, colIdx) {
     if (this._isExternalCol(colIdx)) {
       await this._callWs("home_tasks/reorder_external_sub_tasks", {
         entity_id: this._colEntityId(colIdx),
         task_uid: taskId,
-        sub_task_ids: subTaskIds,
+        sub_task_ids: subTaskIds
       });
     } else {
       await this._callWs("home_tasks/reorder_sub_tasks", {
         list_id: this._colListId(colIdx),
         task_id: taskId,
-        sub_task_ids: subTaskIds,
+        sub_task_ids: subTaskIds
       });
     }
     const tasks = this._columns[colIdx]?.tasks;
     if (tasks) {
-      const task = tasks.find(t => t.id === taskId);
+      const task = tasks.find((t) => t.id === taskId);
       if (task && task.sub_items) {
-        const idToSub = Object.fromEntries(task.sub_items.map(s => [s.id, s]));
-        task.sub_items = subTaskIds.map(id => idToSub[id]).filter(Boolean);
+        const idToSub = Object.fromEntries(task.sub_items.map((s) => [s.id, s]));
+        task.sub_items = subTaskIds.map((id) => idToSub[id]).filter(Boolean);
       }
     }
   }
-
   // Apply pending section_id changes to tasks that crossed a section header
   // during the drag, then persist the new order. Tasks dropped under the
   // global Done header keep their original section_id so reactivation
@@ -6715,7 +6464,7 @@ class HomeTasksCard extends HTMLElement {
     for (const { taskId, sectionId } of sectionedOrder) {
       const task = tasksById.get(taskId);
       if (!task) continue;
-      if (sectionId === "__done__") continue; // dropped onto Done header — leave section_id alone
+      if (sectionId === "__done__") continue;
       const targetSectionId = sectionId && knownSectionIds.has(sectionId) ? sectionId : null;
       const currentSectionId = task.section_id || null;
       if (targetSectionId !== currentSectionId) {
@@ -6733,51 +6482,47 @@ class HomeTasksCard extends HTMLElement {
     const fullOrder = this._mergeHiddenTasks(colIdx, visibleOrder, draggedId);
     await this._reorderTasks(fullOrder, colIdx);
   }
-
   // A task's section: ours alone, so on a linked list it lives in the
   // overlay, never at the provider.
   async _saveSectionId(colIdx, taskId, sectionId) {
     const draft = this._draftFor(colIdx, taskId);
-    if (draft) { draft.section_id = sectionId; return; }
+    if (draft) {
+      draft.section_id = sectionId;
+      return;
+    }
     if (this._isExternalCol(colIdx)) {
       await this._callWs("home_tasks/update_external_overlay", {
         entity_id: this._colEntityId(colIdx),
         task_uid: taskId,
-        section_id: sectionId,
+        section_id: sectionId
       });
     } else {
       await this._callWs("home_tasks/update_task", {
         list_id: this._colListId(colIdx),
         task_id: taskId,
-        section_id: sectionId,
+        section_id: sectionId
       });
     }
   }
-
   async _reorderTasks(taskIds, colIdx) {
     if (this._isExternalCol(colIdx)) {
-      // Route through backend adapter — it decides whether to use
-      // the provider API, todo/item/move, or overlay sort_order.
       await this._callWs("home_tasks/reorder_external_tasks", {
         entity_id: this._colEntityId(colIdx),
-        task_uids: taskIds,
+        task_uids: taskIds
       });
     } else {
       const listId = this._colListId(colIdx);
       if (!listId) return;
       await this._callWs("home_tasks/reorder_tasks", {
         list_id: listId,
-        task_ids: taskIds,
+        task_ids: taskIds
       });
     }
     await this._loadAllTasks();
   }
-
   async _moveTask(srcColIdx, tgtColIdx, taskId, targetTaskIds) {
     const srcIsExternal = this._isExternalCol(srcColIdx);
     const tgtIsExternal = this._isExternalCol(tgtColIdx);
-
-    // Build the move command payload
     const payload = { task_id: taskId };
     if (srcIsExternal) {
       payload.source_entity_id = this._colEntityId(srcColIdx);
@@ -6789,7 +6534,6 @@ class HomeTasksCard extends HTMLElement {
     } else {
       payload.target_list_id = this._colListId(tgtColIdx);
     }
-
     if (!payload.source_list_id && !payload.source_entity_id) {
       this._showError("Cannot move task: source list not configured");
       await this._loadAllTasks();
@@ -6800,45 +6544,32 @@ class HomeTasksCard extends HTMLElement {
       await this._loadAllTasks();
       return;
     }
-    // Dropped among the target's tasks: the section it was dropped in wins
-    // (null = the unsorted top). Not there, or under Done: the backend keeps
-    // a section of the same name.
-    const dropped = this._getOrderWithSectionFromDom(tgtColIdx)
-      .find((p) => String(p.taskId) === String(taskId));
+    const dropped = this._getOrderWithSectionFromDom(tgtColIdx).find((p) => String(p.taskId) === String(taskId));
     if (dropped && dropped.sectionId !== "__done__") payload.section = dropped.sectionId;
-
-    // Shared executor: fast path vs cross routing + error toast. A failed
-    // move skips the reorder and just reloads the authoritative state.
-    if (!(await this._execMove(payload))) {
+    if (!await this._execMove(payload)) {
       await this._loadAllTasks();
       if (srcIsExternal || tgtIsExternal) this._reloadExternal();
       return;
     }
-
-    // Reorder target list if needed
     if (targetTaskIds.length > 0) {
       if (tgtIsExternal) {
         await this._callWs("home_tasks/reorder_external_tasks", {
           entity_id: this._colEntityId(tgtColIdx),
-          task_uids: targetTaskIds,
+          task_uids: targetTaskIds
         });
       } else {
         await this._callWs("home_tasks/reorder_tasks", {
           list_id: this._colListId(tgtColIdx),
-          task_ids: targetTaskIds,
+          task_ids: targetTaskIds
         });
       }
     }
-
     await this._loadAllTasks();
-    // External providers need a delayed reload to pick up confirmed state
     if (srcIsExternal || tgtIsExternal) {
       this._reloadExternal();
     }
   }
-
   // --- Filter & Sort ---
-
   _preFilteredTasks(colIdx) {
     const cs = this._columns[colIdx];
     const col = this._config.columns[colIdx];
@@ -6855,7 +6586,6 @@ class HomeTasksCard extends HTMLElement {
     }
     return tasks;
   }
-
   _filteredTasks(colIdx) {
     const cs = this._columns[colIdx];
     const baseTasks = this._preFilteredTasks(colIdx);
@@ -6871,9 +6601,8 @@ class HomeTasksCard extends HTMLElement {
         const col = this._config.columns[colIdx];
         const days = col.due_soon_days ?? 7;
         const hideOverdue = col.hide_overdue === true;
-        tasks = baseTasks.filter((t) =>
-          !t.completed && t.due_date &&
-          ((!hideOverdue && this._isDueDateOverdue(t.due_date)) || this._isDueDateWithinDays(t.due_date, days))
+        tasks = baseTasks.filter(
+          (t) => !t.completed && t.due_date && (!hideOverdue && this._isDueDateOverdue(t.due_date) || this._isDueDateWithinDays(t.due_date, days))
         );
         break;
       }
@@ -6884,14 +6613,9 @@ class HomeTasksCard extends HTMLElement {
       tasks = tasks.filter((t) => t.tags && t.tags.some((tag) => cs.tagFilters.has(tag)));
     }
     if (cs.personFilters.size > 0) {
-      // A shared task shows under each of its assignees.
       tasks = tasks.filter((t) => _assignees(t).some((p) => cs.personFilters.has(p)));
     }
     const cmp = this._buildSortComparator(colIdx);
-    // overdue_first (issue #57): open overdue tasks lead, oldest due date
-    // first, whatever the chosen sort — the counterpart of completed tasks
-    // sinking to the bottom.  "Overdue" is the card's usual meaning (due
-    // date before today, like the red badge and the overdue sensor).
     const overdueFirst = this._config?.columns?.[colIdx]?.overdue_first === true;
     const overdue = (t) => overdueFirst && !t.completed && this._isDueDateOverdue(t.due_date);
     return tasks.slice().sort((a, b) => {
@@ -6906,66 +6630,62 @@ class HomeTasksCard extends HTMLElement {
       return cmp(a, b);
     });
   }
-
   _buildSortComparator(colIdx) {
     const sortBy = this._columns[colIdx].sortBy;
     switch (sortBy) {
-      case "due": return (a, b) => {
-        const da = a.due_date ? a.due_date + "T" + (a.due_time || "00:00") : null;
-        const db = b.due_date ? b.due_date + "T" + (b.due_time || "00:00") : null;
-        if (da && db) return da < db ? -1 : da > db ? 1 : 0;
-        return da ? -1 : db ? 1 : 0;
-      };
-      case "priority": return (a, b) => {
-        const pa = a.priority ?? 0;
-        const pb = b.priority ?? 0;
-        return pb - pa;
-      };
-      case "title": return (a, b) =>
-        (a.title || "").localeCompare(b.title || "", undefined, { sensitivity: "base" });
-      case "person": return (a, b) => {
-        const pa = a.assigned_person || "\uffff";
-        const pb = b.assigned_person || "\uffff";
-        return pa.localeCompare(pb);
-      };
-      default: return (a, b) => a.sort_order - b.sort_order;
+      case "due":
+        return (a, b) => {
+          const da = a.due_date ? a.due_date + "T" + (a.due_time || "00:00") : null;
+          const db = b.due_date ? b.due_date + "T" + (b.due_time || "00:00") : null;
+          if (da && db) return da < db ? -1 : da > db ? 1 : 0;
+          return da ? -1 : db ? 1 : 0;
+        };
+      case "priority":
+        return (a, b) => {
+          const pa = a.priority ?? 0;
+          const pb = b.priority ?? 0;
+          return pb - pa;
+        };
+      case "title":
+        return (a, b) => (a.title || "").localeCompare(b.title || "", void 0, { sensitivity: "base" });
+      case "person":
+        return (a, b) => {
+          const pa = a.assigned_person || "￿";
+          const pb = b.assigned_person || "￿";
+          return pa.localeCompare(pb);
+        };
+      default:
+        return (a, b) => a.sort_order - b.sort_order;
     }
   }
-
   // --- FLIP & Filter Animation Helpers ---
-
   _applyFlip(before, colIdx, duration = 0.3) {
     if (!before || before.size === 0) return;
-    // Guard the FLIP window: a background re-render mid-animation would wipe the
-    // transforms (intermittent missing animation). _render() defers while this
-    // is set; endFlip() clears it and flushes any deferred render afterwards.
     this._flipActive = true;
     const endFlip = () => {
       this._flipActive = false;
-      if (this._pendingRender) { this._pendingRender = false; this._render(); }
+      if (this._pendingRender) {
+        this._pendingRender = false;
+        this._render();
+      }
     };
-    // _render() rebuilds the shadow DOM via root.innerHTML="", but ha-card (a LitElement)
-    // commits its layout asynchronously. Reading getBoundingClientRect() synchronously
-    // after _render() returns 0 for all elements. One rAF is enough for the browser to
-    // flush the new layout before we measure positions.
     requestAnimationFrame(() => {
-      // Pass 1: read ALL new positions first (relative to list top — no style writes yet)
       const taskListEl = this.shadowRoot.querySelector(`.task-list[data-col-idx="${colIdx}"], .tile-grid-wrap[data-col-idx="${colIdx}"]`);
-      if (!taskListEl) { endFlip(); return; }
+      if (!taskListEl) {
+        endFlip();
+        return;
+      }
       const curRect = taskListEl.getBoundingClientRect();
-      const newPositions = new Map(); // id → { top, left } relative to container
-      const elMap = new Map();        // id → element (reused in Pass 2, avoids N re-queries)
-      taskListEl.querySelectorAll(".task[data-task-id], .task-tile[data-task-id]")
-        .forEach(el => {
-          const id = el.dataset.taskId;
-          if (id && before.has(id)) {
-            const er = el.getBoundingClientRect();
-            newPositions.set(id, { top: er.top - curRect.top, left: er.left - curRect.left });
-            elMap.set(id, el);
-          }
-        });
-      // Pass 2: apply transforms — 2D so grid tiles animate their real
-      // (diagonal/horizontal) reflow, not just vertical movement.
+      const newPositions = /* @__PURE__ */ new Map();
+      const elMap = /* @__PURE__ */ new Map();
+      taskListEl.querySelectorAll(".task[data-task-id], .task-tile[data-task-id]").forEach((el) => {
+        const id = el.dataset.taskId;
+        if (id && before.has(id)) {
+          const er = el.getBoundingClientRect();
+          newPositions.set(id, { top: er.top - curRect.top, left: er.left - curRect.left });
+          elMap.set(id, el);
+        }
+      });
       const flipEls = [];
       newPositions.forEach((np, id) => {
         const el = elMap.get(id);
@@ -6978,10 +6698,13 @@ class HomeTasksCard extends HTMLElement {
         el.style.transform = `translate(${dx}px, ${dy}px)`;
         flipEls.push(el);
       });
-      if (flipEls.length === 0) { endFlip(); return; }
-      flipEls[0].getBoundingClientRect(); // single reflow commits all start states
+      if (flipEls.length === 0) {
+        endFlip();
+        return;
+      }
+      flipEls[0].getBoundingClientRect();
       requestAnimationFrame(() => {
-        flipEls.forEach(el => {
+        flipEls.forEach((el) => {
           el.style.transition = `transform ${duration}s ease`;
           el.style.transform = "";
           el.addEventListener("transitionend", () => {
@@ -6989,32 +6712,28 @@ class HomeTasksCard extends HTMLElement {
             el.style.transform = "";
           }, { once: true });
         });
-        setTimeout(endFlip, duration * 1000 + 50);
+        setTimeout(endFlip, duration * 1e3 + 50);
       });
     });
   }
-
   _captureListFlip(colIdx) {
     const listEl = this.shadowRoot.querySelector(`.task-list[data-col-idx="${colIdx}"], .tile-grid-wrap[data-col-idx="${colIdx}"]`);
-    const before = new Map();
+    const before = /* @__PURE__ */ new Map();
     if (!listEl) return before;
-    // Cancel any in-progress FLIP transforms before reading — getBoundingClientRect()
-    // includes CSS transforms in its result, so a partially-animated transform would
-    // corrupt the snapshot and cause the next animation to overshoot.
     const tasks = listEl.querySelectorAll(".task[data-task-id], .task-tile[data-task-id]");
-    tasks.forEach(el => {
-      if (el.style.transform) { el.style.transition = "none"; el.style.transform = ""; }
+    tasks.forEach((el) => {
+      if (el.style.transform) {
+        el.style.transition = "none";
+        el.style.transform = "";
+      }
     });
-    // getBoundingClientRect() here both flushes any cleared transforms (forced layout)
-    // and reads the reference top — one reflow serves both purposes.
     const r = listEl.getBoundingClientRect();
-    tasks.forEach(el => {
+    tasks.forEach((el) => {
       const er = el.getBoundingClientRect();
       before.set(el.dataset.taskId, { top: er.top - r.top, left: er.left - r.left });
     });
     return before;
   }
-
   // Slide a newly-added task in from the add-input position. Shared by list
   // rows (.task) and tiles (.task-tile) so both views animate identically.
   _animateTaskEntry(taskId, colIdx) {
@@ -7023,24 +6742,24 @@ class HomeTasksCard extends HTMLElement {
       requestAnimationFrame(() => {
         const idEsc = CSS.escape(String(taskId));
         const el = this.shadowRoot.querySelector(
-          `.task-list[data-col-idx="${colIdx}"] .task[data-task-id="${idEsc}"], ` +
-          `.tile-grid-wrap[data-col-idx="${colIdx}"] .task-tile[data-task-id="${idEsc}"]`
+          `.task-list[data-col-idx="${colIdx}"] .task[data-task-id="${idEsc}"], .tile-grid-wrap[data-col-idx="${colIdx}"] .task-tile[data-task-id="${idEsc}"]`
         );
         if (!el) return;
         const taskTop = el.getBoundingClientRect().top;
-        const originDy = inputRect ? (inputRect.bottom - taskTop) : -30;
+        const originDy = inputRect ? inputRect.bottom - taskTop : -30;
         el.style.transition = "none";
         el.style.opacity = "0";
         el.style.transform = `translateY(${originDy}px)`;
-        el.getBoundingClientRect(); // commit start state
+        el.getBoundingClientRect();
         el.style.transition = "opacity 0.25s ease, transform 0.25s ease";
         el.style.opacity = "";
         el.style.transform = "";
-        el.addEventListener("transitionend", () => { el.style.transition = ""; }, { once: true });
+        el.addEventListener("transitionend", () => {
+          el.style.transition = "";
+        }, { once: true });
       });
     });
   }
-
   _animateFilterChange(colIdx, applyFilterFn) {
     if (this._filterAnimPending) {
       applyFilterFn();
@@ -7048,25 +6767,21 @@ class HomeTasksCard extends HTMLElement {
       return;
     }
     const taskList = this.shadowRoot.querySelector(`.task-list[data-col-idx="${colIdx}"]`);
-    if (!taskList) { applyFilterFn(); this._render(); return; }
-
-    // Snapshot current visible tasks (clears ongoing transforms for accurate reading)
+    if (!taskList) {
+      applyFilterFn();
+      this._render();
+      return;
+    }
     const before = this._captureListFlip(colIdx);
     const currentIds = new Set(before.keys());
-
-    // Apply filter change to compute future set
     applyFilterFn();
-    const futureIds = new Set(this._filteredTasks(colIdx).map(t => String(t.id)));
-
-    const disappearing = [...currentIds].filter(id => !futureIds.has(id));
-    const appearing    = [...futureIds].filter(id => !currentIds.has(id));
-
-    // Animate exit on disappearing tasks
-    disappearing.forEach(id => {
+    const futureIds = new Set(this._filteredTasks(colIdx).map((t) => String(t.id)));
+    const disappearing = [...currentIds].filter((id) => !futureIds.has(id));
+    const appearing = [...futureIds].filter((id) => !currentIds.has(id));
+    disappearing.forEach((id) => {
       const el = taskList.querySelector(`.task[data-task-id="${CSS.escape(id)}"]`);
       if (el) el.classList.add("task-anim-exit");
     });
-
     const delay = disappearing.length > 0 ? 175 : 0;
     this._filterAnimPending = true;
     setTimeout(() => {
@@ -7077,33 +6792,24 @@ class HomeTasksCard extends HTMLElement {
       this._applyFlip(before, colIdx, 0.25);
     }, delay);
   }
-
   // --- Helpers ---
-
   _getCompletedCount(colIdx) {
     return this._columns[colIdx].tasks.filter((t) => t.completed).length;
   }
-
   _getSubTaskProgress(task) {
     if (!task.sub_items || task.sub_items.length === 0) return null;
     const done = task.sub_items.filter((s) => s.completed).length;
     return `${done}/${task.sub_items.length}`;
   }
-
   _isDueDateOverdue(dueDate) {
     if (!dueDate) return false;
-    // dueDate is "YYYY-MM-DD" in the user's local timezone. Parse it as
-    // local midnight rather than `new Date(dueDate)` which interprets
-    // date-only strings as UTC midnight (causing wrong-day classification
-    // for users west of UTC).
     const [y, m, d] = dueDate.split("-").map(Number);
     if (!y || !m || !d) return false;
     const due = new Date(y, m - 1, d);
-    const today = new Date();
+    const today = /* @__PURE__ */ new Date();
     today.setHours(0, 0, 0, 0);
     return due < today;
   }
-
   // Advance a Date by N days/weeks/months/years with month-end clamping:
   // Jan 31 + 1 month must be Feb 28, not Mar 3 (bare setMonth overflows
   // into the next month), and Feb 29 + 1 year must be Feb 28, not Mar 1.
@@ -7114,7 +6820,7 @@ class HomeTasksCard extends HTMLElement {
     else if (unit === "weeks") next.setDate(next.getDate() + val * 7);
     else if (unit === "months" || unit === "years") {
       const day = next.getDate();
-      next.setDate(1); // avoid overflow while shifting month/year
+      next.setDate(1);
       if (unit === "months") next.setMonth(next.getMonth() + val);
       else next.setFullYear(next.getFullYear() + val);
       const lastDay = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
@@ -7122,7 +6828,6 @@ class HomeTasksCard extends HTMLElement {
     }
     return next;
   }
-
   // In-card confirmation dialog. Browsers render window.confirm() as a
   // detached prompt at the top of the window — this renders a modal in the
   // card's own look instead (same shell as the media dialog). Resolves
@@ -7142,7 +6847,10 @@ class HomeTasksCard extends HTMLElement {
       const finish = (val) => {
         if (settled) return;
         settled = true;
-        try { if (dialog.open) dialog.close(); } catch (_) { /* jsdom */ }
+        try {
+          if (dialog.open) dialog.close();
+        } catch (_) {
+        }
         dialog.remove();
         resolve(val);
       };
@@ -7150,27 +6858,31 @@ class HomeTasksCard extends HTMLElement {
       const okBtn = this._el("button", { className: "ht-confirm-btn primary", textContent: okLabel });
       cancelBtn.addEventListener("click", () => finish(null));
       okBtn.addEventListener("click", () => finish(resolveOk()));
-      dialog.addEventListener("cancel", (e) => { e.preventDefault(); finish(null); }); // Esc
+      dialog.addEventListener("cancel", (e) => {
+        e.preventDefault();
+        finish(null);
+      });
       dialog.addEventListener("close", () => finish(null));
-      // The inner body carries the padding, so a click that lands on the
-      // <dialog> itself can only come from the backdrop.
-      dialog.addEventListener("click", (e) => { if (e.target === dialog) finish(null); });
+      dialog.addEventListener("click", (e) => {
+        if (e.target === dialog) finish(null);
+      });
       dialog.appendChild(this._el("div", { className: "ht-confirm-body" }, [
         this._el("div", { className: "ht-confirm-msg", textContent: message }),
         ...body,
-        this._el("div", { className: "ht-confirm-actions" }, [cancelBtn, okBtn]),
+        this._el("div", { className: "ht-confirm-actions" }, [cancelBtn, okBtn])
       ]));
       this.shadowRoot.appendChild(dialog);
       if (typeof dialog.showModal === "function") dialog.showModal();
-      else dialog.setAttribute("open", ""); // test environments without <dialog> support
-      try { okBtn.focus(); } catch (_) { /* best-effort */ }
+      else dialog.setAttribute("open", "");
+      try {
+        okBtn.focus();
+      } catch (_) {
+      }
     });
   }
-
   _confirmDialog(message, okLabel) {
     return this._modalDialog({ message, okLabel, resolveOk: () => true }).then((v) => !!v);
   }
-
   // Per-column max_height (issues #33 / #34): cap only the task body and let
   // it scroll internally. Header, add-task row, filters and chips are
   // siblings above it and therefore stay put. 0 / unset = unlimited.
@@ -7185,13 +6897,11 @@ class HomeTasksCard extends HTMLElement {
       body.style.maxHeight = `${maxH}px`;
     }
   }
-
   // Column max_height in px, or 0 when unset/invalid/non-positive.
   _columnMaxHeight(col) {
     const n = Number(col && col.max_height);
     return Number.isFinite(n) && n > 0 ? Math.round(n) : 0;
   }
-
   // Grow a textarea to fit its content (issue #32): reset to auto so it can
   // also shrink, then take the scroll height plus the border (the field is
   // box-sizing: border-box, scrollHeight excludes borders). The CSS
@@ -7207,34 +6917,28 @@ class HomeTasksCard extends HTMLElement {
     el.style.height = h + "px";
     el.dataset.autoH = h + "px";
   }
-
   // Format a Date as its *local* YYYY-MM-DD calendar date. Never use
   // toISOString() for this: it returns the UTC date, which differs from
   // the local date for several hours each day in any non-UTC timezone.
   _localDateStr(d) {
-    return d.getFullYear() + "-" +
-      String(d.getMonth() + 1).padStart(2, "0") + "-" +
-      String(d.getDate()).padStart(2, "0");
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
-
   _isDueDateToday(dueDate) {
     if (!dueDate) return false;
-    return dueDate === this._localDateStr(new Date());
+    return dueDate === this._localDateStr(/* @__PURE__ */ new Date());
   }
-
   _isDueDateWithinDays(dueDate, days) {
     if (!dueDate) return false;
     const [y, m, d] = dueDate.split("-").map(Number);
     if (!y || !m || !d) return false;
     const due = new Date(y, m - 1, d);
-    const today = new Date();
+    const today = /* @__PURE__ */ new Date();
     today.setHours(0, 0, 0, 0);
     const future = new Date(today);
     future.setDate(future.getDate() + days);
     future.setHours(23, 59, 59, 999);
     return due >= today && due <= future;
   }
-
   // ---- Locale helpers (issue #30) -----------------------------------
   // HA exposes the user's profile settings on hass.locale:
   //   language     UI language (falls back to hass.language)
@@ -7253,7 +6957,7 @@ class HomeTasksCard extends HTMLElement {
       const lang = this._localeCode().split("-")[0];
       const tens = n % 100;
       if (lang === "en") {
-        const suffix = tens >= 11 && tens <= 13 ? "th" : ({ 1: "st", 2: "nd", 3: "rd" }[n % 10] || "th");
+        const suffix = tens >= 11 && tens <= 13 ? "th" : { 1: "st", 2: "nd", 3: "rd" }[n % 10] || "th";
         return `${n}${suffix}`;
       }
       if (lang === "sv") return `${n}${(n % 10 === 1 || n % 10 === 2) && tens !== 11 && tens !== 12 ? ":a" : ":e"}`;
@@ -7261,12 +6965,10 @@ class HomeTasksCard extends HTMLElement {
     }
     return `${day}${this._t("rec_dom_short")}`;
   }
-
   _localeCode() {
     const loc = this._hass?.locale;
-    return (loc && loc.language) || this._hass?.language || "en";
+    return loc && loc.language || this._hass?.language || "en";
   }
-
   // Format an absolute timestamp (Date) per the HA profile settings.
   // Mirrors HA frontend's format_date/format_time: the explicit numeric
   // date formats are produced by borrowing a locale that natively uses
@@ -7274,33 +6976,28 @@ class HomeTasksCard extends HTMLElement {
   _fmtTimestamp(ts) {
     const loc = this._hass?.locale || {};
     const lang = this._localeCode();
-    const dateLang = { DMY: "en-GB", MDY: "en-US", YMD: "en-CA" }[loc.date_format]
-      || (loc.date_format === "system" ? undefined : lang);
+    const dateLang = { DMY: "en-GB", MDY: "en-US", YMD: "en-CA" }[loc.date_format] || (loc.date_format === "system" ? void 0 : lang);
     const dateStr = ts.toLocaleDateString(dateLang, { day: "numeric", month: "numeric", year: "numeric" });
     const timeOpts = { hour: "numeric", minute: "2-digit" };
     if (loc.time_format === "am_pm") timeOpts.hour12 = true;
     else if (loc.time_format === "24") timeOpts.hour12 = false;
-    const timeStr = ts.toLocaleTimeString(loc.time_format === "system" ? undefined : lang, timeOpts);
+    const timeStr = ts.toLocaleTimeString(loc.time_format === "system" ? void 0 : lang, timeOpts);
     return `${dateStr}, ${timeStr}`;
   }
-
   _formatDueDate(dueDate, dueTime) {
     if (!dueDate) return "";
-    const now = new Date();
+    const now = /* @__PURE__ */ new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const target = new Date(dueDate + "T00:00:00");
-    const diffDays = Math.round((target - today) / 86400000);
+    const target = /* @__PURE__ */ new Date(dueDate + "T00:00:00");
+    const diffDays = Math.round((target - today) / 864e5);
     const lang = this._localeCode();
-
-    // Near dates: relative labels
     if (diffDays >= -2 && diffDays <= 2) {
       if (diffDays === 0 && dueTime) {
-        // Today with time: show relative hours/minutes
         const [h, m] = dueTime.split(":").map(Number);
         const dueMs = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m).getTime();
         const diffMs = dueMs - now.getTime();
         const absDiffMs = Math.abs(diffMs);
-        const mins = Math.floor(absDiffMs / 60000);
+        const mins = Math.floor(absDiffMs / 6e4);
         const hrs = Math.floor(mins / 60);
         const remMins = mins % 60;
         if (diffMs >= 0) {
@@ -7316,35 +7013,25 @@ class HomeTasksCard extends HTMLElement {
       const relKey = { "-2": "due_day_before_yesterday", "-1": "due_yesterday", 0: "due_today", 1: "due_tomorrow", 2: "due_day_after_tomorrow" }[diffDays];
       return this._t(relKey);
     }
-
-    // Further dates: "6. Apr" (de) / "Apr 6" (en-US) — day/month order
-    // follows the HA profile language via Intl instead of a hardcoded
-    // European "D. Mon" (issue #30).
     const opts = { day: "numeric", month: "short" };
     if (target.getFullYear() !== now.getFullYear()) opts.year = "2-digit";
     return target.toLocaleDateString(lang, opts);
   }
-
   _getListName(colIdx) {
     const col = this._config.columns[colIdx];
     if (col.title) return col.title;
     if (col.entity_id) {
-      const ext = (this._externalLists || []).find(l => l.entity_id === col.entity_id);
+      const ext = (this._externalLists || []).find((l) => l.entity_id === col.entity_id);
       return ext ? ext.name : col.entity_id;
     }
     const list = this._lists.find((l) => l.id === col.list_id);
     return list ? list.name : this._t("my_tasks");
   }
-
   // --- Render ---
-
   // Hold a render back until the focused field is left, then run it —
   // as a background render again when it was one (`background`).
   _deferRenderUntilBlur(el, background) {
     this._pendingRender = true;
-    // Rebind when the field changed: a rebuild can replace the focused field
-    // with a fresh copy, and not every browser fires blur on the removed one
-    // — a listener left on it would never flush.
     if (this._deferredRenderBoundBlur === el) return;
     this._deferredRenderBoundBlur = el;
     el.addEventListener("blur", () => {
@@ -7356,17 +7043,17 @@ class HomeTasksCard extends HTMLElement {
       };
       const run = () => {
         if (!this._pendingRender) return;
-        // A held-back background update stays one: if focus went straight
-        // into another field that defers, it waits for that one too. The
-        // user's own change (date, select) goes through right away.
-        if (!background) { this._render(); return; }
+        if (!background) {
+          this._render();
+          return;
+        }
         this._bgUpdates = (this._bgUpdates || 0) + 1;
-        try { this._render(); } finally { this._bgUpdates = Math.max(0, this._bgUpdates - 1); }
+        try {
+          this._render();
+        } finally {
+          this._bgUpdates = Math.max(0, this._bgUpdates - 1);
+        }
       };
-      // The timeout lets the field's own blur handling go first (the notes
-      // switch back to their read view in one). If the blur came from
-      // pressing a button, wait for the release as well — rebuilding
-      // between press and release would drop the click.
       if (this._pointerIsDown) {
         window.addEventListener("pointerup", flush, true);
         window.addEventListener("pointercancel", flush, true);
@@ -7375,78 +7062,31 @@ class HomeTasksCard extends HTMLElement {
       }
     }, { once: true });
   }
-
   _render() {
-    // Don't tear down DOM while the user is interacting — but only for
-    // background updates (polling, state changes). User-initiated renders
-    // (clicks, edits, saves) must always go through.
-    // Counter, not a boolean: several background loaders (state watcher,
-    // external poll, lists retry) can overlap, and one finishing must not
-    // reclassify the others\u2019 still-running loads as foreground.
     if (this._bgUpdates > 0) {
-      // A FLIP animation is mid-flight — rebuilding now would wipe the in-flight
-      // transforms (intermittent missing animation). Defer; _applyFlip flushes.
-      if (this._flipActive) { this._pendingRender = true; return; }
-      if (this._draggedTaskId !== null || this._draggedSubTaskId !== null
-          || this._editingTaskId || this._editingSubTaskId || this._planNoteEditing) {
+      if (this._flipActive) {
         this._pendingRender = true;
         return;
       }
-      // Only defer for inputs that lose internal state on a DOM rebuild
-      // (date/time pickers, open <select>). Text/textarea rebuild fine —
-      // focus + caret are restored from focusSnap — so a background update
-      // (e.g. the user's own add, which fires a store event) must not be
-      // swallowed here, or the initiating card never reflects the change.
+      if (this._draggedTaskId !== null || this._draggedSubTaskId !== null || this._editingTaskId || this._editingSubTaskId || this._planNoteEditing) {
+        this._pendingRender = true;
+        return;
+      }
       const active = this.shadowRoot?.activeElement;
-      const activeStateful = active && (
-        (active.tagName === "INPUT" &&
-          ["date", "time", "datetime-local", "month", "week"].includes(active.type)) ||
-        active.tagName === "SELECT"
-      );
-      // The notes are typed into while their own auto-save fires store
-      // events. Rebuilding under them restores the caret, but on iOS the
-      // blur + refocus closes and reopens the keyboard on every save — so
-      // wait until the user leaves the field. (Only the notes: other task
-      // fields save on Enter/change, not while typing, and some — the tag
-      // input — hold the task object the reload is about to replace.)
-      const activeNotes = active && active.tagName === "TEXTAREA"
-        && active.dataset?.focusKey === "notes";
+      const activeStateful = active && (active.tagName === "INPUT" && ["date", "time", "datetime-local", "month", "week"].includes(active.type) || active.tagName === "SELECT");
+      const activeNotes = active && active.tagName === "TEXTAREA" && active.dataset?.focusKey === "notes";
       if (activeStateful || activeNotes) {
         this._deferRenderUntilBlur(active, true);
         return;
       }
     }
-
-    // Foreground-render guard:
-    //   - <input type="date|time|...">: internal segments (day/month/year,
-    //     hour/minute) reset to the first segment on any DOM rebuild
-    //     because these inputs have no selectionStart API.
-    //   - <select>: loses its open dropdown state on DOM rebuild, so
-    //     picking an option while a background save is in flight would
-    //     snap the menu closed.
-    // In both cases the render is deferred until blur (the user leaves
-    // the field or picks an option).  Other inputs (text, number, radio,
-    // checkbox) MUST rebuild immediately — the tag autocomplete relies on
-    // a synchronous render to insert the new chip while the input is
-    // still focused.
     const activeNow = this.shadowRoot?.activeElement;
-    const isStatefulInput = activeNow && (
-      (activeNow.tagName === "INPUT" &&
-        ["date", "time", "datetime-local", "month", "week"].includes(activeNow.type)) ||
-      activeNow.tagName === "SELECT"
-    );
+    const isStatefulInput = activeNow && (activeNow.tagName === "INPUT" && ["date", "time", "datetime-local", "month", "week"].includes(activeNow.type) || activeNow.tagName === "SELECT");
     if (isStatefulInput) {
       this._deferRenderUntilBlur(activeNow, false);
       return;
     }
     this._pendingRender = false;
-
-    // Snapshot focus before tearing down the DOM so we can restore it
-    // after the rebuild.  A focused input marked with data-focus-key is
-    // re-queried by (taskId, key) once the new DOM is in place — this
-    // keeps the user's caret put when a save during editing triggers a
-    // foreground re-render (e.g. toggling the recurrence switch while
-    // the cursor is already in a time/date field).
     let focusSnap = null;
     const activeForSnap = this.shadowRoot?.activeElement;
     if (activeForSnap && activeForSnap.dataset && activeForSnap.dataset.focusKey) {
@@ -7455,86 +7095,61 @@ class HomeTasksCard extends HTMLElement {
         taskId: taskEl?.dataset?.taskId ?? null,
         key: activeForSnap.dataset.focusKey,
         selStart: activeForSnap.selectionStart ?? null,
-        selEnd: activeForSnap.selectionEnd ?? null,
+        selEnd: activeForSnap.selectionEnd ?? null
       };
     }
-
-    // Remove any stale sort close handler before rebuilding DOM
     if (this._sortCloseHandler) {
       document.removeEventListener("click", this._sortCloseHandler);
       this._sortCloseHandler = null;
     }
-
     const root = this.shadowRoot;
-    // Rebuild only what this card owns. Long-lived nodes that other code put
-    // into the shadow root stay in place, untouched: an open modal <dialog>
-    // (confirm prompt, media picker — detaching a modal dialog drops it out of
-    // the top layer and showModal() can't re-open it), the tile detail sheet
-    // + backdrop, card-mod's <card-mod> node (issue #31/#34) and error
-    // toasts. Everything else (ha-card, drag clones) is removed and rebuilt;
-    // the <style> element is reused.
     const KEEP = ".task-detail-backdrop, .task-detail-sheet, dialog, card-mod, .toast-error";
-    this._clearTileLp(); // a rebuild removes the pressed tile → cancel its long-press
+    this._clearTileLp();
     for (const child of [...root.children]) {
       if (child === this._styleEl) continue;
       if (child.matches && child.matches(KEEP)) continue;
       child.remove();
     }
-    // Stash for use after the rebuild
     this._pendingFocusRestore = focusSnap;
     this._updateFitRows();
-
     if (!this._styleEl) {
       this._styleEl = document.createElement("style");
       this._styleEl.textContent = this._getStyles();
     }
     if (!this._styleEl.isConnected) root.insertBefore(this._styleEl, root.firstChild);
-
     const card = this._el("ha-card", {}, [
-      this._buildCardContent(),
+      this._buildCardContent()
     ]);
-    // Right after the style, i.e. before any kept overlay, so the sheet /
-    // backdrop / dialogs keep painting above the card (DOM order).
     root.insertBefore(card, this._styleEl.nextSibling);
-
-    // Restore focus to the element that had it before the DOM rebuild,
-    // if it still exists in the new tree.  Fields tagged with
-    // data-focus-key are identified by (task-id, focus-key); caret
-    // position is restored when the element supports selection ranges.
-    //
-    // Defer via rAF: right after root.appendChild(card) the browser has
-    // not yet done layout, so the target's offsetHeight is still 0 and
-    // Chrome refuses to focus invisible elements.  Waiting two frames
-    // lets CSS transitions settle and makes the focus call stick.
     const fs = this._pendingFocusRestore;
     this._pendingFocusRestore = null;
     if (fs && fs.key) {
-      const selector = fs.taskId
-        ? `[data-task-id="${CSS.escape(String(fs.taskId))}"] [data-focus-key="${fs.key}"]`
-        : `[data-focus-key="${fs.key}"]`;
+      const selector = fs.taskId ? `[data-task-id="${CSS.escape(String(fs.taskId))}"] [data-focus-key="${fs.key}"]` : `[data-focus-key="${fs.key}"]`;
       const restore = () => {
         const target = root.querySelector(selector);
         if (target && typeof target.focus === "function") {
           target.focus();
           if (fs.selStart != null && typeof target.setSelectionRange === "function") {
-            try { target.setSelectionRange(fs.selStart, fs.selEnd ?? fs.selStart); } catch { /* noop */ }
+            try {
+              target.setSelectionRange(fs.selStart, fs.selEnd ?? fs.selStart);
+            } catch {
+            }
           }
         }
       };
       requestAnimationFrame(() => requestAnimationFrame(restore));
     }
-
-    // Close any open sort dropdowns on next outside click
-    if (this._columns.some(c => c.sortOpen)) {
+    if (this._columns.some((c) => c.sortOpen)) {
       this._sortCloseHandler = () => {
         this._sortCloseHandler = null;
-        this._columns.forEach(c => { c.sortOpen = false; });
+        this._columns.forEach((c) => {
+          c.sortOpen = false;
+        });
         this._render();
       };
       setTimeout(() => document.addEventListener("click", this._sortCloseHandler, { once: true }), 0);
     }
   }
-
   _buildCardContent() {
     if (this._planMode) return this._buildPlanView();
     const cols = this._config.columns;
@@ -7551,43 +7166,26 @@ class HomeTasksCard extends HTMLElement {
     children.push(this._el("div", { className: "multi-columns" }, cols.map((_, i) => this._buildColumn(i))));
     return this._el("div", {}, children);
   }
-
   _buildColumn(colIdx) {
     const col = this._config.columns[colIdx];
     const cs = this._columns[colIdx];
     const filteredTasks = this._filteredTasks(colIdx);
     const completedCount = this._getCompletedCount(colIdx);
     const totalCount = cs.tasks.length;
-    // auto_delete_completed makes the All/Open/Done set redundant, but the
-    // Due-Soon filter is still meaningful (it filters open tasks by upcoming
-    // due date). When both are on, keep a slimmed-down row with just All +
-    // Due Soon so the user can still toggle between "everything" and
-    // "due soon only".
-    const hideFilters = (col.auto_delete_completed === true && col.show_due_soon_filter !== true) || col.show_filters === false;
-
+    const hideFilters = col.auto_delete_completed === true && col.show_due_soon_filter !== true || col.show_filters === false;
     const header = this._buildColumnHeader(col, colIdx, completedCount, totalCount);
     const addTask = this._buildColumnAddTask(cs, colIdx);
-    const sortBtnWrapper = (col.show_sort !== false) ? this._buildColumnSortControl(col, cs, colIdx) : null;
+    const sortBtnWrapper = col.show_sort !== false ? this._buildColumnSortControl(col, cs, colIdx) : null;
     const tagChips = col.show_tag_chips === false ? null : this._buildColumnTagChips(col, cs, colIdx);
-    const personChips = this._personMode(colIdx, "filter") === "off"
-      ? null : this._buildColumnPersonChips(col, cs, colIdx);
-
-    // Sort button placement: move into first available chips row when filters are hidden
+    const personChips = this._personMode(colIdx, "filter") === "off" ? null : this._buildColumnPersonChips(col, cs, colIdx);
     const sortInTagRow = hideFilters && tagChips !== null && sortBtnWrapper !== null;
     const sortInPersonRow = hideFilters && tagChips === null && personChips !== null && sortBtnWrapper !== null;
-
     const filters = this._buildColumnFilterRow(hideFilters, sortBtnWrapper, sortInTagRow, sortInPersonRow, colIdx);
-    const tagChipsEl = (tagChips && sortInTagRow)
-      ? this._el("div", { className: "tag-chips-row" }, [tagChips, sortBtnWrapper])
-      : tagChips;
-    const personChipsEl = (personChips && sortInPersonRow)
-      ? this._el("div", { className: "person-chips-row" }, [personChips, sortBtnWrapper])
-      : personChips;
-
+    const tagChipsEl = tagChips && sortInTagRow ? this._el("div", { className: "tag-chips-row" }, [tagChips, sortBtnWrapper]) : tagChips;
+    const personChipsEl = personChips && sortInPersonRow ? this._el("div", { className: "person-chips-row" }, [personChips, sortBtnWrapper]) : personChips;
     const isTiles = col.view_mode === "tiles";
     const taskList = this._buildColumnBody(filteredTasks, colIdx);
     this._applyColumnMaxHeight(taskList, col);
-
     const children = [];
     if (header) children.push(header);
     if (col.show_add_task !== false) children.push(addTask);
@@ -7596,10 +7194,8 @@ class HomeTasksCard extends HTMLElement {
     if (tagChipsEl) children.push(tagChipsEl);
     if (personChipsEl) children.push(personChipsEl);
     children.push(taskList);
-
     const listCols = _listColumns(col);
-    const className = "card-column" + (col.compact === true ? " compact" : "") + (isTiles ? " tiles-mode" : "")
-      + (listCols > 1 ? " list-cols" : "");
+    const className = "card-column" + (col.compact === true ? " compact" : "") + (isTiles ? " tiles-mode" : "") + (listCols > 1 ? " list-cols" : "");
     const columnEl = this._el("div", { className }, children);
     if (listCols > 1) {
       columnEl.style.setProperty("--ht-list-cols", String(listCols));
@@ -7610,7 +7206,6 @@ class HomeTasksCard extends HTMLElement {
     if (tileMin) columnEl.style.setProperty("--ht-tile-min", `${tileMin}px`);
     return columnEl;
   }
-
   _buildColumnHeader(col, colIdx, completedCount, totalCount) {
     const showTitle = col.show_title !== false;
     const showProgress = col.show_progress !== false;
@@ -7630,14 +7225,11 @@ class HomeTasksCard extends HTMLElement {
     if (showProgress) {
       headerChildren.push(this._el("span", {
         className: "progress",
-        textContent: this._t("progress", completedCount, totalCount),
+        textContent: this._t("progress", completedCount, totalCount)
       }));
     }
-    return headerChildren.length > 0
-      ? this._el("div", { className: "header" }, headerChildren)
-      : null;
+    return headerChildren.length > 0 ? this._el("div", { className: "header" }, headerChildren) : null;
   }
-
   // Start voice input. colIdx identifies the column; inputEl is the <input>
   // element to fill (list-row input or tile-dialog input). If omitted the
   // column's newTaskTitle state is updated instead (legacy path).
@@ -7646,21 +7238,15 @@ class HomeTasksCard extends HTMLElement {
   // or plain-HTTP contexts — hide the mic button there instead of showing a
   // button that can only fail.
   _voiceSupported() {
-    return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) ||
-           !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+    return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) || !!(window.SpeechRecognition || window.webkitSpeechRecognition);
   }
-
   _startVoiceInput(colIdx, inputEl = null) {
-    // Toggle off if already recording
     if (this._voiceActive.has(colIdx)) {
-      this._voiceActive.get(colIdx)(); // call cleanup
+      this._voiceActive.get(colIdx)();
       return;
     }
-
-    // Helper: update the visible input + column state
     const setTranscript = (text) => {
       const cs = this._columns[colIdx];
-      // While a task is drafted the add field is its title, without search.
       const draft = !inputEl && cs?.draft;
       if (draft) draft.title = text;
       else if (cs) cs.newTaskTitle = text;
@@ -7670,81 +7256,80 @@ class HomeTasksCard extends HTMLElement {
         const inp = this.shadowRoot.querySelector(`.add-input[data-focus-key="add_task_col_${colIdx}"]`);
         if (inp) inp.value = text;
       }
-      // Dictating a title searches exactly like typing it does — otherwise
-      // the same text in the same field would behave differently.
       if (cs && !draft && this._config.columns[colIdx]?.show_task_search !== false) {
         cs.taskSearchQuery = text.trim();
         this._refreshTaskListDOM(colIdx);
       }
     };
-
     const stopRecording = () => {
       const cleanup = this._voiceActive.get(colIdx);
       if (cleanup) cleanup();
     };
-
-    // Try HA assist_pipeline first, then fall back to Web Speech API
-    this._startHAStt(colIdx, inputEl, setTranscript, stopRecording)
-      .catch((err) => {
-        console.warn("Home Tasks voice: HA Assist STT failed.", err);
-        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (SR) {
-          this._startWebSpeech(colIdx, inputEl, setTranscript);
-        } else {
-          const reason = err && err.message ? ": " + err.message : "";
-          this._showError(this._t("voice_failed") + reason);
-        }
-      });
+    this._startHAStt(colIdx, inputEl, setTranscript, stopRecording).catch((err) => {
+      console.warn("Home Tasks voice: HA Assist STT failed.", err);
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SR) {
+        this._startWebSpeech(colIdx, inputEl, setTranscript);
+      } else {
+        const reason = err && err.message ? ": " + err.message : "";
+        this._showError(this._t("voice_failed") + reason);
+      }
+    });
   }
-
   // Primary: HA assist_pipeline/run STT (streams raw PCM to HA's STT backend)
   async _startHAStt(colIdx, inputEl, setTranscript) {
     if (!this._hass || !this._hass.connection) throw new Error("no hass");
-
-    // Request microphone access early so we can fail fast if denied
     let stream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     } catch (err) {
       throw new Error("mic denied: " + err.message);
     }
-
-    // Mutable refs inside the shared cleanup closure
-    let audioRefs = null; // { audioCtx, processor }
-    let sttHandlerId = null; // HA binary handler id for routing audio frames
+    let audioRefs = null;
+    let sttHandlerId = null;
     let unsub = null;
     let cleaned = false;
-
     const cleanup = () => {
       if (cleaned) return;
       cleaned = true;
       if (audioRefs) {
-        try { audioRefs.processor.disconnect(); } catch (_) {}
-        try { audioRefs.audioCtx.close(); } catch (_) {}
-        // Signal end-of-audio to HA: a lone handler-id byte (empty payload).
+        try {
+          audioRefs.processor.disconnect();
+        } catch (_) {
+        }
+        try {
+          audioRefs.audioCtx.close();
+        } catch (_) {
+        }
         try {
           if (sttHandlerId != null) {
             this._hass.connection.socket.send(new Uint8Array([sttHandlerId]).buffer);
           }
-        } catch (_) {}
+        } catch (_) {
+        }
         audioRefs = null;
       }
-      if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-      if (unsub) { try { unsub(); } catch (_) {} unsub = null; }
+      if (stream) {
+        stream.getTracks().forEach((t) => t.stop());
+        stream = null;
+      }
+      if (unsub) {
+        try {
+          unsub();
+        } catch (_) {
+        }
+        unsub = null;
+      }
       this._voiceActive.delete(colIdx);
       this._updateMicBtn(colIdx, inputEl, false);
     };
-
     this._voiceActive.set(colIdx, cleanup);
     this._updateMicBtn(colIdx, inputEl, true);
-
-    // Subscribe to pipeline events
     try {
       unsub = await this._hass.connection.subscribeMessage(
         (event) => {
           if (!event || !event.type) return;
           if (event.type === "run-start") {
-            // Capture the binary handler id needed to route audio frames.
             sttHandlerId = event.data?.runner_data?.stt_binary_handler_id ?? null;
           } else if (event.type === "stt-start") {
             if (sttHandlerId == null) {
@@ -7753,7 +7338,6 @@ class HomeTasksCard extends HTMLElement {
               this._startWebSpeech(colIdx, inputEl, setTranscript);
               return;
             }
-            // HA is ready – stream audio, each frame prefixed with the handler id
             audioRefs = this._streamPcmAudio(stream, cleanup, sttHandlerId);
           } else if (event.type === "stt-end") {
             const text = event.data?.stt_output?.text || "";
@@ -7762,7 +7346,6 @@ class HomeTasksCard extends HTMLElement {
           } else if (event.type === "error") {
             console.warn("HA STT error:", event.data);
             cleanup();
-            // Fall back to Web Speech
             this._startWebSpeech(colIdx, inputEl, setTranscript);
           } else if (event.type === "run-end") {
             cleanup();
@@ -7772,32 +7355,29 @@ class HomeTasksCard extends HTMLElement {
           type: "assist_pipeline/run",
           start_stage: "stt",
           end_stage: "stt",
-          input: { sample_rate: 16000 },
+          input: { sample_rate: 16e3 }
         }
       );
     } catch (err) {
       cleanup();
-      throw err; // triggers fallback in _startVoiceInput
+      throw err;
     }
   }
-
   // Stream PCM audio from the MediaStream to HA via binary WebSocket frames.
   // Returns { audioCtx, processor } for the caller to store and disconnect later.
   _streamPcmAudio(stream, onError, handlerId) {
-    const SAMPLE_RATE = 16000;
+    const SAMPLE_RATE = 16e3;
     const BUFFER_SIZE = 4096;
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: SAMPLE_RATE });
       const source = audioCtx.createMediaStreamSource(stream);
       const processor = audioCtx.createScriptProcessor(BUFFER_SIZE, 1, 1);
-
       processor.onaudioprocess = (e) => {
         const float32 = e.inputBuffer.getChannelData(0);
         const pcm16 = new Int16Array(float32.length);
         for (let i = 0; i < float32.length; i++) {
           pcm16[i] = Math.max(-32768, Math.min(32767, float32[i] * 32767));
         }
-        // HA routes binary audio by a 1-byte handler-id prefix on every frame.
         const frame = new Uint8Array(1 + pcm16.byteLength);
         frame[0] = handlerId;
         frame.set(new Uint8Array(pcm16.buffer), 1);
@@ -7807,7 +7387,6 @@ class HomeTasksCard extends HTMLElement {
           if (onError) onError(err);
         }
       };
-
       source.connect(processor);
       processor.connect(audioCtx.destination);
       return { audioCtx, processor };
@@ -7817,7 +7396,6 @@ class HomeTasksCard extends HTMLElement {
       return null;
     }
   }
-
   // Fallback: Web Speech API (browser-native, less accurate)
   _startWebSpeech(colIdx, inputEl, setTranscript) {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -7827,24 +7405,23 @@ class HomeTasksCard extends HTMLElement {
       this._showError(this._t("voice_failed"));
       return;
     }
-    // Don't start if already cancelled (user toggled off)
     if (!this._voiceActive.has(colIdx)) {
-      // Was already cleaned up; mark as active again for Web Speech
     }
     const recognition = new SR();
     recognition.lang = this._config.voice_lang || "de-DE";
     recognition.interimResults = true;
     recognition.maxAlternatives = 3;
     recognition.continuous = false;
-
     const cleanup = () => {
-      try { recognition.abort(); } catch (_) {}
+      try {
+        recognition.abort();
+      } catch (_) {
+      }
       this._voiceActive.delete(colIdx);
       this._updateMicBtn(colIdx, inputEl, false);
     };
     this._voiceActive.set(colIdx, cleanup);
     this._updateMicBtn(colIdx, inputEl, true);
-
     recognition.onresult = (event) => {
       const result = event.results[event.results.length - 1];
       const transcript = result[0].transcript;
@@ -7867,23 +7444,19 @@ class HomeTasksCard extends HTMLElement {
       cleanup();
     }
   }
-
   // Update the mic button state without a full re-render.
   // inputEl: if set, update a mic-btn inside the tile dialog; else find
   // the column-level mic-btn via data attribute.
   _updateMicBtn(colIdx, inputEl, recording) {
     const MIC_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 15c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V6zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-2.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>`;
     const STOP_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>`;
-
     let btn;
     if (inputEl) {
-      // Tile dialog mic button is a sibling of the input inside the dialog
       btn = inputEl.closest(".tile-dialog")?.querySelector(".mic-btn");
     } else {
       btn = this.shadowRoot.querySelector(`.mic-btn[data-col-idx="${colIdx}"]`);
     }
     if (!btn) {
-      // Fall back to full re-render if button not found
       this._render();
       return;
     }
@@ -7895,7 +7468,6 @@ class HomeTasksCard extends HTMLElement {
       btn.classList.remove("recording");
     }
   }
-
   // The scrollable body of a column: task list or tile grid. Both the full
   // render and the targeted refresh below go through here, so a refresh
   // produces exactly what a re-render would.
@@ -7905,12 +7477,11 @@ class HomeTasksCard extends HTMLElement {
       const query = this._activeSearchQuery(colIdx);
       return this._buildColumnTileGrid(
         query ? this._searchMatches(query, colIdx) : filteredTasks,
-        colIdx,
+        colIdx
       );
     }
     return this._buildColumnTaskList(filteredTasks, colIdx);
   }
-
   // Updates only the column body, leaving the add-task <input> untouched.
   //
   // A full this._render() rebuilds the whole card, and even though focus
@@ -7921,50 +7492,37 @@ class HomeTasksCard extends HTMLElement {
   // that, since the <input> is never touched.
   _refreshTaskListDOM(colIdx) {
     const col = this._config.columns[colIdx];
-    const selector = col.view_mode === "tiles"
-      ? `.tile-grid-wrap[data-col-idx="${colIdx}"]`
-      : `.task-list[data-col-idx="${colIdx}"]`;
+    const selector = col.view_mode === "tiles" ? `.tile-grid-wrap[data-col-idx="${colIdx}"]` : `.task-list[data-col-idx="${colIdx}"]`;
     const oldBody = this.shadowRoot.querySelector(selector);
     if (!oldBody || !oldBody.parentNode) {
       this._render();
       return;
     }
-    // Same FLIP as sorting and filtering: every task that survives the new
-    // query slides from where it was to where it now is, instead of the whole
-    // body jumping. Tiles reflow in two dimensions, which is where a hard cut
-    // is most jarring. Shorter than the sort animation (0.3s) because this
-    // runs on every keystroke and must keep up with typing.
     const before = this._captureListFlip(colIdx);
     const newBody = this._buildColumnBody(this._filteredTasks(colIdx), colIdx);
     this._applyColumnMaxHeight(newBody, col);
     oldBody.replaceWith(newBody);
     this._applyFlip(before, colIdx, 0.2);
   }
-
   _buildColumnAddTask(cs, colIdx) {
     const col = this._config.columns[colIdx];
-    // Per-column opt-out via show_task_search (default on); editor switch
-    // lives in HomeTasksCardEditor further below.
     const searchEnabled = col.show_task_search !== false;
-    // While a task is drafted (show_add_details), the field is its title:
-    // no search, Enter or + creates it, Escape closes the draft.
     const draft = cs.draft;
-
     const addInput = this._el("input", {
       type: "text",
       className: "add-input",
       placeholder: this._t("add_placeholder"),
       value: draft ? draft.title : cs.newTaskTitle,
       "data-focus-key": `add_task_col_${colIdx}`,
-      autocomplete: "off",
+      autocomplete: "off"
     });
     addInput.addEventListener("input", (e) => {
-      if (draft) { draft.title = e.target.value; return; }
+      if (draft) {
+        draft.title = e.target.value;
+        return;
+      }
       cs.newTaskTitle = e.target.value;
       if (searchEnabled) {
-        // Mirror the search text and refresh only the list (see
-        // _refreshTaskListDOM above — no this._render() here, to avoid
-        // the mobile keyboard flicker on every keystroke).
         cs.taskSearchQuery = e.target.value.trim();
         this._refreshTaskListDOM(colIdx);
       }
@@ -7972,14 +7530,15 @@ class HomeTasksCard extends HTMLElement {
     addInput.addEventListener("keydown", (e) => {
       if (draft) {
         if (e.key === "Enter") this._saveDraft(colIdx);
-        else if (e.key === "Escape") { e.preventDefault(); this._closeDraft(colIdx, true); }
+        else if (e.key === "Escape") {
+          e.preventDefault();
+          this._closeDraft(colIdx, true);
+        }
         return;
       }
       if (e.key === "Enter") {
         this._addTask(colIdx);
       } else if (searchEnabled && e.key === "Escape" && cs.taskSearchQuery) {
-        // Escape cancels the search and restores the section view.
-        // Same targeted update as above, for the same reason.
         e.preventDefault();
         addInput.value = "";
         cs.newTaskTitle = "";
@@ -7988,24 +7547,27 @@ class HomeTasksCard extends HTMLElement {
       }
     });
     const addBtn = this._el("button", { className: "add-btn", textContent: "+" });
-    addBtn.addEventListener("click", () => (draft ? this._saveDraft(colIdx) : this._addTask(colIdx)));
-
-    // Clear (x) inside the field, shown while there is text or a draft:
-    // empties the title and any search it was driving, drops the draft, and
-    // keeps the cursor there.
+    addBtn.addEventListener("click", () => draft ? this._saveDraft(colIdx) : this._addTask(colIdx));
     const clearBtn = this._el("button", {
-      className: "add-clear-btn", textContent: "\u00D7", title: this._t("add_clear"),
+      className: "add-clear-btn",
+      textContent: "×",
+      title: this._t("add_clear")
     });
     clearBtn.type = "button";
     clearBtn.setAttribute("aria-label", this._t("add_clear"));
     if (!cs.newTaskTitle && !draft) clearBtn.style.display = "none";
-    addInput.addEventListener("input", () => { clearBtn.style.display = (addInput.value || draft) ? "" : "none"; });
+    addInput.addEventListener("input", () => {
+      clearBtn.style.display = addInput.value || draft ? "" : "none";
+    });
     clearBtn.addEventListener("click", () => {
       addInput.value = "";
       cs.newTaskTitle = "";
       clearBtn.style.display = "none";
       if (draft) {
-        try { addInput.focus(); } catch (_) { /* best-effort */ }
+        try {
+          addInput.focus();
+        } catch (_) {
+        }
         this._closeDraft(colIdx, false);
         return;
       }
@@ -8013,10 +7575,12 @@ class HomeTasksCard extends HTMLElement {
         cs.taskSearchQuery = "";
         this._refreshTaskListDOM(colIdx);
       }
-      try { addInput.focus(); } catch (_) { /* best-effort */ }
+      try {
+        addInput.focus();
+      } catch (_) {
+      }
     });
     const inputWrap = this._el("div", { className: "add-input-wrap" }, [addInput, clearBtn]);
-
     const children = [inputWrap];
     if (col.show_voice !== false && this._voiceSupported()) {
       const isRecording = this._voiceActive.has(colIdx);
@@ -8024,26 +7588,24 @@ class HomeTasksCard extends HTMLElement {
         className: "mic-btn" + (isRecording ? " recording" : ""),
         title: isRecording ? this._t("voice_stop") : this._t("voice_input"),
         "data-col-idx": String(colIdx),
-        innerHTML: isRecording
-          ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>`
-          : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 15c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V6zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-2.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>`,
+        innerHTML: isRecording ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 15c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3S9 4.34 9 6v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V6zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-2.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>`
       });
       micBtn.addEventListener("click", () => this._startVoiceInput(colIdx));
       children.push(micBtn);
     }
-    // Due date at creation (issue #38): opt-in per column. When enabled, a
-    // second row with date (+ time) inputs sits under the add-task input;
-    // leaving it empty simply creates the task without a due date.
-    // A draft has its own due date field among the details.
     const showAddDue = col.show_add_due === true && this._colSupportsDue(colIdx) && !draft;
     let dueRow = null;
     if (showAddDue) {
       const dateInput = this._el("input", {
-        type: "date", className: "add-due-date", value: cs.newTaskDue || "",
+        type: "date",
+        className: "add-due-date",
+        value: cs.newTaskDue || "",
         "data-focus-key": `add_due_col_${colIdx}`,
-        "aria-label": this._t("due_date_lbl"),
+        "aria-label": this._t("due_date_lbl")
       });
-      dateInput.addEventListener("change", () => { cs.newTaskDue = dateInput.value || ""; });
+      dateInput.addEventListener("change", () => {
+        cs.newTaskDue = dateInput.value || "";
+      });
       dateInput.addEventListener("keydown", (e) => {
         if (e.key !== "Enter") return;
         e.preventDefault();
@@ -8053,11 +7615,15 @@ class HomeTasksCard extends HTMLElement {
       const rowChildren = [dateInput];
       if (this._colSupportsDueTime(colIdx)) {
         const timeInput = this._el("input", {
-          type: "time", className: "add-due-time", value: cs.newTaskDueTime || "",
+          type: "time",
+          className: "add-due-time",
+          value: cs.newTaskDueTime || "",
           "data-focus-key": `add_due_time_col_${colIdx}`,
-          "aria-label": this._t("due_time_lbl"),
+          "aria-label": this._t("due_time_lbl")
         });
-        timeInput.addEventListener("change", () => { cs.newTaskDueTime = timeInput.value || ""; });
+        timeInput.addEventListener("change", () => {
+          cs.newTaskDueTime = timeInput.value || "";
+        });
         timeInput.addEventListener("keydown", (e) => {
           if (e.key !== "Enter") return;
           e.preventDefault();
@@ -8068,14 +7634,12 @@ class HomeTasksCard extends HTMLElement {
       }
       dueRow = this._el("div", { className: "add-due-row" }, rowChildren);
     }
-    // show_add_details: a second button that drafts the task with its
-    // details under the add row; pressed again, it closes the draft.
     if (col.show_add_details === true) {
-      // Pressed, it says what it then does: close the draft, like Cancel.
       const detailsLabel = this._t(draft ? "dialog_cancel" : "add_with_details");
       const detailsBtn = this._el("button", {
         className: "add-btn add-details-btn" + (draft ? " active" : ""),
-        textContent: "\u270E", title: detailsLabel,
+        textContent: "✎",
+        title: detailsLabel
       });
       detailsBtn.setAttribute("aria-label", detailsLabel);
       detailsBtn.setAttribute("aria-pressed", draft ? "true" : "false");
@@ -8087,16 +7651,16 @@ class HomeTasksCard extends HTMLElement {
     }
     children.push(addBtn);
     const row = this._el("div", { className: "add-task" }, children);
-    // Without the option the DOM is exactly as before (single .add-task row).
     if (!dueRow) return row;
     return this._el("div", { className: "add-task-group" }, [row, dueRow]);
   }
-
   _buildColumnSortControl(col, cs, colIdx) {
     const sortLabels = {
-      manual: this._t("sort_manual"), due: this._t("sort_due"),
-      priority: this._t("sort_priority"), title: this._t("sort_title"),
-      person: this._t("sort_person"),
+      manual: this._t("sort_manual"),
+      due: this._t("sort_due"),
+      priority: this._t("sort_priority"),
+      title: this._t("sort_title"),
+      person: this._t("sort_person")
     };
     const sortKeys = ["manual"];
     if (col.show_due_date !== false) sortKeys.push("due");
@@ -8104,12 +7668,11 @@ class HomeTasksCard extends HTMLElement {
     sortKeys.push("title");
     if (col.show_assigned_person !== false) sortKeys.push("person");
     const effectiveSortBy = sortKeys.includes(cs.sortBy) ? cs.sortBy : "manual";
-
     const sortDropdown = this._el("div", { className: "sort-dropdown" + (cs.sortOpen ? "" : " hidden") });
     for (const key of sortKeys) {
       const opt = this._el("div", {
         className: "sort-option" + (effectiveSortBy === key ? " active" : ""),
-        textContent: sortLabels[key],
+        textContent: sortLabels[key]
       });
       opt.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -8124,13 +7687,15 @@ class HomeTasksCard extends HTMLElement {
     const sortBtnWrapper = this._el("div", { className: "sort-btn-wrapper" });
     const sortBtn = this._el("button", {
       className: "sort-btn" + (effectiveSortBy !== "manual" ? " active" : ""),
-      textContent: "\u2191 \u2193",
-      title: sortLabels[effectiveSortBy],
+      textContent: "↑ ↓",
+      title: sortLabels[effectiveSortBy]
     });
     sortBtn.addEventListener("click", (e) => {
       e.stopPropagation();
       const wasOpen = cs.sortOpen;
-      this._columns.forEach(c => { c.sortOpen = false; });
+      this._columns.forEach((c) => {
+        c.sortOpen = false;
+      });
       cs.sortOpen = !wasOpen;
       this._render();
     });
@@ -8138,16 +7703,14 @@ class HomeTasksCard extends HTMLElement {
     sortBtnWrapper.appendChild(sortDropdown);
     return sortBtnWrapper;
   }
-
   _buildColumnTagChips(col, cs, colIdx) {
     if (col.show_tags === false) return null;
-    const allTags = new Set();
+    const allTags = /* @__PURE__ */ new Set();
     const baseTasks = this._preFilteredTasks(colIdx);
     for (const t of baseTasks) {
-      for (const tag of (t.tags || [])) allTags.add(tag);
+      for (const tag of t.tags || []) allTags.add(tag);
     }
-    // Remove preset labels — they are always applied and cannot be toggled by the user
-    for (const label of (col.filters?.labels || [])) allTags.delete(label);
+    for (const label of col.filters?.labels || []) allTags.delete(label);
     if (allTags.size === 0) return null;
     const chipChildren = [];
     for (const tag of [...allTags].sort()) {
@@ -8155,44 +7718,39 @@ class HomeTasksCard extends HTMLElement {
     }
     return this._el("div", { className: "tag-chips" }, chipChildren);
   }
-
   _buildColumnTagChip(tag, cs, colIdx) {
     const isActive = cs.tagFilters.has(tag);
     const chip = this._el("button", {
       className: "tag-chip" + (isActive ? " active" : ""),
       textContent: "#" + tag,
-      "data-tag": tag,
+      "data-tag": tag
     });
     chip.addEventListener("click", () => {
       this._animateFilterChange(colIdx, () => {
         if (cs.tagFilters.has(tag)) cs.tagFilters.delete(tag);
         else cs.tagFilters.add(tag);
       });
-      // chip-pop: delay so render has completed before querying new chips
       setTimeout(() => {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            this.shadowRoot.querySelectorAll(`.tag-chip[data-tag="${CSS.escape(tag)}"]`)
-              .forEach(c => {
-                c.classList.add("chip-anim");
-                c.addEventListener("animationend", () => c.classList.remove("chip-anim"), { once: true });
-              });
+            this.shadowRoot.querySelectorAll(`.tag-chip[data-tag="${CSS.escape(tag)}"]`).forEach((c) => {
+              c.classList.add("chip-anim");
+              c.addEventListener("animationend", () => c.classList.remove("chip-anim"), { once: true });
+            });
           });
         });
       }, 0);
     });
     return chip;
   }
-
   _buildColumnPersonChips(col, cs, colIdx) {
     if (col.show_assigned_person === false) return null;
-    const assignedPersons = new Set();
+    const assignedPersons = /* @__PURE__ */ new Set();
     const baseTasks = this._preFilteredTasks(colIdx);
     for (const t of baseTasks) {
       for (const p of _assignees(t)) assignedPersons.add(p);
     }
-    // Remove preset assignees — they are always applied and cannot be toggled by the user
-    for (const eid of (col.filters?.assignees || [])) assignedPersons.delete(eid);
+    for (const eid of col.filters?.assignees || []) assignedPersons.delete(eid);
     if (assignedPersons.size === 0) return null;
     const chipChildren = [];
     for (const eid of [...assignedPersons].sort()) {
@@ -8200,7 +7758,6 @@ class HomeTasksCard extends HTMLElement {
     }
     return this._el("div", { className: "person-chips" }, chipChildren);
   }
-
   _buildColumnPersonChip(eid, cs, colIdx) {
     const isActive = cs.personFilters.has(eid);
     let name = eid;
@@ -8209,20 +7766,18 @@ class HomeTasksCard extends HTMLElement {
     }
     const mode = this._personMode(colIdx, "filter");
     const withAvatar = mode === "picture" || mode === "both";
-    // Picture alone: no pill, at the size the pill was tall.
     const avatarOnly = mode === "picture";
     const chip = this._el("button", {
-      className: "person-chip" + (isActive ? " active" : "") + (withAvatar ? " with-avatar" : "")
-        + (avatarOnly ? " avatar-only" : ""),
+      className: "person-chip" + (isActive ? " active" : "") + (withAvatar ? " with-avatar" : "") + (avatarOnly ? " avatar-only" : ""),
       "data-eid": eid,
-      title: name,
+      title: name
     });
     if (avatarOnly) {
       chip.appendChild(this._buildPersonAvatar(eid, name));
     } else if (withAvatar) {
       chip.append(this._buildPersonAvatar(eid, name), this._el("span", { textContent: name }));
     } else {
-      chip.textContent = "\uD83D\uDC64 " + name;
+      chip.textContent = "👤 " + name;
     }
     chip.addEventListener("click", () => {
       this._animateFilterChange(colIdx, () => {
@@ -8232,42 +7787,34 @@ class HomeTasksCard extends HTMLElement {
       setTimeout(() => {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            this.shadowRoot.querySelectorAll(`.person-chip[data-eid="${CSS.escape(eid)}"]`)
-              .forEach(c => {
-                c.classList.add("chip-anim");
-                c.addEventListener("animationend", () => c.classList.remove("chip-anim"), { once: true });
-              });
+            this.shadowRoot.querySelectorAll(`.person-chip[data-eid="${CSS.escape(eid)}"]`).forEach((c) => {
+              c.classList.add("chip-anim");
+              c.addEventListener("animationend", () => c.classList.remove("chip-anim"), { once: true });
+            });
           });
         });
       }, 0);
     });
     return chip;
   }
-
   _buildColumnFilterRow(hideFilters, sortBtnWrapper, sortInTagRow, sortInPersonRow, colIdx) {
     const col = this._config.columns[colIdx];
     const autoDelete = col.auto_delete_completed === true;
     const dueSoonEnabled = col.show_due_soon_filter === true;
     const children = [];
-
     if (hideFilters) {
-      // Fully suppressed (auto-delete on AND no due-soon): only the sort
-      // button may end up here, when it can't be tucked into the tag/person
-      // chip rows.
       if (sortBtnWrapper && !sortInTagRow && !sortInPersonRow) {
         children.push(this._el("div", { className: "filter-spacer" }));
         children.push(sortBtnWrapper);
       }
     } else {
       if (autoDelete) {
-        // Auto-delete suppresses Open/Done (Done is always empty, Open ≡ All).
-        // Keep All so the user can return after picking Due Soon.
         children.push(this._buildFilterBtn(this._t("filter_all"), "all", colIdx));
       } else {
         children.push(
           this._buildFilterBtn(this._t("filter_all"), "all", colIdx),
           this._buildFilterBtn(this._t("filter_open"), "open", colIdx),
-          this._buildFilterBtn(this._t("filter_done"), "done", colIdx),
+          this._buildFilterBtn(this._t("filter_done"), "done", colIdx)
         );
       }
       if (dueSoonEnabled) {
@@ -8276,12 +7823,8 @@ class HomeTasksCard extends HTMLElement {
       children.push(this._el("div", { className: "filter-spacer" }));
       if (sortBtnWrapper) children.push(sortBtnWrapper);
     }
-
-    return children.length > 0
-      ? this._el("div", { className: "filters" }, children)
-      : null;
+    return children.length > 0 ? this._el("div", { className: "filters" }, children) : null;
   }
-
   // The trimmed search query in effect for a column — "" when nothing is
   // typed or the column opted out via show_task_search: false.
   _activeSearchQuery(colIdx) {
@@ -8289,56 +7832,41 @@ class HomeTasksCard extends HTMLElement {
     if (!col || col.show_task_search === false) return "";
     return (this._columns[colIdx]?.taskSearchQuery || "").trim();
   }
-
   // Tasks whose title contains the query, prefix matches first. Deliberately
   // ignores the All/Open/Done filter and the tag/person chips: the point of
   // the search is to find a task you already have, wherever it sits.
   _searchMatches(query, colIdx) {
     const cs = this._columns[colIdx];
     const q = query.toLowerCase();
-    return (cs.tasks || [])
-      .filter((t) => t.title && t.title.toLowerCase().includes(q))
-      .sort((a, b) => {
-        const aStarts = a.title.toLowerCase().startsWith(q) ? 0 : 1;
-        const bStarts = b.title.toLowerCase().startsWith(q) ? 0 : 1;
-        if (aStarts !== bStarts) return aStarts - bStarts;
-        return a.title.localeCompare(b.title);
-      });
+    return (cs.tasks || []).filter((t) => t.title && t.title.toLowerCase().includes(q)).sort((a, b) => {
+      const aStarts = a.title.toLowerCase().startsWith(q) ? 0 : 1;
+      const bStarts = b.title.toLowerCase().startsWith(q) ? 0 : 1;
+      if (aStarts !== bStarts) return aStarts - bStarts;
+      return a.title.localeCompare(b.title);
+    });
   }
-
   // While searching, replaces the normal section-grouped view with a flat
   // list of matches (open + completed, across all sections) so section
   // headers don't eat the whole screen on mobile.
   _buildTaskSearchResults(query, colIdx) {
     const matches = this._searchMatches(query, colIdx);
-
-    const children = matches.length === 0
-      ? [this._el("div", { className: "empty-state", textContent: this._t("empty") })]
-      : matches.map((task) => this._buildTask(task, colIdx));
+    const children = matches.length === 0 ? [this._el("div", { className: "empty-state", textContent: this._t("empty") })] : matches.map((task) => this._buildTask(task, colIdx));
     return this._el("div", { className: "task-list", "data-col-idx": String(colIdx) }, children);
   }
-
   _buildColumnTaskList(filteredTasks, colIdx) {
     const cs = this._columns[colIdx];
     const col = this._config.columns[colIdx];
-
-    // Branch off into the search results view when a search is active
-    // (and not disabled via the editor toggle).
     const activeQuery = this._activeSearchQuery(colIdx);
     if (activeQuery) {
       return this._buildTaskSearchResults(activeQuery, colIdx);
     }
-
     const sections = (cs.sections || []).slice().sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
-
     const taskListChildren = [];
     if (filteredTasks.length === 0) {
       taskListChildren.push(
         this._el("div", { className: "empty-state", textContent: this._t("empty") })
       );
     } else if (sections.length === 0) {
-      // Flat rendering — original behavior, plus optional Done header at the
-      // bottom for visual consistency when both open and completed are visible.
       const openTasks = filteredTasks.filter((t) => !t.completed);
       const doneTasks = filteredTasks.filter((t) => t.completed);
       for (const task of openTasks) taskListChildren.push(this._buildTask(task, colIdx));
@@ -8361,34 +7889,23 @@ class HomeTasksCard extends HTMLElement {
       for (const t of openTasks) {
         if (t.section_id && knownIds.has(t.section_id)) bySection.get(t.section_id).push(t);
       }
-
-      // Top: unsorted, no header (flat)
       for (const t of unsorted) taskListChildren.push(this._buildTask(t, colIdx));
-
-      // Each section in sort order — header + body wrapper (so the entire
-      // body collapses/expands as a single animated unit, including its
-      // internal flex gaps).
       for (const section of sections) {
         const tasksIn = bySection.get(section.id) || [];
         const collapsed = this._isSectionCollapsed(colIdx, section.id);
         taskListChildren.push(this._buildSectionHeader(section, colIdx, { collapsed, count: tasksIn.length }));
         taskListChildren.push(this._buildSectionBody(section.id, tasksIn, colIdx, collapsed));
       }
-
-      // Done at end (only if there are completed tasks)
       if (doneTasks.length > 0) {
         const collapsed = this._isSectionCollapsed(colIdx, "__done__");
         taskListChildren.push(this._buildDoneHeader(colIdx, { collapsed, count: doneTasks.length }));
         taskListChildren.push(this._buildSectionBody("__done__", doneTasks, colIdx, collapsed));
       }
     }
-
     const taskList = this._el("div", {
       className: "task-list",
-      "data-col-idx": String(colIdx),
+      "data-col-idx": String(colIdx)
     }, taskListChildren);
-
-    // Allow dropping on empty column
     taskList.addEventListener("dragover", (e) => {
       e.preventDefault();
       if (!this._draggedTaskId) return;
@@ -8408,26 +7925,19 @@ class HomeTasksCard extends HTMLElement {
     });
     return taskList;
   }
-
   // ── Tile / Kachel view ─────────────────────────────────────────────────────
-
   _buildColumnTileGrid(filteredTasks, colIdx) {
-    // Open tasks first, completed after
-    const openTasks = filteredTasks.filter(t => !t.completed);
-    const doneTasks = filteredTasks.filter(t => t.completed);
+    const openTasks = filteredTasks.filter((t) => !t.completed);
+    const doneTasks = filteredTasks.filter((t) => t.completed);
     const ordered = [...openTasks, ...doneTasks];
-
-    const tileEls = ordered.map(task => this._buildTaskTile(task, colIdx));
-
+    const tileEls = ordered.map((task) => this._buildTaskTile(task, colIdx));
     if (tileEls.length === 0) {
       const empty = this._el("div", { className: "empty-state", textContent: this._t("empty") });
       return this._el("div", { className: "tile-grid-wrap", "data-col-idx": String(colIdx) }, [empty]);
     }
-
     const grid = this._el("div", { className: "tile-grid-inner" }, tileEls);
     return this._el("div", { className: "tile-grid-wrap", "data-col-idx": String(colIdx) }, [grid]);
   }
-
   // Derive the small WebP thumbnail URL for one of our public images
   // (/local/home_tasks/<base>.<ext> -> <base>_thumb.webp). Other URLs unchanged.
   _thumbUrl(url) {
@@ -8438,37 +7948,30 @@ class HomeTasksCard extends HTMLElement {
     if (!path.startsWith("/local/home_tasks/")) return url;
     return path.replace(/\.[^/.]+$/, "") + "_thumb.webp" + q;
   }
-
   _buildTaskTile(task, colIdx) {
     const col = this._config.columns[colIdx];
     const showImages = col.show_images === true;
-    const thumbUrl = showImages ? (task.image_url || null) : null;
-
+    const thumbUrl = showImages ? task.image_url || null : null;
     const cls = [
       "task-tile",
       task.completed ? "completed" : "",
-      thumbUrl ? "has-image" : "",
+      thumbUrl ? "has-image" : ""
     ].filter(Boolean).join(" ");
-
     const tile = this._el("div", { className: cls, "data-task-id": String(task.id), draggable: true });
-
-    // Background image (only when show_images is enabled)
     if (thumbUrl) {
       const small = this._thumbUrl(thumbUrl);
       const img = this._el("img", { className: "tile-bg", src: small, alt: "", draggable: false });
-      // Fall back to the full image if the thumbnail isn't available yet.
-      if (small !== thumbUrl) img.addEventListener("error", () => { img.src = thumbUrl; }, { once: true });
+      if (small !== thumbUrl) img.addEventListener("error", () => {
+        img.src = thumbUrl;
+      }, { once: true });
       tile.appendChild(img);
     } else {
-      // Placeholder: first letter on gradient background
       const placeholder = this._el("div", {
         className: "tile-placeholder",
-        textContent: (task.title || "?").charAt(0).toUpperCase(),
+        textContent: (task.title || "?").charAt(0).toUpperCase()
       });
       tile.appendChild(placeholder);
     }
-
-    // Bottom overlay: title (optional) + done badge
     const showTitle = col.show_tile_title !== false;
     if (showTitle || task.completed) {
       const overlay = this._el("div", { className: "tile-overlay" });
@@ -8482,30 +7985,33 @@ class HomeTasksCard extends HTMLElement {
       }
       tile.appendChild(overlay);
     }
-
-    // Gestures — same mechanism as list rows so both views feel identical.
-    //  • click / tap (no move) → toggle complete
-    //  • hold in place         → open detail sheet (500 ms)
-    //  • drag                  → reorder. Desktop = native HTML5 drag (the
-    //    browser ghost follows the cursor); touch = a clone that follows the
-    //    finger. Displaced tiles animate to their new slot via FLIP
-    //    (_liveMoveTile). Touch arms on a 400 ms hold so a swipe still scrolls.
-
-    // --- Mouse (pointer events for click/hold; HTML5 drag for the move) ---
     let _mDown = null, _mDetail = false, _mDrag = false;
     tile.addEventListener("pointerdown", (e) => {
       if (e.pointerType !== "mouse" || e.button !== 0) return;
-      _mDown = { x: e.clientX, y: e.clientY }; _mDetail = false; _mDrag = false;
+      _mDown = { x: e.clientX, y: e.clientY };
+      _mDetail = false;
+      _mDrag = false;
       this._clearTileLp();
-      this._tileLpTimer = setTimeout(() => { this._tileLpTimer = null; _mDetail = true; this._openTaskDetailSheet(task, colIdx); }, 500);
+      this._tileLpTimer = setTimeout(() => {
+        this._tileLpTimer = null;
+        _mDetail = true;
+        this._openTaskDetailSheet(task, colIdx);
+      }, 500);
     });
     tile.addEventListener("pointermove", (e) => {
       if (e.pointerType !== "mouse" || !_mDown) return;
       if (this._tileLpTimer && (Math.abs(e.clientX - _mDown.x) > 6 || Math.abs(e.clientY - _mDown.y) > 6)) this._clearTileLp();
     });
-    tile.addEventListener("pointerup", () => { this._clearTileLp(); _mDown = null; });
+    tile.addEventListener("pointerup", () => {
+      this._clearTileLp();
+      _mDown = null;
+    });
     tile.addEventListener("click", () => {
-      if (_mDetail || _mDrag) { _mDetail = false; _mDrag = false; return; }
+      if (_mDetail || _mDrag) {
+        _mDetail = false;
+        _mDrag = false;
+        return;
+      }
       this._toggleTask(task.id, task.completed, colIdx);
     });
     tile.addEventListener("dragstart", (e) => {
@@ -8513,57 +8019,76 @@ class HomeTasksCard extends HTMLElement {
       _mDrag = true;
       this._draggedTileId = task.id;
       this._draggedTileCol = colIdx;
-      this._dragPrevX = null; this._dragPrevY = null;
-      try { e.dataTransfer.effectAllowed = "move"; } catch (_) {}
+      this._dragPrevX = null;
+      this._dragPrevY = null;
+      try {
+        e.dataTransfer.effectAllowed = "move";
+      } catch (_) {
+      }
       tile.classList.add("dragging");
     });
     tile.addEventListener("dragend", () => this._finishTileDrag(colIdx));
     tile.addEventListener("dragover", (e) => {
       e.preventDefault();
-      try { e.dataTransfer.dropEffect = "move"; } catch (_) {}
+      try {
+        e.dataTransfer.dropEffect = "move";
+      } catch (_) {
+      }
       if (this._draggedTileId == null || this._draggedTileCol !== colIdx || String(this._draggedTileId) === String(task.id)) return;
       const draggedEl = tile.parentNode.querySelector(`.task-tile[data-task-id="${CSS.escape(String(this._draggedTileId))}"]`);
       this._liveMoveTile(draggedEl, tile, e.clientX, e.clientY);
     });
-    tile.addEventListener("drop", (e) => { e.preventDefault(); this._finishTileDrag(colIdx); });
-
-    // --- Touch (tap = complete; 400 ms hold arms drag; clone follows finger) ---
+    tile.addEventListener("drop", (e) => {
+      e.preventDefault();
+      this._finishTileDrag(colIdx);
+    });
     let _t = null;
     tile.addEventListener("touchstart", (e) => {
       if (e.touches.length !== 1) return;
       _t = { x: e.touches[0].clientX, y: e.touches[0].clientY, armed: false, dragging: false };
       this._clearTileLp();
-      this._tileLpTimer = setTimeout(() => { this._tileLpTimer = null; if (_t) { _t.armed = true; tile.classList.add("armed"); } }, 400);
+      this._tileLpTimer = setTimeout(() => {
+        this._tileLpTimer = null;
+        if (_t) {
+          _t.armed = true;
+          tile.classList.add("armed");
+        }
+      }, 400);
     }, { passive: true });
     tile.addEventListener("touchmove", (e) => {
       const tt = e.touches[0];
       if (!tt || !_t) return;
       if (!_t.armed) {
-        if (Math.abs(tt.clientX - _t.x) > 8 || Math.abs(tt.clientY - _t.y) > 8) { this._clearTileLp(); _t = null; }
+        if (Math.abs(tt.clientX - _t.x) > 8 || Math.abs(tt.clientY - _t.y) > 8) {
+          this._clearTileLp();
+          _t = null;
+        }
         return;
       }
       e.preventDefault();
-      if (!_t.dragging) { _t.dragging = true; tile.classList.remove("armed"); this._startTileTouchDrag(tile, colIdx, tt.clientX, tt.clientY); }
+      if (!_t.dragging) {
+        _t.dragging = true;
+        tile.classList.remove("armed");
+        this._startTileTouchDrag(tile, colIdx, tt.clientX, tt.clientY);
+      }
       this._moveTileTouchDrag(tt.clientX, tt.clientY);
     }, { passive: false });
     const _tEnd = () => {
       this._clearTileLp();
       if (_t && _t.dragging) this._finishTileDrag(colIdx);
-      else if (_t && _t.armed) { tile.classList.remove("armed"); this._openTaskDetailSheet(task, colIdx); }
-      else if (_t) this._toggleTask(task.id, task.completed, colIdx);
+      else if (_t && _t.armed) {
+        tile.classList.remove("armed");
+        this._openTaskDetailSheet(task, colIdx);
+      } else if (_t) this._toggleTask(task.id, task.completed, colIdx);
       _t = null;
     };
     tile.addEventListener("touchend", _tEnd);
     tile.addEventListener("touchcancel", _tEnd);
-
-    // Same creation animation as list rows.
     if (this._justAddedTaskId && this._justAddedTaskId === String(task.id)) {
       this._animateTaskEntry(task.id, colIdx);
     }
-
     return tile;
   }
-
   // Live-reorder during a tile drag. Whole-tile catch + direction gate: hovering
   // a tile takes over its slot, but only in the pointer's travel direction; the
   // displaced tiles then FLIP (translate x+y) to their new grid slots.
@@ -8571,30 +8096,20 @@ class HomeTasksCard extends HTMLElement {
     if (!draggedEl || !targetEl || draggedEl === targetEl) return;
     const grid = targetEl.parentNode;
     if (!grid) return;
-    // Direction of travel since the last event. dragover/touchmove keep firing
-    // even when the pointer is still (and an in-flight FLIP shifts tiles under
-    // it), so "no movement" must mean "no change" — that is what stops the two
-    // tiles from flickering back and forth on their own.
     const mx = clientX - (this._dragPrevX == null ? clientX : this._dragPrevX);
     const my = clientY - (this._dragPrevY == null ? clientY : this._dragPrevY);
     this._dragPrevX = clientX;
     this._dragPrevY = clientY;
-    if (Math.abs(mx) <= 1 && Math.abs(my) <= 1) return; // sub-pixel/idle: treat as no movement
-    // Whole-tile catch + direction gate: hovering anywhere on a tile takes over
-    // its slot, but only reorder in the direction the pointer is actually
-    // travelling (vertical weighted higher since it changes the whole row). This
-    // gives the full-tile catch, lets you push a tile back the way it came, and
-    // stops diagonal / row-change flicker — a swap and its reverse can't both
-    // fire while the pointer moves one way.
+    if (Math.abs(mx) <= 1 && Math.abs(my) <= 1) return;
     const all = [...grid.querySelectorAll(".task-tile")];
     const draggedBefore = all.indexOf(draggedEl) < all.indexOf(targetEl);
-    if (draggedBefore !== ((my * 2 + mx) > 0)) return;
+    if (draggedBefore !== my * 2 + mx > 0) return;
     const ref = draggedBefore ? targetEl.nextSibling : targetEl;
-    if (ref === draggedEl || draggedEl.nextSibling === ref) return; // already there
+    if (ref === draggedEl || draggedEl.nextSibling === ref) return;
     const siblings = [...grid.querySelectorAll(".task-tile:not(.dragging)")];
-    const before = new Map(siblings.map(el => [el, el.getBoundingClientRect()]));
+    const before = new Map(siblings.map((el) => [el, el.getBoundingClientRect()]));
     grid.insertBefore(draggedEl, ref);
-    siblings.forEach(el => {
+    siblings.forEach((el) => {
       const b = before.get(el);
       const now = el.getBoundingClientRect();
       const dx = (b ? b.left : now.left) - now.left;
@@ -8605,17 +8120,20 @@ class HomeTasksCard extends HTMLElement {
       requestAnimationFrame(() => {
         el.style.transition = "transform 0.18s ease";
         el.style.transform = "";
-        el.addEventListener("transitionend", () => { el.style.transition = ""; el.style.transform = ""; }, { once: true });
+        el.addEventListener("transitionend", () => {
+          el.style.transition = "";
+          el.style.transform = "";
+        }, { once: true });
       });
     });
   }
-
   // Touch drag: a clone follows the finger while the real tile (dimmed) is
   // reordered in place — same approach as the list's row touch drag.
   _startTileTouchDrag(tile, colIdx, clientX, clientY) {
     this._draggedTileId = tile.dataset.taskId;
     this._draggedTileCol = colIdx;
-    this._dragPrevX = null; this._dragPrevY = null;
+    this._dragPrevX = null;
+    this._dragPrevY = null;
     tile.classList.add("dragging");
     const rect = tile.getBoundingClientRect();
     const clone = tile.cloneNode(true);
@@ -8627,7 +8145,6 @@ class HomeTasksCard extends HTMLElement {
     this._tileCloneOffX = clientX - rect.left;
     this._tileCloneOffY = clientY - rect.top;
   }
-
   _moveTileTouchDrag(clientX, clientY) {
     if (this._tileClone) {
       this._tileClone.style.left = `${clientX - this._tileCloneOffX}px`;
@@ -8642,31 +8159,31 @@ class HomeTasksCard extends HTMLElement {
       this._liveMoveTile(draggedEl, target, clientX, clientY);
     }
   }
-
   _finishTileDrag(colIdx) {
     const draggedId = this._draggedTileId;
     this._draggedTileId = null;
     this._draggedTileCol = null;
-    if (this._tileClone) { this._tileClone.remove(); this._tileClone = null; }
-    this.shadowRoot.querySelectorAll(".task-tile.dragging").forEach(el => el.classList.remove("dragging"));
+    if (this._tileClone) {
+      this._tileClone.remove();
+      this._tileClone = null;
+    }
+    this.shadowRoot.querySelectorAll(".task-tile.dragging").forEach((el) => el.classList.remove("dragging"));
     if (draggedId == null) return;
     const grid = this.shadowRoot.querySelector(`.tile-grid-wrap[data-col-idx="${colIdx}"] .tile-grid-inner`);
     if (!grid) return;
-    const order = [...grid.querySelectorAll(".task-tile[data-task-id]")].map(el => el.dataset.taskId);
-    // Merge back tasks hidden by a filter (person/tag chips) so they keep their
-    // relative position — otherwise reorder_tasks renumbers only the visible
-    // subset and the hidden tasks' sort_order collides (same as the list path).
+    const order = [...grid.querySelectorAll(".task-tile[data-task-id]")].map((el) => el.dataset.taskId);
     if (order.length > 1) this._reorderTasks(this._mergeHiddenTasks(colIdx, order, draggedId), colIdx);
   }
-
   // Cancel a pending tile long-press (detail) timer. Centralised so a re-render
   // (e.g. from a rapid complete/uncomplete) reliably clears it — otherwise the
   // pressed tile gets replaced, its pointerup never fires, and the timer would
   // pop the detail sheet open.
   _clearTileLp() {
-    if (this._tileLpTimer) { clearTimeout(this._tileLpTimer); this._tileLpTimer = null; }
+    if (this._tileLpTimer) {
+      clearTimeout(this._tileLpTimer);
+      this._tileLpTimer = null;
+    }
   }
-
   // Remove the detail sheet + backdrop immediately (no slide-out). Used by the
   // action buttons and before opening a new sheet; the animated dismissal is the
   // close() closure inside _openTaskDetailSheet.
@@ -8674,32 +8191,36 @@ class HomeTasksCard extends HTMLElement {
     this.shadowRoot.querySelector(".task-detail-sheet")?.remove();
     this.shadowRoot.querySelector(".task-detail-backdrop")?.remove();
   }
-
   _openTaskDetailSheet(task, colIdx) {
     this._closeTaskDetailSheet();
-
     const backdrop = this._el("div", { className: "task-detail-backdrop" });
     const sheet = this._el("div", { className: "task-detail-sheet" });
-    // Match the sheet width/position to the card itself rather than spanning
-    // the full viewport width.
     const cardRect = this.getBoundingClientRect();
     if (cardRect.width) {
       sheet.style.left = `${Math.round(cardRect.left)}px`;
       sheet.style.right = "auto";
       sheet.style.width = `${Math.round(cardRect.width)}px`;
     }
-
     const close = () => {
       sheet.classList.remove("open");
-      sheet.addEventListener("transitionend", () => { sheet.remove(); backdrop.remove(); }, { once: true });
-      setTimeout(() => { sheet.remove(); backdrop.remove(); }, 350);
+      sheet.addEventListener("transitionend", () => {
+        sheet.remove();
+        backdrop.remove();
+      }, { once: true });
+      setTimeout(() => {
+        sheet.remove();
+        backdrop.remove();
+      }, 350);
     };
-
     backdrop.addEventListener("click", close);
-
     const handle = this._el("div", { className: "sheet-handle" });
     const titleEl = this._el("input", { className: "sheet-title", type: "text", value: task.title });
-    titleEl.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); titleEl.blur(); } });
+    titleEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        titleEl.blur();
+      }
+    });
     titleEl.addEventListener("change", () => {
       const v = titleEl.value.trim();
       if (v && v !== task.title) this._updateTaskTitle(task.id, v, colIdx);
@@ -8712,32 +8233,29 @@ class HomeTasksCard extends HTMLElement {
     closeBtn.appendChild(closeIco);
     closeBtn.addEventListener("click", close);
     const header = this._el("div", { className: "sheet-header" }, [titleEl, closeBtn]);
-
     const body = this._el("div", { className: "sheet-body" });
     body.appendChild(this._buildTaskDetails(task, colIdx));
-
     sheet.append(handle, header, body);
     this.shadowRoot.append(backdrop, sheet);
     requestAnimationFrame(() => requestAnimationFrame(() => sheet.classList.add("open")));
   }
-
   _buildFilterBtn(label, value, colIdx) {
     const cs = this._columns[colIdx];
     const btn = this._el("button", {
       className: `filter-btn${cs.filter === value ? " active" : ""}`,
-      textContent: label,
+      textContent: label
     });
     btn.addEventListener("click", () => {
-      this._animateFilterChange(colIdx, () => { cs.filter = value; });
+      this._animateFilterChange(colIdx, () => {
+        cs.filter = value;
+      });
     });
     return btn;
   }
-
   _columnStorageKey(colIdx) {
     const col = this._config.columns[colIdx] || {};
     return col.list_id || col.entity_id || `col_${colIdx}`;
   }
-
   _isSectionCollapsed(colIdx, sectionId) {
     try {
       const key = `home_tasks_card:section_collapse:${this._columnStorageKey(colIdx)}:${sectionId}`;
@@ -8746,32 +8264,23 @@ class HomeTasksCard extends HTMLElement {
       return false;
     }
   }
-
   _setSectionCollapsed(colIdx, sectionId, collapsed) {
     try {
       const key = `home_tasks_card:section_collapse:${this._columnStorageKey(colIdx)}:${sectionId}`;
       if (collapsed) window.localStorage.setItem(key, "1");
       else window.localStorage.removeItem(key);
     } catch (e) {
-      /* localStorage unavailable — collapse state is session-only */
     }
   }
-
   _toggleSectionCollapsed(colIdx, sectionId) {
     const currentlyCollapsed = this._isSectionCollapsed(colIdx, sectionId);
     if (currentlyCollapsed) {
-      // Expanding: render with .expanding class baseline (max-height: 0) so
-      // the body never flashes at full height, then animate it to its
-      // natural height.
       this._setSectionCollapsed(colIdx, sectionId, false);
       this._expandingSection = sectionId;
       this._render();
       this._expandingSection = null;
       this._animateSectionExpand(colIdx, sectionId);
     } else {
-      // Collapsing: animate body's max-height from current to 0, then render
-      // to drop the body's collapsed class baseline.
-      // Caret rotation: toggle header class immediately for instant feedback.
       const header = this._findSectionHeader(colIdx, sectionId);
       if (header) header.classList.add("collapsed");
       this._animateSectionCollapse(colIdx, sectionId, () => {
@@ -8780,7 +8289,6 @@ class HomeTasksCard extends HTMLElement {
       });
     }
   }
-
   _buildSectionBody(sectionId, tasks, colIdx, collapsed) {
     let cls = "section-body";
     if (collapsed) cls += " collapsed";
@@ -8790,32 +8298,30 @@ class HomeTasksCard extends HTMLElement {
     for (const t of tasks) body.appendChild(this._buildTask(t, colIdx));
     return body;
   }
-
   _findSectionHeader(colIdx, sectionId) {
     return this.shadowRoot.querySelector(
       `.task-list[data-col-idx="${CSS.escape(String(colIdx))}"] .section-header[data-section-id="${CSS.escape(String(sectionId))}"]`
     );
   }
-
   _findSectionBody(colIdx, sectionId) {
     return this.shadowRoot.querySelector(
       `.task-list[data-col-idx="${CSS.escape(String(colIdx))}"] .section-body[data-section-id="${CSS.escape(String(sectionId))}"]`
     );
   }
-
   _animateSectionCollapse(colIdx, sectionId, done) {
     const body = this._findSectionBody(colIdx, sectionId);
-    if (!body) { done(); return; }
-    // No animation when the document isn't visible: requestAnimationFrame
-    // doesn't fire in hidden tabs / backgrounded apps, and the transition
-    // would never run. Commit the end state directly.
-    if (document.hidden) { done(); return; }
-    // Freeze current height as px so we can transition from a concrete value
+    if (!body) {
+      done();
+      return;
+    }
+    if (document.hidden) {
+      done();
+      return;
+    }
     const h = body.scrollHeight;
     body.style.maxHeight = h + "px";
     body.style.opacity = "1";
     body.style.overflow = "hidden";
-    // Force layout flush before applying the transition target
     void body.offsetHeight;
     let finished = false;
     const finish = (e) => {
@@ -8830,11 +8336,6 @@ class HomeTasksCard extends HTMLElement {
       done();
     };
     body.addEventListener("transitionend", finish);
-    // Safety net registered *outside* the rAF: if the frame callback never
-    // runs (tab hidden mid-click, throttled WebView), the body must not
-    // stay frozen at a fixed max-height with overflow hidden — later content
-    // growth would be clipped and the next section headers would visually
-    // overlap it.
     setTimeout(() => finish(), 320);
     requestAnimationFrame(() => {
       if (finished) return;
@@ -8843,12 +8344,7 @@ class HomeTasksCard extends HTMLElement {
       body.style.opacity = "0";
     });
   }
-
   _animateSectionExpand(colIdx, sectionId) {
-    // The body was rendered with .expanding (max-height:0) so there's no
-    // flash; whatever happens below, it must end up fully visible. The
-    // safety net lives outside the rAF chain for the same reason as in
-    // _animateSectionCollapse (hidden tabs never run frame callbacks).
     let cleared = false;
     const clear = (e) => {
       if (e && e.propertyName !== "max-height") return;
@@ -8864,22 +8360,20 @@ class HomeTasksCard extends HTMLElement {
       body.style.overflow = "";
     };
     setTimeout(() => clear(), 360);
-    if (document.hidden) { clear(); return; }
-    // ha-card commits its layout asynchronously after _render(); waiting one
-    // rAF lets scrollHeight return the body's true natural height.
+    if (document.hidden) {
+      clear();
+      return;
+    }
     requestAnimationFrame(() => {
       if (cleared) return;
       const body = this._findSectionBody(colIdx, sectionId);
       if (!body) return;
-      // scrollHeight ignores max-height and overflow:hidden — it returns
-      // the body's content height even while .expanding is still applied.
       const targetH = body.scrollHeight;
-      // Swap the class baseline for inline styles, then transition.
       body.classList.remove("expanding");
       body.style.maxHeight = "0";
       body.style.opacity = "0";
       body.style.overflow = "hidden";
-      void body.offsetHeight; // commit baseline before transition
+      void body.offsetHeight;
       body.addEventListener("transitionend", clear);
       requestAnimationFrame(() => {
         if (cleared) return;
@@ -8889,7 +8383,6 @@ class HomeTasksCard extends HTMLElement {
       });
     });
   }
-
   _buildSectionHeader(section, colIdx, opts = {}) {
     const { collapsed = false, count = 0, isDone = false } = opts;
     let className = "section-header";
@@ -8918,13 +8411,10 @@ class HomeTasksCard extends HTMLElement {
     this._attachDragToSectionHeader(header, section.id, colIdx, opts.isDone === true);
     return header;
   }
-
   _attachDragToSectionHeader(headerEl, sectionId, colIdx, isDoneHeader) {
     const onEnter = () => {
       if (!this._draggedTaskId) return;
       headerEl.classList.add("drop-target");
-      // Spring-loaded: open a collapsed section after a short hover so
-      // the user can drop into it. Skip for the Done header.
       if (!isDoneHeader && this._isSectionCollapsed(colIdx, sectionId)) {
         if (this._springLoadTimer) clearTimeout(this._springLoadTimer);
         this._springLoadOriginallyCollapsed = sectionId;
@@ -8946,12 +8436,9 @@ class HomeTasksCard extends HTMLElement {
       e.preventDefault();
       e.dataTransfer.dropEffect = isDoneHeader ? "none" : "move";
       headerEl.classList.add("drop-target");
-      if (isDoneHeader) return; // never reposition into Done bucket via drag
+      if (isDoneHeader) return;
       const draggedEl = this.shadowRoot.querySelector(`.task[data-task-id="${CSS.escape(String(this._draggedTaskId))}"]`);
       if (!draggedEl) return;
-      // The body wrapper of this section is headerEl's next sibling. Insert
-      // the dragged element as the first child of that wrapper so it lands
-      // as the first task of the section.
       const body = headerEl.nextElementSibling;
       const target = body && body.classList.contains("section-body") ? body : null;
       if (target && draggedEl.parentNode === target && draggedEl === target.firstChild) return;
@@ -8985,7 +8472,6 @@ class HomeTasksCard extends HTMLElement {
       this._finishDrag();
     });
   }
-
   _buildDoneHeader(colIdx, opts = {}) {
     return this._buildSectionHeader(
       { id: "__done__", name: this._t("done_section_header"), icon: "mdi:check-circle-outline" },
@@ -8993,29 +8479,16 @@ class HomeTasksCard extends HTMLElement {
       { ...opts, isDone: true }
     );
   }
-
   _buildTask(task, colIdx) {
     const cs = this._columns[colIdx];
     const col = this._config.columns[colIdx];
     const isExpanded = this._expandedTasks.has(task.id);
     const isEditing = this._editingTaskId === task.id;
-
     let className = "task";
     if (task.completed) className += " completed";
     if (isExpanded) className += " is-expanded";
-
-    // draggable=false while editing OR while expanded:
-    //   - editing: the title input must accept text selection
-    //   - expanded: the details container has notes/tag/date inputs that
-    //     must accept text selection. The browser blocks ALL cursor and
-    //     text-selection inside any draggable=true ancestor, regardless
-    //     of dragstart.preventDefault() or mousedown.stopPropagation().
-    //     Users can drag a task only when it's collapsed — matching the
-    //     UX of Trello, Jira and other card-based interfaces.
     const taskEl = this._el("div", { className, draggable: !isEditing && !isExpanded });
     taskEl.dataset.taskId = task.id;
-
-    // --- main row: checkbox + content + [thumb] + expand button ---
     const checkboxEl = this._buildTaskCheckbox(task, colIdx);
     const contentChildren = this._buildTaskContentChildren(task, colIdx, isEditing);
     const metaBadges = this._buildTaskMetaBadges(task, col, cs, colIdx);
@@ -9024,7 +8497,6 @@ class HomeTasksCard extends HTMLElement {
     }
     const contentEl = this._el("div", { className: "task-content" }, contentChildren);
     const expandBtn = this._buildTaskExpandButton(isExpanded);
-
     const mainRowChildren = [checkboxEl, contentEl];
     if (task.image_url && !isEditing && col.show_images === true) {
       const _full = task.image_url;
@@ -9033,10 +8505,11 @@ class HomeTasksCard extends HTMLElement {
         className: "task-thumb",
         src: _small,
         alt: "",
-        title: task.title,
+        title: task.title
       });
-      if (_small !== _full) thumb.addEventListener("error", () => { thumb.src = _full; }, { once: true });
-      // Click on thumbnail expands the task to show full image
+      if (_small !== _full) thumb.addEventListener("error", () => {
+        thumb.src = _full;
+      }, { once: true });
       thumb.addEventListener("click", (e) => {
         e.stopPropagation();
         if (isExpanded) this._expandedTasks.delete(task.id);
@@ -9046,28 +8519,20 @@ class HomeTasksCard extends HTMLElement {
       mainRowChildren.push(thumb);
     }
     mainRowChildren.push(expandBtn);
-
     const mainRow = this._el("div", { className: "task-main" }, mainRowChildren);
     this._attachTaskExpandClickHandler(mainRow, task, taskEl, colIdx);
     taskEl.appendChild(mainRow);
-
-    // --- expanded details + open/close animation ---
     if (isExpanded) {
       const detailsEl = this._buildTaskDetails(task, colIdx);
       taskEl.appendChild(detailsEl);
       this._animateExpandedDetails(detailsEl, task);
     }
-
     this._attachDragToTask(taskEl, task.id, colIdx);
     this._attachTaskAppearanceAnimations(task, colIdx);
-
     return taskEl;
   }
-
   _buildTaskCheckbox(task, colIdx) {
     const checkbox = this._el("input", { type: "checkbox", checked: task.completed });
-    // A touch drag released on the checkbox still ends in a click — cancel it
-    // so the drag doesn't tick the task off.
     checkbox.addEventListener("click", (e) => {
       if (Date.now() < (this._suppressRowTapUntil || 0)) e.preventDefault();
     });
@@ -9075,43 +8540,46 @@ class HomeTasksCard extends HTMLElement {
     const checkmark = this._el("span", { className: "checkmark" });
     return this._el("label", { className: "checkbox-container" }, [checkbox, checkmark]);
   }
-
   _buildTaskContentChildren(task, colIdx, isEditing) {
     const children = [];
-    // Show the title as a bordered text field whenever the task is expanded (not
-    // only on the hidden double-click) so users can see the title is editable —
-    // matching the other detail input fields.
     if (isEditing || this._expandedTasks.has(task.id)) {
       const editInput = this._el("input", {
         type: "text",
         className: "edit-title-input",
         value: task.title,
-        "data-focus-key": "task_title",
+        "data-focus-key": "task_title"
       });
-      // Stop mousedown from reaching the draggable taskEl — otherwise the browser's
-      // drag-detection system intercepts mousedown and prevents cursor positioning.
-      editInput.addEventListener("mousedown", (e) => { e.stopPropagation(); });
-      // Mark as actively editing on focus so a background re-render defers — else
-      // a poll mid-typing would rebuild this text input and revert the title.
-      editInput.addEventListener("focus", () => { this._editingTaskId = task.id; });
+      editInput.addEventListener("mousedown", (e) => {
+        e.stopPropagation();
+      });
+      editInput.addEventListener("focus", () => {
+        this._editingTaskId = task.id;
+      });
       const saveTitle = () => {
         this._editingTaskId = null;
         const v = editInput.value.trim();
         if (v && v !== task.title) this._updateTaskTitle(task.id, v, colIdx);
-        else if (!v) editInput.value = task.title;  // never store a blank title
+        else if (!v) editInput.value = task.title;
       };
       editInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") { e.preventDefault(); saveTitle(); editInput.blur(); }
-        else if (e.key === "Escape") { this._editingTaskId = null; editInput.value = task.title; editInput.blur(); }
+        if (e.key === "Enter") {
+          e.preventDefault();
+          saveTitle();
+          editInput.blur();
+        } else if (e.key === "Escape") {
+          this._editingTaskId = null;
+          editInput.value = task.title;
+          editInput.blur();
+        }
       });
       editInput.addEventListener("blur", saveTitle);
       children.push(editInput);
-      // Only grab focus for the explicit double-click edit, not on plain expand.
-      if (isEditing) setTimeout(() => { editInput.focus(); editInput.select(); }, 0);
+      if (isEditing) setTimeout(() => {
+        editInput.focus();
+        editInput.select();
+      }, 0);
     } else {
       const titleSpan = this._el("span", { className: "task-title", textContent: task.title });
-      // With tap_to_complete the first click of a double-click already ticks
-      // the task off; the title is edited from the expanded details instead.
       if (this._config?.columns?.[colIdx]?.tap_to_complete !== true) titleSpan.addEventListener("dblclick", (e) => {
         e.stopPropagation();
         this._expandedTasks.add(task.id);
@@ -9122,7 +8590,6 @@ class HomeTasksCard extends HTMLElement {
     }
     return children;
   }
-
   _buildTaskExpandButton(isExpanded) {
     const expandBtn = this._el("button", { className: "expand-btn" + (isExpanded ? " expanded" : "") });
     const expandIcon = document.createElement("ha-icon");
@@ -9130,13 +8597,8 @@ class HomeTasksCard extends HTMLElement {
     expandBtn.appendChild(expandIcon);
     return expandBtn;
   }
-
   _buildTaskMetaBadges(task, col, cs, colIdx) {
     const meta = [];
-    // Each chip needs BOTH switches (issue #45): the feature switch
-    // ("Task features" section, also gates the detail editor) and its
-    // display switch ("Display" section). Both default to on, so hiding a
-    // chip no longer requires disabling the feature itself.
     if (task.priority && col.show_priority !== false && col.badge_priority !== false) {
       meta.push(this._buildPriorityBadge(task));
     }
@@ -9151,8 +8613,7 @@ class HomeTasksCard extends HTMLElement {
       const badge = this._buildRecurrenceBadge(task);
       if (badge) meta.push(badge);
     }
-    if ((task.assigned_person || task.assigned_name) && col.show_assigned_person !== false
-        && this._personMode(colIdx, "badge") !== "off") {
+    if ((task.assigned_person || task.assigned_name) && col.show_assigned_person !== false && this._personMode(colIdx, "badge") !== "off") {
       const people = _assignees(task);
       if (people.length) for (const eid of people) meta.push(this._buildAssignedPersonBadge(task, cs, colIdx, eid));
       else meta.push(this._buildAssignedPersonBadge(task, cs, colIdx));
@@ -9167,73 +8628,64 @@ class HomeTasksCard extends HTMLElement {
     }
     return meta;
   }
-
   _priorityLabel(priority) {
     return { 1: this._t("pri_low"), 2: this._t("pri_medium"), 3: this._t("pri_high") }[priority];
   }
-
   _buildPriorityBadge(task) {
     const priClass = { 1: "pri-low", 2: "pri-medium", 3: "pri-high" };
     return this._el("span", {
       className: `priority-badge ${priClass[task.priority] || ""}`,
-      textContent: this._priorityLabel(task.priority),
+      textContent: this._priorityLabel(task.priority)
     });
   }
-
   _buildDueDateBadge(task) {
     let dueCls = "due-date";
     if (this._isDueDateOverdue(task.due_date)) dueCls += " overdue";
     else if (this._isDueDateToday(task.due_date)) dueCls += " today";
     return this._el("span", {
       className: dueCls,
-      textContent: this._formatDueDate(task.due_date, task.due_time),
+      textContent: this._formatDueDate(task.due_date, task.due_time)
     });
   }
-
   _buildRecurrenceBadge(task) {
     let recLabel = null;
     const unit = task.recurrence_unit;
     const val = task.recurrence_value || 1;
     const unitLabels = { hours: this._t("rec_short_h"), days: this._t("rec_short_d"), weeks: this._t("rec_short_w"), months: this._t("rec_short_m"), years: this._t("rec_short_y") };
     const singleLabels = { hours: this._t("rec_hourly"), days: this._t("rec_daily"), weeks: this._t("rec_weekly"), months: this._t("rec_monthly"), years: this._t("rec_yearly") };
-
     if (task.recurrence_type === "weekdays" && task.recurrence_weekdays && task.recurrence_weekdays.length) {
-      // Legacy mode (pre-migration): show weekdays.
-      recLabel = task.recurrence_weekdays.map(d => this._t(`rec_wd_${d}`)).join(" ");
+      recLabel = task.recurrence_weekdays.map((d) => this._t(`rec_wd_${d}`)).join(" ");
     } else if (unit === "weeks" && task.recurrence_weekdays && task.recurrence_weekdays.length) {
-      // Weekly with weekday filter — "Mo Mi" or "alle 2 Wo: Mo Mi".
-      const days = task.recurrence_weekdays.map(d => this._t(`rec_wd_${d}`)).join(" ");
+      const days = task.recurrence_weekdays.map((d) => this._t(`rec_wd_${d}`)).join(" ");
       recLabel = val === 1 ? days : `${val} ${unitLabels.weeks} ${days}`;
     } else if (unit === "months" && task.recurrence_month_pattern === "day_of_month" && task.recurrence_day_of_month != null) {
       const dom = task.recurrence_day_of_month;
       const dayPart = dom === "last" ? this._t("rec_last_short") : this._dayOrdinal(dom);
-      recLabel = val === 1 ? dayPart : `${dayPart} \u00b7 ${val} ${unitLabels.months}`;
+      recLabel = val === 1 ? dayPart : `${dayPart} · ${val} ${unitLabels.months}`;
     } else if (unit === "months" && task.recurrence_month_pattern === "nth_weekday" && task.recurrence_nth_week != null && task.recurrence_weekdays && task.recurrence_weekdays.length) {
       const nth = task.recurrence_nth_week;
       const wdShort = this._t(`rec_wd_${task.recurrence_weekdays[0]}`);
       const nthLbl = nth === "last" ? this._t("rec_last_short") : `${nth}.`;
       const head = `${nthLbl} ${wdShort}`;
-      recLabel = val === 1 ? head : `${head} \u00b7 ${val} ${unitLabels.months}`;
+      recLabel = val === 1 ? head : `${head} · ${val} ${unitLabels.months}`;
     } else if (unit === "years" && task.recurrence_anniversary && /^\d{2}-\d{2}$/.test(task.recurrence_anniversary)) {
       const m = task.recurrence_anniversary.slice(0, 2);
       const d = task.recurrence_anniversary.slice(3, 5);
       const head = `${parseInt(d, 10)}.${parseInt(m, 10)}.`;
-      recLabel = val === 1 ? head : `${head} \u00b7 ${val} ${unitLabels.years}`;
+      recLabel = val === 1 ? head : `${head} · ${val} ${unitLabels.years}`;
     } else if (unit) {
       recLabel = val === 1 ? singleLabels[unit] : `${val} ${unitLabels[unit] || unit}`;
     }
-    // Fallback for complex Todoist recurrence patterns
     if (!recLabel && task._todoist_recurrence_string) {
       recLabel = task._todoist_recurrence_string;
     }
     if (!recLabel) return null;
-    let badgeText = "\u21BB " + recLabel;
+    let badgeText = "↻ " + recLabel;
     if (task.recurrence_end_type === "count" && task.recurrence_remaining_count != null) {
-      badgeText += " \u00b7 " + this._t("rec_remaining", task.recurrence_remaining_count);
+      badgeText += " · " + this._t("rec_remaining", task.recurrence_remaining_count);
     }
     return this._el("span", { className: "recurrence-badge", textContent: badgeText });
   }
-
   // Only Home Assistant's own person picture is ever shown. entity_picture
   // may hold whatever the person's config puts there; an absolute URL points
   // at a host we do not control, so it is treated like no picture at all.
@@ -9242,13 +8694,9 @@ class HomeTasksCard extends HTMLElement {
   _personPictureUrl(entityId) {
     const url = this._hass?.states?.[entityId]?.attributes?.entity_picture;
     if (typeof url !== "string" || !url.startsWith("/")) return null;
-    // Only the size that image_upload itself serves is swapped. A picture
-    // that merely has "512x512" somewhere in its path (a folder named after
-    // a size, say) would turn into a URL that does not exist.
     if (!url.startsWith("/api/image/serve/")) return url;
     return url.replace("/512x512", "/256x256");
   }
-
   // `which` is "badge" (in the task row) or "filter" (the row above it).
   // Configs written before the dropdown existed are read through their old
   // keys, so an update changes nothing on screen.
@@ -9261,58 +8709,44 @@ class HomeTasksCard extends HTMLElement {
     if (!chipOn) return picture ? "picture" : "off";
     return picture ? "both" : "name";
   }
-
   _personInitials(name) {
-    // The first *letter* of a word: display names are not always plain
-    // first-and-last, and "Unknown (Alice)" must not put a bracket in the
-    // circle. Words without a letter or digit drop out entirely.
-    const letters = String(name || "")
-      .trim()
-      .split(/\s+/)
-      .map((w) => (w.match(/[\p{L}\p{N}]/u) || [""])[0])
-      .filter(Boolean);
+    const letters = String(name || "").trim().split(/\s+/).map((w) => (w.match(/[\p{L}\p{N}]/u) || [""])[0]).filter(Boolean);
     if (!letters.length) return "?";
     const last = letters.length > 1 ? letters[letters.length - 1] : "";
     return (letters[0] + last).toUpperCase();
   }
-
   _personColor(key) {
     const s = String(key || "");
     let hash = 0;
-    for (let i = 0; i < s.length; i++) hash = (hash * 31 + s.charCodeAt(i)) | 0;
+    for (let i = 0; i < s.length; i++) hash = hash * 31 + s.charCodeAt(i) | 0;
     return PERSON_COLORS[Math.abs(hash) % PERSON_COLORS.length];
   }
-
   _buildInitialsAvatar(key, name) {
     const el = this._el("span", {
       className: "person-avatar initials",
-      textContent: this._personInitials(name),
+      textContent: this._personInitials(name)
     });
     el.style.background = this._personColor(key);
     return el;
   }
-
   // A picture when the person has one, initials otherwise (issue #48).
   _buildPersonAvatar(entityId, name) {
     const url = this._personPictureUrl(entityId);
     if (!url) return this._buildInitialsAvatar(entityId || name, name);
     const img = this._el("img", { className: "person-avatar", src: url, alt: "" });
-    // A picture that has gone missing must not leave a hole in the row.
     img.addEventListener(
       "error",
       () => img.replaceWith(this._buildInitialsAvatar(entityId || name, name)),
-      { once: true },
+      { once: true }
     );
     return img;
   }
-
   _buildAssignedPersonBadge(task, cs, colIdx, eid = task.assigned_person) {
     let personName;
     if (eid && this._hass && this._hass.states && this._hass.states[eid]) {
       const attrs = this._hass.states[eid].attributes;
-      personName = (attrs && attrs.friendly_name) || eid;
+      personName = attrs && attrs.friendly_name || eid;
     } else if (task.assigned_name) {
-      // Todoist collaborator with no HA person match
       personName = this._t("assigned_unknown").replace("%s", task.assigned_name);
     } else {
       personName = eid;
@@ -9322,20 +8756,19 @@ class HomeTasksCard extends HTMLElement {
     const withAvatar = mode === "picture" || mode === "both";
     const avatarOnly = mode === "picture";
     const assignedBadge = this._el("span", {
-      className: "assigned-badge" + (isActivePerson ? " active" : "") + (withAvatar ? " with-avatar" : "")
-        + (avatarOnly ? " avatar-only" : ""),
+      className: "assigned-badge" + (isActivePerson ? " active" : "") + (withAvatar ? " with-avatar" : "") + (avatarOnly ? " avatar-only" : ""),
       "data-eid": eid,
-      title: personName,
+      title: personName
     });
     if (avatarOnly) {
       assignedBadge.appendChild(this._buildPersonAvatar(eid, personName));
     } else if (withAvatar) {
       assignedBadge.append(
         this._buildPersonAvatar(eid, personName),
-        this._el("span", { textContent: personName }),
+        this._el("span", { textContent: personName })
       );
     } else {
-      assignedBadge.textContent = "\uD83D\uDC64 " + personName;
+      assignedBadge.textContent = "👤 " + personName;
     }
     assignedBadge.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -9346,21 +8779,22 @@ class HomeTasksCard extends HTMLElement {
       setTimeout(() => {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            this.shadowRoot.querySelectorAll(`.assigned-badge[data-eid="${CSS.escape(eid)}"]`)
-              .forEach(b => { b.classList.add("chip-anim"); b.addEventListener("animationend", () => b.classList.remove("chip-anim"), { once: true }); });
+            this.shadowRoot.querySelectorAll(`.assigned-badge[data-eid="${CSS.escape(eid)}"]`).forEach((b) => {
+              b.classList.add("chip-anim");
+              b.addEventListener("animationend", () => b.classList.remove("chip-anim"), { once: true });
+            });
           });
         });
       }, 0);
     });
     return assignedBadge;
   }
-
   _buildTagBadge(tag, cs, colIdx) {
     const isActive = cs.tagFilters.has(tag);
     const tagBadge = this._el("span", {
       className: "tag-badge" + (isActive ? " active" : ""),
       textContent: "#" + tag,
-      "data-tag": tag,
+      "data-tag": tag
     });
     tagBadge.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -9371,31 +8805,30 @@ class HomeTasksCard extends HTMLElement {
       setTimeout(() => {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            this.shadowRoot.querySelectorAll(`.tag-badge[data-tag="${CSS.escape(tag)}"]`)
-              .forEach(b => { b.classList.add("chip-anim"); b.addEventListener("animationend", () => b.classList.remove("chip-anim"), { once: true }); });
+            this.shadowRoot.querySelectorAll(`.tag-badge[data-tag="${CSS.escape(tag)}"]`).forEach((b) => {
+              b.classList.add("chip-anim");
+              b.addEventListener("animationend", () => b.classList.remove("chip-anim"), { once: true });
+            });
           });
         });
       }, 0);
     });
     return tagBadge;
   }
-
   // A reminder offset (minutes before due) as its label, e.g. "1 day before".
   _reminderLabel(minutes) {
     const entry = REMINDER_OFFSETS.find(([v]) => v === minutes);
     return entry ? this._t(entry[1]) : minutes + " min";
   }
-
   _buildReminderBadge(task) {
     let remText;
     if (task.reminders.length === 1) {
-      remText = "\u23F0 " + this._reminderLabel(task.reminders[0]);
+      remText = "⏰ " + this._reminderLabel(task.reminders[0]);
     } else {
-      remText = "\u23F0 " + task.reminders.length;
+      remText = "⏰ " + task.reminders.length;
     }
     return this._el("span", { className: "reminder-badge", textContent: remText });
   }
-
   _attachTaskExpandClickHandler(mainRow, task, taskEl, colIdx) {
     const tapToComplete = this._config?.columns?.[colIdx]?.tap_to_complete === true;
     mainRow.addEventListener("click", (e) => {
@@ -9404,16 +8837,11 @@ class HomeTasksCard extends HTMLElement {
       if (e.target.closest(".tag-badge")) return;
       if (e.target.closest(".assigned-badge")) return;
       if (e.target.closest(".edit-title-input")) return;
-      // tap_to_complete (issue #69): the whole row ticks the task off, like
-      // a tile; only the chevron opens the details.  confirm_complete still
-      // asks first — _toggleTask handles that.
       if (tapToComplete && !e.target.closest(".expand-btn")) {
-        if (Date.now() < (this._suppressRowTapUntil || 0)) return;  // end of a drag
+        if (Date.now() < (this._suppressRowTapUntil || 0)) return;
         this._toggleTask(task.id, task.completed, colIdx);
         return;
       }
-
-      // If an animation is in progress, skip animation and just toggle + render
       if (this._animatingTaskIds?.has(task.id)) {
         this._animatingTaskIds.delete(task.id);
         if (this._expandedTasks.has(task.id)) {
@@ -9424,11 +8852,10 @@ class HomeTasksCard extends HTMLElement {
         this._render();
         return;
       }
-
       if (this._expandedTasks.has(task.id)) {
         this._collapseExpandedTask(task, taskEl);
       } else {
-        if (!this._animatingTaskIds) this._animatingTaskIds = new Set();
+        if (!this._animatingTaskIds) this._animatingTaskIds = /* @__PURE__ */ new Set();
         this._animatingTaskIds.add(task.id);
         this._justExpandedTaskId = task.id;
         this._expandedTasks.add(task.id);
@@ -9437,7 +8864,6 @@ class HomeTasksCard extends HTMLElement {
       }
     });
   }
-
   _collapseExpandedTask(task, taskEl) {
     this._expandedTasks.delete(task.id);
     const detailsEl = taskEl.querySelector(".task-details");
@@ -9446,9 +8872,12 @@ class HomeTasksCard extends HTMLElement {
       return;
     }
     const h = detailsEl.offsetHeight;
-    if (!h) { this._render(); return; }
+    if (!h) {
+      this._render();
+      return;
+    }
     detailsEl.style.height = h + "px";
-    if (!this._animatingTaskIds) this._animatingTaskIds = new Set();
+    if (!this._animatingTaskIds) this._animatingTaskIds = /* @__PURE__ */ new Set();
     this._animatingTaskIds.add(task.id);
     const finish = () => {
       if (!this._animatingTaskIds?.delete(task.id)) return;
@@ -9462,27 +8891,22 @@ class HomeTasksCard extends HTMLElement {
       });
     });
   }
-
   _animateExpandedDetails(detailsEl, task) {
     if (this._justExpandedTaskId === task.id) {
-      // .task-details starts at height:0 (CSS default). Animate to full height.
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           detailsEl.style.height = detailsEl.scrollHeight + "px";
           detailsEl.addEventListener("transitionend", () => {
             this._animatingTaskIds?.delete(task.id);
-            detailsEl.style.height = "auto"; // release constraint once fully open
+            detailsEl.style.height = "auto";
           }, { once: true });
         });
       });
     } else {
-      // Already open (after re-render): show without animation
       detailsEl.style.height = "auto";
     }
   }
-
   _attachTaskAppearanceAnimations(task, colIdx) {
-    // Filter enter animation: task is newly appearing after a filter change
     if (this._justAppearedTaskIds && this._justAppearedTaskIds.has(String(task.id))) {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -9496,18 +8920,12 @@ class HomeTasksCard extends HTMLElement {
         });
       });
     }
-
-    // Creation animation: task slides in from the add-input field position
     if (this._justAddedTaskId && this._justAddedTaskId === String(task.id)) {
       this._animateTaskEntry(task.id, colIdx);
     }
   }
-
   _buildTaskDetails(task, colIdx, { draft = false } = {}) {
     const col = this._config.columns[colIdx];
-
-    // detail_order picks the order; fields it doesn't name follow in the
-    // default order. The action row stays last.
     const build = {
       notes: () => this._buildNotesSection(task, colIdx),
       sub_tasks: () => this._buildSubTasksSection(task, colIdx),
@@ -9519,40 +8937,29 @@ class HomeTasksCard extends HTMLElement {
       reminders: () => this._buildRemindersSection(task, colIdx),
       recurrence: () => this._buildRecurrenceSection(task, colIdx),
       history: () => this._buildHistorySection(task),
-      images: () => this._buildImageSection(task, colIdx),
+      images: () => this._buildImageSection(task, colIdx)
     };
     const hasSections = (this._columns[colIdx].sections || []).length > 0;
     const details = [];
     for (const key of _detailOrder(col)) {
-      // A draft has no id the backend knows yet: sub-tasks, images and the
-      // history need the task to exist.
       if (draft && (key === "sub_tasks" || key === "images" || key === "history")) continue;
       if (_detailFieldOn(col, key) && (key !== "section" || hasSections)) {
         details.push(this._foldableDetail(build[key](), key, task, colIdx));
       }
     }
     if (!draft) details.push(this._buildActionsSection(task, colIdx));
-
     const inner = this._el("div", { className: "task-details-inner" }, details);
     const wrapper = this._el("div", { className: "task-details" }, [inner]);
-
-    // Stop mousedown on text inputs from reaching the draggable parent task.
-    // Without this, the browser's drag detection intercepts mousedown and
-    // prevents text selection / cursor positioning inside notes, due date,
-    // tag, and reminder inputs.
     wrapper.addEventListener("mousedown", (e) => {
       if (this._isInteractiveTarget(e.target)) e.stopPropagation();
     });
-
     return wrapper;
   }
-
   // Fields of the task details folded by the user in this column's list,
   // by key: one choice for every task of the list (see _foldedDetailKeys).
   _foldedDetails(colIdx) {
     return _foldedDetailKeys(this._columnStorageKey(colIdx));
   }
-
   // Folds or opens a field of a column's list everywhere it shows: in this
   // card's open task details at once, in other cards on the page with the
   // same list through an event (each listens while connected), and in
@@ -9564,24 +8971,25 @@ class HomeTasksCard extends HTMLElement {
     else keys.delete(key);
     try {
       window.localStorage.setItem(`${DETAIL_FOLD_STORAGE_KEY}:${list}`, JSON.stringify([...keys]));
-    } catch (e) { /* storage blocked: folding lasts this session */ }
+    } catch (e) {
+    }
     this._applyDetailFold(list, key, folded);
     window.dispatchEvent(new CustomEvent(DETAIL_FOLD_EVENT, { detail: { list, key, folded, source: this } }));
   }
-
   _applyDetailFold(list, key, folded) {
     for (const s of this.shadowRoot?.querySelectorAll(`.detail-section[data-detail-key="${key}"]`) || []) {
       if (s.dataset.foldList === list) s._applyFold?.(folded);
     }
   }
-
   // A one-line summary of what a field holds, shown next to its heading
   // while it is folded; "" when nothing is set (then nothing is shown).
   _detailSummary(key, task, colIdx) {
     const nameOf = (eid) => this._hass?.states?.[eid]?.attributes?.friendly_name || eid;
     switch (key) {
-      case "notes": return (task.notes || "").trim().split("\n")[0];
-      case "sub_tasks": return this._getSubTaskProgress(task) || "";
+      case "notes":
+        return (task.notes || "").trim().split("\n")[0];
+      case "sub_tasks":
+        return this._getSubTaskProgress(task) || "";
       case "person": {
         const names = _assignees(task).map(nameOf);
         if (!names.length && task.assigned_name) names.push(task.assigned_name);
@@ -9589,19 +8997,22 @@ class HomeTasksCard extends HTMLElement {
       }
       case "section":
         return (this._columns[colIdx].sections || []).find((x) => x.id === task.section_id)?.name || "";
-      case "priority": return task.priority ? this._priorityLabel(task.priority) : "";
-      case "tags": return (task.tags || []).map((t) => "#" + t).join(" ");
-      case "due_date": return task.due_date ? this._formatDueDate(task.due_date, task.due_time) : "";
-      case "reminders": return (task.reminders || []).map((m) => this._reminderLabel(m)).join(", ");
+      case "priority":
+        return task.priority ? this._priorityLabel(task.priority) : "";
+      case "tags":
+        return (task.tags || []).map((t) => "#" + t).join(" ");
+      case "due_date":
+        return task.due_date ? this._formatDueDate(task.due_date, task.due_time) : "";
+      case "reminders":
+        return (task.reminders || []).map((m) => this._reminderLabel(m)).join(", ");
       case "recurrence": {
-        // Its switch stays in the heading; the rule follows when it is on.
         const badge = task.recurrence_enabled ? this._buildRecurrenceBadge(task) : null;
         return badge ? badge.textContent.replace(/^↻\s*/, "").trim() : "";
       }
-      default: return "";  // history, images: nothing short to say
+      default:
+        return "";
     }
   }
-
   // Makes a task-details field foldable: a tap on its heading folds it to
   // that heading (plus the summary of what is set), and the choice is
   // remembered per field. The heading is the field's label - for the
@@ -9617,8 +9028,6 @@ class HomeTasksCard extends HTMLElement {
     caret.className = "detail-fold-caret";
     caret.setAttribute("icon", "mdi:chevron-down");
     head.insertBefore(caret, head.firstChild);
-    // Inside the heading, so folding (which hides all but the heading)
-    // leaves it in view.
     const summary = this._el("span", { className: "detail-fold-summary" });
     if (head === label) head.appendChild(summary);
     else label.after(summary);
@@ -9635,18 +9044,14 @@ class HomeTasksCard extends HTMLElement {
     const toggle = () => {
       const folded = !section.classList.contains("folded");
       this._setDetailFolded(colIdx, key, folded);
-      apply(folded);  // also when this section is not (yet) in the card
+      apply(folded);
     };
-    // The recurrence switch works while folded: the summary follows it
-    // straight away, not only once the saved task comes back.
     head.addEventListener("change", (e) => {
       if (!e.target.matches?.("ha-switch")) return;
       shown = { ...shown, recurrence_enabled: e.target.checked };
       apply(section.classList.contains("folded"));
     });
     head.addEventListener("click", (e) => {
-      // The recurrence switch (and anything else interactive in the
-      // heading) does its own job.
       if (e.target.closest("ha-switch, input, button, select, a")) return;
       e.preventDefault();
       toggle();
@@ -9658,51 +9063,44 @@ class HomeTasksCard extends HTMLElement {
     });
     return section;
   }
-
   _buildDateSection(task, colIdx) {
     const dateInput = this._el("input", { type: "date", value: task.due_date || "" });
-    // Check if external provider supports due time (SET_DUE_DATETIME_ON_ITEM = 32)
     const features = this._colSupportedFeatures(colIdx);
     const supportsTime = this._colSupportsDueTime(colIdx);
-
     const timeInput = this._el("input", { type: "time", value: task.due_time || "" });
     if (!task.due_date) timeInput.disabled = true;
-
     const saveDueDate = () => {
       if (!dateInput.value) timeInput.value = "";
       timeInput.disabled = !dateInput.value;
       this._updateTaskDue(task.id, dateInput.value, supportsTime ? timeInput.value : "", colIdx);
     };
-    const saveDueTime = () =>
-      this._updateTaskDue(task.id, dateInput.value, timeInput.value, colIdx);
-    // One-tap due dates (buttons added below). Each date is worked out when
-    // it is needed, so details left open past midnight stay right.
+    const saveDueTime = () => this._updateTaskDue(task.id, dateInput.value, timeInput.value, colIdx);
     const quickRow = this._el("div", { className: "due-quick-row" });
-    const quickDate = (b) =>
-      this._localDateStr(this._advanceDateClamped(new Date(), b.dataset.unit, Number(b.dataset.val)));
+    const quickDate = (b) => this._localDateStr(this._advanceDateClamped(/* @__PURE__ */ new Date(), b.dataset.unit, Number(b.dataset.val)));
     const markQuickPick = () => quickRow.querySelectorAll(".due-quick-btn").forEach((b) => {
       const on = quickDate(b) === dateInput.value;
       b.classList.toggle("active", on);
       b.setAttribute("aria-pressed", String(on));
     });
-
-    const dateClearBtn = this._el("button", { className: "field-clear-btn", textContent: "\u00D7" });
-    const timeClearBtn = this._el("button", { className: "field-clear-btn", textContent: "\u00D7" });
+    const dateClearBtn = this._el("button", { className: "field-clear-btn", textContent: "×" });
+    const timeClearBtn = this._el("button", { className: "field-clear-btn", textContent: "×" });
     if (!dateInput.value) dateClearBtn.style.display = "none";
     if (!timeInput.value) timeClearBtn.style.display = "none";
-
     dateInput.addEventListener("change", () => {
       saveDueDate();
       dateClearBtn.style.display = dateInput.value ? "" : "none";
       markQuickPick();
     });
-    dateInput.addEventListener("keydown", (e) => { if (e.key === "Enter") dateInput.blur(); });
+    dateInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") dateInput.blur();
+    });
     timeInput.addEventListener("change", () => {
       saveDueTime();
       timeClearBtn.style.display = timeInput.value ? "" : "none";
     });
-    timeInput.addEventListener("keydown", (e) => { if (e.key === "Enter") timeInput.blur(); });
-
+    timeInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") timeInput.blur();
+    });
     dateClearBtn.addEventListener("click", () => {
       dateInput.value = "";
       timeInput.value = "";
@@ -9717,31 +9115,33 @@ class HomeTasksCard extends HTMLElement {
       saveDueTime();
       timeClearBtn.style.display = "none";
     });
-
     const dateFieldWrap = this._el("div", { className: "field-wrap" }, [
       dateInput,
-      this._el("span", { textContent: this._t("due_date_lbl") }),
+      this._el("span", { textContent: this._t("due_date_lbl") })
     ]);
     const dateWrap = this._el("div", { className: "field-with-clear" }, [dateFieldWrap, dateClearBtn]);
     const timeFieldWrap = this._el("div", { className: "field-wrap" }, [
       timeInput,
-      this._el("span", { textContent: this._t("due_time_lbl") }),
+      this._el("span", { textContent: this._t("due_time_lbl") })
     ]);
     const timeWrap = this._el("div", { className: "field-with-clear" }, [timeFieldWrap, timeClearBtn]);
     if (!supportsTime) timeWrap.style.display = "none";
-
-    // Today, tomorrow, a week, a month, three months out. A set due time is
-    // kept; the button for the current date is highlighted.
     for (const [key, unit, val] of [
-      ["due_today", "days", 0], ["due_tomorrow", "days", 1], ["due_quick_week", "days", 7],
-      ["due_quick_month", "months", 1], ["due_quick_3months", "months", 3],
+      ["due_today", "days", 0],
+      ["due_tomorrow", "days", 1],
+      ["due_quick_week", "days", 7],
+      ["due_quick_month", "months", 1],
+      ["due_quick_3months", "months", 3]
     ]) {
       const btn = this._el("button", { className: "due-quick-btn", textContent: this._t(key) });
       btn.dataset.unit = unit;
       btn.dataset.val = val;
       btn.addEventListener("click", () => {
         const iso = quickDate(btn);
-        if (dateInput.value === iso) { markQuickPick(); return; }
+        if (dateInput.value === iso) {
+          markQuickPick();
+          return;
+        }
         dateInput.value = iso;
         dateClearBtn.style.display = "";
         timeInput.disabled = false;
@@ -9754,10 +9154,9 @@ class HomeTasksCard extends HTMLElement {
     return this._el("div", { className: "detail-section" }, [
       this._el("label", { className: "detail-label", textContent: this._t("due_date") }),
       this._el("div", { className: "due-input-row" }, [dateWrap, timeWrap]),
-      quickRow,
+      quickRow
     ]);
   }
-
   // http(s) URLs in *text*, as [start, end) ranges.  Trailing punctuation
   // that closes the sentence ("see https://x.y/z.") is not part of the link,
   // and a closing bracket only is when the URL opened one ("(…/wiki/Foo_(bar))").
@@ -9767,19 +9166,24 @@ class HomeTasksCard extends HTMLElement {
     let m;
     while ((m = re.exec(text || "")) !== null) {
       let url = m[0];
-      for (;;) {
+      for (; ; ) {
         const last = url.slice(-1);
-        if (/[.,;:!?'"]/.test(last)) { url = url.slice(0, -1); continue; }
+        if (/[.,;:!?'"]/.test(last)) {
+          url = url.slice(0, -1);
+          continue;
+        }
         const opener = { ")": "(", "]": "[", "}": "{" }[last];
         const count = (ch) => url.split(ch).length - 1;
-        if (opener && count(last) > count(opener)) { url = url.slice(0, -1); continue; }
+        if (opener && count(last) > count(opener)) {
+          url = url.slice(0, -1);
+          continue;
+        }
         break;
       }
       if (url.length > "https://".length) found.push({ start: m.index, end: m.index + url.length, url });
     }
     return found;
   }
-
   // Fill *container* with *text* as text nodes and <a> elements for its
   // URLs.  Only text nodes and hrefs from _findUrls — notes can come from
   // anywhere (services, synced providers), so no markup is ever parsed.
@@ -9793,45 +9197,31 @@ class HomeTasksCard extends HTMLElement {
     }
     if (pos < text.length) container.appendChild(document.createTextNode(text.slice(pos)));
   }
-
   _buildNotesSection(task, colIdx) {
-    // Notes are shown as text with clickable links; a click (or Enter)
-    // switches to the textarea.  Empty notes go straight to the textarea so
-    // they can be typed into.  The editing state lives on the card, not the
-    // DOM, so a re-render while typing brings the textarea (and, through
-    // data-focus-key, the caret) back instead of the read view.
-    if (!this._notesEditing) this._notesEditing = new Set();
-    // The tile detail sheet outlives re-renders while a reload replaces the
-    // task objects, so always read the notes from the current one.
-    const currentNotes = () =>
-      (this._columns[colIdx]?.tasks?.find(t => t.id === task.id) || task).notes || "";
+    if (!this._notesEditing) this._notesEditing = /* @__PURE__ */ new Set();
+    const currentNotes = () => (this._columns[colIdx]?.tasks?.find((t) => t.id === task.id) || task).notes || "";
     const notesWrap = this._el("div", { className: "field-wrap no-label" });
     const section = this._el("div", { className: "detail-section" }, [
       this._el("label", { className: "detail-label", textContent: this._t("notes") }),
-      notesWrap,
+      notesWrap
     ]);
-
     const showView = () => {
       const text = currentNotes();
       const view = this._el("div", {
         className: "notes-view",
         tabIndex: 0,
         role: "button",
-        title: this._t("notes_edit_hint"),
+        title: this._t("notes_edit_hint")
       });
       this._renderLinkified(view, text);
-      // Selecting text to copy it is not a request to edit it: the pointer
-      // moved between press and release, or a selection sits in the view.
-      // (Inside a shadow root, window.getSelection() reports the host in
-      // Chrome/Safari — ask the shadow root where it can answer.)
       let downAt = null;
-      view.addEventListener("pointerdown", (e) => { downAt = { x: e.clientX, y: e.clientY }; });
+      view.addEventListener("pointerdown", (e) => {
+        downAt = { x: e.clientX, y: e.clientY };
+      });
       const selecting = (e) => {
-        if (downAt && e && e.clientX != null &&
-            Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 4) return true;
+        if (downAt && e && e.clientX != null && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 4) return true;
         const root = this.shadowRoot;
-        const sel = (root && typeof root.getSelection === "function" && root.getSelection())
-          || (window.getSelection && window.getSelection());
+        const sel = root && typeof root.getSelection === "function" && root.getSelection() || window.getSelection && window.getSelection();
         return !!(sel && !sel.isCollapsed && sel.anchorNode && view.contains(sel.anchorNode));
       };
       const edit = () => {
@@ -9839,24 +9229,26 @@ class HomeTasksCard extends HTMLElement {
         showEditor(true);
       };
       view.addEventListener("click", (e) => {
-        if (e.target.closest && e.target.closest("a")) return;  // a link opens, it doesn't edit
+        if (e.target.closest && e.target.closest("a")) return;
         const skip = selecting(e);
         downAt = null;
         if (!skip) edit();
       });
       view.addEventListener("keydown", (e) => {
-        if (e.target !== view) return;  // Enter on a focused link opens the link
-        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); edit(); }
+        if (e.target !== view) return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          edit();
+        }
       });
       notesWrap.replaceChildren(view);
     };
-
     const showEditor = (focus) => {
       const notesInput = this._el("textarea", {
         placeholder: this._t("notes_placeholder"),
         rows: 2,
         value: currentNotes(),
-        "data-focus-key": "notes",
+        "data-focus-key": "notes"
       });
       let debounceTimer;
       const saveNotes = () => {
@@ -9864,10 +9256,6 @@ class HomeTasksCard extends HTMLElement {
         debounceTimer = null;
         this._updateTaskNotes(task.id, notesInput.value, colIdx);
       };
-      // Focus is what marks the notes as being edited — also when they start
-      // out empty, where no click on the view came first; otherwise the
-      // re-render after the first auto-save would swap in the read view
-      // mid-typing.
       notesInput.addEventListener("focus", () => this._notesEditing.add(task.id));
       notesInput.addEventListener("input", () => {
         this._autoGrowTextarea(notesInput);
@@ -9876,9 +9264,6 @@ class HomeTasksCard extends HTMLElement {
       });
       notesInput.addEventListener("blur", () => {
         saveNotes();
-        // A blur from the card tearing its DOM down for a re-render is not
-        // the user leaving the field — stay in editing, the rebuild restores
-        // the textarea.  Only a real blur (still attached) goes back to the view.
         setTimeout(() => {
           if (!notesInput.isConnected) return;
           this._notesEditing.delete(task.id);
@@ -9886,47 +9271,51 @@ class HomeTasksCard extends HTMLElement {
         }, 0);
       });
       notesWrap.replaceChildren(notesInput);
-      // Fit to content once attached (scrollHeight is 0 while detached).
       requestAnimationFrame(() => this._autoGrowTextarea(notesInput));
       if (focus) {
         notesInput.focus();
         const end = notesInput.value.length;
-        try { notesInput.setSelectionRange(end, end); } catch { /* noop */ }
+        try {
+          notesInput.setSelectionRange(end, end);
+        } catch {
+        }
       }
     };
-
     if (currentNotes().trim() && !this._notesEditing.has(task.id)) showView();
     else showEditor(false);
     return section;
   }
-
   _buildSubTasksSection(task, colIdx) {
     const subList = this._el("div", { className: "sub-task-list" });
     subList.dataset.taskId = task.id;
-    for (const sub of (task.sub_items || [])) {
+    for (const sub of task.sub_items || []) {
       subList.appendChild(this._buildSubTask(task.id, sub, colIdx));
     }
-    subList.addEventListener("dragover", (e) => { e.preventDefault(); });
-    subList.addEventListener("drop", (e) => { e.preventDefault(); this._finishSubDrag(task.id, colIdx); });
+    subList.addEventListener("dragover", (e) => {
+      e.preventDefault();
+    });
+    subList.addEventListener("drop", (e) => {
+      e.preventDefault();
+      this._finishSubDrag(task.id, colIdx);
+    });
     const addSubBtn = this._el("button", {
       className: "add-sub-btn",
-      textContent: this._t("add_sub_item"),
+      textContent: this._t("add_sub_item")
     });
     addSubBtn.addEventListener("click", () => this._addSubTask(task.id, colIdx));
     return this._el("div", { className: "detail-section" }, [
       this._el("label", { className: "detail-label", textContent: this._t("sub_items") }),
       subList,
-      addSubBtn,
+      addSubBtn
     ]);
   }
-
   _buildPrioritySection(task, colIdx) {
     const currentPriority = task.priority || null;
     const priorityBtnRow = this._el("div", { className: "priority-btn-row" });
     for (const [val, key] of [[1, "pri_low"], [2, "pri_medium"], [3, "pri_high"]]) {
       const btn = this._el("button", {
         className: `priority-btn pri-${val}${currentPriority === val ? " active" : ""}`,
-        textContent: this._t(key),
+        textContent: this._t(key)
       });
       btn.addEventListener("click", () => {
         const newPri = currentPriority === val ? null : val;
@@ -9938,22 +9327,16 @@ class HomeTasksCard extends HTMLElement {
     }
     return this._el("div", { className: "detail-section" }, [
       this._el("label", { className: "detail-label", textContent: this._t("priority") }),
-      priorityBtnRow,
+      priorityBtnRow
     ]);
   }
-
   _buildRecurrenceSection(task, colIdx) {
     const recurrenceEnabled = task.recurrence_enabled || false;
     const listLead = this._columns[colIdx]?.reopenLead || 0;
-    // Never set up yet: start the interval a day longer than the list's
-    // reopen lead, so switching it on keeps the lead (issue #77).
     const leadDays = !task.recurrence_unit && listLead >= 1440 ? Math.floor(listLead / 1440) + 1 : 0;
-    const recurrenceValue = leadDays > 365 ? 2 : (leadDays || task.recurrence_value || 1);
-    // Default unit "days"; legacy "weekdays" mode (unmigrated overlay) is
-    // mapped to weeks+weekday-filter for UI purposes.
+    const recurrenceValue = leadDays > 365 ? 2 : leadDays || task.recurrence_value || 1;
     const legacyWeekdaysMode = task.recurrence_type === "weekdays";
-    const recurrenceUnit = legacyWeekdaysMode ? "weeks"
-      : leadDays > 365 ? "years" : (task.recurrence_unit || "days");
+    const recurrenceUnit = legacyWeekdaysMode ? "weeks" : leadDays > 365 ? "years" : task.recurrence_unit || "days";
     const recurrenceWeekdays = task.recurrence_weekdays || [];
     const recurrenceStartDate = task.recurrence_start_date || "";
     const recurrenceTime = task.recurrence_time || "00:00";
@@ -9965,47 +9348,37 @@ class HomeTasksCard extends HTMLElement {
     const recurrenceDayOfMonth = task.recurrence_day_of_month;
     const recurrenceNthWeek = task.recurrence_nth_week;
     const recurrenceAnniversary = task.recurrence_anniversary || "";
-    // What a late completion counts from: "completion" ("Ab Erledigung",
-    // default) or "due" ("Ab Fälligkeit").  A calendar pattern (weekdays,
-    // day of month, …) always follows the due date, so this only matters
-    // while no pattern is picked.
-    // A provider that runs the recurrence itself (Todoist) gets no anchor
-    // choice, so a stray "due" there must not leave its row unselected.
     const _anchorCaps = this._colCapabilities(colIdx);
-    const recurrenceAnchor = (task.recurrence_anchor === "due" && !(_anchorCaps && _anchorCaps.can_sync_recurrence))
-      ? "due" : "completion";
-
+    const recurrenceAnchor = task.recurrence_anchor === "due" && !(_anchorCaps && _anchorCaps.can_sync_recurrence) ? "due" : "completion";
     const recSwitch = document.createElement("ha-switch");
     recSwitch.checked = recurrenceEnabled;
     const recurrenceToggleRow = this._el("div", { className: "recurrence-toggle-row" }, [
       this._el("label", { className: "detail-label", style: "margin: 0;" }, [
         document.createTextNode(this._t("recurrence"))
       ]),
-      recSwitch,
+      recSwitch
     ]);
-
     const recurrenceValueInput = this._el("input", {
-      type: "number", value: recurrenceValue,
-      "data-focus-key": "recurrence_value",
+      type: "number",
+      value: recurrenceValue,
+      "data-focus-key": "recurrence_value"
     });
     recurrenceValueInput.min = 1;
     recurrenceValueInput.max = 365;
-
     const recurrenceUnitSelect = this._el("select", {});
     for (const opt of [
       { value: "hours", label: this._t("rec_hours") },
       { value: "days", label: this._t("rec_days") },
       { value: "weeks", label: this._t("rec_weeks") },
       { value: "months", label: this._t("rec_months") },
-      { value: "years", label: this._t("rec_years") },
+      { value: "years", label: this._t("rec_years") }
     ]) {
       const optEl = this._el("option", { value: opt.value, textContent: opt.label });
       if (opt.value === recurrenceUnit) optEl.selected = true;
       recurrenceUnitSelect.appendChild(optEl);
     }
-
-    const spinUp = this._el("button", { className: "spin-btn spin-up", textContent: "\u25b4", type: "button" });
-    const spinDown = this._el("button", { className: "spin-btn spin-down", textContent: "\u25be", type: "button" });
+    const spinUp = this._el("button", { className: "spin-btn spin-up", textContent: "▴", type: "button" });
+    const spinDown = this._el("button", { className: "spin-btn spin-down", textContent: "▾", type: "button" });
     spinUp.addEventListener("click", () => {
       const v = Math.min(365, (parseInt(recurrenceValueInput.value) || 1) + 1);
       recurrenceValueInput.value = v;
@@ -10019,15 +9392,13 @@ class HomeTasksCard extends HTMLElement {
     const recValueWrap = this._el("div", { className: "field-wrap inline" }, [
       recurrenceValueInput,
       this._el("span", { textContent: this._t("rec_value_lbl") }),
-      this._el("div", { className: "spin-btns" }, [spinUp, spinDown]),
+      this._el("div", { className: "spin-btns" }, [spinUp, spinDown])
     ]);
     const recUnitWrap = this._el("div", { className: "sel-wrap inline" }, [
       recurrenceUnitSelect,
-      this._el("span", { textContent: this._t("rec_unit_lbl") }),
+      this._el("span", { textContent: this._t("rec_unit_lbl") })
     ]);
     const recurrenceIntervalRow = this._el("div", { className: "recurrence-input-row" }, [recValueWrap, recUnitWrap]);
-
-    // ---- Hourly/daily sub-section (radios: Ab Erledigung / Ab Fälligkeit) -
     const _basicPatName = `rec_basic_pattern_${task.id}`;
     const _mkBasicRadio = (val) => {
       const r = this._el("input", { type: "radio", name: _basicPatName, value: val });
@@ -10038,17 +9409,16 @@ class HomeTasksCard extends HTMLElement {
     const basicPatDueRadio = _mkBasicRadio("due");
     const recurrenceBasicRadioRow = this._el("div", { className: "recurrence-radio-row" }, [
       this._el("label", { className: "weekday-label" }, [
-        basicPatNoneRadio, this._el("span", { textContent: this._t("rec_pattern_none") }),
+        basicPatNoneRadio,
+        this._el("span", { textContent: this._t("rec_pattern_none") })
       ]),
       this._el("label", { className: "weekday-label" }, [
-        basicPatDueRadio, this._el("span", { textContent: this._t("rec_pattern_due") }),
-      ]),
+        basicPatDueRadio,
+        this._el("span", { textContent: this._t("rec_pattern_due") })
+      ])
     ]);
-
-    // ---- Weekly sub-section (radios: Ab Erledigung / Am + weekday filter) -
     const _weekPatName = `rec_week_pattern_${task.id}`;
-    const weekHasFilter = (recurrenceWeekdays && recurrenceWeekdays.length > 0)
-      || this._weekPatternOverride.get(task.id) === "on";
+    const weekHasFilter = recurrenceWeekdays && recurrenceWeekdays.length > 0 || this._weekPatternOverride.get(task.id) === "on";
     const _mkWeekRadio = (val, checked) => {
       const r = this._el("input", { type: "radio", name: _weekPatName, value: val });
       if (checked) r.checked = true;
@@ -10058,16 +9428,21 @@ class HomeTasksCard extends HTMLElement {
     const weekPatDueRadio = _mkWeekRadio("due", !weekHasFilter && recurrenceAnchor === "due");
     const weekPatOnRadio = _mkWeekRadio("on", weekHasFilter);
     const weekPatNoneLabel = this._el("label", { className: "weekday-label" }, [
-      weekPatNoneRadio, this._el("span", { textContent: this._t("rec_pattern_none") }),
+      weekPatNoneRadio,
+      this._el("span", { textContent: this._t("rec_pattern_none") })
     ]);
     const weekPatDueLabel = this._el("label", { className: "weekday-label" }, [
-      weekPatDueRadio, this._el("span", { textContent: this._t("rec_pattern_due") }),
+      weekPatDueRadio,
+      this._el("span", { textContent: this._t("rec_pattern_due") })
     ]);
     const weekPatOnLabel = this._el("label", { className: "weekday-label" }, [
-      weekPatOnRadio, this._el("span", { textContent: this._t("rec_anniversary_lbl") }),
+      weekPatOnRadio,
+      this._el("span", { textContent: this._t("rec_anniversary_lbl") })
     ]);
     const recurrenceWeekRadioRow = this._el("div", { className: "recurrence-radio-row" }, [
-      weekPatNoneLabel, weekPatDueLabel, weekPatOnLabel,
+      weekPatNoneLabel,
+      weekPatDueLabel,
+      weekPatOnLabel
     ]);
     const weekdayCheckboxes = [];
     const recurrenceWeekdayCheckboxRow = this._el("div", { className: "recurrence-weekday-row" });
@@ -10075,22 +9450,17 @@ class HomeTasksCard extends HTMLElement {
       const cb = this._el("input", { type: "checkbox", checked: recurrenceWeekdays.includes(d) });
       const lbl = this._el("label", { className: "weekday-label" }, [
         cb,
-        this._el("span", { textContent: this._t(`rec_wd_${d}`) }),
+        this._el("span", { textContent: this._t(`rec_wd_${d}`) })
       ]);
       weekdayCheckboxes.push(cb);
       recurrenceWeekdayCheckboxRow.appendChild(lbl);
     }
     const recurrenceWeekSection = this._el("div", { className: "recurrence-week-section" }, [
-      recurrenceWeekRadioRow, recurrenceWeekdayCheckboxRow,
+      recurrenceWeekRadioRow,
+      recurrenceWeekdayCheckboxRow
     ]);
-
-    // ---- Monthly sub-section (pattern picker + dom + nth/weekday) ---------
-    // Radios use the same .weekday-label pill styling as the weekday picker
-    // so both rows feel like one consistent control.
     const _patternName = `rec_month_pattern_${task.id}`;
-    const _monthChecked = recurrenceMonthPattern !== "none"
-      ? recurrenceMonthPattern
-      : (recurrenceAnchor === "due" ? "due" : "none");
+    const _monthChecked = recurrenceMonthPattern !== "none" ? recurrenceMonthPattern : recurrenceAnchor === "due" ? "due" : "none";
     const _mkPatternRadio = (val) => {
       const r = this._el("input", { type: "radio", name: _patternName, value: val });
       if (_monthChecked === val) r.checked = true;
@@ -10100,17 +9470,12 @@ class HomeTasksCard extends HTMLElement {
     const monthPatDueRadio = _mkPatternRadio("due");
     const monthPatDomRadio = _mkPatternRadio("day_of_month");
     const monthPatNthRadio = _mkPatternRadio("nth_weekday");
-
-    // Day-of-month options: "1. Tag", "2. Tag", ..., plus "Letzter Tag".
-    // Ordinals are language-aware ("1." in German/most European, "1st"
-    // in English).  Default to day 1 so the dropdown shows a sensible
-    // value as soon as the user picks "Tag im Monat".
     const monthDomSelect = this._el("select", {});
     const _domEffective = recurrenceDayOfMonth ?? 1;
     for (let d = 1; d <= 31; d++) {
       const opt = this._el("option", {
         value: String(d),
-        textContent: `${this._domOrdinal(d)} ${this._t("rec_dom_lbl")}`,
+        textContent: `${this._domOrdinal(d)} ${this._t("rec_dom_lbl")}`
       });
       if (_domEffective === d) opt.selected = true;
       monthDomSelect.appendChild(opt);
@@ -10120,9 +9485,8 @@ class HomeTasksCard extends HTMLElement {
     monthDomSelect.appendChild(lastOpt);
     const monthDomWrap = this._el("div", { className: "sel-wrap" }, [
       monthDomSelect,
-      this._el("span", { textContent: this._t("rec_anniversary_lbl") }),
+      this._el("span", { textContent: this._t("rec_anniversary_lbl") })
     ]);
-
     const monthNthSelect = this._el("select", {});
     for (const [val, key] of [[1, "rec_nth_1"], [2, "rec_nth_2"], [3, "rec_nth_3"], [4, "rec_nth_4"], ["last", "rec_nth_last"]]) {
       const opt = this._el("option", { value: String(val), textContent: this._t(key) });
@@ -10131,16 +9495,10 @@ class HomeTasksCard extends HTMLElement {
     }
     const monthNthWrap = this._el("div", { className: "sel-wrap" }, [
       monthNthSelect,
-      this._el("span", { textContent: this._t("rec_nth_lbl") }),
+      this._el("span", { textContent: this._t("rec_nth_lbl") })
     ]);
-
-    // Weekday dropdown: spell out the names ("Montag, Dienstag, …") via
-    // Intl, so the user-facing text is the full word — the abbreviated
-    // forms (rec_wd_0..6) are still used elsewhere (badges, weekly
-    // checkboxes).  Our weekday convention is 0=Mon..6=Sun; 2024-01-01
-    // happens to be a Monday, which lets us index dates 1..7 directly.
     const monthWeekdaySelect = this._el("select", {});
-    const monthWeekdayInitial = (recurrenceWeekdays && recurrenceWeekdays.length) ? recurrenceWeekdays[0] : 0;
+    const monthWeekdayInitial = recurrenceWeekdays && recurrenceWeekdays.length ? recurrenceWeekdays[0] : 0;
     const _wdLang = this._localeCode();
     for (let d = 0; d < 7; d++) {
       const fullName = new Date(2024, 0, d + 1).toLocaleString(_wdLang, { weekday: "long" });
@@ -10150,45 +9508,50 @@ class HomeTasksCard extends HTMLElement {
     }
     const monthWeekdayWrap = this._el("div", { className: "sel-wrap" }, [
       monthWeekdaySelect,
-      this._el("span", { textContent: this._t("rec_wd_lbl") }),
+      this._el("span", { textContent: this._t("rec_wd_lbl") })
     ]);
-
     const monthPatNoneLabel = this._el("label", { className: "weekday-label" }, [
-      monthPatNoneRadio, this._el("span", { textContent: this._t("rec_pattern_none") }),
+      monthPatNoneRadio,
+      this._el("span", { textContent: this._t("rec_pattern_none") })
     ]);
     const monthPatDueLabel = this._el("label", { className: "weekday-label" }, [
-      monthPatDueRadio, this._el("span", { textContent: this._t("rec_pattern_due") }),
+      monthPatDueRadio,
+      this._el("span", { textContent: this._t("rec_pattern_due") })
     ]);
     const monthPatDomLabel = this._el("label", { className: "weekday-label" }, [
-      monthPatDomRadio, this._el("span", { textContent: this._t("rec_pattern_dom") }),
+      monthPatDomRadio,
+      this._el("span", { textContent: this._t("rec_pattern_dom") })
     ]);
     const monthPatNthLabel = this._el("label", { className: "weekday-label" }, [
-      monthPatNthRadio, this._el("span", { textContent: this._t("rec_pattern_nth") }),
+      monthPatNthRadio,
+      this._el("span", { textContent: this._t("rec_pattern_nth") })
     ]);
     const recurrenceMonthRadioRow = this._el("div", { className: "recurrence-radio-row" }, [
-      monthPatNoneLabel, monthPatDueLabel, monthPatDomLabel, monthPatNthLabel,
+      monthPatNoneLabel,
+      monthPatDueLabel,
+      monthPatDomLabel,
+      monthPatNthLabel
     ]);
-    // The selects appear under the radios — only one set is visible at a time.
     const recurrenceMonthDomRow = this._el("div", { className: "recurrence-sub-row" }, [
-      monthDomWrap,
+      monthDomWrap
     ]);
     const recurrenceMonthNthRow = this._el("div", { className: "recurrence-sub-row" }, [
-      monthNthWrap, monthWeekdayWrap,
+      monthNthWrap,
+      monthWeekdayWrap
     ]);
     const recurrenceTodoistMonthNote = this._el("div", {
       className: "recurrence-todoist-note",
-      textContent: this._t("rec_todoist_pattern_unsupported"),
+      textContent: this._t("rec_todoist_pattern_unsupported")
     });
     recurrenceTodoistMonthNote.style.display = "none";
     const recurrenceMonthSection = this._el("div", { className: "recurrence-month-section" }, [
-      recurrenceMonthRadioRow, recurrenceMonthDomRow, recurrenceMonthNthRow,
-      recurrenceTodoistMonthNote,
+      recurrenceMonthRadioRow,
+      recurrenceMonthDomRow,
+      recurrenceMonthNthRow,
+      recurrenceTodoistMonthNote
     ]);
-
-    // ---- Yearly sub-section (radios: Ab Erledigung / Am + TT.MM) ----------
     const _yearPatName = `rec_year_pattern_${task.id}`;
-    const yearHasAnchor = !!(recurrenceAnniversary && /^\d{2}-\d{2}$/.test(recurrenceAnniversary))
-      || this._yearPatternOverride.get(task.id) === "on";
+    const yearHasAnchor = !!(recurrenceAnniversary && /^\d{2}-\d{2}$/.test(recurrenceAnniversary)) || this._yearPatternOverride.get(task.id) === "on";
     const _mkYearRadio = (val, checked) => {
       const r = this._el("input", { type: "radio", name: _yearPatName, value: val });
       if (checked) r.checked = true;
@@ -10198,25 +9561,28 @@ class HomeTasksCard extends HTMLElement {
     const yearPatDueRadio = _mkYearRadio("due", !yearHasAnchor && recurrenceAnchor === "due");
     const yearPatOnRadio = _mkYearRadio("on", yearHasAnchor);
     const yearPatNoneLabel = this._el("label", { className: "weekday-label" }, [
-      yearPatNoneRadio, this._el("span", { textContent: this._t("rec_pattern_none") }),
+      yearPatNoneRadio,
+      this._el("span", { textContent: this._t("rec_pattern_none") })
     ]);
     const yearPatDueLabel = this._el("label", { className: "weekday-label" }, [
-      yearPatDueRadio, this._el("span", { textContent: this._t("rec_pattern_due") }),
+      yearPatDueRadio,
+      this._el("span", { textContent: this._t("rec_pattern_due") })
     ]);
     const yearPatOnLabel = this._el("label", { className: "weekday-label" }, [
-      yearPatOnRadio, this._el("span", { textContent: this._t("rec_anniversary_lbl") }),
+      yearPatOnRadio,
+      this._el("span", { textContent: this._t("rec_anniversary_lbl") })
     ]);
     const recurrenceYearRadioRow = this._el("div", { className: "recurrence-radio-row" }, [
-      yearPatNoneLabel, yearPatDueLabel, yearPatOnLabel,
+      yearPatNoneLabel,
+      yearPatDueLabel,
+      yearPatOnLabel
     ]);
-
-    // TT input: same custom spin-btn pattern as the value/anzahl fields so
-    // the up/down arrows look consistent.  Native browser spinners are
-    // suppressed by .field-wrap.inline CSS rules.
     const annDayInput = this._el("input", { type: "number" });
-    annDayInput.min = 1; annDayInput.max = 31; annDayInput.placeholder = "TT";
-    const annDaySpinUp = this._el("button", { className: "spin-btn spin-up", textContent: "\u25b4", type: "button" });
-    const annDaySpinDown = this._el("button", { className: "spin-btn spin-down", textContent: "\u25be", type: "button" });
+    annDayInput.min = 1;
+    annDayInput.max = 31;
+    annDayInput.placeholder = "TT";
+    const annDaySpinUp = this._el("button", { className: "spin-btn spin-up", textContent: "▴", type: "button" });
+    const annDaySpinDown = this._el("button", { className: "spin-btn spin-down", textContent: "▾", type: "button" });
     annDaySpinUp.addEventListener("click", () => {
       const v = Math.min(31, (parseInt(annDayInput.value) || 0) + 1);
       annDayInput.value = v;
@@ -10228,9 +9594,6 @@ class HomeTasksCard extends HTMLElement {
       annDayInput.value = v;
       annDayInput.dispatchEvent(new Event("change"));
     });
-
-    // MM as a localized dropdown — Januar, Februar, ... in the user's
-    // language via Intl, so we don't need a translated month-name table.
     const annMonthSelect = this._el("select", {});
     const _lang = this._localeCode();
     for (let i = 1; i <= 12; i++) {
@@ -10241,107 +9604,91 @@ class HomeTasksCard extends HTMLElement {
       annMonthSelect.value = String(parseInt(recurrenceAnniversary.slice(0, 2), 10));
       annDayInput.value = parseInt(recurrenceAnniversary.slice(3, 5), 10);
     } else {
-      // Sensible default when the user just picked "Am" — January 1st.
-      // The values are only saved once the partial-input guard sees a
-      // complete (TT+MM) pair, so showing them pre-filled is fine.
       annDayInput.value = "1";
       annMonthSelect.value = "1";
     }
-    // The period rendered right after the typed number is drawn via a
-    // ::after pseudo on the wrapper (CSS).  The wrapper toggles the
-    // ``has-value`` class so the dot only shows when the input actually
-    // has a number — empty TT shouldn't read "." next to the placeholder.
     const annDayWrap = this._el("div", { className: "field-wrap inline year-day" }, [
       annDayInput,
       this._el("span", { textContent: this._t("rec_dd") }),
-      this._el("div", { className: "spin-btns" }, [annDaySpinUp, annDaySpinDown]),
+      this._el("div", { className: "spin-btns" }, [annDaySpinUp, annDaySpinDown])
     ]);
     const _syncDotVisibility = () => {
       const v = annDayInput.value || "";
       annDayWrap.classList.toggle("has-value", !!v);
-      // The dot's left offset is left-padding + (digit count) * 1ch.
       annDayWrap.style.setProperty("--day-len", String(v.length));
     };
     annDayInput.addEventListener("input", _syncDotVisibility);
     annDayInput.addEventListener("change", _syncDotVisibility);
     _syncDotVisibility();
-
     const annMonthWrap = this._el("div", { className: "sel-wrap" }, [
-      annMonthSelect, this._el("span", { textContent: this._t("rec_mm") }),
+      annMonthSelect,
+      this._el("span", { textContent: this._t("rec_mm") })
     ]);
     const recurrenceTodoistYearNote = this._el("div", {
       className: "recurrence-todoist-note",
-      textContent: this._t("rec_todoist_pattern_unsupported"),
+      textContent: this._t("rec_todoist_pattern_unsupported")
     });
     recurrenceTodoistYearNote.style.display = "none";
     const recurrenceYearInputs = this._el("div", { className: "recurrence-year-row" }, [
       annDayWrap,
-      annMonthWrap,
+      annMonthWrap
     ]);
     const recurrenceYearRow = this._el("div", { className: "recurrence-year-section" }, [
-      recurrenceYearRadioRow, recurrenceYearInputs, recurrenceTodoistYearNote,
+      recurrenceYearRadioRow,
+      recurrenceYearInputs,
+      recurrenceTodoistYearNote
     ]);
-
-    // Start date + reactivation time — now on separate rows so the time
-    // input is read as "time of each occurrence" rather than "starts at".
-    const _todayStr = this._localDateStr(new Date());
+    const _todayStr = this._localDateStr(/* @__PURE__ */ new Date());
     const recurrenceStartDateInput = this._el("input", {
-      type: "date", value: recurrenceStartDate, min: _todayStr,
-      "data-focus-key": "recurrence_start_date",
+      type: "date",
+      value: recurrenceStartDate,
+      min: _todayStr,
+      "data-focus-key": "recurrence_start_date"
     });
-    const recStartClearBtn = this._el("button", { className: "field-clear-btn", textContent: "\u00D7" });
+    const recStartClearBtn = this._el("button", { className: "field-clear-btn", textContent: "×" });
     recStartClearBtn.addEventListener("click", () => {
       recurrenceStartDateInput.value = "";
       saveStartDate();
       recStartClearBtn.style.display = "none";
     });
     if (!recurrenceStartDate) recStartClearBtn.style.display = "none";
-    recurrenceStartDateInput.addEventListener("change", () => { recStartClearBtn.style.display = recurrenceStartDateInput.value ? "" : "none"; });
-
+    recurrenceStartDateInput.addEventListener("change", () => {
+      recStartClearBtn.style.display = recurrenceStartDateInput.value ? "" : "none";
+    });
     const recStartFieldWrap = this._el("div", { className: "field-wrap" }, [
       recurrenceStartDateInput,
-      this._el("span", { textContent: this._t("rec_start_date_lbl") }),
+      this._el("span", { textContent: this._t("rec_start_date_lbl") })
     ]);
     const recurrenceStartDateWrap = this._el("div", { className: "field-with-clear" }, [recStartFieldWrap, recStartClearBtn]);
-
     const recurrenceTimeInput = this._el("input", {
-      type: "time", value: recurrenceTime,
-      "data-focus-key": "recurrence_time",
+      type: "time",
+      value: recurrenceTime,
+      "data-focus-key": "recurrence_time"
     });
-    const recTimeClearBtn = this._el("button", { className: "field-clear-btn", textContent: "\u00D7" });
+    const recTimeClearBtn = this._el("button", { className: "field-clear-btn", textContent: "×" });
     recTimeClearBtn.addEventListener("click", () => {
       recurrenceTimeInput.value = "";
       saveRecurrenceTime();
       recTimeClearBtn.style.display = "none";
     });
     if (!recurrenceTime) recTimeClearBtn.style.display = "none";
-    recurrenceTimeInput.addEventListener("change", () => { recTimeClearBtn.style.display = recurrenceTimeInput.value ? "" : "none"; });
-
+    recurrenceTimeInput.addEventListener("change", () => {
+      recTimeClearBtn.style.display = recurrenceTimeInput.value ? "" : "none";
+    });
     const recTimeFieldWrap = this._el("div", { className: "field-wrap" }, [
       recurrenceTimeInput,
-      this._el("span", { textContent: this._t("rec_at_lbl") }),
+      this._el("span", { textContent: this._t("rec_at_lbl") })
     ]);
     const recurrenceTimeWrap = this._el("div", { className: "field-with-clear" }, [recTimeFieldWrap, recTimeClearBtn]);
-
-    // Each on its own single-column row — the time row sits above "Beginn"
-    // so the user reads "happens at HH:MM" rather than "starts at HH:MM".
     const recurrenceTimeRow = this._el("div", { className: "due-input-row single" }, [
-      recurrenceTimeWrap,
+      recurrenceTimeWrap
     ]);
     const recurrenceStartDateRow = this._el("div", { className: "due-input-row single" }, [
-      recurrenceStartDateWrap,
+      recurrenceStartDateWrap
     ]);
-
-    // End condition — two radio pills: "Bis" (date, default) and "X mal"
-    // (count, native lists only).  "Bis" with an empty date input means
-    // "no end" — same semantics as Beginn: leave it blank to never end.
-    // The "Nie" radio was dropped because the empty-date case already
-    // covers it and the extra option just added noise.
     const caps = this._colCapabilities(colIdx);
     const providerSupportsCount = !this._isExternalCol(colIdx) || !caps || !caps.can_sync_recurrence;
-
-    const initialEndType = (recurrenceEndType === "count" && providerSupportsCount)
-      ? "count" : "date";
+    const initialEndType = recurrenceEndType === "count" && providerSupportsCount ? "count" : "date";
     const _endName = `rec_end_${task.id}`;
     const _mkEndRadio = (val) => {
       const r = this._el("input", { type: "radio", name: _endName, value: val });
@@ -10351,60 +9698,60 @@ class HomeTasksCard extends HTMLElement {
     const endDateRadio = _mkEndRadio("date");
     const endCountRadio = _mkEndRadio("count");
     const endDateLabel = this._el("label", { className: "weekday-label" }, [
-      endDateRadio, this._el("span", { textContent: this._t("rec_end_date") }),
+      endDateRadio,
+      this._el("span", { textContent: this._t("rec_end_date") })
     ]);
     const endCountLabel = this._el("label", { className: "weekday-label" }, [
-      endCountRadio, this._el("span", { textContent: this._t("rec_end_count") }),
+      endCountRadio,
+      this._el("span", { textContent: this._t("rec_end_count") })
     ]);
     const recurrenceEndRow = this._el("div", { className: "recurrence-radio-row" });
     recurrenceEndRow.appendChild(endDateLabel);
     if (providerSupportsCount) recurrenceEndRow.appendChild(endCountLabel);
-
-    // Compute the minimum allowed end date based on recurrence interval.
     const _computeMinEndDate = () => {
       const unit = recurrenceUnitSelect.value || "days";
       const val = parseInt(recurrenceValueInput.value) || 1;
-      // Hours: multiple occurrences fit in one day, so today is a valid end
-      // date (_advanceDateClamped leaves the date unchanged for "hours").
-      return this._localDateStr(this._advanceDateClamped(new Date(), unit, val));
+      return this._localDateStr(this._advanceDateClamped(/* @__PURE__ */ new Date(), unit, val));
     };
     const _updateEndDateMin = () => {
       const minEnd = _computeMinEndDate();
       recurrenceEndDateInput.min = minEnd;
-      // If the current value is before the new min, clear it
       if (recurrenceEndDateInput.value && recurrenceEndDateInput.value < minEnd) {
         recurrenceEndDateInput.value = "";
       }
     };
     const recurrenceEndDateInput = this._el("input", {
-      type: "date", value: recurrenceEndDate, min: _computeMinEndDate(),
-      "data-focus-key": "recurrence_end_date",
+      type: "date",
+      value: recurrenceEndDate,
+      min: _computeMinEndDate(),
+      "data-focus-key": "recurrence_end_date"
     });
-    const recEndClearBtn = this._el("button", { className: "field-clear-btn", textContent: "\u00D7" });
+    const recEndClearBtn = this._el("button", { className: "field-clear-btn", textContent: "×" });
     recEndClearBtn.addEventListener("click", () => {
       recurrenceEndDateInput.value = "";
       saveEndCondition();
       recEndClearBtn.style.display = "none";
     });
     if (!recurrenceEndDate) recEndClearBtn.style.display = "none";
-    recurrenceEndDateInput.addEventListener("change", () => { recEndClearBtn.style.display = recurrenceEndDateInput.value ? "" : "none"; });
-
+    recurrenceEndDateInput.addEventListener("change", () => {
+      recEndClearBtn.style.display = recurrenceEndDateInput.value ? "" : "none";
+    });
     const recEndFieldWrap = this._el("div", { className: "field-wrap" }, [
       recurrenceEndDateInput,
-      this._el("span", { textContent: this._t("rec_end_date_lbl") }),
+      this._el("span", { textContent: this._t("rec_end_date_lbl") })
     ]);
     const recurrenceEndDateWrap = this._el("div", { className: "due-input-row single" }, [
-      this._el("div", { className: "field-with-clear" }, [recEndFieldWrap, recEndClearBtn]),
+      this._el("div", { className: "field-with-clear" }, [recEndFieldWrap, recEndClearBtn])
     ]);
-
     const recurrenceMaxCountInput = this._el("input", {
-      type: "number", value: recurrenceMaxCount !== null ? recurrenceMaxCount : "",
-      "data-focus-key": "recurrence_max_count",
+      type: "number",
+      value: recurrenceMaxCount !== null ? recurrenceMaxCount : "",
+      "data-focus-key": "recurrence_max_count"
     });
     recurrenceMaxCountInput.min = 1;
     recurrenceMaxCountInput.max = 999;
-    const spinUp2 = this._el("button", { className: "spin-btn spin-up", textContent: "\u25b4", type: "button" });
-    const spinDown2 = this._el("button", { className: "spin-btn spin-down", textContent: "\u25be", type: "button" });
+    const spinUp2 = this._el("button", { className: "spin-btn spin-up", textContent: "▴", type: "button" });
+    const spinDown2 = this._el("button", { className: "spin-btn spin-down", textContent: "▾", type: "button" });
     spinUp2.addEventListener("click", () => {
       const v = Math.min(999, (parseInt(recurrenceMaxCountInput.value) || 1) + 1);
       recurrenceMaxCountInput.value = v;
@@ -10422,67 +9769,49 @@ class HomeTasksCard extends HTMLElement {
     const recMaxCountWrap = this._el("div", { className: "field-wrap inline" }, [
       recurrenceMaxCountInput,
       this._el("span", { textContent: this._t("rec_max_count_lbl") }),
-      this._el("div", { className: "spin-btns" }, [spinUp2, spinDown2]),
+      this._el("div", { className: "spin-btns" }, [spinUp2, spinDown2])
     ]);
-    const recMaxCountClearBtn = this._el("button", { className: "field-clear-btn", textContent: "\u00D7" });
+    const recMaxCountClearBtn = this._el("button", { className: "field-clear-btn", textContent: "×" });
     recMaxCountClearBtn.addEventListener("click", () => {
       recurrenceMaxCountInput.value = "";
       saveEndCondition();
       recMaxCountClearBtn.style.display = "none";
     });
-    if (recurrenceMaxCount === null || recurrenceMaxCount === undefined) recMaxCountClearBtn.style.display = "none";
+    if (recurrenceMaxCount === null || recurrenceMaxCount === void 0) recMaxCountClearBtn.style.display = "none";
     recurrenceMaxCountInput.addEventListener("change", () => {
       recMaxCountClearBtn.style.display = recurrenceMaxCountInput.value ? "" : "none";
     });
     const recMaxCountWithClear = this._el("div", { className: "field-with-clear" }, [recMaxCountWrap, recMaxCountClearBtn]);
     const recurrenceCountRow = this._el("div", { className: "recurrence-input-row" }, [recMaxCountWithClear, recRemainingSpan]);
-
-    // ---- Reopen ahead (PR #74) --------------------------------------------
-    // Show the task as open this long before its next due moment, as an
-    // upcoming to-do.  Stored in minutes; the unit picker offers what fits the
-    // interval (minutes/hours for hourly, hours/days otherwise).  A lead as
-    // long as the interval is never offered — the backend would ignore it.
-    // Native lists only: a linked list's reopen runs without it.
-    // Until recurrence is switched on the task has no lead of its own: it
-    // shows the list's (issue #77), which it takes over with the switch
-    // where the interval can hold it.
     const leadSupported = !this._isExternalCol(colIdx);
     const LEAD_FACTORS = { minutes: 1, hours: 60, days: 1440 };
-    // A recurring task without one (from before reopen early, or moved in)
-    // reopens when due, like the backend's `or 0`.
-    let leadMinutes = recurrenceEnabled
-      ? (Number.isInteger(task.recurrence_reopen_lead) ? task.recurrence_reopen_lead : 0) : null;
+    let leadMinutes = recurrenceEnabled ? Number.isInteger(task.recurrence_reopen_lead) ? task.recurrence_reopen_lead : 0 : null;
     const _intervalMinutes = () => {
       const unit = recurrenceUnitSelect.value || "days";
-      // Weekdays only count while "On" is picked — otherwise they aren't saved.
-      const weekdays = (unit === "weeks" && weekPatOnRadio.checked)
-        ? weekdayCheckboxes.map((cb, i) => cb.checked ? i : -1).filter(i => i >= 0)
-        : [];
-      return HomeTasksCard.recurrenceIntervalMinutes(
-        unit, parseInt(recurrenceValueInput.value) || 1, weekdays,
+      const weekdays = unit === "weeks" && weekPatOnRadio.checked ? weekdayCheckboxes.map((cb, i) => cb.checked ? i : -1).filter((i) => i >= 0) : [];
+      return _HomeTasksCard.recurrenceIntervalMinutes(
+        unit,
+        parseInt(recurrenceValueInput.value) || 1,
+        weekdays
       ) || 1440;
     };
     const _leadMaxIn = (unit) => Math.floor((_intervalMinutes() - 1) / LEAD_FACTORS[unit]);
     const _shownLead = () => leadMinutes ?? (listLead < _intervalMinutes() ? listLead : 0);
-
     const leadInput = this._el("input", {
-      type: "number", "data-focus-key": "recurrence_reopen_lead",
+      type: "number",
+      "data-focus-key": "recurrence_reopen_lead"
     });
     leadInput.min = 0;
     const leadUnitSelect = this._el("select", {});
-    const leadSpinUp = this._el("button", { className: "spin-btn spin-up", textContent: "\u25b4", type: "button" });
-    const leadSpinDown = this._el("button", { className: "spin-btn spin-down", textContent: "\u25be", type: "button" });
+    const leadSpinUp = this._el("button", { className: "spin-btn spin-up", textContent: "▴", type: "button" });
+    const leadSpinDown = this._el("button", { className: "spin-btn spin-down", textContent: "▾", type: "button" });
     const _fillLeadUnits = () => {
       const base = recurrenceUnitSelect.value === "hours" ? ["minutes", "hours"] : ["hours", "days"];
-      // Only units that can hold at least 1 below the interval: "days" on a
-      // daily task (or "hours" on an hourly one) could only ever be 0.
       const units = base.filter((u, i) => i === 0 || _leadMaxIn(u) >= 1);
-      // A stored lead only minutes can express (90 min on a daily task)
-      // keeps its unit rather than being shown rounded.
       const shown = _shownLead();
       if (shown % LEAD_FACTORS[units[0]] !== 0) units.unshift("minutes");
-      const pick = [...units].reverse().find(u => shown % LEAD_FACTORS[u] === 0) || units[0];
-      leadUnitSelect.replaceChildren(...units.map(u => {
+      const pick = [...units].reverse().find((u) => shown % LEAD_FACTORS[u] === 0) || units[0];
+      leadUnitSelect.replaceChildren(...units.map((u) => {
         const opt = this._el("option", { value: u, textContent: this._t(`rec_${u}`) });
         if (u === pick) opt.selected = true;
         return opt;
@@ -10499,8 +9828,6 @@ class HomeTasksCard extends HTMLElement {
       leadMinutes = n * LEAD_FACTORS[unit];
       _saveAndReload(this._updateTaskRouted(colIdx, task.id, { recurrence_reopen_lead: leadMinutes }));
     };
-    // A shorter interval can leave the lead as long as the interval itself;
-    // drop it with the same save rather than keep a value that does nothing.
     const _leadFieldsAfterIntervalChange = () => {
       if (!leadSupported) return {};
       _fillLeadUnits();
@@ -10524,72 +9851,48 @@ class HomeTasksCard extends HTMLElement {
         this._el("div", { className: "field-wrap inline" }, [
           leadInput,
           this._el("span", { textContent: this._t("rec_lead_lbl") }),
-          this._el("div", { className: "spin-btns" }, [leadSpinUp, leadSpinDown]),
+          this._el("div", { className: "spin-btns" }, [leadSpinUp, leadSpinDown])
         ]),
         this._el("div", { className: "sel-wrap inline" }, [
           leadUnitSelect,
-          this._el("span", { textContent: this._t("rec_unit_lbl") }),
-        ]),
+          this._el("span", { textContent: this._t("rec_unit_lbl") })
+        ])
       ]),
-      this._el("div", { className: "recurrence-note", textContent: this._t("rec_lead_hint") }),
+      this._el("div", { className: "recurrence-note", textContent: this._t("rec_lead_hint") })
     ]);
     if (!leadSupported) recurrenceLeadSection.style.display = "none";
-
-    // For Todoist: hide start date + recurrence time row entirely —
-    // the due date/time fields already control when the recurrence starts.
     const providerSyncsRecurrence = caps && caps.can_sync_recurrence;
-
-    // Todoist's natural-language parser can't model "every N months on the
-    // <pattern>" or "every N years on TT.MM" — match Todoist's web UI by
-    // hiding the pattern picker entirely whenever value > 1 + months/years
-    // on a Todoist list.  Forces the data to stay on "no pattern".
-    const todoistPatternBlocked = (unit, value) => (
-      providerSyncsRecurrence && value > 1 && (unit === "months" || unit === "years")
-    );
-
+    const todoistPatternBlocked = (unit, value) => providerSyncsRecurrence && value > 1 && (unit === "months" || unit === "years");
     const applyRowVisibility = (unit, value) => {
       recurrenceIntervalRow.style.display = "";
-      // Hours/days: only the anchor choice.  A provider that runs the
-      // recurrence itself (Todoist) decides that on its own, so the
-      // "Ab Fälligkeit" option is ours to offer only on other lists.
-      recurrenceBasicRadioRow.style.display =
-        ((unit === "hours" || unit === "days") && !providerSyncsRecurrence) ? "" : "none";
+      recurrenceBasicRadioRow.style.display = (unit === "hours" || unit === "days") && !providerSyncsRecurrence ? "" : "none";
       for (const lbl of [weekPatDueLabel, monthPatDueLabel, yearPatDueLabel]) {
         lbl.style.display = providerSyncsRecurrence ? "none" : "";
       }
-      // Weekly: radios always visible when unit=weeks; the checkbox row only
-      // when "Am" is selected.
       recurrenceWeekSection.style.display = unit === "weeks" ? "" : "none";
-      recurrenceWeekdayCheckboxRow.style.display = (unit === "weeks" && weekPatOnRadio.checked) ? "" : "none";
+      recurrenceWeekdayCheckboxRow.style.display = unit === "weeks" && weekPatOnRadio.checked ? "" : "none";
       const blockMonthly = todoistPatternBlocked(unit, value);
       recurrenceMonthSection.style.display = unit === "months" ? "" : "none";
-      recurrenceMonthRadioRow.style.display = (unit === "months" && !blockMonthly) ? "" : "none";
-      recurrenceMonthDomRow.style.display = (unit === "months" && !blockMonthly && monthPatDomRadio.checked) ? "" : "none";
-      recurrenceMonthNthRow.style.display = (unit === "months" && !blockMonthly && monthPatNthRadio.checked) ? "" : "none";
-      recurrenceTodoistMonthNote.style.display = (unit === "months" && blockMonthly) ? "" : "none";
+      recurrenceMonthRadioRow.style.display = unit === "months" && !blockMonthly ? "" : "none";
+      recurrenceMonthDomRow.style.display = unit === "months" && !blockMonthly && monthPatDomRadio.checked ? "" : "none";
+      recurrenceMonthNthRow.style.display = unit === "months" && !blockMonthly && monthPatNthRadio.checked ? "" : "none";
+      recurrenceTodoistMonthNote.style.display = unit === "months" && blockMonthly ? "" : "none";
       recurrenceYearRow.style.display = unit === "years" ? "" : "none";
       const blockYearly = todoistPatternBlocked(unit, value);
-      // Yearly: radios visible (when not Todoist-blocked); TT.MM only when "Am".
-      recurrenceYearRadioRow.style.display = (unit === "years" && !blockYearly) ? "" : "none";
-      recurrenceYearInputs.style.display = (unit === "years" && !blockYearly && yearPatOnRadio.checked) ? "" : "none";
-      recurrenceTodoistYearNote.style.display = (unit === "years" && blockYearly) ? "" : "none";
-      // Time row: only meaningful when the recurrence triggers on a calendar
-      // day (so hours mode hides it).  For Todoist we still show it so the
-      // user can set "happens at HH:MM".
+      recurrenceYearRadioRow.style.display = unit === "years" && !blockYearly ? "" : "none";
+      recurrenceYearInputs.style.display = unit === "years" && !blockYearly && yearPatOnRadio.checked ? "" : "none";
+      recurrenceTodoistYearNote.style.display = unit === "years" && blockYearly ? "" : "none";
       const hideTime = unit === "hours";
       recurrenceTimeRow.style.display = hideTime ? "none" : "";
-      // Start date: hidden for Todoist (due_date drives the anchor).
       recurrenceStartDateRow.style.display = providerSyncsRecurrence ? "none" : "";
       if (leadSupported) _fillLeadUnits();
     };
     applyRowVisibility(recurrenceUnit, recurrenceValue);
-
     const applyEndTypeVisibility = (endType) => {
       recurrenceEndDateWrap.style.display = endType === "date" ? "" : "none";
       recurrenceCountRow.style.display = endType === "count" ? "" : "none";
     };
     applyEndTypeVisibility(initialEndType);
-
     const applyMonthPatternState = () => {
       const isDom = monthPatDomRadio.checked;
       const isNth = monthPatNthRadio.checked;
@@ -10599,7 +9902,9 @@ class HomeTasksCard extends HTMLElement {
     };
     const applyWeekPatternState = () => {
       const isOn = weekPatOnRadio.checked;
-      weekdayCheckboxes.forEach(cb => { cb.disabled = !recSwitch.checked || !isOn; });
+      weekdayCheckboxes.forEach((cb) => {
+        cb.disabled = !recSwitch.checked || !isOn;
+      });
     };
     const applyYearPatternState = () => {
       const isOn = yearPatOnRadio.checked;
@@ -10609,7 +9914,6 @@ class HomeTasksCard extends HTMLElement {
       annDaySpinDown.disabled = off;
       annMonthSelect.disabled = off;
     };
-
     const applyEnabledState = (enabled) => {
       recurrenceValueInput.disabled = !enabled;
       recurrenceUnitSelect.disabled = !enabled;
@@ -10644,8 +9948,6 @@ class HomeTasksCard extends HTMLElement {
       applyYearPatternState();
     };
     applyEnabledState(recurrenceEnabled);
-
-    // ---- Helpers: collect current sub-pattern fields into a payload -------
     const _normaliseDom = () => {
       const v = monthDomSelect.value;
       return v === "last" ? "last" : parseInt(v, 10);
@@ -10655,61 +9957,44 @@ class HomeTasksCard extends HTMLElement {
       return v === "last" ? "last" : parseInt(v, 10);
     };
     const _collectMonthlyFields = () => {
-      // Returns the four monthly-specific fields based on which radio is set.
-      // Unused fields are explicitly null so the backend clears stale data.
       if (monthPatDomRadio.checked) {
         return {
           recurrence_month_pattern: "day_of_month",
           recurrence_day_of_month: _normaliseDom(),
-          recurrence_nth_week: null,
+          recurrence_nth_week: null
         };
       }
       if (monthPatNthRadio.checked) {
         return {
           recurrence_month_pattern: "nth_weekday",
           recurrence_day_of_month: null,
-          recurrence_nth_week: _normaliseNth(),
+          recurrence_nth_week: _normaliseNth()
         };
       }
       return {
         recurrence_month_pattern: null,
         recurrence_day_of_month: null,
-        recurrence_nth_week: null,
+        recurrence_nth_week: null
       };
     };
-    // Returns:
-    //   "MM-DD"      → both fields filled and valid
-    //   null         → both fields empty (= clear the anchor)
-    //   undefined    → partial / invalid input — caller should NOT save yet,
-    //                  otherwise the round-trip reload wipes the user's
-    //                  half-typed value (the bug behind "TT loses on blur").
     const _collectAnniversary = () => {
       const dStr = annDayInput.value;
       const mStr = annMonthSelect.value;
       if (!dStr && !mStr) return null;
-      if (!dStr || !mStr) return undefined;
+      if (!dStr || !mStr) return void 0;
       const d = parseInt(dStr, 10);
       const m = parseInt(mStr, 10);
-      if (!(d >= 1 && d <= 31 && m >= 1 && m <= 12)) return undefined;
+      if (!(d >= 1 && d <= 31 && m >= 1 && m <= 12)) return void 0;
       return `${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
     };
-    const _collectWeekdaysSelected = () => weekdayCheckboxes
-      .map((cb, i) => cb.checked ? i : -1).filter(i => i >= 0);
-
+    const _collectWeekdaysSelected = () => weekdayCheckboxes.map((cb, i) => cb.checked ? i : -1).filter((i) => i >= 0);
     const _activeWeekdaysForUnit = (unit) => {
-      // For weekly mode: only when "Am" is selected — the checkboxes drive it.
-      // For monthly nth-weekday mode: the single weekday picker.
-      // Otherwise: empty (we don't want stale weekday data lingering).
       if (unit === "weeks" && weekPatOnRadio.checked) return _collectWeekdaysSelected();
       if (unit === "months" && monthPatNthRadio.checked) {
         return [parseInt(monthWeekdaySelect.value, 10)];
       }
       return [];
     };
-
-    // The anchor is one setting shown in every unit's radio row.  Picking it
-    // in one row mirrors it into the others, so switching the unit keeps it
-    // (a row whose calendar pattern is picked keeps showing the pattern).
     let currentAnchor = recurrenceAnchor;
     const syncAnchorRadios = () => {
       const due = currentAnchor === "due";
@@ -10733,20 +10018,14 @@ class HomeTasksCard extends HTMLElement {
       syncAnchorRadios();
       return currentAnchor;
     };
-
     const saveBasicPattern = () => {
       _saveAndReload(this._updateTaskRouted(colIdx, task.id, {
-        recurrence_anchor: _setAnchor(basicPatDueRadio.checked),
+        recurrence_anchor: _setAnchor(basicPatDueRadio.checked)
       }));
     };
-
     const saveWeekdays = () => {
-      // If the user toggled a checkbox while "Ab Erledigung" was selected,
-      // auto-flip to "Am" so the picker stays consistent (unlikely path —
-      // checkboxes are disabled in that mode — but a keyboard shortcut
-      // could still hit it).
       if (recurrenceUnitSelect.value === "weeks" && !weekPatOnRadio.checked) {
-        const any = weekdayCheckboxes.some(cb => cb.checked);
+        const any = weekdayCheckboxes.some((cb) => cb.checked);
         if (any) {
           weekPatOnRadio.checked = true;
           applyRowVisibility("weeks", parseInt(recurrenceValueInput.value) || 1);
@@ -10755,10 +10034,9 @@ class HomeTasksCard extends HTMLElement {
       }
       _saveAndReload(this._updateTaskRouted(colIdx, task.id, {
         recurrence_weekdays: _activeWeekdaysForUnit(recurrenceUnitSelect.value),
-        ..._leadFieldsAfterIntervalChange(),
+        ..._leadFieldsAfterIntervalChange()
       }));
     };
-
     const saveMonthlyPattern = () => {
       applyRowVisibility(recurrenceUnitSelect.value, parseInt(recurrenceValueInput.value) || 1);
       applyMonthPatternState();
@@ -10767,43 +10045,31 @@ class HomeTasksCard extends HTMLElement {
       if (monthPatNoneRadio.checked || monthPatDueRadio.checked) {
         fields.recurrence_anchor = _setAnchor(monthPatDueRadio.checked);
       }
-      // Keep recurrence_weekdays in sync with the nth-weekday picker.
       if (recurrenceUnitSelect.value === "months") {
         fields.recurrence_weekdays = _activeWeekdaysForUnit("months");
       }
       _saveAndReload(this._updateTaskRouted(colIdx, task.id, fields));
     };
-
     const saveAnniversary = () => {
       const ann = _collectAnniversary();
-      if (ann === undefined) return;  // partial input; wait for the second field
+      if (ann === void 0) return;
       _saveAndReload(this._updateTaskRouted(colIdx, task.id, {
-        recurrence_anniversary: ann,
+        recurrence_anniversary: ann
       }));
     };
-
     const saveWeekPattern = () => {
       applyRowVisibility(recurrenceUnitSelect.value, parseInt(recurrenceValueInput.value) || 1);
       applyWeekPatternState();
       if (!weekPatOnRadio.checked) {
-        // Picked "Ab Erledigung" / "Ab Fälligkeit" — clear weekdays AND
-        // drop the override so a future reload renders the radio purely
-        // from data.
         this._weekPatternOverride.delete(task.id);
         _saveAndReload(this._updateTaskRouted(colIdx, task.id, {
           recurrence_weekdays: [],
-          recurrence_anchor: _setAnchor(weekPatDueRadio.checked),
+          recurrence_anchor: _setAnchor(weekPatDueRadio.checked)
         }));
       } else {
-        // Picked "Am" without any checkboxes yet — remember the choice
-        // locally so an unrelated reload (e.g. from a still-pending
-        // saveInterval) doesn't snap the radio back to "Ab Erledigung".
-        // Once the user actually picks a weekday, saveWeekdays writes
-        // the data and the override becomes redundant.
         this._weekPatternOverride.set(task.id, "on");
       }
     };
-
     const saveYearPattern = () => {
       applyRowVisibility(recurrenceUnitSelect.value, parseInt(recurrenceValueInput.value) || 1);
       applyYearPatternState();
@@ -10811,44 +10077,35 @@ class HomeTasksCard extends HTMLElement {
         this._yearPatternOverride.delete(task.id);
         _saveAndReload(this._updateTaskRouted(colIdx, task.id, {
           recurrence_anniversary: null,
-          recurrence_anchor: _setAnchor(yearPatDueRadio.checked),
+          recurrence_anchor: _setAnchor(yearPatDueRadio.checked)
         }));
       } else {
-        // Same sticky-UI rule as the weekly radio.
         this._yearPatternOverride.set(task.id, "on");
         const ann = _collectAnniversary();
-        if (!ann) return;  // wait for the user to fill in TT and the month
+        if (!ann) return;
         _saveAndReload(this._updateTaskRouted(colIdx, task.id, {
-          recurrence_anniversary: ann,
+          recurrence_anniversary: ann
         }));
       }
     };
-
     const saveInterval = () => {
       const val = Math.max(1, Math.min(365, parseInt(recurrenceValueInput.value) || 1));
       recurrenceValueInput.value = val;
       const newUnit = recurrenceUnitSelect.value;
-      // Switching unit clears any sticky-UI overrides for the OTHER unit
-      // dimensions — picking "Am" under "Wochen", switching to "Jahre",
-      // then back to "Wochen" should give a fresh derivation from the
-      // saved data rather than a leftover override from the earlier
-      // session.  Same idea for Year ↔ Month transitions.
       if (newUnit !== "weeks") this._weekPatternOverride.delete(task.id);
       if (newUnit !== "years") this._yearPatternOverride.delete(task.id);
       syncAnchorRadios();
       applyRowVisibility(newUnit, val);
-      // Update end-date min; auto-clear if it became invalid
       const oldEndVal = recurrenceEndDateInput.value;
       _updateEndDateMin();
       const fields = {
-        recurrence_type: "interval",  // legacy "weekdays" mode is gone
+        recurrence_type: "interval",
+        // legacy "weekdays" mode is gone
         recurrence_value: val,
         recurrence_unit: newUnit,
         // Re-sync weekdays so switching unit clears stale selections
-        recurrence_weekdays: _activeWeekdaysForUnit(newUnit),
+        recurrence_weekdays: _activeWeekdaysForUnit(newUnit)
       };
-      // Sub-pattern fields: only meaningful for the active unit; clear the rest.
-      // Todoist + value > 1 also forces "no pattern" — match Todoist web UI.
       const todoistBlocks = todoistPatternBlocked(newUnit, val);
       if (newUnit === "months" && !todoistBlocks) {
         Object.assign(fields, _collectMonthlyFields());
@@ -10864,7 +10121,6 @@ class HomeTasksCard extends HTMLElement {
         fields.recurrence_nth_week = null;
         fields.recurrence_anniversary = null;
       }
-      // If end date was cleared because it's now invalid, tell the server
       if (oldEndVal && !recurrenceEndDateInput.value) {
         fields.recurrence_end_date = null;
         fields.recurrence_end_type = "none";
@@ -10872,18 +10128,7 @@ class HomeTasksCard extends HTMLElement {
       Object.assign(fields, _leadFieldsAfterIntervalChange());
       _saveAndReload(this._updateTaskRouted(colIdx, task.id, fields));
     };
-
     const _saveAndReload = (promise) => {
-      // After a recurrence field is saved, make sure the local task state is
-      // refreshed so the next render shows the new value.  External columns
-      // need _reloadExternal(); native ones need _loadAllTasks() — without
-      // this, fields like recurrence_time appeared to snap back to "00:00"
-      // on re-expand until an unrelated state event rewrote the cached task.
-      //
-      // Mark the reload as a background update so _render() defers if the
-      // user has already moved focus to another field — otherwise picking
-      // an option, then clicking the next field, would tear down the DOM
-      // mid-click and the click would be lost.
       promise?.then(async () => {
         this._bgUpdates = (this._bgUpdates || 0) + 1;
         try {
@@ -10894,43 +10139,33 @@ class HomeTasksCard extends HTMLElement {
         }
       });
     };
-
     const saveStartDate = () => {
       _saveAndReload(this._updateTaskRouted(colIdx, task.id, {
-        recurrence_start_date: recurrenceStartDateInput.value || null,
+        recurrence_start_date: recurrenceStartDateInput.value || null
       }));
     };
-
     const saveRecurrenceTime = () => {
       _saveAndReload(this._updateTaskRouted(colIdx, task.id, {
-        recurrence_time: recurrenceTimeInput.value || null,
+        recurrence_time: recurrenceTimeInput.value || null
       }));
     };
-
     const _selectedEndType = () => endCountRadio.checked ? "count" : "date";
     const saveEndCondition = () => {
       const endType = _selectedEndType();
       applyEndTypeVisibility(endType);
-      // Clamp manually entered end date to the minimum allowed
       if (endType === "date" && recurrenceEndDateInput.value) {
         const minEnd = _computeMinEndDate();
         if (recurrenceEndDateInput.value < minEnd) {
           recurrenceEndDateInput.value = minEnd;
         }
       }
-      // "Bis" with an empty date = no end (same idea as an empty Beginn).
-      // The radio stays on "Bis" — that's now the default — but the saved
-      // end_type is "none" so the backend doesn't try to clamp on a
-      // missing date.  Reload doesn't snap the radio back because empty
-      // "Bis" + count-not-selected → initialEndType === "date" still wins.
-      const effectiveEndType = (endType === "date" && !recurrenceEndDateInput.value) ? "none" : endType;
+      const effectiveEndType = endType === "date" && !recurrenceEndDateInput.value ? "none" : endType;
       _saveAndReload(this._updateTaskRouted(colIdx, task.id, {
         recurrence_end_type: effectiveEndType,
-        recurrence_end_date: endType === "date" ? (recurrenceEndDateInput.value || null) : null,
-        recurrence_max_count: endType === "count" ? (parseInt(recurrenceMaxCountInput.value) || null) : null,
+        recurrence_end_date: endType === "date" ? recurrenceEndDateInput.value || null : null,
+        recurrence_max_count: endType === "count" ? parseInt(recurrenceMaxCountInput.value) || null : null
       }));
     };
-
     recSwitch.addEventListener("change", () => {
       const enabled = recSwitch.checked;
       applyEnabledState(enabled);
@@ -10947,12 +10182,12 @@ class HomeTasksCard extends HTMLElement {
         recurrence_start_date: recurrenceStartDateInput.value || null,
         recurrence_time: recurrenceTimeInput.value || null,
         recurrence_end_type: endType,
-        recurrence_end_date: endType === "date" ? (recurrenceEndDateInput.value || null) : null,
-        recurrence_max_count: endType === "count" ? (parseInt(recurrenceMaxCountInput.value) || null) : null,
+        recurrence_end_date: endType === "date" ? recurrenceEndDateInput.value || null : null,
+        recurrence_max_count: endType === "count" ? parseInt(recurrenceMaxCountInput.value) || null : null,
         recurrence_anchor: currentAnchor,
         // Include current reminders — Todoist deletes them when due changes,
         // so the backend needs to re-create them after the update.
-        reminders: task.reminders || [],
+        reminders: task.reminders || []
       };
       if (newUnit === "months" && !todoistBlocks) {
         Object.assign(fields, _collectMonthlyFields());
@@ -10968,24 +10203,21 @@ class HomeTasksCard extends HTMLElement {
         fields.recurrence_nth_week = null;
         fields.recurrence_anniversary = null;
       }
-      // Switched on: the list's lead, as shown; switched off: shown again
-      // as the one a later switch takes over.
       leadMinutes = enabled ? _shownLead() : null;
       if (enabled && leadSupported) fields.recurrence_reopen_lead = leadMinutes;
       _fillLeadUnits();
       _saveAndReload(this._updateTaskRouted(colIdx, task.id, fields));
     });
-
     recurrenceValueInput.addEventListener("change", saveInterval);
-    recurrenceValueInput.addEventListener("keydown", (e) => { if (e.key === "Enter") recurrenceValueInput.blur(); });
+    recurrenceValueInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") recurrenceValueInput.blur();
+    });
     const _blurAfterChange = (el) => this._blurSelectOnChange(el);
     recurrenceUnitSelect.addEventListener("change", saveInterval);
     _blurAfterChange(recurrenceUnitSelect);
-    weekdayCheckboxes.forEach(cb => cb.addEventListener("change", saveWeekdays));
-    [basicPatNoneRadio, basicPatDueRadio].forEach(r =>
-      r.addEventListener("change", saveBasicPattern));
-    [monthPatNoneRadio, monthPatDueRadio, monthPatDomRadio, monthPatNthRadio].forEach(r =>
-      r.addEventListener("change", saveMonthlyPattern));
+    weekdayCheckboxes.forEach((cb) => cb.addEventListener("change", saveWeekdays));
+    [basicPatNoneRadio, basicPatDueRadio].forEach((r) => r.addEventListener("change", saveBasicPattern));
+    [monthPatNoneRadio, monthPatDueRadio, monthPatDomRadio, monthPatNthRadio].forEach((r) => r.addEventListener("change", saveMonthlyPattern));
     monthDomSelect.addEventListener("change", saveMonthlyPattern);
     monthNthSelect.addEventListener("change", saveMonthlyPattern);
     monthWeekdaySelect.addEventListener("change", saveMonthlyPattern);
@@ -10993,34 +10225,36 @@ class HomeTasksCard extends HTMLElement {
     _blurAfterChange(monthNthSelect);
     _blurAfterChange(monthWeekdaySelect);
     annDayInput.addEventListener("blur", saveAnniversary);
-    annDayInput.addEventListener("keydown", (e) => { if (e.key === "Enter") annDayInput.blur(); });
+    annDayInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") annDayInput.blur();
+    });
     annMonthSelect.addEventListener("change", saveAnniversary);
     _blurAfterChange(annMonthSelect);
-    [weekPatNoneRadio, weekPatDueRadio, weekPatOnRadio].forEach(r =>
-      r.addEventListener("change", saveWeekPattern));
-    [yearPatNoneRadio, yearPatDueRadio, yearPatOnRadio].forEach(r =>
-      r.addEventListener("change", saveYearPattern));
-    [endDateRadio, endCountRadio].forEach(r =>
-      r.addEventListener("change", saveEndCondition));
-    // Use "blur" instead of "change" for the time/date inputs: type="time"
-    // fires change the moment the hour alone becomes a valid time ("20:00"),
-    // which would trigger a save + re-render and yank the focus out before
-    // the user can type the minutes.  Blur triggers on Enter (via the keydown
-    // handler below) and when the user tabs or clicks away, which is the
-    // natural commit moment.
+    [weekPatNoneRadio, weekPatDueRadio, weekPatOnRadio].forEach((r) => r.addEventListener("change", saveWeekPattern));
+    [yearPatNoneRadio, yearPatDueRadio, yearPatOnRadio].forEach((r) => r.addEventListener("change", saveYearPattern));
+    [endDateRadio, endCountRadio].forEach((r) => r.addEventListener("change", saveEndCondition));
     recurrenceStartDateInput.addEventListener("blur", saveStartDate);
-    recurrenceStartDateInput.addEventListener("keydown", (e) => { if (e.key === "Enter") recurrenceStartDateInput.blur(); });
+    recurrenceStartDateInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") recurrenceStartDateInput.blur();
+    });
     recurrenceTimeInput.addEventListener("blur", saveRecurrenceTime);
-    recurrenceTimeInput.addEventListener("keydown", (e) => { if (e.key === "Enter") recurrenceTimeInput.blur(); });
+    recurrenceTimeInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") recurrenceTimeInput.blur();
+    });
     recurrenceEndDateInput.addEventListener("blur", saveEndCondition);
-    recurrenceEndDateInput.addEventListener("keydown", (e) => { if (e.key === "Enter") recurrenceEndDateInput.blur(); });
+    recurrenceEndDateInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") recurrenceEndDateInput.blur();
+    });
     recurrenceMaxCountInput.addEventListener("change", saveEndCondition);
-    recurrenceMaxCountInput.addEventListener("keydown", (e) => { if (e.key === "Enter") recurrenceMaxCountInput.blur(); });
+    recurrenceMaxCountInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") recurrenceMaxCountInput.blur();
+    });
     leadInput.addEventListener("change", saveLead);
-    leadInput.addEventListener("keydown", (e) => { if (e.key === "Enter") leadInput.blur(); });
+    leadInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") leadInput.blur();
+    });
     leadUnitSelect.addEventListener("change", saveLead);
     _blurAfterChange(leadUnitSelect);
-
     return this._el("div", { className: "detail-section" }, [
       recurrenceToggleRow,
       recurrenceIntervalRow,
@@ -11033,16 +10267,10 @@ class HomeTasksCard extends HTMLElement {
       recurrenceLeadSection,
       recurrenceEndRow,
       recurrenceEndDateWrap,
-      recurrenceCountRow,
+      recurrenceCountRow
     ]);
   }
-
   _buildAssignedPersonSection(task, colIdx) {
-    // One chip per person; any number can be on (issue #75). The first one
-    // switched on is the primary assignee - what older automations and
-    // single-assignee providers see as assigned_person.
-    // hidden_persons: people never offered for assignment in this card (system
-    // or visiting persons). Someone already assigned stays visible.
     const hiddenPersons = (this._config.columns[colIdx] || {}).hidden_persons || [];
     const assigned = _assignees(task);
     const offered = personEntries(this._hass, hiddenPersons.filter((p) => !assigned.includes(p)));
@@ -11052,7 +10280,7 @@ class HomeTasksCard extends HTMLElement {
       const chip = this._el("button", {
         className: "assignee-chip" + (on ? " active" : ""),
         textContent: label,
-        title: label,
+        title: label
       });
       chip.setAttribute("aria-pressed", on ? "true" : "false");
       chip.addEventListener("click", () => {
@@ -11067,17 +10295,14 @@ class HomeTasksCard extends HTMLElement {
     }
     return this._el("div", { className: "detail-section" }, [
       this._el("label", { className: "detail-label", textContent: this._t("assigned_to") }),
-      row,
+      row
     ]);
   }
-
   // Section picker in the task details: the same section_id update a drag
   // across a section header makes, without needing to drag (hard on phones,
   // and impossible to discover for tasks added outside a section).
   _buildSectionPickerSection(task, colIdx) {
-    const sections = (this._columns[colIdx].sections || [])
-      .slice()
-      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    const sections = (this._columns[colIdx].sections || []).slice().sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
     const sectionSelect = this._el("select", {});
     const noneOpt = this._el("option", { value: "", textContent: this._t("ed_default_none") });
     const current = sections.some((x) => x.id === task.section_id) ? task.section_id : "";
@@ -11096,7 +10321,6 @@ class HomeTasksCard extends HTMLElement {
         await this._saveSectionId(colIdx, task.id, sectionId);
       } catch (err) {
         this._showError(`Section update failed: ${err.message || err}`);
-        // Put the task back where the server still has it.
         if (this._isExternalCol(colIdx)) await this._reloadExternal();
         else await this._loadAllTasks();
       }
@@ -11105,13 +10329,12 @@ class HomeTasksCard extends HTMLElement {
     const sectionWrap = this._el("div", { className: "sel-wrap no-label" }, [sectionSelect]);
     return this._el("div", { className: "detail-section" }, [
       this._el("label", { className: "detail-label", textContent: this._t("section_label") }),
-      sectionWrap,
+      sectionWrap
     ]);
   }
-
   _buildTagsSection(task, colIdx) {
     const tagSectionChildren = [
-      this._el("label", { className: "detail-label", textContent: this._t("tags") }),
+      this._el("label", { className: "detail-label", textContent: this._t("tags") })
     ];
     const taskTags = task.tags || [];
     if (taskTags.length > 0) {
@@ -11120,7 +10343,7 @@ class HomeTasksCard extends HTMLElement {
         const removeBtn = this._el("button", {
           className: "remove-tag-btn",
           title: this._t("remove_tag"),
-          textContent: "\u00D7",
+          textContent: "×"
         });
         removeBtn.addEventListener("click", () => {
           const newTags = taskTags.filter((t) => t !== tag);
@@ -11131,7 +10354,7 @@ class HomeTasksCard extends HTMLElement {
         tagListEl.appendChild(
           this._el("span", { className: "tag-item" }, [
             this._el("span", { textContent: "#" + tag }),
-            removeBtn,
+            removeBtn
           ])
         );
       }
@@ -11141,45 +10364,31 @@ class HomeTasksCard extends HTMLElement {
       type: "text",
       placeholder: this._t("tag_placeholder"),
       "data-focus-key": "tag_input",
-      autocomplete: "off",
+      autocomplete: "off"
     });
     const tagInputWrap = this._el("div", { className: "field-wrap" }, [
       tagInput,
-      this._el("span", { textContent: this._t("add_tag").replace("+ ", "") }),
+      this._el("span", { textContent: this._t("add_tag").replace("+ ", "") })
     ]);
     const dropdown = this._el("div", {
       className: "tag-autocomplete-dropdown",
       role: "listbox",
-      "aria-label": this._t("tag_suggestions_label"),
+      "aria-label": this._t("tag_suggestions_label")
     });
     dropdown.hidden = true;
-
-    // Popover state lives on a closure shared by the handlers below.
-    // activeIndex = -1 means "user has not navigated into the list yet",
-    // so Enter commits the raw input value instead of the first match —
-    // this lets the user type e.g. "hau" and add it as a new tag even
-    // when "haus" is in the suggestion list.
     const state = { activeIndex: -1, items: [] };
-
     const applyHighlight = () => {
       for (let i = 0; i < state.items.length; i++) {
         state.items[i].classList.toggle("highlighted", i === state.activeIndex);
       }
     };
-
     const refresh = () => {
       const q = tagInput.value.trim().replace(/^#/, "").toLowerCase();
-      // The list's fixed tags (issue #61) come first and are always offered;
-      // then whatever else is in use on the loaded tasks.
       const catalog = this._columns[colIdx]?.tagCatalog || [];
-      const known = [...new Set([...catalog, ...this._collectAllKnownTags()])];
+      const known = [.../* @__PURE__ */ new Set([...catalog, ...this._collectAllKnownTags()])];
       const taken = new Set(task.tags || []);
-      const suggestions = known.filter(t => !taken.has(t) && (q === "" || t.startsWith(q)));
-      // A new tag one or two letters away from a fixed one is most likely a
-      // typo that would split the category in two — offer the fixed one.
-      const typoFixes = (q && !catalog.includes(q))
-        ? catalog.filter(t => !taken.has(t) && !suggestions.includes(t) && this._isNearMiss(q, t))
-        : [];
+      const suggestions = known.filter((t) => !taken.has(t) && (q === "" || t.startsWith(q)));
+      const typoFixes = q && !catalog.includes(q) ? catalog.filter((t) => !taken.has(t) && !suggestions.includes(t) && this._isNearMiss(q, t)) : [];
       dropdown.innerHTML = "";
       state.items = [];
       state.activeIndex = -1;
@@ -11188,7 +10397,7 @@ class HomeTasksCard extends HTMLElement {
           className: "tag-autocomplete-item did-you-mean",
           role: "option",
           "data-tag": tag,
-          textContent: this._t("tag_did_you_mean", "#" + tag),
+          textContent: this._t("tag_did_you_mean", "#" + tag)
         });
         item.addEventListener("mousedown", (e) => {
           e.preventDefault();
@@ -11200,7 +10409,7 @@ class HomeTasksCard extends HTMLElement {
       if (suggestions.length === 0 && typoFixes.length === 0) {
         dropdown.appendChild(this._el("div", {
           className: "tag-autocomplete-empty",
-          textContent: this._t("tag_no_matches"),
+          textContent: this._t("tag_no_matches")
         }));
         return;
       }
@@ -11209,10 +10418,8 @@ class HomeTasksCard extends HTMLElement {
           className: "tag-autocomplete-item" + (catalog.includes(tag) ? " catalog" : ""),
           role: "option",
           "data-tag": tag,
-          textContent: "#" + tag,
+          textContent: "#" + tag
         });
-        // mousedown (not click) — click would fire after the input's blur,
-        // which closes the popover before the pick can register.
         item.addEventListener("mousedown", (e) => {
           e.preventDefault();
           this._addTagFromSuggestion(task, colIdx, tagInput, tag);
@@ -11221,7 +10428,6 @@ class HomeTasksCard extends HTMLElement {
         state.items.push(item);
       }
     };
-
     tagInput.addEventListener("focus", () => {
       dropdown.hidden = false;
       refresh();
@@ -11273,15 +10479,13 @@ class HomeTasksCard extends HTMLElement {
         }
       }
     });
-
     const anchor = this._el("div", { className: "tag-autocomplete-anchor" }, [
       tagInputWrap,
-      dropdown,
+      dropdown
     ]);
     tagSectionChildren.push(anchor);
     return this._el("div", { className: "detail-section" }, tagSectionChildren);
   }
-
   // Damerau-free edit distance ≤ 1 (short tags) or ≤ 2, early-exit: good
   // enough to catch "kitchn" / "kichen" for "kitchen" without flagging
   // unrelated short words.
@@ -11302,17 +10506,15 @@ class HomeTasksCard extends HTMLElement {
     }
     return prev[b.length] <= max;
   }
-
   _collectAllKnownTags() {
-    const all = new Set();
-    for (const cs of (this._columns || [])) {
-      for (const t of (cs?.tasks || [])) {
-        for (const tag of (t.tags || [])) all.add(tag);
+    const all = /* @__PURE__ */ new Set();
+    for (const cs of this._columns || []) {
+      for (const t of cs?.tasks || []) {
+        for (const tag of t.tags || []) all.add(tag);
       }
     }
     return [...all].sort();
   }
-
   _commitNewTag(task, colIdx, tagInput) {
     const val = tagInput.value.trim().toLowerCase();
     const taskTags = task.tags || [];
@@ -11326,7 +10528,6 @@ class HomeTasksCard extends HTMLElement {
       tagInput.value = "";
     }
   }
-
   _addTagFromSuggestion(task, colIdx, tagInput, tag) {
     const taskTags = task.tags || [];
     tagInput.value = "";
@@ -11336,11 +10537,10 @@ class HomeTasksCard extends HTMLElement {
     this._render();
     this._updateTaskRouted(colIdx, task.id, { tags: newTags });
   }
-
   _buildRemindersSection(task, colIdx) {
     const taskReminders = task.reminders || [];
     const reminderSectionChildren = [
-      this._el("label", { className: "detail-label", textContent: this._t("reminder") }),
+      this._el("label", { className: "detail-label", textContent: this._t("reminder") })
     ];
     const _rebuildReminders = (newReminders) => {
       task.reminders = newReminders;
@@ -11359,8 +10559,8 @@ class HomeTasksCard extends HTMLElement {
       this._blurSelectOnChange(sel);
       const removeBtn = this._el("button", {
         className: "reminder-remove",
-        textContent: "\u00D7",
-        title: this._t("remove_reminder"),
+        textContent: "×",
+        title: this._t("remove_reminder")
       });
       removeBtn.addEventListener("click", () => {
         const updated = taskReminders.filter((_, i) => i !== ri);
@@ -11368,14 +10568,14 @@ class HomeTasksCard extends HTMLElement {
       });
       const remSelWrap = this._el("div", { className: "sel-wrap" }, [
         sel,
-        this._el("span", { textContent: this._t("reminder") }),
+        this._el("span", { textContent: this._t("reminder") })
       ]);
       reminderSectionChildren.push(this._el("div", { className: "reminder-row" }, [remSelWrap, removeBtn]));
     }
     if (taskReminders.length < MAX_REMINDERS) {
       const addReminderBtn = this._el("button", {
         className: "add-reminder-btn",
-        textContent: this._t("rem_add"),
+        textContent: this._t("rem_add")
       });
       addReminderBtn.addEventListener("click", () => {
         const used = new Set(taskReminders);
@@ -11385,101 +10585,72 @@ class HomeTasksCard extends HTMLElement {
     }
     return this._el("div", { className: "detail-section" }, reminderSectionChildren);
   }
-
   _buildActionsSection(task, colIdx) {
     const col = this._config.columns[colIdx];
     const children = [];
-
     if (!this._planMode && !task.completed && this._plansForCol(colIdx).length > 0) {
-      // On a list that a day plan draws from: put the task on one of its days.
       const planBtn = this._el("button", {
         className: "move-task-btn plan-for-btn",
-        textContent: this._t("plan_for"),
+        textContent: this._t("plan_for")
       });
       planBtn.addEventListener("click", () => this._planTaskViaDialog(task, colIdx));
       children.push(planBtn);
     }
-
-    // Move to another list (issue #47): opens an in-card dialog listing the
-    // possible targets and routes through the same WS commands as
-    // cross-column drag, so external lists work as source and target too.
     const moveTargets = this._moveTargets(colIdx);
     if (col.show_move !== false && moveTargets.length > 0) {
       const moveBtn = this._el("button", {
         className: "move-task-btn",
-        textContent: this._t("move_task"),
+        textContent: this._t("move_task")
       });
       moveBtn.addEventListener("click", () => this._moveTaskViaDialog(task, colIdx, moveTargets));
       children.push(moveBtn);
     }
-
-    // Duplicate: create an identical copy (same assignee, recurrence, tags,
-    // notes, due date — everything). Linked lists too: the provider gets the
-    // copy, the overlay keeps what the provider cannot.
     {
       const dupBtn = this._el("button", {
         className: "duplicate-task-btn",
-        textContent: this._t("duplicate_task"),
+        textContent: this._t("duplicate_task")
       });
       dupBtn.addEventListener("click", () => {
-        // Close the tile detail sheet (no-op in the inline list view) so repeated
-        // clicks don't silently pile up copies behind the popup.
         this._closeTaskDetailSheet();
         this._duplicateTask(task, colIdx);
       });
       children.push(dupBtn);
     }
-
     const deleteBtn = this._el("button", {
       className: "delete-task-btn",
-      textContent: this._t("delete_task"),
+      textContent: this._t("delete_task")
     });
     deleteBtn.addEventListener("click", () => {
-      // Close the sheet first (no-op for the inline list view) so the popup
-      // doesn't linger showing a task being deleted; synchronous so the delete's
-      // re-render can't re-attach it.
       this._closeTaskDetailSheet();
       this._deleteTask(task.id, colIdx);
     });
     children.push(deleteBtn);
-
     return this._el("div", { className: "detail-actions" }, children);
   }
-
   async _duplicateTask(task, colIdx) {
     if (this._isExternalCol(colIdx)) {
-      // A linked list refuses far more often than a native one (read-only
-      // calendar, provider rate limit), so a failure has to be said out
-      // loud. A timeout is not a refusal: the provider may hold the copy,
-      // and the reload will show it either way.
       let err = null;
       try {
         await this._callWs("home_tasks/duplicate_external_task", {
           entity_id: this._colEntityId(colIdx),
           task_uid: task.id,
-          assigned_person: task.assigned_person ?? null,
+          assigned_person: task.assigned_person ?? null
         }, { rethrow: true });
       } catch (e) {
         err = e;
       }
       if (err && !this._isWsTimeout(err)) this._showError(this._t("duplicate_failed"));
-      // The provider decides where the copy lands and when its entity
-      // reflects it - same delayed reload as every other linked-list edit.
       this._reloadExternal(colIdx);
       return;
     }
     const newTask = await this._callWs("home_tasks/duplicate_task", {
       list_id: this._colListId(colIdx),
       task_id: task.id,
-      assigned_person: task.assigned_person ?? null,
+      assigned_person: task.assigned_person ?? null
     });
     if (!newTask) return;
-    // Reload once — the backend placed the copy right after the source and
-    // renumbered, so we fetch the authoritative order with a single render
-    // instead of an optimistic insert + render followed by a second reload render.
     await this._loadAllTasks();
   }
-
   // Possible move targets for a task in colIdx (issue #47): every native
   // list except the source list, plus the external lists shown as other
   // columns of this card (a cross move needs an entity_id, which the card
@@ -11492,23 +10663,20 @@ class HomeTasksCard extends HTMLElement {
       if (list.id !== srcListId) targets.push({ label: list.name, list_id: list.id });
     }
     const srcEntityId = srcIsExternal ? this._colEntityId(colIdx) : null;
-    const seen = new Set();
+    const seen = /* @__PURE__ */ new Set();
     for (let i = 0; i < (this._config.columns || []).length; i++) {
       if (!this._isExternalCol(i)) continue;
       const eid = this._colEntityId(i);
       if (!eid || eid === srcEntityId || seen.has(eid)) continue;
       seen.add(eid);
       const st = this._hass && this._hass.states ? this._hass.states[eid] : null;
-      targets.push({ label: (st && st.attributes && st.attributes.friendly_name) || eid, entity_id: eid });
+      targets.push({ label: st && st.attributes && st.attributes.friendly_name || eid, entity_id: eid });
     }
     return targets;
   }
-
   async _moveTaskViaDialog(task, colIdx, targets) {
     const choice = await this._moveDialog(task, targets);
     if (!choice) return;
-    // Close the sheet before the move (no-op in the inline list view) so the
-    // popup doesn't linger showing a task that just left this list.
     this._closeTaskDetailSheet();
     const payload = { task_id: task.id };
     if (this._isExternalCol(colIdx)) payload.source_entity_id = this._colEntityId(colIdx);
@@ -11519,7 +10687,6 @@ class HomeTasksCard extends HTMLElement {
     await this._loadAllTasks();
     if (payload.source_entity_id || payload.target_entity_id) this._reloadExternal();
   }
-
   // Single move executor shared by cross-column drag & drop and the detail
   // sheet's Move dialog: native→native goes through the move_task fast path,
   // anything external through move_task_cross. Failures (backend errors,
@@ -11529,64 +10696,49 @@ class HomeTasksCard extends HTMLElement {
     const bothNative = !!(payload.source_list_id && payload.target_list_id);
     const msg = {
       type: bothNative ? "home_tasks/move_task" : "home_tasks/move_task_cross",
-      ...payload,
+      ...payload
     };
     try {
-      // No artificial timeout: cross moves against slow external providers
-      // legitimately take longer than any fixed budget (adapter create,
-      // per-sub-task calls, reminder sync), and a false "failed" makes users
-      // retry into duplicates. WS errors and disconnects reject on their own.
       await this._hass.callWS(msg);
       return true;
     } catch (err) {
-      this._showError("Move failed: " + ((err && err.message) || err));
+      this._showError("Move failed: " + (err && err.message || err));
       return false;
     }
   }
-
   // The confirm dialog plus a target <select>; resolves with the chosen
   // target object, or null on cancel/Esc/backdrop click.
   _moveDialog(task, targets) {
-    const sel = this._el("select", { className: "ht-move-select" },
-      targets.map((t, i) => this._el("option", { value: String(i), textContent: t.label })));
+    const sel = this._el(
+      "select",
+      { className: "ht-move-select" },
+      targets.map((t, i) => this._el("option", { value: String(i), textContent: t.label }))
+    );
     return this._modalDialog({
       message: this._t("move_task_msg", task.title),
       okLabel: this._t("move_task"),
       body: [sel],
-      resolveOk: () => targets[sel.value],
+      resolveOk: () => targets[sel.value]
     });
   }
-
   _buildImageSection(task, colIdx) {
     const col = this._config.columns[colIdx];
     const isGenerating = this._generatingImage.has(task.id);
-
     const children = [];
-
-    // --- Show existing image ---
     if (task.image_url) {
       const imgWrap = this._el("div", { className: "task-image-wrap" });
-
       const img = this._el("img", { className: "task-image", src: task.image_url, alt: task.title });
       imgWrap.appendChild(img);
-
-      // Remove image button (×)
       const removeBtn = this._el("button", { className: "task-image-remove", title: this._t("img_remove") });
       removeBtn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>`;
-      // Reuse _saveImageUrl(null): it clears the image in the source column and
-      // refreshes the open sheet + visible tiles without a full render.
       removeBtn.addEventListener("click", () => this._saveImageUrl(task, colIdx, null));
       imgWrap.appendChild(removeBtn);
       children.push(imgWrap);
     }
-
-    // --- Action buttons row ---
     const busy = isGenerating;
-
-    // Generate button
     const genBtn = this._el("button", {
       className: "generate-image-btn" + (busy ? " generating" : ""),
-      disabled: busy,
+      disabled: busy
     });
     if (isGenerating) {
       genBtn.innerHTML = `<span class="spinner"></span> ${this._t("img_generating")}`;
@@ -11595,11 +10747,9 @@ class HomeTasksCard extends HTMLElement {
     }
     genBtn.addEventListener("click", () => this._generateTaskImage(task, colIdx, !!task.image_url));
     children.push(genBtn);
-
-    // "Aus Mediathek" button — opens HA's native media browser dialog
     const selectBtn = this._el("button", {
       className: "generate-image-btn",
-      disabled: busy,
+      disabled: busy
     });
     selectBtn.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right:6px;vertical-align:-3px"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9H9V9h10v2zm-4 4H9v-2h6v2zm4-8H9V5h10v2z"/></svg>${this._t("img_from_media")}`;
     selectBtn.addEventListener("click", (e) => {
@@ -11607,21 +10757,17 @@ class HomeTasksCard extends HTMLElement {
       this._openMediaPicker(task, colIdx);
     });
     children.push(selectBtn);
-
     return this._el("div", { className: "detail-section detail-section--image" }, [
       this._el("label", { className: "detail-label", textContent: this._t("img_label") }),
-      this._el("div", { className: "image-section-body" }, children),
+      this._el("div", { className: "image-section-body" }, children)
     ]);
   }
-
   async _openMediaPicker(task, colIdx) {
-    const navStack = []; // { id, title }
-
+    const navStack = [];
     const dialog = document.createElement("dialog");
     dialog.className = "mb-dialog";
-
     const header = this._el("div", { className: "mb-header" }, [
-      this._el("span", { className: "mb-title", textContent: this._t("mb_title") }),
+      this._el("span", { className: "mb-title", textContent: this._t("mb_title") })
     ]);
     const closeBtn = document.createElement("button");
     closeBtn.className = "mb-close";
@@ -11629,20 +10775,20 @@ class HomeTasksCard extends HTMLElement {
     closeIco.setAttribute("icon", "mdi:close");
     closeIco.style.cssText = "--mdc-icon-size:20px;";
     closeBtn.appendChild(closeIco);
-    closeBtn.addEventListener("click", () => { dialog.close(); dialog.remove(); });
+    closeBtn.addEventListener("click", () => {
+      dialog.close();
+      dialog.remove();
+    });
     header.appendChild(closeBtn);
-
     const list = this._el("div", { className: "mb-list" });
-
     const load = async (id) => {
       list.innerHTML = `<div class="mb-status">${this._t("mb_loading")}</div>`;
       try {
         const data = await this._hass.callWS({
           type: "media_source/browse_media",
-          media_content_id: id,
+          media_content_id: id
         });
         list.innerHTML = "";
-
         if (navStack.length > 0) {
           const prev = navStack[navStack.length - 1];
           const backBtn = document.createElement("button");
@@ -11651,26 +10797,22 @@ class HomeTasksCard extends HTMLElement {
           backIco.setAttribute("icon", "mdi:arrow-left");
           backIco.style.cssText = "--mdc-icon-size:20px;flex-shrink:0;";
           backBtn.append(backIco, prev.title);
-          backBtn.addEventListener("click", () => { navStack.pop(); load(prev.id); });
+          backBtn.addEventListener("click", () => {
+            navStack.pop();
+            load(prev.id);
+          });
           list.appendChild(backBtn);
         }
-
         const crumb = this._el("div", { className: "mb-crumb", textContent: data.title || this._t("mb_root") });
         list.appendChild(crumb);
-
         const children = data.children || [];
-        const folders = children.filter(i => i.can_expand);
-        const files = children.filter(i => !i.can_expand);
-
+        const folders = children.filter((i) => i.can_expand);
+        const files = children.filter((i) => !i.can_expand);
         const pickFile = async (item) => {
-          // Save the media-source:// id, not a resolved (signed, expiring) URL —
-          // the backend re-publishes it into the public www dir by copying the
-          // file off disk, so it loads without auth and never expires.
           await this._saveImageUrl(task, colIdx, item.media_content_id || item.thumbnail);
           dialog.close();
           dialog.remove();
         };
-
         for (const item of folders) {
           const row = document.createElement("button");
           row.className = "mb-item mb-folder";
@@ -11684,10 +10826,12 @@ class HomeTasksCard extends HTMLElement {
           chev.setAttribute("icon", "mdi:chevron-right");
           chev.style.cssText = "--mdc-icon-size:18px;flex-shrink:0;color:var(--secondary-text-color);";
           row.appendChild(chev);
-          row.addEventListener("click", () => { navStack.push({ id, title: data.title || this._t("mb_back") }); load(item.media_content_id); });
+          row.addEventListener("click", () => {
+            navStack.push({ id, title: data.title || this._t("mb_back") });
+            load(item.media_content_id);
+          });
           list.appendChild(row);
         }
-
         if (files.length > 0) {
           const grid = this._el("div", { className: "mb-grid" });
           for (const item of files) {
@@ -11696,22 +10840,22 @@ class HomeTasksCard extends HTMLElement {
             const isImage = item.media_class === "image" || /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(item.title || "");
             if (item.thumbnail) {
               const img = this._el("img", { className: "mb-grid-thumb", alt: item.title });
-              this._fetchAuthThumb(item.thumbnail).then(src => { img.src = src; });
+              this._fetchAuthThumb(item.thumbnail).then((src) => {
+                img.src = src;
+              });
               cell.appendChild(img);
             } else if (isImage) {
-              // No thumbnail provided — resolve the media to a URL and preview it.
               const img = this._el("img", { className: "mb-grid-thumb", alt: item.title });
               cell.appendChild(img);
-              this._hass.callWS({ type: "media_source/resolve_media", media_content_id: item.media_content_id })
-                .then((r) => this._fetchAuthThumb(r.url))
-                .then((src) => { img.src = src; })
-                .catch(() => {
-                  img.remove();
-                  const ico = document.createElement("ha-icon");
-                  ico.setAttribute("icon", "mdi:image");
-                  ico.style.cssText = "--mdc-icon-size:40px;color:var(--secondary-text-color);";
-                  cell.insertBefore(ico, cell.firstChild);
-                });
+              this._hass.callWS({ type: "media_source/resolve_media", media_content_id: item.media_content_id }).then((r) => this._fetchAuthThumb(r.url)).then((src) => {
+                img.src = src;
+              }).catch(() => {
+                img.remove();
+                const ico = document.createElement("ha-icon");
+                ico.setAttribute("icon", "mdi:image");
+                ico.style.cssText = "--mdc-icon-size:40px;color:var(--secondary-text-color);";
+                cell.insertBefore(ico, cell.firstChild);
+              });
             } else {
               const ico = document.createElement("ha-icon");
               ico.setAttribute("icon", "mdi:image");
@@ -11724,7 +10868,6 @@ class HomeTasksCard extends HTMLElement {
           }
           list.appendChild(grid);
         }
-
         if (!data.children?.length) {
           list.appendChild(this._el("div", { className: "mb-status", textContent: this._t("mb_empty") }));
         }
@@ -11732,42 +10875,40 @@ class HomeTasksCard extends HTMLElement {
         list.innerHTML = `<div class="mb-status mb-error">${this._t("mb_error")}${e.message || e}</div>`;
       }
     };
-
     dialog.append(header, list);
-    dialog.addEventListener("close", () => { dialog.remove(); this._revokeThumbCache(); });
+    dialog.addEventListener("close", () => {
+      dialog.remove();
+      this._revokeThumbCache();
+    });
     this.shadowRoot.appendChild(dialog);
     dialog.showModal();
     await load("media-source://media_source");
   }
-
   // Replace a task's tile(s) in place (any column) so an image change shows
   // without a full _render() — which would reset the page scroll ("jump").
   _refreshTaskTileEverywhere(taskId) {
-    this.shadowRoot.querySelectorAll(`.task-tile[data-task-id="${CSS.escape(String(taskId))}"]`).forEach(el => {
+    this.shadowRoot.querySelectorAll(`.task-tile[data-task-id="${CSS.escape(String(taskId))}"]`).forEach((el) => {
       const wrap = el.closest(".tile-grid-wrap");
       const ci = wrap ? parseInt(wrap.dataset.colIdx, 10) : NaN;
       if (Number.isNaN(ci)) return;
       const cs = this._columns[ci];
-      const t = cs && cs.tasks ? cs.tasks.find(x => x.id === taskId) : null;
+      const t = cs && cs.tasks ? cs.tasks.find((x) => x.id === taskId) : null;
       if (t) el.replaceWith(this._buildTaskTile(t, ci));
     });
   }
-
   // Refresh only the image section inside an open detail sheet (so the spinner
   // and the finished image appear without rebuilding the body or scrolling it).
   _refreshOpenSheetImage(taskId, colIdx) {
     const oldSec = this.shadowRoot.querySelector(".task-detail-sheet .detail-section--image");
     if (!oldSec) return;
     const cs = this._columns[colIdx];
-    const task = cs && cs.tasks ? cs.tasks.find(t => t.id === taskId) : null;
+    const task = cs && cs.tasks ? cs.tasks.find((t) => t.id === taskId) : null;
     if (!task) return;
-    // Keep the sheet's scroll position steady across the swap.
     const body = this.shadowRoot.querySelector(".task-detail-sheet .sheet-body");
     const st = body ? body.scrollTop : 0;
     oldSec.replaceWith(this._buildImageSection(task, colIdx));
     if (body) body.scrollTop = st;
   }
-
   // Auto-generation for an external column, waiting for the task the provider
   // just created to reach the card. Polls rather than chaining onto
   // _reloadExternal, which is a fire-and-forget timer. Gives up quietly: an
@@ -11777,62 +10918,45 @@ class HomeTasksCard extends HTMLElement {
     const sourceKey = this._colSourceKey(colIdx);
     for (let attempt = 0; attempt < 12; attempt++) {
       if (!this.isConnected) return;
-      // The column may have been re-pointed at another list meanwhile.
       if (this._colSourceKey(colIdx) !== sourceKey) return;
-      const task = this._columns[colIdx]?.tasks?.find(t => String(t.id) === uid);
+      const task = this._columns[colIdx]?.tasks?.find((t) => String(t.id) === uid);
       if (task) {
         if (!task.image_url) await this._generateTaskImage(task, colIdx);
         return;
       }
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 500));
     }
   }
-
   async _generateTaskImage(task, colIdx, force = false) {
     const col = this._config.columns[colIdx];
     const imgCfg = this._config.image_generation || {};
-
     this._generatingImage.add(task.id);
     this._refreshOpenSheetImage(task.id, colIdx);
-
     const payload = {
       type: "home_tasks/generate_task_image",
       task_id: task.id,
-      force: force,
+      force
     };
     if (col.entity_id) payload.todo_entity_id = col.entity_id;
     else payload.entry_id = col.list_id;
     if (imgCfg.prompt_prefix) payload.prompt_prefix = imgCfg.prompt_prefix;
     if (imgCfg.entity_id) payload.entity_id = imgCfg.entity_id;
-
     try {
       const result = await this._hass.callWS(payload);
-      // Update every column immediately.
-      // • Exact ID match in the source column → full task replacement.
-      // • Same title, different ID → image_url-only patch (same-title tasks in
-      //   other lists that the backend also updated — they share the image but
-      //   have their own task objects).
-      // An id match only counts within the same list — external providers can
-      // hand out colliding uids, so replacing a foreign column's task object
-      // by id would corrupt it. Same list in two columns (open | done) still
-      // gets the full replacement in both.
       const newImageUrl = result.task?.image_url;
       const titleKey = (task.title || "").trim().toLowerCase();
       const sourceKey = this._colSourceKey(colIdx);
-      // A list that keeps its images to itself only shares within itself.
       const sourceShares = this._colSharesImages(colIdx);
       for (let ci = 0; ci < this._columns.length; ci++) {
         const cs = this._columns[ci];
         if (!cs || !cs.tasks) continue;
         const sameSource = this._colSourceKey(ci) === sourceKey;
-        const sharesWithSource = sameSource
-          || (sourceShares && this._colSharesImages(ci));
+        const sharesWithSource = sameSource || sourceShares && this._colSharesImages(ci);
         for (let i = 0; i < cs.tasks.length; i++) {
           const t = cs.tasks[i];
           if (sameSource && t.id === task.id) {
             cs.tasks[i] = result.task;
-          } else if (sharesWithSource && newImageUrl && titleKey
-                     && (t.title || "").trim().toLowerCase() === titleKey) {
+          } else if (sharesWithSource && newImageUrl && titleKey && (t.title || "").trim().toLowerCase() === titleKey) {
             cs.tasks[i] = { ...t, image_url: newImageUrl };
           }
         }
@@ -11846,10 +10970,9 @@ class HomeTasksCard extends HTMLElement {
       this._refreshTaskTileEverywhere(task.id);
     }
   }
-
   async _fetchAuthThumb(url) {
     if (!url || !url.startsWith("/")) return url;
-    this._thumbCache = this._thumbCache || new Map();
+    this._thumbCache = this._thumbCache || /* @__PURE__ */ new Map();
     if (this._thumbCache.has(url)) return this._thumbCache.get(url);
     try {
       const token = this._hass.auth?.data?.access_token;
@@ -11859,9 +10982,10 @@ class HomeTasksCard extends HTMLElement {
       const blobUrl = URL.createObjectURL(await resp.blob());
       this._thumbCache.set(url, blobUrl);
       return blobUrl;
-    } catch { return url; }
+    } catch {
+      return url;
+    }
   }
-
   // Revoke + drop cached blob: thumbnail URLs (called when the media picker
   // closes) so browsing large libraries repeatedly doesn't leak blob memory.
   _revokeThumbCache() {
@@ -11871,7 +10995,6 @@ class HomeTasksCard extends HTMLElement {
     }
     this._thumbCache.clear();
   }
-
   async _saveImageUrl(task, colIdx, url) {
     const col = this._config.columns[colIdx];
     try {
@@ -11881,36 +11004,24 @@ class HomeTasksCard extends HTMLElement {
           type: "home_tasks/update_external_overlay",
           entity_id: col.entity_id,
           task_uid: task.id,
-          image_url: url,
+          image_url: url
         });
-        // Take ONLY the image from the response. The overlay always comes back
-        // complete (every field, defaults included), so spreading it over the
-        // task would reset everything the provider owns — a Todoist task would
-        // lose its due date, notes, priority, tags and sub-items until the next
-        // reload.
         result = { ...task, image_url: overlay?.image_url ?? url };
       } else {
         result = await this._hass.callWS({
           type: "home_tasks/update_task",
           list_id: col.list_id,
           task_id: task.id,
-          image_url: url,
+          image_url: url
         });
       }
-      // Update the task in every column showing the SAME list — the same list
-      // can legitimately appear twice on one card (e.g. open | done), and
-      // leaving the second copy behind means it keeps showing the old image.
-      // Matching by task id alone is not enough: two providers can hand out
-      // the same uid, and patching a foreign list by id would corrupt it.
       const sourceKey = this._colSourceKey(colIdx);
       for (let ci = 0; ci < this._columns.length; ci++) {
         if (this._colSourceKey(ci) !== sourceKey) continue;
         const cs = this._columns[ci];
-        const idx = cs?.tasks?.findIndex(t => t.id === task.id) ?? -1;
+        const idx = cs?.tasks?.findIndex((t) => t.id === task.id) ?? -1;
         if (idx >= 0) cs.tasks[idx] = result;
       }
-      // Update the open sheet + tiles in place (a full _render() would keep the
-      // old sheet DOM — showing the old image — and reset the scroll position).
       this._refreshOpenSheetImage(task.id, colIdx);
       this._refreshTaskTileEverywhere(task.id);
     } catch (err) {
@@ -11918,7 +11029,6 @@ class HomeTasksCard extends HTMLElement {
       alert(this._t("img_save_failed") + (err.message || err));
     }
   }
-
   _buildHistorySection(task) {
     const taskHistory = (task.history || []).slice().reverse();
     const histContent = this._el("div", { className: "history-list" });
@@ -11931,41 +11041,36 @@ class HomeTasksCard extends HTMLElement {
     }
     return this._el("div", { className: "detail-section" }, [
       this._el("label", { className: "detail-label", textContent: this._t("history") }),
-      histContent,
+      histContent
     ]);
   }
-
   _buildHistoryEntry(entry) {
     const row = this._el("div", { className: "history-entry" });
     const ts = new Date(entry.ts);
     const tsStr = this._fmtTimestamp(ts);
     const { icon, text } = this._formatHistoryEntry(entry);
-    const byLabel = entry.by && entry.by !== "recurrence"
-      ? ` \u00b7 ${entry.by === "user" ? this._t("hist_by_user") : entry.by}`
-      : "";
+    const byLabel = entry.by && entry.by !== "recurrence" ? ` · ${entry.by === "user" ? this._t("hist_by_user") : entry.by}` : "";
     row.appendChild(this._el("span", { className: "history-icon", textContent: icon }));
     row.appendChild(this._el("span", { className: "history-text", textContent: text + byLabel }));
     row.appendChild(this._el("span", { className: "history-ts", textContent: tsStr }));
     return row;
   }
-
   _formatHistoryEntry(entry) {
     if (entry.action === "created") {
-      return { icon: "\u2605", text: this._t("history_created") };
+      return { icon: "★", text: this._t("history_created") };
     }
     if (entry.action === "completed") {
-      return { icon: "\u2713", text: this._t("history_completed") };
+      return { icon: "✓", text: this._t("history_completed") };
     }
     if (entry.action === "reopened") {
       const text = entry.by === "recurrence" ? this._t("history_reset") : this._t("history_reopened");
-      return { icon: "\u21BA", text };
+      return { icon: "↺", text };
     }
     if (entry.action === "updated") {
-      return { icon: "\u270e", text: this._formatHistoryUpdateText(entry) };
+      return { icon: "✎", text: this._formatHistoryUpdateText(entry) };
     }
-    return { icon: "\u2022", text: "" };
+    return { icon: "•", text: "" };
   }
-
   _formatHistoryUpdateText(entry) {
     const fieldNames = {
       title: this._t("hist_title"),
@@ -11976,20 +11081,19 @@ class HomeTasksCard extends HTMLElement {
       assigned_persons: this._t("assigned_to"),
       tags: this._t("tags"),
       notes: this._t("notes"),
-      recurrence_enabled: this._t("recurrence"),
+      recurrence_enabled: this._t("recurrence")
     };
     const lbl = fieldNames[entry.field] || entry.field;
     if (entry.field === "recurrence_enabled") {
       return `${lbl}: ${entry.to ? this._t("recurrence_enabled") : this._t("history_disabled")}`;
     }
-    if (entry.from !== undefined || entry.to !== undefined) {
-      return `${lbl}: ${this._formatHistoryValue(entry.from, entry.field)} \u2192 ${this._formatHistoryValue(entry.to, entry.field)}`;
+    if (entry.from !== void 0 || entry.to !== void 0) {
+      return `${lbl}: ${this._formatHistoryValue(entry.from, entry.field)} → ${this._formatHistoryValue(entry.to, entry.field)}`;
     }
     return `${lbl} ${this._t("history_changed")}`;
   }
-
   _formatHistoryValue(v, field) {
-    if (v == null) return "\u2013";
+    if (v == null) return "–";
     if (field === "priority") {
       return [this._t("pri_low"), this._t("pri_medium"), this._t("pri_high")][v - 1] || String(v);
     }
@@ -11998,61 +11102,60 @@ class HomeTasksCard extends HTMLElement {
     }
     if (field === "assigned_persons") {
       const names = (Array.isArray(v) ? v : []).map((p) => this._hass?.states?.[p]?.attributes?.friendly_name || p);
-      return names.join(", ") || "\u2013";
+      return names.join(", ") || "–";
     }
     if (field === "tags") {
-      return Array.isArray(v) ? (v.join(", ") || "\u2013") : String(v);
+      return Array.isArray(v) ? v.join(", ") || "–" : String(v);
     }
     return String(v);
   }
-
   _isInteractiveTarget(el) {
     if (!el) return false;
     const tag = el.tagName;
-    return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT"
-        || el.isContentEditable === true
-        // The notes read view: selecting its text or tapping a link in it
-        // must not start dragging the task.
-        || (typeof el.closest === "function" && !!el.closest(".notes-view"));
+    return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el.isContentEditable === true || typeof el.closest === "function" && !!el.closest(".notes-view");
   }
-
   _buildSubTask(taskId, sub, colIdx) {
     const isEditing = this._editingSubTaskId === sub.id;
-
     const handle = this._el("span", {
       className: "sub-drag-handle",
-      textContent: "\u2237",
-      title: this._t("drag_handle"),
+      textContent: "∷",
+      title: this._t("drag_handle")
     });
-
     const checkbox = this._el("input", { type: "checkbox", checked: sub.completed });
-    checkbox.addEventListener("change", () =>
-      this._toggleSubTask(taskId, sub.id, sub.completed, colIdx)
+    checkbox.addEventListener(
+      "change",
+      () => this._toggleSubTask(taskId, sub.id, sub.completed, colIdx)
     );
     const checkmark = this._el("span", { className: "checkmark" });
     const label = this._el("label", { className: "checkbox-container small" }, [
-      checkbox, checkmark,
+      checkbox,
+      checkmark
     ]);
-
     let titleEl;
     if (isEditing) {
       titleEl = this._el("input", {
         type: "text",
         className: "edit-sub-input",
         value: sub.title,
-        "data-focus-key": `sub_title_${sub.id}`,
+        "data-focus-key": `sub_title_${sub.id}`
       });
       titleEl.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
           e.preventDefault();
-          this._editingSubTaskId = null;  // clear BEFORE calling so blur skips
+          this._editingSubTaskId = null;
           this._updateSubTaskTitle(taskId, sub.id, titleEl.value, colIdx);
-        } else if (e.key === "Escape") { this._editingSubTaskId = null; this._render(); }
+        } else if (e.key === "Escape") {
+          this._editingSubTaskId = null;
+          this._render();
+        }
       });
       titleEl.addEventListener("blur", () => {
         if (this._editingSubTaskId === sub.id) this._updateSubTaskTitle(taskId, sub.id, titleEl.value, colIdx);
       });
-      setTimeout(() => { titleEl.focus(); titleEl.select(); }, 0);
+      setTimeout(() => {
+        titleEl.focus();
+        titleEl.select();
+      }, 0);
     } else {
       let subCls = "sub-title";
       if (sub.completed) subCls += " completed";
@@ -12062,25 +11165,25 @@ class HomeTasksCard extends HTMLElement {
         this._render();
       });
     }
-
     const deleteBtn = this._el("button", {
       className: "delete-sub-btn",
       title: this._t("delete_sub"),
-      textContent: "\u00D7",
+      textContent: "×"
     });
     deleteBtn.addEventListener("click", () => this._deleteSubTask(taskId, sub.id, colIdx));
-
     const subEl = this._el("div", { className: "sub-task" }, [handle, label, titleEl, deleteBtn]);
     subEl.draggable = true;
     subEl.dataset.subTaskId = sub.id;
-
     subEl.addEventListener("dragstart", (e) => {
       e.stopPropagation();
       this._draggedSubTaskId = sub.id;
       e.dataTransfer.effectAllowed = "move";
       subEl.classList.add("dragging");
     });
-    subEl.addEventListener("dragend", (e) => { e.stopPropagation(); this._finishSubDrag(taskId, colIdx); });
+    subEl.addEventListener("dragend", (e) => {
+      e.stopPropagation();
+      this._finishSubDrag(taskId, colIdx);
+    });
     subEl.addEventListener("dragover", (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -12089,8 +11192,11 @@ class HomeTasksCard extends HTMLElement {
       const draggedEl = this.shadowRoot.querySelector(`.sub-task[data-sub-task-id="${CSS.escape(this._draggedSubTaskId)}"]`);
       this._liveMoveSubTask(draggedEl, subEl, e.clientY);
     });
-    subEl.addEventListener("drop", (e) => { e.preventDefault(); e.stopPropagation(); this._finishSubDrag(taskId, colIdx); });
-
+    subEl.addEventListener("drop", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this._finishSubDrag(taskId, colIdx);
+    });
     handle.addEventListener("touchstart", (e) => {
       e.stopPropagation();
       if (e.touches.length !== 1) return;
@@ -12106,7 +11212,6 @@ class HomeTasksCard extends HTMLElement {
         this._subTouchOffsetY = touch.clientY - rect.top;
       }, 150);
     }, { passive: true });
-
     const onSubTouchMove = (e) => {
       if (!this._draggedSubTaskId) {
         clearTimeout(this._subTouchStartTimer);
@@ -12133,18 +11238,14 @@ class HomeTasksCard extends HTMLElement {
     handle.addEventListener("touchmove", onSubTouchMove, { passive: false });
     handle.addEventListener("touchend", onSubTouchEnd);
     handle.addEventListener("touchcancel", onSubTouchEnd);
-
     return subEl;
   }
-
   // --- Drag & Drop ---
-
   _getOrderFromDom(colIdx) {
     const taskList = this.shadowRoot.querySelector(`.task-list[data-col-idx="${CSS.escape(String(colIdx))}"]`);
     if (!taskList) return [];
     return Array.from(taskList.querySelectorAll(".task")).map((el) => el.dataset.taskId);
   }
-
   // Walks the rendered list in order and returns [{taskId, sectionId}] pairs
   // where sectionId is the id of the most recent section header (or null if
   // the task sits in the unsorted top bucket / "__done__" for the Done bucket).
@@ -12165,25 +11266,16 @@ class HomeTasksCard extends HTMLElement {
           }
         }
       } else if (el.classList.contains("task")) {
-        // Top unsorted bucket — flat children of .task-list
         result.push({ taskId: el.dataset.taskId, sectionId: null });
       }
     }
     return result;
   }
-
   _mergeHiddenTasks(colIdx, visibleOrder, draggedId = null) {
     const cs = this._columns[colIdx];
-    // With overdue_first the overdue tasks are drawn on top, not where their
-    // manual order puts them; saving the drawn order would store every one
-    // of them first for good.  Treat them like filtered-out tasks: they go
-    // back after their original predecessor.  The task actually dragged
-    // keeps the place it was dropped at.
     if (this._config?.columns?.[colIdx]?.overdue_first === true) {
       const pinned = new Set(
-        (cs.tasks || [])
-          .filter((t) => !t.completed && this._isDueDateOverdue(t.due_date) && String(t.id) !== String(draggedId))
-          .map((t) => t.id),
+        (cs.tasks || []).filter((t) => !t.completed && this._isDueDateOverdue(t.due_date) && String(t.id) !== String(draggedId)).map((t) => t.id)
       );
       visibleOrder = visibleOrder.filter((id) => !pinned.has(id));
     }
@@ -12197,38 +11289,30 @@ class HomeTasksCard extends HTMLElement {
       for (let i = origIdx - 1; i >= 0; i--) {
         const prevId = origOrder[i];
         const posInNew = fullOrder.indexOf(prevId);
-        if (posInNew !== -1) { insertIdx = posInNew + 1; break; }
+        if (posInNew !== -1) {
+          insertIdx = posInNew + 1;
+          break;
+        }
       }
       fullOrder.splice(insertIdx, 0, hid);
     }
     return fullOrder;
   }
-
   _liveMoveTask(draggedEl, targetEl, clientX, clientY) {
     if (!draggedEl || !targetEl || draggedEl === targetEl) return;
     const targetList = targetEl.parentNode;
     if (!targetList) return;
-
     const siblings = [...targetList.querySelectorAll(".task:not(.dragging), .section-header")];
-    const before = new Map(siblings.map(el => [el, el.getBoundingClientRect()]));
-
-    // One column: the upper half of the target means "before it". Side by
-    // side (list_columns) the reading order runs across, so the left half
-    // does - otherwise a task dragged onto its right-hand neighbour only
-    // moves once the pointer drops into that neighbour's lower half.
+    const before = new Map(siblings.map((el) => [el, el.getBoundingClientRect()]));
     const targetRect = targetEl.getBoundingClientRect();
     const sideBySide = getComputedStyle(targetList).display === "grid";
-    const inFirstHalf = sideBySide
-      ? clientX < targetRect.left + targetRect.width / 2
-      : clientY < targetRect.top + targetRect.height / 2;
+    const inFirstHalf = sideBySide ? clientX < targetRect.left + targetRect.width / 2 : clientY < targetRect.top + targetRect.height / 2;
     if (inFirstHalf) {
       targetList.insertBefore(draggedEl, targetEl);
     } else {
       targetList.insertBefore(draggedEl, targetEl.nextSibling);
     }
-
-    // FLIP: animate siblings from their previous position to the new one
-    siblings.forEach(el => {
+    siblings.forEach((el) => {
       const was = before.get(el);
       const now = el.getBoundingClientRect();
       const dx = was ? was.left - now.left : 0;
@@ -12246,23 +11330,19 @@ class HomeTasksCard extends HTMLElement {
       });
     });
   }
-
   _liveMoveSubTask(draggedEl, targetEl, clientY) {
     if (!draggedEl || !targetEl || draggedEl === targetEl) return;
     const list = targetEl.parentNode;
     if (!list) return;
-
     const siblings = [...list.querySelectorAll(".sub-task:not(.dragging)")];
-    const before = new Map(siblings.map(el => [el, el.getBoundingClientRect().top]));
-
+    const before = new Map(siblings.map((el) => [el, el.getBoundingClientRect().top]));
     const r2 = targetEl.getBoundingClientRect();
     if (clientY < r2.top + r2.height / 2) {
       list.insertBefore(draggedEl, targetEl);
     } else {
       list.insertBefore(draggedEl, targetEl.nextSibling);
     }
-
-    siblings.forEach(el => {
+    siblings.forEach((el) => {
       const dy = (before.get(el) ?? el.getBoundingClientRect().top) - el.getBoundingClientRect().top;
       if (Math.abs(dy) < 1) return;
       el.style.transition = "none";
@@ -12277,34 +11357,30 @@ class HomeTasksCard extends HTMLElement {
       });
     });
   }
-
   _finishSubDrag(taskId, colIdx) {
     const draggedId = this._draggedSubTaskId;
     this._draggedSubTaskId = null;
-    this.shadowRoot.querySelectorAll(".sub-task").forEach(el => el.classList.remove("dragging"));
-    if (this._subTouchClone) { this._subTouchClone.remove(); this._subTouchClone = null; }
-    if (this._subTouchStartTimer) { clearTimeout(this._subTouchStartTimer); this._subTouchStartTimer = null; }
+    this.shadowRoot.querySelectorAll(".sub-task").forEach((el) => el.classList.remove("dragging"));
+    if (this._subTouchClone) {
+      this._subTouchClone.remove();
+      this._subTouchClone = null;
+    }
+    if (this._subTouchStartTimer) {
+      clearTimeout(this._subTouchStartTimer);
+      this._subTouchStartTimer = null;
+    }
     if (!draggedId) return;
     const subList = this.shadowRoot.querySelector(`.sub-task-list[data-task-id="${CSS.escape(taskId)}"]`);
     if (!subList) return;
-    const order = [...subList.querySelectorAll(".sub-task")].map(el => el.dataset.subTaskId).filter(Boolean);
+    const order = [...subList.querySelectorAll(".sub-task")].map((el) => el.dataset.subTaskId).filter(Boolean);
     if (order.length > 1) this._reorderSubTasks(taskId, order, colIdx);
   }
-
   _finishDrag() {
     const draggedId = this._draggedTaskId;
     const srcColIdx = this._draggedColIdx;
-
-    // Determine which column the dragged element ended up in
-    const draggedEl = draggedId
-      ? this._taskDragElement(draggedId, srcColIdx)
-      : null;
+    const draggedEl = draggedId ? this._taskDragElement(draggedId, srcColIdx) : null;
     const currentTaskList = draggedEl?.closest(".task-list");
-    const tgtColIdx = currentTaskList !== null && currentTaskList !== undefined && currentTaskList.dataset.colIdx !== undefined
-      ? parseInt(currentTaskList.dataset.colIdx, 10)
-      : srcColIdx;
-
-    // Clean up
+    const tgtColIdx = currentTaskList !== null && currentTaskList !== void 0 && currentTaskList.dataset.colIdx !== void 0 ? parseInt(currentTaskList.dataset.colIdx, 10) : srcColIdx;
     this._draggedTaskId = null;
     this._draggedColIdx = null;
     this._draggedTaskElement = null;
@@ -12322,61 +11398,50 @@ class HomeTasksCard extends HTMLElement {
       this._springLoadTimer = null;
     }
     this._springLoadOriginallyCollapsed = null;
-    if (this._touchClone) { this._touchClone.remove(); this._touchClone = null; }
-    if (this._touchStartTimer) { clearTimeout(this._touchStartTimer); this._touchStartTimer = null; }
-
+    if (this._touchClone) {
+      this._touchClone.remove();
+      this._touchClone = null;
+    }
+    if (this._touchStartTimer) {
+      clearTimeout(this._touchStartTimer);
+      this._touchStartTimer = null;
+    }
     if (!draggedId || srcColIdx === null) return;
-
     if (this._planMode) {
-      // Days, not lists: the row's new place is a place on the plan.
       this._finishPlanDrag(draggedEl);
       return;
     }
-
     if (!isNaN(tgtColIdx) && tgtColIdx !== srcColIdx) {
-      // Cross-column move
       const targetTaskIds = this._getOrderFromDom(tgtColIdx);
       this._moveTask(srcColIdx, tgtColIdx, draggedId, targetTaskIds);
     } else {
-      // Same-column reorder — also detect cross-section changes
       const idx = srcColIdx ?? 0;
       const sectionedOrder = this._getOrderWithSectionFromDom(idx);
       if (sectionedOrder.length > 0) {
         this._applySectionChangesAndReorder(idx, sectionedOrder, draggedId);
       }
     }
-
     if (this._pendingRender) this._render();
   }
-
   _collapseAllForDrag() {
     if (this._expandedTasks.size === 0) return;
-    // Invalidate any in-flight expand/collapse animations
     if (this._animatingTaskIds) this._animatingTaskIds.clear();
     this._expandedTasks.clear();
     const details = this.shadowRoot.querySelectorAll(".task-details");
-    // Freeze current heights as px (CSS can't transition from "auto")
     for (const det of details) {
       det.style.height = det.offsetHeight + "px";
     }
     for (const btn of this.shadowRoot.querySelectorAll(".expand-btn.expanded")) {
       btn.classList.remove("expanded");
     }
-    // Animate to 0 on next frame
     requestAnimationFrame(() => {
       for (const det of details) {
         det.style.height = "0";
       }
     });
   }
-
   _attachDragToTask(taskEl, taskId, colIdx) {
-    // HTML5 Drag & Drop (Desktop)
     taskEl.addEventListener("dragstart", (e) => {
-      // The whole .task is draggable=true so the browser starts a drag
-      // detection on mousedown anywhere inside it — including text inputs.
-      // Cancel the drag at the dragstart hook (which fires before any move)
-      // when the user is interacting with a text field.
       if (this._isInteractiveTarget(e.target)) {
         e.preventDefault();
         e.stopPropagation();
@@ -12386,15 +11451,12 @@ class HomeTasksCard extends HTMLElement {
       this._draggedColIdx = colIdx;
       this._draggedTaskElement = taskEl;
       e.dataTransfer.effectAllowed = "move";
-      // Collapse all expanded tasks for a cleaner drag experience
       this._collapseAllForDrag();
       taskEl.classList.add("dragging");
     });
-
     taskEl.addEventListener("dragend", () => {
       this._finishDrag();
     });
-
     taskEl.addEventListener("dragover", (e) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
@@ -12402,45 +11464,32 @@ class HomeTasksCard extends HTMLElement {
       const draggedEl = this._taskDragElement();
       if (draggedEl === taskEl) return;
       this._liveMoveTask(draggedEl, taskEl, e.clientX, e.clientY);
-      // Visual feedback for cross-column target
       const tgtList = taskEl.closest(".task-list");
       const tgtColIdx = tgtList ? parseInt(tgtList.dataset.colIdx) : colIdx;
       if (tgtColIdx !== this._draggedColIdx) {
-        this.shadowRoot.querySelectorAll(".card-column").forEach(el => el.classList.remove("drag-target"));
+        this.shadowRoot.querySelectorAll(".card-column").forEach((el) => el.classList.remove("drag-target"));
         taskEl.closest(".card-column")?.classList.add("drag-target");
       }
     });
-
     taskEl.addEventListener("drop", (e) => {
       e.preventDefault();
       this._finishDrag();
     });
-
-    // Touch Events (Mobile) — long-press anywhere on the task row to drag
     taskEl.addEventListener("touchstart", (e) => {
       if (e.touches.length !== 1) return;
-      // Don't arm the long-press drag when the user taps a text input —
-      // they want to focus / select / scroll the field, not drag the task.
       if (this._isInteractiveTarget(e.target)) return;
       const touch = e.touches[0];
-      // List rows show their details inline on tap; the detail sheet is a
-      // tiles-only gesture. A long-press here only arms the drag below — opening
-      // the sheet here too fought the drag (stationary hold flashed a drag +
-      // sheet, and the trailing tap toggled expand under the sheet).
       this._touchStartTimer = setTimeout(() => {
         this._draggedTaskId = taskId;
         this._draggedColIdx = colIdx;
         this._draggedTaskElement = taskEl;
         this._touchDragStartedAt = Date.now();
         this._touchDragMoved = false;
-        // Collapse all expanded tasks for a cleaner drag experience
         this._collapseAllForDrag();
         taskEl = this._taskDragElement();
         if (taskEl) taskEl.classList.add("dragging");
-
         const rect = taskEl.getBoundingClientRect();
         const clone = taskEl.cloneNode(true);
-        // Remove expanded details from clone so it shows collapsed during drag
         const cloneDetails = clone.querySelector(".task-details");
         if (cloneDetails) cloneDetails.remove();
         clone.className = "task drag-clone";
@@ -12457,10 +11506,7 @@ class HomeTasksCard extends HTMLElement {
         this._touchClone = clone;
         this._touchOffsetY = touch.clientY - rect.top;
       }, 150);
-      // (A scroll cancels the pending drag via onTouchMove below, which clears
-      // _touchStartTimer on the first move while no drag is active.)
     }, { passive: true });
-
     const onTouchMove = (e) => {
       if (!this._draggedTaskId) {
         if (this._touchStartTimer) {
@@ -12472,15 +11518,12 @@ class HomeTasksCard extends HTMLElement {
       e.preventDefault();
       this._touchDragMoved = true;
       const touch = e.touches[0];
-
       if (this._touchClone) {
         this._touchClone.style.top = `${touch.clientY - this._touchOffsetY}px`;
       }
-
       if (this._touchClone) this._touchClone.style.display = "none";
       const shadowEl = this.shadowRoot.elementFromPoint(touch.clientX, touch.clientY);
       if (this._touchClone) this._touchClone.style.display = "";
-
       const target = shadowEl ? shadowEl.closest(".task") : null;
       const sectionHeader = shadowEl ? shadowEl.closest(".section-header") : null;
       if (target && target.dataset.taskId && target !== this._taskDragElement() && !target.classList.contains("drag-clone")) {
@@ -12493,34 +11536,26 @@ class HomeTasksCard extends HTMLElement {
           body.insertBefore(draggedEl, body.firstChild);
         }
       } else if (this._planMode && shadowEl) {
-        // A day of the plan without a row under the finger.
         const dayList = shadowEl.closest(".plan-day-list");
         if (dayList) this._planDropInto(dayList);
       }
     };
-
     const onTouchEnd = () => {
       if (this._touchStartTimer) {
         clearTimeout(this._touchStartTimer);
         this._touchStartTimer = null;
       }
       if (this._draggedTaskId) {
-        // The browser still sends a click for a hold released in place. After
-        // a real drag (moved, or held on purpose) neither the checkbox nor
-        // (tap_to_complete) the row may tick the task off; a tap that merely
-        // ran past the 150 ms drag threshold still counts as a tap.
         if (this._touchDragMoved || Date.now() - (this._touchDragStartedAt || 0) >= 300) {
           this._suppressRowTapUntil = Date.now() + 500;
         }
         this._finishDrag();
       }
     };
-
     taskEl.addEventListener("touchmove", onTouchMove, { passive: false });
     taskEl.addEventListener("touchend", onTouchEnd);
     taskEl.addEventListener("touchcancel", onTouchEnd);
   }
-
   // ── Day plan view ──────────────────────────────────────────────────────────
   //
   // HomeTasksDayPlanCard shows the days of a plan instead of list columns. A plan
@@ -12528,12 +11563,7 @@ class HomeTasksCard extends HTMLElement {
   // from - as columns that are never drawn. Every row is then a task of one
   // of those columns, and ticking it off, editing it or opening its details
   // runs through the same code as in a list.
-
   _setPlanConfig(config) {
-    // What a row shows (priority, tags, person, …) is set with the options
-    // a list column has for it, at the root of the card config. What only
-    // makes sense in a list is not taken over: the row's number is what
-    // ticks a task off, and a completed task stays on its day.
     const { type: _type, view: _view, plan, days, title: _title, columns: _c, list_id: _l, entity_id: _e, ...template } = config;
     for (const key of ["tap_to_complete", "auto_delete_completed", "view_mode", "list_columns"]) delete template[key];
     const wasPlan = this._planMode === true;
@@ -12555,27 +11585,24 @@ class HomeTasksCard extends HTMLElement {
     else this._render();
     this._ensureCardMod();
   }
-
   _planSourceKey(col) {
     return col.entity_id ? `ext:${col.entity_id}` : `native:${col.list_id}`;
   }
-
   // The plan's lists as columns (never drawn). A list keeps the tasks it
   // has loaded when the plan is read again.
   _applyPlanSources() {
-    const sources = (this._plan && this._plan.sources) || [];
+    const sources = this._plan && this._plan.sources || [];
     const kept = new Map(
       (this._config.columns || []).map((c, i) => [this._planSourceKey(c), this._columns[i]])
     );
     const columns = sources.map((s) => ({
       ...this._planTemplate,
-      ...(s.kind === "external" ? { entity_id: s.entity_id } : { list_id: s.entry_id }),
+      ...s.kind === "external" ? { entity_id: s.entity_id } : { list_id: s.entry_id }
     }));
     this._config = { ...this._config, columns };
     this._columns = columns.map((c) => kept.get(this._planSourceKey(c)) || this._defaultColState());
     this._planColByEntry = new Map(sources.map((s, i) => [s.entry_id, i]));
   }
-
   // What tells a day plan card to look again: the plan's sensor (it changes
   // when the plan reads differently, and only then), and for a linked list
   // its todo entity. Without the sensor - its entity disabled - the sensors
@@ -12598,30 +11625,29 @@ class HomeTasksCard extends HTMLElement {
     });
     if (!reload) return;
     this._bgUpdates = (this._bgUpdates || 0) + 1;
-    this._loadAllTasks(true).finally(() => { this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1); });
+    this._loadAllTasks(true).finally(() => {
+      this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1);
+    });
   }
-
   // Doubt the card's copy of a list (of every linked list when none is
   // named): the next load asks for it again.
   _planDoubt(colIdx) {
     this._columns.forEach((cs, i) => {
-      if (colIdx === undefined ? !!this._config.columns[i]?.entity_id : i === colIdx) cs.stale = true;
+      if (colIdx === void 0 ? !!this._config.columns[i]?.entity_id : i === colIdx) cs.stale = true;
     });
   }
-
   // The poll of a day plan: a provider can change what Home Assistant's own
   // todo entity does not carry (labels, a priority). Asked only for linked
   // lists that have a row on the days shown.
   _planDoubtShown() {
-    const shown = new Set();
-    for (const day of (this._plan && this._plan.days) || []) {
+    const shown = /* @__PURE__ */ new Set();
+    for (const day of this._plan && this._plan.days || []) {
       for (const row of day.items || []) shown.add(row.entry_id);
     }
-    ((this._plan && this._plan.sources) || []).forEach((src, i) => {
+    (this._plan && this._plan.sources || []).forEach((src, i) => {
       if (src.kind === "external" && shown.has(src.entry_id) && this._columns[i]) this._columns[i].stale = true;
     });
   }
-
   async _loadPlan() {
     const msg = { days: this._planDays };
     if (this._planId) msg.plan = this._planId;
@@ -12630,63 +11656,45 @@ class HomeTasksCard extends HTMLElement {
     try {
       result = await this._callWs("home_tasks/get_plan", msg, { rethrow: true });
     } catch (err) {
-      // Our own timeout says nothing about the plan: keep what is shown.
       if (this._isWsTimeout(err)) return;
-      refused = (err && err.message) || String(err);
+      refused = err && err.message || String(err);
     }
     if (result && Array.isArray(result.days)) {
-      // The same plan as before stays the same objects. The rows on screen
-      // were built from them, and a look in the background that finds
-      // nothing new does not rebuild the rows: a tick would otherwise be
-      // set on a row object nobody draws from any more, and show only once
-      // the list has answered.
       const json = JSON.stringify(result);
       if (!this._plan || json !== this._planJson) {
         this._plan = result;
         this._planJson = json;
       }
       this._planError = null;
-      // Remembered beyond this answer: see the refusal below.
       if (result.sensor_entity_id) this._planSensorId = result.sensor_entity_id;
     } else {
       this._plan = null;
       this._planJson = null;
       this._planError = refused;
-      // The plan may only be away for a moment - its entry reloading, Home
-      // Assistant restarting. With the plan gone there are no lists left to
-      // watch, so two things bring it back: its sensor, which the hass
-      // setter keeps watching, and asking again with the lists' backoff.
       if (refused) this._scheduleListsRetry();
     }
     this._planLoaded = true;
     this._applyPlanSources();
   }
-
   // A change to the plan itself. A refusal is a rule of the plan and is
   // shown as the backend words it; the plan is read again either way.
   async _planWrite(type, data) {
     const msg = { ...data };
-    const planId = (this._plan && this._plan.id) || this._planId;
+    const planId = this._plan && this._plan.id || this._planId;
     if (planId) msg.plan = planId;
     try {
       await this._callWs(type, msg, { rethrow: true });
     } catch (err) {
-      if (!this._isWsTimeout(err)) this._showError((err && err.message) || String(err));
-      // What the card showed ahead of the answer (a row opened again) did
-      // not happen, or nobody knows. The plan as it is read next is the
-      // truth - also when it is word for word what was read before, which
-      // _loadPlan would otherwise answer by keeping the card's own copy.
+      if (!this._isWsTimeout(err)) this._showError(err && err.message || String(err));
       this._planJson = null;
     }
     await this._loadPlan();
     this._render();
   }
-
   _planDate(str) {
     const [y, m, d] = String(str).split("-").map(Number);
     return new Date(y, m - 1, d);
   }
-
   // "Today", "Tomorrow" or the weekday, seen from *today* (an ISO date).
   _planDayName(dateStr, today) {
     if (dateStr === today) return this._t("due_today");
@@ -12695,15 +11703,12 @@ class HomeTasksCard extends HTMLElement {
     if (this._localDateStr(next) === dateStr) return this._t("due_tomorrow");
     return this._planDate(dateStr).toLocaleDateString(this._localeCode(), { weekday: "long" });
   }
-
   _planShortDate(dateStr) {
     return this._planDate(dateStr).toLocaleDateString(this._localeCode(), { day: "numeric", month: "short" });
   }
-
   _planDayLabel(dateStr, today) {
     return `${this._planDayName(dateStr, today)}, ${this._planShortDate(dateStr)}`;
   }
-
   _buildPlanView() {
     const children = [];
     if (this._config.title) {
@@ -12711,18 +11716,17 @@ class HomeTasksCard extends HTMLElement {
     }
     const plan = this._plan;
     if (!plan) {
-      // Nothing while the first answer is still out - not a flash of "no plan".
       if (this._planLoaded) {
         const lines = [this._el("div", { textContent: this._t("plan_none") })];
         if (this._planError) {
           lines.push(this._el("div", { className: "plan-missing-detail", textContent: this._planError }));
         }
-        // Only an administrator can add one.
         if (this._hass?.user?.is_admin === true) {
           const link = this._el("a", {
-            className: "new-entry-link", href: NEW_ENTRY_PATH, textContent: `+ ${this._t("new_entry_link")}`,
+            className: "new-entry-link",
+            href: NEW_ENTRY_PATH,
+            textContent: `+ ${this._t("new_entry_link")}`
           });
-          // Within Home Assistant, without loading the page anew.
           link.addEventListener("click", (e) => {
             if (e.button || e.ctrlKey || e.metaKey || e.shiftKey) return;
             e.preventDefault();
@@ -12739,22 +11743,18 @@ class HomeTasksCard extends HTMLElement {
     children.push(this._el(
       "div",
       { className: "plan-days" + (days.length === 1 ? " single" : "") },
-      days.map((day, i) => this._buildPlanDay(day, i === 0)),
+      days.map((day, i) => this._buildPlanDay(day, i === 0))
     ));
     const compact = this._planTemplate.compact === true ? " compact" : "";
     return this._el("div", { className: "plan-view" + compact }, children);
   }
-
   _buildPlanDay(day, isCurrent) {
     const plan = this._plan;
     const rows = day.items || [];
     const done = rows.filter((r) => r.completed).length;
-
-    // The date, the focus line and the progress bar are there unless the
-    // card config switches them off (show_date, show_focus, show_progress).
     const opts = this._planTemplate || {};
     const headLine = [
-      this._el("span", { className: "plan-day-name", textContent: this._planDayName(day.date, plan.today) }),
+      this._el("span", { className: "plan-day-name", textContent: this._planDayName(day.date, plan.today) })
     ];
     if (opts.show_date !== false) {
       headLine.push(this._el("span", { className: "plan-day-date", textContent: this._planShortDate(day.date) }));
@@ -12766,43 +11766,35 @@ class HomeTasksCard extends HTMLElement {
     if (opts.show_focus !== false) head.push(this._buildPlanNote(day));
     if (isCurrent && opts.show_progress !== false) {
       const fill = this._el("div", { className: "plan-bar-fill" });
-      fill.style.width = rows.length ? `${Math.round((done / rows.length) * 100)}%` : "0%";
+      fill.style.width = rows.length ? `${Math.round(done / rows.length * 100)}%` : "0%";
       head.push(this._el("div", { className: "plan-progress" }, [
         this._el("span", { className: "plan-progress-text", textContent: this._t("progress", done, rows.length) }),
-        this._el("div", { className: "plan-bar" }, [fill]),
+        this._el("div", { className: "plan-bar" }, [fill])
       ]));
     }
-
     const showList = (plan.sources || []).length > 1;
     const list = this._el("div", { className: "task-list plan-day-list", "data-plan-date": day.date }, [
       ...rows.map((row, i) => this._buildPlanRow(row, i + 1, showList, day)),
       // Hidden by CSS as soon as the day holds a row - also one dragged in.
-      this._el("div", { className: "plan-empty", textContent: this._t("plan_empty") }),
+      this._el("div", { className: "plan-empty", textContent: this._t("plan_empty") })
     ]);
-    // A task dragged over the day itself rather than over one of its rows:
-    // an empty day, or the space below the last row.
     list.addEventListener("dragover", (e) => {
       e.preventDefault();
-      if (!this._draggedTaskId || (e.target.closest && e.target.closest(".task"))) return;
+      if (!this._draggedTaskId || e.target.closest && e.target.closest(".task")) return;
       this._planDropInto(list);
     });
     list.addEventListener("drop", (e) => {
       e.preventDefault();
       this._finishDrag();
     });
-
     const children = [this._el("div", { className: "plan-day-head" }, head), list];
     const offer = day.carry_over;
     if (offer && (offer.items || []).length) children.push(this._buildPlanCarryOver(day, offer));
     children.push(this._buildPlanAdd(day));
     return this._el("div", { className: "plan-day" + (isCurrent ? " plan-current" : "") }, children);
   }
-
   _taskDragElement(taskId = this._draggedTaskId, colIdx = this._draggedColIdx) {
-    // A recurring task can have a done row today and an open row tomorrow.
-    // Keep the actual dragged node, including after it moves to another day.
-    if (this._draggedTaskElement?.isConnected
-        && String(taskId) === String(this._draggedTaskId) && colIdx === this._draggedColIdx) {
+    if (this._draggedTaskElement?.isConnected && String(taskId) === String(this._draggedTaskId) && colIdx === this._draggedColIdx) {
       return this._draggedTaskElement;
     }
     let selector = `.task[data-task-id="${CSS.escape(String(taskId))}"]`;
@@ -12812,21 +11804,14 @@ class HomeTasksCard extends HTMLElement {
       selector += `[data-plan-entry="${CSS.escape(String(src.entry_id))}"]`;
       return this.shadowRoot.querySelector(selector);
     }
-    // A card can show one list in two columns: the id then names two rows.
-    // The one being dragged carries "dragging" wherever the drag has taken
-    // it; before that it is the one in the column the drag started in.
     const found = [...this.shadowRoot.querySelectorAll(selector)];
     if (found.length < 2) return found[0] || null;
-    return found.find((el) => el.classList.contains("dragging"))
-      || found.find((el) => el.closest(".task-list")?.dataset.colIdx === String(colIdx))
-      || found[0];
+    return found.find((el) => el.classList.contains("dragging")) || found.find((el) => el.closest(".task-list")?.dataset.colIdx === String(colIdx)) || found[0];
   }
-
   _planDropInto(list) {
     const el = this._taskDragElement();
     if (el && el.parentNode !== list) list.insertBefore(el, list.querySelector(".plan-empty"));
   }
-
   // The day's focus: a line of text, edited in place.
   _buildPlanNote(day) {
     if (this._planNoteEditing === day.date) {
@@ -12835,7 +11820,7 @@ class HomeTasksCard extends HTMLElement {
         className: "plan-note-input",
         value: day.note || "",
         maxlength: "255",
-        placeholder: this._t("plan_note_placeholder"),
+        placeholder: this._t("plan_note_placeholder")
       });
       let finished = false;
       const finish = (save) => {
@@ -12850,16 +11835,20 @@ class HomeTasksCard extends HTMLElement {
         }
       };
       input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") { e.preventDefault(); finish(true); }
-        else if (e.key === "Escape") finish(false);
+        if (e.key === "Enter") {
+          e.preventDefault();
+          finish(true);
+        } else if (e.key === "Escape") finish(false);
       });
       input.addEventListener("blur", () => finish(true));
-      setTimeout(() => { if (input.isConnected) input.focus(); }, 0);
+      setTimeout(() => {
+        if (input.isConnected) input.focus();
+      }, 0);
       return input;
     }
     const note = this._el("div", {
       className: "plan-note" + (day.note ? "" : " empty"),
-      textContent: day.note || this._t("plan_note_placeholder"),
+      textContent: day.note || this._t("plan_note_placeholder")
     });
     note.addEventListener("click", () => {
       this._planNoteEditing = day.date;
@@ -12867,70 +11856,58 @@ class HomeTasksCard extends HTMLElement {
     });
     return note;
   }
-
   _buildPlanCarryOver(day, offer) {
     const btn = this._el("button", {
       className: "plan-carry",
-      textContent: this._t("plan_carry_over", this._planShortDate(offer.date), offer.items.length),
+      textContent: this._t("plan_carry_over", this._planShortDate(offer.date), offer.items.length)
     });
     btn.addEventListener("click", () => this._planWrite("home_tasks/set_plan_day", {
       date: day.date,
-      items: offer.items.map((r) => ({ task_id: r.task_id, entry_id: r.entry_id })),
+      items: offer.items.map((r) => ({ task_id: r.task_id, entry_id: r.entry_id }))
     }));
     return btn;
   }
-
   // One row of a day: a task of one of the plan's lists, with its place in
   // the day's order where a list has the checkbox.
   _buildPlanRow(row, number, showList, day) {
-    const colIdx = this._planColByEntry ? this._planColByEntry.get(row.entry_id) : undefined;
-    const cs = colIdx !== undefined ? this._columns[colIdx] : null;
+    const colIdx = this._planColByEntry ? this._planColByEntry.get(row.entry_id) : void 0;
+    const cs = colIdx !== void 0 ? this._columns[colIdx] : null;
     const task = cs ? (cs.tasks || []).find((t) => String(t.id) === String(row.task_id)) : null;
-    const listBadge = showList
-      ? this._el("span", { className: "plan-list-badge", textContent: row.list_name })
-      : null;
+    const listBadge = showList ? this._el("span", { className: "plan-list-badge", textContent: row.list_name }) : null;
     const done = !!row.completed;
     let className = `task plan-row plan-kind-${row.kind}`;
     if (done) className += " completed";
-
     if (!task) {
-      // The row's list has not answered yet: show what the plan knows.
-      const meta = listBadge ? [this._el("div", { className: "task-meta" }, [listBadge])] : [];
+      const meta2 = listBadge ? [this._el("div", { className: "task-meta" }, [listBadge])] : [];
       return this._el("div", { className }, [
         this._el("div", { className: "task-main" }, [
           this._el("span", { className: "plan-num" + (done ? " done" : ""), textContent: done ? "✓" : String(number) }),
           this._el("div", { className: "task-content" }, [
             this._el("span", { className: "task-title", textContent: row.title }),
-            ...meta,
-          ]),
-        ]),
+            ...meta2
+          ])
+        ])
       ]);
     }
-
     const col = this._config.columns[colIdx];
     const isExpanded = this._expandedTasks.has(task.id);
     const isEditing = this._editingTaskId === task.id;
     if (isExpanded) className += " is-expanded";
-    // A done row keeps its place: what is done on a day is that day's record.
     const taskEl = this._el("div", { className, draggable: !done && !isEditing && !isExpanded });
     taskEl.dataset.taskId = task.id;
     taskEl.dataset.planEntry = row.entry_id;
-
     const contentChildren = this._buildTaskContentChildren(task, colIdx, isEditing);
     const meta = this._buildTaskMetaBadges(task, col, cs, colIdx);
     if (listBadge) meta.unshift(listBadge);
     if (meta.length > 0) contentChildren.push(this._el("div", { className: "task-meta" }, meta));
-
     const mainRow = this._el("div", { className: "task-main" }, [
       this._buildPlanNumber(row, task, colIdx, number),
       this._el("div", { className: "task-content" }, contentChildren),
-      this._buildTaskExpandButton(isExpanded),
+      this._buildTaskExpandButton(isExpanded)
     ]);
     this._attachTaskExpandClickHandler(mainRow, task, taskEl, colIdx);
     taskEl.appendChild(mainRow);
-
     if (isExpanded) {
-      // What one does to a row of a plan first: move it to another day.
       const actions = this._buildPlanActions(task, day, row);
       if (actions.length > 0) taskEl.appendChild(this._el("div", { className: "plan-actions" }, actions));
       const detailsEl = this._buildTaskDetails(task, colIdx);
@@ -12940,7 +11917,6 @@ class HomeTasksCard extends HTMLElement {
     if (!done) this._attachDragToTask(taskEl, task.id, colIdx);
     return taskEl;
   }
-
   _buildPlanNumber(row, task, colIdx, number) {
     const done = !!row.completed;
     const btn = this._el("button", { className: "plan-num" + (done ? " done" : ""), title: task.title });
@@ -12954,19 +11930,11 @@ class HomeTasksCard extends HTMLElement {
     const rowKey = `${row.entry_id}|${task.id}`;
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
-      if (Date.now() < (this._suppressRowTapUntil || 0)) return;   // end of a drag
-      // The second click of a double-click on this row (see below).
+      if (Date.now() < (this._suppressRowTapUntil || 0)) return;
       const guard = this._planUntickGuard;
       if (guard && guard.key === rowKey && Date.now() < guard.until) return;
       if (done && !task.completed) {
-        // Done today, open again: a recurring task that has moved on to its
-        // next round. There is no tick on the task to take back, and
-        // toggling would complete that next round - so the tap takes back
-        // the day's "done" only, and the row is open on the day again.
         row.completed = false;
-        // The row is rebuilt at once, and its number then completes the
-        // task: the second click of a double-click must not land on it.
-        // This row's taps only - another row can be ticked right away.
         this._planUntickGuard = { key: rowKey, until: Date.now() + 700 };
         this._render();
         this._planWrite("home_tasks/untick_plan_task", { task_id: String(task.id), entry_id: row.entry_id });
@@ -12976,7 +11944,6 @@ class HomeTasksCard extends HTMLElement {
     });
     return btn;
   }
-
   // Tick a row off (or take the tick back). The row shows it at once; the
   // task's list and the plan follow.
   async _planToggle(row, task, colIdx) {
@@ -12984,32 +11951,27 @@ class HomeTasksCard extends HTMLElement {
     const done = !task.completed;
     if (done && col.confirm_complete === true) {
       const ok = await this._confirmDialog(
-        this._t("confirm_complete_msg", task.title), this._t("confirm_complete_ok"),
+        this._t("confirm_complete_msg", task.title),
+        this._t("confirm_complete_ok")
       );
       if (!ok) return;
     }
     const was = { row: row.completed, task: task.completed };
     row.completed = done;
-    // A provider does not close a recurring task, it moves it on: on the
-    // plan it is done for today, in its list it stays as it comes back.
     const recurring = task.recurrence_enabled && task.recurrence_unit;
     if (!(this._isExternalCol(colIdx) && recurring)) task.completed = done;
     this._render();
     try {
       await this._updateTaskRouted(colIdx, task.id, { completed: done }, { rethrow: true });
     } catch (err) {
-      // Not done after all. The plan will not say that the list changed -
-      // it did not - so the card takes its own tick back and reads the list
-      // again, instead of keeping a task it only believes to be done.
       row.completed = was.row;
       task.completed = was.task;
       if (this._columns[colIdx]) this._columns[colIdx].stale = true;
-      if (!this._isWsTimeout(err)) this._showError((err && err.message) || String(err));
+      if (!this._isWsTimeout(err)) this._showError(err && err.message || String(err));
     }
     if (this._isExternalCol(colIdx)) this._reloadExternal(colIdx);
     await this._loadAllTasks();
   }
-
   // "Plan a task" under a day: a search across the plan's lists.
   _buildPlanAdd(day) {
     const state = this._planAdd;
@@ -13028,34 +11990,29 @@ class HomeTasksCard extends HTMLElement {
       className: "plan-add-input",
       value: state.query,
       placeholder: this._t("plan_search_placeholder"),
-      "data-focus-key": "plan_add",
+      "data-focus-key": "plan_add"
     });
     const results = this._el("div", { className: "plan-add-results" });
-    if (!state.lists) state.lists = new Set();
-    // Typing refills the results in place: a rebuild of the card on every
-    // key would drop the field mid-word.
+    if (!state.lists) state.lists = /* @__PURE__ */ new Set();
     const fill = () => results.replaceChildren(...this._buildPlanCandidates(day, state.query, state.lists));
-    // The lists that have something to plan, as a filter: none picked = all.
     const withTasks = this._planCandidateLists(day);
     for (const entryId of [...state.lists]) {
       if (!withTasks.some((src) => src.entry_id === entryId)) state.lists.delete(entryId);
     }
-    const chips = withTasks.length > 1
-      ? this._el("div", { className: "plan-add-lists" }, withTasks.map((src) => {
-        const chip = this._el("button", {
-          className: "plan-list-chip" + (state.lists.has(src.entry_id) ? " active" : ""),
-          textContent: src.name,
-        });
-        chip.dataset.planEntry = src.entry_id;
-        chip.addEventListener("click", () => {
-          if (state.lists.has(src.entry_id)) state.lists.delete(src.entry_id);
-          else state.lists.add(src.entry_id);
-          chip.classList.toggle("active", state.lists.has(src.entry_id));
-          fill();
-        });
-        return chip;
-      }))
-      : null;
+    const chips = withTasks.length > 1 ? this._el("div", { className: "plan-add-lists" }, withTasks.map((src) => {
+      const chip = this._el("button", {
+        className: "plan-list-chip" + (state.lists.has(src.entry_id) ? " active" : ""),
+        textContent: src.name
+      });
+      chip.dataset.planEntry = src.entry_id;
+      chip.addEventListener("click", () => {
+        if (state.lists.has(src.entry_id)) state.lists.delete(src.entry_id);
+        else state.lists.add(src.entry_id);
+        chip.classList.toggle("active", state.lists.has(src.entry_id));
+        fill();
+      });
+      return chip;
+    })) : null;
     input.addEventListener("input", () => {
       state.query = input.value;
       fill();
@@ -13070,7 +12027,9 @@ class HomeTasksCard extends HTMLElement {
     fill();
     if (state.fresh) {
       state.fresh = false;
-      setTimeout(() => { if (input.isConnected) input.focus(); }, 0);
+      setTimeout(() => {
+        if (input.isConnected) input.focus();
+      }, 0);
     }
     const closeIcon = document.createElement("ha-icon");
     closeIcon.setAttribute("icon", "mdi:close");
@@ -13079,21 +12038,18 @@ class HomeTasksCard extends HTMLElement {
     return this._el("div", { className: "plan-add" }, [
       this._el("div", { className: "plan-add-row" }, [input, closeBtn]),
       chips,
-      results,
+      results
     ]);
   }
-
   // The plan's lists that hold an open task not on *day* yet.
   _planCandidateLists(day) {
     const onDay = new Set((day.items || []).map((r) => `${r.entry_id}|${r.task_id}`));
-    return (this._plan.sources || []).filter((src, i) =>
-      ((this._columns[i] && this._columns[i].tasks) || []).some(
-        (task) => !task.completed && !onDay.has(`${src.entry_id}|${task.id}`)
-      ));
+    return (this._plan.sources || []).filter((src, i) => (this._columns[i] && this._columns[i].tasks || []).some(
+      (task) => !task.completed && !onDay.has(`${src.entry_id}|${task.id}`)
+    ));
   }
-
   // Open tasks of the plan's lists that are not on *day* yet.
-  _buildPlanCandidates(day, query, lists = new Set()) {
+  _buildPlanCandidates(day, query, lists = /* @__PURE__ */ new Set()) {
     const onDay = new Set((day.items || []).map((r) => `${r.entry_id}|${r.task_id}`));
     const q = String(query || "").trim().toLowerCase();
     const sources = this._plan.sources || [];
@@ -13101,7 +12057,7 @@ class HomeTasksCard extends HTMLElement {
     const found = [];
     sources.forEach((src, i) => {
       if (lists.size > 0 && !lists.has(src.entry_id)) return;
-      for (const task of (this._columns[i] && this._columns[i].tasks) || []) {
+      for (const task of this._columns[i] && this._columns[i].tasks || []) {
         if (task.completed || onDay.has(`${src.entry_id}|${task.id}`)) continue;
         if (q && !String(task.title || "").toLowerCase().includes(q)) continue;
         found.push({ task, src });
@@ -13116,12 +12072,13 @@ class HomeTasksCard extends HTMLElement {
       if (showList) children.push(this._el("span", { className: "plan-list-badge", textContent: src.name }));
       const btn = this._el("button", { className: "plan-candidate" }, children);
       btn.addEventListener("click", () => this._planWrite("home_tasks/plan_task", {
-        task_id: String(task.id), entry_id: src.entry_id, date: day.date,
+        task_id: String(task.id),
+        entry_id: src.entry_id,
+        date: day.date
       }));
       return btn;
     });
   }
-
   // Take a task's rows out of the plan as it is shown, ahead of the backend
   // (which drops the reference to a deleted task on its own).
   _planForget(taskId, colIdx) {
@@ -13133,7 +12090,6 @@ class HomeTasksCard extends HTMLElement {
       );
     }
   }
-
   // At the top of an open row: to the next day, to another day, off the
   // plan. A task that is there through its due date can only be moved.
   _buildPlanActions(task, day, row) {
@@ -13149,8 +12105,7 @@ class HomeTasksCard extends HTMLElement {
       buttons.push(btn);
     };
     if (next) {
-      button("plan-next-btn", `→ ${this._planDayName(next, plan.today)}`, () =>
-        this._planWrite("home_tasks/plan_task", { ...ref, date: next }));
+      button("plan-next-btn", `→ ${this._planDayName(next, plan.today)}`, () => this._planWrite("home_tasks/plan_task", { ...ref, date: next }));
     }
     if (others.length > 1) {
       button("plan-move-btn", `→ ${this._t("plan_move_day")}`, async () => {
@@ -13159,16 +12114,12 @@ class HomeTasksCard extends HTMLElement {
       });
     }
     if (row.kind === "planned") {
-      button("plan-remove-btn", this._t("plan_remove"), () =>
-        this._planWrite("home_tasks/unplan_task", { ...ref }));
+      button("plan-remove-btn", this._t("plan_remove"), () => this._planWrite("home_tasks/unplan_task", { ...ref }));
     } else {
-      // There through its due date: it can be moved, not taken off. Say so
-      // where the button would be, instead of leaving it out without a word.
       buttons.push(this._el("span", { className: "plan-due-hint", textContent: this._t("plan_due_hint") }));
     }
     return buttons;
   }
-
   // Resolves with the day picked (an ISO date), or null.
   _planDayDialog(task, dates, today, okLabel) {
     const sel = this._el("select", { className: "ht-move-select" }, dates.map(
@@ -13178,17 +12129,14 @@ class HomeTasksCard extends HTMLElement {
       message: this._t("plan_day_msg", task.title),
       okLabel,
       body: [sel],
-      resolveOk: () => sel.value,
+      resolveOk: () => sel.value
     });
   }
-
   // --- "Plan for…" in a list ---
-
   async _loadPlans() {
     const r = await this._callWs("home_tasks/get_plans");
-    this._plans = (r && Array.isArray(r.plans)) ? r.plans : [];
+    this._plans = r && Array.isArray(r.plans) ? r.plans : [];
   }
-
   // The plans a column's list belongs to, with the list's id in each.
   _plansForCol(colIdx) {
     const col = this._config.columns[colIdx];
@@ -13196,15 +12144,13 @@ class HomeTasksCard extends HTMLElement {
     const found = [];
     for (const plan of this._plans || []) {
       const src = (plan.sources || []).find(
-        (s) => (col.entity_id ? s.entity_id === col.entity_id : s.entry_id === col.list_id)
+        (s) => col.entity_id ? s.entity_id === col.entity_id : s.entry_id === col.list_id
       );
       if (src) found.push({ plan, entry_id: src.entry_id });
     }
     return found;
   }
-
   async _planTaskViaDialog(task, colIdx) {
-    // Read again: the days a plan covers move on at midnight.
     await this._loadPlans();
     const targets = this._plansForCol(colIdx);
     if (targets.length === 0) return;
@@ -13214,7 +12160,7 @@ class HomeTasksCard extends HTMLElement {
     const daySel = this._el("select", { className: "ht-move-select day-pick" });
     const fillDays = () => {
       const plan = targets[Number(planSel.value) || 0].plan;
-      const today = plan.today || this._localDateStr(new Date());
+      const today = plan.today || this._localDateStr(/* @__PURE__ */ new Date());
       daySel.replaceChildren(...(plan.horizon || []).map(
         (d) => this._el("option", { value: d, textContent: this._planDayLabel(d, today) })
       ));
@@ -13225,7 +12171,7 @@ class HomeTasksCard extends HTMLElement {
       message: this._t("plan_day_msg", task.title),
       okLabel: this._t("plan_ok"),
       body: targets.length > 1 ? [planSel, daySel] : [daySel],
-      resolveOk: () => ({ target: targets[Number(planSel.value) || 0], date: daySel.value }),
+      resolveOk: () => ({ target: targets[Number(planSel.value) || 0], date: daySel.value })
     });
     if (!choice || !choice.date) return;
     try {
@@ -13233,13 +12179,12 @@ class HomeTasksCard extends HTMLElement {
         plan: choice.target.plan.id,
         task_id: String(task.id),
         entry_id: choice.target.entry_id,
-        date: choice.date,
+        date: choice.date
       }, { rethrow: true });
     } catch (err) {
-      if (!this._isWsTimeout(err)) this._showError((err && err.message) || String(err));
+      if (!this._isWsTimeout(err)) this._showError(err && err.message || String(err));
     }
   }
-
   // A drag ended: the day the row lies in now gets its rows in the order
   // they stand. That re-plans a row that came from another day.
   async _finishPlanDrag(el) {
@@ -13251,19 +12196,17 @@ class HomeTasksCard extends HTMLElement {
     const date = list.dataset.planDate;
     const items = [...list.querySelectorAll(".task[data-task-id]")].map((n) => ({
       task_id: n.dataset.taskId,
-      entry_id: n.dataset.planEntry,
+      entry_id: n.dataset.planEntry
     }));
-    const day = ((this._plan && this._plan.days) || []).find((d) => d.date === date);
-    const was = ((day && day.items) || []).map((r) => `${r.entry_id}|${r.task_id}`).join("\n");
+    const day = (this._plan && this._plan.days || []).find((d) => d.date === date);
+    const was = (day && day.items || []).map((r) => `${r.entry_id}|${r.task_id}`).join("\n");
     if (items.map((r) => `${r.entry_id}|${r.task_id}`).join("\n") === was) {
-      this._render();   // dropped where it was
+      this._render();
       return;
     }
     await this._planWrite("home_tasks/set_plan_day", { date, items });
   }
-
   // --- Styles ---
-
   _getStyles() {
     return `
       :host {
@@ -14325,9 +13268,7 @@ class HomeTasksCard extends HTMLElement {
       }
     `;
   }
-
   // --- Card config ---
-
   connectedCallback() {
     this._ensureCardMod();
     if (!this._detailFoldHandler) {
@@ -14337,25 +13278,23 @@ class HomeTasksCard extends HTMLElement {
       window.addEventListener(DETAIL_FOLD_EVENT, this._detailFoldHandler);
     }
     this._updateFitRows();
-    // A pending lists retry is cancelled on disconnect — resume the ladder
-    // when the card is re-attached (dashboard view switch during startup),
-    // repeating the cancelled attempt instead of skipping it.
     if (this._initialized && this._listsRetryCount > 0 && !this._listsRetryTimer) {
       this._listsRetryCount--;
       this._scheduleListsRetry();
     }
   }
-
   // HA's sections view sets --row-size on the card's grid cell wrapper when
   // the Layout tab uses a fixed number of rows (inherited into our shadow
   // DOM); it is empty/"auto" otherwise and in masonry views. Toggle a host
   // class so the CSS can switch to fill-and-scroll mode (see ha-card rules).
   _updateFitRows() {
     let rows = "";
-    try { rows = (getComputedStyle(this).getPropertyValue("--row-size") || "").trim(); } catch (_) { /* detached */ }
+    try {
+      rows = (getComputedStyle(this).getPropertyValue("--row-size") || "").trim();
+    } catch (_) {
+    }
     this.classList.toggle("fit-rows", rows !== "" && rows !== "auto");
   }
-
   // card-mod compatibility (issues #31 / #34). card-mod normally styles us
   // through its hui-card hook, but on a cold page load — while this (large)
   // module is still being fetched — HA mounts a placeholder first and
@@ -14367,23 +13306,20 @@ class HomeTasksCard extends HTMLElement {
   _ensureCardMod() {
     if (!(this._config && this._config.card_mod)) return;
     if (!("customElements" in window) || !customElements.whenDefined) return;
-    // At most one pending waiter per element: when card-mod is not installed
-    // whenDefined() never settles, and every extra .then would keep this
-    // element (and its config) alive for the page lifetime.
     if (this._cardModPending) return;
     this._cardModPending = true;
     customElements.whenDefined("card-mod").then((cm) => {
       this._cardModPending = false;
-      cm = cm || customElements.get("card-mod"); // older engines resolve with undefined
-      const cur = this._config && this._config.card_mod; // always the latest config
+      cm = cm || customElements.get("card-mod");
+      const cur = this._config && this._config.card_mod;
       if (!this.isConnected || !cur) return;
       if (!cm || typeof cm.applyToElement !== "function") return;
       try {
         cm.applyToElement(this, "card", cur, { config: this._config }, true, "type-custom-home-tasks-card");
-      } catch (_) { /* never let a styling add-on break the card */ }
+      } catch (_) {
+      }
     });
   }
-
   disconnectedCallback() {
     if (this._detailFoldHandler) {
       window.removeEventListener(DETAIL_FOLD_EVENT, this._detailFoldHandler);
@@ -14393,45 +13329,53 @@ class HomeTasksCard extends HTMLElement {
       document.removeEventListener("click", this._sortCloseHandler);
       this._sortCloseHandler = null;
     }
-    if (this._touchStartTimer) { clearTimeout(this._touchStartTimer); this._touchStartTimer = null; }
-    if (this._subTouchStartTimer) { clearTimeout(this._subTouchStartTimer); this._subTouchStartTimer = null; }
-    if (this._extPollTimer) { clearInterval(this._extPollTimer); this._extPollTimer = null; }
-    if (this._listsRetryTimer) { clearTimeout(this._listsRetryTimer); this._listsRetryTimer = null; }
-    // Stop any active voice recording so the mic stream, AudioContext and
-    // pipeline subscription are released when the card is removed mid-recording.
+    if (this._touchStartTimer) {
+      clearTimeout(this._touchStartTimer);
+      this._touchStartTimer = null;
+    }
+    if (this._subTouchStartTimer) {
+      clearTimeout(this._subTouchStartTimer);
+      this._subTouchStartTimer = null;
+    }
+    if (this._extPollTimer) {
+      clearInterval(this._extPollTimer);
+      this._extPollTimer = null;
+    }
+    if (this._listsRetryTimer) {
+      clearTimeout(this._listsRetryTimer);
+      this._listsRetryTimer = null;
+    }
     if (this._voiceActive) {
       for (const cleanup of this._voiceActive.values()) {
-        try { cleanup(); } catch (_) { /* best-effort */ }
+        try {
+          cleanup();
+        } catch (_) {
+        }
       }
       this._voiceActive.clear();
     }
   }
-
   static getConfigElement() {
     return document.createElement("home-tasks-card-editor");
   }
-
   static getStubConfig() {
     return { columns: [{}] };
   }
-
   getCardSize() {
     if (this._planMode) {
-      const days = (this._plan && this._plan.days) || [];
+      const days = this._plan && this._plan.days || [];
       return 4 + Math.max(0, ...days.map((day) => (day.items || []).length));
     }
     return 3 + this._columns.reduce((sum, cs) => sum + cs.tasks.length, 0);
   }
-
   getLayoutOptions() {
     return {
       grid_columns: "full",
       grid_min_columns: 4,
       grid_rows: "auto",
-      grid_min_rows: 2,
+      grid_min_rows: 2
     };
   }
-
   // Current HA API (sections view Layout tab, 12-column grid — the legacy
   // getLayoutOptions above speaks the old 4-column grid, HA migrates ×3).
   // Rows default to "auto"; a fixed number makes the card fill the cell and
@@ -14441,25 +13385,19 @@ class HomeTasksCard extends HTMLElement {
       columns: "full",
       min_columns: 12,
       rows: "auto",
-      min_rows: 2,
+      min_rows: 2
     };
   }
-}
+};
 
-/**
- * The days of a day plan: a card type of its own in the picker and in YAML
- * (custom:home-tasks-day-plan-card). It is the list card in its plan mode -
- * a row is a task of a list, and everything a row does is the list's code.
- */
-class HomeTasksDayPlanCard extends HomeTasksCard {
+// src/views/day-plan-card.js
+var HomeTasksDayPlanCard = class extends HomeTasksCard {
   setConfig(config) {
     this._setPlanConfig(config || {});
   }
-
   static getConfigElement() {
     return document.createElement("home-tasks-day-plan-card-editor");
   }
-
   // What the picker starts a new card with: the first plan there is. With
   // several plans a card has to name one, so it is named from the start.
   static async getStubConfig(hass) {
@@ -14468,20 +13406,18 @@ class HomeTasksDayPlanCard extends HomeTasksCard {
       const result = await hass.callWS({ type: "home_tasks/get_plans" });
       const first = result && Array.isArray(result.plans) && result.plans[0];
       if (first) config.plan = first.id;
-    } catch (_) { /* no plan yet, or not reachable: the card says so */ }
+    } catch (_) {
+    }
     return config;
   }
-}
+};
 
-/**
- * Card Editor — uses safe DOM construction
- */
-class HomeTasksCardEditor extends HTMLElement {
+// src/editors/list-editor.js
+var HomeTasksCardEditor = class extends HTMLElement {
   // The editor of the day plan card is this one with its plan part only.
   get _isPlanEditor() {
     return false;
   }
-
   // "Defaults" section (issues #44 / #46): list-level default assignee and
   // reminders, stored in the list itself so they apply to every creation
   // path (card, service, WS, voice, todo). Loaded/saved via WS.
@@ -14491,16 +13427,15 @@ class HomeTasksCardEditor extends HTMLElement {
       const parsed = raw ? JSON.parse(raw) : null;
       return parsed && typeof parsed === "object" ? parsed : {};
     } catch (e) {
-      return {};  // private mode, blocked storage - just start folded
+      return {};
     }
   }
-
   _saveSectionState() {
     try {
       localStorage.setItem("ht-editor-sections", JSON.stringify(this._sectionOpen));
-    } catch (e) { /* not worth bothering the user about */ }
+    } catch (e) {
+    }
   }
-
   _buildDefaultsEditor(col) {
     const container = this._el("div", { className: "defaults-editor" });
     const target = this._sectionsTargetPayload(col);
@@ -14512,35 +13447,25 @@ class HomeTasksCardEditor extends HTMLElement {
       return container;
     }
     container.appendChild(this._el("span", { className: "hint", textContent: this._t("ed_loading") }));
-    // Fetched once per editor session and cached like _listSections /
-    // _listMeta: the editor rebuilds its DOM on every structural change, and
-    // an uncached fetch would flash "Loading\u2026" and hit the backend each
-    // time.
-    this._hass.callWS({ type: "home_tasks/get_defaults", ...target })
-      .then((r) => {
-        const d = (r && r.defaults) || {};
-        this._listDefaults[key] = {
-          assignees: [...(d.assignees || (d.assignee ? [d.assignee] : []))],
-          reminders: [...(d.reminders || [])],
-          tags: [...(d.tags || [])],
-          priority: d.priority ?? null,
-          section_id: d.section_id || null,
-          tag_catalog: [...(d.tag_catalog || [])],
-          recurrence_reopen_lead: d.recurrence_reopen_lead || 0,
-        };
-        this._renderDefaultsInto(container, col, this._listDefaults[key]);
-      })
-      .catch(() => {
-        // Never seed the cache with fabricated empty defaults: an editable
-        // empty state would let the very next change wipe the list's real
-        // defaults on the server. Show the failure; the next render retries.
-        container.replaceChildren(
-          this._el("span", { className: "hint", textContent: this._t("ed_defaults_load_failed") })
-        );
-      });
+    this._hass.callWS({ type: "home_tasks/get_defaults", ...target }).then((r) => {
+      const d = r && r.defaults || {};
+      this._listDefaults[key] = {
+        assignees: [...d.assignees || (d.assignee ? [d.assignee] : [])],
+        reminders: [...d.reminders || []],
+        tags: [...d.tags || []],
+        priority: d.priority ?? null,
+        section_id: d.section_id || null,
+        tag_catalog: [...d.tag_catalog || []],
+        recurrence_reopen_lead: d.recurrence_reopen_lead || 0
+      };
+      this._renderDefaultsInto(container, col, this._listDefaults[key]);
+    }).catch(() => {
+      container.replaceChildren(
+        this._el("span", { className: "hint", textContent: this._t("ed_defaults_load_failed") })
+      );
+    });
     return container;
   }
-
   // Whether this column's LIST takes part in the cross-list image pool.
   // Unlike the switches above this is not a card option: it belongs to the
   // list itself, so every card showing it behaves the same and the backend
@@ -14558,7 +13483,7 @@ class HomeTasksCardEditor extends HTMLElement {
       if (own) {
         await this._hass.callWS({ type: "home_tasks/sync_image_config", ...own });
       }
-      const change = { auto_generate_images: on, ...(own || {}) };
+      const change = { auto_generate_images: on, ...own || {} };
       await this._hass.callWS({ type: "home_tasks/set_list_settings", ...target, ...change });
       const info = listInfoFor(this, col);
       if (info) Object.assign(info, change);
@@ -14566,12 +13491,10 @@ class HomeTasksCardEditor extends HTMLElement {
       console.warn("Could not sync automatic image generation:", e);
     }
   }
-
   _buildQueuePanel() {
     const wrap = this._el("div", { className: "queue-panel" });
-
     const cancelBtn = (job) => {
-      const btn = this._el("button", { className: "queue-cancel", textContent: "\u00d7" });
+      const btn = this._el("button", { className: "queue-cancel", textContent: "×" });
       btn.title = this._t("ed_queue_cancel");
       btn.addEventListener("click", async () => {
         btn.disabled = true;
@@ -14579,111 +13502,108 @@ class HomeTasksCardEditor extends HTMLElement {
           await this._hass.callWS({
             type: "home_tasks/cancel_image_queue",
             jobs: [{
-              ...(job.list_id ? { list_id: job.list_id } : {}),
-              ...(job.entity_id ? { entity_id: job.entity_id } : {}),
-              task_id: job.task_id,
-            }],
+              ...job.list_id ? { list_id: job.list_id } : {},
+              ...job.entity_id ? { entity_id: job.entity_id } : {},
+              task_id: job.task_id
+            }]
           });
-        } catch (e) { /* the refresh below shows what actually happened */ }
+        } catch (e) {
+        }
         load();
       });
       return btn;
     };
-
     const render = (current, jobs) => {
       wrap.innerHTML = "";
       if (!current && !jobs.length) {
         wrap.appendChild(this._el("div", {
-          className: "hint", textContent: this._t("ed_queue_empty"),
+          className: "hint",
+          textContent: this._t("ed_queue_empty")
         }));
         return;
       }
       if (current) {
-        // The one being generated right now cannot be cancelled - the
-        // provider call is already out.
         const row = this._el("div", { className: "queue-row current" }, [
-          this._el("span", { className: "queue-pos", textContent: "\u25b6" }),
+          this._el("span", { className: "queue-pos", textContent: "▶" }),
           this._el("span", { className: "queue-title", textContent: current.title || current.task_id }),
-          this._el("span", { className: "queue-state", textContent: this._t("ed_queue_running") }),
+          this._el("span", { className: "queue-state", textContent: this._t("ed_queue_running") })
         ]);
         wrap.appendChild(row);
       }
       if (jobs.length) {
         wrap.appendChild(this._el("div", {
-          className: "hint", textContent: this._t("ed_queue_pending", String(jobs.length)),
+          className: "hint",
+          textContent: this._t("ed_queue_pending", String(jobs.length))
         }));
       }
       jobs.forEach((job, i) => {
         const row = this._el("div", { className: "queue-row" }, [
           // Numbered so the order is not a guess: 1 is generated next.
           this._el("span", { className: "queue-pos", textContent: `${i + 1}.` }),
-          this._el("span", { className: "queue-title", textContent: job.title || job.task_id }),
+          this._el("span", { className: "queue-title", textContent: job.title || job.task_id })
         ]);
         row.appendChild(cancelBtn(job));
         wrap.appendChild(row);
       });
     };
-
-    // Generation takes seconds, so the panel follows along — but only while
-    // there is something to follow. Once the queue is empty it stops polling
-    // instead of ticking forever behind a closed editor (an interval would
-    // also outlive the panel, and in tests the process with it).
     let timer = null;
-    const stop = () => { if (timer) { clearTimeout(timer); timer = null; } };
+    const stop = () => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    };
     const load = async (scheduled = false) => {
       stop();
-      // The first call runs before the panel has been appended, so only a
-      // tick that scheduled itself may give up on being disconnected.
       if (scheduled && !wrap.isConnected) return;
       let current = null;
       let jobs = [];
       try {
         const r = await this._hass.callWS({ type: "home_tasks/get_image_queue" });
-        current = (r && r.current) || null;
-        jobs = (r && r.queue) || [];
-      } catch (e) { /* render the empty state below */ }
+        current = r && r.current || null;
+        jobs = r && r.queue || [];
+      } catch (e) {
+      }
       render(current, jobs);
       if ((current || jobs.length) && wrap.isConnected) {
-        timer = setTimeout(() => load(true), 3000);
+        timer = setTimeout(() => load(true), 3e3);
       }
     };
     load();
     return wrap;
   }
-
   _buildListSettingToggle(col, key, labelKey, defaultOn) {
-    const info = col.entity_id
-      ? (this._externalLists || []).find(l => l.entity_id === col.entity_id)
-      : (this._lists || []).find(l => l.id === col.list_id);
+    const info = col.entity_id ? (this._externalLists || []).find((l) => l.entity_id === col.entity_id) : (this._lists || []).find((l) => l.id === col.list_id);
     const sw = document.createElement("ha-switch");
-    sw.checked = info && info[key] !== undefined ? info[key] !== false : defaultOn;
+    sw.checked = info && info[key] !== void 0 ? info[key] !== false : defaultOn;
     sw.disabled = !info;
     sw.setAttribute("aria-label", this._t(labelKey));
     sw.addEventListener("change", async () => {
       const target = col.entity_id ? { entity_id: col.entity_id } : { list_id: col.list_id };
       try {
         await this._hass.callWS({
-          type: "home_tasks/set_list_settings", ...target, [key]: sw.checked,
+          type: "home_tasks/set_list_settings",
+          ...target,
+          [key]: sw.checked
         });
-        if (info) info[key] = sw.checked;  // keep the cached list in sync
+        if (info) info[key] = sw.checked;
       } catch (e) {
-        sw.checked = !sw.checked;  // put the switch back if the write failed
+        sw.checked = !sw.checked;
       }
     });
     return this._el("div", { className: "toggle-row" }, [
       this._el("span", { className: "toggle-label", textContent: this._t(labelKey) }),
-      sw,
+      sw
     ]);
   }
-
   // The list's "Reopen early": number + unit like the task's own field, but
   // with no interval to fit — a task starts its interval long enough for it.
   _buildDefaultLead(defaults, save) {
     const FACTORS = { minutes: 1, hours: 60, days: 1440 };
     const lead = defaults.recurrence_reopen_lead || 0;
     const units = ["hours", "days"];
-    if (lead % 60) units.unshift("minutes");  // kept as set, not rounded
-    const pick = [...units].reverse().find(u => lead % FACTORS[u] === 0);
+    if (lead % 60) units.unshift("minutes");
+    const pick = [...units].reverse().find((u) => lead % FACTORS[u] === 0);
     const maxIn = (u) => Math.floor(MAX_REOPEN_LEAD_MINUTES / FACTORS[u]);
     const input = this._el("input", { type: "number", value: String(lead / FACTORS[pick]) });
     input.min = 0;
@@ -14720,24 +13640,20 @@ class HomeTasksCardEditor extends HTMLElement {
         this._el("div", { className: "field-wrap" }, [
           input,
           this._el("span", { textContent: this._t("rec_lead_lbl") }),
-          this._el("div", { className: "spin-btns" }, [spinUp, spinDown]),
+          this._el("div", { className: "spin-btns" }, [spinUp, spinDown])
         ]),
         this._el("div", { className: "field-wrap" }, [
           unitSelect,
-          this._el("span", { textContent: this._t("rec_unit_lbl") }),
-        ]),
+          this._el("span", { textContent: this._t("rec_unit_lbl") })
+        ])
       ]),
-      this._el("span", { className: "hint", textContent: this._t("ed_default_lead_hint") }),
+      this._el("span", { className: "hint", textContent: this._t("ed_default_lead_hint") })
     ];
   }
-
   _renderDefaultsInto(container, col, defaults) {
     const target = this._sectionsTargetPayload(col);
     const key = this._sourceKeyForCol(col);
     const savedFlash = this._el("span", { className: "def-saved-flash" });
-    // Partial saves with in-flight coalescing: each change sends only the
-    // field(s) it touched (the backend keeps omitted fields), and changes
-    // made while a write is in flight merge into one trailing flush.
     let saving = false;
     let pending = null;
     let renderInto;
@@ -14745,67 +13661,45 @@ class HomeTasksCardEditor extends HTMLElement {
       const patch = pending;
       pending = null;
       saving = true;
-      this._hass.callWS({ type: "home_tasks/set_defaults", ...target, ...patch })
-        .then((r) => {
-          // Adopt the server-normalized state (deduped, sorted reminders) so
-          // the session cache cannot diverge from the store — but NEVER while
-          // a newer local patch is queued: adopting then would revert the
-          // optimistic DOM state and later row clicks would splice stale
-          // indices. The trailing flush's response adopts instead.
-          if (!pending) {
-            const d = (r && r.defaults) || {};
-            const norm = d.reminders || [];
-            const normTags = d.tags || [];
-            const normCatalog = d.tag_catalog || [];
-            const normPeople = d.assignees || (d.assignee ? [d.assignee] : []);
-            const changed = JSON.stringify(normPeople) !== JSON.stringify(defaults.assignees || []) ||
-              (d.priority ?? null) !== defaults.priority ||
-              (d.section_id || null) !== defaults.section_id ||
-              JSON.stringify(norm) !== JSON.stringify(defaults.reminders) ||
-              JSON.stringify(normTags) !== JSON.stringify(defaults.tags) ||
-              JSON.stringify(normCatalog) !== JSON.stringify(defaults.tag_catalog || []) ||
-              (d.recurrence_reopen_lead || 0) !== (defaults.recurrence_reopen_lead || 0);
-            defaults.recurrence_reopen_lead = d.recurrence_reopen_lead || 0;
-            defaults.assignees = [...normPeople];
-            defaults.priority = d.priority ?? null;
-            defaults.section_id = d.section_id || null;
-            defaults.reminders.splice(0, defaults.reminders.length, ...norm);
-            defaults.tags.splice(0, defaults.tags.length, ...normTags);
-            defaults.tag_catalog = [...normCatalog];
-            if (changed) renderInto();
-          }
-          savedFlash.classList.remove("err");
-          savedFlash.textContent = "\u2713 " + this._t("ed_defaults_saved");
-          savedFlash.classList.add("show");
-          clearTimeout(savedFlash._hideT);
-          savedFlash._hideT = setTimeout(() => savedFlash.classList.remove("show"), 1500);
-        })
-        .catch(() => {
-          // Make the failure visible (the flash stays until the next
-          // success) and drop the session cache so the next editor render
-          // refetches the server truth instead of showing unsaved state.
-          clearTimeout(savedFlash._hideT);
-          savedFlash.textContent = "\u2717 " + this._t("ed_defaults_save_failed");
-          savedFlash.classList.add("err", "show");
-          delete this._listDefaults[key];
-        })
-        .then(() => {
-          saving = false;
-          if (pending) flush();
-        });
+      this._hass.callWS({ type: "home_tasks/set_defaults", ...target, ...patch }).then((r) => {
+        if (!pending) {
+          const d = r && r.defaults || {};
+          const norm = d.reminders || [];
+          const normTags = d.tags || [];
+          const normCatalog = d.tag_catalog || [];
+          const normPeople = d.assignees || (d.assignee ? [d.assignee] : []);
+          const changed = JSON.stringify(normPeople) !== JSON.stringify(defaults.assignees || []) || (d.priority ?? null) !== defaults.priority || (d.section_id || null) !== defaults.section_id || JSON.stringify(norm) !== JSON.stringify(defaults.reminders) || JSON.stringify(normTags) !== JSON.stringify(defaults.tags) || JSON.stringify(normCatalog) !== JSON.stringify(defaults.tag_catalog || []) || (d.recurrence_reopen_lead || 0) !== (defaults.recurrence_reopen_lead || 0);
+          defaults.recurrence_reopen_lead = d.recurrence_reopen_lead || 0;
+          defaults.assignees = [...normPeople];
+          defaults.priority = d.priority ?? null;
+          defaults.section_id = d.section_id || null;
+          defaults.reminders.splice(0, defaults.reminders.length, ...norm);
+          defaults.tags.splice(0, defaults.tags.length, ...normTags);
+          defaults.tag_catalog = [...normCatalog];
+          if (changed) renderInto();
+        }
+        savedFlash.classList.remove("err");
+        savedFlash.textContent = "✓ " + this._t("ed_defaults_saved");
+        savedFlash.classList.add("show");
+        clearTimeout(savedFlash._hideT);
+        savedFlash._hideT = setTimeout(() => savedFlash.classList.remove("show"), 1500);
+      }).catch(() => {
+        clearTimeout(savedFlash._hideT);
+        savedFlash.textContent = "✗ " + this._t("ed_defaults_save_failed");
+        savedFlash.classList.add("err", "show");
+        delete this._listDefaults[key];
+      }).then(() => {
+        saving = false;
+        if (pending) flush();
+      });
     };
     const save = (patch) => {
-      pending = { ...(pending || {}), ...patch };
+      pending = { ...pending || {}, ...patch };
       if (!saving) flush();
     };
     renderInto = () => {
-      // Fixed tags and the reopen lead come first; the values every new
-      // task gets follow, starting with the default people.
-      const known = (key && this._listMeta[key]) || { tags: [] };
+      const known = key && this._listMeta[key] || { tags: [] };
       const kids = [];
-      // Fixed tags (issue #61) — not applied to new tasks like the defaults
-      // below, but a per-list setting all the same: always offered when
-      // tagging a task, in every card that shows the list.
       if (!defaults.tag_catalog) defaults.tag_catalog = [];
       kids.push(this._buildMultiSelect(
         this._t("ed_tag_catalog"),
@@ -14814,12 +13708,9 @@ class HomeTasksCardEditor extends HTMLElement {
         (vals) => {
           defaults.tag_catalog = vals.map((v) => String(v).trim().replace(/^#/, "").toLowerCase()).filter(Boolean);
           save({ tag_catalog: [...defaults.tag_catalog] });
-        },
+        }
       ));
       kids.push(this._el("span", { className: "hint", textContent: this._t("ed_tag_catalog_hint") }));
-      // Reopen early (issue #77): taken over by a task when its recurrence
-      // is switched on, so a later change leaves recurring tasks alone.
-      // Native lists only, as for the task's own lead.
       if (!col.entity_id) kids.push(...this._buildDefaultLead(defaults, save));
       const peopleField = this._buildPersonChips(
         this._t("ed_default_assignee"),
@@ -14828,12 +13719,10 @@ class HomeTasksCardEditor extends HTMLElement {
         (people) => {
           defaults.assignees = people;
           save({ assignees: people });
-        },
+        }
       );
-      // "Saved" shows in the first heading of the values new tasks get.
       peopleField.querySelector(".group-label").appendChild(savedFlash);
       kids.push(peopleField);
-
       const prioritySelect = this._el("select", { className: "editor-native-select" });
       for (const [value, labelKey] of [["", "ed_default_none"], ["1", "pri_low"], ["2", "pri_medium"], ["3", "pri_high"]]) {
         const opt = this._el("option", { value, textContent: this._t(labelKey) });
@@ -14846,11 +13735,8 @@ class HomeTasksCardEditor extends HTMLElement {
       });
       kids.push(this._el("div", { className: "field-wrap" }, [
         prioritySelect,
-        this._el("span", { textContent: this._t("ed_default_priority") }),
+        this._el("span", { textContent: this._t("ed_default_priority") })
       ]));
-
-      // Suggestions come from the tags already in use on this list; the
-      // multi-select takes free text too, same as the preset filters.
       kids.push(this._buildMultiSelect(
         this._t("ed_default_tags"),
         defaults.tags,
@@ -14858,13 +13744,9 @@ class HomeTasksCardEditor extends HTMLElement {
         (vals) => {
           defaults.tags.splice(0, defaults.tags.length, ...vals);
           save({ tags: [...defaults.tags] });
-        },
+        }
       ));
-
-      // Sections are loaded for the Sections editor in the same render pass;
-      // until they arrive this is just the "no section" entry, and the load
-      // re-renders the editor.
-      const sections = (key && this._listSections[key]) || [];
+      const sections = key && this._listSections[key] || [];
       if (sections.length) {
         const sectionSelect = this._el("select", { className: "editor-native-select" });
         const noSection = this._el("option", { value: "", textContent: this._t("ed_default_none") });
@@ -14881,10 +13763,9 @@ class HomeTasksCardEditor extends HTMLElement {
         });
         kids.push(this._el("div", { className: "field-wrap" }, [
           sectionSelect,
-          this._el("span", { textContent: this._t("ed_default_section") }),
+          this._el("span", { textContent: this._t("ed_default_section") })
         ]));
       }
-
       defaults.reminders.forEach((offset, ri) => {
         const sel = this._el("select", { className: "editor-native-select" });
         for (const opt of reminderOffsetOptions(this, offset)) sel.appendChild(opt);
@@ -14892,7 +13773,7 @@ class HomeTasksCardEditor extends HTMLElement {
           defaults.reminders[ri] = parseInt(sel.value, 10);
           save({ reminders: [...defaults.reminders] });
         });
-        const removeBtn = this._el("button", { className: "icon-btn del", textContent: "\u00D7", title: this._t("remove_reminder"), type: "button" });
+        const removeBtn = this._el("button", { className: "icon-btn del", textContent: "×", title: this._t("remove_reminder"), type: "button" });
         removeBtn.addEventListener("click", () => {
           defaults.reminders.splice(ri, 1);
           save({ reminders: [...defaults.reminders] });
@@ -14900,7 +13781,7 @@ class HomeTasksCardEditor extends HTMLElement {
         });
         kids.push(this._el("div", { className: "def-reminder-row" }, [
           this._el("div", { className: "field-wrap" }, [sel, this._el("span", { textContent: this._t("reminder") })]),
-          removeBtn,
+          removeBtn
         ]));
       });
       if (defaults.reminders.length < MAX_REMINDERS) {
@@ -14916,7 +13797,6 @@ class HomeTasksCardEditor extends HTMLElement {
     };
     renderInto();
   }
-
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -14926,39 +13806,31 @@ class HomeTasksCardEditor extends HTMLElement {
     this._externalLists = [];
     this._listsLoaded = false;
     this._editorTab = 0;
-    this._editorCodeMode = {};  // { tabIdx: bool }
-    // { sectionId: bool } — which editor sections are unfolded. Kept in
-    // localStorage because the editor is thrown away every time the dialog
-    // closes, and re-opening it to find everything folded shut again (or
-    // everything open again) is equally annoying. Nothing is open until the
-    // user opens it.
+    this._editorCodeMode = {};
     this._sectionOpen = this._loadSectionState();
-    this._ignoreNextSetConfig = false; // skip the echo setConfig() call after _fireChanged
-    this._listSections = {};    // { sourceKey: [{id,name,icon,sort_order}] } — server-loaded sections
-    this._listMeta = {};        // { sourceKey: {tags:[], persons:[]} } — derived from the list's tasks
-    this._listDefaults = {};    // { listId: {assignee, reminders} } — session cache for the Defaults section
+    this._ignoreNextSetConfig = false;
+    this._listSections = {};
+    this._listMeta = {};
+    this._listDefaults = {};
   }
-
   _sourceKeyForCol(col) {
     if (!col) return null;
     if (col.entity_id) return `ext:${col.entity_id}`;
     if (col.list_id) return col.list_id;
     return null;
   }
-
   _sectionsTargetPayload(col) {
     if (col.entity_id) return { entity_id: col.entity_id };
     if (col.list_id) return { list_id: col.list_id };
     return null;
   }
-
   async _loadSectionsFor(col) {
     const target = this._sectionsTargetPayload(col);
     if (!target) return [];
     const key = this._sourceKeyForCol(col);
     try {
       const r = await this._hass.callWS({ type: "home_tasks/get_sections", ...target });
-      const arr = (r && r.sections) || [];
+      const arr = r && r.sections || [];
       this._listSections[key] = arr;
       return arr;
     } catch (e) {
@@ -14966,7 +13838,6 @@ class HomeTasksCardEditor extends HTMLElement {
       return [];
     }
   }
-
   // Fetch the column's tasks once to derive the tag + assignee-name sets used
   // as autocomplete suggestions in the preset-filter multi-selects. Cached per
   // source key like _listSections; missing/empty is fine (free-text entry).
@@ -14977,22 +13848,20 @@ class HomeTasksCardEditor extends HTMLElement {
       let tasks = [];
       if (col.entity_id) {
         const r = await this._hass.callWS({ type: "home_tasks/get_external_tasks", entity_id: col.entity_id });
-        tasks = (r && r.tasks) || [];
+        tasks = r && r.tasks || [];
       } else if (col.list_id) {
         const r = await this._hass.callWS({ type: "home_tasks/get_tasks", list_id: col.list_id });
-        tasks = (r && r.tasks) || [];
+        tasks = r && r.tasks || [];
       }
-      const tags = new Set();
-      const persons = new Set();
+      const tags = /* @__PURE__ */ new Set();
+      const persons = /* @__PURE__ */ new Set();
       for (const t of tasks) {
-        for (const tag of (t.tags || [])) tags.add(tag);
+        for (const tag of t.tags || []) tags.add(tag);
         for (const p of _assignees(t)) persons.add(p);
       }
-      // Persons may be stored as `person.*` entity ids — resolve each to its
-      // friendly name for display while keeping the raw value for matching.
       const personOpts = [...persons].sort().map((v) => ({
         value: v,
-        label: this._hass?.states?.[v]?.attributes?.friendly_name || v,
+        label: this._hass?.states?.[v]?.attributes?.friendly_name || v
       }));
       this._listMeta[key] = { tags: [...tags].sort(), persons: personOpts };
     } catch (e) {
@@ -15000,26 +13869,23 @@ class HomeTasksCardEditor extends HTMLElement {
     }
     return this._listMeta[key];
   }
-
   async _wsCallSection(col, type, extra = {}) {
     const target = this._sectionsTargetPayload(col);
     if (!target) throw new Error("No list selected");
     return this._hass.callWS({ type, ...target, ...extra });
   }
-
   _t(key, ...args) {
-    // Same preference order as HomeTasksCard._localeCode (separate class).
     return _htText(this._hass?.locale?.language || this._hass?.language, key, args);
   }
-
   _el(tag, attrs = {}, children = []) {
     const el = document.createElement(tag);
     for (const [key, val] of Object.entries(attrs)) {
       if (key === "className") el.className = val;
       else if (key === "textContent") el.textContent = val;
       else if (key === "value") el.value = val;
-      else if (key === "selected") { if (val) el.selected = true; }
-      else if (key === "placeholder") el.placeholder = val;
+      else if (key === "selected") {
+        if (val) el.selected = true;
+      } else if (key === "placeholder") el.placeholder = val;
       else if (key === "type") el.type = val;
       else if (key === "id") el.id = val;
       else if (key === "checked") el.checked = val;
@@ -15031,30 +13897,22 @@ class HomeTasksCardEditor extends HTMLElement {
     }
     return el;
   }
-
   setConfig(config) {
-    // Normalize old single-list format
-    // Keep HA card-level keys (type, etc.) at root, not inside column objects
     if (config.list_id && !config.columns) {
       const { type, columns: _c, ...colConfig } = config;
-      config = { ...(type ? { type } : {}), columns: [colConfig] };
+      config = { ...type ? { type } : {}, columns: [colConfig] };
     }
     if (!config.columns || !Array.isArray(config.columns) || config.columns.length === 0) {
       config = { ...config, columns: [{}] };
     }
-    // Strip any stray type keys from column objects
     config = {
       ...config,
-      columns: config.columns.map(({ type: _t, ...col }) => col),
+      columns: config.columns.map(({ type: _t, ...col }) => col)
     };
     this._config = { ...config };
-
-    // Clamp active tab
     if (this._editorTab >= this._config.columns.length) {
       this._editorTab = this._config.columns.length - 1;
     }
-
-    // Skip re-render if this setConfig is the echo of our own _fireChanged call
     if (this._ignoreNextSetConfig) {
       this._ignoreNextSetConfig = false;
       return;
@@ -15063,41 +13921,32 @@ class HomeTasksCardEditor extends HTMLElement {
       this._render();
     }
   }
-
   set hass(hass) {
     this._hass = hass;
     if (!this._listsLoaded) {
       this._loadLists();
     }
   }
-
   async _loadLists() {
     try {
       const [nativeResult, externalResult, plansResult] = await Promise.all([
         this._hass.callWS({ type: "home_tasks/get_lists" }),
         this._hass.callWS({ type: "home_tasks/get_external_lists" }).catch(() => null),
-        this._hass.callWS({ type: "home_tasks/get_plans" }).catch(() => null),
+        this._hass.callWS({ type: "home_tasks/get_plans" }).catch(() => null)
       ]);
       if (nativeResult && Array.isArray(nativeResult.lists)) {
         this._lists = nativeResult.lists;
       }
-      this._plans = (plansResult && Array.isArray(plansResult.plans)) ? plansResult.plans : [];
-      // Every list there is, for choosing a plan's lists.
-      this._planLists = (plansResult && Array.isArray(plansResult.lists)) ? plansResult.lists : [];
-      this._externalLists = (externalResult && Array.isArray(externalResult.external_lists))
-        ? externalResult.external_lists.filter(l => l.linked)
-        : [];
+      this._plans = plansResult && Array.isArray(plansResult.plans) ? plansResult.plans : [];
+      this._planLists = plansResult && Array.isArray(plansResult.lists) ? plansResult.lists : [];
+      this._externalLists = externalResult && Array.isArray(externalResult.external_lists) ? externalResult.external_lists.filter((l) => l.linked) : [];
       this._listsLoaded = true;
       if (this._isPlanEditor) {
-        // A new card names its plan from the start (see getStubConfig); one
-        // written by hand without a plan gets the first one once there is a
-        // choice to make.
         if (!this._config.plan && this._plans.length > 1) {
           this._config = { ...this._config, plan: this._plans[0].id };
           this._fireChanged();
         }
       } else if (!this._config.columns[0]?.list_id && !this._config.columns[0]?.entity_id && this._lists.length > 0) {
-        // Auto-select first list for first column if none set
         const newCols = [...this._config.columns];
         newCols[0] = { ...newCols[0], list_id: this._lists[0].id };
         this._config = { ...this._config, columns: newCols };
@@ -15105,18 +13954,14 @@ class HomeTasksCardEditor extends HTMLElement {
       }
       this._render();
     } catch (e) {
-      // Integration might not be loaded yet
     }
   }
-
   _clearCodeState() {
     this._editorCodeMode = {};
   }
-
   _render() {
     const root = this.shadowRoot;
     root.innerHTML = "";
-
     const style = document.createElement("style");
     style.textContent = `
       :host { display: block; }
@@ -15286,40 +14131,33 @@ class HomeTasksCardEditor extends HTMLElement {
       .field-wrap .ms-input, .field-wrap .ms-input:focus { width: auto; height: auto; padding: 4px 2px; border: none; background: transparent; }
     `;
     root.appendChild(style);
-
     const cols = this._config.columns || [];
     const activeTab = Math.min(this._editorTab, cols.length - 1);
-
-    // Global card title input (above tabs)
     const cardTitleInput = this._editorText(
-      "ed_card_title", "ed_card_title_placeholder", "card-title-input", this._config.title,
+      "ed_card_title",
+      "ed_card_title_placeholder",
+      "card-title-input",
+      this._config.title,
       (value) => {
-        this._config = { ...this._config, title: value || undefined };
+        this._config = { ...this._config, title: value || void 0 };
         this._fireChanged();
-      },
+      }
     );
     const cardTitleRow = this._el("div", { className: "editor-card-title-row" }, [cardTitleInput]);
-
-    // A day plan has no columns to set up: its rows come from the plan.
     if (this._isPlanEditor) {
       root.appendChild(this._el("div", { className: "editor" }, [
-        cardTitleRow, this._buildPlanEditor(this._plans || []),
+        cardTitleRow,
+        this._buildPlanEditor(this._plans || [])
       ]));
       return;
     }
-
-
-    // Tab bar (tabs on left, + on right)
     const tabsEl = this._el("div", { className: "editor-tabs" });
     for (let i = 0; i < cols.length; i++) {
-      const colName = cols[i].title ||
-        this._lists.find(l => l.id === cols[i].list_id)?.name ||
-        (cols[i].entity_id && (this._externalLists || []).find(l => l.entity_id === cols[i].entity_id)?.name) ||
-        String(i + 1);
+      const colName = cols[i].title || this._lists.find((l) => l.id === cols[i].list_id)?.name || cols[i].entity_id && (this._externalLists || []).find((l) => l.entity_id === cols[i].entity_id)?.name || String(i + 1);
       const tab = this._el("button", {
         className: "editor-tab" + (i === activeTab ? " active" : ""),
         textContent: String(i + 1),
-        title: colName,
+        title: colName
       });
       tab.addEventListener("click", () => {
         this._editorTab = i;
@@ -15343,11 +14181,8 @@ class HomeTasksCardEditor extends HTMLElement {
       this._render();
     });
     const tabsRow = this._el("div", { className: "editor-tabs-row" }, [tabsEl, addTabBtn]);
-
-    // Column controls using ha-icon-button
     const isCodeMode = this._editorCodeMode[activeTab] === true;
     const controls = this._el("div", { className: "editor-col-controls" });
-
     const makeIconBtn = (icon, label, cls, handler, disabled = false) => {
       const btn = document.createElement("button");
       btn.className = "icon-btn" + (cls ? " " + cls : "");
@@ -15360,7 +14195,6 @@ class HomeTasksCardEditor extends HTMLElement {
       btn.addEventListener("click", handler);
       return btn;
     };
-
     controls.appendChild(makeIconBtn(
       "mdi:code-braces",
       isCodeMode ? this._t("ed_visual_editor") : this._t("ed_code_editor"),
@@ -15373,8 +14207,6 @@ class HomeTasksCardEditor extends HTMLElement {
     const _btnSpacer = document.createElement("div");
     _btnSpacer.className = "icon-btn-spacer";
     controls.appendChild(_btnSpacer);
-
-    // Left/right arrows always visible; disabled when not applicable
     controls.appendChild(makeIconBtn("mdi:arrow-left", this._t("ed_move_left"), "", () => {
       this._clearCodeState();
       const newCols = [...cols];
@@ -15393,7 +14225,6 @@ class HomeTasksCardEditor extends HTMLElement {
       this._fireChanged();
       this._render();
     }, cols.length < 2 || activeTab === cols.length - 1));
-
     if (cols.length > 1) {
       controls.appendChild(makeIconBtn("mdi:content-copy", this._t("ed_duplicate"), "", () => {
         this._clearCodeState();
@@ -15413,19 +14244,10 @@ class HomeTasksCardEditor extends HTMLElement {
         this._render();
       }));
     }
-
-    // Tab content
-    const tabContent = isCodeMode
-      ? this._buildCodeEditor(activeTab)
-      : this._buildVisualEditor(activeTab);
-
-    // The AI settings used to sit in their own section at the bottom, which
-    // is not where anyone looks for them — everything about images is in the
-    // column's "Images" section now.
+    const tabContent = isCodeMode ? this._buildCodeEditor(activeTab) : this._buildVisualEditor(activeTab);
     const editor = this._el("div", { className: "editor" }, [cardTitleRow, tabsRow, controls, tabContent]);
     root.appendChild(editor);
   }
-
   // The way to a new list or a new day plan: the integration's page, where
   // Home Assistant adds an entry. In a new tab, so that this editor
   // stays open with what was changed in it; when the user comes back, lists
@@ -15434,8 +14256,11 @@ class HomeTasksCardEditor extends HTMLElement {
   _newEntryLink() {
     if (this._hass?.user?.is_admin !== true) return null;
     const link = this._el("a", {
-      className: "new-entry-link", href: NEW_ENTRY_PATH, target: "_blank", rel: "noopener",
-      textContent: `+ ${this._t("new_entry_link")}`,
+      className: "new-entry-link",
+      href: NEW_ENTRY_PATH,
+      target: "_blank",
+      rel: "noopener",
+      textContent: `+ ${this._t("new_entry_link")}`
     });
     link.addEventListener("click", () => {
       window.addEventListener("focus", () => {
@@ -15444,7 +14269,6 @@ class HomeTasksCardEditor extends HTMLElement {
     });
     return link;
   }
-
   // A line of text with its label inside the box. An input of the editor's
   // own: Home Assistant's ha-textfield is no longer there in 2026.11, and an
   // element that is not defined takes no room - the field was simply gone.
@@ -15453,10 +14277,10 @@ class HomeTasksCardEditor extends HTMLElement {
     input.placeholder = this._t(placeholderKey);
     input.addEventListener("change", () => onChange(input.value));
     return this._el("div", { className: "field-wrap title-field" }, [
-      input, this._el("span", { textContent: this._t(labelKey) }),
+      input,
+      this._el("span", { textContent: this._t(labelKey) })
     ]);
   }
-
   // A dropdown with its label inside the box, as the list editor's.
   // *options* are [value, text] pairs.
   _editorSelect(labelKey, cls, options, value, onChange) {
@@ -15466,10 +14290,10 @@ class HomeTasksCardEditor extends HTMLElement {
     sel.value = value;
     sel.addEventListener("change", () => onChange(sel.value));
     return this._el("div", { className: "field-wrap" }, [
-      sel, this._el("span", { textContent: this._t(labelKey) }),
+      sel,
+      this._el("span", { textContent: this._t(labelKey) })
     ]);
   }
-
   // The day plan's settings, laid out like a list column's: the plan where a
   // column has its list, then sections that open - what is shown, grouped by
   // card and day header, the fields of an open task, and the lists the plan
@@ -15478,48 +14302,47 @@ class HomeTasksCardEditor extends HTMLElement {
     const set = (updates) => {
       const next = { ...this._config };
       for (const [key, value] of Object.entries(updates)) {
-        if (value === undefined) delete next[key];
+        if (value === void 0) delete next[key];
         else next[key] = value;
       }
       this._config = next;
       this._fireChanged();
     };
-    const groupLabel = (key) =>
-      this._el("div", { className: "group-label" }, [this._el("span", { textContent: this._t(key) })]);
-    // Only the state that differs from the default is written, so a card
-    // that changes nothing keeps a config of three lines.
+    const groupLabel = (key) => this._el("div", { className: "group-label" }, [this._el("span", { textContent: this._t(key) })]);
     const toggle = (cls, labelKey, key, defaultOn) => {
       const sw = document.createElement("ha-switch");
       sw.className = cls;
       const now = this._config[key];
       sw.checked = defaultOn ? now !== false : now === true;
       sw.setAttribute("aria-label", this._t(labelKey));
-      sw.addEventListener("change", () => set({ [key]: sw.checked === defaultOn ? undefined : sw.checked }));
+      sw.addEventListener("change", () => set({ [key]: sw.checked === defaultOn ? void 0 : sw.checked }));
       return this._el("div", { className: "toggle-row" }, [
         this._el("span", { className: "toggle-label", textContent: this._t(labelKey) }),
-        sw,
+        sw
       ]);
     };
-
     const known = plans.some((p) => p.id === this._config.plan);
     const planOptions = plans.map((p) => [p.id, p.name]);
-    // A plan the config names but that is not there (yet) stays selectable.
     if (this._config.plan && !known) planOptions.unshift([this._config.plan, this._config.plan]);
-    const planSelect = this._editorSelect("ed_view_day_plan", "plan-select", planOptions,
-      this._config.plan || (plans[0] && plans[0].id) || "", (value) => {
+    const planSelect = this._editorSelect(
+      "ed_view_day_plan",
+      "plan-select",
+      planOptions,
+      this._config.plan || plans[0] && plans[0].id || "",
+      (value) => {
         set({ plan: value });
-        this._render();                       // the lists below are the chosen plan's
-      });
-
+        this._render();
+      }
+    );
     const days = Math.min(7, Math.max(1, parseInt(this._config.days, 10) || 1));
-    const daysSelect = this._editorSelect("ed_plan_days", "days-select",
-      [1, 2, 3, 4, 5, 6, 7].map((n) => [String(n), String(n)]), String(days),
-      (value) => set({ days: Number(value) }));
-
-    // Whether the plan has Saturday and Sunday. That is one of the plan's
-    // own settings (its workdays), written to the plan right away like its
-    // lists: every card showing the plan and its assistants follow.
-    const planInfo = plans.find((p) => p.id === (this._config.plan || (plans[0] && plans[0].id)));
+    const daysSelect = this._editorSelect(
+      "ed_plan_days",
+      "days-select",
+      [1, 2, 3, 4, 5, 6, 7].map((n) => [String(n), String(n)]),
+      String(days),
+      (value) => set({ days: Number(value) })
+    );
+    const planInfo = plans.find((p) => p.id === (this._config.plan || plans[0] && plans[0].id));
     const weekendRow = [];
     if (planInfo) {
       const ALL = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
@@ -15529,80 +14352,63 @@ class HomeTasksCardEditor extends HTMLElement {
       sw.checked = current.includes("sat") || current.includes("sun");
       sw.setAttribute("aria-label", this._t("ed_plan_weekend"));
       sw.addEventListener("change", () => {
-        const days = ALL.filter((d) => (d === "sat" || d === "sun" ? sw.checked : current.includes(d)));
-        // A plan of the weekend only, switched off: the week instead of no day at all.
-        const workdays = days.length ? days : ALL.slice(0, 5);
+        const days2 = ALL.filter((d) => d === "sat" || d === "sun" ? sw.checked : current.includes(d));
+        const workdays = days2.length ? days2 : ALL.slice(0, 5);
         this._planDaysError = null;
-        this._hass.callWS({ type: "home_tasks/set_plan_workdays", plan: planInfo.id, workdays })
-          .then((info) => {
-            planInfo.workdays = (info && info.workdays) || (workdays.length === ALL.length ? [] : workdays);
-            this._render();
-          })
-          .catch((err) => {
-            this._planDaysError = (err && err.message) || String(err);
-            this._render();
-          });
+        this._hass.callWS({ type: "home_tasks/set_plan_workdays", plan: planInfo.id, workdays }).then((info) => {
+          planInfo.workdays = info && info.workdays || (workdays.length === ALL.length ? [] : workdays);
+          this._render();
+        }).catch((err) => {
+          this._planDaysError = err && err.message || String(err);
+          this._render();
+        });
       });
       weekendRow.push(this._el("div", { className: "toggle-row" }, [
         this._el("span", { className: "toggle-label", textContent: this._t("ed_plan_weekend") }),
-        sw,
+        sw
       ]));
     }
-
     const sections = [
       this._buildEditorSection("plan_view", "mdi:eye", "ed_sec_view", [
         groupLabel("ed_group_card"),
         daysSelect,
         this._el("div", { className: "toggle-grid" }, [
           toggle("compact-switch", "ed_compact", "compact", false),
-          ...weekendRow,
+          ...weekendRow
         ]),
-        ...(this._planDaysError
-          ? [this._el("div", { className: "hint plan-lists-error plan-days-error", textContent: this._planDaysError })]
-          : []),
+        ...this._planDaysError ? [this._el("div", { className: "hint plan-lists-error plan-days-error", textContent: this._planDaysError })] : [],
         groupLabel("ed_group_header"),
         this._el("div", { className: "toggle-grid" }, [
           toggle("date-switch", "due_date_lbl", "show_date", true),
           toggle("progress-switch", "ed_show_progress", "show_progress", true),
-          toggle("focus-switch", "plan_note_placeholder", "show_focus", true),
-        ]),
+          toggle("focus-switch", "plan_note_placeholder", "show_focus", true)
+        ])
       ]),
       // What an open row shows, and in which order: the options a column
       // has for it, at the root of the card config - a plan's rows come
       // from several lists and all follow the one setting.
       this._buildEditorSection("plan_features", "mdi:tune", "ed_sec_display", [
         this._buildDetailFieldList({ get: () => this._config, update: set }),
-        toggle("move-switch", "ed_show_move", "show_move", true),
-      ]),
+        toggle("move-switch", "ed_show_move", "show_move", true)
+      ])
     ];
-
-    // The lists the plan draws from. That is a setting of the plan, not of
-    // this card - every card showing the plan and the plan's tools for
-    // assistants follow it - but this is where one looks for it.
     const allLists = this._planLists || [];
     if (planInfo && allLists.length > 0) {
-      // The whole choice, also lists that are not there right now (deleted,
-      // or their entry not loaded): they keep limiting the plan, so they
-      // show - as chips of their own - and are saved along. Dropping them
-      // without a word could leave nothing chosen, which means every list,
-      // for the plan's assistants too.
       const chosen = new Set(planInfo.source_lists || []);
       const missing = [...chosen].filter((id) => !allLists.some((l) => l.entry_id === id));
       const ordered = (ids) => [
         ...allLists.map((x) => x.entry_id).filter((id) => ids.has(id)),
-        ...missing.filter((id) => ids.has(id)),
+        ...missing.filter((id) => ids.has(id))
       ];
       const save = (ids) => {
         this._planListsError = null;
-        this._hass.callWS({ type: "home_tasks/set_plan_lists", plan: planInfo.id, source_lists: ids })
-          .then((info) => {
-            planInfo.source_lists = (info && info.source_lists) || ids;
-            this._render();
-          })
-          .catch((err) => {
-            this._planListsError = (err && err.message) || String(err);
-            this._render();
-          });
+        this._hass.callWS({ type: "home_tasks/set_plan_lists", plan: planInfo.id, source_lists: ids }).then((info) => {
+          planInfo.source_lists = info && info.source_lists || ids;
+          this._render();
+        }).catch((err) => {
+          this._planListsError = err && err.message || String(err);
+          this._render();
+        });
       };
       const chip = (label, active, cls, onClick) => {
         const btn = this._el("button", { className: `assignee-chip ${cls}` + (active ? " active" : ""), textContent: label });
@@ -15632,7 +14438,7 @@ class HomeTasksCardEditor extends HTMLElement {
           });
           btn.dataset.entryId = id;
           return btn;
-        }),
+        })
       ];
       const nodes = [this._el("div", { className: "assignee-chip-row plan-lists" }, chips)];
       if (this._planListsError) {
@@ -15640,47 +14446,34 @@ class HomeTasksCardEditor extends HTMLElement {
       }
       sections.push(this._buildEditorSection("plan_lists", "mdi:format-list-checks", "ed_view_lists", nodes));
     }
-
     return this._el("div", { className: "visual-editor plan-editor" }, [
       this._el("div", { className: "field" }, [planSelect, this._newEntryLink()]),
-      ...sections,
+      ...sections
     ]);
   }
-
   // The card-level ai_task entity and prompt prefix, rendered inside the
   // column's Images section. Card-level, but shown where images are.
   _buildImgGenForm() {
     const imgGen = this._config.image_generation || {};
-
     const form = document.createElement("ha-form");
     form.hass = this._hass;
     form.data = { entity_id: imgGen.entity_id || "", prompt_prefix: imgGen.prompt_prefix || "" };
     form.schema = [
       {
         name: "entity_id",
-        selector: { entity: { domain: ["ai_task"] } },
+        selector: { entity: { domain: ["ai_task"] } }
       },
       {
         name: "prompt_prefix",
-        selector: { text: {} },
-      },
+        selector: { text: {} }
+      }
     ];
-    form.computeLabel = (schema) =>
-      schema.name === "entity_id" ? this._t("ed_ai_image_entity")
-      : schema.name === "prompt_prefix" ? this._t("ed_ai_prompt_prefix")
-      : schema.name;
-    // ha-form can emit value-changed on its own: while it settles after
-    // opening, or when a selector normalises a value it does not know yet
-    // (an ai_task entity whose integration is still loading). Such an event
-    // reports the field as empty, and taking it at face value wrote a
-    // dashboard without its AI entity - while the background queue, which
-    // remembers the last entity it was handed, kept generating. Only the
-    // user clears a field: nothing is written before they have touched the
-    // form, and a field the event leaves out or reports unchanged is left
-    // alone.
+    form.computeLabel = (schema) => schema.name === "entity_id" ? this._t("ed_ai_image_entity") : schema.name === "prompt_prefix" ? this._t("ed_ai_prompt_prefix") : schema.name;
     let touched = false;
     for (const type of ["pointerdown", "keydown", "focusin"]) {
-      form.addEventListener(type, () => { touched = true; });
+      form.addEventListener(type, () => {
+        touched = true;
+      });
     }
     form.addEventListener("value-changed", (e) => {
       if (!touched) return;
@@ -15690,24 +14483,23 @@ class HomeTasksCardEditor extends HTMLElement {
       const next = { ...current };
       for (const key of ["entity_id", "prompt_prefix"]) {
         if (!(key in val)) continue;
-        if (val[key]) next[key] = val[key]; else delete next[key];
+        if (val[key]) next[key] = val[key];
+        else delete next[key];
       }
       if (JSON.stringify(next) === JSON.stringify(current)) return;
-      this._config = { ...this._config, image_generation: Object.keys(next).length ? next : undefined };
+      this._config = { ...this._config, image_generation: Object.keys(next).length ? next : void 0 };
       this._fireChanged();
     });
-
     return form;
   }
-
   _buildCodeEditor(tabIdx) {
     const col = this._config.columns[tabIdx] || {};
     const editor = document.createElement("ha-yaml-editor");
     editor.defaultValue = col;
     editor.addEventListener("value-changed", (e) => {
       const val = e.detail.value;
-      if (val !== undefined && typeof val === "object" && !Array.isArray(val)) {
-        const { type: _t, ...stripped } = val;  // strip stray type key
+      if (val !== void 0 && typeof val === "object" && !Array.isArray(val)) {
+        const { type: _t, ...stripped } = val;
         const newCols = [...this._config.columns];
         newCols[tabIdx] = stripped;
         this._config = { ...this._config, columns: newCols };
@@ -15716,7 +14508,6 @@ class HomeTasksCardEditor extends HTMLElement {
     });
     return editor;
   }
-
   // The task-details fields as one list: switched on or off, and moved up or
   // down to set the order they appear in (detail_order). *get* gives the
   // config the options are in as it is now - a column, or the card itself
@@ -15745,26 +14536,24 @@ class HomeTasksCardEditor extends HTMLElement {
         sw.setAttribute("aria-label", this._t(labelKey));
         sw.addEventListener("change", () => {
           const updates = { [option]: sw.checked };
-          // The older name would otherwise still win where the new one is unset.
-          if (legacy && legacy in (get() || {})) updates[legacy] = undefined;
+          if (legacy && legacy in (get() || {})) updates[legacy] = void 0;
           update(updates);
           if (onToggle) onToggle(key, sw.checked);
         });
         list.appendChild(this._el("div", {
           className: "toggle-row detail-field-row" + (unavailable ? " unavailable" : ""),
-          "data-key": key,
+          "data-key": key
         }, [
           label,
           this._iconButton("mdi:arrow-up", "ed_move_up", i === 0, () => move(-1)),
           this._iconButton("mdi:arrow-down", "ed_move_down", i === order.length - 1, () => move(1)),
-          sw,
+          sw
         ]));
       });
     };
     draw();
     return list;
   }
-
   // A section that opens: icon, title, chevron, and the settings inside.
   // Open or closed is remembered per section id.
   _buildEditorSection(sectionId, icon, titleKey, nodes) {
@@ -15788,21 +14577,19 @@ class HomeTasksCardEditor extends HTMLElement {
     const content = document.createElement("div");
     content.className = "section-content";
     for (const n of nodes) if (n) content.appendChild(n);
-    // Zero-padding wrapper: animating max-height on the padded section-content
-    // would leave the padding visible at max-height:0. The wrapper has no
-    // padding so max-height:0 truly collapses to 0.
     const wrap = document.createElement("div");
     wrap.appendChild(content);
     det.appendChild(wrap);
-
     sum.addEventListener("click", (e) => {
       e.preventDefault();
       if (det.open) {
-        // Mark closed immediately so any mid-animation re-render preserves state
         this._sectionOpen[sectionId] = false;
         this._saveSectionState();
         const h = wrap.offsetHeight;
-        if (!h) { det.open = false; return; }
+        if (!h) {
+          det.open = false;
+          return;
+        }
         wrap.style.cssText = `overflow:hidden;max-height:${h}px;`;
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
@@ -15815,7 +14602,6 @@ class HomeTasksCardEditor extends HTMLElement {
           });
         });
       } else {
-        // Mark open immediately so any mid-animation re-render preserves state
         this._sectionOpen[sectionId] = true;
         this._saveSectionState();
         det.open = true;
@@ -15831,25 +14617,19 @@ class HomeTasksCardEditor extends HTMLElement {
         });
       }
     });
-
     return det;
   }
-
   _buildVisualEditor(tabIdx) {
     const col = this._config.columns[tabIdx] || {};
-
     const updateCol = (updates) => {
       const newCols = [...this._config.columns];
       newCols[tabIdx] = { ...newCols[tabIdx], ...updates };
       this._config = { ...this._config, columns: newCols };
       this._fireChanged();
     };
-
-    const groupLabel = (key) =>
-      this._el("div", { className: "group-label" }, [
-        this._el("span", { textContent: this._t(key) }),
-      ]);
-
+    const groupLabel = (key) => this._el("div", { className: "group-label" }, [
+      this._el("span", { textContent: this._t(key) })
+    ]);
     const makeSelect = (labelKey, options, currentVal, onChange) => {
       const sel = document.createElement("select");
       sel.className = "editor-native-select";
@@ -15863,66 +14643,59 @@ class HomeTasksCardEditor extends HTMLElement {
       sel.addEventListener("change", () => onChange(sel.value));
       return this._el("div", { className: "field-wrap" }, [
         sel,
-        this._el("span", { textContent: this._t(labelKey) }),
+        this._el("span", { textContent: this._t(labelKey) })
       ]);
     };
-
-    // Off / Profile picture / Name / Both, for the filter row and for the
-    // task row. Both keys are written on every change and the three older
-    // ones dropped, so the two can never disagree about the picture.
-    //
-    // Read from the config as it is *now*, never from the `col` captured when
-    // the editor was drawn: the editor ignores the setConfig echo of its own
-    // change and so does not re-render, which would make the second dropdown
-    // write back the value the first one had already replaced.
     const personMode = (which) => {
       const current = (this._config.columns || [])[tabIdx] || {};
       const chosen = which === "badge" ? current.person_badge : current.person_filter;
       if (["off", "picture", "name", "both"].includes(chosen)) return chosen;
-      const chipOn = which === "badge"
-        ? current.badge_person !== false : current.show_person_chips !== false;
+      const chipOn = which === "badge" ? current.badge_person !== false : current.show_person_chips !== false;
       const picture = current.show_person_avatar === true;
       if (!chipOn) return picture ? "picture" : "off";
       return picture ? "both" : "name";
     };
     const makePersonSelect = (which) => makeSelect(
       which === "badge" ? "ed_badge_person" : "ed_show_person_chips",
-      [["off", "ed_person_off"], ["picture", "ed_show_person_avatar"],
-       ["name", "ed_person_name"], ["both", "ed_person_both"]],
+      [
+        ["off", "ed_person_off"],
+        ["picture", "ed_show_person_avatar"],
+        ["name", "ed_person_name"],
+        ["both", "ed_person_both"]
+      ],
       personMode(which),
       (val) => updateCol({
         person_badge: which === "badge" ? val : personMode("badge"),
         person_filter: which === "filter" ? val : personMode("filter"),
-        badge_person: undefined,
-        show_person_chips: undefined,
-        show_person_avatar: undefined,
-      }),
+        badge_person: void 0,
+        show_person_chips: void 0,
+        show_person_avatar: void 0
+      })
     );
-
-    // List select — native lists + linked external entities
     const listSelect = document.createElement("select");
     listSelect.className = "editor-native-select";
-    const currentSource = col.entity_id ? `ext:${col.entity_id}` : (col.list_id || "");
+    const currentSource = col.entity_id ? `ext:${col.entity_id}` : col.list_id || "";
     if (!col.list_id && !col.entity_id) {
       const opt = document.createElement("option");
-      opt.value = ""; opt.textContent = "\u2014"; opt.selected = true;
+      opt.value = "";
+      opt.textContent = "—";
+      opt.selected = true;
       listSelect.appendChild(opt);
     }
-    // Native lists
     for (const l of this._lists) {
       const opt = document.createElement("option");
-      opt.value = l.id; opt.textContent = l.name;
+      opt.value = l.id;
+      opt.textContent = l.name;
       if (l.id === col.list_id && !col.entity_id) opt.selected = true;
       listSelect.appendChild(opt);
     }
-    // External lists (linked)
     if (this._externalLists && this._externalLists.length > 0) {
       const optGroup = document.createElement("optgroup");
       optGroup.label = this._t("ed_external_lists") || "External";
       for (const el of this._externalLists) {
         const opt = document.createElement("option");
         opt.value = `ext:${el.entity_id}`;
-        opt.textContent = `${el.name} \u2197`;
+        opt.textContent = `${el.name} ↗`;
         if (col.entity_id === el.entity_id) opt.selected = true;
         optGroup.appendChild(opt);
       }
@@ -15932,18 +14705,14 @@ class HomeTasksCardEditor extends HTMLElement {
       const val = listSelect.value || "";
       if (val.startsWith("ext:")) {
         const entityId = val.slice(4);
-        // Find the external list's supported_features and adapter capabilities
-        const extList = (this._externalLists || []).find(l => l.entity_id === entityId);
+        const extList = (this._externalLists || []).find((l) => l.entity_id === entityId);
         const features = extList?.supported_features || 0;
         const caps = extList?.capabilities || {};
-        // Auto-set visibility defaults for external lists:
-        // - Rich adapters (Todoist): enable all synced fields based on capabilities
-        // - Generic adapters: enable only fields supported by HA's todo entity interface
-        const HAS_DUE = listSupportsDue(extList);             // incl. adapters that sync due times
+        const HAS_DUE = listSupportsDue(extList);
         const HAS_DESC = !!(features & TODO_FEATURE.SET_DESCRIPTION);
         updateCol({
           entity_id: entityId,
-          list_id: undefined,
+          list_id: void 0,
           default_sort: "manual",
           show_due_date: HAS_DUE,
           show_notes: HAS_DESC || !!caps.can_sync_description,
@@ -15953,14 +14722,13 @@ class HomeTasksCardEditor extends HTMLElement {
           show_assigned_person: !!caps.can_sync_assignee,
           show_reminders: HAS_DUE,
           show_recurrence: !!caps.can_sync_recurrence,
-          show_history: false,
+          show_history: false
         });
         this._render();
       } else {
-        // Native list: restore default visibility (all features ON)
         updateCol({
-          list_id: val || undefined,
-          entity_id: undefined,
+          list_id: val || void 0,
+          entity_id: void 0,
           default_sort: "manual",
           show_due_date: true,
           show_notes: true,
@@ -15970,24 +14738,23 @@ class HomeTasksCardEditor extends HTMLElement {
           show_assigned_person: true,
           show_reminders: true,
           show_recurrence: true,
-          show_history: undefined,  // default off for native too
+          show_history: void 0
+          // default off for native too
         });
         this._render();
       }
     });
-
-    // Title input
     const titleInput = this._editorText(
-      "ed_title", "ed_title_placeholder", "column-title-input", col.title,
-      (value) => updateCol({ title: value || undefined }),
+      "ed_title",
+      "ed_title_placeholder",
+      "column-title-input",
+      col.title,
+      (value) => updateCol({ title: value || void 0 })
     );
-
-    // Icon picker
     const iconPicker = document.createElement("ha-icon-picker");
     iconPicker.label = this._t("ed_icon");
     iconPicker.value = col.icon || "";
-    iconPicker.addEventListener("value-changed", (e) => updateCol({ icon: e.detail.value || undefined }));
-
+    iconPicker.addEventListener("value-changed", (e) => updateCol({ icon: e.detail.value || void 0 }));
     const filterOptions = [["all", "filter_all"], ["open", "filter_open"], ["done", "filter_done"]];
     if (col.show_due_soon_filter === true) {
       filterOptions.push(["due_soon", "filter_due_soon"]);
@@ -15996,18 +14763,24 @@ class HomeTasksCardEditor extends HTMLElement {
       "ed_default_filter",
       filterOptions,
       col.default_filter || "all",
-      (val) => { if (val !== (col.default_filter || "all")) updateCol({ default_filter: val }); }
+      (val) => {
+        if (val !== (col.default_filter || "all")) updateCol({ default_filter: val });
+      }
     );
-
     const sortField = makeSelect(
       "ed_default_sort",
-      [["manual", "sort_manual"], ["due", "sort_due"], ["priority", "sort_priority"],
-       ["title", "sort_title"], ["person", "sort_person"]],
+      [
+        ["manual", "sort_manual"],
+        ["due", "sort_due"],
+        ["priority", "sort_priority"],
+        ["title", "sort_title"],
+        ["person", "sort_person"]
+      ],
       col.default_sort || "manual",
-      (val) => { if (val !== (col.default_sort || "manual")) updateCol({ default_sort: val }); }
+      (val) => {
+        if (val !== (col.default_sort || "manual")) updateCol({ default_sort: val });
+      }
     );
-
-    // Toggle helper — uses ha-switch for native HA look
     const makeToggle = (_id, labelKey, configKey, defaultOn = true, onChange = null) => {
       const checked = defaultOn ? col[configKey] !== false : col[configKey] === true;
       const sw = document.createElement("ha-switch");
@@ -16019,40 +14792,25 @@ class HomeTasksCardEditor extends HTMLElement {
       });
       return this._el("div", { className: "toggle-row" }, [
         this._el("span", { className: "toggle-label", textContent: this._t(labelKey) }),
-        sw,
+        sw
       ]);
     };
-
-    // Where to get a new list: the link for those who may add one, the
-    // sentence for everybody else.
-    const hint = this._newEntryLink()
-      || this._el("span", { className: "hint", textContent: this._t("ed_hint") });
-
+    const hint = this._newEntryLink() || this._el("span", { className: "hint", textContent: this._t("ed_hint") });
     const makeSection = (...args) => this._buildEditorSection(...args);
-
-    // Preset filters live under col.filters.{assignees,labels}. Merge against
-    // the LIVE config (not the render-time `col` snapshot) so two sequential
-    // edits don't clobber each other before the next re-render.
     const updateFilters = (patch) => {
       const live = this._config.columns[tabIdx] || {};
-      const filters = { ...(live.filters || {}), ...patch };
+      const filters = { ...live.filters || {}, ...patch };
       for (const k of Object.keys(filters)) {
         const v = filters[k];
-        if (v == null || (Array.isArray(v) && v.length === 0)) delete filters[k];
+        if (v == null || Array.isArray(v) && v.length === 0) delete filters[k];
       }
-      updateCol({ filters: Object.keys(filters).length ? filters : undefined });
+      updateCol({ filters: Object.keys(filters).length ? filters : void 0 });
     };
-
-    // Tag / assignee values for the multi-select autocomplete, derived from
-    // the list's tasks (lazy-loaded, cached per source key). Empty is fine \u2014
-    // the multi-select still allows free-text entry.
     const metaKey = this._sourceKeyForCol(col);
-    if (metaKey && this._listMeta[metaKey] === undefined) {
+    if (metaKey && this._listMeta[metaKey] === void 0) {
       this._loadMetaFor(col).then(() => this._render());
     }
-    const meta = (metaKey && this._listMeta[metaKey]) || { tags: [], persons: [] };
-
-    // Due-soon filter toggle
+    const meta = metaKey && this._listMeta[metaKey] || { tags: [], persons: [] };
     const dueSoonToggle = (() => {
       const sw = document.createElement("ha-switch");
       sw.checked = col.show_due_soon_filter === true;
@@ -16065,24 +14823,21 @@ class HomeTasksCardEditor extends HTMLElement {
       });
       return this._el("div", { className: "toggle-row" }, [
         this._el("span", { className: "toggle-label", textContent: this._t("ed_show_due_soon_filter") }),
-        sw,
+        sw
       ]);
     })();
-
-    // Days-ahead + hide-overdue \u2014 only shown when the due-soon filter is on
     const dueSoonDetail = col.show_due_soon_filter === true ? [(() => {
       const daysInput = this._el("input", { type: "number", value: col.due_soon_days ?? 7 });
       daysInput.min = 0;
       daysInput.max = 90;
-      // 0 = "due today only"; guard the NaN case so a valid 0 isn't reset to 7.
       const clampDays = (n) => Math.max(0, Math.min(90, Number.isNaN(n) ? 7 : n));
       daysInput.addEventListener("change", () => {
         const v = clampDays(parseInt(daysInput.value, 10));
         daysInput.value = v;
         updateCol({ due_soon_days: v });
       });
-      const spinUp = this._el("button", { className: "spin-btn spin-up", textContent: "\u25b4", type: "button" });
-      const spinDown = this._el("button", { className: "spin-btn spin-down", textContent: "\u25be", type: "button" });
+      const spinUp = this._el("button", { className: "spin-btn spin-up", textContent: "▴", type: "button" });
+      const spinDown = this._el("button", { className: "spin-btn spin-down", textContent: "▾", type: "button" });
       spinUp.addEventListener("click", () => {
         daysInput.value = clampDays(parseInt(daysInput.value, 10)) + 1;
         daysInput.dispatchEvent(new Event("change"));
@@ -16094,16 +14849,10 @@ class HomeTasksCardEditor extends HTMLElement {
       return this._el("div", { className: "field-wrap inline" }, [
         daysInput,
         this._el("span", { textContent: this._t("ed_due_soon_days") }),
-        this._el("div", { className: "spin-btns" }, [spinUp, spinDown]),
+        this._el("div", { className: "spin-btns" }, [spinUp, spinDown])
       ]);
     })(), makeToggle("hide-overdue", "ed_hide_overdue", "hide_overdue", false)] : [];
-
-    // Who this card offers for assignment: everyone highlighted. The config
-    // keeps the ones switched off (hidden_persons), so a person added to
-    // Home Assistant later is offered without editing every card.
     const offeredPersons = (() => {
-      // Someone hidden who is no longer in Home Assistant still gets a chip,
-      // so the entry can be switched back on and leaves the config.
       const people = this._personOptions(col.hidden_persons);
       const hidden = new Set(col.hidden_persons || []);
       const field = this._buildPersonChips(
@@ -16112,28 +14861,22 @@ class HomeTasksCardEditor extends HTMLElement {
         people.filter((p) => !hidden.has(p.value)).map((p) => p.value),
         (on) => {
           const off = people.map((p) => p.value).filter((v) => !on.includes(v)).sort();
-          updateCol({ hidden_persons: off.length ? off : undefined });
+          updateCol({ hidden_persons: off.length ? off : void 0 });
         },
         {
           hint: this._t("ed_offered_persons_hint"),
           // At least one person stays selectable: with none, the task
           // details would show an empty assignee row.
-          keep: (on) => on.some((v) => this._hass?.states?.[v]),
-        },
+          keep: (on) => on.some((v) => this._hass?.states?.[v])
+        }
       );
       if (col.show_assigned_person === false) field.style.display = "none";
       return field;
     })();
-
-    // Images has its switch in the Images section too; the two follow
-    // each other.
     const imagesToggle = makeToggle("show-images", "ed_show_images", "show_images", false, (on) => {
       const twin = detailFields.querySelector('.detail-field-row[data-key="images"] ha-switch');
       if (twin) twin.checked = on;
     });
-
-    // The task-details fields as one list: switched on or off, and moved up
-    // or down to set the order they appear in (detail_order).
     const listSections = this._listSections[this._sourceKeyForCol(col)];
     const detailFields = this._buildDetailFieldList({
       get: () => this._config.columns[tabIdx] || {},
@@ -16143,13 +14886,12 @@ class HomeTasksCardEditor extends HTMLElement {
       onToggle: (key, on) => {
         if (key === "person") offeredPersons.style.display = on ? "" : "none";
         if (key === "images") imagesToggle.querySelector("ha-switch").checked = on;
-      },
+      }
     });
-
     return this._el("div", { className: "visual-editor" }, [
       this._el("div", { className: "field" }, [
         this._el("div", { className: "field-wrap" }, [listSelect, this._el("span", { textContent: this._t("ed_list") })]),
-        hint,
+        hint
       ]),
       makeSection("view", "mdi:eye", "ed_sec_view", [
         // Two dozen switches in one grid meant reading every label to find
@@ -16161,36 +14903,35 @@ class HomeTasksCardEditor extends HTMLElement {
           "ed_view_mode",
           [["list", "ed_view_mode_list"], ["tiles", "ed_view_mode_tiles"]],
           col.view_mode || "list",
-          (val) => { updateCol({ view_mode: val === "list" ? undefined : val }); this._render(); }
+          (val) => {
+            updateCol({ view_mode: val === "list" ? void 0 : val });
+            this._render();
+          }
         ),
-        ...(col.view_mode === "tiles"
-          ? [this._el("div", { className: "hint", textContent: this._t("ed_tile_help"), style: "white-space:pre-line" })]
-          : []),
-        col.view_mode === "tiles"
-          ? makeSelect(
-            "ed_tile_size",
-            [
-              ["small", "ed_tile_size_small"], ["compact", "ed_tile_size_compact"], ["medium", "ed_tile_size_medium"], ["large", "ed_tile_size_large"],
-              // A width in px set in YAML: shown as itself, kept unless changed.
-              ...(_tileMinWidth(col) && !_TILE_SIZES[col.tile_size]
-                ? [[String(col.tile_size), `${_tileMinWidth(col)} px`]] : []),
-            ],
-            // Medium is the default: unset (or unknown) shows as it.
-            _tileMinWidth(col) ? String(col.tile_size) : "medium",
-            (val) => updateCol({ tile_size: val === "medium" ? undefined : (_TILE_SIZES[val] ? val : parseInt(val, 10)) })
-          )
-          : makeSelect(
-            "ed_list_columns",
-            [["1", "1"], ["2", "2"], ["3", "3"], ["4", "4"]],
-            String(col.list_columns || 1),
-            (val) => updateCol({ list_columns: val === "1" ? undefined : parseInt(val, 10) })
-          ),
+        ...col.view_mode === "tiles" ? [this._el("div", { className: "hint", textContent: this._t("ed_tile_help"), style: "white-space:pre-line" })] : [],
+        col.view_mode === "tiles" ? makeSelect(
+          "ed_tile_size",
+          [
+            ["small", "ed_tile_size_small"],
+            ["compact", "ed_tile_size_compact"],
+            ["medium", "ed_tile_size_medium"],
+            ["large", "ed_tile_size_large"],
+            // A width in px set in YAML: shown as itself, kept unless changed.
+            ..._tileMinWidth(col) && !_TILE_SIZES[col.tile_size] ? [[String(col.tile_size), `${_tileMinWidth(col)} px`]] : []
+          ],
+          // Medium is the default: unset (or unknown) shows as it.
+          _tileMinWidth(col) ? String(col.tile_size) : "medium",
+          (val) => updateCol({ tile_size: val === "medium" ? void 0 : _TILE_SIZES[val] ? val : parseInt(val, 10) })
+        ) : makeSelect(
+          "ed_list_columns",
+          [["1", "1"], ["2", "2"], ["3", "3"], ["4", "4"]],
+          String(col.list_columns || 1),
+          (val) => updateCol({ list_columns: val === "1" ? void 0 : parseInt(val, 10) })
+        ),
         this._el("div", { className: "toggle-grid" }, [
-          makeToggle("compact", "ed_compact", "compact", false),
+          makeToggle("compact", "ed_compact", "compact", false)
         ]),
         this._el("div", { className: "field" }, [(() => {
-          // max_height (px): 0 / empty = unlimited. Caps the task body only.
-          // (Editor is its own class — don't reach for HomeTasksCard helpers here.)
           const curMh = Number(col.max_height);
           const mhInput = this._el("input", { type: "number", value: Number.isFinite(curMh) && curMh > 0 ? Math.round(curMh) : "" });
           mhInput.min = 0;
@@ -16200,12 +14941,11 @@ class HomeTasksCardEditor extends HTMLElement {
             const v = parseInt(mhInput.value, 10);
             const valid = Number.isFinite(v) && v > 0;
             mhInput.value = valid ? v : "";
-            // undefined drops the key on serialization (same as view_mode).
-            updateCol({ max_height: valid ? v : undefined });
+            updateCol({ max_height: valid ? v : void 0 });
           });
           return this._el("div", { className: "field-wrap" }, [
             mhInput,
-            this._el("span", { textContent: this._t("ed_max_height") }),
+            this._el("span", { textContent: this._t("ed_max_height") })
           ]);
         })()]),
         groupLabel("ed_group_header"),
@@ -16222,7 +14962,7 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("show-add-details", "ed_show_add_details", "show_add_details", false),
           makeToggle("show-sort", "ed_show_sort", "show_sort", true),
           makeToggle("show-filters", "ed_show_filters", "show_filters", true),
-          makeToggle("show-tag-chips", "ed_show_tag_chips", "show_tag_chips", true),
+          makeToggle("show-tag-chips", "ed_show_tag_chips", "show_tag_chips", true)
         ]),
         makePersonSelect("filter"),
         groupLabel("ed_group_tasks"),
@@ -16235,19 +14975,16 @@ class HomeTasksCardEditor extends HTMLElement {
           makeToggle("badge-reminders", "ed_badge_reminders", "badge_reminders", true),
           makeToggle("auto-delete", "ed_auto_delete", "auto_delete_completed", false),
           makeToggle("confirm-complete", "ed_confirm_complete", "confirm_complete", false),
-          ...(col.view_mode === "tiles"
-            ? [makeToggle("show-tile-title", "ed_show_tile_title", "show_tile_title", true)]
-            // Tiles already complete on a tap; the list needs the switch.
-            : [makeToggle("tap-to-complete", "ed_tap_to_complete", "tap_to_complete", false)]),
+          ...col.view_mode === "tiles" ? [makeToggle("show-tile-title", "ed_show_tile_title", "show_tile_title", true)] : [makeToggle("tap-to-complete", "ed_tap_to_complete", "tap_to_complete", false)]
         ]),
-        makePersonSelect("badge"),
+        makePersonSelect("badge")
       ]),
       makeSection("defaults", "mdi:account-check-outline", "ed_sec_defaults", [
         sortField,
         makeToggle("overdue-first", "ed_overdue_first", "overdue_first", false),
         // Defaults live with the list, native or external, so they apply
         // however the task is created - card, voice, service or todo entity.
-        this._buildDefaultsEditor(col),
+        this._buildDefaultsEditor(col)
       ]),
       makeSection("filters", "mdi:filter-variant", "ed_sec_filters", [
         filterField,
@@ -16257,21 +14994,21 @@ class HomeTasksCardEditor extends HTMLElement {
           this._t("ed_preset_assignees"),
           // Linked lists can name people Home Assistant doesn't know (a
           // Todoist collaborator), so the list's own assignees come too.
-          this._personOptions([...meta.persons.map((p) => p.value), ...(col.filters?.assignees || [])]),
+          this._personOptions([...meta.persons.map((p) => p.value), ...col.filters?.assignees || []]),
           col.filters?.assignees || [],
-          (vals) => updateFilters({ assignees: vals }),
+          (vals) => updateFilters({ assignees: vals })
         ),
         this._buildMultiSelect(
           this._t("ed_preset_labels"),
           col.filters?.labels || [],
           meta.tags,
-          (vals) => updateFilters({ labels: vals }),
-        ),
+          (vals) => updateFilters({ labels: vals })
+        )
       ]),
       makeSection("config", "mdi:tune", "ed_sec_display", [
         detailFields,
         makeToggle("show-move", "ed_show_move", "show_move", true),
-        offeredPersons,
+        offeredPersons
       ]),
       this._buildSectionsEditor(col),
       makeSection("images", "mdi:image-multiple", "ed_sec_images", [
@@ -16280,32 +15017,24 @@ class HomeTasksCardEditor extends HTMLElement {
           // Also tells the integration to generate for this list when no
           // dashboard is open - one switch, both behaviours.
           makeToggle("auto-image", "ed_auto_image", "auto_generate_image", false, (on) => {
-            // The list is switched over right away, not on save — so redraw
-            // now as well, or the queue below would only turn up after the
-            // dialog is saved and reopened.
             this._syncAutoGenerate(col, on);
             this._render();
           }),
-          ...(col.list_id || col.entity_id
-            ? [this._buildListSettingToggle(col, "share_images", "ed_share_images", true)]
-            : []),
+          ...col.list_id || col.entity_id ? [this._buildListSettingToggle(col, "share_images", "ed_share_images", true)] : []
         ]),
-        ...(col.list_id || col.entity_id
-          ? [this._el("div", { className: "hint", textContent: this._t("ed_share_images_hint") })]
-          : []),
+        ...col.list_id || col.entity_id ? [this._el("div", { className: "hint", textContent: this._t("ed_share_images_hint") })] : [],
         this._buildImgGenForm(),
         this._el("div", { className: "hint", textContent: this._t("ed_ai_image_hint") }),
         // Only worth showing once the list actually asks for background
         // generation - otherwise "nothing waiting" is a sentence without a
         // subject.
-        ...((col.list_id || col.entity_id) && col.auto_generate_image === true ? [
+        ...(col.list_id || col.entity_id) && col.auto_generate_image === true ? [
           this._el("label", { textContent: this._t("ed_queue_title") }),
-          this._buildQueuePanel(),
-        ] : []),
-      ]),
+          this._buildQueuePanel()
+        ] : []
+      ])
     ]);
   }
-
   // Everyone Home Assistant knows as a person, plus *extra* values that are
   // not one (a removed person, a provider's collaborator), named as stored.
   _personOptions(extra = []) {
@@ -16317,13 +15046,12 @@ class HomeTasksCardEditor extends HTMLElement {
     }
     return people;
   }
-
   // A row of person chips, any number on - the editor's counterpart of the
   // assignee chips in the task details. onChange gets who is on in the order
   // they were switched on, as there (the first is a default's primary);
   // *keep* can refuse a change (returns false).
   _buildPersonChips(labelText, options, selected, onChange, { hint = null, keep = null } = {}) {
-    let on = [...(selected || [])];
+    let on = [...selected || []];
     const row = this._el("div", { className: "assignee-chip-row" });
     for (const { value, label } of options) {
       const chip = this._el("button", { className: "assignee-chip", textContent: label });
@@ -16346,7 +15074,6 @@ class HomeTasksCardEditor extends HTMLElement {
     if (hint) kids.push(this._el("div", { className: "hint", textContent: hint }));
     return this._el("div", { className: "field" }, kids);
   }
-
   // Chip multi-select: removable chips for the selected values plus a text
   // input with datalist autocomplete from `suggestions`. Free-text entry is
   // allowed (Enter / comma / blur), so a value can be preset even when no
@@ -16358,17 +15085,18 @@ class HomeTasksCardEditor extends HTMLElement {
   // config keeps `person.ben`.
   _buildMultiSelect(labelText, currentValues, suggestions, onChange) {
     const values = Array.isArray(currentValues) ? currentValues.slice() : [];
-    const opts = (suggestions || []).map((s) =>
-      (s && typeof s === "object") ? { value: s.value, label: s.label || s.value } : { value: s, label: s });
-    const labelOf = (v) => { const o = opts.find((o) => o.value === v); return o ? o.label : v; };
+    const opts = (suggestions || []).map((s) => s && typeof s === "object" ? { value: s.value, label: s.label || s.value } : { value: s, label: s });
+    const labelOf = (v) => {
+      const o = opts.find((o2) => o2.value === v);
+      return o ? o.label : v;
+    };
     const valueOf = (typed) => {
-      const o = opts.find((o) => o.label === typed || o.value === typed);
+      const o = opts.find((o2) => o2.label === typed || o2.value === typed);
       return o ? o.value : typed;
     };
     const dlId = "ms-dl-" + Math.random().toString(36).slice(2, 9);
     const input = this._el("input", { className: "ms-input", type: "text", list: dlId, placeholder: this._t("ed_ms_add") });
     const chipBox = this._el("div", { className: "ms-chips" });
-
     const datalist = document.createElement("datalist");
     datalist.id = dlId;
     for (const o of opts) {
@@ -16376,7 +15104,6 @@ class HomeTasksCardEditor extends HTMLElement {
       opt.value = o.label;
       datalist.appendChild(opt);
     }
-
     const renderChips = () => {
       chipBox.innerHTML = "";
       for (const v of values) {
@@ -16390,12 +15117,12 @@ class HomeTasksCardEditor extends HTMLElement {
           input.focus();
         });
         chipBox.appendChild(this._el("span", { className: "ms-chip" }, [
-          this._el("span", { textContent: labelOf(v) }), x,
+          this._el("span", { textContent: labelOf(v) }),
+          x
         ]));
       }
       chipBox.appendChild(input);
     };
-
     const addValue = (raw) => {
       const typed = (raw || "").trim();
       input.value = "";
@@ -16407,7 +15134,6 @@ class HomeTasksCardEditor extends HTMLElement {
       onChange(values.slice());
       input.focus();
     };
-
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === ",") {
         e.preventDefault();
@@ -16418,16 +15144,16 @@ class HomeTasksCardEditor extends HTMLElement {
         onChange(values.slice());
       }
     });
-    input.addEventListener("blur", () => { if (input.value.trim()) addValue(input.value); });
-
+    input.addEventListener("blur", () => {
+      if (input.value.trim()) addValue(input.value);
+    });
     renderChips();
     return this._el("div", { className: "field-wrap" }, [
       chipBox,
       this._el("span", { textContent: labelText }),
-      datalist,
+      datalist
     ]);
   }
-
   // An icon-only button, e.g. the up/down arrows in the editor's lists.
   _iconButton(icon, titleKey, disabled, onClick) {
     const btn = this._el("button", { className: "icon-btn", type: "button", title: this._t(titleKey) });
@@ -16438,20 +15164,15 @@ class HomeTasksCardEditor extends HTMLElement {
     btn.addEventListener("click", onClick);
     return btn;
   }
-
   _buildSectionsEditor(col) {
     const key = this._sourceKeyForCol(col);
     const cached = key ? this._listSections[key] : null;
     if (!key) {
       return this._el("div", { className: "field" }, [
-        this._el("span", { className: "hint", textContent: this._t("ed_sections_select_list_hint") }),
+        this._el("span", { className: "hint", textContent: this._t("ed_sections_select_list_hint") })
       ]);
     }
     const list = (cached || []).slice().sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
-
-    // Build a collapsible <details> section using the same makeSection-style markup,
-    // but inline (we cannot reuse makeSection because it lives in the closure of
-    // _buildVisualEditor — we replicate the visual structure via the same classes).
     const det = document.createElement("details");
     if (this._sectionOpen.sections) det.open = true;
     const sum = document.createElement("summary");
@@ -16472,22 +15193,17 @@ class HomeTasksCardEditor extends HTMLElement {
       this._saveSectionState();
     });
     det.appendChild(sum);
-
     const content = document.createElement("div");
     content.className = "section-content";
-
-    if (cached === null || cached === undefined) {
-      // Trigger lazy load — re-render once it arrives
+    if (cached === null || cached === void 0) {
       this._loadSectionsFor(col).then(() => this._render());
       content.appendChild(this._el("span", { className: "hint", textContent: this._t("ed_loading") || "…" }));
     } else if (list.length === 0) {
       content.appendChild(this._el("span", { className: "hint", textContent: this._t("ed_sections_empty") }));
     }
-
     for (let i = 0; i < list.length; i++) {
       const section = list[i];
       const row = this._el("div", { className: "sections-editor-row" });
-
       const upBtn = this._iconButton("mdi:arrow-up", "ed_move_up", i === 0, async () => {
         if (i === 0) return;
         const ids = list.map((s) => s.id);
@@ -16497,7 +15213,6 @@ class HomeTasksCardEditor extends HTMLElement {
         this._render();
       });
       row.appendChild(upBtn);
-
       const downBtn = this._iconButton("mdi:arrow-down", "ed_move_down", i === list.length - 1, async () => {
         if (i === list.length - 1) return;
         const ids = list.map((s) => s.id);
@@ -16507,7 +15222,6 @@ class HomeTasksCardEditor extends HTMLElement {
         this._render();
       });
       row.appendChild(downBtn);
-
       const nameInput = this._el("input", { type: "text", autocomplete: "off" });
       nameInput.value = section.name;
       nameInput.addEventListener("change", async (e) => {
@@ -16522,10 +15236,9 @@ class HomeTasksCardEditor extends HTMLElement {
       });
       const nameWrap = this._el("div", { className: "field-wrap" }, [
         nameInput,
-        this._el("span", { textContent: this._t("ed_section_name") }),
+        this._el("span", { textContent: this._t("ed_section_name") })
       ]);
       row.appendChild(nameWrap);
-
       const iconPicker = document.createElement("ha-icon-picker");
       iconPicker.label = this._t("ed_section_icon");
       iconPicker.value = section.icon || "";
@@ -16536,9 +15249,12 @@ class HomeTasksCardEditor extends HTMLElement {
         this._render();
       });
       row.appendChild(iconPicker);
-
       const delBtn = this._el("button", { className: "icon-btn del", type: "button", title: this._t("ed_delete_section") });
-      delBtn.appendChild((() => { const ic = document.createElement("ha-icon"); ic.setAttribute("icon", "mdi:delete"); return ic; })());
+      delBtn.appendChild((() => {
+        const ic = document.createElement("ha-icon");
+        ic.setAttribute("icon", "mdi:delete");
+        return ic;
+      })());
       delBtn.addEventListener("click", async () => {
         if (!window.confirm(this._t("confirm_delete_section"))) return;
         await this._wsCallSection(col, "home_tasks/delete_section", { section_id: section.id });
@@ -16546,11 +15262,9 @@ class HomeTasksCardEditor extends HTMLElement {
         this._render();
       });
       row.appendChild(delBtn);
-
       content.appendChild(row);
     }
-
-    if (cached !== null && cached !== undefined) {
+    if (cached !== null && cached !== void 0) {
       const addBtn = this._el("button", { className: "add-section-btn", type: "button", textContent: this._t("ed_add_section") });
       addBtn.addEventListener("click", async () => {
         const name = window.prompt(this._t("ed_section_name_prompt"));
@@ -16565,134 +15279,112 @@ class HomeTasksCardEditor extends HTMLElement {
       });
       content.appendChild(addBtn);
     }
-
     const wrap = document.createElement("div");
     wrap.appendChild(content);
     det.appendChild(wrap);
     return det;
   }
-
   _fireChanged() {
-    // Flag so the immediate echo setConfig() from HA is ignored (no re-render).
     this._ignoreNextSetConfig = true;
     this.dispatchEvent(new CustomEvent("config-changed", {
       detail: { config: this._config },
       bubbles: true,
-      composed: true,
+      composed: true
     }));
   }
-}
+};
 
-/**
- * The editor of the day plan card: the card title and the plan's settings.
- * A plan card has no columns, so its config is taken as it is.
- */
-class HomeTasksDayPlanCardEditor extends HomeTasksCardEditor {
+// src/editors/plan-editor.js
+var HomeTasksDayPlanCardEditor = class extends HomeTasksCardEditor {
   get _isPlanEditor() {
     return true;
   }
-
   setConfig(config) {
-    // Left over from a config written when the plan was a view of the list
-    // card: neither key means anything here.
     const { columns: _c, view: _v, ...rest } = config || {};
     this._config = rest;
-    // Skip re-render if this setConfig is the echo of our own _fireChanged call
     if (this._ignoreNextSetConfig) {
       this._ignoreNextSetConfig = false;
       return;
     }
     if (this._listsLoaded) this._render();
   }
-}
+};
 
-// Register elements — wait for HA's scoped custom element registry polyfill
-// before calling customElements.define. The polyfill replaces the native
-// define() with a JS wrapper; we detect this to avoid registering too early
-// (which puts the element in the native registry where the polyfill can't
-// find it, causing "Custom element not found" in Firefox/Safari/iPad).
-const _htRegister = () => {
+// src/index.js
+var _htRegister = () => {
   for (const [name, element] of [
     ["home-tasks-card", HomeTasksCard],
     ["home-tasks-card-editor", HomeTasksCardEditor],
     ["home-tasks-day-plan-card", HomeTasksDayPlanCard],
-    ["home-tasks-day-plan-card-editor", HomeTasksDayPlanCardEditor],
+    ["home-tasks-day-plan-card-editor", HomeTasksDayPlanCardEditor]
   ]) {
-    try { customElements.define(name, element); } catch(_) {}
+    try {
+      customElements.define(name, element);
+    } catch (_) {
+    }
   }
 };
-
-const _htIsPolyfillReady = () =>
-  !customElements.define.toString().includes("[native code]");
-
-// Flat poll: 50ms ticks for 10s, then a native fallback registration plus
-// 1s ticks for up to ~5 min. If the polyfill installs after the native
-// fallback, the elements are registered again through the wrapped define and
-// the result is verified: when the polyfill build refuses names already in
-// the native registry (the scoped-registry polyfill does), a one-time
-// reload — guarded per tab so it can never loop — is the only way to get the
-// card into the scoped registry (#37).
-// Reload only when it cannot destroy user work: once per tab (sessionStorage
-// guard), and deferred while the user is typing anywhere on the page
-// (dashboard edit mode, another card's dialog) — retried every 30s while busy.
-const _htSafeReload = (attemptsLeft) => {
+var _htIsPolyfillReady = () => !customElements.define.toString().includes("[native code]");
+var _htSafeReload = (attemptsLeft) => {
   try {
     if (sessionStorage.getItem("ht-poly-reload")) return;
-  } catch (_) { return; /* sandboxed storage — stay registered natively */ }
+  } catch (_) {
+    return;
+  }
   let active = document.activeElement;
   while (active && active.shadowRoot && active.shadowRoot.activeElement) {
     active = active.shadowRoot.activeElement;
   }
-  const busy = !!active && (active.isContentEditable ||
-    ["INPUT", "TEXTAREA", "SELECT"].includes(active.tagName));
+  const busy = !!active && (active.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(active.tagName));
   if (busy) {
-    if (attemptsLeft > 0) setTimeout(() => _htSafeReload(attemptsLeft - 1), 30000);
+    if (attemptsLeft > 0) setTimeout(() => _htSafeReload(attemptsLeft - 1), 3e4);
     return;
   }
-  try { sessionStorage.setItem("ht-poly-reload", "1"); } catch (_) { return; }
+  try {
+    sessionStorage.setItem("ht-poly-reload", "1");
+  } catch (_) {
+    return;
+  }
   location.reload();
 };
-
-let _htTicks = 0;
-const _htTick = () => {
+var _htTicks = 0;
+var _htTick = () => {
   if (_htIsPolyfillReady()) {
     _htRegister();
-    // >= 200: _htTicks sticks at exactly 200 after the native-fallback tick,
-    // and a polyfill arriving in that very window is the most likely "slow
-    // polyfill" timing — it must still get the verified heal.
     if (_htTicks >= 200 && !customElements.get("home-tasks-card")) {
       _htSafeReload(10);
     } else {
-      try { sessionStorage.removeItem("ht-poly-reload"); } catch (_) { /* ignore */ }
+      try {
+        sessionStorage.removeItem("ht-poly-reload");
+      } catch (_) {
+      }
     }
     return;
   }
   _htTicks++;
-  if (_htTicks === 200) _htRegister(); // 10s: polyfill-free fallback (native registry)
-  if (_htTicks >= 500) return;         // stop watching after ~5 min
-  setTimeout(_htTick, _htTicks < 200 ? 50 : 1000);
+  if (_htTicks === 200) _htRegister();
+  if (_htTicks >= 500) return;
+  setTimeout(_htTick, _htTicks < 200 ? 50 : 1e3);
 };
 _htTick();
-
-// The names in the card picker. They are read once, when this file loads -
-// before there is a hass object - so the language is the one Home Assistant
-// keeps for this browser, else the browser's own, else English.
-const _htPickerText = (key) => {
+var _htPickerText = (key) => {
   let lang = "";
-  try { lang = JSON.parse(localStorage.getItem("selectedLanguage") || "null") || ""; } catch (_) { /* blocked storage */ }
+  try {
+    lang = JSON.parse(localStorage.getItem("selectedLanguage") || "null") || "";
+  } catch (_) {
+  }
   if (!lang && typeof navigator !== "undefined") lang = navigator.language || "";
   return _htText(lang, key);
 };
-
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "home-tasks-card",
   name: _htPickerText("picker_list_name"),
   description: _htPickerText("picker_list_desc"),
-  preview: true,
+  preview: true
 }, {
   type: "home-tasks-day-plan-card",
   name: _htPickerText("picker_plan_name"),
   description: _htPickerText("picker_plan_desc"),
-  preview: true,
+  preview: true
 });

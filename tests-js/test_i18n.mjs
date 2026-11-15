@@ -11,16 +11,22 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const CARD = join(__dirname, "..", "custom_components", "home_tasks", "home-tasks-card.js");
 
 function loadTranslations() {
-  const src = readFileSync(CARD, "utf8");
-  const m = src.match(/const _TRANSLATIONS = (\{[\s\S]*?\n\});/);
-  assert.ok(m, "could not locate _TRANSLATIONS object");
-  // The literal is pure data (identifier keys + string values) from our own
-  // source file — safe to evaluate to get the exact object.
-  const embedded = new Function("return " + m[1])();
-  const shared = JSON.parse(readFileSync(join(dirname(CARD), "ui_translations.json"), "utf8"));
-  assert.deepEqual(embedded, shared, "Run npm run build:i18n after editing shared translations");
-  return shared;
+  return JSON.parse(readFileSync(join(dirname(CARD), "ui_translations.json"), "utf8"));
 }
+
+// The card is built from src/ with ui_translations.json in it. What it says
+// in each language is checked against that file through its own lookup.
+test("the built card says what ui_translations.json says, in every language", async () => {
+  const shared = loadTranslations();
+  const { HomeTasksCard } = await loadCard();
+  const card = new HomeTasksCard();
+  for (const [lang, table] of Object.entries(shared)) {
+    card._hass = { language: lang };
+    for (const [key, value] of Object.entries(table)) {
+      assert.equal(card._t(key), value, `${lang}.${key} - run npm run build`);
+    }
+  }
+});
 
 test("Brazilian Portuguese preserves interpolation placeholders", () => {
   const t = loadTranslations();

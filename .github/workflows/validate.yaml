@@ -32,12 +32,12 @@ jobs:
         with:
           node-version: 24
       - run: npm install --no-audit --no-fund
-      # The card embeds a copy of ui_translations.json; a forgotten build
-      # would ship the card with the old strings.
-      - name: Card translations match ui_translations.json
+      # The card is built from src/ (texts from ui_translations.json
+      # included); a forgotten build would ship an old card.
+      - name: The card is what src/ builds to
         run: |
-          npm run build:i18n
+          npm run build
           git diff --exit-code -- custom_components/home_tasks/home-tasks-card.js \
-            || { echo "::error::Run npm run build:i18n and commit the card"; exit 1; }
+            || { echo "::error::Run npm run build and commit the card"; exit 1; }
       - name: Card tests
         run: npm run test:nocov
