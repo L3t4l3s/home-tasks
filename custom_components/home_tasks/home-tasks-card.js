@@ -304,7 +304,31 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Only highlighted people can be assigned in this card",
     "add_with_details": "Add with details",
     "add_clear": "Clear",
-    "ed_show_add_details": "Details when adding"
+    "ed_show_add_details": "Details when adding",
+    "plan_note_placeholder": "Focus for the day",
+    "plan_empty": "Nothing planned",
+    "plan_add": "Plan a task",
+    "plan_search_placeholder": "Search tasks…",
+    "plan_no_results": "No matching open tasks",
+    "plan_carry_over": "Carry over open tasks from {0} ({1})",
+    "plan_move_day": "Other day…",
+    "plan_day_msg": "Which day for \"{0}\"?",
+    "plan_remove": "Remove from plan",
+    "plan_for": "Plan for…",
+    "plan_ok": "Plan",
+    "plan_none": "No day plan found. Day plans can be created under Settings → Integrations → Home Tasks.",
+    "ed_view_lists": "Lists",
+    "ed_view_day_plan": "Day plan",
+    "ed_plan_days": "Days shown",
+    "ed_plan_all_lists": "All lists",
+    "plan_due_hint": "On the plan through its due date: move it, or change the date.",
+    "ed_plan_weekend": "Weekend",
+    "new_entry_link": "Create a new list or day plan",
+    "ed_plan_list_missing": "List not available",
+    "picker_list_name": "Home Tasks: List",
+    "picker_plan_name": "Home Tasks: Day plan",
+    "picker_list_desc": "Task lists in columns, with drag & drop, sub-tasks, notes and due dates.",
+    "picker_plan_desc": "The days of a day plan: tasks from several lists in the order you work on them."
   },
   "nl": {
     "ed_default_priority": "Standaardprioriteit",
@@ -602,7 +626,31 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Alleen gemarkeerde personen kunnen in deze kaart worden toegewezen",
     "ed_show_add_details": "Details bij toevoegen",
     "add_with_details": "Toevoegen met details",
-    "add_clear": "Wissen"
+    "add_clear": "Wissen",
+    "plan_note_placeholder": "Focus voor de dag",
+    "plan_empty": "Niets gepland",
+    "plan_add": "Taak inplannen",
+    "plan_search_placeholder": "Taken zoeken…",
+    "plan_no_results": "Geen overeenkomende open taken",
+    "plan_carry_over": "Open taken van {0} overnemen ({1})",
+    "plan_move_day": "Andere dag…",
+    "plan_day_msg": "Welke dag voor „{0}”?",
+    "plan_remove": "Uit het plan halen",
+    "plan_for": "Inplannen voor…",
+    "plan_ok": "Inplannen",
+    "plan_none": "Geen dagplan gevonden. Dagplannen kunnen worden aangemaakt via Instellingen → Integraties → Home Tasks.",
+    "ed_view_lists": "Lijsten",
+    "ed_view_day_plan": "Dagplan",
+    "ed_plan_days": "Getoonde dagen",
+    "ed_plan_all_lists": "Alle lijsten",
+    "plan_due_hint": "Staat op het plan door de vervaldatum: verplaats de taak of wijzig de datum.",
+    "ed_plan_weekend": "Weekend",
+    "new_entry_link": "Nieuwe lijst of nieuw dagplan aanmaken",
+    "ed_plan_list_missing": "Lijst niet beschikbaar",
+    "picker_list_name": "Home Tasks: Lijst",
+    "picker_plan_name": "Home Tasks: Dagplan",
+    "picker_list_desc": "Takenlijsten in kolommen, met slepen, subtaken, notities en vervaldatums.",
+    "picker_plan_desc": "De dagen van een dagplan: taken uit meerdere lijsten in de volgorde waarin je ze afwerkt."
   },
   "it": {
     "ed_default_priority": "Priorità predefinita",
@@ -900,7 +948,31 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "In questa scheda si possono assegnare solo le persone evidenziate",
     "ed_show_add_details": "Dettagli alla creazione",
     "add_with_details": "Crea con dettagli",
-    "add_clear": "Cancella"
+    "add_clear": "Cancella",
+    "plan_note_placeholder": "Obiettivo della giornata",
+    "plan_empty": "Niente in programma",
+    "plan_add": "Pianifica un'attività",
+    "plan_search_placeholder": "Cerca attività…",
+    "plan_no_results": "Nessuna attività aperta corrispondente",
+    "plan_carry_over": "Riporta le attività aperte del {0} ({1})",
+    "plan_move_day": "Altro giorno…",
+    "plan_day_msg": "Quale giorno per “{0}”?",
+    "plan_remove": "Rimuovi dal piano",
+    "plan_for": "Pianifica per…",
+    "plan_ok": "Pianifica",
+    "plan_none": "Nessun piano giornaliero trovato. I piani giornalieri possono essere creati in Impostazioni → Integrazioni → Home Tasks.",
+    "ed_view_lists": "Liste",
+    "ed_view_day_plan": "Piano giornaliero",
+    "ed_plan_days": "Giorni mostrati",
+    "ed_plan_all_lists": "Tutte le liste",
+    "plan_due_hint": "È nel piano per la data di scadenza: spostala o cambia la data.",
+    "ed_plan_weekend": "Fine settimana",
+    "new_entry_link": "Crea una nuova lista o un nuovo piano giornaliero",
+    "ed_plan_list_missing": "Lista non disponibile",
+    "picker_list_name": "Home Tasks: Lista",
+    "picker_plan_name": "Home Tasks: Piano giornaliero",
+    "picker_list_desc": "Elenchi di attività in colonne, con trascinamento, sottoattività, note e scadenze.",
+    "picker_plan_desc": "I giorni di un piano giornaliero: attività di più liste nell'ordine in cui le svolgi."
   },
   "pl": {
     "ed_default_priority": "Domyślny priorytet",
@@ -1198,7 +1270,31 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "W tej karcie można przypisać tylko wyróżnione osoby",
     "ed_show_add_details": "Szczegóły przy dodawaniu",
     "add_with_details": "Dodaj ze szczegółami",
-    "add_clear": "Wyczyść"
+    "add_clear": "Wyczyść",
+    "plan_note_placeholder": "Cel na ten dzień",
+    "plan_empty": "Nic nie zaplanowano",
+    "plan_add": "Zaplanuj zadanie",
+    "plan_search_placeholder": "Szukaj zadań…",
+    "plan_no_results": "Brak pasujących otwartych zadań",
+    "plan_carry_over": "Przenieś otwarte zadania z {0} ({1})",
+    "plan_move_day": "Inny dzień…",
+    "plan_day_msg": "Który dzień dla „{0}”?",
+    "plan_remove": "Usuń z planu",
+    "plan_for": "Zaplanuj na…",
+    "plan_ok": "Zaplanuj",
+    "plan_none": "Nie znaleziono planu dnia. Plany dnia można tworzyć w Ustawienia → Integracje → Home Tasks.",
+    "ed_view_lists": "Listy",
+    "ed_view_day_plan": "Plan dnia",
+    "ed_plan_days": "Wyświetlane dni",
+    "ed_plan_all_lists": "Wszystkie listy",
+    "plan_due_hint": "Jest w planie ze względu na termin: przenieś zadanie lub zmień datę.",
+    "ed_plan_weekend": "Weekend",
+    "new_entry_link": "Utwórz nową listę lub plan dnia",
+    "ed_plan_list_missing": "Lista niedostępna",
+    "picker_list_name": "Home Tasks: Lista",
+    "picker_plan_name": "Home Tasks: Plan dnia",
+    "picker_list_desc": "Listy zadań w kolumnach, z przeciąganiem, podzadaniami, notatkami i terminami.",
+    "picker_plan_desc": "Dni planu dnia: zadania z kilku list w kolejności, w jakiej je wykonujesz."
   },
   "sv": {
     "ed_default_priority": "Standardprioritet",
@@ -1496,7 +1592,31 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Endast markerade personer kan tilldelas i det här kortet",
     "ed_show_add_details": "Detaljer vid tillägg",
     "add_with_details": "Lägg till med detaljer",
-    "add_clear": "Rensa"
+    "add_clear": "Rensa",
+    "plan_note_placeholder": "Fokus för dagen",
+    "plan_empty": "Inget planerat",
+    "plan_add": "Planera en uppgift",
+    "plan_search_placeholder": "Sök uppgifter…",
+    "plan_no_results": "Inga matchande öppna uppgifter",
+    "plan_carry_over": "Ta över öppna uppgifter från {0} ({1})",
+    "plan_move_day": "Annan dag…",
+    "plan_day_msg": "Vilken dag för ”{0}”?",
+    "plan_remove": "Ta bort från planen",
+    "plan_for": "Planera för…",
+    "plan_ok": "Planera",
+    "plan_none": "Ingen dagsplan hittades. Dagsplaner kan skapas under Inställningar → Integrationer → Home Tasks.",
+    "ed_view_lists": "Listor",
+    "ed_view_day_plan": "Dagsplan",
+    "ed_plan_days": "Visade dagar",
+    "ed_plan_all_lists": "Alla listor",
+    "plan_due_hint": "Står i planen genom sitt förfallodatum: flytta den eller ändra datumet.",
+    "ed_plan_weekend": "Helg",
+    "new_entry_link": "Skapa en ny lista eller dagsplan",
+    "ed_plan_list_missing": "Listan är inte tillgänglig",
+    "picker_list_name": "Home Tasks: Lista",
+    "picker_plan_name": "Home Tasks: Dagsplan",
+    "picker_list_desc": "Uppgiftslistor i kolumner, med dra och släpp, deluppgifter, anteckningar och förfallodatum.",
+    "picker_plan_desc": "Dagarna i en dagsplan: uppgifter från flera listor i den ordning du gör dem."
   },
   "fr": {
     "ed_default_priority": "Priorité par défaut",
@@ -1794,7 +1914,31 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Seules les personnes en surbrillance peuvent être assignées dans cette carte",
     "ed_show_add_details": "Détails à la création",
     "add_with_details": "Créer avec détails",
-    "add_clear": "Effacer"
+    "add_clear": "Effacer",
+    "plan_note_placeholder": "Objectif du jour",
+    "plan_empty": "Rien de prévu",
+    "plan_add": "Planifier une tâche",
+    "plan_search_placeholder": "Rechercher des tâches…",
+    "plan_no_results": "Aucune tâche ouverte correspondante",
+    "plan_carry_over": "Reprendre les tâches ouvertes du {0} ({1})",
+    "plan_move_day": "Autre jour…",
+    "plan_day_msg": "Quel jour pour « {0} » ?",
+    "plan_remove": "Retirer du plan",
+    "plan_for": "Planifier pour…",
+    "plan_ok": "Planifier",
+    "plan_none": "Aucun plan du jour trouvé. Les plans du jour peuvent être créés dans Paramètres → Intégrations → Home Tasks.",
+    "ed_view_lists": "Listes",
+    "ed_view_day_plan": "Plan du jour",
+    "ed_plan_days": "Jours affichés",
+    "ed_plan_all_lists": "Toutes les listes",
+    "plan_due_hint": "Figure dans le plan par sa date d'échéance : déplacez-la ou modifiez la date.",
+    "ed_plan_weekend": "Week-end",
+    "new_entry_link": "Créer une nouvelle liste ou un plan du jour",
+    "ed_plan_list_missing": "Liste indisponible",
+    "picker_list_name": "Home Tasks : Liste",
+    "picker_plan_name": "Home Tasks : Plan du jour",
+    "picker_list_desc": "Listes de tâches en colonnes, avec glisser-déposer, sous-tâches, notes et échéances.",
+    "picker_plan_desc": "Les jours d'un plan du jour : des tâches de plusieurs listes dans l'ordre où vous les traitez."
   },
   "pt": {
     "ed_default_priority": "Prioridade padrão",
@@ -2092,7 +2236,31 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Só as pessoas destacadas podem ser atribuídas neste cartão",
     "ed_show_add_details": "Detalhes ao adicionar",
     "add_with_details": "Adicionar com detalhes",
-    "add_clear": "Limpar"
+    "add_clear": "Limpar",
+    "plan_note_placeholder": "Foco do dia",
+    "plan_empty": "Nada planeado",
+    "plan_add": "Planear uma tarefa",
+    "plan_search_placeholder": "Pesquisar tarefas…",
+    "plan_no_results": "Nenhuma tarefa aberta correspondente",
+    "plan_carry_over": "Transferir tarefas abertas de {0} ({1})",
+    "plan_move_day": "Outro dia…",
+    "plan_day_msg": "Que dia para “{0}”?",
+    "plan_remove": "Remover do plano",
+    "plan_for": "Planear para…",
+    "plan_ok": "Planear",
+    "plan_none": "Nenhum plano diário encontrado. Os planos diários podem ser criados em Configurações → Integrações → Home Tasks.",
+    "ed_view_lists": "Listas",
+    "ed_view_day_plan": "Plano diário",
+    "ed_plan_days": "Dias apresentados",
+    "ed_plan_all_lists": "Todas as listas",
+    "plan_due_hint": "Está no plano pela data de vencimento: mova-a ou altere a data.",
+    "ed_plan_weekend": "Fim de semana",
+    "new_entry_link": "Criar uma nova lista ou um plano diário",
+    "ed_plan_list_missing": "Lista indisponível",
+    "picker_list_name": "Home Tasks: Lista",
+    "picker_plan_name": "Home Tasks: Plano diário",
+    "picker_list_desc": "Listas de tarefas em colunas, com arrastar e largar, subtarefas, notas e prazos.",
+    "picker_plan_desc": "Os dias de um plano diário: tarefas de várias listas pela ordem em que as realiza."
   },
   "pt-BR": {
     "ed_default_priority": "Prioridade padrão",
@@ -2390,7 +2558,31 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Somente as pessoas destacadas podem ser atribuídas neste cartão",
     "ed_show_add_details": "Detalhes ao adicionar",
     "add_with_details": "Adicionar com detalhes",
-    "add_clear": "Limpar"
+    "add_clear": "Limpar",
+    "plan_note_placeholder": "Foco do dia",
+    "plan_empty": "Nada planejado",
+    "plan_add": "Planejar uma tarefa",
+    "plan_search_placeholder": "Pesquisar tarefas…",
+    "plan_no_results": "Nenhuma tarefa aberta correspondente",
+    "plan_carry_over": "Trazer tarefas abertas de {0} ({1})",
+    "plan_move_day": "Outro dia…",
+    "plan_day_msg": "Qual dia para “{0}”?",
+    "plan_remove": "Remover do plano",
+    "plan_for": "Planejar para…",
+    "plan_ok": "Planejar",
+    "plan_none": "Nenhum plano diário encontrado. Os planos diários podem ser criados em Configurações → Integrações → Home Tasks.",
+    "ed_view_lists": "Listas",
+    "ed_view_day_plan": "Plano diário",
+    "ed_plan_days": "Dias exibidos",
+    "ed_plan_all_lists": "Todas as listas",
+    "plan_due_hint": "Está no plano pela data de vencimento: mova-a ou altere a data.",
+    "ed_plan_weekend": "Fim de semana",
+    "new_entry_link": "Criar uma nova lista ou um plano diário",
+    "ed_plan_list_missing": "Lista indisponível",
+    "picker_list_name": "Home Tasks: Lista",
+    "picker_plan_name": "Home Tasks: Plano diário",
+    "picker_list_desc": "Listas de tarefas em colunas, com arrastar e soltar, subtarefas, notas e prazos.",
+    "picker_plan_desc": "Os dias de um plano diário: tarefas de várias listas na ordem em que você as realiza."
   },
   "es": {
     "ed_default_priority": "Prioridad predeterminada",
@@ -2688,7 +2880,31 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "En esta tarjeta solo se pueden asignar las personas resaltadas",
     "ed_show_add_details": "Detalles al añadir",
     "add_with_details": "Añadir con detalles",
-    "add_clear": "Borrar"
+    "add_clear": "Borrar",
+    "plan_note_placeholder": "Enfoque del día",
+    "plan_empty": "Nada planificado",
+    "plan_add": "Planificar una tarea",
+    "plan_search_placeholder": "Buscar tareas…",
+    "plan_no_results": "No hay tareas abiertas coincidentes",
+    "plan_carry_over": "Traer las tareas abiertas del {0} ({1})",
+    "plan_move_day": "Otro día…",
+    "plan_day_msg": "¿Qué día para «{0}»?",
+    "plan_remove": "Quitar del plan",
+    "plan_for": "Planificar para…",
+    "plan_ok": "Planificar",
+    "plan_none": "No se encontró ningún plan diario. Los planes diarios se pueden crear en Configuración → Integraciones → Home Tasks.",
+    "ed_view_lists": "Listas",
+    "ed_view_day_plan": "Plan diario",
+    "ed_plan_days": "Días mostrados",
+    "ed_plan_all_lists": "Todas las listas",
+    "plan_due_hint": "Está en el plan por su fecha de vencimiento: muévela o cambia la fecha.",
+    "ed_plan_weekend": "Fin de semana",
+    "new_entry_link": "Crear una nueva lista o un plan diario",
+    "ed_plan_list_missing": "Lista no disponible",
+    "picker_list_name": "Home Tasks: Lista",
+    "picker_plan_name": "Home Tasks: Plan diario",
+    "picker_list_desc": "Listas de tareas en columnas, con arrastrar y soltar, subtareas, notas y vencimientos.",
+    "picker_plan_desc": "Los días de un plan diario: tareas de varias listas en el orden en que las haces."
   },
   "ru": {
     "ed_default_priority": "Приоритет по умолчанию",
@@ -2986,7 +3202,31 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "В этой карточке можно назначать только выделенных людей",
     "ed_show_add_details": "Детали при добавлении",
     "add_with_details": "Добавить с деталями",
-    "add_clear": "Очистить"
+    "add_clear": "Очистить",
+    "plan_note_placeholder": "Фокус дня",
+    "plan_empty": "Ничего не запланировано",
+    "plan_add": "Запланировать задачу",
+    "plan_search_placeholder": "Поиск задач…",
+    "plan_no_results": "Нет подходящих открытых задач",
+    "plan_carry_over": "Перенести открытые задачи с {0} ({1})",
+    "plan_move_day": "Другой день…",
+    "plan_day_msg": "Какой день для «{0}»?",
+    "plan_remove": "Убрать из плана",
+    "plan_for": "Запланировать на…",
+    "plan_ok": "Запланировать",
+    "plan_none": "План дня не найден. Планы дня можно создать в Настройки → Интеграции → Home Tasks.",
+    "ed_view_lists": "Списки",
+    "ed_view_day_plan": "План дня",
+    "ed_plan_days": "Показываемые дни",
+    "ed_plan_all_lists": "Все списки",
+    "plan_due_hint": "В плане из-за срока выполнения: перенесите задачу или измените дату.",
+    "ed_plan_weekend": "Выходные",
+    "new_entry_link": "Создать новый список или план дня",
+    "ed_plan_list_missing": "Список недоступен",
+    "picker_list_name": "Home Tasks: Список",
+    "picker_plan_name": "Home Tasks: План дня",
+    "picker_list_desc": "Списки задач в колонках: перетаскивание, подзадачи, заметки и сроки.",
+    "picker_plan_desc": "Дни плана дня: задачи из нескольких списков в том порядке, в котором вы их выполняете."
   },
   "cs": {
     "ed_default_priority": "Výchozí priorita",
@@ -3284,7 +3524,31 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "V této kartě lze přiřadit jen zvýrazněné osoby",
     "ed_show_add_details": "Podrobnosti při přidání",
     "add_with_details": "Přidat s podrobnostmi",
-    "add_clear": "Vymazat"
+    "add_clear": "Vymazat",
+    "plan_note_placeholder": "Zaměření dne",
+    "plan_empty": "Nic naplánováno",
+    "plan_add": "Naplánovat úkol",
+    "plan_search_placeholder": "Hledat úkoly…",
+    "plan_no_results": "Žádné odpovídající otevřené úkoly",
+    "plan_carry_over": "Převzít otevřené úkoly z {0} ({1})",
+    "plan_move_day": "Jiný den…",
+    "plan_day_msg": "Který den pro „{0}“?",
+    "plan_remove": "Odebrat z plánu",
+    "plan_for": "Naplánovat na…",
+    "plan_ok": "Naplánovat",
+    "plan_none": "Nebyl nalezen žádný denní plán. Denní plány lze vytvořit v Nastavení → Integrace → Home Tasks.",
+    "ed_view_lists": "Seznamy",
+    "ed_view_day_plan": "Denní plán",
+    "ed_plan_days": "Zobrazené dny",
+    "ed_plan_all_lists": "Všechny seznamy",
+    "plan_due_hint": "Je v plánu kvůli termínu: přesuňte úkol nebo změňte datum.",
+    "ed_plan_weekend": "Víkend",
+    "new_entry_link": "Vytvořit nový seznam nebo denní plán",
+    "ed_plan_list_missing": "Seznam není dostupný",
+    "picker_list_name": "Home Tasks: Seznam",
+    "picker_plan_name": "Home Tasks: Denní plán",
+    "picker_list_desc": "Seznamy úkolů ve sloupcích, s přetahováním, podúkoly, poznámkami a termíny.",
+    "picker_plan_desc": "Dny denního plánu: úkoly z několika seznamů v pořadí, v jakém na nich pracujete."
   },
   "da": {
     "ed_default_priority": "Standardprioritet",
@@ -3582,7 +3846,31 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Kun fremhævede personer kan tildeles i dette kort",
     "ed_show_add_details": "Detaljer ved tilføjelse",
     "add_with_details": "Tilføj med detaljer",
-    "add_clear": "Ryd"
+    "add_clear": "Ryd",
+    "plan_note_placeholder": "Fokus for dagen",
+    "plan_empty": "Intet planlagt",
+    "plan_add": "Planlæg en opgave",
+    "plan_search_placeholder": "Søg opgaver…",
+    "plan_no_results": "Ingen matchende åbne opgaver",
+    "plan_carry_over": "Overfør åbne opgaver fra {0} ({1})",
+    "plan_move_day": "Anden dag…",
+    "plan_day_msg": "Hvilken dag til ”{0}”?",
+    "plan_remove": "Fjern fra planen",
+    "plan_for": "Planlæg til…",
+    "plan_ok": "Planlæg",
+    "plan_none": "Ingen dagsplan fundet. Dagsplaner kan oprettes under Indstillinger → Integrationer → Home Tasks.",
+    "ed_view_lists": "Lister",
+    "ed_view_day_plan": "Dagsplan",
+    "ed_plan_days": "Viste dage",
+    "ed_plan_all_lists": "Alle lister",
+    "plan_due_hint": "Står i planen på grund af forfaldsdatoen: flyt den, eller ændr datoen.",
+    "ed_plan_weekend": "Weekend",
+    "new_entry_link": "Opret en ny liste eller dagsplan",
+    "ed_plan_list_missing": "Listen er ikke tilgængelig",
+    "picker_list_name": "Home Tasks: Liste",
+    "picker_plan_name": "Home Tasks: Dagsplan",
+    "picker_list_desc": "Opgavelister i kolonner, med træk og slip, underopgaver, noter og forfaldsdatoer.",
+    "picker_plan_desc": "Dagene i en dagsplan: opgaver fra flere lister i den rækkefølge, du løser dem."
   },
   "no": {
     "ed_default_priority": "Standardprioritet",
@@ -3880,7 +4168,31 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Bare uthevede personer kan tildeles i dette kortet",
     "ed_show_add_details": "Detaljer ved tillegg",
     "add_with_details": "Legg til med detaljer",
-    "add_clear": "Tøm"
+    "add_clear": "Tøm",
+    "plan_note_placeholder": "Fokus for dagen",
+    "plan_empty": "Ingenting planlagt",
+    "plan_add": "Planlegg en oppgave",
+    "plan_search_placeholder": "Søk i oppgaver…",
+    "plan_no_results": "Ingen samsvarende åpne oppgaver",
+    "plan_carry_over": "Overfør åpne oppgaver fra {0} ({1})",
+    "plan_move_day": "Annen dag…",
+    "plan_day_msg": "Hvilken dag for «{0}»?",
+    "plan_remove": "Fjern fra planen",
+    "plan_for": "Planlegg for…",
+    "plan_ok": "Planlegg",
+    "plan_none": "Fant ingen dagsplan. Dagsplaner kan opprettes under Innstillinger → Integrasjoner → Home Tasks.",
+    "ed_view_lists": "Lister",
+    "ed_view_day_plan": "Dagsplan",
+    "ed_plan_days": "Viste dager",
+    "ed_plan_all_lists": "Alle lister",
+    "plan_due_hint": "Står i planen på grunn av forfallsdatoen: flytt den, eller endre datoen.",
+    "ed_plan_weekend": "Helg",
+    "new_entry_link": "Opprett en ny liste eller dagsplan",
+    "ed_plan_list_missing": "Listen er ikke tilgjengelig",
+    "picker_list_name": "Home Tasks: Liste",
+    "picker_plan_name": "Home Tasks: Dagsplan",
+    "picker_list_desc": "Oppgavelister i kolonner, med dra og slipp, underoppgaver, notater og forfallsdatoer.",
+    "picker_plan_desc": "Dagene i en dagsplan: oppgaver fra flere lister i den rekkefølgen du gjør dem."
   },
   "fi": {
     "ed_default_priority": "Oletusprioriteetti",
@@ -4178,7 +4490,31 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Tässä kortissa voi määrittää vain korostettuja henkilöitä",
     "ed_show_add_details": "Tiedot lisättäessä",
     "add_with_details": "Lisää tietojen kanssa",
-    "add_clear": "Tyhjennä"
+    "add_clear": "Tyhjennä",
+    "plan_note_placeholder": "Päivän painopiste",
+    "plan_empty": "Ei mitään suunniteltu",
+    "plan_add": "Suunnittele tehtävä",
+    "plan_search_placeholder": "Hae tehtäviä…",
+    "plan_no_results": "Ei vastaavia avoimia tehtäviä",
+    "plan_carry_over": "Siirrä avoimet tehtävät päivältä {0} ({1})",
+    "plan_move_day": "Toinen päivä…",
+    "plan_day_msg": "Mille päivälle ”{0}”?",
+    "plan_remove": "Poista suunnitelmasta",
+    "plan_for": "Suunnittele päivälle…",
+    "plan_ok": "Suunnittele",
+    "plan_none": "Päiväsuunnitelmaa ei löytynyt. Päiväsuunnitelmia voi luoda kohdassa Asetukset → Integraatiot → Home Tasks.",
+    "ed_view_lists": "Listat",
+    "ed_view_day_plan": "Päiväsuunnitelma",
+    "ed_plan_days": "Näytettävät päivät",
+    "ed_plan_all_lists": "Kaikki listat",
+    "plan_due_hint": "On suunnitelmassa eräpäivänsä vuoksi: siirrä tehtävä tai muuta päivämäärää.",
+    "ed_plan_weekend": "Viikonloppu",
+    "new_entry_link": "Luo uusi lista tai päiväsuunnitelma",
+    "ed_plan_list_missing": "Lista ei ole käytettävissä",
+    "picker_list_name": "Home Tasks: Lista",
+    "picker_plan_name": "Home Tasks: Päiväsuunnitelma",
+    "picker_list_desc": "Tehtävälistat sarakkeina: vedä ja pudota, alitehtävät, muistiinpanot ja eräpäivät.",
+    "picker_plan_desc": "Päiväsuunnitelman päivät: tehtävät useista listoista siinä järjestyksessä, jossa teet ne."
   },
   "hu": {
     "ed_default_priority": "Alapértelmezett prioritás",
@@ -4476,7 +4812,31 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Ebben a kártyában csak a kiemelt személyek rendelhetők hozzá",
     "ed_show_add_details": "Részletek hozzáadáskor",
     "add_with_details": "Hozzáadás részletekkel",
-    "add_clear": "Törlés"
+    "add_clear": "Törlés",
+    "plan_note_placeholder": "A nap fókusza",
+    "plan_empty": "Nincs semmi betervezve",
+    "plan_add": "Feladat betervezése",
+    "plan_search_placeholder": "Feladatok keresése…",
+    "plan_no_results": "Nincs egyező nyitott feladat",
+    "plan_carry_over": "Nyitott feladatok átvétele innen: {0} ({1})",
+    "plan_move_day": "Másik nap…",
+    "plan_day_msg": "Melyik napra kerüljön: „{0}”?",
+    "plan_remove": "Eltávolítás a tervből",
+    "plan_for": "Betervezés…",
+    "plan_ok": "Betervezés",
+    "plan_none": "Nem található napi terv. Napi tervek a Beállítások → Integrációk → Home Tasks alatt hozhatók létre.",
+    "ed_view_lists": "Listák",
+    "ed_view_day_plan": "Napi terv",
+    "ed_plan_days": "Megjelenített napok",
+    "ed_plan_all_lists": "Minden lista",
+    "plan_due_hint": "A határideje miatt van a tervben: helyezd át, vagy módosítsd a dátumot.",
+    "ed_plan_weekend": "Hétvége",
+    "new_entry_link": "Új lista vagy napi terv létrehozása",
+    "ed_plan_list_missing": "A lista nem érhető el",
+    "picker_list_name": "Home Tasks: Lista",
+    "picker_plan_name": "Home Tasks: Napi terv",
+    "picker_list_desc": "Feladatlisták oszlopokban, húzással, alfeladatokkal, jegyzetekkel és határidőkkel.",
+    "picker_plan_desc": "Egy napi terv napjai: több lista feladatai abban a sorrendben, ahogy dolgozol rajtuk."
   },
   "de": {
     "ed_default_priority": "Standard-Priorität",
@@ -4774,7 +5134,31 @@ const _TRANSLATIONS = {
     "ed_offered_persons_hint": "Nur markierte Personen können in dieser Karte zugewiesen werden",
     "add_with_details": "Mit Details anlegen",
     "add_clear": "Leeren",
-    "ed_show_add_details": "Details beim Anlegen"
+    "ed_show_add_details": "Details beim Anlegen",
+    "plan_note_placeholder": "Fokus für den Tag",
+    "plan_empty": "Nichts geplant",
+    "plan_add": "Aufgabe einplanen",
+    "plan_search_placeholder": "Aufgaben suchen…",
+    "plan_no_results": "Keine passenden offenen Aufgaben",
+    "plan_carry_over": "Offene Aufgaben vom {0} übernehmen ({1})",
+    "plan_move_day": "Anderer Tag…",
+    "plan_day_msg": "Welcher Tag für „{0}“?",
+    "plan_remove": "Aus dem Plan nehmen",
+    "plan_for": "Einplanen für…",
+    "plan_ok": "Einplanen",
+    "plan_none": "Kein Tagesplan gefunden. Tagespläne können unter Einstellungen → Integrationen → Home Tasks erstellt werden.",
+    "ed_view_lists": "Listen",
+    "ed_view_day_plan": "Tagesplan",
+    "ed_plan_days": "Angezeigte Tage",
+    "ed_plan_all_lists": "Alle Listen",
+    "plan_due_hint": "Steht über das Fälligkeitsdatum im Plan: verschieben oder das Datum ändern.",
+    "ed_plan_weekend": "Wochenende",
+    "new_entry_link": "Neue Liste oder neuen Tagesplan anlegen",
+    "ed_plan_list_missing": "Liste nicht verfügbar",
+    "picker_list_name": "Home Tasks: Liste",
+    "picker_plan_name": "Home Tasks: Tagesplan",
+    "picker_list_desc": "Aufgabenlisten in Spalten, mit Drag & Drop, Unteraufgaben, Notizen und Fälligkeiten.",
+    "picker_plan_desc": "Die Tage eines Tagesplans: Aufgaben aus mehreren Listen in der Reihenfolge, in der du sie erledigst."
   }
 };
 
@@ -4976,6 +5360,25 @@ function _shortDetailOrder(order) {
   return n ? order.slice(0, n) : undefined;
 }
 
+// Where a list, a linked list or a day plan is added: the integration's page
+// in Home Assistant's settings, with its "Add service" button. Adding one is
+// Home Assistant's job, not the card's: the card only takes the user there.
+// The card exists only once Home Tasks is set up, so the address that starts
+// the dialog directly (/config/integrations/dashboard/add?domain=…) is the
+// wrong one - it first asks whether to "set up" what is already there.
+const NEW_ENTRY_PATH = "/config/integrations/integration/home_tasks";
+
+// One lookup for every text of the card, its editors and the card picker:
+// the language's own table, else its base language's ("de-CH" reads "de"),
+// else English. Norwegian's two written forms share one table.
+function _htText(lang, key, args = []) {
+  lang = String(lang || "en");
+  if (lang === "nb" || lang === "nn") lang = "no";
+  const table = _TRANSLATIONS[lang] || _TRANSLATIONS[lang.split("-")[0]] || _TRANSLATIONS.en;
+  const str = table[key] || _TRANSLATIONS.en[key] || key;
+  return args.length ? str.replace(/\{(\d+)\}/g, (_, i) => args[i] ?? "") : str;
+}
+
 class HomeTasksCard extends HTMLElement {
   // The shortest gap between two occurrences, in minutes — what a reopen
   // lead must stay below.  Must match _recurrence_interval_minutes in
@@ -5076,10 +5479,7 @@ class HomeTasksCard extends HTMLElement {
   }
 
   _t(key, ...args) {
-    let lang = this._localeCode();
-    if (lang === "nb" || lang === "nn") lang = "no";
-    const str = (_TRANSLATIONS[lang] || _TRANSLATIONS.en)[key] || _TRANSLATIONS.en[key] || key;
-    return args.length ? str.replace(/\{(\d+)\}/g, (_, i) => args[i] ?? "") : str;
+    return _htText(this._localeCode(), key, args);
   }
 
   // After the user picks an option in a <select>, drop focus right away.
@@ -5109,6 +5509,14 @@ class HomeTasksCard extends HTMLElement {
   }
 
   setConfig(config) {
+    // The days of a plan are a card of their own (HomeTasksDayPlanCard,
+    // below). Said plainly, for a config written while they were a view of
+    // this card.
+    if (config.view === "day_plan") {
+      throw new Error(
+        "The day plan is a card of its own: use type custom:home-tasks-day-plan-card (and drop view)"
+      );
+    }
     // Normalize old single-list format to columns format
     // Keep HA card-level keys (type, etc.) at root, not inside column objects
     if (config.list_id && !config.columns) {
@@ -5196,6 +5604,13 @@ class HomeTasksCard extends HTMLElement {
     // Reload when any watched entity's state object changes (new reference = entity updated).
     // Covers both external todo entities and native-list sensor entities (for cross-device sync).
     if (prev && hass) {
+      // --- Day plan: its sensor changes whenever the plan reads differently
+      //     (a row planned, a task of one of its lists changed, midnight) ---
+      if (this._planMode) {
+        this._watchPlan(prev, hass);
+        this._syncExtPollTimer();
+        return;
+      }
       for (const col of this._config.columns) {
         // --- External list: watch the todo entity directly ---
         if (col.entity_id) {
@@ -5227,8 +5642,10 @@ class HomeTasksCard extends HTMLElement {
     const hasExternal = this._config.columns.some(c => c.entity_id);
     if (hasExternal && !this._extPollTimer) {
       this._extPollTimer = setInterval(async () => {
+        // A day plan asks the providers only about the lists it shows rows of.
+        if (this._planMode) this._planDoubtShown();
         this._bgUpdates = (this._bgUpdates || 0) + 1;
-        try { await this._loadAllTasks(); } finally { this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1); }
+        try { await this._loadAllTasks(true); } finally { this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1); }
       }, 30000);
     } else if (!hasExternal && this._extPollTimer) {
       clearInterval(this._extPollTimer);
@@ -5320,8 +5737,13 @@ class HomeTasksCard extends HTMLElement {
    * local updates first so the UI responds instantly; this method only
    * schedules a background reload to pick up the confirmed provider state.
    */
-  _reloadExternal() {
-    setTimeout(() => this._loadAllTasks(), 1500);
+  _reloadExternal(colIdx) {
+    setTimeout(() => {
+      // A day plan keeps its lists until they change; after a write to a
+      // linked list the provider's answer is what counts.
+      if (this._planMode) this._planDoubt(colIdx);
+      this._loadAllTasks();
+    }, 1500);
   }
 
   _isExternalCol(colIdx) {
@@ -5478,6 +5900,9 @@ class HomeTasksCard extends HTMLElement {
     const [nativeResult, externalResult] = await Promise.all([
       this._callWs("home_tasks/get_lists"),
       this._callWs("home_tasks/get_external_lists"),
+      // A day plan names the lists it draws from; a list card asks which
+      // plans there are, for "Plan for…".
+      this._planMode ? this._loadPlan() : this._loadPlans(),
     ]);
     if (nativeResult && Array.isArray(nativeResult.lists)) {
       this._lists = nativeResult.lists;
@@ -5493,10 +5918,12 @@ class HomeTasksCard extends HTMLElement {
     // nothing else re-triggers it: the cross-device state watcher needs the
     // very list metadata that just failed to load. Retry with backoff until
     // the backend answers completely.
-    const missingConfigured = this._config.columns.some(
+    const missingConfigured = !this._planMode && this._config.columns.some(
       (c) => c.list_id && !this._lists.some((l) => l.id === c.list_id)
     );
-    if (nativeResult === null || externalResult === null || missingConfigured) {
+    // Same boot window for a day plan: its entry may not be loaded yet.
+    const missingPlan = this._planMode && !this._plan;
+    if (nativeResult === null || externalResult === null || missingConfigured || missingPlan) {
       this._scheduleListsRetry();
     } else {
       this._listsRetryCount = 0;
@@ -5508,6 +5935,13 @@ class HomeTasksCard extends HTMLElement {
 
     // The list metadata the sync needs (share/auto flags) is only here now.
     this._syncImageGenerationConfig();
+
+    if (this._planMode) {
+      // The plan is read; now the tasks of its lists.
+      await this._loadColumnTasks();
+      this._render();
+      return;
+    }
 
     // Auto-select first list if no column has a list configured
     const hasAnyList = this._config.columns.some(c => c.list_id || c.entity_id);
@@ -5547,28 +5981,78 @@ class HomeTasksCard extends HTMLElement {
     this._sourceDefaults[entityId] = (r && r.defaults) || null;
   }
 
-  async _loadAllTasks() {
+  // *quiet*: a look in the background (a sensor changed, the poll). In a
+  // day plan one that finds nothing new leaves the card as it is - a
+  // rebuild under the pointer or mid-scroll for no change is only a flicker.
+  async _loadAllTasks(quiet = false) {
+    if (!this._planMode) {
+      await this._loadColumnTasks();
+      this._render();
+      return;
+    }
+    // A day plan first reads the plan: it says which lists there are, and
+    // which of them changed.
+    const before = this._planJson;
+    await this._loadPlan();
+    const changed = await this._loadColumnTasks();
+    if (quiet && changed === 0 && before !== undefined && this._planJson === before) return;
+    this._render();
+  }
+
+  // Returns how many of a day plan's lists came back different from what
+  // the card held (0 for a card of lists, which renders after every load).
+  async _loadColumnTasks() {
+    // The states as they are now: a day plan swaps the array when its lists
+    // change, and an answer must land in the list it was asked for.
+    const states = this._columns;
+    const sources = this._planMode ? ((this._plan && this._plan.sources) || []) : null;
+    let changed = 0;
+    const content = (cs) => JSON.stringify([cs.tasks, cs.sections, cs.tagCatalog]);
     await Promise.all(this._config.columns.map(async (col, i) => {
+      const cs = states[i];
+      if (!cs) return;
+      // A day plan can draw from dozens of lists, many of them kept by a
+      // provider that takes its time. Each list is loaded again only when
+      // the plan says its tasks changed (a stamp per list), or when the card
+      // has a reason of its own to doubt its copy (cs.stale).
+      const stamp = sources ? (sources[i] && sources[i].stamp) : undefined;
+      if (sources && cs.loaded && !cs.stale && stamp !== undefined && cs.stamp === stamp) return;
+      cs.stale = false;
+      // As the card holds it now - with what it changed on its own ahead of
+      // the answer (a tick shown at once), so that a refused change counts
+      // as a difference too.
+      const held = sources ? content(cs) : null;
+      const kept = sources ? { tasks: cs.tasks, sections: cs.sections, tagCatalog: cs.tagCatalog } : null;
       if (col.entity_id) {
         // External column — fetch from external entity + overlay
         this._loadListDefaults(col.entity_id);
         const r = await this._callWs("home_tasks/get_external_tasks", { entity_id: col.entity_id });
-        this._columns[i].tasks = r?.tasks ?? [];
-        this._columns[i].sections = r?.sections ?? [];
-        this._columns[i].tagCatalog = r?.tag_catalog ?? [];
+        cs.tasks = r?.tasks ?? [];
+        cs.sections = r?.sections ?? [];
+        cs.tagCatalog = r?.tag_catalog ?? [];
+        cs.loaded = !!r;
       } else if (col.list_id) {
         // Native column
         const r = await this._callWs("home_tasks/get_tasks", { list_id: col.list_id });
-        this._columns[i].tasks = r?.tasks ?? [];
-        this._columns[i].sections = r?.sections ?? [];
-        this._columns[i].tagCatalog = r?.tag_catalog ?? [];
-        this._columns[i].reopenLead = r?.reopen_lead ?? 0;
+        cs.tasks = r?.tasks ?? [];
+        cs.sections = r?.sections ?? [];
+        cs.tagCatalog = r?.tag_catalog ?? [];
+        cs.reopenLead = r?.reopen_lead ?? 0;
+        cs.loaded = !!r;
       } else {
-        this._columns[i].tasks = [];
-        this._columns[i].sections = [];
+        cs.tasks = [];
+        cs.sections = [];
+      }
+      if (sources) {
+        cs.stamp = stamp;
+        // Asked again is not changed: the poll asks a provider every 30 s,
+        // and the same tasks back must not rebuild the card under the pointer.
+        if (content(cs) !== held) changed += 1;
+        // The same tasks again: the objects stay, as with the plan above.
+        else Object.assign(cs, kept);
       }
     }));
-    this._render();
+    return changed;
   }
 
   _colListId(colIdx) {
@@ -6052,6 +6536,9 @@ class HomeTasksCard extends HTMLElement {
       // without waiting for the server round-trip.
       const cs = this._columns[colIdx];
       if (cs?.tasks) cs.tasks = cs.tasks.filter(t => String(t.id) !== String(taskId));
+      // On a day plan the row goes with the task; otherwise it would show
+      // for a moment as a row whose list has not answered.
+      if (this._planMode) this._planForget(taskId, colIdx);
       this._expandedTasks.delete(taskId);
       this._render();
       this._applyFlip(before, colIdx, 0.22);
@@ -6059,6 +6546,9 @@ class HomeTasksCard extends HTMLElement {
       // Sync with server in the background (re-render after reload is harmless
       // since the FLIP animation will have completed by then).
       await this._deleteTaskCmd(colIdx, taskId);
+      // The row was taken out of the card's copy of the plan above. Deleted
+      // or not, the plan as it reads now replaces that copy.
+      if (this._planMode) this._planJson = null;
       await this._loadAllTasks();
 
     } else {
@@ -6897,7 +7387,7 @@ class HomeTasksCard extends HTMLElement {
       // transforms (intermittent missing animation). Defer; _applyFlip flushes.
       if (this._flipActive) { this._pendingRender = true; return; }
       if (this._draggedTaskId !== null || this._draggedSubTaskId !== null
-          || this._editingTaskId || this._editingSubTaskId) {
+          || this._editingTaskId || this._editingSubTaskId || this._planNoteEditing) {
         this._pendingRender = true;
         return;
       }
@@ -7045,6 +7535,7 @@ class HomeTasksCard extends HTMLElement {
   }
 
   _buildCardContent() {
+    if (this._planMode) return this._buildPlanView();
     const cols = this._config.columns;
     if (cols.length === 1) {
       return this._buildColumn(0);
@@ -7902,7 +8393,7 @@ class HomeTasksCard extends HTMLElement {
       if (!this._draggedTaskId) return;
       const tgtColIdx = parseInt(taskList.dataset.colIdx);
       if (tgtColIdx !== this._draggedColIdx) {
-        const draggedEl = this.shadowRoot.querySelector(`.task[data-task-id="${CSS.escape(String(this._draggedTaskId))}"]`);
+        const draggedEl = this._taskDragElement();
         if (draggedEl && draggedEl.parentNode !== taskList) {
           if (draggedEl.parentElement) draggedEl.parentElement.removeChild(draggedEl);
           taskList.appendChild(draggedEl);
@@ -10898,6 +11389,16 @@ class HomeTasksCard extends HTMLElement {
     const col = this._config.columns[colIdx];
     const children = [];
 
+    if (!this._planMode && !task.completed && this._plansForCol(colIdx).length > 0) {
+      // On a list that a day plan draws from: put the task on one of its days.
+      const planBtn = this._el("button", {
+        className: "move-task-btn plan-for-btn",
+        textContent: this._t("plan_for"),
+      });
+      planBtn.addEventListener("click", () => this._planTaskViaDialog(task, colIdx));
+      children.push(planBtn);
+    }
+
     // Move to another list (issue #47): opens an in-card dialog listing the
     // possible targets and routes through the same WS commands as
     // cross-column drag, so external lists work as source and target too.
@@ -11795,7 +12296,7 @@ class HomeTasksCard extends HTMLElement {
 
     // Determine which column the dragged element ended up in
     const draggedEl = draggedId
-      ? this.shadowRoot.querySelector(`[data-task-id="${CSS.escape(String(draggedId))}"]`)
+      ? this._taskDragElement(draggedId, srcColIdx)
       : null;
     const currentTaskList = draggedEl?.closest(".task-list");
     const tgtColIdx = currentTaskList !== null && currentTaskList !== undefined && currentTaskList.dataset.colIdx !== undefined
@@ -11823,6 +12324,12 @@ class HomeTasksCard extends HTMLElement {
     if (this._touchStartTimer) { clearTimeout(this._touchStartTimer); this._touchStartTimer = null; }
 
     if (!draggedId || srcColIdx === null) return;
+
+    if (this._planMode) {
+      // Days, not lists: the row's new place is a place on the plan.
+      this._finishPlanDrag(draggedId, srcColIdx);
+      return;
+    }
 
     if (!isNaN(tgtColIdx) && tgtColIdx !== srcColIdx) {
       // Cross-column move
@@ -11888,8 +12395,9 @@ class HomeTasksCard extends HTMLElement {
     taskEl.addEventListener("dragover", (e) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
-      if (!this._draggedTaskId || this._draggedTaskId === taskId) return;
-      const draggedEl = this.shadowRoot.querySelector(`.task[data-task-id="${CSS.escape(String(this._draggedTaskId))}"]`);
+      if (!this._draggedTaskId) return;
+      const draggedEl = this._taskDragElement();
+      if (draggedEl === taskEl) return;
       this._liveMoveTask(draggedEl, taskEl, e.clientX, e.clientY);
       // Visual feedback for cross-column target
       const tgtList = taskEl.closest(".task-list");
@@ -11923,7 +12431,7 @@ class HomeTasksCard extends HTMLElement {
         this._touchDragMoved = false;
         // Collapse all expanded tasks for a cleaner drag experience
         this._collapseAllForDrag();
-        taskEl = this.shadowRoot.querySelector(`.task[data-task-id="${CSS.escape(String(taskId))}"]`);
+        taskEl = this._taskDragElement();
         if (taskEl) taskEl.classList.add("dragging");
 
         const rect = taskEl.getBoundingClientRect();
@@ -11971,15 +12479,19 @@ class HomeTasksCard extends HTMLElement {
 
       const target = shadowEl ? shadowEl.closest(".task") : null;
       const sectionHeader = shadowEl ? shadowEl.closest(".section-header") : null;
-      if (target && target.dataset.taskId && target.dataset.taskId !== this._draggedTaskId && !target.classList.contains("drag-clone")) {
-        const draggedEl = this.shadowRoot.querySelector(`.task[data-task-id="${CSS.escape(String(this._draggedTaskId))}"]`);
+      if (target && target.dataset.taskId && target !== this._taskDragElement() && !target.classList.contains("drag-clone")) {
+        const draggedEl = this._taskDragElement();
         this._liveMoveTask(draggedEl, target, touch.clientX, touch.clientY);
       } else if (sectionHeader && sectionHeader.dataset.sectionId !== "__done__") {
-        const draggedEl = this.shadowRoot.querySelector(`.task[data-task-id="${CSS.escape(String(this._draggedTaskId))}"]`);
+        const draggedEl = this._taskDragElement();
         const body = sectionHeader.nextElementSibling;
         if (draggedEl && body && body.classList.contains("section-body") && draggedEl.parentNode !== body) {
           body.insertBefore(draggedEl, body.firstChild);
         }
+      } else if (this._planMode && shadowEl) {
+        // A day of the plan without a row under the finger.
+        const dayList = shadowEl.closest(".plan-day-list");
+        if (dayList) this._planDropInto(dayList);
       }
     };
 
@@ -12003,6 +12515,742 @@ class HomeTasksCard extends HTMLElement {
     taskEl.addEventListener("touchmove", onTouchMove, { passive: false });
     taskEl.addEventListener("touchend", onTouchEnd);
     taskEl.addEventListener("touchcancel", onTouchEnd);
+  }
+
+  // ── Day plan view ──────────────────────────────────────────────────────────
+  //
+  // HomeTasksDayPlanCard shows the days of a plan instead of list columns. A plan
+  // only refers to tasks, so the card still loads the lists the plan draws
+  // from - as columns that are never drawn. Every row is then a task of one
+  // of those columns, and ticking it off, editing it or opening its details
+  // runs through the same code as in a list.
+
+  _setPlanConfig(config) {
+    // What a row shows (priority, tags, person, …) is set with the options
+    // a list column has for it, at the root of the card config. What only
+    // makes sense in a list is not taken over: the row's number is what
+    // ticks a task off, and a completed task stays on its day.
+    const { type: _type, view: _view, plan, days, title: _title, columns: _c, list_id: _l, entity_id: _e, ...template } = config;
+    for (const key of ["tap_to_complete", "auto_delete_completed", "view_mode", "list_columns"]) delete template[key];
+    const wasPlan = this._planMode === true;
+    this._planMode = true;
+    this._planTemplate = template;
+    const n = parseInt(days, 10);
+    this._planDays = Number.isFinite(n) ? Math.min(7, Math.max(1, n)) : 1;
+    if (!wasPlan || (plan || null) !== this._planId) {
+      this._plan = null;
+      this._planError = null;
+      this._planLoaded = false;
+      this._planSensorId = null;
+    }
+    this._planId = plan || null;
+    this._config = { ...config, columns: wasPlan ? this._config.columns : [] };
+    if (!wasPlan) this._columns = [];
+    this._applyPlanSources();
+    if (this._initialized) this._loadAllTasks();
+    else this._render();
+    this._ensureCardMod();
+  }
+
+  _planSourceKey(col) {
+    return col.entity_id ? `ext:${col.entity_id}` : `native:${col.list_id}`;
+  }
+
+  // The plan's lists as columns (never drawn). A list keeps the tasks it
+  // has loaded when the plan is read again.
+  _applyPlanSources() {
+    const sources = (this._plan && this._plan.sources) || [];
+    const kept = new Map(
+      (this._config.columns || []).map((c, i) => [this._planSourceKey(c), this._columns[i]])
+    );
+    const columns = sources.map((s) => ({
+      ...this._planTemplate,
+      ...(s.kind === "external" ? { entity_id: s.entity_id } : { list_id: s.entry_id }),
+    }));
+    this._config = { ...this._config, columns };
+    this._columns = columns.map((c) => kept.get(this._planSourceKey(c)) || this._defaultColState());
+    this._planColByEntry = new Map(sources.map((s, i) => [s.entry_id, i]));
+  }
+
+  // What tells a day plan card to look again: the plan's sensor (it changes
+  // when the plan reads differently, and only then), and for a linked list
+  // its todo entity. Without the sensor - its entity disabled - the sensors
+  // of the native lists stand in.
+  _watchPlan(prev, hass) {
+    const changed = (id) => !!id && prev.states?.[id] !== hass.states?.[id];
+    const planSensor = this._planSensorId;
+    const sensorThere = !!(planSensor && hass.states?.[planSensor]);
+    let reload = changed(planSensor);
+    this._config.columns.forEach((col, i) => {
+      const cs = this._columns[i];
+      if (!cs) return;
+      let watch = null;
+      if (col.entity_id) watch = col.entity_id;
+      else if (!sensorThere) watch = (this._lists || []).find((l) => l.id === col.list_id)?.sensor_entity_id;
+      if (changed(watch)) {
+        cs.stale = true;
+        reload = true;
+      }
+    });
+    if (!reload) return;
+    this._bgUpdates = (this._bgUpdates || 0) + 1;
+    this._loadAllTasks(true).finally(() => { this._bgUpdates = Math.max(0, (this._bgUpdates || 0) - 1); });
+  }
+
+  // Doubt the card's copy of a list (of every linked list when none is
+  // named): the next load asks for it again.
+  _planDoubt(colIdx) {
+    this._columns.forEach((cs, i) => {
+      if (colIdx === undefined ? !!this._config.columns[i]?.entity_id : i === colIdx) cs.stale = true;
+    });
+  }
+
+  // The poll of a day plan: a provider can change what Home Assistant's own
+  // todo entity does not carry (labels, a priority). Asked only for linked
+  // lists that have a row on the days shown.
+  _planDoubtShown() {
+    const shown = new Set();
+    for (const day of (this._plan && this._plan.days) || []) {
+      for (const row of day.items || []) shown.add(row.entry_id);
+    }
+    ((this._plan && this._plan.sources) || []).forEach((src, i) => {
+      if (src.kind === "external" && shown.has(src.entry_id) && this._columns[i]) this._columns[i].stale = true;
+    });
+  }
+
+  async _loadPlan() {
+    const msg = { days: this._planDays };
+    if (this._planId) msg.plan = this._planId;
+    let result = null;
+    let refused = null;
+    try {
+      result = await this._callWs("home_tasks/get_plan", msg, { rethrow: true });
+    } catch (err) {
+      // Our own timeout says nothing about the plan: keep what is shown.
+      if (this._isWsTimeout(err)) return;
+      refused = (err && err.message) || String(err);
+    }
+    if (result && Array.isArray(result.days)) {
+      // The same plan as before stays the same objects. The rows on screen
+      // were built from them, and a look in the background that finds
+      // nothing new does not rebuild the rows: a tick would otherwise be
+      // set on a row object nobody draws from any more, and show only once
+      // the list has answered.
+      const json = JSON.stringify(result);
+      if (!this._plan || json !== this._planJson) {
+        this._plan = result;
+        this._planJson = json;
+      }
+      this._planError = null;
+      // Remembered beyond this answer: see the refusal below.
+      if (result.sensor_entity_id) this._planSensorId = result.sensor_entity_id;
+    } else {
+      this._plan = null;
+      this._planJson = null;
+      this._planError = refused;
+      // The plan may only be away for a moment - its entry reloading, Home
+      // Assistant restarting. With the plan gone there are no lists left to
+      // watch, so two things bring it back: its sensor, which the hass
+      // setter keeps watching, and asking again with the lists' backoff.
+      if (refused) this._scheduleListsRetry();
+    }
+    this._planLoaded = true;
+    this._applyPlanSources();
+  }
+
+  // A change to the plan itself. A refusal is a rule of the plan and is
+  // shown as the backend words it; the plan is read again either way.
+  async _planWrite(type, data) {
+    const msg = { ...data };
+    const planId = (this._plan && this._plan.id) || this._planId;
+    if (planId) msg.plan = planId;
+    try {
+      await this._callWs(type, msg, { rethrow: true });
+    } catch (err) {
+      if (!this._isWsTimeout(err)) this._showError((err && err.message) || String(err));
+      // What the card showed ahead of the answer (a row opened again) did
+      // not happen, or nobody knows. The plan as it is read next is the
+      // truth - also when it is word for word what was read before, which
+      // _loadPlan would otherwise answer by keeping the card's own copy.
+      this._planJson = null;
+    }
+    await this._loadPlan();
+    this._render();
+  }
+
+  _planDate(str) {
+    const [y, m, d] = String(str).split("-").map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  // "Today", "Tomorrow" or the weekday, seen from *today* (an ISO date).
+  _planDayName(dateStr, today) {
+    if (dateStr === today) return this._t("due_today");
+    const next = this._planDate(today);
+    next.setDate(next.getDate() + 1);
+    if (this._localDateStr(next) === dateStr) return this._t("due_tomorrow");
+    return this._planDate(dateStr).toLocaleDateString(this._localeCode(), { weekday: "long" });
+  }
+
+  _planShortDate(dateStr) {
+    return this._planDate(dateStr).toLocaleDateString(this._localeCode(), { day: "numeric", month: "short" });
+  }
+
+  _planDayLabel(dateStr, today) {
+    return `${this._planDayName(dateStr, today)}, ${this._planShortDate(dateStr)}`;
+  }
+
+  _buildPlanView() {
+    const children = [];
+    if (this._config.title) {
+      children.push(this._el("h1", { className: "card-global-title", textContent: this._config.title }));
+    }
+    const plan = this._plan;
+    if (!plan) {
+      // Nothing while the first answer is still out - not a flash of "no plan".
+      if (this._planLoaded) {
+        const lines = [this._el("div", { textContent: this._t("plan_none") })];
+        if (this._planError) {
+          lines.push(this._el("div", { className: "plan-missing-detail", textContent: this._planError }));
+        }
+        // Only an administrator can add one.
+        if (this._hass?.user?.is_admin === true) {
+          const link = this._el("a", {
+            className: "new-entry-link", href: NEW_ENTRY_PATH, textContent: `+ ${this._t("new_entry_link")}`,
+          });
+          // Within Home Assistant, without loading the page anew.
+          link.addEventListener("click", (e) => {
+            if (e.button || e.ctrlKey || e.metaKey || e.shiftKey) return;
+            e.preventDefault();
+            history.pushState(null, "", NEW_ENTRY_PATH);
+            window.dispatchEvent(new CustomEvent("location-changed", { detail: { replace: false } }));
+          });
+          lines.push(link);
+        }
+        children.push(this._el("div", { className: "plan-missing" }, lines));
+      }
+      return this._el("div", { className: "plan-view" }, children);
+    }
+    const days = plan.days || [];
+    children.push(this._el(
+      "div",
+      { className: "plan-days" + (days.length === 1 ? " single" : "") },
+      days.map((day, i) => this._buildPlanDay(day, i === 0)),
+    ));
+    const compact = this._planTemplate.compact === true ? " compact" : "";
+    return this._el("div", { className: "plan-view" + compact }, children);
+  }
+
+  _buildPlanDay(day, isCurrent) {
+    const plan = this._plan;
+    const rows = day.items || [];
+    const done = rows.filter((r) => r.completed).length;
+
+    // The date, the focus line and the progress bar are there unless the
+    // card config switches them off (show_date, show_focus, show_progress).
+    const opts = this._planTemplate || {};
+    const headLine = [
+      this._el("span", { className: "plan-day-name", textContent: this._planDayName(day.date, plan.today) }),
+    ];
+    if (opts.show_date !== false) {
+      headLine.push(this._el("span", { className: "plan-day-date", textContent: this._planShortDate(day.date) }));
+    }
+    if (!isCurrent) {
+      headLine.push(this._el("span", { className: "plan-count", textContent: String(rows.length) }));
+    }
+    const head = [this._el("div", { className: "plan-head-line" }, headLine)];
+    if (opts.show_focus !== false) head.push(this._buildPlanNote(day));
+    if (isCurrent && opts.show_progress !== false) {
+      const fill = this._el("div", { className: "plan-bar-fill" });
+      fill.style.width = rows.length ? `${Math.round((done / rows.length) * 100)}%` : "0%";
+      head.push(this._el("div", { className: "plan-progress" }, [
+        this._el("span", { className: "plan-progress-text", textContent: this._t("progress", done, rows.length) }),
+        this._el("div", { className: "plan-bar" }, [fill]),
+      ]));
+    }
+
+    const showList = (plan.sources || []).length > 1;
+    const list = this._el("div", { className: "task-list plan-day-list", "data-plan-date": day.date }, [
+      ...rows.map((row, i) => this._buildPlanRow(row, i + 1, showList, day)),
+      // Hidden by CSS as soon as the day holds a row - also one dragged in.
+      this._el("div", { className: "plan-empty", textContent: this._t("plan_empty") }),
+    ]);
+    // A task dragged over the day itself rather than over one of its rows:
+    // an empty day, or the space below the last row.
+    list.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      if (!this._draggedTaskId || (e.target.closest && e.target.closest(".task"))) return;
+      this._planDropInto(list);
+    });
+    list.addEventListener("drop", (e) => {
+      e.preventDefault();
+      this._finishDrag();
+    });
+
+    const children = [this._el("div", { className: "plan-day-head" }, head), list];
+    const offer = day.carry_over;
+    if (offer && (offer.items || []).length) children.push(this._buildPlanCarryOver(day, offer));
+    children.push(this._buildPlanAdd(day));
+    return this._el("div", { className: "plan-day" + (isCurrent ? " plan-current" : "") }, children);
+  }
+
+  _taskDragElement(taskId = this._draggedTaskId, colIdx = this._draggedColIdx) {
+    let selector = `.task[data-task-id="${CSS.escape(String(taskId))}"]`;
+    if (this._planMode) {
+      const src = this._plan?.sources?.[colIdx];
+      if (!src) return null;
+      selector += `[data-plan-entry="${CSS.escape(String(src.entry_id))}"]`;
+      return this.shadowRoot.querySelector(selector);
+    }
+    // A card can show one list in two columns: the id then names two rows.
+    // The one being dragged carries "dragging" wherever the drag has taken
+    // it; before that it is the one in the column the drag started in.
+    const found = [...this.shadowRoot.querySelectorAll(selector)];
+    if (found.length < 2) return found[0] || null;
+    return found.find((el) => el.classList.contains("dragging"))
+      || found.find((el) => el.closest(".task-list")?.dataset.colIdx === String(colIdx))
+      || found[0];
+  }
+
+  _planDropInto(list) {
+    const el = this._taskDragElement();
+    if (el && el.parentNode !== list) list.insertBefore(el, list.querySelector(".plan-empty"));
+  }
+
+  // The day's focus: a line of text, edited in place.
+  _buildPlanNote(day) {
+    if (this._planNoteEditing === day.date) {
+      const input = this._el("input", {
+        type: "text",
+        className: "plan-note-input",
+        value: day.note || "",
+        maxlength: "255",
+        placeholder: this._t("plan_note_placeholder"),
+      });
+      let finished = false;
+      const finish = (save) => {
+        if (finished) return;
+        finished = true;
+        this._planNoteEditing = null;
+        const value = input.value.trim();
+        if (save && value !== (day.note || "")) {
+          this._planWrite("home_tasks/set_plan_day", { date: day.date, note: value || null });
+        } else {
+          this._render();
+        }
+      };
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); finish(true); }
+        else if (e.key === "Escape") finish(false);
+      });
+      input.addEventListener("blur", () => finish(true));
+      setTimeout(() => { if (input.isConnected) input.focus(); }, 0);
+      return input;
+    }
+    const note = this._el("div", {
+      className: "plan-note" + (day.note ? "" : " empty"),
+      textContent: day.note || this._t("plan_note_placeholder"),
+    });
+    note.addEventListener("click", () => {
+      this._planNoteEditing = day.date;
+      this._render();
+    });
+    return note;
+  }
+
+  _buildPlanCarryOver(day, offer) {
+    const btn = this._el("button", {
+      className: "plan-carry",
+      textContent: this._t("plan_carry_over", this._planShortDate(offer.date), offer.items.length),
+    });
+    btn.addEventListener("click", () => this._planWrite("home_tasks/set_plan_day", {
+      date: day.date,
+      items: offer.items.map((r) => ({ task_id: r.task_id, entry_id: r.entry_id })),
+    }));
+    return btn;
+  }
+
+  // One row of a day: a task of one of the plan's lists, with its place in
+  // the day's order where a list has the checkbox.
+  _buildPlanRow(row, number, showList, day) {
+    const colIdx = this._planColByEntry ? this._planColByEntry.get(row.entry_id) : undefined;
+    const cs = colIdx !== undefined ? this._columns[colIdx] : null;
+    const task = cs ? (cs.tasks || []).find((t) => String(t.id) === String(row.task_id)) : null;
+    const listBadge = showList
+      ? this._el("span", { className: "plan-list-badge", textContent: row.list_name })
+      : null;
+    const done = !!row.completed;
+    let className = `task plan-row plan-kind-${row.kind}`;
+    if (done) className += " completed";
+
+    if (!task) {
+      // The row's list has not answered yet: show what the plan knows.
+      const meta = listBadge ? [this._el("div", { className: "task-meta" }, [listBadge])] : [];
+      return this._el("div", { className }, [
+        this._el("div", { className: "task-main" }, [
+          this._el("span", { className: "plan-num" + (done ? " done" : ""), textContent: done ? "✓" : String(number) }),
+          this._el("div", { className: "task-content" }, [
+            this._el("span", { className: "task-title", textContent: row.title }),
+            ...meta,
+          ]),
+        ]),
+      ]);
+    }
+
+    const col = this._config.columns[colIdx];
+    const isExpanded = this._expandedTasks.has(task.id);
+    const isEditing = this._editingTaskId === task.id;
+    if (isExpanded) className += " is-expanded";
+    // A done row keeps its place: what is done on a day is that day's record.
+    const taskEl = this._el("div", { className, draggable: !done && !isEditing && !isExpanded });
+    taskEl.dataset.taskId = task.id;
+    taskEl.dataset.planEntry = row.entry_id;
+
+    const contentChildren = this._buildTaskContentChildren(task, colIdx, isEditing);
+    const meta = this._buildTaskMetaBadges(task, col, cs, colIdx);
+    if (listBadge) meta.unshift(listBadge);
+    if (meta.length > 0) contentChildren.push(this._el("div", { className: "task-meta" }, meta));
+
+    const mainRow = this._el("div", { className: "task-main" }, [
+      this._buildPlanNumber(row, task, colIdx, number),
+      this._el("div", { className: "task-content" }, contentChildren),
+      this._buildTaskExpandButton(isExpanded),
+    ]);
+    this._attachTaskExpandClickHandler(mainRow, task, taskEl, colIdx);
+    taskEl.appendChild(mainRow);
+
+    if (isExpanded) {
+      // What one does to a row of a plan first: move it to another day.
+      const actions = this._buildPlanActions(task, day, row);
+      if (actions.length > 0) taskEl.appendChild(this._el("div", { className: "plan-actions" }, actions));
+      const detailsEl = this._buildTaskDetails(task, colIdx);
+      taskEl.appendChild(detailsEl);
+      this._animateExpandedDetails(detailsEl, task);
+    }
+    if (!done) this._attachDragToTask(taskEl, task.id, colIdx);
+    return taskEl;
+  }
+
+  _buildPlanNumber(row, task, colIdx, number) {
+    const done = !!row.completed;
+    const btn = this._el("button", { className: "plan-num" + (done ? " done" : ""), title: task.title });
+    if (done) {
+      const icon = document.createElement("ha-icon");
+      icon.setAttribute("icon", "mdi:check");
+      btn.appendChild(icon);
+    } else {
+      btn.textContent = String(number);
+    }
+    const rowKey = `${row.entry_id}|${task.id}`;
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (Date.now() < (this._suppressRowTapUntil || 0)) return;   // end of a drag
+      // The second click of a double-click on this row (see below).
+      const guard = this._planUntickGuard;
+      if (guard && guard.key === rowKey && Date.now() < guard.until) return;
+      if (done && !task.completed) {
+        // Done today, open again: a recurring task that has moved on to its
+        // next round. There is no tick on the task to take back, and
+        // toggling would complete that next round - so the tap takes back
+        // the day's "done" only, and the row is open on the day again.
+        row.completed = false;
+        // The row is rebuilt at once, and its number then completes the
+        // task: the second click of a double-click must not land on it.
+        // This row's taps only - another row can be ticked right away.
+        this._planUntickGuard = { key: rowKey, until: Date.now() + 700 };
+        this._render();
+        this._planWrite("home_tasks/untick_plan_task", { task_id: String(task.id), entry_id: row.entry_id });
+        return;
+      }
+      this._planToggle(row, task, colIdx);
+    });
+    return btn;
+  }
+
+  // Tick a row off (or take the tick back). The row shows it at once; the
+  // task's list and the plan follow.
+  async _planToggle(row, task, colIdx) {
+    const col = this._config.columns[colIdx];
+    const done = !task.completed;
+    if (done && col.confirm_complete === true) {
+      const ok = await this._confirmDialog(
+        this._t("confirm_complete_msg", task.title), this._t("confirm_complete_ok"),
+      );
+      if (!ok) return;
+    }
+    const was = { row: row.completed, task: task.completed };
+    row.completed = done;
+    // A provider does not close a recurring task, it moves it on: on the
+    // plan it is done for today, in its list it stays as it comes back.
+    const recurring = task.recurrence_enabled && task.recurrence_unit;
+    if (!(this._isExternalCol(colIdx) && recurring)) task.completed = done;
+    this._render();
+    try {
+      await this._updateTaskRouted(colIdx, task.id, { completed: done }, { rethrow: true });
+    } catch (err) {
+      // Not done after all. The plan will not say that the list changed -
+      // it did not - so the card takes its own tick back and reads the list
+      // again, instead of keeping a task it only believes to be done.
+      row.completed = was.row;
+      task.completed = was.task;
+      if (this._columns[colIdx]) this._columns[colIdx].stale = true;
+      if (!this._isWsTimeout(err)) this._showError((err && err.message) || String(err));
+    }
+    if (this._isExternalCol(colIdx)) this._reloadExternal(colIdx);
+    await this._loadAllTasks();
+  }
+
+  // "Plan a task" under a day: a search across the plan's lists.
+  _buildPlanAdd(day) {
+    const state = this._planAdd;
+    if (!state || state.date !== day.date) {
+      const icon = document.createElement("ha-icon");
+      icon.setAttribute("icon", "mdi:plus");
+      const btn = this._el("button", { className: "plan-add-btn" }, [icon, this._t("plan_add")]);
+      btn.addEventListener("click", () => {
+        this._planAdd = { date: day.date, query: "", fresh: true };
+        this._render();
+      });
+      return btn;
+    }
+    const input = this._el("input", {
+      type: "text",
+      className: "plan-add-input",
+      value: state.query,
+      placeholder: this._t("plan_search_placeholder"),
+      "data-focus-key": "plan_add",
+    });
+    const results = this._el("div", { className: "plan-add-results" });
+    if (!state.lists) state.lists = new Set();
+    // Typing refills the results in place: a rebuild of the card on every
+    // key would drop the field mid-word.
+    const fill = () => results.replaceChildren(...this._buildPlanCandidates(day, state.query, state.lists));
+    // The lists that have something to plan, as a filter: none picked = all.
+    const withTasks = this._planCandidateLists(day);
+    for (const entryId of [...state.lists]) {
+      if (!withTasks.some((src) => src.entry_id === entryId)) state.lists.delete(entryId);
+    }
+    const chips = withTasks.length > 1
+      ? this._el("div", { className: "plan-add-lists" }, withTasks.map((src) => {
+        const chip = this._el("button", {
+          className: "plan-list-chip" + (state.lists.has(src.entry_id) ? " active" : ""),
+          textContent: src.name,
+        });
+        chip.dataset.planEntry = src.entry_id;
+        chip.addEventListener("click", () => {
+          if (state.lists.has(src.entry_id)) state.lists.delete(src.entry_id);
+          else state.lists.add(src.entry_id);
+          chip.classList.toggle("active", state.lists.has(src.entry_id));
+          fill();
+        });
+        return chip;
+      }))
+      : null;
+    input.addEventListener("input", () => {
+      state.query = input.value;
+      fill();
+    });
+    const close = () => {
+      this._planAdd = null;
+      this._render();
+    };
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") close();
+    });
+    fill();
+    if (state.fresh) {
+      state.fresh = false;
+      setTimeout(() => { if (input.isConnected) input.focus(); }, 0);
+    }
+    const closeIcon = document.createElement("ha-icon");
+    closeIcon.setAttribute("icon", "mdi:close");
+    const closeBtn = this._el("button", { className: "plan-add-close", title: this._t("dialog_cancel") }, [closeIcon]);
+    closeBtn.addEventListener("click", close);
+    return this._el("div", { className: "plan-add" }, [
+      this._el("div", { className: "plan-add-row" }, [input, closeBtn]),
+      chips,
+      results,
+    ]);
+  }
+
+  // The plan's lists that hold an open task not on *day* yet.
+  _planCandidateLists(day) {
+    const onDay = new Set((day.items || []).map((r) => `${r.entry_id}|${r.task_id}`));
+    return (this._plan.sources || []).filter((src, i) =>
+      ((this._columns[i] && this._columns[i].tasks) || []).some(
+        (task) => !task.completed && !onDay.has(`${src.entry_id}|${task.id}`)
+      ));
+  }
+
+  // Open tasks of the plan's lists that are not on *day* yet.
+  _buildPlanCandidates(day, query, lists = new Set()) {
+    const onDay = new Set((day.items || []).map((r) => `${r.entry_id}|${r.task_id}`));
+    const q = String(query || "").trim().toLowerCase();
+    const sources = this._plan.sources || [];
+    const showList = sources.length > 1;
+    const found = [];
+    sources.forEach((src, i) => {
+      if (lists.size > 0 && !lists.has(src.entry_id)) return;
+      for (const task of (this._columns[i] && this._columns[i].tasks) || []) {
+        if (task.completed || onDay.has(`${src.entry_id}|${task.id}`)) continue;
+        if (q && !String(task.title || "").toLowerCase().includes(q)) continue;
+        found.push({ task, src });
+      }
+    });
+    if (found.length === 0) {
+      return [this._el("div", { className: "plan-no-results", textContent: this._t("plan_no_results") })];
+    }
+    return found.slice(0, 8).map(({ task, src }) => {
+      const children = [this._el("span", { className: "plan-candidate-title", textContent: task.title })];
+      if (task.due_date) children.push(this._buildDueDateBadge(task));
+      if (showList) children.push(this._el("span", { className: "plan-list-badge", textContent: src.name }));
+      const btn = this._el("button", { className: "plan-candidate" }, children);
+      btn.addEventListener("click", () => this._planWrite("home_tasks/plan_task", {
+        task_id: String(task.id), entry_id: src.entry_id, date: day.date,
+      }));
+      return btn;
+    });
+  }
+
+  // Take a task's rows out of the plan as it is shown, ahead of the backend
+  // (which drops the reference to a deleted task on its own).
+  _planForget(taskId, colIdx) {
+    const src = this._plan && (this._plan.sources || [])[colIdx];
+    if (!src) return;
+    for (const day of this._plan.days || []) {
+      day.items = (day.items || []).filter(
+        (r) => !(r.entry_id === src.entry_id && String(r.task_id) === String(taskId))
+      );
+    }
+  }
+
+  // At the top of an open row: to the next day, to another day, off the
+  // plan. A task that is there through its due date can only be moved.
+  _buildPlanActions(task, day, row) {
+    if (row.completed) return [];
+    const plan = this._plan;
+    const ref = { task_id: String(task.id), entry_id: row.entry_id };
+    const others = (plan.horizon || []).filter((d) => d !== day.date);
+    const next = (plan.horizon || [])[(plan.horizon || []).indexOf(day.date) + 1];
+    const buttons = [];
+    const button = (cls, label, onClick) => {
+      const btn = this._el("button", { className: `move-task-btn ${cls}`, textContent: label });
+      btn.addEventListener("click", onClick);
+      buttons.push(btn);
+    };
+    if (next) {
+      button("plan-next-btn", `→ ${this._planDayName(next, plan.today)}`, () =>
+        this._planWrite("home_tasks/plan_task", { ...ref, date: next }));
+    }
+    if (others.length > 1) {
+      button("plan-move-btn", `→ ${this._t("plan_move_day")}`, async () => {
+        const date = await this._planDayDialog(task, others, plan.today, this._t("move_task"));
+        if (date) this._planWrite("home_tasks/plan_task", { ...ref, date });
+      });
+    }
+    if (row.kind === "planned") {
+      button("plan-remove-btn", this._t("plan_remove"), () =>
+        this._planWrite("home_tasks/unplan_task", { ...ref }));
+    } else {
+      // There through its due date: it can be moved, not taken off. Say so
+      // where the button would be, instead of leaving it out without a word.
+      buttons.push(this._el("span", { className: "plan-due-hint", textContent: this._t("plan_due_hint") }));
+    }
+    return buttons;
+  }
+
+  // Resolves with the day picked (an ISO date), or null.
+  _planDayDialog(task, dates, today, okLabel) {
+    const sel = this._el("select", { className: "ht-move-select" }, dates.map(
+      (d) => this._el("option", { value: d, textContent: this._planDayLabel(d, today) })
+    ));
+    return this._modalDialog({
+      message: this._t("plan_day_msg", task.title),
+      okLabel,
+      body: [sel],
+      resolveOk: () => sel.value,
+    });
+  }
+
+  // --- "Plan for…" in a list ---
+
+  async _loadPlans() {
+    const r = await this._callWs("home_tasks/get_plans");
+    this._plans = (r && Array.isArray(r.plans)) ? r.plans : [];
+  }
+
+  // The plans a column's list belongs to, with the list's id in each.
+  _plansForCol(colIdx) {
+    const col = this._config.columns[colIdx];
+    if (!col) return [];
+    const found = [];
+    for (const plan of this._plans || []) {
+      const src = (plan.sources || []).find(
+        (s) => (col.entity_id ? s.entity_id === col.entity_id : s.entry_id === col.list_id)
+      );
+      if (src) found.push({ plan, entry_id: src.entry_id });
+    }
+    return found;
+  }
+
+  async _planTaskViaDialog(task, colIdx) {
+    // Read again: the days a plan covers move on at midnight.
+    await this._loadPlans();
+    const targets = this._plansForCol(colIdx);
+    if (targets.length === 0) return;
+    const planSel = this._el("select", { className: "ht-move-select plan-pick" }, targets.map(
+      (t, i) => this._el("option", { value: String(i), textContent: t.plan.name })
+    ));
+    const daySel = this._el("select", { className: "ht-move-select day-pick" });
+    const fillDays = () => {
+      const plan = targets[Number(planSel.value) || 0].plan;
+      const today = plan.today || this._localDateStr(new Date());
+      daySel.replaceChildren(...(plan.horizon || []).map(
+        (d) => this._el("option", { value: d, textContent: this._planDayLabel(d, today) })
+      ));
+    };
+    planSel.addEventListener("change", fillDays);
+    fillDays();
+    const choice = await this._modalDialog({
+      message: this._t("plan_day_msg", task.title),
+      okLabel: this._t("plan_ok"),
+      body: targets.length > 1 ? [planSel, daySel] : [daySel],
+      resolveOk: () => ({ target: targets[Number(planSel.value) || 0], date: daySel.value }),
+    });
+    if (!choice || !choice.date) return;
+    try {
+      await this._callWs("home_tasks/plan_task", {
+        plan: choice.target.plan.id,
+        task_id: String(task.id),
+        entry_id: choice.target.entry_id,
+        date: choice.date,
+      }, { rethrow: true });
+    } catch (err) {
+      if (!this._isWsTimeout(err)) this._showError((err && err.message) || String(err));
+    }
+  }
+
+  // A drag ended: the day the row lies in now gets its rows in the order
+  // they stand. That re-plans a row that came from another day.
+  async _finishPlanDrag(taskId, colIdx) {
+    const el = this._taskDragElement(taskId, colIdx);
+    const list = el && el.closest(".plan-day-list");
+    if (!list) {
+      this._render();
+      return;
+    }
+    const date = list.dataset.planDate;
+    const items = [...list.querySelectorAll(".task[data-task-id]")].map((n) => ({
+      task_id: n.dataset.taskId,
+      entry_id: n.dataset.planEntry,
+    }));
+    const day = ((this._plan && this._plan.days) || []).find((d) => d.date === date);
+    const was = ((day && day.items) || []).map((r) => `${r.entry_id}|${r.task_id}`).join("\n");
+    if (items.map((r) => `${r.entry_id}|${r.task_id}`).join("\n") === was) {
+      this._render();   // dropped where it was
+      return;
+    }
+    await this._planWrite("home_tasks/set_plan_day", { date, items });
   }
 
   // --- Styles ---
@@ -12909,6 +14157,163 @@ class HomeTasksCard extends HTMLElement {
       .task-anim-enter {
         animation: task-enter 0.22s ease-out;
       }
+      /* ── Day plan view ── */
+      .plan-view { display: flex; flex-direction: column; min-height: 0; }
+      .plan-view.compact { padding: 0; }
+      .plan-days { display: flex; align-items: stretch; overflow-x: auto; min-height: 0; }
+      .plan-day {
+        flex: 1 1 0; min-width: 260px; display: flex; flex-direction: column;
+        padding-bottom: 12px; border-right: 1px solid var(--todo-divider); box-sizing: border-box;
+      }
+      .plan-day:last-child { border-right: none; }
+      .plan-days.single .plan-day { min-width: 0; }
+      .plan-day-head {
+        display: flex; flex-direction: column; gap: 6px; padding: 14px 16px 12px;
+        border-bottom: 1px solid var(--todo-divider);
+      }
+      /* The current day is what the card is about: its head is tinted, so a
+         plan never reads as one more list. */
+      .plan-current .plan-day-head {
+        background: color-mix(in srgb, var(--todo-primary) 14%, var(--todo-bg));
+        border-bottom-color: color-mix(in srgb, var(--todo-primary) 40%, transparent);
+        padding-top: 16px;
+      }
+      /* A card title is the plan's heading: it gets the tint of the current
+         day's head over the whole width. Left plain, it was a bare line
+         above a coloured box. */
+      .plan-view > .card-global-title {
+        padding: 14px 16px 12px;
+        background: color-mix(in srgb, var(--todo-primary) 14%, var(--todo-bg));
+        border-bottom: 1px solid color-mix(in srgb, var(--todo-primary) 40%, transparent);
+      }
+      .plan-head-line { display: flex; align-items: baseline; gap: 8px; }
+      .plan-day-name { font-size: 1rem; font-weight: 600; color: var(--todo-text); line-height: 1.2; }
+      .plan-current .plan-day-name { font-size: 1.35rem; color: var(--todo-primary); }
+      .plan-day-date { font-size: 13px; color: var(--todo-secondary-text); }
+      .plan-count {
+        margin-left: auto; font-size: 12px; min-width: 20px; text-align: center; padding: 1px 6px;
+        border-radius: 10px; background: rgba(var(--rgb-primary-text-color, 33, 33, 33), 0.08);
+        color: var(--todo-secondary-text);
+      }
+      .plan-note {
+        font-size: 14px; line-height: 1.4; color: var(--todo-text); cursor: text;
+        padding: 2px 6px; margin: 0 -6px; border-radius: 4px; word-break: break-word;
+      }
+      .plan-note:hover { background: rgba(var(--rgb-primary-text-color, 33, 33, 33), 0.06); }
+      .plan-note.empty { color: var(--todo-disabled); font-style: italic; }
+      .plan-note-input {
+        font: inherit; font-size: 14px; padding: 3px 6px; margin: 0 -6px; box-sizing: border-box;
+        width: calc(100% + 12px); border: 1px solid var(--todo-primary); border-radius: 4px;
+        background: var(--todo-bg); color: var(--todo-text); outline: none;
+      }
+      .plan-progress { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--todo-secondary-text); }
+      .plan-progress-text { white-space: nowrap; }
+      .plan-bar {
+        flex: 1; height: 4px; border-radius: 2px; overflow: hidden;
+        background: color-mix(in srgb, var(--todo-primary) 22%, transparent);
+      }
+      .plan-bar-fill { height: 100%; border-radius: 2px; background: var(--todo-primary); transition: width 0.3s ease; }
+      .plan-day-list { padding: 12px 12px 0; }
+      .plan-empty { text-align: center; padding: 14px 8px; color: var(--todo-disabled); font-size: 13px; }
+      .plan-day-list:has(.task) .plan-empty { display: none; }
+      .plan-num {
+        flex: 0 0 auto; width: 26px; height: 26px; padding: 0; border-radius: 50%;
+        border: 2px solid var(--todo-primary); background: transparent; color: var(--todo-primary);
+        font: inherit; font-size: 12px; font-weight: 600; line-height: 1;
+        display: inline-flex; align-items: center; justify-content: center;
+        /* No transition: a row rebuilt under the pointer would fade in its
+           hover colour again each time, which reads as a flicker. */
+        cursor: pointer; font-variant-numeric: tabular-nums;
+      }
+      button.plan-num:hover:not(:disabled) { background: var(--todo-primary); color: var(--text-primary-color, #fff); }
+      .plan-num.done {
+        background: var(--todo-primary); border-color: var(--todo-primary);
+        color: var(--text-primary-color, #fff); opacity: 0.55;
+      }
+      .plan-num:disabled { cursor: default; }
+      .plan-num ha-icon { --mdc-icon-size: 16px; display: flex; }
+      .plan-kind-overdue .plan-num:not(.done) { border-color: var(--todo-error); color: var(--todo-error); }
+      .plan-kind-overdue button.plan-num:hover:not(:disabled) { background: var(--todo-error); }
+      .plan-list-badge {
+        font-size: 11px; padding: 2px 8px; border-radius: 10px; white-space: nowrap;
+        background: rgba(var(--rgb-primary-text-color, 33, 33, 33), 0.08); color: var(--todo-secondary-text);
+      }
+      .plan-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 12px 10px 46px; }
+      .plan-actions > button { white-space: nowrap; }
+      .plan-due-hint {
+        flex: 1 1 160px; align-self: center; font-size: 12px; line-height: 1.3;
+        color: var(--todo-secondary-text);
+      }
+      .plan-add-lists { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+      .plan-list-chip {
+        font: inherit; font-size: 12px; padding: 3px 10px; border-radius: 12px; cursor: pointer;
+        border: 1px solid var(--todo-divider); background: transparent; color: var(--todo-secondary-text);
+      }
+      .plan-list-chip:hover { border-color: var(--todo-primary); color: var(--todo-primary); }
+      .plan-list-chip.active {
+        background: color-mix(in srgb, var(--todo-primary) 18%, transparent);
+        border-color: var(--todo-primary); color: var(--todo-primary);
+      }
+      /* Compact: the same day in less height. */
+      .plan-view.compact .plan-day-head { padding: 8px 12px 8px; gap: 3px; }
+      .plan-view.compact .plan-current .plan-day-head { padding-top: 10px; }
+      .plan-view.compact .plan-current .plan-day-name { font-size: 1.1rem; }
+      .plan-view.compact > .card-global-title { padding: 10px 12px 8px; font-size: 1.1rem; }
+      .plan-view.compact .plan-day-list { padding: 8px 8px 0; gap: 4px; }
+      .plan-view.compact .plan-num { width: 22px; height: 22px; font-size: 11px; }
+      .plan-view.compact .plan-num ha-icon { --mdc-icon-size: 14px; }
+      .plan-view.compact .plan-actions { padding: 0 8px 6px 38px; gap: 6px; }
+      .plan-view.compact .plan-carry, .plan-view.compact .plan-add-btn { margin: 6px 8px 0; padding: 5px 8px; }
+      .plan-view.compact .plan-add { margin: 6px 8px 0; }
+      .plan-view.compact .plan-day { padding-bottom: 8px; }
+      .plan-carry, .plan-add-btn {
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+        margin: 8px 12px 0; padding: 8px 10px; border-radius: var(--todo-radius);
+        border: 1px dashed var(--todo-divider); background: transparent;
+        color: var(--todo-secondary-text); font: inherit; font-size: 13px; cursor: pointer;
+      }
+      .plan-carry { border-color: var(--todo-primary); color: var(--todo-primary); }
+      .plan-carry:hover, .plan-add-btn:hover {
+        border-color: var(--todo-primary); color: var(--todo-primary);
+        background: color-mix(in srgb, var(--todo-primary) 8%, transparent);
+      }
+      .plan-add-btn ha-icon { --mdc-icon-size: 18px; display: flex; }
+      .plan-add { margin: 8px 12px 0; }
+      .plan-add-row { display: flex; gap: 6px; align-items: center; }
+      .plan-add-input {
+        flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--todo-divider);
+        border-radius: var(--todo-radius); background: var(--todo-bg); color: var(--todo-text);
+        font: inherit; font-size: 14px; outline: none; box-sizing: border-box;
+      }
+      .plan-add-input:focus { border-color: var(--todo-primary); }
+      .plan-add-close {
+        flex: 0 0 auto; width: 32px; height: 32px; padding: 0; border: none; border-radius: 50%;
+        background: transparent; color: var(--todo-secondary-text); cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center;
+      }
+      .plan-add-close:hover { background: rgba(var(--rgb-primary-text-color, 33, 33, 33), 0.08); }
+      .plan-add-close ha-icon { --mdc-icon-size: 18px; display: flex; }
+      .plan-add-results { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+      .plan-candidate {
+        display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+        padding: 8px 10px; border: 1px solid var(--todo-divider); border-radius: var(--todo-radius);
+        background: transparent; color: var(--todo-text); font: inherit; font-size: 14px; cursor: pointer;
+      }
+      .plan-candidate:hover { border-color: var(--todo-primary); }
+      .plan-candidate-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .plan-no-results { padding: 8px 4px; font-size: 13px; color: var(--todo-disabled); }
+      .plan-missing { padding: 24px 16px; text-align: center; color: var(--todo-secondary-text); font-size: 14px; }
+      .plan-missing-detail { margin-top: 6px; font-size: 12px; color: var(--todo-disabled); }
+      .plan-missing .new-entry-link {
+        display: inline-block; margin-top: 12px; color: var(--todo-primary); text-decoration: none;
+      }
+      .plan-missing .new-entry-link:hover { text-decoration: underline; }
+      /* On a phone a day takes most of the width and the next one peeks in. */
+      @media (max-width: 600px) {
+        .plan-days { scroll-snap-type: x proximity; }
+        .plan-day { min-width: 86%; scroll-snap-align: start; }
+        .plan-days.single .plan-day { min-width: 0; }
+      }
     `;
   }
 
@@ -13002,6 +14407,10 @@ class HomeTasksCard extends HTMLElement {
   }
 
   getCardSize() {
+    if (this._planMode) {
+      const days = (this._plan && this._plan.days) || [];
+      return 4 + Math.max(0, ...days.map((day) => (day.items || []).length));
+    }
     return 3 + this._columns.reduce((sum, cs) => sum + cs.tasks.length, 0);
   }
 
@@ -13029,9 +14438,41 @@ class HomeTasksCard extends HTMLElement {
 }
 
 /**
+ * The days of a day plan: a card type of its own in the picker and in YAML
+ * (custom:home-tasks-day-plan-card). It is the list card in its plan mode -
+ * a row is a task of a list, and everything a row does is the list's code.
+ */
+class HomeTasksDayPlanCard extends HomeTasksCard {
+  setConfig(config) {
+    this._setPlanConfig(config || {});
+  }
+
+  static getConfigElement() {
+    return document.createElement("home-tasks-day-plan-card-editor");
+  }
+
+  // What the picker starts a new card with: the first plan there is. With
+  // several plans a card has to name one, so it is named from the start.
+  static async getStubConfig(hass) {
+    const config = { days: 3 };
+    try {
+      const result = await hass.callWS({ type: "home_tasks/get_plans" });
+      const first = result && Array.isArray(result.plans) && result.plans[0];
+      if (first) config.plan = first.id;
+    } catch (_) { /* no plan yet, or not reachable: the card says so */ }
+    return config;
+  }
+}
+
+/**
  * Card Editor — uses safe DOM construction
  */
 class HomeTasksCardEditor extends HTMLElement {
+  // The editor of the day plan card is this one with its plan part only.
+  get _isPlanEditor() {
+    return false;
+  }
+
   // "Defaults" section (issues #44 / #46): list-level default assignee and
   // reminders, stored in the list itself so they apply to every creation
   // path (card, service, WS, voice, todo). Loaded/saved via WS.
@@ -13559,10 +15000,7 @@ class HomeTasksCardEditor extends HTMLElement {
 
   _t(key, ...args) {
     // Same preference order as HomeTasksCard._localeCode (separate class).
-    let lang = this._hass?.locale?.language || this._hass?.language || "en";
-    if (lang === "nb" || lang === "nn") lang = "no";
-    const str = (_TRANSLATIONS[lang] || _TRANSLATIONS.en)[key] || _TRANSLATIONS.en[key] || key;
-    return args.length ? str.replace(/\{(\d+)\}/g, (_, i) => args[i] ?? "") : str;
+    return _htText(this._hass?.locale?.language || this._hass?.language, key, args);
   }
 
   _el(tag, attrs = {}, children = []) {
@@ -13626,19 +15064,31 @@ class HomeTasksCardEditor extends HTMLElement {
 
   async _loadLists() {
     try {
-      const [nativeResult, externalResult] = await Promise.all([
+      const [nativeResult, externalResult, plansResult] = await Promise.all([
         this._hass.callWS({ type: "home_tasks/get_lists" }),
         this._hass.callWS({ type: "home_tasks/get_external_lists" }).catch(() => null),
+        this._hass.callWS({ type: "home_tasks/get_plans" }).catch(() => null),
       ]);
       if (nativeResult && Array.isArray(nativeResult.lists)) {
         this._lists = nativeResult.lists;
       }
+      this._plans = (plansResult && Array.isArray(plansResult.plans)) ? plansResult.plans : [];
+      // Every list there is, for choosing a plan's lists.
+      this._planLists = (plansResult && Array.isArray(plansResult.lists)) ? plansResult.lists : [];
       this._externalLists = (externalResult && Array.isArray(externalResult.external_lists))
         ? externalResult.external_lists.filter(l => l.linked)
         : [];
       this._listsLoaded = true;
-      // Auto-select first list for first column if none set
-      if (!this._config.columns[0]?.list_id && !this._config.columns[0]?.entity_id && this._lists.length > 0) {
+      if (this._isPlanEditor) {
+        // A new card names its plan from the start (see getStubConfig); one
+        // written by hand without a plan gets the first one once there is a
+        // choice to make.
+        if (!this._config.plan && this._plans.length > 1) {
+          this._config = { ...this._config, plan: this._plans[0].id };
+          this._fireChanged();
+        }
+      } else if (!this._config.columns[0]?.list_id && !this._config.columns[0]?.entity_id && this._lists.length > 0) {
+        // Auto-select first list for first column if none set
         const newCols = [...this._config.columns];
         newCols[0] = { ...newCols[0], list_id: this._lists[0].id };
         this._config = { ...this._config, columns: newCols };
@@ -13751,6 +15201,10 @@ class HomeTasksCardEditor extends HTMLElement {
       select.editor-native-select:focus { outline: none; border-color: var(--primary-color, #03a9f4); border-width: 2px; padding: 9px 11px; }
       select.editor-native-select option { background-color: var(--card-background-color, var(--ha-card-background, #fff)); color: var(--primary-text-color, #212121); }
       .hint { font-size: 12px; color: var(--secondary-text-color); font-style: italic; margin-top: 2px; }
+      .hint.plan-lists-error { color: var(--error-color, #db4437); font-style: normal; }
+      .assignee-chip.plan-list-missing { font-style: italic; }
+      .new-entry-link { font-size: 13px; color: var(--primary-color); text-decoration: none; align-self: flex-start; }
+      .new-entry-link:hover { text-decoration: underline; }
       /* A hint belongs to what stands right above it (a field, or a group
          heading it introduces): pull it up to that instead of floating
          halfway to the next setting. */
@@ -13824,7 +15278,7 @@ class HomeTasksCardEditor extends HTMLElement {
     `;
     root.appendChild(style);
 
-    const cols = this._config.columns;
+    const cols = this._config.columns || [];
     const activeTab = Math.min(this._editorTab, cols.length - 1);
 
     // Global card title input (above tabs)
@@ -13836,6 +15290,14 @@ class HomeTasksCardEditor extends HTMLElement {
       },
     );
     const cardTitleRow = this._el("div", { className: "editor-card-title-row" }, [cardTitleInput]);
+
+    // A day plan has no columns to set up: its rows come from the plan.
+    if (this._isPlanEditor) {
+      root.appendChild(this._el("div", { className: "editor" }, [
+        cardTitleRow, this._buildPlanEditor(this._plans || []),
+      ]));
+      return;
+    }
 
 
     // Tab bar (tabs on left, + on right)
@@ -13955,6 +15417,25 @@ class HomeTasksCardEditor extends HTMLElement {
     root.appendChild(editor);
   }
 
+  // The way to a new list or a new day plan: the integration's page, where
+  // Home Assistant adds an entry. In a new tab, so that this editor
+  // stays open with what was changed in it; when the user comes back, lists
+  // and plans are read again and the new one can be picked. Null for anyone
+  // who is not an administrator - nobody else may add an entry.
+  _newEntryLink() {
+    if (this._hass?.user?.is_admin !== true) return null;
+    const link = this._el("a", {
+      className: "new-entry-link", href: NEW_ENTRY_PATH, target: "_blank", rel: "noopener",
+      textContent: `+ ${this._t("new_entry_link")}`,
+    });
+    link.addEventListener("click", () => {
+      window.addEventListener("focus", () => {
+        if (this.isConnected) this._loadLists();
+      }, { once: true });
+    });
+    return link;
+  }
+
   // A line of text with its label inside the box. An input of the editor's
   // own: Home Assistant's ha-textfield is no longer there in 2026.11, and an
   // element that is not defined takes no room - the field was simply gone.
@@ -13964,6 +15445,196 @@ class HomeTasksCardEditor extends HTMLElement {
     input.addEventListener("change", () => onChange(input.value));
     return this._el("div", { className: "field-wrap title-field" }, [
       input, this._el("span", { textContent: this._t(labelKey) }),
+    ]);
+  }
+
+  // A dropdown with its label inside the box, as the list editor's.
+  // *options* are [value, text] pairs.
+  _editorSelect(labelKey, cls, options, value, onChange) {
+    const sel = this._el("select", { className: `editor-native-select ${cls}` }, options.map(
+      ([val, text]) => this._el("option", { value: val, textContent: text })
+    ));
+    sel.value = value;
+    sel.addEventListener("change", () => onChange(sel.value));
+    return this._el("div", { className: "field-wrap" }, [
+      sel, this._el("span", { textContent: this._t(labelKey) }),
+    ]);
+  }
+
+  // The day plan's settings, laid out like a list column's: the plan where a
+  // column has its list, then sections that open - what is shown, grouped by
+  // card and day header, the fields of an open task, and the lists the plan
+  // draws from.
+  _buildPlanEditor(plans) {
+    const set = (updates) => {
+      const next = { ...this._config };
+      for (const [key, value] of Object.entries(updates)) {
+        if (value === undefined) delete next[key];
+        else next[key] = value;
+      }
+      this._config = next;
+      this._fireChanged();
+    };
+    const groupLabel = (key) =>
+      this._el("div", { className: "group-label" }, [this._el("span", { textContent: this._t(key) })]);
+    // Only the state that differs from the default is written, so a card
+    // that changes nothing keeps a config of three lines.
+    const toggle = (cls, labelKey, key, defaultOn) => {
+      const sw = document.createElement("ha-switch");
+      sw.className = cls;
+      const now = this._config[key];
+      sw.checked = defaultOn ? now !== false : now === true;
+      sw.setAttribute("aria-label", this._t(labelKey));
+      sw.addEventListener("change", () => set({ [key]: sw.checked === defaultOn ? undefined : sw.checked }));
+      return this._el("div", { className: "toggle-row" }, [
+        this._el("span", { className: "toggle-label", textContent: this._t(labelKey) }),
+        sw,
+      ]);
+    };
+
+    const known = plans.some((p) => p.id === this._config.plan);
+    const planOptions = plans.map((p) => [p.id, p.name]);
+    // A plan the config names but that is not there (yet) stays selectable.
+    if (this._config.plan && !known) planOptions.unshift([this._config.plan, this._config.plan]);
+    const planSelect = this._editorSelect("ed_view_day_plan", "plan-select", planOptions,
+      this._config.plan || (plans[0] && plans[0].id) || "", (value) => {
+        set({ plan: value });
+        this._render();                       // the lists below are the chosen plan's
+      });
+
+    const days = Math.min(7, Math.max(1, parseInt(this._config.days, 10) || 1));
+    const daysSelect = this._editorSelect("ed_plan_days", "days-select",
+      [1, 2, 3, 4, 5, 6, 7].map((n) => [String(n), String(n)]), String(days),
+      (value) => set({ days: Number(value) }));
+
+    // Whether the plan has Saturday and Sunday. That is one of the plan's
+    // own settings (its workdays), written to the plan right away like its
+    // lists: every card showing the plan and its assistants follow.
+    const planInfo = plans.find((p) => p.id === (this._config.plan || (plans[0] && plans[0].id)));
+    const weekendRow = [];
+    if (planInfo) {
+      const ALL = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+      const current = (planInfo.workdays || []).length ? planInfo.workdays : ALL;
+      const sw = document.createElement("ha-switch");
+      sw.className = "weekend-switch";
+      sw.checked = current.includes("sat") || current.includes("sun");
+      sw.setAttribute("aria-label", this._t("ed_plan_weekend"));
+      sw.addEventListener("change", () => {
+        const days = ALL.filter((d) => (d === "sat" || d === "sun" ? sw.checked : current.includes(d)));
+        // A plan of the weekend only, switched off: the week instead of no day at all.
+        const workdays = days.length ? days : ALL.slice(0, 5);
+        this._planDaysError = null;
+        this._hass.callWS({ type: "home_tasks/set_plan_workdays", plan: planInfo.id, workdays })
+          .then((info) => {
+            planInfo.workdays = (info && info.workdays) || (workdays.length === ALL.length ? [] : workdays);
+            this._render();
+          })
+          .catch((err) => {
+            this._planDaysError = (err && err.message) || String(err);
+            this._render();
+          });
+      });
+      weekendRow.push(this._el("div", { className: "toggle-row" }, [
+        this._el("span", { className: "toggle-label", textContent: this._t("ed_plan_weekend") }),
+        sw,
+      ]));
+    }
+
+    const sections = [
+      this._buildEditorSection("plan_view", "mdi:eye", "ed_sec_view", [
+        groupLabel("ed_group_card"),
+        daysSelect,
+        this._el("div", { className: "toggle-grid" }, [
+          toggle("compact-switch", "ed_compact", "compact", false),
+          ...weekendRow,
+        ]),
+        ...(this._planDaysError
+          ? [this._el("div", { className: "hint plan-lists-error plan-days-error", textContent: this._planDaysError })]
+          : []),
+        groupLabel("ed_group_header"),
+        this._el("div", { className: "toggle-grid" }, [
+          toggle("date-switch", "due_date_lbl", "show_date", true),
+          toggle("progress-switch", "ed_show_progress", "show_progress", true),
+          toggle("focus-switch", "plan_note_placeholder", "show_focus", true),
+        ]),
+      ]),
+      // What an open row shows, and in which order: the options a column
+      // has for it, at the root of the card config - a plan's rows come
+      // from several lists and all follow the one setting.
+      this._buildEditorSection("plan_features", "mdi:tune", "ed_sec_display", [
+        this._buildDetailFieldList({ get: () => this._config, update: set }),
+        toggle("move-switch", "ed_show_move", "show_move", true),
+      ]),
+    ];
+
+    // The lists the plan draws from. That is a setting of the plan, not of
+    // this card - every card showing the plan and the plan's tools for
+    // assistants follow it - but this is where one looks for it.
+    const allLists = this._planLists || [];
+    if (planInfo && allLists.length > 0) {
+      // The whole choice, also lists that are not there right now (deleted,
+      // or their entry not loaded): they keep limiting the plan, so they
+      // show - as chips of their own - and are saved along. Dropping them
+      // without a word could leave nothing chosen, which means every list,
+      // for the plan's assistants too.
+      const chosen = new Set(planInfo.source_lists || []);
+      const missing = [...chosen].filter((id) => !allLists.some((l) => l.entry_id === id));
+      const ordered = (ids) => [
+        ...allLists.map((x) => x.entry_id).filter((id) => ids.has(id)),
+        ...missing.filter((id) => ids.has(id)),
+      ];
+      const save = (ids) => {
+        this._planListsError = null;
+        this._hass.callWS({ type: "home_tasks/set_plan_lists", plan: planInfo.id, source_lists: ids })
+          .then((info) => {
+            planInfo.source_lists = (info && info.source_lists) || ids;
+            this._render();
+          })
+          .catch((err) => {
+            this._planListsError = (err && err.message) || String(err);
+            this._render();
+          });
+      };
+      const chip = (label, active, cls, onClick) => {
+        const btn = this._el("button", { className: `assignee-chip ${cls}` + (active ? " active" : ""), textContent: label });
+        btn.type = "button";
+        btn.setAttribute("aria-pressed", String(active));
+        btn.addEventListener("click", onClick);
+        return btn;
+      };
+      const chips = [
+        chip(this._t("ed_plan_all_lists"), chosen.size === 0, "plan-all-lists", () => save([])),
+        ...allLists.map((l) => {
+          const btn = chip(l.name, chosen.has(l.entry_id), "plan-list", () => {
+            const next = new Set(chosen);
+            if (next.has(l.entry_id)) next.delete(l.entry_id);
+            else next.add(l.entry_id);
+            save(ordered(next));
+          });
+          btn.dataset.entryId = l.entry_id;
+          return btn;
+        }),
+        // Chosen, but not there: a tap takes it out of the choice.
+        ...missing.map((id) => {
+          const btn = chip(this._t("ed_plan_list_missing"), true, "plan-list plan-list-missing", () => {
+            const next = new Set(chosen);
+            next.delete(id);
+            save(ordered(next));
+          });
+          btn.dataset.entryId = id;
+          return btn;
+        }),
+      ];
+      const nodes = [this._el("div", { className: "assignee-chip-row plan-lists" }, chips)];
+      if (this._planListsError) {
+        nodes.push(this._el("div", { className: "hint plan-lists-error", textContent: this._planListsError }));
+      }
+      sections.push(this._buildEditorSection("plan_lists", "mdi:format-list-checks", "ed_view_lists", nodes));
+    }
+
+    return this._el("div", { className: "visual-editor plan-editor" }, [
+      this._el("div", { className: "field" }, [planSelect, this._newEntryLink()]),
+      ...sections,
     ]);
   }
 
@@ -14035,6 +15706,124 @@ class HomeTasksCardEditor extends HTMLElement {
       }
     });
     return editor;
+  }
+
+  // The task-details fields as one list: switched on or off, and moved up or
+  // down to set the order they appear in (detail_order). *get* gives the
+  // config the options are in as it is now - a column, or the card itself
+  // for a day plan - and *update* writes to it.
+  _buildDetailFieldList({ get, update, noSections = false, onToggle = null }) {
+    const list = this._el("div", { className: "detail-field-list" });
+    const draw = () => {
+      const cur = get() || {};
+      const order = _detailOrder(cur);
+      list.replaceChildren();
+      order.forEach((key, i) => {
+        const [, labelKey, option, , legacy] = DETAIL_FIELD[key];
+        const move = (d) => {
+          const next = order.slice();
+          [next[i], next[i + d]] = [next[i + d], next[i]];
+          update({ detail_order: _shortDetailOrder(next) });
+          draw();
+        };
+        const label = this._el("span", { className: "toggle-label", textContent: this._t(labelKey) });
+        const unavailable = key === "section" && noSections;
+        if (unavailable) {
+          label.appendChild(this._el("span", { className: "hint", textContent: this._t("ed_section_field_no_sections") }));
+        }
+        const sw = document.createElement("ha-switch");
+        sw.checked = _detailFieldOn(cur, key);
+        sw.setAttribute("aria-label", this._t(labelKey));
+        sw.addEventListener("change", () => {
+          const updates = { [option]: sw.checked };
+          // The older name would otherwise still win where the new one is unset.
+          if (legacy && legacy in (get() || {})) updates[legacy] = undefined;
+          update(updates);
+          if (onToggle) onToggle(key, sw.checked);
+        });
+        list.appendChild(this._el("div", {
+          className: "toggle-row detail-field-row" + (unavailable ? " unavailable" : ""),
+          "data-key": key,
+        }, [
+          label,
+          this._iconButton("mdi:arrow-up", "ed_move_up", i === 0, () => move(-1)),
+          this._iconButton("mdi:arrow-down", "ed_move_down", i === order.length - 1, () => move(1)),
+          sw,
+        ]));
+      });
+    };
+    draw();
+    return list;
+  }
+
+  // A section that opens: icon, title, chevron, and the settings inside.
+  // Open or closed is remembered per section id.
+  _buildEditorSection(sectionId, icon, titleKey, nodes) {
+    const det = document.createElement("details");
+    const isOpen = this._sectionOpen[sectionId] === true;
+    if (isOpen) det.open = true;
+    const sum = document.createElement("summary");
+    const ico = document.createElement("ha-icon");
+    ico.setAttribute("icon", icon);
+    ico.style.cssText = "--mdc-icon-size:20px;width:20px;height:20px;flex-shrink:0;";
+    const chevWrap = document.createElement("span");
+    chevWrap.className = "sum-chevron";
+    const chev = document.createElement("ha-icon");
+    chev.setAttribute("icon", "mdi:chevron-down");
+    chev.style.cssText = "--mdc-icon-size:20px;width:20px;height:20px;";
+    chevWrap.appendChild(chev);
+    sum.appendChild(ico);
+    sum.appendChild(document.createTextNode(this._t(titleKey)));
+    sum.appendChild(chevWrap);
+    det.appendChild(sum);
+    const content = document.createElement("div");
+    content.className = "section-content";
+    for (const n of nodes) if (n) content.appendChild(n);
+    // Zero-padding wrapper: animating max-height on the padded section-content
+    // would leave the padding visible at max-height:0. The wrapper has no
+    // padding so max-height:0 truly collapses to 0.
+    const wrap = document.createElement("div");
+    wrap.appendChild(content);
+    det.appendChild(wrap);
+
+    sum.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (det.open) {
+        // Mark closed immediately so any mid-animation re-render preserves state
+        this._sectionOpen[sectionId] = false;
+        this._saveSectionState();
+        const h = wrap.offsetHeight;
+        if (!h) { det.open = false; return; }
+        wrap.style.cssText = `overflow:hidden;max-height:${h}px;`;
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            wrap.style.transition = "max-height 0.22s ease-in";
+            wrap.style.maxHeight = "0";
+            wrap.addEventListener("transitionend", () => {
+              det.open = false;
+              wrap.style.cssText = "";
+            }, { once: true });
+          });
+        });
+      } else {
+        // Mark open immediately so any mid-animation re-render preserves state
+        this._sectionOpen[sectionId] = true;
+        this._saveSectionState();
+        det.open = true;
+        wrap.style.cssText = "overflow:hidden;max-height:0;";
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            wrap.style.transition = "max-height 0.28s ease-out";
+            wrap.style.maxHeight = "800px";
+            wrap.addEventListener("transitionend", () => {
+              wrap.style.cssText = "";
+            }, { once: true });
+          });
+        });
+      }
+    });
+
+    return det;
   }
 
   _buildVisualEditor(tabIdx) {
@@ -14225,75 +16014,12 @@ class HomeTasksCardEditor extends HTMLElement {
       ]);
     };
 
-    const hint = this._el("span", { className: "hint", textContent: this._t("ed_hint") });
+    // Where to get a new list: the link for those who may add one, the
+    // sentence for everybody else.
+    const hint = this._newEntryLink()
+      || this._el("span", { className: "hint", textContent: this._t("ed_hint") });
 
-    const makeSection = (sectionId, icon, titleKey, nodes) => {
-      const det = document.createElement("details");
-      const isOpen = this._sectionOpen[sectionId] === true;
-      if (isOpen) det.open = true;
-      const sum = document.createElement("summary");
-      const ico = document.createElement("ha-icon");
-      ico.setAttribute("icon", icon);
-      ico.style.cssText = "--mdc-icon-size:20px;width:20px;height:20px;flex-shrink:0;";
-      const chevWrap = document.createElement("span");
-      chevWrap.className = "sum-chevron";
-      const chev = document.createElement("ha-icon");
-      chev.setAttribute("icon", "mdi:chevron-down");
-      chev.style.cssText = "--mdc-icon-size:20px;width:20px;height:20px;";
-      chevWrap.appendChild(chev);
-      sum.appendChild(ico);
-      sum.appendChild(document.createTextNode(this._t(titleKey)));
-      sum.appendChild(chevWrap);
-      det.appendChild(sum);
-      const content = document.createElement("div");
-      content.className = "section-content";
-      for (const n of nodes) if (n) content.appendChild(n);
-      // Zero-padding wrapper: animating max-height on the padded section-content
-      // would leave the padding visible at max-height:0. The wrapper has no
-      // padding so max-height:0 truly collapses to 0.
-      const wrap = document.createElement("div");
-      wrap.appendChild(content);
-      det.appendChild(wrap);
-
-      sum.addEventListener("click", (e) => {
-        e.preventDefault();
-        if (det.open) {
-          // Mark closed immediately so any mid-animation re-render preserves state
-          this._sectionOpen[sectionId] = false;
-          this._saveSectionState();
-          const h = wrap.offsetHeight;
-          if (!h) { det.open = false; return; }
-          wrap.style.cssText = `overflow:hidden;max-height:${h}px;`;
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              wrap.style.transition = "max-height 0.22s ease-in";
-              wrap.style.maxHeight = "0";
-              wrap.addEventListener("transitionend", () => {
-                det.open = false;
-                wrap.style.cssText = "";
-              }, { once: true });
-            });
-          });
-        } else {
-          // Mark open immediately so any mid-animation re-render preserves state
-          this._sectionOpen[sectionId] = true;
-          this._saveSectionState();
-          det.open = true;
-          wrap.style.cssText = "overflow:hidden;max-height:0;";
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              wrap.style.transition = "max-height 0.28s ease-out";
-              wrap.style.maxHeight = "800px";
-              wrap.addEventListener("transitionend", () => {
-                wrap.style.cssText = "";
-              }, { once: true });
-            });
-          });
-        }
-      });
-
-      return det;
-    };
+    const makeSection = (...args) => this._buildEditorSection(...args);
 
     // Preset filters live under col.filters.{assignees,labels}. Merge against
     // the LIVE config (not the render-time `col` snapshot) so two sequential
@@ -14399,53 +16125,17 @@ class HomeTasksCardEditor extends HTMLElement {
 
     // The task-details fields as one list: switched on or off, and moved up
     // or down to set the order they appear in (detail_order).
-    const detailFields = (() => {
-      const list = this._el("div", { className: "detail-field-list" });
+    const listSections = this._listSections[this._sourceKeyForCol(col)];
+    const detailFields = this._buildDetailFieldList({
+      get: () => this._config.columns[tabIdx] || {},
+      update: updateCol,
       // Section only shows in the details once the list has sections.
-      const sections = this._listSections[this._sourceKeyForCol(col)];
-      const noSections = Array.isArray(sections) && sections.length === 0;
-      const draw = () => {
-        const cur = this._config.columns[tabIdx] || {};
-        const order = _detailOrder(cur);
-        list.replaceChildren();
-        order.forEach((key, i) => {
-          const [, labelKey, option, , legacy] = DETAIL_FIELD[key];
-          const move = (d) => {
-            const next = order.slice();
-            [next[i], next[i + d]] = [next[i + d], next[i]];
-            updateCol({ detail_order: _shortDetailOrder(next) });
-            draw();
-          };
-          const label = this._el("span", { className: "toggle-label", textContent: this._t(labelKey) });
-          const unavailable = key === "section" && noSections;
-          if (unavailable) {
-            label.appendChild(this._el("span", { className: "hint", textContent: this._t("ed_section_field_no_sections") }));
-          }
-          const sw = document.createElement("ha-switch");
-          sw.checked = _detailFieldOn(cur, key);
-          sw.setAttribute("aria-label", this._t(labelKey));
-          sw.addEventListener("change", () => {
-            const updates = { [option]: sw.checked };
-            // The older name would otherwise still win where the new one is unset.
-            if (legacy && legacy in (this._config.columns[tabIdx] || {})) updates[legacy] = undefined;
-            updateCol(updates);
-            if (key === "person") offeredPersons.style.display = sw.checked ? "" : "none";
-            if (key === "images") imagesToggle.querySelector("ha-switch").checked = sw.checked;
-          });
-          list.appendChild(this._el("div", {
-            className: "toggle-row detail-field-row" + (unavailable ? " unavailable" : ""),
-            "data-key": key,
-          }, [
-            label,
-            this._iconButton("mdi:arrow-up", "ed_move_up", i === 0, () => move(-1)),
-            this._iconButton("mdi:arrow-down", "ed_move_down", i === order.length - 1, () => move(1)),
-            sw,
-          ]));
-        });
-      };
-      draw();
-      return list;
-    })();
+      noSections: Array.isArray(listSections) && listSections.length === 0,
+      onToggle: (key, on) => {
+        if (key === "person") offeredPersons.style.display = on ? "" : "none";
+        if (key === "images") imagesToggle.querySelector("ha-switch").checked = on;
+      },
+    });
 
     return this._el("div", { className: "visual-editor" }, [
       this._el("div", { className: "field" }, [
@@ -14884,14 +16574,43 @@ class HomeTasksCardEditor extends HTMLElement {
   }
 }
 
+/**
+ * The editor of the day plan card: the card title and the plan's settings.
+ * A plan card has no columns, so its config is taken as it is.
+ */
+class HomeTasksDayPlanCardEditor extends HomeTasksCardEditor {
+  get _isPlanEditor() {
+    return true;
+  }
+
+  setConfig(config) {
+    // Left over from a config written when the plan was a view of the list
+    // card: neither key means anything here.
+    const { columns: _c, view: _v, ...rest } = config || {};
+    this._config = rest;
+    // Skip re-render if this setConfig is the echo of our own _fireChanged call
+    if (this._ignoreNextSetConfig) {
+      this._ignoreNextSetConfig = false;
+      return;
+    }
+    if (this._listsLoaded) this._render();
+  }
+}
+
 // Register elements — wait for HA's scoped custom element registry polyfill
 // before calling customElements.define. The polyfill replaces the native
 // define() with a JS wrapper; we detect this to avoid registering too early
 // (which puts the element in the native registry where the polyfill can't
 // find it, causing "Custom element not found" in Firefox/Safari/iPad).
 const _htRegister = () => {
-  try { customElements.define("home-tasks-card", HomeTasksCard); } catch(_) {}
-  try { customElements.define("home-tasks-card-editor", HomeTasksCardEditor); } catch(_) {}
+  for (const [name, element] of [
+    ["home-tasks-card", HomeTasksCard],
+    ["home-tasks-card-editor", HomeTasksCardEditor],
+    ["home-tasks-day-plan-card", HomeTasksDayPlanCard],
+    ["home-tasks-day-plan-card-editor", HomeTasksDayPlanCardEditor],
+  ]) {
+    try { customElements.define(name, element); } catch(_) {}
+  }
 };
 
 const _htIsPolyfillReady = () =>
@@ -14946,10 +16665,25 @@ const _htTick = () => {
 };
 _htTick();
 
+// The names in the card picker. They are read once, when this file loads -
+// before there is a hass object - so the language is the one Home Assistant
+// keeps for this browser, else the browser's own, else English.
+const _htPickerText = (key) => {
+  let lang = "";
+  try { lang = JSON.parse(localStorage.getItem("selectedLanguage") || "null") || ""; } catch (_) { /* blocked storage */ }
+  if (!lang && typeof navigator !== "undefined") lang = navigator.language || "";
+  return _htText(lang, key);
+};
+
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "home-tasks-card",
-  name: "Home Tasks",
-  description: "A feature-rich todo list with drag & drop, sub-tasks, notes, and due dates.",
+  name: _htPickerText("picker_list_name"),
+  description: _htPickerText("picker_list_desc"),
+  preview: true,
+}, {
+  type: "home-tasks-day-plan-card",
+  name: _htPickerText("picker_plan_name"),
+  description: _htPickerText("picker_plan_desc"),
   preview: true,
 });
