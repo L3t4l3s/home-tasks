@@ -118,6 +118,76 @@ const sent = (calls, type) => calls.filter((c) => c.type === `home_tasks/${type}
 const same = (actual, expected) => assert.deepEqual(JSON.parse(JSON.stringify(actual)), expected);
 const day = (card, date) => q(card, `.plan-day-list[data-plan-date="${date}"]`).closest('.plan-day');
 
+describe('day plan: titles with identical IDs in different lists', () => {
+  async function twins() {
+    return makeCard({}, (data) => {
+      data.tasks.L2[0].id = 'A';
+      data.plan.days[1].items[0].task_id = 'A';
+    });
+  }
+  const taskRow = (card, entry) => q(card, `.plan-row[data-plan-entry="${entry}"][data-task-id="A"]`);
+
+  for (const entry of ['L1', 'L2']) {
+    test(`editing ${entry} opens and saves only that list's title`, async () => {
+      const { card, calls, data } = await twins();
+      const other = entry === 'L1' ? 'L2' : 'L1';
+      const otherTitle = data.tasks[other].find((task) => task.id === 'A').title;
+      taskRow(card, entry).querySelector('.task-title').dispatchEvent(
+        new MouseEvent('dblclick', { bubbles: true }),
+      );
+      await settle();
+      const input = taskRow(card, entry).querySelector('.edit-title-input');
+      assert.equal(qa(card, '.edit-title-input').length, 1);
+      assert.equal(card.shadowRoot.activeElement, input);
+      assert.equal(taskRow(card, other).querySelector('.edit-title-input'), null);
+      input.value = `Renamed ${entry}`;
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      await settle();
+      same(sent(calls, 'update_task'), [{
+        type: 'home_tasks/update_task', list_id: entry, task_id: 'A', title: `Renamed ${entry}`,
+      }]);
+      assert.equal(data.tasks[other].find((task) => task.id === 'A').title, otherTitle);
+    });
+  }
+
+  test('focus and caret stay in the second list after a forced rebuild', async () => {
+    const { card } = await twins();
+    click(taskRow(card, 'L1').querySelector('.task-content'));
+    await settle();
+    click(taskRow(card, 'L2').querySelector('.task-content'));
+    await settle();
+    assert.equal(qa(card, '.edit-title-input').length, 2);
+    const input = taskRow(card, 'L2').querySelector('.edit-title-input');
+    input.focus();
+    input.setSelectionRange(1, 3);
+    card._render();
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    const restored = taskRow(card, 'L2').querySelector('.edit-title-input');
+    assert.equal(card.shadowRoot.activeElement, restored);
+    assert.equal(restored.selectionStart, 1);
+    assert.equal(restored.selectionEnd, 3);
+  });
+
+  test('a provider ID change keeps only its own list expanded', async () => {
+    const { card, calls } = await twins();
+    click(taskRow(card, 'L2').querySelector('.task-content'));
+    await settle();
+    card._taskIdChanged(1, 'A', 'new-A');
+    card._render();
+    await settle();
+    assert.equal(taskRow(card, 'L1').querySelector('.edit-title-input'), null);
+    const renamedRow = q(card, '.plan-row[data-plan-entry="L2"][data-task-id="new-A"]');
+    const input = renamedRow.querySelector('.edit-title-input');
+    assert.ok(input);
+    input.focus();
+    input.value = 'Renamed after ID change';
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await settle();
+    assert.equal(sent(calls, 'update_task').at(-1).task_id, 'new-A');
+    assert.equal(sent(calls, 'update_task').at(-1).list_id, 'L2');
+  });
+});
+
 describe('day plan: what it shows', () => {
   test('one column per day, the current one first and set apart', async () => {
     const { card, calls } = await makeCard();
@@ -379,7 +449,7 @@ describe('day plan: a row is the task in its list', () => {
     const { card, calls } = await makeCard();
     click(day(card, MON).querySelectorAll('.plan-row')[1].querySelector('.task-content'));
     await settle();
-    assert.ok(card._expandedTasks.has('A'));
+    assert.ok(q(card, '.plan-row[data-task-id="A"].is-expanded'));
     assert.ok(q(card, '.plan-row .task-details'));
     assert.equal(sent(calls, 'update_task').length, 0);
   });

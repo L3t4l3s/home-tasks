@@ -328,6 +328,18 @@ class ExternalTaskOverlayStore:
             self.on_reminders_changed(task_uid)
         return {**_empty_overlay(), **overlay}
 
+    async def async_move_overlay(self, old_uid: str, new_uid: str) -> None:
+        """What Home Tasks keeps for a task, now under the task's new uid.
+
+        For a provider that makes a new item of a renamed one: the task is
+        the same, only its uid changed. Fields the new uid already has win.
+        """
+        overlays = self._data.setdefault("overlays", {})
+        if old_uid == new_uid or old_uid not in overlays:
+            return
+        overlays[new_uid] = {**overlays.pop(old_uid), **overlays.get(new_uid, {})}
+        await self._async_save()
+
     async def async_delete_overlay(self, task_uid: str) -> None:
         """Remove the overlay for *task_uid*."""
         self._data.get("overlays", {}).pop(task_uid, None)

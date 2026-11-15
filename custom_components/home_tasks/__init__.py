@@ -841,6 +841,21 @@ def _schedule_external_reminders(hass: HomeAssistant, entry_id: str, entity_id: 
         _schedule_reminders(hass, entry_id, task)
 
 
+def _external_task_renamed(hass: HomeAssistant, entry_id: str, entity_id: str, old_uid: str, new_uid: str) -> None:
+    """A provider made a new item of a renamed task (Bring!): its timers go with it.
+
+    Its overlay is already under the new uid. Left alone, a reminder would
+    fire for a uid that is gone, and a pending reopen would find nothing.
+    """
+    had_reopen = old_uid in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+    _cancel_recurrence(hass, old_uid)
+    _cancel_reminders(hass, old_uid)
+    hass.data.get(DATA_DUE_FIRED, {}).pop(old_uid, None)
+    _schedule_external_reminders(hass, entry_id, entity_id, new_uid)
+    if had_reopen:
+        _recover_external_recurrence_timers(hass, entry_id, entity_id)
+
+
 def _recover_external_reminder_timers(hass: HomeAssistant, entry_id: str, entity_id: str) -> None:
     """On startup, reschedule reminder timers for external tasks (parity with native)."""
     store = hass.data.get(DOMAIN, {}).get(entry_id)
@@ -2116,8 +2131,8 @@ async def _resolve_actor(hass: HomeAssistant, call: ServiceCall) -> str | None:
 async def _update_external(
     hass: HomeAssistant, entity_id: str, data: dict, fields: dict, task: dict | None = None,
     actor: str | None = None, actor_user_id: str | None = None,
-) -> None:
-    """Apply service fields to a task on a linked list.
+) -> str:
+    """Apply service fields to a task on a linked list; the task's uid afterwards.
 
     Routes through the same code the card uses, so the provider takes what it
     can and the overlay keeps the rest — and the completion events and
@@ -2126,14 +2141,18 @@ async def _update_external(
     Pass *task* when the caller already has it: resolving it again means
     reading the whole list off the provider once more, which on a bulk
     operation is one round trip per task.
+
+    A provider that makes a new item of a renamed one (Bring!) gives the task
+    a new uid: what the caller does with it next belongs there.
     """
     from .websocket_api import async_update_external_task
 
     if task is None:
         task = await _resolve_external_task(hass, entity_id, data)
-    await async_update_external_task(
+    _unsynced, uid = await async_update_external_task(
         hass, entity_id, task["id"], fields, actor=actor, actor_user_id=actor_user_id
     )
+    return uid
 
 
 def _service_task_fields(
@@ -2497,17 +2516,20 @@ def _async_register_services(hass: HomeAssistant) -> None:
             kwargs.update(_service_task_fields(hass, kind, ident, store, call.data, task))
             # Sections are ours alone: the overlay, as the card sets them.
             section = {"section_id": kwargs.pop("section_id")} if "section_id" in kwargs else None
+            task_id = task["id"]
             if kwargs:
-                await _update_external(hass, ident, call.data, kwargs, task=task, actor=actor)
+                # A rename can give the task a new uid (Bring!): the rest goes there.
+                task_id = await _update_external(hass, ident, call.data, kwargs, task=task, actor=actor)
             if section:
-                await store.async_set_overlay(task["id"], **section)
+                await store.async_set_overlay(task_id, **section)
         else:
             task = _resolve_task(store, call.data)
+            task_id = task["id"]
             kwargs.update(_service_task_fields(hass, kind, ident, store, call.data, task))
             if kwargs:
-                await store.async_update_task(task["id"], actor=actor, **kwargs)
-        await _async_service_position(hass, kind, ident, store, task["id"], call.data.get("position"))
-        await _async_service_image(hass, kind, ident, store, task["id"], call.data, force=True)
+                await store.async_update_task(task_id, actor=actor, **kwargs)
+        await _async_service_position(hass, kind, ident, store, task_id, call.data.get("position"))
+        await _async_service_image(hass, kind, ident, store, task_id, call.data, force=True)
 
     async def _resolve_any_task(call: ServiceCall) -> tuple[str, str, object, dict]:
         """The list and the task a call names, native or linked.

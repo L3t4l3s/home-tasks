@@ -5605,11 +5605,22 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
         ...fields
       }, { rethrow });
     }
-    await this._callWs("home_tasks/update_external_task", {
+    const result = await this._callWs("home_tasks/update_external_task", {
       entity_id: this._colEntityId(colIdx),
       task_uid: taskId,
       ...fields
     }, { rethrow });
+    if (result?.uid && String(result.uid) !== String(taskId)) this._taskIdChanged(colIdx, taskId, result.uid);
+  }
+  // A task of the column has a new id: the card holds it under that from now on.
+  _taskIdChanged(colIdx, oldId, newId) {
+    const task = (this._columns[colIdx]?.tasks || []).find((t) => String(t.id) === String(oldId));
+    if (task) task.id = newId;
+    const oldKey = this._taskStateKey(oldId, colIdx);
+    const newKey = this._taskStateKey(newId, colIdx);
+    if (this._expandedTasks.delete(oldKey)) this._expandedTasks.add(newKey);
+    if (this._editingTaskId === oldKey) this._editingTaskId = newKey;
+    this._onTaskIdChanged(colIdx, oldId, newId);
   }
   // The column's draft (show_add_details) when taskId is its id, else null.
   // A detail field that saves on its own must keep a draft's edits on it.
@@ -5906,7 +5917,7 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
       const cs = this._columns[colIdx];
       if (cs?.tasks) cs.tasks = cs.tasks.filter((t) => String(t.id) !== String(taskId));
       this._taskGoneLocally(taskId, colIdx);
-      this._expandedTasks.delete(taskId);
+      this._expandedTasks.delete(this._taskStateKey(taskId, colIdx));
       this._render();
       this._applyFlip(before, colIdx, 0.22);
       await this._deleteTaskCmd(colIdx, taskId);
@@ -5914,7 +5925,7 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
       await this._loadAllTasks();
     } else {
       await this._deleteTaskCmd(colIdx, taskId);
-      this._expandedTasks.delete(taskId);
+      this._expandedTasks.delete(this._taskStateKey(taskId, colIdx));
       await this._loadAllTasks();
     }
   }
@@ -6652,6 +6663,7 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
       const taskEl = activeForSnap.closest?.("[data-task-id]");
       focusSnap = {
         taskId: taskEl?.dataset?.taskId ?? null,
+        planEntry: taskEl?.dataset?.planEntry ?? null,
         key: activeForSnap.dataset.focusKey,
         selStart: activeForSnap.selectionStart ?? null,
         selEnd: activeForSnap.selectionEnd ?? null
@@ -6683,7 +6695,8 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
     const fs = this._pendingFocusRestore;
     this._pendingFocusRestore = null;
     if (fs && fs.key) {
-      const selector = fs.taskId ? `[data-task-id="${CSS.escape(String(fs.taskId))}"] [data-focus-key="${fs.key}"]` : `[data-focus-key="${fs.key}"]`;
+      const planScope = fs.planEntry == null ? "" : `[data-plan-entry="${CSS.escape(fs.planEntry)}"]`;
+      const selector = fs.taskId ? `[data-task-id="${CSS.escape(String(fs.taskId))}"]${planScope} [data-focus-key="${fs.key}"]` : `[data-focus-key="${fs.key}"]`;
       const restore = () => {
         const target = root.querySelector(selector);
         if (target && typeof target.focus === "function") {
@@ -7021,9 +7034,14 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
     const col = this._sourceCol(colIdx) || {};
     return col.list_id || col.entity_id || `col_${colIdx}`;
   }
+  // Views can scope UI state without changing the task id sent to services.
+  _taskStateKey(taskId, _colIdx) {
+    return taskId;
+  }
   _buildTaskContentChildren(task, colIdx, isEditing) {
+    const stateKey = this._taskStateKey(task.id, colIdx);
     const children = [];
-    if (isEditing || this._expandedTasks.has(task.id)) {
+    if (isEditing || this._expandedTasks.has(stateKey)) {
       const editInput = this._el("input", {
         type: "text",
         className: "edit-title-input",
@@ -7034,7 +7052,7 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
         e.stopPropagation();
       });
       editInput.addEventListener("focus", () => {
-        this._editingTaskId = task.id;
+        this._editingTaskId = this._taskStateKey(task.id, colIdx);
       });
       const saveTitle = () => {
         this._editingTaskId = null;
@@ -7063,8 +7081,9 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
       const titleSpan = this._el("span", { className: "task-title", textContent: task.title });
       if (this._sourceCol(colIdx)?.tap_to_complete !== true) titleSpan.addEventListener("dblclick", (e) => {
         e.stopPropagation();
-        this._expandedTasks.add(task.id);
-        this._editingTaskId = task.id;
+        const key = this._taskStateKey(task.id, colIdx);
+        this._expandedTasks.add(key);
+        this._editingTaskId = key;
         this._render();
       });
       children.push(titleSpan);
@@ -7313,6 +7332,7 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
   _attachTaskExpandClickHandler(mainRow, task, taskEl, colIdx) {
     const tapToComplete = this._sourceCol(colIdx)?.tap_to_complete === true;
     mainRow.addEventListener("click", (e) => {
+      const stateKey = this._taskStateKey(task.id, colIdx);
       if (e.detail > 1) return;
       if (e.target.closest(".checkbox-container")) return;
       if (e.target.closest(".tag-badge")) return;
@@ -7323,30 +7343,31 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
         this._toggleTask(task.id, task.completed, colIdx);
         return;
       }
-      if (this._animatingTaskIds?.has(task.id)) {
-        this._animatingTaskIds.delete(task.id);
-        if (this._expandedTasks.has(task.id)) {
-          this._expandedTasks.delete(task.id);
+      if (this._animatingTaskIds?.has(stateKey)) {
+        this._animatingTaskIds.delete(stateKey);
+        if (this._expandedTasks.has(stateKey)) {
+          this._expandedTasks.delete(stateKey);
         } else {
-          this._expandedTasks.add(task.id);
+          this._expandedTasks.add(stateKey);
         }
         this._render();
         return;
       }
-      if (this._expandedTasks.has(task.id)) {
-        this._collapseExpandedTask(task, taskEl);
+      if (this._expandedTasks.has(stateKey)) {
+        this._collapseExpandedTask(task, taskEl, colIdx);
       } else {
         if (!this._animatingTaskIds) this._animatingTaskIds = /* @__PURE__ */ new Set();
-        this._animatingTaskIds.add(task.id);
-        this._justExpandedTaskId = task.id;
-        this._expandedTasks.add(task.id);
+        this._animatingTaskIds.add(stateKey);
+        this._justExpandedTaskId = stateKey;
+        this._expandedTasks.add(stateKey);
         this._render();
         this._justExpandedTaskId = null;
       }
     });
   }
-  _collapseExpandedTask(task, taskEl) {
-    this._expandedTasks.delete(task.id);
+  _collapseExpandedTask(task, taskEl, colIdx) {
+    const stateKey = this._taskStateKey(task.id, colIdx);
+    this._expandedTasks.delete(stateKey);
     const detailsEl = taskEl.querySelector(".task-details");
     if (!detailsEl) {
       this._render();
@@ -7359,9 +7380,9 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
     }
     detailsEl.style.height = h + "px";
     if (!this._animatingTaskIds) this._animatingTaskIds = /* @__PURE__ */ new Set();
-    this._animatingTaskIds.add(task.id);
+    this._animatingTaskIds.add(stateKey);
     const finish = () => {
-      if (!this._animatingTaskIds?.delete(task.id)) return;
+      if (!this._animatingTaskIds?.delete(stateKey)) return;
       this._render();
     };
     requestAnimationFrame(() => {
@@ -7372,13 +7393,14 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
       });
     });
   }
-  _animateExpandedDetails(detailsEl, task) {
-    if (this._justExpandedTaskId === task.id) {
+  _animateExpandedDetails(detailsEl, task, colIdx) {
+    const stateKey = this._taskStateKey(task.id, colIdx);
+    if (this._justExpandedTaskId === stateKey) {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           detailsEl.style.height = detailsEl.scrollHeight + "px";
           detailsEl.addEventListener("transitionend", () => {
-            this._animatingTaskIds?.delete(task.id);
+            this._animatingTaskIds?.delete(stateKey);
             detailsEl.style.height = "auto";
           }, { once: true });
         });
@@ -11087,6 +11109,9 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
   // ... and the backend has been told.
   _afterDeleteSent() {
   }
+  // A task has a new id (a provider made a new item of it on a rename).
+  _onTaskIdChanged(_colIdx, _oldId, _newId) {
+  }
   // Buttons the card type puts first among a task's actions.
   _extraTaskActions(_task, _colIdx) {
     return [];
@@ -13046,8 +13071,9 @@ var HomeTasksDayPlanCard = class extends TasksCardBase {
       ]);
     }
     const col = this._sourceCol(colIdx);
-    const isExpanded = this._expandedTasks.has(task.id);
-    const isEditing = this._editingTaskId === task.id;
+    const stateKey = this._taskStateKey(task.id, colIdx);
+    const isExpanded = this._expandedTasks.has(stateKey);
+    const isEditing = this._editingTaskId === stateKey;
     if (isExpanded) className += " is-expanded";
     const taskEl = this._el("div", { className, draggable: !done && !isEditing && !isExpanded });
     taskEl.dataset.taskId = task.id;
@@ -13068,7 +13094,7 @@ var HomeTasksDayPlanCard = class extends TasksCardBase {
       if (actions.length > 0) taskEl.appendChild(this._el("div", { className: "plan-actions" }, actions));
       const detailsEl = this._buildTaskDetails(task, colIdx);
       taskEl.appendChild(detailsEl);
-      this._animateExpandedDetails(detailsEl, task);
+      this._animateExpandedDetails(detailsEl, task, colIdx);
     }
     if (!done) this._attachDragToTask(taskEl, task.id, colIdx);
     return taskEl;
@@ -13310,6 +13336,10 @@ var HomeTasksDayPlanCard = class extends TasksCardBase {
     await this._planWrite("home_tasks/set_plan_day", { date, items });
   }
   // ── TasksCardBase hooks ───────────────────────────────────────────────────
+  _taskStateKey(taskId, colIdx) {
+    const entryId = this._plan?.sources?.[colIdx]?.entry_id;
+    return JSON.stringify([entryId, String(taskId)]);
+  }
   // The lists of the plan, as columns made from it - not columns of the
   // card's config.
   _sourceCols() {
@@ -13367,6 +13397,17 @@ var HomeTasksDayPlanCard = class extends TasksCardBase {
   // row whose list has not answered.
   _taskGoneLocally(taskId, colIdx) {
     this._planForget(taskId, colIdx);
+  }
+  // The backend moved the task's places on the plan to its new id; the
+  // card's copy follows until the plan is read again.
+  _onTaskIdChanged(colIdx, oldId, newId) {
+    const entryId = (this._plan && this._plan.sources || [])[colIdx]?.entry_id;
+    for (const day of this._plan && this._plan.days || []) {
+      for (const row of day.items || []) {
+        if (row.entry_id === entryId && String(row.task_id) === String(oldId)) row.task_id = newId;
+      }
+    }
+    this._planJson = null;
   }
   // The row was taken out of the card's copy of the plan. Deleted or not,
   // the plan as it reads now replaces that copy.

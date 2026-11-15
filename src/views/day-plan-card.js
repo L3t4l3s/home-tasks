@@ -372,8 +372,9 @@ export class HomeTasksDayPlanCard extends TasksCardBase {
     }
 
     const col = this._sourceCol(colIdx);
-    const isExpanded = this._expandedTasks.has(task.id);
-    const isEditing = this._editingTaskId === task.id;
+    const stateKey = this._taskStateKey(task.id, colIdx);
+    const isExpanded = this._expandedTasks.has(stateKey);
+    const isEditing = this._editingTaskId === stateKey;
     if (isExpanded) className += " is-expanded";
     // A done row keeps its place: what is done on a day is that day's record.
     const taskEl = this._el("div", { className, draggable: !done && !isEditing && !isExpanded });
@@ -399,7 +400,7 @@ export class HomeTasksDayPlanCard extends TasksCardBase {
       if (actions.length > 0) taskEl.appendChild(this._el("div", { className: "plan-actions" }, actions));
       const detailsEl = this._buildTaskDetails(task, colIdx);
       taskEl.appendChild(detailsEl);
-      this._animateExpandedDetails(detailsEl, task);
+      this._animateExpandedDetails(detailsEl, task, colIdx);
     }
     if (!done) this._attachDragToTask(taskEl, task.id, colIdx);
     return taskEl;
@@ -670,6 +671,11 @@ export class HomeTasksDayPlanCard extends TasksCardBase {
 
   // ── TasksCardBase hooks ───────────────────────────────────────────────────
 
+  _taskStateKey(taskId, colIdx) {
+    const entryId = this._plan?.sources?.[colIdx]?.entry_id;
+    return JSON.stringify([entryId, String(taskId)]);
+  }
+
   // The lists of the plan, as columns made from it - not columns of the
   // card's config.
   _sourceCols() {
@@ -740,6 +746,18 @@ export class HomeTasksDayPlanCard extends TasksCardBase {
   // row whose list has not answered.
   _taskGoneLocally(taskId, colIdx) {
     this._planForget(taskId, colIdx);
+  }
+
+  // The backend moved the task's places on the plan to its new id; the
+  // card's copy follows until the plan is read again.
+  _onTaskIdChanged(colIdx, oldId, newId) {
+    const entryId = ((this._plan && this._plan.sources) || [])[colIdx]?.entry_id;
+    for (const day of (this._plan && this._plan.days) || []) {
+      for (const row of day.items || []) {
+        if (row.entry_id === entryId && String(row.task_id) === String(oldId)) row.task_id = newId;
+      }
+    }
+    this._planJson = null;
   }
 
   // The row was taken out of the card's copy of the plan. Deleted or not,

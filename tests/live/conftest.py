@@ -32,7 +32,40 @@ _REAL_CONNECT = pytest_socket._true_connect
 def _enable_sockets_for_live_tests():
     _socket_module.socket = _REAL_SOCKET
     _socket_module.socket.connect = _REAL_CONNECT
+    # Newer pytest-homeassistant versions also refuse to resolve host names
+    # ("DNS resolution disabled in tests"), which keeps the Todoist verifier
+    # from api.todoist.com. The real resolvers: the plugin keeps
+    # getaddrinfo, the C module still has the other two.
+    import _socket
+
+    from pytest_homeassistant_custom_component import plugins as _hass_plugins
+
+    real_getaddrinfo = getattr(_hass_plugins, "_real_getaddrinfo", None)
+    if real_getaddrinfo is None:
+        pytest.fail(
+            "pytest-homeassistant-custom-component no longer keeps the real resolver as "
+            "plugins._real_getaddrinfo: live tests cannot resolve host names. Look up "
+            "where the plugin keeps it now and update tests/live/conftest.py."
+        )
+    blocked = (_socket_module.getaddrinfo, _socket_module.gethostbyname, _socket_module.gethostbyname_ex)
+    _socket_module.getaddrinfo = real_getaddrinfo
+    _socket_module.gethostbyname = _socket.gethostbyname
+    _socket_module.gethostbyname_ex = _socket.gethostbyname_ex
     yield
+    # A test after this one that is not live gets the plugin's block back.
+    _socket_module.getaddrinfo, _socket_module.gethostbyname, _socket_module.gethostbyname_ex = blocked
+
+
+@pytest.fixture(autouse=True)
+def expected_lingering_timers() -> bool:
+    """Let the heartbeat timer of the live client's websocket outlive a test.
+
+    aiohttp schedules it on the test's loop and it is still there when
+    pytest-homeassistant checks for lingering timers - a check (strict since
+    the 2026.10 plugin versions) meant for Home Assistant's own timers. Left
+    on, it fails every live test at teardown.
+    """
+    return True
 
 
 # ---------------------------------------------------------------------------

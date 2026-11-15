@@ -474,6 +474,34 @@ async def test_the_tools_work_on_a_linked_list(hass: HomeAssistant, plan) -> Non
     assert overlay(hass, linked).get_overlay("uid-1")["due_date"] is None
 
 
+async def test_update_task_says_when_a_rename_gave_the_task_a_new_id(hass: HomeAssistant, plan) -> None:
+    """Bring! makes a new item of a renamed one: later calls need the new id."""
+    from homeassistant.components.todo import TodoItem, TodoItemStatus
+
+    from tests.integration.linked_list_helpers import setup_linked_list
+
+    _linked, adapter = await setup_linked_list(hass)
+    entity = hass.data["todo"].get_entity.return_value
+
+    async def replace(uid, fields):
+        entity.todo_items = [
+            *(item for item in entity.todo_items if item.uid != uid),
+            TodoItem(uid="uid-9", summary=fields["title"], status=TodoItemStatus.NEEDS_ACTION),
+        ]
+        return {}
+
+    result = await _tool(hass, plan, "update_task", task_id="uid-2", priority=1)
+    assert "id_changed" not in result
+    # A task of the same name was there already: the new item is the one meant.
+    entity.todo_items = [
+        *entity.todo_items, TodoItem(uid="uid-3", summary="Wipe bench well", status=TodoItemStatus.NEEDS_ACTION),
+    ]
+    adapter.async_update_task = replace
+    result = await _tool(hass, plan, "update_task", task_id="uid-1", title="Wipe bench well")
+    assert (result["task_id"], result["id_changed"]) == ("uid-9", True)
+    assert (await _tool(hass, plan, "get_task", task_id="uid-9"))["task"]["title"] == "Wipe bench well"
+
+
 async def test_a_tool_can_say_which_list_a_task_is_in(hass: HomeAssistant, plan, store, mock_config_entry) -> None:
     """Two lists can hold a task with the same id; entry_id tells them apart."""
     from tests.integration.linked_list_helpers import overlay, setup_linked_list

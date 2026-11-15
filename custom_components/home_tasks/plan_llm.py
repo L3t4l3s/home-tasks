@@ -455,7 +455,19 @@ class UpdateTaskTool(_PlanTool):
         if len(data) == 2:    # only the list and the task: nothing asked for
             raise HomeAssistantError("Nothing to change: give at least one field")
         await self._service(hass, llm_context, "update_task", data)
-        return {"success": True, "task_id": data["task_id"]}
+        result = {"success": True, "task_id": data["task_id"]}
+        if "title" in args:
+            # A provider that makes a new item of a renamed one (Bring!): the
+            # task goes on under a new id, which later calls need.
+            from .websocket_api import renamed_task_uid
+
+            entry = hass.config_entries.async_get_entry(data["entry_id"])
+            entity_id = entry.data.get("entity_id") if entry else None
+            new_id = renamed_task_uid(hass, entity_id, data["task_id"]) if entity_id else None
+            if new_id:
+                result["task_id"] = new_id
+                result["id_changed"] = True
+        return result
 
 
 class CompleteTaskTool(_PlanTool):

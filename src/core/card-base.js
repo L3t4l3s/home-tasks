@@ -336,11 +336,25 @@ export class TasksCardBase extends HTMLElement {
 
     // External: send all fields to the backend — the adapter decides what
     // goes to the provider API and what goes to the overlay.
-    await this._callWs("home_tasks/update_external_task", {
+    const result = await this._callWs("home_tasks/update_external_task", {
       entity_id: this._colEntityId(colIdx),
       task_uid: taskId,
       ...fields,
     }, { rethrow });
+    // Some providers (Bring!) make a new item of a renamed one: what is
+    // open of the task here goes on under its new id.
+    if (result?.uid && String(result.uid) !== String(taskId)) this._taskIdChanged(colIdx, taskId, result.uid);
+  }
+
+  // A task of the column has a new id: the card holds it under that from now on.
+  _taskIdChanged(colIdx, oldId, newId) {
+    const task = (this._columns[colIdx]?.tasks || []).find((t) => String(t.id) === String(oldId));
+    if (task) task.id = newId;
+    const oldKey = this._taskStateKey(oldId, colIdx);
+    const newKey = this._taskStateKey(newId, colIdx);
+    if (this._expandedTasks.delete(oldKey)) this._expandedTasks.add(newKey);
+    if (this._editingTaskId === oldKey) this._editingTaskId = newKey;
+    this._onTaskIdChanged(colIdx, oldId, newId);
   }
 
   // The column's draft (show_add_details) when taskId is its id, else null.
@@ -717,7 +731,7 @@ export class TasksCardBase extends HTMLElement {
       const cs = this._columns[colIdx];
       if (cs?.tasks) cs.tasks = cs.tasks.filter(t => String(t.id) !== String(taskId));
       this._taskGoneLocally(taskId, colIdx);
-      this._expandedTasks.delete(taskId);
+      this._expandedTasks.delete(this._taskStateKey(taskId, colIdx));
       this._render();
       this._applyFlip(before, colIdx, 0.22);
 
@@ -730,7 +744,7 @@ export class TasksCardBase extends HTMLElement {
     } else {
       // Fallback: task not in DOM, delete without animation
       await this._deleteTaskCmd(colIdx, taskId);
-      this._expandedTasks.delete(taskId);
+      this._expandedTasks.delete(this._taskStateKey(taskId, colIdx));
       await this._loadAllTasks();
     }
   }
@@ -1590,6 +1604,7 @@ export class TasksCardBase extends HTMLElement {
       const taskEl = activeForSnap.closest?.("[data-task-id]");
       focusSnap = {
         taskId: taskEl?.dataset?.taskId ?? null,
+        planEntry: taskEl?.dataset?.planEntry ?? null,
         key: activeForSnap.dataset.focusKey,
         selStart: activeForSnap.selectionStart ?? null,
         selEnd: activeForSnap.selectionEnd ?? null,
@@ -1646,8 +1661,9 @@ export class TasksCardBase extends HTMLElement {
     const fs = this._pendingFocusRestore;
     this._pendingFocusRestore = null;
     if (fs && fs.key) {
+      const planScope = fs.planEntry == null ? "" : `[data-plan-entry="${CSS.escape(fs.planEntry)}"]`;
       const selector = fs.taskId
-        ? `[data-task-id="${CSS.escape(String(fs.taskId))}"] [data-focus-key="${fs.key}"]`
+        ? `[data-task-id="${CSS.escape(String(fs.taskId))}"]${planScope} [data-focus-key="${fs.key}"]`
         : `[data-focus-key="${fs.key}"]`;
       const restore = () => {
         const target = root.querySelector(selector);
@@ -1978,12 +1994,18 @@ export class TasksCardBase extends HTMLElement {
     return col.list_id || col.entity_id || `col_${colIdx}`;
   }
 
+  // Views can scope UI state without changing the task id sent to services.
+  _taskStateKey(taskId, _colIdx) {
+    return taskId;
+  }
+
   _buildTaskContentChildren(task, colIdx, isEditing) {
+    const stateKey = this._taskStateKey(task.id, colIdx);
     const children = [];
     // Show the title as a bordered text field whenever the task is expanded (not
     // only on the hidden double-click) so users can see the title is editable —
     // matching the other detail input fields.
-    if (isEditing || this._expandedTasks.has(task.id)) {
+    if (isEditing || this._expandedTasks.has(stateKey)) {
       const editInput = this._el("input", {
         type: "text",
         className: "edit-title-input",
@@ -1995,7 +2017,9 @@ export class TasksCardBase extends HTMLElement {
       editInput.addEventListener("mousedown", (e) => { e.stopPropagation(); });
       // Mark as actively editing on focus so a background re-render defers — else
       // a poll mid-typing would rebuild this text input and revert the title.
-      editInput.addEventListener("focus", () => { this._editingTaskId = task.id; });
+      editInput.addEventListener("focus", () => {
+        this._editingTaskId = this._taskStateKey(task.id, colIdx);
+      });
       const saveTitle = () => {
         this._editingTaskId = null;
         const v = editInput.value.trim();
@@ -2016,8 +2040,9 @@ export class TasksCardBase extends HTMLElement {
       // the task off; the title is edited from the expanded details instead.
       if (this._sourceCol(colIdx)?.tap_to_complete !== true) titleSpan.addEventListener("dblclick", (e) => {
         e.stopPropagation();
-        this._expandedTasks.add(task.id);
-        this._editingTaskId = task.id;
+        const key = this._taskStateKey(task.id, colIdx);
+        this._expandedTasks.add(key);
+        this._editingTaskId = key;
         this._render();
       });
       children.push(titleSpan);
@@ -2301,6 +2326,7 @@ export class TasksCardBase extends HTMLElement {
   _attachTaskExpandClickHandler(mainRow, task, taskEl, colIdx) {
     const tapToComplete = this._sourceCol(colIdx)?.tap_to_complete === true;
     mainRow.addEventListener("click", (e) => {
+      const stateKey = this._taskStateKey(task.id, colIdx);
       if (e.detail > 1) return;
       if (e.target.closest(".checkbox-container")) return;
       if (e.target.closest(".tag-badge")) return;
@@ -2316,32 +2342,33 @@ export class TasksCardBase extends HTMLElement {
       }
 
       // If an animation is in progress, skip animation and just toggle + render
-      if (this._animatingTaskIds?.has(task.id)) {
-        this._animatingTaskIds.delete(task.id);
-        if (this._expandedTasks.has(task.id)) {
-          this._expandedTasks.delete(task.id);
+      if (this._animatingTaskIds?.has(stateKey)) {
+        this._animatingTaskIds.delete(stateKey);
+        if (this._expandedTasks.has(stateKey)) {
+          this._expandedTasks.delete(stateKey);
         } else {
-          this._expandedTasks.add(task.id);
+          this._expandedTasks.add(stateKey);
         }
         this._render();
         return;
       }
 
-      if (this._expandedTasks.has(task.id)) {
-        this._collapseExpandedTask(task, taskEl);
+      if (this._expandedTasks.has(stateKey)) {
+        this._collapseExpandedTask(task, taskEl, colIdx);
       } else {
         if (!this._animatingTaskIds) this._animatingTaskIds = new Set();
-        this._animatingTaskIds.add(task.id);
-        this._justExpandedTaskId = task.id;
-        this._expandedTasks.add(task.id);
+        this._animatingTaskIds.add(stateKey);
+        this._justExpandedTaskId = stateKey;
+        this._expandedTasks.add(stateKey);
         this._render();
         this._justExpandedTaskId = null;
       }
     });
   }
 
-  _collapseExpandedTask(task, taskEl) {
-    this._expandedTasks.delete(task.id);
+  _collapseExpandedTask(task, taskEl, colIdx) {
+    const stateKey = this._taskStateKey(task.id, colIdx);
+    this._expandedTasks.delete(stateKey);
     const detailsEl = taskEl.querySelector(".task-details");
     if (!detailsEl) {
       this._render();
@@ -2351,9 +2378,9 @@ export class TasksCardBase extends HTMLElement {
     if (!h) { this._render(); return; }
     detailsEl.style.height = h + "px";
     if (!this._animatingTaskIds) this._animatingTaskIds = new Set();
-    this._animatingTaskIds.add(task.id);
+    this._animatingTaskIds.add(stateKey);
     const finish = () => {
-      if (!this._animatingTaskIds?.delete(task.id)) return;
+      if (!this._animatingTaskIds?.delete(stateKey)) return;
       this._render();
     };
     requestAnimationFrame(() => {
@@ -2365,14 +2392,15 @@ export class TasksCardBase extends HTMLElement {
     });
   }
 
-  _animateExpandedDetails(detailsEl, task) {
-    if (this._justExpandedTaskId === task.id) {
+  _animateExpandedDetails(detailsEl, task, colIdx) {
+    const stateKey = this._taskStateKey(task.id, colIdx);
+    if (this._justExpandedTaskId === stateKey) {
       // .task-details starts at height:0 (CSS default). Animate to full height.
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           detailsEl.style.height = detailsEl.scrollHeight + "px";
           detailsEl.addEventListener("transitionend", () => {
-            this._animatingTaskIds?.delete(task.id);
+            this._animatingTaskIds?.delete(stateKey);
             detailsEl.style.height = "auto"; // release constraint once fully open
           }, { once: true });
         });
@@ -6486,6 +6514,9 @@ export class TasksCardBase extends HTMLElement {
 
   // ... and the backend has been told.
   _afterDeleteSent() {}
+
+  // A task has a new id (a provider made a new item of it on a rename).
+  _onTaskIdChanged(_colIdx, _oldId, _newId) {}
 
   // Buttons the card type puts first among a task's actions.
   _extraTaskActions(_task, _colIdx) {

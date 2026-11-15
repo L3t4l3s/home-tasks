@@ -2081,6 +2081,44 @@ async def test_ws_create_external_task_via_adapter(
     assert mock_adapter.created[0]["priority"] == 2
 
 
+async def test_ws_a_providers_own_error_reaches_the_card(
+    hass: HomeAssistant, hass_ws_client, external_config_entry
+) -> None:
+    """What the provider's integration says is for the user, not "an internal error"."""
+    from homeassistant.exceptions import HomeAssistantError
+
+    mock_adapter = _MockAdapter("generic")
+
+    async def refuse(fields):
+        raise HomeAssistantError("CalDAV save error: the server refused the item")
+
+    mock_adapter.async_create_task = refuse
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})["todo.ws_external"] = mock_adapter
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 201, "type": "home_tasks/create_external_task",
+        "entity_id": "todo.ws_external", "title": "Refused",
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is False
+    assert msg["error"] == {
+        "code": "home_assistant_error", "message": "CalDAV save error: the server refused the item",
+    }
+
+
+async def test_ws_unauthorized_keeps_its_own_error_code() -> None:
+    from unittest.mock import MagicMock
+
+    from homeassistant.exceptions import Unauthorized
+
+    from custom_components.home_tasks.websocket_api import _handle_error
+
+    connection = MagicMock()
+    _handle_error(connection, 7, Unauthorized())
+    connection.send_error.assert_called_once_with(7, "unauthorized", "Unauthorized")
+
+
 async def test_ws_create_external_task_overlay_for_unsynced_reminders(
     hass: HomeAssistant, hass_ws_client, external_config_entry
 ) -> None:

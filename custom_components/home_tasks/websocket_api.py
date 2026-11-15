@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
 from .image_library import async_get_image_library
 from .image_queue import PLACEHOLDER_IMAGE_URLS, async_get_image_queue
@@ -131,6 +132,13 @@ def _handle_error(connection, msg_id, err):
     """Send error without leaking internals."""
     if isinstance(err, ValueError):
         connection.send_error(msg_id, "invalid_request", str(err))
+    elif isinstance(err, Unauthorized):
+        connection.send_error(msg_id, websocket_api.ERR_UNAUTHORIZED, str(err) or "Unauthorized")
+    elif isinstance(err, HomeAssistantError):
+        # What a provider's integration says went wrong ("the server refused
+        # the item") is written for the user; hiding it helps nobody.
+        _LOGGER.warning("home_tasks: %s", err)
+        connection.send_error(msg_id, websocket_api.ERR_HOME_ASSISTANT_ERROR, str(err) or type(err).__name__)
     else:
         _LOGGER.exception("Unexpected error in home_tasks")
         connection.send_error(msg_id, "unknown_error", "An internal error occurred")
@@ -773,6 +781,8 @@ async def async_move_task_any(
             # re-arms the timers the export side cancelled).
             await src_store.async_import_task(task_data, restore=True)
             raise
+        from .plan import async_retarget
+        await async_retarget(hass, (src_list_id, task_id), (tgt_list_id, task_id))
         return
 
     # --- Read full task data from source ---
@@ -871,7 +881,7 @@ async def async_move_task_any(
         # Build a full native task dict (sort_order/section_id are set by
         # async_import_task, which also enforces the task cap)
         new_task = {
-            "id": str(uuid.uuid4()),
+            "id": str(uuid.uuid4()),  # the moved task's id: see moved_id below
             "title": task_data.get("title", ""),
             "completed": task_data.get("completed", False),
             "notes": task_data.get("notes", ""),
@@ -1026,6 +1036,17 @@ async def async_move_task_any(
         old_image_url = src_overlay.get_overlay(task_id).get("image_url")
         await src_overlay.async_delete_overlay(task_id)
         await _cleanup_orphan_image(hass, old_image_url, None)
+
+    # --- The plans: the task keeps the days it was put on, now as the new
+    #     task of the target list (its id is a new one there) ---
+    moved_id = new_task["id"] if tgt_is_native else new_uid
+    if moved_id:
+        from .plan import async_retarget
+        await async_retarget(
+            hass,
+            (src_list_id if src_is_native else _external_entry_id(hass, src_entity_id), task_id),
+            (tgt_list_id if tgt_is_native else _external_entry_id(hass, tgt_entity_id), moved_id),
+        )
 
 
 
@@ -1618,6 +1639,49 @@ def _external_entry_id(hass, entity_id: str) -> str | None:
     return None
 
 
+def renamed_task_uid(hass, entity_id: str, task_uid: str) -> str | None:
+    """The new uid of a task its provider replaced on a rename, if it did lately."""
+    return hass.data.get(f"{DOMAIN}_renamed", {}).get((entity_id, str(task_uid)))
+
+
+async def _follow_renamed_item(hass, entity_id: str, task_uid: str, title: str, before: set) -> str:
+    """The uid of a task after it was renamed: the same one, or the new item's.
+
+    When the provider has replaced the item (Bring! does on a rename), what
+    Home Tasks kept for it and its places on the plans move to the new uid.
+    """
+    after = _get_external_todo_items(hass, entity_id)
+    if any(str(i.get("uid")) == str(task_uid) for i in after):
+        return task_uid
+    fresh = [i for i in after if str(i.get("uid")) not in before]
+
+    def _name(text) -> str:
+        return " ".join(str(text or "").split()).casefold()
+
+    # The new item carries the new name - as the provider writes it, which
+    # need not be letter for letter what was sent ("milch " -> "Milch").
+    named = [i for i in fresh if _name(i.get("summary")) == _name(title)]
+    if len(named) == 1:
+        new_uid = str(named[0].get("uid"))
+    elif len(fresh) == 1:
+        new_uid = str(fresh[0].get("uid"))   # the one item that appeared
+    else:
+        return task_uid
+    renamed = hass.data.setdefault(f"{DOMAIN}_renamed", {})
+    renamed[(entity_id, str(task_uid))] = new_uid
+    while len(renamed) > 50:     # only the last few: a caller asks right away
+        renamed.pop(next(iter(renamed)))
+    await _get_overlay_store(hass, entity_id).async_move_overlay(str(task_uid), new_uid)
+    entry_id = _external_entry_id(hass, entity_id)
+    if entry_id:
+        from . import _external_task_renamed
+        from .plan import async_retarget
+        _external_task_renamed(hass, entry_id, entity_id, str(task_uid), new_uid)
+        await async_retarget(hass, (entry_id, task_uid), (entry_id, new_uid))
+    _LOGGER.debug("%s made a new item of renamed task %s: %s", entity_id, task_uid, new_uid)
+    return new_uid
+
+
 def _split_assignees(fields: dict) -> list[str] | None:
     """Take assigned_persons out of a provider payload (issue #75).
 
@@ -1810,7 +1874,7 @@ async def ws_create_external_task(hass, connection, msg):
 async def async_update_external_task(
     hass, entity_id: str, task_uid: str, fields: dict,
     actor: str | None = None, actor_user_id: str | None = None,
-) -> dict:
+) -> tuple[dict, str]:
     """Apply an update to a task on a linked external list.
 
     The provider takes what it can; the rest goes to the overlay, and the
@@ -1819,21 +1883,33 @@ async def async_update_external_task(
     (issue #63), which used to refuse external lists outright.
 
     Returns the fields the provider could not take, so a caller can say what
-    was kept locally.
+    was kept locally, and the task's uid afterwards: a provider that makes a
+    new item of a renamed one (Bring!) gives it a new one, which whatever the
+    caller does next with the task needs.
     """
     if "completed" not in fields:
         return await _async_update_external_task(hass, entity_id, task_uid, fields, actor, actor_user_id)
+    unsynced: dict = {}
+    if "title" in fields:
+        # The rename first: the tick below is then guarded under the uid the
+        # task has once the provider is done with the rename.
+        rest = {k: v for k, v in fields.items() if k != "completed"}
+        fields = {"completed": fields["completed"]}
+        unsynced, task_uid = await _async_update_external_task(
+            hass, entity_id, task_uid, rest, actor, actor_user_id)
     # Ours: the watcher of the provider's own app (external_watch) leaves
     # this tick or reopen to the code below, however long the provider takes.
     from .external_watch import own_change
     with own_change(hass, entity_id, task_uid):
-        return await _async_update_external_task(hass, entity_id, task_uid, fields, actor, actor_user_id)
+        more, task_uid = await _async_update_external_task(
+            hass, entity_id, task_uid, fields, actor, actor_user_id)
+    return {**unsynced, **more}, task_uid
 
 
 async def _async_update_external_task(
     hass, entity_id: str, task_uid: str, fields: dict,
     actor: str | None, actor_user_id: str | None,
-) -> dict:
+) -> tuple[dict, str]:
     adapter = _get_adapter(hass, entity_id)
 
     # Several assignees (issue #75): the provider gets the primary, the
@@ -1842,11 +1918,23 @@ async def _async_update_external_task(
     fields = dict(fields)
     people = _split_assignees(fields)
 
+    # Some providers (Bring!) make a new item of a renamed one: what was there
+    # before tells the new item from the old.
+    before: set[str] = set()
+    if "title" in fields:
+        try:
+            before = {str(i.get("uid")) for i in _get_external_todo_items(hass, entity_id)}
+        except ValueError:
+            pass  # no state to read: the update decides, not this lookout
+
     if adapter:
         unsynced = await adapter.async_update_task(task_uid, fields)
     else:
         generic = GenericAdapter(hass, entity_id, {})
         unsynced = await generic.async_update_task(task_uid, fields)
+
+    if str(task_uid) in before:
+        task_uid = await _follow_renamed_item(hass, entity_id, task_uid, fields["title"], before)
 
     if people is not None:
         unsynced = {k: v for k, v in (unsynced or {}).items() if k != "assigned_person"}
@@ -1896,7 +1984,7 @@ async def _async_update_external_task(
                 await _get_overlay_store(hass, entity_id).async_set_overlay(
                     task_uid, completed_at=None, recreate=None, **_undo_count_off(merged)
                 )
-    return unsynced or {}
+    return unsynced or {}, task_uid
 
 
 def _undo_count_off(task: dict) -> dict:
@@ -2036,12 +2124,12 @@ async def ws_update_external_task(hass, connection, msg):
     """Update a task via the provider adapter.  Unsynced fields go to overlay."""
     try:
         fields = {k: v for k, v in msg.items() if k not in ("id", "type", "entity_id", "task_uid")}
-        unsynced = await async_update_external_task(
+        unsynced, uid = await async_update_external_task(
             hass, msg["entity_id"], msg["task_uid"], fields,
             actor=connection.user.name if connection.user else None,
             actor_user_id=connection.user.id if connection.user else None,
         )
-        connection.send_result(msg["id"], {"unsynced": list(unsynced.keys())})
+        connection.send_result(msg["id"], {"unsynced": list(unsynced.keys()), "uid": uid})
     except Exception as err:
         _handle_error(connection, msg["id"], err)
 

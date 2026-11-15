@@ -1223,3 +1223,204 @@ async def test_a_provider_reporting_nothing_new_is_no_change(hass: HomeAssistant
     changed = _sensor(hass, plan)
     assert changed.state == "0"
     assert changed.attributes["last_modified"] != before.attributes["last_modified"]
+
+
+# ---------------------------------------------------------------------------
+# A task that changes its list or its id
+# ---------------------------------------------------------------------------
+
+async def test_a_task_moved_to_a_list_of_the_other_kind_keeps_its_day(
+    hass: HomeAssistant, plan, store, mock_config_entry
+) -> None:
+    """A move between a linked and a native list makes a new task with a new id there."""
+    from homeassistant.components.todo import TodoItem, TodoItemStatus
+
+    from custom_components.home_tasks.plan import plan_store
+    from custom_components.home_tasks.websocket_api import async_move_task_any
+    from tests.integration.linked_list_helpers import EXT_ENTITY, setup_linked_list
+
+    linked, adapter = await setup_linked_list(hass)
+    entity = hass.data["todo"].get_entity.return_value
+
+    async def delete(uid):
+        entity.todo_items = [item for item in entity.todo_items if item.uid != uid]
+
+    create = adapter.async_create_task
+
+    async def create_and_show(fields):
+        uid, rest = await create(fields)
+        entity.todo_items = [*entity.todo_items, TodoItem(uid=uid, summary=fields["title"], status=TodoItemStatus.NEEDS_ACTION)]
+        return uid, rest
+
+    adapter.async_delete_task = delete
+    adapter.async_create_task = create_and_show
+
+    def refs() -> list[tuple[str, str]]:
+        return [(i["list"], i["task_id"]) for i in plan_store(hass, plan.entry_id).days[TUE]["items"]]
+
+    await _call(hass, "plan_task", task_id="uid-1", entry_id=linked.entry_id, date=TUE)
+    await async_move_task_any(hass, "uid-1", src_entity_id=EXT_ENTITY, tgt_list_id=mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    native_id = next(t["id"] for t in store.tasks if t["title"] == "Wipe bench")
+    assert refs() == [(mock_config_entry.entry_id, native_id)]
+    assert titles(await _today(hass, date=TUE)) == ["Wipe bench"]
+
+    # And back: the provider gives it a new uid.
+    await async_move_task_any(hass, native_id, src_list_id=mock_config_entry.entry_id, tgt_entity_id=EXT_ENTITY)
+    await hass.async_block_till_done()
+    assert refs() == [(linked.entry_id, "uid-new")]
+    assert titles(await _today(hass, date=TUE)) == ["Wipe bench"]
+
+
+async def test_a_task_moved_between_native_lists_keeps_its_day_and_its_list_hint(
+    hass: HomeAssistant, plan, store, mock_config_entry
+) -> None:
+    from custom_components.home_tasks.plan import plan_store
+    from custom_components.home_tasks.websocket_api import async_move_task_any
+
+    other, _other_store = await _add_list(hass, "Private")
+    task_id = await _task(store, "Wash car")
+    await _call(hass, "plan_task", task_id=task_id, date=TUE)
+    await async_move_task_any(hass, task_id, src_list_id=mock_config_entry.entry_id, tgt_list_id=other.entry_id)
+    await hass.async_block_till_done()
+    (item,) = plan_store(hass, plan.entry_id).days[TUE]["items"]
+    assert (item["list"], item["task_id"]) == (other.entry_id, task_id)
+    assert titles(await _today(hass, date=TUE)) == ["Wash car"]
+
+
+async def test_a_provider_that_makes_a_new_item_of_a_renamed_one(hass: HomeAssistant, plan) -> None:
+    """Bring! does: the task keeps its day and what Home Tasks keeps for it."""
+    from homeassistant.components.todo import TodoItem, TodoItemStatus
+
+    from custom_components.home_tasks.plan import plan_store
+    from tests.integration.linked_list_helpers import overlay, setup_linked_list
+
+    linked, adapter = await setup_linked_list(hass)
+    entity = hass.data["todo"].get_entity.return_value
+
+    async def replace(uid, fields):
+        entity.todo_items = [
+            *(item for item in entity.todo_items if item.uid != uid),
+            TodoItem(uid="uid-9", summary=fields["title"], status=TodoItemStatus.NEEDS_ACTION),
+        ]
+        return {k: v for k, v in fields.items() if k != "title"}
+
+    adapter.async_update_task = replace
+    await overlay(hass, linked).async_set_overlay("uid-1", tags=["garage"])
+    await _call(hass, "plan_task", task_id="uid-1", entry_id=linked.entry_id, date=TUE)
+
+    await _call(hass, "update_task", entry_id=linked.entry_id, task_id="uid-1", title="Wipe bench well", priority=2)
+
+    refs = [(i["list"], i["task_id"]) for i in plan_store(hass, plan.entry_id).days[TUE]["items"]]
+    assert refs == [(linked.entry_id, "uid-9")]
+    assert titles(await _today(hass, date=TUE)) == ["Wipe bench well"]
+    kept = overlay(hass, linked).get_overlay("uid-9")
+    assert (kept["tags"], kept["priority"]) == (["garage"], 2)
+    assert overlay(hass, linked).get_overlay("uid-1")["tags"] == []
+
+
+async def test_a_rename_that_keeps_the_uid_moves_nothing(hass: HomeAssistant, plan) -> None:
+    from custom_components.home_tasks.plan import plan_store
+    from tests.integration.linked_list_helpers import setup_linked_list
+
+    linked, adapter = await setup_linked_list(hass)
+    await _call(hass, "plan_task", task_id="uid-1", entry_id=linked.entry_id, date=TUE)
+    await _call(hass, "update_task", entry_id=linked.entry_id, task_id="uid-1", title="Wipe bench well")
+    refs = [(i["list"], i["task_id"]) for i in plan_store(hass, plan.entry_id).days[TUE]["items"]]
+    assert refs == [(linked.entry_id, "uid-1")]
+    assert adapter.updated == [("uid-1", {"title": "Wipe bench well"})]
+
+
+def _replacing(hass, adapter, new_uid: str = "uid-9", summary=None):
+    """Make the linked list's provider replace an item on a rename, as Bring! does."""
+    from homeassistant.components.todo import TodoItem, TodoItemStatus
+
+    entity = hass.data["todo"].get_entity.return_value
+
+    async def replace(uid, fields):
+        if "title" in fields:
+            entity.todo_items = [
+                *(item for item in entity.todo_items if item.uid != uid),
+                TodoItem(uid=new_uid, summary=summary or fields["title"], status=TodoItemStatus.NEEDS_ACTION),
+            ]
+            uid = new_uid
+        adapter.updated.append((uid, dict(fields)))
+        return {k: v for k, v in fields.items() if k not in ("title", "completed")}
+
+    adapter.async_update_task = replace
+
+
+async def test_update_task_puts_the_rest_of_a_rename_on_the_new_item(hass: HomeAssistant, plan) -> None:
+    """Section and position of the same call go to the task under its new uid."""
+    from tests.integration.linked_list_helpers import overlay, setup_linked_list
+
+    linked, adapter = await setup_linked_list(hass)
+    _replacing(hass, adapter)
+    shelf = await overlay(hass, linked).async_add_section("Shelf")
+    await _call(hass, "update_task", entry_id=linked.entry_id, task_id="uid-1", title="Wipe bench well", section="Shelf")
+    assert overlay(hass, linked).get_overlay("uid-9")["section_id"] == shelf["id"]
+    assert "uid-1" not in overlay(hass, linked)._data["overlays"]
+
+
+async def test_a_rename_keeps_the_reminders_of_the_task(hass: HomeAssistant, plan) -> None:
+    from custom_components.home_tasks import DATA_REMINDER_TIMERS
+    from tests.integration.linked_list_helpers import overlay, setup_linked_list
+
+    linked, adapter = await setup_linked_list(hass)
+    _replacing(hass, adapter)
+    await overlay(hass, linked).async_set_overlay("uid-1", due_date=TUE, due_time="09:00", reminders=[60])
+    assert [k for k in hass.data[DATA_REMINDER_TIMERS] if k.startswith("uid-")] == ["uid-1_r60"]
+
+    await _call(hass, "update_task", entry_id=linked.entry_id, task_id="uid-1", title="Wipe bench well")
+    assert [k for k in hass.data[DATA_REMINDER_TIMERS] if k.startswith("uid-")] == ["uid-9_r60"]
+
+
+@pytest.mark.parametrize("written", ["wipe Bench  well", "Bench"])
+async def test_a_rename_is_followed_however_the_provider_writes_the_name(
+    hass: HomeAssistant, plan, written
+) -> None:
+    """Bring! may write the name its own way; the one new item is the task."""
+    from custom_components.home_tasks.plan import plan_store
+    from tests.integration.linked_list_helpers import setup_linked_list
+
+    linked, adapter = await setup_linked_list(hass)
+    _replacing(hass, adapter, summary=written)
+    await _call(hass, "plan_task", task_id="uid-1", entry_id=linked.entry_id, date=TUE)
+    await _call(hass, "update_task", entry_id=linked.entry_id, task_id="uid-1", title="Wipe bench well")
+    refs = [(i["list"], i["task_id"]) for i in plan_store(hass, plan.entry_id).days[TUE]["items"]]
+    assert refs == [(linked.entry_id, "uid-9")]
+
+
+async def test_a_rename_and_a_tick_in_one_go_tick_the_new_item(hass: HomeAssistant, plan) -> None:
+    from custom_components.home_tasks.websocket_api import async_update_external_task
+    from tests.integration.linked_list_helpers import EXT_ENTITY, setup_linked_list
+
+    _linked, adapter = await setup_linked_list(hass)
+    _replacing(hass, adapter)
+    _unsynced, uid = await async_update_external_task(
+        hass, EXT_ENTITY, "uid-1", {"title": "Wipe bench well", "completed": True})
+    assert uid == "uid-9"
+    assert adapter.updated == [("uid-9", {"title": "Wipe bench well"}), ("uid-9", {"completed": True})]
+
+
+async def test_a_move_takes_along_a_reference_with_a_stale_list_hint(
+    hass: HomeAssistant, plan, store, mock_config_entry
+) -> None:
+    """A native task can be under a list it left; a later move still takes it along."""
+    from custom_components.home_tasks.plan import plan_store
+    from custom_components.home_tasks.websocket_api import async_move_task_any
+
+    other, other_store = await _add_list(hass, "Private")
+    third, _third_store = await _add_list(hass, "Third")
+    task_id = await _task(store, "Wash car")
+    await _call(hass, "plan_task", task_id=task_id, date=TUE)
+    # Moved on without the plan hearing of it: the reference still names the first list.
+    await other_store.async_import_task(await store.async_export_task(task_id))
+    await hass.async_block_till_done()
+    (item,) = plan_store(hass, plan.entry_id).days[TUE]["items"]
+    assert item["list"] == mock_config_entry.entry_id
+
+    await async_move_task_any(hass, task_id, src_list_id=other.entry_id, tgt_list_id=third.entry_id)
+    await hass.async_block_till_done()
+    (item,) = plan_store(hass, plan.entry_id).days[TUE]["items"]
+    assert (item["list"], item["task_id"]) == (third.entry_id, task_id)

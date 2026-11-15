@@ -839,6 +839,52 @@ async def async_leave_days_off(hass: HomeAssistant, entry: ConfigEntry, store: P
         await store.async_save(view.today)
 
 
+async def async_retarget(hass: HomeAssistant, old: tuple[str, str], new: tuple[str, str]) -> None:
+    """A task is now *new* (list entry id, task id) where it was *old*.
+
+    Moving a task to a list of the other kind makes it a new task with a new
+    id there, and some providers (Bring!) make a new item of a renamed one.
+    Its references on every plan follow it, so it keeps the days it was put
+    on. A task that keeps its id within native lists is found anyway; this
+    keeps its list hint right too.
+    """
+    old = (old[0], str(old[1]))
+    new = (new[0], str(new[1]))
+    if old == new:
+        return
+    native = {
+        e.entry_id for e in hass.config_entries.async_entries(DOMAIN)
+        if e.data.get("type") not in ("external", "plan")
+    }
+
+    def stale_hint(item: dict) -> bool:
+        """A reference to this native task under a list it left earlier.
+
+        Only native ids travel between lists (and they are unique), so only a
+        native hint can be stale: its list no longer holds the id.
+        """
+        hint = item.get("list")
+        if old[0] not in native or hint not in native or str(item["task_id"]) != old[1]:
+            return False
+        tasks = getattr(hass.data.get(DOMAIN, {}).get(hint), "tasks", None) or []
+        return not any(str(t.get("id")) == old[1] for t in tasks)
+
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if not is_plan(entry):
+            continue
+        store = plan_store(hass, entry.entry_id)
+        if store is None:
+            continue
+        changed = False
+        for day in store.days.values():
+            for item in day["items"]:
+                if (item.get("list"), str(item["task_id"])) == old or stale_hint(item):
+                    item["list"], item["task_id"] = new
+                    changed = True
+        if changed:
+            await store.async_save(dt_util.now().date())
+
+
 # ---------------------------------------------------------------------------
 #  Following the lists
 # ---------------------------------------------------------------------------
