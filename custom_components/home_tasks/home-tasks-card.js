@@ -15405,19 +15405,27 @@ var HomeTasksDayPlanCardEditor = class extends EditorBase {
         btn.setAttribute("aria-pressed", String(on));
         if (on && current.size === 1) btn.disabled = true;
         btn.addEventListener("click", () => {
-          const next = new Set(current);
+          const next = new Set((planInfo.workdays || []).length ? planInfo.workdays : ALL);
           if (next.has(day)) next.delete(day);
           else next.add(day);
           if (!next.size) return;
           const workdays = ALL.filter((d) => next.has(d));
+          if (planInfo._savedWorkdays === void 0) planInfo._savedWorkdays = planInfo.workdays || [];
+          planInfo.workdays = workdays.length === ALL.length ? [] : workdays;
+          const seq = this._workdaysSeq = (this._workdaysSeq || 0) + 1;
           this._planDaysError = null;
-          this._hass.callWS({ type: "home_tasks/set_plan_workdays", plan: planInfo.id, workdays }).then((info) => {
-            planInfo.workdays = info && info.workdays || (workdays.length === ALL.length ? [] : workdays);
-            this._render();
+          this._render();
+          this._workdaysWrite = (this._workdaysWrite || Promise.resolve()).then(() => this._hass.callWS({ type: "home_tasks/set_plan_workdays", plan: planInfo.id, workdays }).then((info) => {
+            planInfo._savedWorkdays = info && info.workdays || (workdays.length === ALL.length ? [] : workdays);
+            if (seq === this._workdaysSeq) {
+              planInfo.workdays = planInfo._savedWorkdays;
+              this._render();
+            }
           }).catch((err) => {
+            planInfo.workdays = planInfo._savedWorkdays;
             this._planDaysError = err && err.message || String(err);
             this._render();
-          });
+          }));
         });
         return btn;
       });

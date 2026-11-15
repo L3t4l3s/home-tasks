@@ -83,21 +83,35 @@ export class HomeTasksDayPlanCardEditor extends EditorBase {
         // A plan needs at least one day: the last one cannot be taken out.
         if (on && current.size === 1) btn.disabled = true;
         btn.addEventListener("click", () => {
-          const next = new Set(current);
+          // From the days as shown now, not as they were when this chip was
+          // drawn: a second tap before the first write is back builds on it.
+          const next = new Set((planInfo.workdays || []).length ? planInfo.workdays : ALL);
           if (next.has(day)) next.delete(day);
           else next.add(day);
           if (!next.size) return;
           const workdays = ALL.filter((d) => next.has(d));
+          if (planInfo._savedWorkdays === undefined) planInfo._savedWorkdays = planInfo.workdays || [];
+          planInfo.workdays = workdays.length === ALL.length ? [] : workdays;   // shown at once
+          const seq = (this._workdaysSeq = (this._workdaysSeq || 0) + 1);
           this._planDaysError = null;
-          this._hass.callWS({ type: "home_tasks/set_plan_workdays", plan: planInfo.id, workdays })
-            .then((info) => {
-              planInfo.workdays = (info && info.workdays) || (workdays.length === ALL.length ? [] : workdays);
-              this._render();
-            })
-            .catch((err) => {
-              this._planDaysError = (err && err.message) || String(err);
-              this._render();
-            });
+          this._render();
+          // One write after the other, in the order of the taps.
+          this._workdaysWrite = (this._workdaysWrite || Promise.resolve()).then(() =>
+            this._hass.callWS({ type: "home_tasks/set_plan_workdays", plan: planInfo.id, workdays })
+              .then((info) => {
+                planInfo._savedWorkdays = (info && info.workdays) || (workdays.length === ALL.length ? [] : workdays);
+                // A later tap is on its way: what it shows stays.
+                if (seq === this._workdaysSeq) {
+                  planInfo.workdays = planInfo._savedWorkdays;
+                  this._render();
+                }
+              })
+              .catch((err) => {
+                // Back to what the plan has: the last write that went through.
+                planInfo.workdays = planInfo._savedWorkdays;
+                this._planDaysError = (err && err.message) || String(err);
+                this._render();
+              }));
         });
         return btn;
       });

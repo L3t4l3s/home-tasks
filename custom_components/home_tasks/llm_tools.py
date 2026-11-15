@@ -31,8 +31,10 @@ and left out where it does not.
 
 from __future__ import annotations
 
+from contextvars import ContextVar
 from datetime import date
 import json
+import re
 
 import voluptuous as vol
 
@@ -47,20 +49,25 @@ from .plan import (
     MAX_PLAN_NOTE_LENGTH,
     PLAN_HORIZON_DAYS,
     SET_MODES,
+    ListIndex,
     PlanStore,
     PlanView,
     SourceList,
     async_plan_task,
     async_set_day,
     async_unplan_task,
-    find_task,
     is_plan,
+    plan_list_names,
     plan_name,
     plan_store,
     read_lists,
     resolve_plan,
     source_lists,
 )
+
+# The lists as read for the tool call that is running: a call that looks a
+# task up, checks its list and names the target reads everything once.
+_READING: ContextVar[dict | None] = ContextVar("home_tasks_tool_reading", default=None)
 
 _WEEKDAY_NAMES = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
@@ -170,15 +177,6 @@ def _date(value: str | None) -> date | None:
         raise HomeAssistantError(f"Not a date: {value!r} (use YYYY-MM-DD)") from err
 
 
-async def _actor(hass: HomeAssistant, llm_context: llm.LLMContext) -> str | None:
-    """The name of the user an assistant acts for, for a task's history."""
-    user_id = llm_context.context.user_id if llm_context.context else None
-    if not user_id:
-        return None
-    user = await hass.auth.async_get_user(user_id)
-    return user.name if user else None
-
-
 # What an assistant has to know to use the tools well.
 _TASK_RULES = """\
 How the tools work:
@@ -237,9 +235,6 @@ class _Scope:
     def lists(self, hass: HomeAssistant) -> list[SourceList]:
         raise NotImplementedError
 
-    def find(self, hass: HomeAssistant, task_id: str, list_hint: str | None) -> tuple[str, dict] | None:
-        raise NotImplementedError
-
     def plans(self, hass: HomeAssistant) -> list[tuple[ConfigEntry, PlanStore]]:
         raise NotImplementedError
 
@@ -261,9 +256,6 @@ class _PlanScope(_Scope):
     def lists(self, hass: HomeAssistant) -> list[SourceList]:
         return source_lists(hass, self.entry)
 
-    def find(self, hass, task_id, list_hint):
-        return PlanView(hass, self.entry, self.store).find(task_id, list_hint)
-
     def plans(self, hass):
         return [(self.entry, self.store)]
 
@@ -276,12 +268,6 @@ class _AllScope(_Scope):
 
     def lists(self, hass: HomeAssistant) -> list[SourceList]:
         return read_lists(hass)
-
-    def find(self, hass, task_id, list_hint):
-        sources = read_lists(hass)
-        tasks = {src.entry_id: {str(t["id"]): t for t in src.tasks} for src in sources}
-        linked = {src.entry_id for src in sources if src.entity_id}
-        return find_task(tasks, linked, task_id, list_hint)
 
     def plans(self, hass):
         plans = []
@@ -333,12 +319,21 @@ class _Tool(llm.Tool):
 
     # --- the set's boundary ---
 
+    def _index(self, hass: HomeAssistant) -> ListIndex:
+        """The set's lists, read once for the call that is running."""
+        reading = _READING.get()
+        if reading is None:
+            return ListIndex(self._scope.lists(hass))
+        if "index" not in reading:
+            reading["index"] = ListIndex(self._scope.lists(hass))
+        return reading["index"]
+
     def _list_names(self, hass: HomeAssistant) -> str:
-        return ", ".join(src.name for src in self._scope.lists(hass)) or "none"
+        return ", ".join(src.name for src in self._index(hass).sources) or "none"
 
     def _list_id(self, hass: HomeAssistant, value: str | None) -> str:
         """The entry id of one of the set's lists, by name or id."""
-        sources = self._scope.lists(hass)
+        sources = self._index(hass).sources
         if not value:
             if len(sources) == 1:
                 return sources[0].entry_id
@@ -357,14 +352,14 @@ class _Tool(llm.Tool):
         *list_hint* only chooses between the set's lists: a list outside it
         is never looked at.
         """
-        found = self._scope.find(hass, task_id, list_hint)
+        found = self._index(hass).find(task_id, list_hint)
         if not found:
             raise HomeAssistantError(f"No task with id {task_id}{self._scope.tasks_where}")
         return found
 
     def _source(self, hass: HomeAssistant, entry_id: str) -> SourceList:
         """One of the set's lists; its entity_id says whether it is linked."""
-        return next(src for src in self._scope.lists(hass) if src.entry_id == entry_id)
+        return next(src for src in self._index(hass).sources if src.entry_id == entry_id)
 
     async def _service(
         self, hass: HomeAssistant, llm_context: llm.LLMContext, service: str, data: dict,
@@ -383,11 +378,14 @@ class _Tool(llm.Tool):
         self, hass: HomeAssistant, tool_input: llm.ToolInput, llm_context: llm.LLMContext
     ):
         args = self.parameters(tool_input.tool_args)
+        token = _READING.set({})
         try:
             data = await self._run(hass, args, llm_context)
         except ValueError as err:
             # What the stores turn down, said the way a tool says it.
             raise HomeAssistantError(str(err)) from err
+        finally:
+            _READING.reset(token)
         return _result(data)
 
     async def _run(self, hass: HomeAssistant, args: dict, llm_context: llm.LLMContext) -> dict:
@@ -411,12 +409,39 @@ def _sections(store) -> list[dict]:
 def _section(store, value: str, list_name: str) -> dict:
     """A section of a list, by name or id."""
     sections = _sections(store)
-    key = value.strip().lower()
     for section in sections:
-        if section["id"] == value or section["name"].lower() == key:
+        if section["id"] == value:
             return section
+    key = value.strip().lower()
+    named = [s for s in sections if s["name"].lower() == key]
+    if len(named) == 1:
+        return named[0]
+    if named:
+        # Made in the card, where two sections may share a name.
+        ids = ", ".join(s["id"] for s in named)
+        raise HomeAssistantError(
+            f"{len(named)} sections in {list_name} are called {value!r}: give the id of one ({ids})"
+        )
     names = ", ".join(s["name"] for s in sections) or "none"
     raise HomeAssistantError(f"No section {value!r} in {list_name} (sections: {names})")
+
+
+def _free_section_name(store, name: str, list_name: str, keep: str | None = None) -> None:
+    """A section name no other section of the list has: a name is how the
+    tools find a section, so it must say which one."""
+    key = name.strip().lower()
+    if any(s["name"].lower() == key and s["id"] != keep for s in store.sections):
+        raise HomeAssistantError(f"{list_name} already has a section called {name!r}")
+
+
+def _icon(value: str | None) -> str | None:
+    """An icon argument as the card can show it, e.g. mdi:cart."""
+    if value is None:
+        return None
+    value = value.strip()
+    if len(value) > _MAX_ICON_LENGTH or not re.fullmatch(r"[a-z0-9_-]+:[a-z0-9_-]+", value):
+        raise HomeAssistantError(f"Not an icon: {value!r} (use a name like mdi:cart)")
+    return value
 
 
 def _list_info(hass: HomeAssistant, src: SourceList) -> dict:
@@ -457,14 +482,14 @@ class GetListsTool(_Tool):
     parameters = vol.Schema({})
 
     async def _run(self, hass: HomeAssistant, args: dict, llm_context: llm.LLMContext) -> dict:
-        result: dict = {"lists": [_list_info(hass, src) for src in self._scope.lists(hass)]}
+        result: dict = {"lists": [_list_info(hass, src) for src in self._index(hass).sources]}
         plans = self._scope.plans(hass)
         if plans:
             result["plans"] = [
                 {
                     "entry_id": entry.entry_id,
                     "name": plan_name(entry),
-                    "lists": [src.name for src in source_lists(hass, entry)],
+                    "lists": plan_list_names(hass, entry),
                 }
                 for entry, _store in plans
             ]
@@ -501,7 +526,7 @@ class GetTasksTool(_Tool):
         if args.get("lists"):
             entry_ids = list(dict.fromkeys(self._list_id(hass, name) for name in args["lists"]))
         else:
-            entry_ids = [src.entry_id for src in self._scope.lists(hass)]
+            entry_ids = [src.entry_id for src in self._index(hass).sources]
         if not entry_ids:
             return {"lists": [], "tasks": []}
         data = {"entry_id": entry_ids, "status": args["status"]}
@@ -795,8 +820,10 @@ class DuplicateTaskTool(_Tool):
 
             new_id = await async_duplicate_external_task(hass, src.entity_id, str(task["id"]), person)
         else:
+            from . import actor_name
+
             copy = await _list_store(hass, entry_id).async_duplicate_task(
-                str(task["id"]), assigned_person=person, actor=await _actor(hass, llm_context),
+                str(task["id"]), assigned_person=person, actor=await actor_name(hass, llm_context.context),
             )
             new_id = copy["id"]
         return {"success": True, "task_id": str(new_id), "entry_id": entry_id, "title": task.get("title", "")}
@@ -820,7 +847,21 @@ class ReorderTasksTool(_Tool):
     async def _run(self, hass: HomeAssistant, args: dict, llm_context: llm.LLMContext) -> dict:
         entry_id = self._list_id(hass, args.get("list"))
         src = self._source(hass, entry_id)
-        current = [str(task["id"]) for task in src.tasks]
+        if src.entity_id:
+            # The order the card shows: the provider's own, or the one kept
+            # for it - not the order the provider happens to list items in.
+            from .websocket_api import _async_get_external_tasks
+
+            if src.away:
+                raise HomeAssistantError(f"{src.name} cannot be read right now; try again later")
+            try:
+                tasks, _overlay = await _async_get_external_tasks(hass, src.entity_id)
+            except Exception as err:  # noqa: BLE001 - the provider is away
+                raise HomeAssistantError(f"{src.name} cannot be read right now: {err}") from err
+            tasks = sorted(tasks, key=lambda task: task.get("sort_order", 0))
+        else:
+            tasks = src.tasks           # native: in its order already
+        current = [str(task["id"]) for task in tasks]
         named = list(dict.fromkeys(str(task_id) for task_id in args["task_ids"]))
         unknown = [task_id for task_id in named if task_id not in current]
         if unknown:
@@ -908,6 +949,8 @@ class RemoveSubTaskTool(_Tool):
 # ---------------------------------------------------------------------------
 
 _ICON = "A Material Design icon, e.g. mdi:cart"
+# As the card's section commands allow.
+_MAX_ICON_LENGTH = 64
 
 
 async def _place_section(store, section_id: str, position: int) -> None:
@@ -935,12 +978,13 @@ class AddSectionTool(_Tool):
 
     async def _run(self, hass: HomeAssistant, args: dict, llm_context: llm.LLMContext) -> dict:
         entry_id = self._list_id(hass, args.get("list"))
+        src = self._source(hass, entry_id)
         store = _list_store(hass, entry_id)
-        section = await store.async_add_section(args["name"], icon=args.get("icon"))
+        _free_section_name(store, args["name"], src.name)
+        section = await store.async_add_section(args["name"], icon=_icon(args.get("icon")))
         if "position" in args:
             await _place_section(store, section["id"], args["position"])
-        return {"success": True, "list_name": self._source(hass, entry_id).name,
-                "sections": [s["name"] for s in _sections(store)]}
+        return {"success": True, "list_name": src.name, "sections": [s["name"] for s in _sections(store)]}
 
 
 class UpdateSectionTool(_Tool):
@@ -965,6 +1009,10 @@ class UpdateSectionTool(_Tool):
         store = _list_store(hass, entry_id)
         section = _section(store, args["section"], src.name)
         changes = {key: args[key] for key in ("name", "icon") if key in args}
+        if "name" in changes:
+            _free_section_name(store, changes["name"], src.name, keep=section["id"])
+        if "icon" in changes:
+            changes["icon"] = _icon(changes["icon"])
         if not changes and "position" not in args:
             raise HomeAssistantError("Nothing to change: give name, icon or position")
         if changes:
@@ -1236,7 +1284,7 @@ class PlanAPI(_ToolSet):
 
     def _intro(self, lists, plans) -> list[str]:
         entry, store = self.scope.entry, self.scope.store
-        view = PlanView(self.hass, entry, store)
+        view = PlanView(self.hass, entry, store, sources=lists)
         names = _names([src.name for src in lists]) or "none yet"
         lines = [
             f'These tools work on the day plan "{plan_name(entry)}" of Home Tasks and on '
@@ -1266,7 +1314,7 @@ class HomeTasksAPI(_ToolSet):
         text = f"the task lists {_names([src.name for src in lists])}" if lists else "no task lists yet"
         if plans:
             described = [
-                f'"{plan_name(entry)}" (lists: {_names([src.name for src in source_lists(self.hass, entry)]) or "none"})'
+                f'"{plan_name(entry)}" (lists: {_names(plan_list_names(self.hass, entry)) or "none"})'
                 for entry, _store in plans
             ]
             text += f", and the day plans {', '.join(described)}"

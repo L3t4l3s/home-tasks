@@ -2126,7 +2126,13 @@ def _resolve_sub_task(task: dict, data: dict, completed: bool | None = None) -> 
 
 async def _resolve_actor(hass: HomeAssistant, call: ServiceCall) -> str | None:
     """Resolve the actor name from a service call context (user or automation)."""
-    user_id = call.context.user_id
+    return await actor_name(hass, call.context)
+
+
+async def actor_name(hass: HomeAssistant, context) -> str | None:
+    """The name of the user behind a context, for a task's history; None for
+    an automation, or when the user cannot be looked up."""
+    user_id = context.user_id if context else None
     if not user_id:
         return None
     try:

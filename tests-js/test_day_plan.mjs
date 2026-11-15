@@ -1535,6 +1535,21 @@ describe('editor of the day plan card', () => {
     assert.equal(wsCalls.length, calls);
   });
 
+  test('two quick taps both count, written one after the other', async () => {
+    const plans = [{ id: 'P1', name: 'Today', source_lists: [], workdays: ['mon', 'tue', 'wed', 'thu', 'fri'] }];
+    const { editor, wsCalls } = await makeEditor(
+      { type: 'custom:home-tasks-day-plan-card', plan: 'P1', days: 3 }, plans);
+    const before = wsCalls.length;
+    workdayChips(editor)[0].click();                      // Monday off
+    workdayChips(editor)[1].click();                      // Tuesday off, before the first write is back
+    same(activeDays(editor), ['wed', 'thu', 'fri'], 'shown at once');
+    await settle();
+    same(wsCalls.slice(before).map((c) => c.workdays), [
+      ['tue', 'wed', 'thu', 'fri'], ['wed', 'thu', 'fri'],
+    ]);
+    same(activeDays(editor), ['wed', 'thu', 'fri']);
+  });
+
   test('refused workdays are said and taken back', async () => {
     const plans = [{ id: 'P1', name: 'Today', source_lists: [], workdays: [] }];
     const { editor, refuseWrites } = await makeEditor(

@@ -276,6 +276,12 @@ def all_lists(hass: HomeAssistant) -> list[SourceList]:
     return lists
 
 
+def plan_list_names(hass: HomeAssistant, entry: ConfigEntry) -> list[str]:
+    """The names of a plan's lists, without reading their tasks."""
+    wanted = set(entry.options.get(CONF_SOURCE_LISTS) or [])
+    return [src.name for src in all_lists(hass) if not wanted or src.entry_id in wanted]
+
+
 def source_lists(hass: HomeAssistant, entry: ConfigEntry) -> list[SourceList]:
     """The lists a plan may reference, with their tasks. No lists chosen
     means all of them."""
@@ -302,33 +308,38 @@ def read_lists(hass: HomeAssistant, wanted: set[str] | None = None) -> list[Sour
     return sources
 
 
-def find_task(
-    tasks: dict[str, dict[str, dict]], linked: set[str], task_id, list_hint: str | None = None,
-    *, fallback: bool = True,
-) -> tuple[str, dict] | None:
-    """``(list entry id, task)`` for an id, trying its hinted list first.
+class ListIndex:
+    """Lists read once, with their tasks by id - to find a task in them."""
 
-    *tasks* maps a list's entry id to its tasks by id; *linked* holds the
-    linked ones. With fallback disabled, only the hinted list may supply
-    the task.
+    def __init__(self, sources: list[SourceList]) -> None:
+        self.sources = sources
+        self.tasks = {src.entry_id: {str(t["id"]): t for t in src.tasks} for src in sources}
+        self.linked = {src.entry_id for src in sources if src.entity_id}
 
-    A task that is not in the list it is said to be in was deleted or
-    moved. A move keeps the id only from one native list to another, and
-    native ids are unique. A linked list's ids are its provider's: the
-    same id elsewhere is another task, so a hinted lookup never leaves a
-    linked list and never ends in one.
-    """
-    task_id = str(task_id)
-    if list_hint and task_id in tasks.get(list_hint, {}):
-        return list_hint, tasks[list_hint][task_id]
-    if not fallback or (list_hint and list_hint in linked):
+    def find(
+        self, task_id, list_hint: str | None = None, *, fallback: bool = True,
+    ) -> tuple[str, dict] | None:
+        """``(list entry id, task)`` for an id, trying its hinted list first.
+
+        With fallback disabled, only the hinted list may supply the task.
+
+        A task that is not in the list it is said to be in was deleted or
+        moved. A move keeps the id only from one native list to another, and
+        native ids are unique. A linked list's ids are its provider's: the
+        same id elsewhere is another task, so a hinted lookup never leaves a
+        linked list and never ends in one.
+        """
+        task_id = str(task_id)
+        if list_hint and task_id in self.tasks.get(list_hint, {}):
+            return list_hint, self.tasks[list_hint][task_id]
+        if not fallback or (list_hint and list_hint in self.linked):
+            return None
+        for entry_id, by_id in self.tasks.items():
+            if list_hint and entry_id in self.linked:
+                continue
+            if task_id in by_id:
+                return entry_id, by_id[task_id]
         return None
-    for entry_id, by_id in tasks.items():
-        if list_hint and entry_id in linked:
-            continue
-        if task_id in by_id:
-            return entry_id, by_id[task_id]
-    return None
 
 
 class PlanView:
@@ -340,7 +351,9 @@ class PlanView:
 
     def __init__(
         self, hass: HomeAssistant, entry: ConfigEntry, store: PlanStore, today: date | None = None,
+        sources: list[SourceList] | None = None,
     ) -> None:
+        """*sources* are the plan's lists when they have just been read."""
         self.entry = entry
         self.store = store
         self.today = today or dt_util.now().date()
@@ -349,10 +362,11 @@ class PlanView:
         self.current = next_workday(self.today, self.workdays)
         self.include_due = bool(entry.options.get(CONF_INCLUDE_DUE, True))
         self.carry_over = entry.options.get(CONF_CARRY_OVER, DEFAULT_CARRY_OVER)
-        self.sources = source_lists(hass, entry)
+        self.sources = source_lists(hass, entry) if sources is None else sources
         self._names = {src.entry_id: src.name for src in self.sources}
-        self._tasks = {src.entry_id: {str(t["id"]): t for t in src.tasks} for src in self.sources}
-        self._linked = {src.entry_id for src in self.sources if src.entity_id}
+        self._index = ListIndex(self.sources)
+        self._tasks = self._index.tasks
+        self._linked = self._index.linked
         self._away = {src.entry_id for src in self.sources if src.away}
         # (list, task id) -> the day the task is explicitly planned on, from
         # the current day on. Ids are only unique within a list: two linked
@@ -374,8 +388,8 @@ class PlanView:
     def find(
         self, task_id, list_hint: str | None = None, *, fallback: bool = True,
     ) -> tuple[str, dict] | None:
-        """Resolve an id, trying its hinted list first (see find_task)."""
-        return find_task(self._tasks, self._linked, task_id, list_hint, fallback=fallback)
+        """Resolve an id, trying its hinted list first (see ListIndex.find)."""
+        return self._index.find(task_id, list_hint, fallback=fallback)
 
     def key_of(self, task_id, list_hint: str | None = None) -> tuple[str, str] | None:
         """``(list entry id, task id)`` - what a task is on the plan."""

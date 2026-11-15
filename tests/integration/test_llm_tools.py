@@ -201,10 +201,47 @@ async def test_reorder_tasks_puts_the_named_ones_first(hass: HomeAssistant, mock
 async def test_reorder_tasks_on_a_linked_list(hass: HomeAssistant, mock_config_entry, store) -> None:
     from tests.integration.linked_list_helpers import overlay, setup_linked_list
 
+    from homeassistant.components.todo import TodoItem, TodoItemStatus
+
     linked, _adapter = await setup_linked_list(hass)
     await _tool(hass, "reorder_tasks", list="All Tasks", task_ids=["uid-2"])
     stored = overlay(hass, linked)
     assert (stored.get_overlay("uid-2")["sort_order"], stored.get_overlay("uid-1")["sort_order"]) == (0, 1)
+
+    # The others keep the order the card shows, not the provider's own.
+    entity = hass.data["todo"].get_entity.return_value
+    entity.todo_items = [*entity.todo_items, TodoItem(uid="uid-3", summary="Third", status=TodoItemStatus.NEEDS_ACTION)]
+    for uid, place in (("uid-3", 0), ("uid-2", 1), ("uid-1", 2)):
+        await stored.async_set_overlay(uid, sort_order=place)
+    await _tool(hass, "reorder_tasks", list="All Tasks", task_ids=["uid-1"])
+    assert [stored.get_overlay(uid)["sort_order"] for uid in ("uid-1", "uid-3", "uid-2")] == [0, 1, 2]
+
+
+async def test_reorder_tasks_on_a_list_that_is_away(hass: HomeAssistant, mock_config_entry, store) -> None:
+    from tests.integration.linked_list_helpers import EXT_ENTITY, setup_linked_list
+
+    await setup_linked_list(hass)
+    hass.states.async_set(EXT_ENTITY, "unavailable")
+    with pytest.raises(HomeAssistantError, match="(?i)all tasks cannot be read right now"):
+        await _tool(hass, "reorder_tasks", list="All Tasks", task_ids=["uid-1"])
+
+
+async def test_a_call_reads_the_lists_once(hass: HomeAssistant, mock_config_entry, store, monkeypatch) -> None:
+    from custom_components.home_tasks import llm_tools
+
+    work, _work_store = await _add_list(hass, "Work")
+    task_id = await _task(store, "Belongs to work")
+    reads = []
+    original = llm_tools.read_lists
+    monkeypatch.setattr(llm_tools, "read_lists", lambda hass: reads.append(1) or original(hass))
+    api = await _api(hass)
+    reads.clear()
+    # Looks the task up, finds the target list and both lists' kinds: one read.
+    result = await api.async_call_tool(llm.ToolInput(
+        tool_name=f"{DOMAIN}__move_task", tool_args={"task_id": task_id, "to_list": "Work"},
+    ))
+    assert result.error is False and result.data["entry_id"] == work.entry_id
+    assert len(reads) == 1
 
 
 # ---------------------------------------------------------------------------
@@ -238,6 +275,28 @@ async def test_sections_can_be_added_changed_moved_and_deleted(
     # What the store turns down comes back as a tool error.
     with pytest.raises(HomeAssistantError, match="Section name"):
         await _tool(hass, "add_section", name="x" * 101)
+    # An icon is a name like mdi:cart, as short as the card's commands allow.
+    for icon in ("a picture of bread", "mdi:" + "b" * 70):
+        with pytest.raises(HomeAssistantError, match="Not an icon"):
+            await _tool(hass, "update_section", section="Bakery", icon=icon)
+    # A name says which section: no second one with it.
+    with pytest.raises(HomeAssistantError, match="already has a section called 'bakery'"):
+        await _tool(hass, "add_section", name="bakery")
+    with pytest.raises(HomeAssistantError, match="already has a section called 'Bakery'"):
+        await _tool(hass, "update_section", section="Fruit & veg", name="Bakery")
+    await _tool(hass, "update_section", section="Bakery", name="BAKERY")      # its own name is free
+
+
+async def test_two_sections_of_one_name_are_told_apart_by_id(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """The card lets two sections share a name; the tools ask which one."""
+    first = await store.async_add_section("Misc")
+    second = await store.async_add_section("Misc")
+    with pytest.raises(HomeAssistantError, match=f"2 sections in Test List are called 'Misc'.*{second['id']}"):
+        await _tool(hass, "delete_section", section="Misc")
+    await _tool(hass, "delete_section", section=second["id"])
+    assert [s["id"] for s in store.sections] == [first["id"]]
 
 
 async def test_sections_on_a_linked_list(hass: HomeAssistant, mock_config_entry, store) -> None:
