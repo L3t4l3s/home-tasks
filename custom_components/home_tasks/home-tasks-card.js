@@ -13745,7 +13745,6 @@ class HomeTasksCardEditor extends HTMLElement {
       details[open] .sum-chevron { transform: rotate(180deg); }
       .section-content { display: flex; flex-direction: column; gap: 16px; padding: 16px 16px; border-top: 1px solid var(--divider-color, rgba(255,255,255,0.12)); box-sizing: border-box; }
       label { font-size: 12px; font-weight: 500; color: var(--secondary-text-color); text-transform: uppercase; letter-spacing: 0.5px; }
-      ha-textfield { width: 100%; }
       ha-icon-picker { width: 100%; }
       select.editor-native-select { width: 100%; padding: 10px 12px; border: 1px solid var(--input-outlined-idle-border-color, var(--divider-color, rgba(0,0,0,0.38))); border-radius: 4px; background-color: var(--input-fill-color, var(--secondary-background-color, transparent)); color: var(--primary-text-color, #212121); font-size: 1rem; font-family: var(--mdc-typography-body1-font-family, Roboto, sans-serif); cursor: pointer; box-sizing: border-box; }
       select.editor-native-select:hover { border-color: var(--input-outlined-hover-border-color, var(--primary-text-color, rgba(0,0,0,0.87))); }
@@ -13829,15 +13828,13 @@ class HomeTasksCardEditor extends HTMLElement {
     const activeTab = Math.min(this._editorTab, cols.length - 1);
 
     // Global card title input (above tabs)
-    const cardTitleInput = document.createElement("ha-textfield");
-    cardTitleInput.label = this._t("ed_card_title");
-    cardTitleInput.placeholder = this._t("ed_card_title_placeholder");
-    cardTitleInput.value = this._config.title || "";
-    cardTitleInput.style.width = "100%";
-    cardTitleInput.addEventListener("change", (e) => {
-      this._config = { ...this._config, title: e.target.value || undefined };
-      this._fireChanged();
-    });
+    const cardTitleInput = this._editorText(
+      "ed_card_title", "ed_card_title_placeholder", "card-title-input", this._config.title,
+      (value) => {
+        this._config = { ...this._config, title: value || undefined };
+        this._fireChanged();
+      },
+    );
     const cardTitleRow = this._el("div", { className: "editor-card-title-row" }, [cardTitleInput]);
 
 
@@ -13956,6 +13953,18 @@ class HomeTasksCardEditor extends HTMLElement {
     // column's "Images" section now.
     const editor = this._el("div", { className: "editor" }, [cardTitleRow, tabsRow, controls, tabContent]);
     root.appendChild(editor);
+  }
+
+  // A line of text with its label inside the box. An input of the editor's
+  // own: Home Assistant's ha-textfield is no longer there in 2026.11, and an
+  // element that is not defined takes no room - the field was simply gone.
+  _editorText(labelKey, placeholderKey, cls, value, onChange) {
+    const input = this._el("input", { type: "text", className: cls, value: value || "" });
+    input.placeholder = this._t(placeholderKey);
+    input.addEventListener("change", () => onChange(input.value));
+    return this._el("div", { className: "field-wrap title-field" }, [
+      input, this._el("span", { textContent: this._t(labelKey) }),
+    ]);
   }
 
   // The card-level ai_task entity and prompt prefix, rendered inside the
@@ -14170,12 +14179,10 @@ class HomeTasksCardEditor extends HTMLElement {
     });
 
     // Title input
-    const titleInput = document.createElement("ha-textfield");
-    titleInput.label = this._t("ed_title");
-    titleInput.placeholder = this._t("ed_title_placeholder");
-    titleInput.value = col.title || "";
-    titleInput.style.width = "100%";
-    titleInput.addEventListener("change", (e) => updateCol({ title: e.target.value || undefined }));
+    const titleInput = this._editorText(
+      "ed_title", "ed_title_placeholder", "column-title-input", col.title,
+      (value) => updateCol({ title: value || undefined }),
+    );
 
     // Icon picker
     const iconPicker = document.createElement("ha-icon-picker");

@@ -117,7 +117,7 @@ describe('what sits in which group', () => {
     for (const el of section.querySelectorAll('.group-label, .field, .field-wrap')) {
       if (el.classList.contains('group-label')) marks.push(el.textContent.trim());
       else if (el.querySelector('ha-icon-picker')) marks.push('icon');
-      else if (el.querySelector('ha-textfield')) marks.push('title');
+      else if (el.querySelector('.title-field')) marks.push('title');
       else if (el.querySelector('select option[value="tiles"]')) marks.push('view-mode');
     }
     return marks;
