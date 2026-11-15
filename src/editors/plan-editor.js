@@ -62,37 +62,49 @@ export class HomeTasksDayPlanCardEditor extends EditorBase {
       [1, 2, 3, 4, 5, 6, 7].map((n) => [String(n), String(n)]), String(days),
       (value) => set({ days: Number(value) }));
 
-    // Whether the plan has Saturday and Sunday. That is one of the plan's
-    // own settings (its workdays), written to the plan right away like its
-    // lists: every card showing the plan and its assistants follow.
+    // The days the plan has, Monday to Sunday - for a part-time week as much
+    // as for Monday to Friday. That is one of the plan's own settings (its
+    // workdays), written to the plan right away like its lists: every card
+    // showing the plan and its assistants follow.
     const planInfo = plans.find((p) => p.id === (this._config.plan || (plans[0] && plans[0].id)));
-    const weekendRow = [];
+    const workdayNodes = [];
     if (planInfo) {
       const ALL = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-      const current = (planInfo.workdays || []).length ? planInfo.workdays : ALL;
-      const sw = document.createElement("ha-switch");
-      sw.className = "weekend-switch";
-      sw.checked = current.includes("sat") || current.includes("sun");
-      sw.setAttribute("aria-label", this._t("ed_plan_weekend"));
-      sw.addEventListener("change", () => {
-        const days = ALL.filter((d) => (d === "sat" || d === "sun" ? sw.checked : current.includes(d)));
-        // A plan of the weekend only, switched off: the week instead of no day at all.
-        const workdays = days.length ? days : ALL.slice(0, 5);
-        this._planDaysError = null;
-        this._hass.callWS({ type: "home_tasks/set_plan_workdays", plan: planInfo.id, workdays })
-          .then((info) => {
-            planInfo.workdays = (info && info.workdays) || (workdays.length === ALL.length ? [] : workdays);
-            this._render();
-          })
-          .catch((err) => {
-            this._planDaysError = (err && err.message) || String(err);
-            this._render();
-          });
+      const current = new Set((planInfo.workdays || []).length ? planInfo.workdays : ALL);
+      const chips = ALL.map((day, index) => {
+        const on = current.has(day);
+        const btn = this._el("button", {
+          className: "assignee-chip plan-workday" + (on ? " active" : ""),
+          textContent: this._t(`rec_wd_${index}`),
+        });
+        btn.type = "button";
+        btn.dataset.day = day;
+        btn.setAttribute("aria-pressed", String(on));
+        // A plan needs at least one day: the last one cannot be taken out.
+        if (on && current.size === 1) btn.disabled = true;
+        btn.addEventListener("click", () => {
+          const next = new Set(current);
+          if (next.has(day)) next.delete(day);
+          else next.add(day);
+          if (!next.size) return;
+          const workdays = ALL.filter((d) => next.has(d));
+          this._planDaysError = null;
+          this._hass.callWS({ type: "home_tasks/set_plan_workdays", plan: planInfo.id, workdays })
+            .then((info) => {
+              planInfo.workdays = (info && info.workdays) || (workdays.length === ALL.length ? [] : workdays);
+              this._render();
+            })
+            .catch((err) => {
+              this._planDaysError = (err && err.message) || String(err);
+              this._render();
+            });
+        });
+        return btn;
       });
-      weekendRow.push(this._el("div", { className: "toggle-row" }, [
-        this._el("span", { className: "toggle-label", textContent: this._t("ed_plan_weekend") }),
-        sw,
-      ]));
+      workdayNodes.push(
+        groupLabel("ed_plan_workdays"),
+        this._el("div", { className: "assignee-chip-row plan-workdays" }, chips),
+      );
     }
 
     const sections = [
@@ -101,8 +113,8 @@ export class HomeTasksDayPlanCardEditor extends EditorBase {
         daysSelect,
         this._el("div", { className: "toggle-grid" }, [
           toggle("compact-switch", "ed_compact", "compact", false),
-          ...weekendRow,
         ]),
+        ...workdayNodes,
         ...(this._planDaysError
           ? [this._el("div", { className: "hint plan-lists-error plan-days-error", textContent: this._planDaysError })]
           : []),

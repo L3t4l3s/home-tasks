@@ -176,6 +176,8 @@ export class EditorBase extends HTMLElement {
         background: color-mix(in srgb, var(--primary-color) 18%, transparent);
         color: var(--primary-color); border-color: var(--primary-color);
       }
+      .assignee-chip:disabled { cursor: default; }
+      .plan-workday { min-width: 40px; }
       .detail-field-row { gap: 4px; }
       .detail-field-row > .toggle-label { flex: 1; display: flex; flex-direction: column; }
       .detail-field-row.unavailable > .toggle-label { color: var(--secondary-text-color); }

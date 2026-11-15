@@ -95,6 +95,14 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     _async_register_due_checker(hass)
     async_register_image_library(hass)
     async_register_image_queue(hass)
+    # The tools for every list and plan. A Home Assistant too old to have
+    # tool sets still gets everything else.
+    try:
+        from .llm_tools import async_register_home_tasks_api
+    except ImportError:
+        _LOGGER.debug("No LLM tools: this Home Assistant has none")
+    else:
+        async_register_home_tasks_api(hass)
     hass.async_create_task(_async_load_image_library(hass))
     # One-time: generate thumbnails for any pre-existing task images so tile
     # grids load fast without re-saving each image. Runs in the background.

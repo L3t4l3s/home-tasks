@@ -1387,10 +1387,10 @@ describe('editor of the day plan card', () => {
     assert.deepEqual(sections.map((d) => d.querySelector('summary').textContent), ['Display', 'Task features', 'Lists']);
     assert.deepEqual(sections.map((d) => d.open), [false, false, false], 'closed until opened, as in a list');
     assert.deepEqual(
-      [...sections[0].querySelectorAll('.group-label')].map((g) => g.textContent), ['Card', 'Header']);
+      [...sections[0].querySelectorAll('.group-label')].map((g) => g.textContent), ['Card', 'Workdays', 'Header']);
     assert.deepEqual(
       [...sections[0].querySelectorAll('.toggle-grid .toggle-label')].map((l) => l.textContent),
-      ['Compact', 'Weekend', 'Date', 'Progress', 'Focus for the day']);
+      ['Compact', 'Date', 'Progress', 'Focus for the day']);
     assert.ok(sections[0].querySelector('.field-wrap > .days-select'));
     assert.ok(sections[2].querySelector('.plan-lists'));
     assert.equal(sections[2].querySelector('.hint'), null);
@@ -1491,55 +1491,59 @@ describe('editor of the day plan card', () => {
     assert.ok(chips()[0].classList.contains('active'));
   });
 
-  test('the weekend is a switch of the plan itself', async () => {
-    const WEEK = ['mon', 'tue', 'wed', 'thu', 'fri'];
+  // The plan's days as chips, Monday to Sunday.
+  const workdayChips = (editor) => [...editor.shadowRoot.querySelectorAll('.plan-workdays .plan-workday')];
+  const activeDays = (editor) => workdayChips(editor).filter((c) => c.classList.contains('active')).map((c) => c.dataset.day);
+
+  test('the workdays are a setting of the plan itself, one chip per day', async () => {
     const plans = [{ id: 'P1', name: 'Today', source_lists: [], workdays: [] }];
     const { editor, fired, wsCalls } = await makeEditor(
       { type: 'custom:home-tasks-day-plan-card', plan: 'P1', days: 3 }, plans);
-    const flip = async (on) => {
-      const sw = editor.shadowRoot.querySelector('.weekend-switch');
-      sw.checked = on;
-      sw.dispatchEvent(new Event('change', { bubbles: true }));
-      await settle();
-    };
-    assert.equal(editor.shadowRoot.querySelector('.weekend-switch').checked, true, 'no days chosen: all of them');
+    assert.deepEqual(workdayChips(editor).map((c) => c.textContent), ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']);
+    same(activeDays(editor), ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'], 'no days chosen: all of them');
 
-    await flip(false);
-    same(wsCalls.at(-1), { type: 'home_tasks/set_plan_workdays', plan: 'P1', workdays: WEEK });
-    assert.equal(editor.shadowRoot.querySelector('.weekend-switch').checked, false);
-    await flip(true);
-    same(wsCalls.at(-1).workdays, [...WEEK, 'sat', 'sun']);
-    assert.equal(editor.shadowRoot.querySelector('.weekend-switch').checked, true);
+    workdayChips(editor)[6].click();                      // Sunday off
+    await settle();
+    same(wsCalls.at(-1), {
+      type: 'home_tasks/set_plan_workdays', plan: 'P1', workdays: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'],
+    });
+    same(activeDays(editor), ['mon', 'tue', 'wed', 'thu', 'fri', 'sat']);
+    workdayChips(editor)[6].click();                      // and back
+    await settle();
+    same(wsCalls.at(-1).workdays, ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']);
     assert.equal(fired.length, 0, 'a setting of the plan, not of the card config');
   });
 
-  test('the weekend switch leaves the other days of the plan as they are', async () => {
-    const plans = [{ id: 'P1', name: 'Today', source_lists: [], workdays: ['mon', 'wed', 'sat'] }];
+  test('a part-time week: any days, but never none', async () => {
+    const plans = [{ id: 'P1', name: 'Today', source_lists: [], workdays: ['mon', 'wed'] }];
     const { editor, wsCalls } = await makeEditor(
       { type: 'custom:home-tasks-day-plan-card', plan: 'P1', days: 3 }, plans);
-    const sw = () => editor.shadowRoot.querySelector('.weekend-switch');
-    assert.equal(sw().checked, true, 'Saturday is a day of this plan');
-    sw().checked = false;
-    sw().dispatchEvent(new Event('change', { bubbles: true }));
+    same(activeDays(editor), ['mon', 'wed']);
+    workdayChips(editor)[3].click();                      // Thursday on
     await settle();
-    same(wsCalls.at(-1).workdays, ['mon', 'wed']);
-    sw().checked = true;
-    sw().dispatchEvent(new Event('change', { bubbles: true }));
+    same(wsCalls.at(-1).workdays, ['mon', 'wed', 'thu']);
+    workdayChips(editor)[0].click();                      // Monday off
     await settle();
-    same(wsCalls.at(-1).workdays, ['mon', 'wed', 'sat', 'sun']);
+    workdayChips(editor)[2].click();                      // Wednesday off
+    await settle();
+    same(activeDays(editor), ['thu']);
+    const calls = wsCalls.length;
+    const last = workdayChips(editor)[3];
+    assert.equal(last.disabled, true, 'the last day cannot be taken out');
+    last.click();
+    await settle();
+    assert.equal(wsCalls.length, calls);
   });
 
-  test('a refused weekend switch is said and taken back', async () => {
+  test('refused workdays are said and taken back', async () => {
     const plans = [{ id: 'P1', name: 'Today', source_lists: [], workdays: [] }];
     const { editor, refuseWrites } = await makeEditor(
       { type: 'custom:home-tasks-day-plan-card', plan: 'P1', days: 3 }, plans);
     refuseWrites();
-    const sw = editor.shadowRoot.querySelector('.weekend-switch');
-    sw.checked = false;
-    sw.dispatchEvent(new Event('change', { bubbles: true }));
+    workdayChips(editor)[5].click();
     await settle();
     assert.match(editor.shadowRoot.querySelector('.plan-days-error').textContent, /Unauthorized/);
-    assert.equal(editor.shadowRoot.querySelector('.weekend-switch').checked, true);
+    same(activeDays(editor), ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']);
   });
 
   test('task features: every field of an open row has a switch and can be moved', async () => {

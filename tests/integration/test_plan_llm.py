@@ -22,11 +22,14 @@ from tests.integration.test_plan import (
 pytestmark = pytest.mark.integration
 
 DOMAIN = "home_tasks"
-TOOLS = [f"home_tasks__{name}" for name in (
+LIST_TOOLS = [f"home_tasks__{name}" for name in (
+    "get_lists",
     "get_tasks", "get_task", "add_task", "update_task", "complete_task", "reopen_task",
-    "delete_task", "move_task", "add_sub_task", "update_sub_task", "remove_sub_task",
-    "get_plan", "set_plan", "plan_task", "unplan_task",
+    "delete_task", "move_task", "duplicate_task", "reorder_tasks",
+    "add_sub_task", "update_sub_task", "remove_sub_task",
+    "add_section", "update_section", "delete_section", "set_list_defaults",
 )]
+TOOLS = LIST_TOOLS + [f"home_tasks__{name}" for name in ("get_plan", "set_plan", "plan_task", "unplan_task")]
 
 
 @pytest.fixture
@@ -130,9 +133,12 @@ async def test_the_tools_translate_for_mcp(hass: HomeAssistant, plan) -> None:
 async def test_the_tools_say_what_they_do(hass: HomeAssistant, plan) -> None:
     """Read-only tools are what a read-only MCP connection still offers."""
     tools = {tool.name.removeprefix("home_tasks__"): tool.annotations for tool in (await _api(hass, plan)).tools}
-    assert [name for name, notes in tools.items() if notes.read_only] == ["get_tasks", "get_task", "get_plan"]
+    assert [name for name, notes in tools.items() if notes.read_only] == [
+        "get_lists", "get_tasks", "get_task", "get_plan",
+    ]
     assert [name for name, notes in tools.items() if notes.destructive] == [
-        "update_task", "delete_task", "update_sub_task", "remove_sub_task", "set_plan", "unplan_task",
+        "update_task", "delete_task", "update_sub_task", "remove_sub_task",
+        "update_section", "delete_section", "set_list_defaults", "set_plan", "unplan_task",
     ]
     # Native lists only: nothing leaves Home Assistant.
     assert not any(notes.open_world for notes in tools.values())
@@ -143,10 +149,12 @@ async def test_tools_on_a_linked_list_reach_its_provider(hass: HomeAssistant, pl
 
     await setup_linked_list(hass)
     tools = {tool.name.removeprefix("home_tasks__"): tool.annotations for tool in (await _api(hass, plan)).tools}
-    # Everything that reads or writes tasks; the plan itself stays in Home Assistant.
+    # Everything that reads or writes tasks; the plan, sections and defaults
+    # stay in Home Assistant.
     assert [name for name, notes in tools.items() if notes.open_world] == [
         "get_tasks", "get_task", "add_task", "update_task", "complete_task", "reopen_task",
-        "delete_task", "move_task", "add_sub_task", "update_sub_task", "remove_sub_task",
+        "delete_task", "move_task", "duplicate_task", "reorder_tasks",
+        "add_sub_task", "update_sub_task", "remove_sub_task",
     ]
 
 

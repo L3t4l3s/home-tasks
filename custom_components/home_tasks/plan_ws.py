@@ -261,7 +261,7 @@ async def ws_set_plan_lists(hass, connection, msg):
 @websocket_api.async_response
 async def ws_set_plan_workdays(hass, connection, msg):
     """Choose the weekdays a plan has - the plan's own setting, offered in
-    the card editor as a weekend switch. None chosen means every day, and so
+    the card editor as one chip per weekday. None chosen means every day, and so
     does all seven.
 
     It moves what every card and every assistant reads as the plan's days,

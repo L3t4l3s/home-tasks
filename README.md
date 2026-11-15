@@ -28,9 +28,9 @@
 Home Tasks turns Home Assistant into the place where your household keeps its to-dos. It has two parts that work together:
 
 - 🧩 **An integration** that keeps your lists in Home Assistant. Every list is a regular `todo.*` entity with a calendar, sensors, events and services — so tasks can drive automations, show up on your phone and be added by voice.
-- 🖼️ **A dashboard card** to work with them: a clean list or a picture grid, several lists side by side, drag & drop, filters per person and tag, and every detail of a task one tap away.
+- 🖼️ **Two dashboard cards** to work with them: the **list card** — a clean list or a picture grid, several lists side by side, drag & drop, filters per person and tag, and every detail of a task one tap away — and the **day plan card**, which lays out today and the days ahead with the tasks from all your lists.
 
-Already using **Todoist, Google Tasks, Nextcloud, Bring** or another to-do app? Link those lists, and they get the same card and the same features — while your family keeps using the app they know.
+Already using **Todoist, Google Tasks, Nextcloud, Bring** or another to-do app? Link those lists, and they get the same cards and the same features — while your family keeps using the app they know.
 
 <table>
 <tr>
@@ -66,8 +66,8 @@ Already using **Todoist, Google Tasks, Nextcloud, Bring** or another to-do app? 
 - ✨ [Features](https://github.com/L3t4l3s/home-tasks#features)
 - 📊 [Entities](https://github.com/L3t4l3s/home-tasks#entities)
 - 📦 [Installation](https://github.com/L3t4l3s/home-tasks#installation)
-- ⚙️ [Setup](https://github.com/L3t4l3s/home-tasks#setup) — lists, linked lists and their providers, day plans, AI pictures
-- 🎨 [Card configuration](https://github.com/L3t4l3s/home-tasks#card-configuration) — options, list defaults, styling, examples
+- ⚙️ [Setup](https://github.com/L3t4l3s/home-tasks#setup) — lists, linked lists and their providers, day plans, AI assistants, AI pictures
+- 🎨 [Card configuration](https://github.com/L3t4l3s/home-tasks#card-configuration) — list card and day plan card options, list defaults, styling, examples
 - 🤖 [Automations](https://github.com/L3t4l3s/home-tasks#automations) — events, services, example automations
 - 🗣️ [View Assist](https://github.com/L3t4l3s/home-tasks#view-assist)
 - ❤️ [Support](https://github.com/L3t4l3s/home-tasks#support)
@@ -90,11 +90,12 @@ Already using **Todoist, Google Tasks, Nextcloud, Bring** or another to-do app? 
   - survives Home Assistant's *clear completed*; to end it, delete it in the card or switch recurrence off
 - **History** — every change with who made it and when
 
-### Dashboard card
+### Dashboard cards
+
+**List card** — your lists, one or several side by side:
 
 - **List or tile view** per list — rows with every detail one tap away, or a picture grid where you tap a tile to tick it off
 - **Several lists side by side** in one card, e.g. as a Kanban board
-- **Day plan card** — today and the days after it side by side, with the tasks you picked for each day and the ones due on it, from all your lists ([day plan card](https://github.com/L3t4l3s/home-tasks#day-plan-card))
 - **Sections** — group a list under headers like store aisles, rooms or project phases; every dashboard shows the same ones
 - **Drag & drop** — reorder, sort into sections, or move tasks to another list
 - **Filter and sort** — open/done/due soon, by date, priority, title or person; tap a tag or person chip to filter
@@ -105,11 +106,21 @@ Already using **Todoist, Google Tasks, Nextcloud, Bring** or another to-do app? 
 - **Duplicate, move, auto-delete completed** — per task or per list
 - **Compact mode**, smooth animations, and a **visual editor** for all of it
 
+**Day plan card** — what you do when, across your lists ([day plans](https://github.com/L3t4l3s/home-tasks#day-plans), [card](https://github.com/L3t4l3s/home-tasks#day-plan-card)):
+
+- **Today and the days ahead** side by side — the tasks you planned for each day and the ones due on it, from native and linked lists alike
+- **A focus note** per day and the progress of today
+- **Tick off, reorder, re-plan** — tap a row's number to complete the task, drag it within a day or onto another one
+- **Plan a task** under a day by searching the plan's lists, or with **Plan for…** in a task's details in the list card
+- **Same task details** as in its list — tap a row to edit every field
+- **Carry over** what was left open on the last planned day
+- A task keeps its day when it moves to another list, and ticking it off shows in both cards
+
 ### Home Assistant integration
 
 - **7 automation events** — created, completed, reopened, due, overdue, assigned, reminder ([Events](https://github.com/L3t4l3s/home-tasks#events))
 - **Services** — add (also from a spoken sentence), update, move, complete, reopen, assign and read tasks ([Services](https://github.com/L3t4l3s/home-tasks#services))
-- **Tools for AI assistants** — every [day plan](https://github.com/L3t4l3s/home-tasks#day-plans) offers its own set of tools to conversation agents and to Home Assistant's MCP Server ([Day plans and AI assistants](https://github.com/L3t4l3s/home-tasks#day-plans-and-ai-assistants))
+- **Tools for AI assistants** — conversation agents and Home Assistant's MCP Server can do with your lists what you can: one set of tools for everything, and one per [day plan](https://github.com/L3t4l3s/home-tasks#day-plans) for just its lists ([AI assistants](https://github.com/L3t4l3s/home-tasks#ai-assistants))
 - **[View Assist](https://github.com/L3t4l3s/home-tasks#view-assist)** — a ready-made view and blueprints for voice satellites with a screen
 
 ### Languages
@@ -170,7 +181,7 @@ Home Tasks is available in the HACS default repository.
 
 ## Setup
 
-Every list is set up as its own entry of the integration. The dashboard card is registered automatically — just add it to your dashboard.
+Every list is set up as its own entry of the integration. Both dashboard cards are registered automatically — just add them to your dashboard.
 
 ### Native Lists
 
@@ -234,56 +245,72 @@ when a provider gives it a new ID — Bring! does that on a rename.
 
 Show a plan with the [day plan card](https://github.com/L3t4l3s/home-tasks#day-plan-card), and
 fill it there, with the [plan services](https://github.com/L3t4l3s/home-tasks#day-plan-services), or let an
-[assistant](https://github.com/L3t4l3s/home-tasks#day-plans-and-ai-assistants) do it. In a list card, a task
+[assistant](https://github.com/L3t4l3s/home-tasks#ai-assistants) do it. In a list card, a task
 of a list that a plan draws from has **Plan for…** in its details.
 
-#### Day plans and AI assistants
+### AI assistants
 
-Every day plan offers a **set of tools** for an AI assistant, named after the
-plan. With it an assistant can read and write the tasks of the plan's lists
-and put the day together — with priorities, tags, assignees and the working
-order, none of which it gets from plain to-do entities.
+Home Tasks offers AI assistants **sets of tools**. With them an assistant can
+do what you do in the cards and what automations do with the services: read
+and add tasks; change, complete, move, duplicate, order and delete them, with
+priorities, tags, assignees, sub-tasks, reminders and recurrence; keep a
+list's sections and defaults; and fill a day plan. Plain to-do entities give
+it none of that. A set reaches nothing until you hand it to an assistant.
 
-The set reaches the plan and its lists, and nothing else: no devices, no
-other lists. A plan over your work lists gives an assistant your work tasks
-and not the house.
+| Set | What it reaches |
+|-----|-----------------|
+| **Home Tasks** | All your lists and all day plans |
+| **One per [day plan](https://github.com/L3t4l3s/home-tasks#day-plans)**, named after the plan | The plan and the lists it draws from, nothing else. A plan over your work lists gives an assistant your work tasks and not the house |
+
+Adding or removing a list or a plan, and a plan's settings, stay in Home
+Assistant's settings.
 
 The tools are marked as reading, changing or deleting, which Home Assistant's
-MCP Server passes on: a read-only connection gets `get_tasks`, `get_task` and
-`get_plan` only, and a client can ask before it runs a tool that deletes.
+MCP Server passes on: a read-only connection gets `get_lists`, `get_tasks`,
+`get_task` and `get_plan` only, and a client can ask before it runs a tool
+that deletes.
 
 | Tool | What it does |
 |------|--------------|
-| `home_tasks__get_tasks` | Reads the tasks of the plan's lists, with all fields. Filters: lists, status, tag, person, due |
+| `home_tasks__get_lists` | Reads the lists: kind, open tasks, sections, fixed tags, the defaults for new tasks — and the day plans with their lists |
+| `home_tasks__get_tasks` | Reads tasks with all fields. Filters: lists, status, tag, person, due |
 | `home_tasks__get_task` | Reads all of one task: also its reminders, how it recurs, its section, its picture and its recent history |
-| `home_tasks__add_task` | Creates a task in one of the plan's lists — with notes, due date, priority, tags, assignees, sub-tasks, section, reminders, recurrence, position, picture |
+| `home_tasks__add_task` | Creates a task — with notes, due date, priority, tags, assignees, sub-tasks, section, reminders, recurrence, position, picture |
 | `home_tasks__update_task` | Changes fields of a task; `null` clears a due date, a priority, the notes, the section or the picture and switches recurring off |
-| `home_tasks__complete_task` | Marks a task as done |
-| `home_tasks__reopen_task` | Opens a completed task again |
-| `home_tasks__delete_task` | Deletes a task for good. The only tool that cannot be undone; the assistant is told to use it only when asked to delete |
-| `home_tasks__move_task` | Moves a task to another list of the plan |
+| `home_tasks__complete_task` / `reopen_task` | Marks a task as done, or opens it again |
+| `home_tasks__delete_task` | Deletes a task for good; the assistant is told to use it only when asked to delete |
+| `home_tasks__move_task` | Moves a task to another list |
+| `home_tasks__duplicate_task` | Makes an open copy of a task, optionally for another person |
+| `home_tasks__reorder_tasks` | Puts the tasks of a list in order |
 | `home_tasks__add_sub_task` / `update_sub_task` / `remove_sub_task` | Adds a sub-task, renames it or ticks it off, removes it |
-| `home_tasks__get_plan` | Reads the plan, 1–7 days |
+| `home_tasks__add_section` / `update_section` / `delete_section` | Adds a section to a list, renames or moves it, deletes it (its tasks stay) |
+| `home_tasks__set_list_defaults` | Sets what new tasks of a list get, its fixed tags and how early recurring tasks come back |
+| `home_tasks__get_plan` | Reads a plan, 1–7 days |
 | `home_tasks__set_plan` | Sets the working order of a day and its note (`merge` or `replace`) |
 | `home_tasks__plan_task` | Puts one task on a day, or moves it there |
 | `home_tasks__unplan_task` | Takes a task off the plan |
 
-Two ways to hand the set to an assistant:
+The plan tools are there when there is a plan. In the **Home Tasks** set they
+take the plan's name as `plan` when there are several.
+
+Two ways to hand a set to an assistant:
 
 - **A conversation agent in Home Assistant**: in the agent's settings (the
-  configuration of your AI integration), choose the plan among the tools it
-  may use — next to Assist, or instead of it.
+  configuration of your AI integration), choose **Home Tasks** or a plan
+  among the tools it may use — next to Assist, or instead of it.
 - **An assistant outside Home Assistant**, through the
   [Model Context Protocol Server](https://www.home-assistant.io/integrations/mcp_server/)
   integration. There every set of tools has its own address, listed under
-  **Settings → System → AI**; the plan's ends in `/api/mcp/home_tasks-<entry ID>`.
-  Point the assistant's connector at that address and it gets the plan and
-  nothing else. It needs the access token of an administrator account.
+  **Settings → System → AI**: `/api/mcp/home_tasks` for Home Tasks, and
+  `/api/mcp/home_tasks-<entry ID>` for a plan. Point the assistant's
+  connector at that address and it gets that set and nothing else. It needs
+  the access token of an administrator account.
 
-Along with the tools the assistant is told how the plan works and how to plan
-a day: keep what is already on today, treat due and overdue tasks as fixed
-points, fill up in working order and write with `merge`, so that nothing you
-planned yourself gets lost. A morning briefing is then one automation:
+Along with the tools the assistant is told how the lists work and, in a set
+with a plan, how to plan a day: keep what is already on today, treat due and
+overdue tasks as fixed points, fill up in working order and write with
+`merge`, so that nothing you planned yourself gets lost. A morning briefing
+is then one automation:
 
 ```yaml
 automation:
@@ -329,7 +356,7 @@ Pictures are stored in `config/www/home_tasks/` and reused for every task with t
 
 ## Card Configuration
 
-All options are available in the visual card editor. The examples below cover the most common setups.
+There are two card types: the list card (**Home Tasks: List** in the card picker, `custom:home-tasks-card`), whose options come first, and the [day plan card](https://github.com/L3t4l3s/home-tasks#day-plan-card) (**Home Tasks: Day plan**, `custom:home-tasks-day-plan-card`). All options are available in the visual card editor. The examples below cover the most common setups.
 
 <center>
 
@@ -341,7 +368,7 @@ All options are available in the visual card editor. The examples below cover th
 
 ### Column option reference
 
-Each entry in `columns` accepts the following options.
+Each entry in `columns` of the list card accepts the following options.
 
 | Option | Default | Description |
 |--------|---------|-------------|
@@ -398,7 +425,7 @@ Each entry in `columns` accepts the following options.
 
 ### Card-level option reference
 
-These options live at the **root** of the card config, not inside a column.
+These options live at the **root** of the list card's config, not inside a column.
 
 | Option | Default | Description |
 |--------|---------|-------------|
@@ -423,11 +450,12 @@ one column per day, the current day first with its focus note and progress.
 
 Its editor is laid out like a list
 column's: the plan on top, below it the sections *Display* — the number of
-days, a compact mode, the weekend, and switches for the date, the progress
-bar and the focus line of a day — *Task features* — which fields an open row
+days, a compact mode, the plan's **workdays** Monday to Sunday (any days,
+for a part-time week too), and switches for the date, the progress bar and
+the focus line of a day — *Task features* — which fields an open row
 shows and in which order, as for a list — and *Lists*, the **lists the plan
-draws from**. The lists and the **weekend** switch are settings of the plan
-itself (its lists and workdays): they are saved at once, and they also apply
+draws from**. The lists and the workdays are settings of the plan
+itself: they are saved at once, and they also apply
 to other cards showing the plan and to the plan's tools for assistants
 (administrators only).
 
@@ -570,7 +598,7 @@ columns:
 
 <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/meals.png" alt="Meals in tile view with pictures">
 
-A visual board in [tile view](https://github.com/L3t4l3s/home-tasks#dashboard-card) — each task is a card with its (optionally AI-generated) image. Great for meal plans, recipes, or anything where the picture matters. Tap to complete, long-press for details.
+A visual board in [tile view](https://github.com/L3t4l3s/home-tasks#dashboard-cards) — each task is a card with its (optionally AI-generated) image. Great for meal plans, recipes, or anything where the picture matters. Tap to complete, long-press for details.
 
 ```yaml
 type: custom:home-tasks-card
@@ -589,7 +617,7 @@ columns:
 
 <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/usecase-chores.png" alt="Kids chores in tile view with comic-style images">
 
-Kid-friendly [tile view](https://github.com/L3t4l3s/home-tasks#dashboard-card) — each chore is a picture card with a playful, AI-generated comic image (prompt prefix `Comic style illustration for kids:`). Tap to complete. Person assignment and weekday recurrence still run underneath.
+Kid-friendly [tile view](https://github.com/L3t4l3s/home-tasks#dashboard-cards) — each chore is a picture card with a playful, AI-generated comic image (prompt prefix `Comic style illustration for kids:`). Tap to complete. Person assignment and weekday recurrence still run underneath.
 
 ```yaml
 type: custom:home-tasks-card

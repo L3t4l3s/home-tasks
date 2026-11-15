@@ -375,7 +375,7 @@ async def test_untick_is_not_for_a_task_that_is_still_completed(
 async def test_set_plan_workdays_changes_the_plans_days(
     hass: HomeAssistant, plan, store, saturday, ws
 ) -> None:
-    """The weekend switch of the card editor: the plan's own setting."""
+    """The workday chips of the card editor: the plan's own setting."""
     await _task(store, "Due next Monday", due_date="2026-11-23")
     await hass.async_block_till_done()
 

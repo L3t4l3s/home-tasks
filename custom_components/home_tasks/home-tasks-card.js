@@ -326,7 +326,7 @@ var ui_translations_default = {
     ed_plan_days: "Days shown",
     ed_plan_all_lists: "All lists",
     plan_due_hint: "On the plan through its due date: move it, or change the date.",
-    ed_plan_weekend: "Weekend",
+    ed_plan_workdays: "Workdays",
     new_entry_link: "Create a new list or day plan",
     ed_plan_list_missing: "List not available",
     picker_list_name: "Home Tasks: List",
@@ -648,7 +648,7 @@ var ui_translations_default = {
     ed_plan_days: "Getoonde dagen",
     ed_plan_all_lists: "Alle lijsten",
     plan_due_hint: "Staat op het plan door de vervaldatum: verplaats de taak of wijzig de datum.",
-    ed_plan_weekend: "Weekend",
+    ed_plan_workdays: "Werkdagen",
     new_entry_link: "Nieuwe lijst of nieuw dagplan aanmaken",
     ed_plan_list_missing: "Lijst niet beschikbaar",
     picker_list_name: "Home Tasks: Lijst",
@@ -970,7 +970,7 @@ var ui_translations_default = {
     ed_plan_days: "Giorni mostrati",
     ed_plan_all_lists: "Tutte le liste",
     plan_due_hint: "È nel piano per la data di scadenza: spostala o cambia la data.",
-    ed_plan_weekend: "Fine settimana",
+    ed_plan_workdays: "Giorni lavorativi",
     new_entry_link: "Crea una nuova lista o un nuovo piano giornaliero",
     ed_plan_list_missing: "Lista non disponibile",
     picker_list_name: "Home Tasks: Lista",
@@ -1292,7 +1292,7 @@ var ui_translations_default = {
     ed_plan_days: "Wyświetlane dni",
     ed_plan_all_lists: "Wszystkie listy",
     plan_due_hint: "Jest w planie ze względu na termin: przenieś zadanie lub zmień datę.",
-    ed_plan_weekend: "Weekend",
+    ed_plan_workdays: "Dni robocze",
     new_entry_link: "Utwórz nową listę lub plan dnia",
     ed_plan_list_missing: "Lista niedostępna",
     picker_list_name: "Home Tasks: Lista",
@@ -1614,7 +1614,7 @@ var ui_translations_default = {
     ed_plan_days: "Visade dagar",
     ed_plan_all_lists: "Alla listor",
     plan_due_hint: "Står i planen genom sitt förfallodatum: flytta den eller ändra datumet.",
-    ed_plan_weekend: "Helg",
+    ed_plan_workdays: "Arbetsdagar",
     new_entry_link: "Skapa en ny lista eller dagsplan",
     ed_plan_list_missing: "Listan är inte tillgänglig",
     picker_list_name: "Home Tasks: Lista",
@@ -1936,7 +1936,7 @@ var ui_translations_default = {
     ed_plan_days: "Jours affichés",
     ed_plan_all_lists: "Toutes les listes",
     plan_due_hint: "Figure dans le plan par sa date d'échéance : déplacez-la ou modifiez la date.",
-    ed_plan_weekend: "Week-end",
+    ed_plan_workdays: "Jours ouvrés",
     new_entry_link: "Créer une nouvelle liste ou un plan du jour",
     ed_plan_list_missing: "Liste indisponible",
     picker_list_name: "Home Tasks : Liste",
@@ -2258,7 +2258,7 @@ var ui_translations_default = {
     ed_plan_days: "Dias apresentados",
     ed_plan_all_lists: "Todas as listas",
     plan_due_hint: "Está no plano pela data de vencimento: mova-a ou altere a data.",
-    ed_plan_weekend: "Fim de semana",
+    ed_plan_workdays: "Dias úteis",
     new_entry_link: "Criar uma nova lista ou um plano diário",
     ed_plan_list_missing: "Lista indisponível",
     picker_list_name: "Home Tasks: Lista",
@@ -2580,7 +2580,7 @@ var ui_translations_default = {
     ed_plan_days: "Dias exibidos",
     ed_plan_all_lists: "Todas as listas",
     plan_due_hint: "Está no plano pela data de vencimento: mova-a ou altere a data.",
-    ed_plan_weekend: "Fim de semana",
+    ed_plan_workdays: "Dias úteis",
     new_entry_link: "Criar uma nova lista ou um plano diário",
     ed_plan_list_missing: "Lista indisponível",
     picker_list_name: "Home Tasks: Lista",
@@ -2902,7 +2902,7 @@ var ui_translations_default = {
     ed_plan_days: "Días mostrados",
     ed_plan_all_lists: "Todas las listas",
     plan_due_hint: "Está en el plan por su fecha de vencimiento: muévela o cambia la fecha.",
-    ed_plan_weekend: "Fin de semana",
+    ed_plan_workdays: "Días laborables",
     new_entry_link: "Crear una nueva lista o un plan diario",
     ed_plan_list_missing: "Lista no disponible",
     picker_list_name: "Home Tasks: Lista",
@@ -3224,7 +3224,7 @@ var ui_translations_default = {
     ed_plan_days: "Показываемые дни",
     ed_plan_all_lists: "Все списки",
     plan_due_hint: "В плане из-за срока выполнения: перенесите задачу или измените дату.",
-    ed_plan_weekend: "Выходные",
+    ed_plan_workdays: "Рабочие дни",
     new_entry_link: "Создать новый список или план дня",
     ed_plan_list_missing: "Список недоступен",
     picker_list_name: "Home Tasks: Список",
@@ -3546,7 +3546,7 @@ var ui_translations_default = {
     ed_plan_days: "Zobrazené dny",
     ed_plan_all_lists: "Všechny seznamy",
     plan_due_hint: "Je v plánu kvůli termínu: přesuňte úkol nebo změňte datum.",
-    ed_plan_weekend: "Víkend",
+    ed_plan_workdays: "Pracovní dny",
     new_entry_link: "Vytvořit nový seznam nebo denní plán",
     ed_plan_list_missing: "Seznam není dostupný",
     picker_list_name: "Home Tasks: Seznam",
@@ -3868,7 +3868,7 @@ var ui_translations_default = {
     ed_plan_days: "Viste dage",
     ed_plan_all_lists: "Alle lister",
     plan_due_hint: "Står i planen på grund af forfaldsdatoen: flyt den, eller ændr datoen.",
-    ed_plan_weekend: "Weekend",
+    ed_plan_workdays: "Arbejdsdage",
     new_entry_link: "Opret en ny liste eller dagsplan",
     ed_plan_list_missing: "Listen er ikke tilgængelig",
     picker_list_name: "Home Tasks: Liste",
@@ -4190,7 +4190,7 @@ var ui_translations_default = {
     ed_plan_days: "Viste dager",
     ed_plan_all_lists: "Alle lister",
     plan_due_hint: "Står i planen på grunn av forfallsdatoen: flytt den, eller endre datoen.",
-    ed_plan_weekend: "Helg",
+    ed_plan_workdays: "Arbeidsdager",
     new_entry_link: "Opprett en ny liste eller dagsplan",
     ed_plan_list_missing: "Listen er ikke tilgjengelig",
     picker_list_name: "Home Tasks: Liste",
@@ -4512,7 +4512,7 @@ var ui_translations_default = {
     ed_plan_days: "Näytettävät päivät",
     ed_plan_all_lists: "Kaikki listat",
     plan_due_hint: "On suunnitelmassa eräpäivänsä vuoksi: siirrä tehtävä tai muuta päivämäärää.",
-    ed_plan_weekend: "Viikonloppu",
+    ed_plan_workdays: "Työpäivät",
     new_entry_link: "Luo uusi lista tai päiväsuunnitelma",
     ed_plan_list_missing: "Lista ei ole käytettävissä",
     picker_list_name: "Home Tasks: Lista",
@@ -4834,7 +4834,7 @@ var ui_translations_default = {
     ed_plan_days: "Megjelenített napok",
     ed_plan_all_lists: "Minden lista",
     plan_due_hint: "A határideje miatt van a tervben: helyezd át, vagy módosítsd a dátumot.",
-    ed_plan_weekend: "Hétvége",
+    ed_plan_workdays: "Munkanapok",
     new_entry_link: "Új lista vagy napi terv létrehozása",
     ed_plan_list_missing: "A lista nem érhető el",
     picker_list_name: "Home Tasks: Lista",
@@ -5156,7 +5156,7 @@ var ui_translations_default = {
     ed_plan_days: "Angezeigte Tage",
     ed_plan_all_lists: "Alle Listen",
     plan_due_hint: "Steht über das Fälligkeitsdatum im Plan: verschieben oder das Datum ändern.",
-    ed_plan_weekend: "Wochenende",
+    ed_plan_workdays: "Arbeitstage",
     new_entry_link: "Neue Liste oder neuen Tagesplan anlegen",
     ed_plan_list_missing: "Liste nicht verfügbar",
     picker_list_name: "Home Tasks: Liste",
@@ -13751,6 +13751,8 @@ var EditorBase = class extends HTMLElement {
         background: color-mix(in srgb, var(--primary-color) 18%, transparent);
         color: var(--primary-color); border-color: var(--primary-color);
       }
+      .assignee-chip:disabled { cursor: default; }
+      .plan-workday { min-width: 40px; }
       .detail-field-row { gap: 4px; }
       .detail-field-row > .toggle-label { flex: 1; display: flex; flex-direction: column; }
       .detail-field-row.unavailable > .toggle-label { color: var(--secondary-text-color); }
@@ -15388,39 +15390,50 @@ var HomeTasksDayPlanCardEditor = class extends EditorBase {
       (value) => set({ days: Number(value) })
     );
     const planInfo = plans.find((p) => p.id === (this._config.plan || plans[0] && plans[0].id));
-    const weekendRow = [];
+    const workdayNodes = [];
     if (planInfo) {
       const ALL = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-      const current = (planInfo.workdays || []).length ? planInfo.workdays : ALL;
-      const sw = document.createElement("ha-switch");
-      sw.className = "weekend-switch";
-      sw.checked = current.includes("sat") || current.includes("sun");
-      sw.setAttribute("aria-label", this._t("ed_plan_weekend"));
-      sw.addEventListener("change", () => {
-        const days2 = ALL.filter((d) => d === "sat" || d === "sun" ? sw.checked : current.includes(d));
-        const workdays = days2.length ? days2 : ALL.slice(0, 5);
-        this._planDaysError = null;
-        this._hass.callWS({ type: "home_tasks/set_plan_workdays", plan: planInfo.id, workdays }).then((info) => {
-          planInfo.workdays = info && info.workdays || (workdays.length === ALL.length ? [] : workdays);
-          this._render();
-        }).catch((err) => {
-          this._planDaysError = err && err.message || String(err);
-          this._render();
+      const current = new Set((planInfo.workdays || []).length ? planInfo.workdays : ALL);
+      const chips = ALL.map((day, index) => {
+        const on = current.has(day);
+        const btn = this._el("button", {
+          className: "assignee-chip plan-workday" + (on ? " active" : ""),
+          textContent: this._t(`rec_wd_${index}`)
         });
+        btn.type = "button";
+        btn.dataset.day = day;
+        btn.setAttribute("aria-pressed", String(on));
+        if (on && current.size === 1) btn.disabled = true;
+        btn.addEventListener("click", () => {
+          const next = new Set(current);
+          if (next.has(day)) next.delete(day);
+          else next.add(day);
+          if (!next.size) return;
+          const workdays = ALL.filter((d) => next.has(d));
+          this._planDaysError = null;
+          this._hass.callWS({ type: "home_tasks/set_plan_workdays", plan: planInfo.id, workdays }).then((info) => {
+            planInfo.workdays = info && info.workdays || (workdays.length === ALL.length ? [] : workdays);
+            this._render();
+          }).catch((err) => {
+            this._planDaysError = err && err.message || String(err);
+            this._render();
+          });
+        });
+        return btn;
       });
-      weekendRow.push(this._el("div", { className: "toggle-row" }, [
-        this._el("span", { className: "toggle-label", textContent: this._t("ed_plan_weekend") }),
-        sw
-      ]));
+      workdayNodes.push(
+        groupLabel("ed_plan_workdays"),
+        this._el("div", { className: "assignee-chip-row plan-workdays" }, chips)
+      );
     }
     const sections = [
       this._buildEditorSection("plan_view", "mdi:eye", "ed_sec_view", [
         groupLabel("ed_group_card"),
         daysSelect,
         this._el("div", { className: "toggle-grid" }, [
-          toggle("compact-switch", "ed_compact", "compact", false),
-          ...weekendRow
+          toggle("compact-switch", "ed_compact", "compact", false)
         ]),
+        ...workdayNodes,
         ...this._planDaysError ? [this._el("div", { className: "hint plan-lists-error plan-days-error", textContent: this._planDaysError })] : [],
         groupLabel("ed_group_header"),
         this._el("div", { className: "toggle-grid" }, [

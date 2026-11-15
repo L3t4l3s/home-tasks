@@ -209,7 +209,7 @@ or needs hand-written scripts per user as in spec v0.2.
 1. Service changes: `get_tasks` for several lists, `add_task` response. — done
 2. Plan entry: config flow, store, resolution rules, services, sensor, tests. — done
    (`plan.py`, `plan_services.py`, `tests/integration/test_plan.py`)
-3. Plan tool set (LLM API) and the briefing. — done (`plan_llm.py`,
+3. Plan tool set (LLM API) and the briefing. — done (`llm_tools.py`,
    `tests/integration/test_plan_llm.py`). The briefing is the set's prompt
    plus one automation calling a conversation agent (README); the
    integration has no scheduler of its own.
@@ -298,9 +298,10 @@ After the first try on a real system (27 lists, 16 of them linked):
   `show_focus`; all on by default). A third section, *Task features*, sets
   which fields an open row shows and in which order (the columns' `show_*`
   and `detail_order`, at the root of the card config). Row badges stay YAML.
-- The editor has a weekend switch. It writes the plan's workdays (WebSocket
-  `set_plan_workdays`, administrators only), leaving the other days as they
-  are; all seven days is stored as "none chosen".
+- The editor has one chip per weekday, Monday to Sunday, for any week -
+  part-time too. It writes the plan's workdays (WebSocket
+  `set_plan_workdays`, administrators only); the last day cannot be taken
+  out, and all seven days is stored as "none chosen".
 - Lists and plans are still made in Home Assistant's dialog for the
   integration; the card does not copy it. For administrators the editor and
   the "no plan" message link to the integration's page

@@ -277,15 +277,19 @@ def all_lists(hass: HomeAssistant) -> list[SourceList]:
 
 
 def source_lists(hass: HomeAssistant, entry: ConfigEntry) -> list[SourceList]:
-    """The lists a plan may reference, with their tasks.
+    """The lists a plan may reference, with their tasks. No lists chosen
+    means all of them."""
+    return read_lists(hass, set(entry.options.get(CONF_SOURCE_LISTS) or []))
 
-    No lists chosen means all of them. Linked lists are read through the
-    snapshot the sensors use - no I/O, so a plan can be read from an entity
-    property as well as from a service.
+
+def read_lists(hass: HomeAssistant, wanted: set[str] | None = None) -> list[SourceList]:
+    """Lists with their tasks: the ones in *wanted*, or all of them.
+
+    Linked lists are read through the snapshot the sensors use - no I/O, so
+    a plan can be read from an entity property as well as from a service.
     """
     from .external_view import get_external_tasks_snapshot
 
-    wanted = set(entry.options.get(CONF_SOURCE_LISTS) or [])
     stores = hass.data.get(DOMAIN, {})
     sources = [src for src in all_lists(hass) if not wanted or src.entry_id in wanted]
     for src in sources:
@@ -296,6 +300,35 @@ def source_lists(hass: HomeAssistant, entry: ConfigEntry) -> list[SourceList]:
         else:
             src.tasks = list(stores[src.entry_id].tasks)
     return sources
+
+
+def find_task(
+    tasks: dict[str, dict[str, dict]], linked: set[str], task_id, list_hint: str | None = None,
+    *, fallback: bool = True,
+) -> tuple[str, dict] | None:
+    """``(list entry id, task)`` for an id, trying its hinted list first.
+
+    *tasks* maps a list's entry id to its tasks by id; *linked* holds the
+    linked ones. With fallback disabled, only the hinted list may supply
+    the task.
+
+    A task that is not in the list it is said to be in was deleted or
+    moved. A move keeps the id only from one native list to another, and
+    native ids are unique. A linked list's ids are its provider's: the
+    same id elsewhere is another task, so a hinted lookup never leaves a
+    linked list and never ends in one.
+    """
+    task_id = str(task_id)
+    if list_hint and task_id in tasks.get(list_hint, {}):
+        return list_hint, tasks[list_hint][task_id]
+    if not fallback or (list_hint and list_hint in linked):
+        return None
+    for entry_id, by_id in tasks.items():
+        if list_hint and entry_id in linked:
+            continue
+        if task_id in by_id:
+            return entry_id, by_id[task_id]
+    return None
 
 
 class PlanView:
@@ -341,27 +374,8 @@ class PlanView:
     def find(
         self, task_id, list_hint: str | None = None, *, fallback: bool = True,
     ) -> tuple[str, dict] | None:
-        """Resolve an id, trying its hinted list first.
-
-        With fallback disabled, only the specified list may supply the task.
-
-        A task that is not in the list it is said to be in was deleted or
-        moved. A move keeps the id only from one native list to another, and
-        native ids are unique. A linked list's ids are its provider's: the
-        same id elsewhere is another task, so a hinted lookup never leaves a
-        linked list and never ends in one.
-        """
-        task_id = str(task_id)
-        if list_hint and task_id in self._tasks.get(list_hint, {}):
-            return list_hint, self._tasks[list_hint][task_id]
-        if not fallback or (list_hint and list_hint in self._linked):
-            return None
-        for entry_id, tasks in self._tasks.items():
-            if list_hint and entry_id in self._linked:
-                continue
-            if task_id in tasks:
-                return entry_id, tasks[task_id]
-        return None
+        """Resolve an id, trying its hinted list first (see find_task)."""
+        return find_task(self._tasks, self._linked, task_id, list_hint, fallback=fallback)
 
     def key_of(self, task_id, list_hint: str | None = None) -> tuple[str, str] | None:
         """``(list entry id, task id)`` - what a task is on the plan."""
@@ -1057,7 +1071,7 @@ async def async_setup_plan_entry(hass: HomeAssistant, entry: ConfigEntry) -> Non
     # The plan's tools for an LLM, there for as long as the plan is loaded.
     # A Home Assistant too old to have tool sets still gets the plan.
     try:
-        from .plan_llm import async_register_plan_api
+        from .llm_tools import async_register_plan_api
     except ImportError:
         _LOGGER.debug("No LLM tools for plan %s: this Home Assistant has none", plan_name(entry))
     else:
