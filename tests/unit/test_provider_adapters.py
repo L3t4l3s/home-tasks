@@ -1609,3 +1609,93 @@ class TestTodoistResolveProjectId:
 
         await adapter._resolve_project_id()
         assert adapter._project_id is None
+
+
+class TestTodoistProjectNotFound:
+    """A linked Todoist list whose project is gone (deleted, or not there yet).
+
+    Without a project id the API returns every task of the account, and a
+    new task lands in the Inbox - both in the wrong list.
+    """
+
+    def _adapter(self, projects=()):
+        hass = MagicMock()
+        adapter = TodoistAdapter(hass, "todo.errands", {"name": "Errands"}, "tok")
+        api = MagicMock()
+        api.get_projects = AsyncMock(return_value=list(projects))
+        api.get_tasks = AsyncMock(return_value=[])
+        api.get_all_reminders = AsyncMock(return_value=[])
+        api.get_collaborators = AsyncMock(return_value=[])
+        api.add_task = AsyncMock()
+        adapter._api = api
+        return adapter, api
+
+    async def test_reads_no_tasks_instead_of_the_whole_account(self):
+        adapter, api = self._adapter()
+        assert await adapter.async_read_tasks() == []
+        api.get_tasks.assert_not_called()
+
+    async def test_refuses_to_create_a_task(self):
+        adapter, api = self._adapter()
+        with pytest.raises(ValueError, match="project of todo.errands was not found"):
+            await adapter.async_create_task({"title": "Would land in the Inbox"})
+        api.add_task.assert_not_called()
+
+    async def test_looks_again_later_and_warns_once(self):
+        adapter, api = self._adapter()
+        adapter._api = None                      # first use
+        with patch("custom_components.home_tasks.todoist_api.TodoistAPIClient", return_value=api),                 patch("custom_components.home_tasks.provider_adapters._LOGGER.warning") as warning:
+            await adapter.async_read_tasks()
+            await adapter.async_read_tasks()     # right after: not asked again
+            assert api.get_projects.await_count == 1
+            adapter._resolve_again_at = 0        # the retry interval has passed
+            project = MagicMock()
+            project.id = "P-9"
+            project.name = "Errands"
+            api.get_projects.return_value = [project]
+            await adapter.async_read_tasks()
+        assert adapter._project_id == "P-9"
+        api.get_tasks.assert_awaited_once_with(project_id="P-9")
+        assert warning.call_count == 1
+        assert "Could not resolve Todoist project ID" in warning.call_args.args[0]
+
+    async def test_collaborators_are_asked_for_again_after_a_failure(self):
+        project = MagicMock()
+        project.id = "P-9"
+        project.name = "Errands"
+        adapter, api = self._adapter([project])
+        api.get_collaborators = AsyncMock(side_effect=RuntimeError("network"))
+        adapter._api = None                      # first use
+        with patch("custom_components.home_tasks.todoist_api.TodoistAPIClient", return_value=api):
+            await adapter.async_read_tasks()
+            await adapter.async_read_tasks()     # right after: not with every call
+            assert api.get_collaborators.await_count == 1
+            adapter._collaborators_again_at = 0  # the retry interval has passed
+            someone = MagicMock()
+            api.get_collaborators = AsyncMock(return_value=[someone])
+            await adapter.async_read_tasks()
+            assert adapter._collaborators == [someone]
+            await adapter.async_read_tasks()     # read: not asked again
+            assert api.get_collaborators.await_count == 1
+
+    async def test_a_project_without_collaborators_is_asked_once(self):
+        project = MagicMock()
+        project.id = "P-9"
+        project.name = "Errands"
+        adapter, api = self._adapter([project])
+        adapter._api = None
+        with patch("custom_components.home_tasks.todoist_api.TodoistAPIClient", return_value=api):
+            await adapter.async_read_tasks()
+            adapter._collaborators_again_at = 0
+            await adapter.async_read_tasks()
+        assert api.get_collaborators.await_count == 1
+
+    async def test_takes_the_project_from_home_assistants_own_entity(self):
+        """No guessing by name - a renamed project still belongs to its entity."""
+        adapter, api = self._adapter()
+        entity = MagicMock()
+        entity._project_id = "P-42"
+        adapter._hass.data = {"todo": MagicMock(get_entity=MagicMock(return_value=entity))}
+        await adapter._resolve_project_id()
+        assert adapter._project_id == "P-42"
+        api.get_projects.assert_not_called()

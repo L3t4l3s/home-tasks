@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
+import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from dataclasses import asdict, dataclass
@@ -600,10 +601,26 @@ class GenericAdapter(ProviderAdapter):
 # ---------------------------------------------------------------------------
 
 
+def _provider_project_id(hass: HomeAssistant, entity_id: str) -> str | None:
+    """The Todoist project of Home Assistant's own Todoist todo entity.
+
+    That entity is made for one project and knows its id, so nothing has to
+    be guessed from names (which stop matching once a project is renamed).
+    """
+    comp = hass.data.get("todo")
+    entity = comp.get_entity(entity_id) if comp is not None and hasattr(comp, "get_entity") else None
+    value = getattr(entity, "_project_id", None)
+    if isinstance(value, bool) or not isinstance(value, (str, int)) or value == "":
+        return None
+    return str(value)
+
+
 class TodoistAdapter(ProviderAdapter):
     """Full bidirectional sync via the Todoist REST API."""
 
     provider_type = "todoist"
+    # How long to wait before looking for a project again that was not found.
+    RESOLVE_RETRY_SECONDS = 300
 
     def __init__(
         self,
@@ -616,6 +633,12 @@ class TodoistAdapter(ProviderAdapter):
         self._token = token
         self._api: Any = None  # TodoistAPIClient, lazy-initialised
         self._project_id: str | None = config_data.get("todoist_project_id")
+        self._resolve_again_at = 0.0
+        self._unresolved_logged = False
+        # Whether the project's collaborators have been read (none is an
+        # answer too), and when to ask again after a failure.
+        self._collaborators_read = False
+        self._collaborators_again_at = 0.0
         self._collaborators: list[Any] = []
         # Cache of {task_id: [reminder_dict, ...]} from the last async_read_tasks().
         # Used as a snapshot source when a due-date change would wipe Todoist reminders,
@@ -637,23 +660,47 @@ class TodoistAdapter(ProviderAdapter):
 
     async def _ensure_api(self) -> Any:
         """Create the TodoistAPIClient instance on first use."""
-        if self._api is not None:
-            return self._api
-        from .todoist_api import TodoistAPIClient  # noqa: WPS433
+        first = self._api is None
+        if first:
+            from .todoist_api import TodoistAPIClient  # noqa: WPS433
 
-        self._api = TodoistAPIClient(self._token)
+            self._api = TodoistAPIClient(self._token)
 
-        if not self._project_id:
+        if not self._project_id and (first or time.monotonic() >= self._resolve_again_at):
+            # Not on first use only: the provider's entity may not have been
+            # there yet when this adapter was first asked for something.
+            self._resolve_again_at = time.monotonic() + self.RESOLVE_RETRY_SECONDS
             await self._resolve_project_id()
-        if not self._collaborators and self._project_id:
+        if (
+            self._project_id and not self._collaborators_read
+            and time.monotonic() >= self._collaborators_again_at
+        ):
+            # Once is enough when it answers - also with nobody. A failure is
+            # tried again, but not with every call.
+            self._collaborators_again_at = time.monotonic() + self.RESOLVE_RETRY_SECONDS
             try:
                 self._collaborators = await self._api.get_collaborators(self._project_id)
+                self._collaborators_read = True
             except Exception:  # noqa: BLE001
                 self._collaborators = []
         return self._api
 
+    def _require_project(self) -> str:
+        """The project id, or a refusal that says what is wrong."""
+        if not self._project_id:
+            raise ValueError(
+                f"The Todoist project of {self._entity_id} was not found - is the list still there?"
+            )
+        return self._project_id
+
     async def _resolve_project_id(self) -> None:
-        """Determine the Todoist project ID from the entity name."""
+        """Determine the Todoist project ID: from Home Assistant's own
+        Todoist entity, else from the entity name."""
+        own = _provider_project_id(self._hass, self._entity_id)
+        if own:
+            self._project_id = own
+            _LOGGER.info("Todoist project ID %s for %s, from its entity", own, self._entity_id)
+            return
         projects = await self._api.get_projects()
 
         entity_name = self._config_data.get("name", "")
@@ -678,8 +725,13 @@ class TodoistAdapter(ProviderAdapter):
 
         if self._project_id:
             _LOGGER.info("Resolved Todoist project ID %s for %s", self._project_id, self._entity_id)
-        else:
-            _LOGGER.warning("Could not resolve Todoist project ID for %s", self._entity_id)
+        elif not self._unresolved_logged:
+            # Said once: the look-up is repeated every few minutes.
+            self._unresolved_logged = True
+            _LOGGER.warning(
+                "Could not resolve Todoist project ID for %s - the list reads as empty until "
+                "its project is found (was it deleted in Todoist?)", self._entity_id,
+            )
 
     def _match_person_to_collaborator(self, person_entity_id: str) -> str | None:
         """Match HA person entity → Todoist collaborator ID by name."""
@@ -1143,6 +1195,11 @@ class TodoistAdapter(ProviderAdapter):
     async def async_read_tasks(self) -> list[dict]:
         from .todoist_api import TodoistAPIError  # noqa: WPS433
         api = await self._ensure_api()
+        if not self._project_id:
+            # Without its project the request would return every task of the
+            # account - into this one list. A list whose project is gone has
+            # no tasks.
+            return []
 
         all_tasks = await api.get_tasks(project_id=self._project_id)
 
@@ -1202,11 +1259,11 @@ class TodoistAdapter(ProviderAdapter):
 
     async def async_create_task(self, fields: dict) -> tuple[str | None, dict]:
         api = await self._ensure_api()
+        # Without a project Todoist would put the task into the Inbox.
         kwargs: dict[str, Any] = {
             "content": fields.get("title", "New task"),
+            "project_id": self._require_project(),
         }
-        if self._project_id:
-            kwargs["project_id"] = self._project_id
         if fields.get("notes"):
             kwargs["description"] = fields["notes"]
         if fields.get("priority") is not None:
