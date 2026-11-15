@@ -5444,6 +5444,7 @@ class HomeTasksCard extends HTMLElement {
     this._editingSubTaskId = null;
     this._draggedTaskId = null;
     this._draggedColIdx = null;
+    this._draggedTaskElement = null;
     this._touchClone = null;
     this._touchStartTimer = null;
     this._touchOffsetY = 0;
@@ -12306,6 +12307,7 @@ class HomeTasksCard extends HTMLElement {
     // Clean up
     this._draggedTaskId = null;
     this._draggedColIdx = null;
+    this._draggedTaskElement = null;
     this.shadowRoot.querySelectorAll(".task").forEach((el) => {
       el.classList.remove("dragging", "drag-over");
     });
@@ -12327,7 +12329,7 @@ class HomeTasksCard extends HTMLElement {
 
     if (this._planMode) {
       // Days, not lists: the row's new place is a place on the plan.
-      this._finishPlanDrag(draggedId, srcColIdx);
+      this._finishPlanDrag(draggedEl);
       return;
     }
 
@@ -12382,6 +12384,7 @@ class HomeTasksCard extends HTMLElement {
       }
       this._draggedTaskId = taskId;
       this._draggedColIdx = colIdx;
+      this._draggedTaskElement = taskEl;
       e.dataTransfer.effectAllowed = "move";
       // Collapse all expanded tasks for a cleaner drag experience
       this._collapseAllForDrag();
@@ -12427,6 +12430,7 @@ class HomeTasksCard extends HTMLElement {
       this._touchStartTimer = setTimeout(() => {
         this._draggedTaskId = taskId;
         this._draggedColIdx = colIdx;
+        this._draggedTaskElement = taskEl;
         this._touchDragStartedAt = Date.now();
         this._touchDragMoved = false;
         // Collapse all expanded tasks for a cleaner drag experience
@@ -12795,6 +12799,12 @@ class HomeTasksCard extends HTMLElement {
   }
 
   _taskDragElement(taskId = this._draggedTaskId, colIdx = this._draggedColIdx) {
+    // A recurring task can have a done row today and an open row tomorrow.
+    // Keep the actual dragged node, including after it moves to another day.
+    if (this._draggedTaskElement?.isConnected
+        && String(taskId) === String(this._draggedTaskId) && colIdx === this._draggedColIdx) {
+      return this._draggedTaskElement;
+    }
     let selector = `.task[data-task-id="${CSS.escape(String(taskId))}"]`;
     if (this._planMode) {
       const src = this._plan?.sources?.[colIdx];
@@ -13232,8 +13242,7 @@ class HomeTasksCard extends HTMLElement {
 
   // A drag ended: the day the row lies in now gets its rows in the order
   // they stand. That re-plans a row that came from another day.
-  async _finishPlanDrag(taskId, colIdx) {
-    const el = this._taskDragElement(taskId, colIdx);
+  async _finishPlanDrag(el) {
     const list = el && el.closest(".plan-day-list");
     if (!list) {
       this._render();

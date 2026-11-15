@@ -12,7 +12,6 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 from .plan import (
-    MAX_PLAN_ITEMS_PER_DAY,
     PLAN_HORIZON_DAYS,
     SET_MODES,
     PlanView,
@@ -89,9 +88,8 @@ def async_register_plan_services(hass: HomeAssistant) -> None:
         schema=vol.Schema({
             vol.Optional("plan"): cv.string,
             vol.Optional("date"): cv.date,
-            vol.Required("items"): vol.All(
-                cv.ensure_list, [TASK_REF], vol.Length(max=MAX_PLAN_ITEMS_PER_DAY)
-            ),
+            # Resolve first: automatic due rows do not use up planned slots.
+            vol.Required("items"): vol.All(cv.ensure_list, [TASK_REF]),
             vol.Optional("note"): vol.Any(None, cv.string),
             vol.Optional("mode", default="merge"): vol.In(SET_MODES),
         }),

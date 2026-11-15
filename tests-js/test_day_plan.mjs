@@ -755,6 +755,60 @@ describe('day plan: changing the plan', () => {
 
 describe('day plan: dragging', () => {
   for (const input of ['desktop', 'touch']) {
+    for (const destination of ['reorder', 'another day']) {
+      test(`${input}: drag tomorrow's recurrence ${destination} without moving today's done row`, async () => {
+        const { card, calls } = await makeCard({}, (data) => {
+          data.tasks.L1[2].completed = false;
+          data.plan.days[1].items.unshift(row('C', 'L1', 'Work', 'Call back'));
+        });
+        const done = day(card, MON).querySelector('.plan-row[data-task-id="C"]');
+        const recurrence = day(card, TUE).querySelector('.plan-row[data-task-id="C"]');
+        if (input === 'desktop') {
+          const start = new Event('dragstart', { bubbles: true });
+          Object.defineProperty(start, 'dataTransfer', { value: {} });
+          recurrence.dispatchEvent(start);
+        } else {
+          const start = new Event('touchstart', { bubbles: true });
+          Object.defineProperty(start, 'touches', { value: [{ clientX: 0, clientY: 0 }] });
+          recurrence.dispatchEvent(start);
+          await new Promise((resolve) => setTimeout(resolve, 180));
+        }
+        assert.ok(recurrence.classList.contains('dragging'));
+        assert.ok(!done.classList.contains('dragging'));
+        if (destination === 'reorder') {
+          const target = day(card, TUE).querySelector('.plan-row[data-task-id="E"]');
+          if (input === 'desktop') {
+            const over = new MouseEvent('dragover', { bubbles: true, cancelable: true });
+            Object.defineProperty(over, 'dataTransfer', { value: {} });
+            target.dispatchEvent(over);
+          } else {
+            card.shadowRoot.elementFromPoint = () => target;
+            const move = new Event('touchmove', { bubbles: true, cancelable: true });
+            Object.defineProperty(move, 'touches', { value: [{ clientX: 0, clientY: 0 }] });
+            recurrence.dispatchEvent(move);
+          }
+          assert.equal(target.nextElementSibling, recurrence);
+        } else {
+          const target = q(card, `.plan-day-list[data-plan-date="${WED}"]`);
+          card._planDropInto(target);
+          assert.equal(recurrence.parentNode, target);
+        }
+        assert.equal(done.closest('.plan-day-list').dataset.planDate, MON);
+        card._finishDrag();
+        await settle();
+        same(sent(calls, 'set_plan_day').at(-1), {
+          type: 'home_tasks/set_plan_day', date: destination === 'reorder' ? TUE : WED, plan: 'P1',
+          items: destination === 'reorder'
+            ? [{ task_id: 'E', entry_id: 'L2' }, { task_id: 'C', entry_id: 'L1' }]
+            : [{ task_id: 'C', entry_id: 'L1' }],
+        });
+        assert.equal(card._draggedTaskId, null);
+        assert.equal(card._draggedTaskElement, null);
+      });
+    }
+  }
+
+  for (const input of ['desktop', 'touch']) {
     test(`${input}: dragging over a row with the same ID keeps both lists distinct`, async () => {
       const { card, calls } = await makeCard({}, (data) => {
         data.tasks.L2[0].id = 'A';

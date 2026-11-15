@@ -25,7 +25,6 @@ from .plan import (
     CONF_SOURCE_LISTS,
     CONF_WORKDAYS,
     DEFAULT_CARRY_OVER,
-    MAX_PLAN_ITEMS_PER_DAY,
     PLAN_HORIZON_DAYS,
     SET_MODES,
     WEEKDAYS,
@@ -165,7 +164,9 @@ async def ws_plan_task(hass, connection, msg):
     vol.Required("type"): "home_tasks/set_plan_day",
     vol.Optional("plan"): _ID,
     vol.Optional("date"): _DATE,
-    vol.Optional("items"): vol.All([TASK_REF], vol.Length(max=MAX_PLAN_ITEMS_PER_DAY)),
+    # Only explicitly planned tasks count toward the day limit, checked by
+    # async_set_day after resolving references; due rows may exceed it.
+    vol.Optional("items"): [TASK_REF],
     vol.Optional("note"): vol.Any(None, str),
     vol.Optional("mode", default="merge"): vol.In(SET_MODES),
 })

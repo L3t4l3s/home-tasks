@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import pytest
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from tests.integration.test_plan import (
@@ -170,6 +171,30 @@ async def test_set_plan_day_takes_the_order_of_a_drag(hass: HomeAssistant, plan,
 
     await ws("set_plan_day", date=MON, items=[{"task_id": c, "entry_id": plan.entry_id}, a, b])
     assert titles(await _today(hass)) == ["C", "A", "B"]
+
+
+@pytest.mark.parametrize("transport", ["service", "websocket"])
+async def test_large_due_day_can_be_sorted_without_bypassing_the_planned_limit(
+    hass: HomeAssistant, plan, store, mock_config_entry, monkeypatch, transport, ws
+) -> None:
+    monkeypatch.setattr("custom_components.home_tasks.plan.MAX_PLAN_ITEMS_PER_DAY", 2)
+    due = [await _task(store, f"Due {n}", due_date=MON) for n in range(101)]
+    planned = [await _task(store, f"Planned {n}") for n in range(3)]
+    order = [planned[0], *reversed(due), planned[1]]
+    refs = [{"task_id": task_id, "entry_id": mock_config_entry.entry_id} for task_id in order]
+    if transport == "service":
+        await _call(hass, "set_day_plan", items=refs)
+    else:
+        assert await ws("set_plan_day", items=refs) == {}
+    assert [row["task_id"] for row in (await _today(hass))["items"]] == order
+
+    if transport == "service":
+        with pytest.raises(ServiceValidationError, match="at most 2 planned tasks"):
+            await _call(hass, "set_day_plan", items=[*refs, planned[2]])
+    else:
+        error = await ws("set_plan_day", items=[*refs, planned[2]])
+        assert "at most 2 planned tasks" in error["message"]
+    assert [row["task_id"] for row in (await _today(hass))["items"]] == order
 
 
 async def test_a_done_row_keeps_its_place_in_a_reorder(hass: HomeAssistant, plan, store, ws) -> None:
