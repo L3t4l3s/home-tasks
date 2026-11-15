@@ -207,6 +207,7 @@ Anything a provider can't store — priority, tags, sub-tasks, reminders, recurr
 - **Recurrence** runs in Home Tasks for providers that have none; Todoist keeps its own.
 - **Google Tasks** — Google's API has no due times and no recurrence ([open issue](https://issuetracker.google.com/issues/36759725)); the recurrence in Google's web UI never reaches the API. Use Home Tasks' recurrence instead.
 - **Todoist** — Home Tasks talks to the Todoist API directly, with the token of your existing Todoist integration; no extra setup. Not synced: comments, attachments, Todoist sections, task duration, label colors, deadlines, favorites and saved filters.
+- **Bring!** — renaming an item makes a new one in Bring!. Home Tasks takes what it keeps locally over to it — tags, reminders, recurrence, its place on a day plan.
 
 ### Day Plans
 
@@ -228,7 +229,8 @@ the plan, and taking a task off the plan leaves the task as it is.
 
 A plan covers its current day and the six plan days after it. From today on a
 task sits on one day only: planning it for another day moves it. Past days are
-kept for two weeks.
+kept for two weeks. A task keeps its day when it moves to another list, and
+when a provider gives it a new ID — Bring! does that on a rename.
 
 Show a plan with the [day plan card](https://github.com/L3t4l3s/home-tasks#day-plan-card), and
 fill it there, with the [plan services](https://github.com/L3t4l3s/home-tasks#day-plan-services), or let an
@@ -414,6 +416,11 @@ A card type of its own, **Home Tasks: Day plan** in the card picker
 (`custom:home-tasks-day-plan-card`), next to the list card (**Home Tasks:
 List**, `custom:home-tasks-card`). It shows a [day plan](https://github.com/L3t4l3s/home-tasks#day-plans):
 one column per day, the current day first with its focus note and progress.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/Day-plan.png" width="820" alt="A work week as a day plan: three days with tasks from a work list and a clients list">
+</p>
+
 Its editor is laid out like a list
 column's: the plan on top, below it the sections *Display* — the number of
 days, a compact mode, the weekend, and switches for the date, the progress
