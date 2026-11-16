@@ -1,7 +1,7 @@
 // The list card (custom:home-tasks-card): lists as columns, with filters,
 // sorting, sections, an add-task row and tiles.
 
-import { _assignees, _listColumns, _listMinWidth, _tileMinWidth, listSupportsDue } from "../core/helpers.js";
+import { UNASSIGNED, _assignees, _listColumns, _listMinWidth, _tileMinWidth, listSupportsDue } from "../core/helpers.js";
 import { TasksCardBase } from "../core/card-base.js";
 
 export class HomeTasksCard extends TasksCardBase {
@@ -147,7 +147,11 @@ export class HomeTasksCard extends TasksCardBase {
     const defaults = (r && r.defaults) || {};
     if (isExt && r) this._sourceDefaults[this._colEntityId(colIdx)] = r.defaults || null;
     const person = this._autoAssignPerson(colIdx);
-    const people = person ? [person] : [...(defaults.assignees || (defaults.assignee ? [defaults.assignee] : []))];
+    // Left empty where the column keeps new tasks unassigned: Add then clears
+    // what the list would fill in (see _saveDraft).
+    const people = person ? [person]
+      : this._keepsNewTasksUnassigned(colIdx) ? []
+      : [...(defaults.assignees || (defaults.assignee ? [defaults.assignee] : []))];
     const { addDue, addDueTime } = this._addRowDue(colIdx);
     cs.draft = {
       id: `__draft__${colIdx}`, _draft: true, title, completed: false, notes: "", sub_items: [],
@@ -279,16 +283,26 @@ export class HomeTasksCard extends TasksCardBase {
 
   // Auto-assign: the one person active in the person filter, or else the
   // column's one preset assignee unless this card doesn't offer them
-  // (hidden_persons). null when neither applies.
+  // (hidden_persons). null when neither applies - also for a column that
+  // only shows unassigned tasks, whose new tasks stay unassigned.
   _autoAssignPerson(colIdx) {
     const cs = this._columns[colIdx];
     const col = this._config.columns[colIdx];
     if (cs.personFilters.size === 1) return [...cs.personFilters][0];
     if (cs.personFilters.size === 0 && col.filters?.assignees?.length === 1
+        && col.filters.assignees[0] !== UNASSIGNED
         && !(col.hidden_persons || []).includes(col.filters.assignees[0])) {
       return col.filters.assignees[0];
     }
     return null;
+  }
+
+  // A column that shows unassigned tasks (issue #93) and has no one to give a
+  // new task to keeps it unassigned: the list's default assignees would take
+  // it straight out of the column it was added in.
+  _keepsNewTasksUnassigned(colIdx) {
+    const preset = this._config.columns[colIdx].filters?.assignees || [];
+    return preset.includes(UNASSIGNED) && !this._autoAssignPerson(colIdx);
   }
 
   // Due date chosen in the add row (issue #38) — only when the option is
@@ -324,6 +338,12 @@ export class HomeTasksCard extends TasksCardBase {
 
     const col = this._config.columns[colIdx];
     const autoAssignPerson = this._autoAssignPerson(colIdx);
+    const keepUnassigned = this._keepsNewTasksUnassigned(colIdx);
+    // Creating fills in the list's default assignees whatever is sent, so
+    // such a task is cleared again right after.
+    const unassign = (taskId) => this._updateTaskRouted(colIdx, taskId,
+      { assigned_person: null, assigned_persons: [] }, { rethrow: true })
+      .catch(() => this._showError(this._t("draft_details_failed")));
     const { addDue, addDueTime } = this._addRowDue(colIdx);
     const resetAddDue = () => { cs.newTaskDue = ""; cs.newTaskDueTime = ""; };
 
@@ -342,8 +362,9 @@ export class HomeTasksCard extends TasksCardBase {
         tags: [...(listDefaults.tags || [])],
         reminders: [...(listDefaults.reminders || [])],
         section_id: listDefaults.section_id || null,
-        assigned_person: autoAssignPerson || listDefaults.assignee || null,
-        assigned_persons: autoAssignPerson ? [autoAssignPerson] : [...(listDefaults.assignees || [])],
+        assigned_person: autoAssignPerson || (keepUnassigned ? null : listDefaults.assignee) || null,
+        assigned_persons: autoAssignPerson ? [autoAssignPerson]
+          : keepUnassigned ? [] : [...(listDefaults.assignees || [])],
         recurrence_enabled: false, _external: true,
       });
       const typed = { title, due: cs.newTaskDue, dueTime: cs.newTaskDueTime };
@@ -365,6 +386,11 @@ export class HomeTasksCard extends TasksCardBase {
         result = await this._callWs("home_tasks/create_external_task", payload, { rethrow: true });
       } catch (err) {
         addError = err;
+      }
+      // Cached defaults not known yet (undefined/null): clear to be safe.
+      const cached = this._sourceDefaults[this._colEntityId(colIdx)];
+      if (result?.uid && keepUnassigned && (!cached || cached.assignees?.length || cached.assignee)) {
+        await unassign(String(result.uid));
       }
       // Refused: say so, take the placeholder row back off and hand the
       // typed text back, so the next attempt is one keypress and not a
@@ -398,6 +424,7 @@ export class HomeTasksCard extends TasksCardBase {
         addError = err;
       }
       if (result) {
+        if (keepUnassigned && _assignees(result).length) await unassign(result.id);
         cs.newTaskTitle = "";
         resetAddDue();
         this._justAddedTaskId = result.id ? String(result.id) : null;

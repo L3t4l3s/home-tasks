@@ -1,6 +1,6 @@
 // The editor of the list card: its columns, one tab each.
 
-import { MAX_REMINDERS, MAX_REOPEN_LEAD_MINUTES, TODO_FEATURE, _TILE_SIZES, _assignees, _tileMinWidth, imageSettingsForLists, listInfoFor, listSupportsDue, nextFreeReminderOffset, personEntries, reminderOffsetOptions } from "../core/helpers.js";
+import { MAX_REMINDERS, MAX_REOPEN_LEAD_MINUTES, TODO_FEATURE, UNASSIGNED, _TILE_SIZES, _assignees, _tileMinWidth, imageSettingsForLists, listInfoFor, listSupportsDue, nextFreeReminderOffset, personEntries, reminderOffsetOptions } from "../core/helpers.js";
 import { EditorBase } from "./editor-base.js";
 
 export class HomeTasksCardEditor extends EditorBase {
@@ -1016,7 +1016,12 @@ export class HomeTasksCardEditor extends EditorBase {
           this._t("ed_preset_assignees"),
           // Linked lists can name people Home Assistant doesn't know (a
           // Todoist collaborator), so the list's own assignees come too.
-          this._personOptions([...meta.persons.map((p) => p.value), ...(col.filters?.assignees || [])]),
+          // "Unassigned" comes last (issue #93).
+          [
+            ...this._personOptions([...meta.persons.map((p) => p.value), ...(col.filters?.assignees || [])])
+              .filter((p) => p.value !== UNASSIGNED),
+            { value: UNASSIGNED, label: this._t("ed_preset_unassigned") },
+          ],
           col.filters?.assignees || [],
           (vals) => updateFilters({ assignees: vals }),
         ),

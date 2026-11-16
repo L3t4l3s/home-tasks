@@ -283,6 +283,7 @@ var ui_translations_default = {
     confirm_delete_section: "Delete this section? Tasks inside will become unsorted.",
     ed_sec_filters: "Filters",
     ed_preset_assignees: "Limit to people",
+    ed_preset_unassigned: "Unassigned",
     ed_preset_labels: "Limit to tags",
     ed_ms_add: "Add…",
     ed_ai_image_entity: "AI entity for image generation",
@@ -547,6 +548,7 @@ var ui_translations_default = {
     ed_sec_display: "Configuratie",
     ed_sec_filters: "Filters",
     ed_preset_assignees: "Beperken tot personen",
+    ed_preset_unassigned: "Niet toegewezen",
     ed_preset_labels: "Beperken tot tags",
     ed_ms_add: "Toevoegen…",
     due_time_lbl: "Tijd",
@@ -869,6 +871,7 @@ var ui_translations_default = {
     ed_sec_display: "Configurazione",
     ed_sec_filters: "Filtri",
     ed_preset_assignees: "Limita alle persone",
+    ed_preset_unassigned: "Non assegnate",
     ed_preset_labels: "Limita ai tag",
     ed_ms_add: "Aggiungi…",
     due_time_lbl: "Ora",
@@ -1191,6 +1194,7 @@ var ui_translations_default = {
     ed_sec_display: "Konfiguracja",
     ed_sec_filters: "Filtry",
     ed_preset_assignees: "Ogranicz do osób",
+    ed_preset_unassigned: "Nieprzypisane",
     ed_preset_labels: "Ogranicz do tagów",
     ed_ms_add: "Dodaj…",
     due_time_lbl: "Czas",
@@ -1513,6 +1517,7 @@ var ui_translations_default = {
     ed_sec_display: "Konfiguration",
     ed_sec_filters: "Filter",
     ed_preset_assignees: "Begränsa till personer",
+    ed_preset_unassigned: "Ej tilldelade",
     ed_preset_labels: "Begränsa till taggar",
     ed_ms_add: "Lägg till…",
     due_time_lbl: "Tid",
@@ -1835,6 +1840,7 @@ var ui_translations_default = {
     ed_sec_display: "Configuration",
     ed_sec_filters: "Filtres",
     ed_preset_assignees: "Limiter aux personnes",
+    ed_preset_unassigned: "Non assignées",
     ed_preset_labels: "Limiter aux étiquettes",
     ed_ms_add: "Ajouter…",
     due_time_lbl: "Heure",
@@ -2157,6 +2163,7 @@ var ui_translations_default = {
     ed_sec_display: "Configuração",
     ed_sec_filters: "Filtros",
     ed_preset_assignees: "Limitar a pessoas",
+    ed_preset_unassigned: "Não atribuídas",
     ed_preset_labels: "Limitar a etiquetas",
     ed_ms_add: "Adicionar…",
     due_time_lbl: "Hora",
@@ -2479,6 +2486,7 @@ var ui_translations_default = {
     ed_sec_display: "Recursos das tarefas",
     ed_sec_filters: "Filtros",
     ed_preset_assignees: "Limitar a pessoas",
+    ed_preset_unassigned: "Não atribuídas",
     ed_preset_labels: "Limitar a etiquetas",
     ed_ms_add: "Adicionar…",
     due_time_lbl: "Hora",
@@ -2801,6 +2809,7 @@ var ui_translations_default = {
     ed_sec_display: "Configuración",
     ed_sec_filters: "Filtros",
     ed_preset_assignees: "Limitar a personas",
+    ed_preset_unassigned: "Sin asignar",
     ed_preset_labels: "Limitar a etiquetas",
     ed_ms_add: "Añadir…",
     due_time_lbl: "Hora",
@@ -3123,6 +3132,7 @@ var ui_translations_default = {
     ed_sec_display: "Конфигурация",
     ed_sec_filters: "Фильтры",
     ed_preset_assignees: "Ограничить по людям",
+    ed_preset_unassigned: "Без исполнителя",
     ed_preset_labels: "Ограничить по тегам",
     ed_ms_add: "Добавить…",
     due_time_lbl: "Время",
@@ -3445,6 +3455,7 @@ var ui_translations_default = {
     ed_sec_display: "Konfigurace",
     ed_sec_filters: "Filtry",
     ed_preset_assignees: "Omezit na osoby",
+    ed_preset_unassigned: "Nepřiřazené",
     ed_preset_labels: "Omezit na štítky",
     ed_ms_add: "Přidat…",
     due_time_lbl: "Čas",
@@ -3767,6 +3778,7 @@ var ui_translations_default = {
     ed_sec_display: "Konfiguration",
     ed_sec_filters: "Filtre",
     ed_preset_assignees: "Begræns til personer",
+    ed_preset_unassigned: "Ikke tildelt",
     ed_preset_labels: "Begræns til tags",
     ed_ms_add: "Tilføj…",
     due_time_lbl: "Tid",
@@ -4089,6 +4101,7 @@ var ui_translations_default = {
     ed_sec_display: "Konfigurasjon",
     ed_sec_filters: "Filtre",
     ed_preset_assignees: "Begrens til personer",
+    ed_preset_unassigned: "Ikke tildelt",
     ed_preset_labels: "Begrens til tagger",
     ed_ms_add: "Legg til…",
     due_time_lbl: "Tid",
@@ -4411,6 +4424,7 @@ var ui_translations_default = {
     ed_sec_display: "Konfiguraatio",
     ed_sec_filters: "Suodattimet",
     ed_preset_assignees: "Rajaa henkilöihin",
+    ed_preset_unassigned: "Ei vastuuhenkilöä",
     ed_preset_labels: "Rajaa tunnisteisiin",
     ed_ms_add: "Lisää…",
     due_time_lbl: "Aika",
@@ -4733,6 +4747,7 @@ var ui_translations_default = {
     ed_sec_display: "Konfiguráció",
     ed_sec_filters: "Szűrők",
     ed_preset_assignees: "Személyekre szűkítés",
+    ed_preset_unassigned: "Nincs hozzárendelve",
     ed_preset_labels: "Korlátozás címkékre",
     ed_ms_add: "Hozzáadás…",
     due_time_lbl: "Időpont",
@@ -5113,6 +5128,7 @@ var ui_translations_default = {
     confirm_delete_section: "Diesen Bereich wirklich löschen? Enthaltene Aufgaben werden unsortiert.",
     ed_sec_filters: "Filter",
     ed_preset_assignees: "Auf Personen begrenzen",
+    ed_preset_unassigned: "Nicht zugewiesen",
     ed_preset_labels: "Auf Tags begrenzen",
     ed_ms_add: "Hinzufügen…",
     ed_ai_image_entity: "KI-Entität für Bildgenerierung",
@@ -5282,6 +5298,7 @@ function _assignees(task) {
   if (primary && !people.includes(primary)) people.unshift(primary);
   return people;
 }
+var UNASSIGNED = "unassigned";
 var DETAIL_FIELDS = [
   ["notes", "ed_show_notes", "show_notes", true],
   ["sub_tasks", "ed_show_sub_items", "show_sub_tasks", true, "show_sub_items"],
@@ -6181,7 +6198,10 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
     const preLabels = col.filters?.labels;
     if (preAssignees && preAssignees.length > 0) {
       const set = new Set(preAssignees);
-      tasks = tasks.filter((t) => _assignees(t).some((p) => set.has(p)));
+      tasks = tasks.filter((t) => {
+        const people = _assignees(t);
+        return people.length === 0 ? set.has(UNASSIGNED) : people.some((p) => set.has(p));
+      });
     }
     if (preLabels && preLabels.length > 0) {
       const set = new Set(preLabels);
@@ -11245,7 +11265,7 @@ var HomeTasksCard = class extends TasksCardBase {
     const defaults = r && r.defaults || {};
     if (isExt && r) this._sourceDefaults[this._colEntityId(colIdx)] = r.defaults || null;
     const person = this._autoAssignPerson(colIdx);
-    const people = person ? [person] : [...defaults.assignees || (defaults.assignee ? [defaults.assignee] : [])];
+    const people = person ? [person] : this._keepsNewTasksUnassigned(colIdx) ? [] : [...defaults.assignees || (defaults.assignee ? [defaults.assignee] : [])];
     const { addDue, addDueTime } = this._addRowDue(colIdx);
     cs.draft = {
       id: `__draft__${colIdx}`,
@@ -11384,15 +11404,23 @@ var HomeTasksCard = class extends TasksCardBase {
   }
   // Auto-assign: the one person active in the person filter, or else the
   // column's one preset assignee unless this card doesn't offer them
-  // (hidden_persons). null when neither applies.
+  // (hidden_persons). null when neither applies - also for a column that
+  // only shows unassigned tasks, whose new tasks stay unassigned.
   _autoAssignPerson(colIdx) {
     const cs = this._columns[colIdx];
     const col = this._config.columns[colIdx];
     if (cs.personFilters.size === 1) return [...cs.personFilters][0];
-    if (cs.personFilters.size === 0 && col.filters?.assignees?.length === 1 && !(col.hidden_persons || []).includes(col.filters.assignees[0])) {
+    if (cs.personFilters.size === 0 && col.filters?.assignees?.length === 1 && col.filters.assignees[0] !== UNASSIGNED && !(col.hidden_persons || []).includes(col.filters.assignees[0])) {
       return col.filters.assignees[0];
     }
     return null;
+  }
+  // A column that shows unassigned tasks (issue #93) and has no one to give a
+  // new task to keeps it unassigned: the list's default assignees would take
+  // it straight out of the column it was added in.
+  _keepsNewTasksUnassigned(colIdx) {
+    const preset = this._config.columns[colIdx].filters?.assignees || [];
+    return preset.includes(UNASSIGNED) && !this._autoAssignPerson(colIdx);
   }
   // Due date chosen in the add row (issue #38) — only when the option is
   // on and the column supports due dates; a time without a date is ignored.
@@ -11417,6 +11445,13 @@ var HomeTasksCard = class extends TasksCardBase {
     const before = this._captureListFlip(colIdx);
     const col = this._config.columns[colIdx];
     const autoAssignPerson = this._autoAssignPerson(colIdx);
+    const keepUnassigned = this._keepsNewTasksUnassigned(colIdx);
+    const unassign = (taskId) => this._updateTaskRouted(
+      colIdx,
+      taskId,
+      { assigned_person: null, assigned_persons: [] },
+      { rethrow: true }
+    ).catch(() => this._showError(this._t("draft_details_failed")));
     const { addDue, addDueTime } = this._addRowDue(colIdx);
     const resetAddDue = () => {
       cs.newTaskDue = "";
@@ -11439,8 +11474,8 @@ var HomeTasksCard = class extends TasksCardBase {
         tags: [...listDefaults.tags || []],
         reminders: [...listDefaults.reminders || []],
         section_id: listDefaults.section_id || null,
-        assigned_person: autoAssignPerson || listDefaults.assignee || null,
-        assigned_persons: autoAssignPerson ? [autoAssignPerson] : [...listDefaults.assignees || []],
+        assigned_person: autoAssignPerson || (keepUnassigned ? null : listDefaults.assignee) || null,
+        assigned_persons: autoAssignPerson ? [autoAssignPerson] : keepUnassigned ? [] : [...listDefaults.assignees || []],
         recurrence_enabled: false,
         _external: true
       });
@@ -11464,6 +11499,10 @@ var HomeTasksCard = class extends TasksCardBase {
         result = await this._callWs("home_tasks/create_external_task", payload, { rethrow: true });
       } catch (err) {
         addError = err;
+      }
+      const cached = this._sourceDefaults[this._colEntityId(colIdx)];
+      if (result?.uid && keepUnassigned && (!cached || cached.assignees?.length || cached.assignee)) {
+        await unassign(String(result.uid));
       }
       if (!result && !this._isWsTimeout(addError)) {
         cs.tasks = cs.tasks.filter((t) => t.id !== tempId);
@@ -11491,6 +11530,7 @@ var HomeTasksCard = class extends TasksCardBase {
         addError = err;
       }
       if (result) {
+        if (keepUnassigned && _assignees(result).length) await unassign(result.id);
         cs.newTaskTitle = "";
         resetAddDue();
         this._justAddedTaskId = result.id ? String(result.id) : null;
@@ -14938,7 +14978,11 @@ var HomeTasksCardEditor = class extends EditorBase {
           this._t("ed_preset_assignees"),
           // Linked lists can name people Home Assistant doesn't know (a
           // Todoist collaborator), so the list's own assignees come too.
-          this._personOptions([...meta.persons.map((p) => p.value), ...col.filters?.assignees || []]),
+          // "Unassigned" comes last (issue #93).
+          [
+            ...this._personOptions([...meta.persons.map((p) => p.value), ...col.filters?.assignees || []]).filter((p) => p.value !== UNASSIGNED),
+            { value: UNASSIGNED, label: this._t("ed_preset_unassigned") }
+          ],
           col.filters?.assignees || [],
           (vals) => updateFilters({ assignees: vals })
         ),

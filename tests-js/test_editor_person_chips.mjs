@@ -72,13 +72,13 @@ describe('limit to people', () => {
 
   test('a chip per person; tapping one limits the column to them', async () => {
     const { field, events } = await editor({});
-    assert.deepEqual(chipsIn(field), ['Anna', 'Kevin']);
+    assert.deepEqual(chipsIn(field), ['Anna', 'Kevin', 'Unassigned']);
     field.querySelectorAll('.assignee-chip')[1].click();
     assert.deepEqual(events.at(-1), ['person.kevin']);
   });
 
   test("a linked list's own assignees without a person entity are offered too", async () => {
     const { field } = await editor({ filters: { assignees: ['Sam'] } }, ['Sam', 'person.anna']);
-    assert.deepEqual(chipsIn(field), ['Anna', 'Kevin', 'Sam*']);
+    assert.deepEqual(chipsIn(field), ['Anna', 'Kevin', 'Sam*', 'Unassigned']);
   });
 });

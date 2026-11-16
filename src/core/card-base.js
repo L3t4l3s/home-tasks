@@ -4,7 +4,7 @@
 // in the hooks at the end.
 
 import { _htText } from "./i18n.js";
-import { DETAIL_FOLD_EVENT, DETAIL_FOLD_STORAGE_KEY, MAX_REMINDERS, PERSON_COLORS, PERSON_MODES, REMINDER_OFFSETS, WS_TIMEOUT, _assignees, _detailFieldOn, _detailOrder, _foldedDetailKeys, imageSettingsForLists, listInfoFor, listSupportsDueTime, nextFreeReminderOffset, personEntries, reminderOffsetOptions } from "./helpers.js";
+import { DETAIL_FOLD_EVENT, DETAIL_FOLD_STORAGE_KEY, MAX_REMINDERS, PERSON_COLORS, PERSON_MODES, REMINDER_OFFSETS, UNASSIGNED, WS_TIMEOUT, _assignees, _detailFieldOn, _detailOrder, _foldedDetailKeys, imageSettingsForLists, listInfoFor, listSupportsDueTime, nextFreeReminderOffset, personEntries, reminderOffsetOptions } from "./helpers.js";
 
 export class TasksCardBase extends HTMLElement {
   // The shortest gap between two occurrences, in minutes — what a reopen
@@ -1036,7 +1036,10 @@ export class TasksCardBase extends HTMLElement {
     const preLabels = col.filters?.labels;
     if (preAssignees && preAssignees.length > 0) {
       const set = new Set(preAssignees);
-      tasks = tasks.filter((t) => _assignees(t).some((p) => set.has(p)));
+      tasks = tasks.filter((t) => {
+        const people = _assignees(t);
+        return people.length === 0 ? set.has(UNASSIGNED) : people.some((p) => set.has(p));
+      });
     }
     if (preLabels && preLabels.length > 0) {
       const set = new Set(preLabels);

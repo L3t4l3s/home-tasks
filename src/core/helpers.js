@@ -157,6 +157,11 @@ export function _assignees(task) {
   return people;
 }
 
+// Stands for "nobody" in a column's preset assignee filter (issue #93), so a
+// column can show the unclaimed tasks, alone or next to named people. Never
+// a person: nothing is ever assigned to it.
+export const UNASSIGNED = "unassigned";
+
 // The task-details fields in their default order: [key, editor label,
 // show_* option, shown by default, older name of the option].
 export const DETAIL_FIELDS = [
