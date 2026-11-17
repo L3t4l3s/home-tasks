@@ -827,19 +827,24 @@ export class HomeTasksDayPlanCard extends TasksCardBase {
         background: color-mix(in srgb, var(--todo-primary) 14%, var(--todo-bg));
         border-bottom: 1px solid color-mix(in srgb, var(--todo-primary) 40%, transparent);
       }
-      /* As tall as the current day's larger name on every day, the line at
-         the bottom: the heads end at one height and the names share a
-         baseline across the columns. */
+      /* As tall as the current day's larger name on every day: the heads
+         end at one height across the columns. Every part of the line has a
+         fixed height - the texts their line-height, the count and the
+         progress 20px, centred - and the line never wraps (the progress
+         shrinks instead), so what differs between the days cannot make
+         one line taller than the others. */
       .plan-head-line {
-        display: flex; flex-wrap: wrap; align-content: flex-end; align-items: baseline; gap: 8px;
-        min-height: calc(1.35rem * 1.2);
+        display: flex; flex-wrap: nowrap; align-items: baseline; gap: 8px;
+        line-height: 1.2; min-height: max(calc(1.35rem * 1.2), 20px);
       }
-      .plan-view.compact .plan-head-line { min-height: calc(1.1rem * 1.2); }
+      .plan-day-name, .plan-day-date { flex: none; white-space: nowrap; }
+      .plan-view.compact .plan-head-line { min-height: max(calc(1.1rem * 1.2), 20px); }
       .plan-day-name { font-size: 1rem; font-weight: 600; color: var(--todo-text); line-height: 1.2; }
       .plan-current .plan-day-name { font-size: 1.35rem; color: var(--todo-primary); }
       .plan-day-date { font-size: 13px; color: var(--todo-secondary-text); }
       .plan-count {
-        margin-left: auto; font-size: 12px; min-width: 20px; text-align: center; padding: 1px 6px;
+        margin-left: auto; font-size: 12px; min-width: 20px; text-align: center; padding: 0 6px;
+        box-sizing: border-box; height: 20px; line-height: 20px; align-self: center;
         border-radius: 10px; background: rgba(var(--rgb-primary-text-color, 33, 33, 33), 0.08);
         color: var(--todo-secondary-text);
       }
@@ -855,10 +860,10 @@ export class HomeTasksDayPlanCard extends TasksCardBase {
         background: var(--todo-bg); color: var(--todo-text); outline: none;
       }
       .plan-progress {
-        margin-left: auto; flex: 0 1 180px; min-width: 0;
+        margin-left: auto; flex: 0 1 180px; min-width: 0; height: 20px; align-self: center;
         display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--todo-secondary-text);
       }
-      .plan-progress-text { white-space: nowrap; }
+      .plan-progress-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
       .plan-bar {
         flex: 1; min-width: 24px; height: 4px; border-radius: 2px; overflow: hidden;
         background: color-mix(in srgb, var(--todo-primary) 22%, transparent);
