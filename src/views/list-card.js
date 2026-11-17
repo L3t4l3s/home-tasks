@@ -3,6 +3,11 @@
 
 import { UNASSIGNED, _assignees, _listColumns, _listMinWidth, _tileMinWidth, listSupportsDue } from "../core/helpers.js";
 import { TasksCardBase } from "../core/card-base.js";
+import { ConditionWatcher, evaluateLocally, normalizeVisibility } from "../core/visibility.js";
+
+// A column's visibility conditions as judged, per column object: the list a
+// watcher compares stays the same object across hass updates.
+const VISIBILITY_CACHE = new WeakMap();
 
 export class HomeTasksCard extends TasksCardBase {
   setConfig(config) {
@@ -79,6 +84,8 @@ export class HomeTasksCard extends TasksCardBase {
       }
     }
 
+    // Judged before the render below, which shows the visible columns.
+    this._syncColumnVisibility(false);
     if (this._initialized) {
       this._loadAllTasks();
     } else {
@@ -289,10 +296,12 @@ export class HomeTasksCard extends TasksCardBase {
     const cs = this._columns[colIdx];
     const col = this._config.columns[colIdx];
     if (cs.personFilters.size === 1) return [...cs.personFilters][0];
-    if (cs.personFilters.size === 0 && col.filters?.assignees?.length === 1
-        && col.filters.assignees[0] !== UNASSIGNED
-        && !(col.hidden_persons || []).includes(col.filters.assignees[0])) {
-      return col.filters.assignees[0];
+    // "Current user" counts as the person of whoever is signed in.
+    const preset = this._presetAssignees(col);
+    if (cs.personFilters.size === 0 && (col.filters?.assignees || []).length === 1 && preset.length === 1
+        && preset[0] !== UNASSIGNED
+        && !(col.hidden_persons || []).includes(preset[0])) {
+      return preset[0];
     }
     return null;
   }
@@ -488,8 +497,19 @@ export class HomeTasksCard extends TasksCardBase {
 
   _buildCardContent() {
     const cols = this._config.columns;
+    // While the dashboard is edited every column shows, the hidden ones
+    // dimmed - as Home Assistant shows a hidden card there.
+    const preview = this.preview;
+    const shown = cols.map((_, i) => i).filter((i) => preview || this._columnVisible(i));
+    this._shownVisibilityKey = this._visibilityKey();
+    this._setHostHidden(shown.length === 0);
+    const build = (i) => {
+      const el = this._buildColumn(i);
+      if (preview && !this._columnVisible(i)) el.classList.add("visibility-hidden");
+      return el;
+    };
     if (cols.length === 1) {
-      return this._buildColumn(0);
+      return shown.length ? build(0) : document.createElement("div");
     }
     const children = [];
     if (this._config.title) {
@@ -498,8 +518,112 @@ export class HomeTasksCard extends TasksCardBase {
       titleEl.textContent = this._config.title;
       children.push(titleEl);
     }
-    children.push(this._el("div", { className: "multi-columns" }, cols.map((_, i) => this._buildColumn(i))));
+    children.push(this._el("div", { className: "multi-columns" }, shown.map(build)));
     return this._el("div", {}, children);
+  }
+
+  // -- Column visibility ------------------------------------------------------
+  //
+  // A column's `visibility` takes the conditions of a card's own Visibility
+  // tab and is judged as Home Assistant judges them (core/visibility.js).
+  // A hidden column is not drawn; its tasks still load, so it shows at once
+  // when its conditions hold again. With no column left the card hides, and
+  // stays connected while hidden (connectedWhileHidden) to notice that.
+
+  // Set by Home Assistant while the dashboard or this card is edited.
+  set preview(value) {
+    const on = value === true;
+    if (on === (this._preview === true)) return;
+    this._preview = on;
+    if (this._shownVisibilityKey !== undefined) this._render();
+  }
+
+  get preview() {
+    return this._preview === true;
+  }
+
+  // Asks hui-card to keep the card in the page while it is hidden.
+  get connectedWhileHidden() {
+    return true;
+  }
+
+  _colConditions(colIdx) {
+    const col = this._config.columns[colIdx];
+    if (!col || col.visibility == null) return undefined;
+    let entry = VISIBILITY_CACHE.get(col);
+    if (!entry || entry.source !== col.visibility) {
+      entry = { source: col.visibility, list: normalizeVisibility(col.visibility) };
+      VISIBILITY_CACHE.set(col, entry);
+    }
+    return entry.list;
+  }
+
+  // A `state` condition naming no entity reads the column's linked list, as
+  // a card's reads the card's entity.
+  _colConditionContext(colIdx) {
+    const entityId = this._config.columns[colIdx]?.entity_id;
+    return entityId ? { entity_id: entityId } : {};
+  }
+
+  _columnVisible(colIdx) {
+    const conditions = this._colConditions(colIdx);
+    if (!conditions) return true;
+    const watcher = this._colWatchers?.[colIdx];
+    if (watcher) return watcher.visible;
+    if (!this._hass) return true;
+    return evaluateLocally(conditions, this._hass, this._colConditionContext(colIdx)) === true;
+  }
+
+  _visibilityKey() {
+    return this._config.columns.map((_, i) => (this._columnVisible(i) ? "1" : "0")).join("")
+      + (this.preview ? "p" : "");
+  }
+
+  // Watches each column's conditions while the card is in the page (core
+  // subscriptions, media queries, time); redraws when what shows changed.
+  _syncColumnVisibility(redraw = true) {
+    const cols = (this._config && this._config.columns) || [];
+    const watchers = this._colWatchers || (this._colWatchers = []);
+    for (let i = cols.length; i < watchers.length; i++) watchers[i]?.stop();
+    watchers.length = Math.min(watchers.length, cols.length);
+    for (let i = 0; i < cols.length; i++) {
+      const conditions = this._colConditions(i);
+      if (!conditions || !this.isConnected || !this._hass) {
+        if (watchers[i]) { watchers[i].stop(); watchers[i] = null; }
+        continue;
+      }
+      if (!watchers[i]) watchers[i] = new ConditionWatcher(() => this._columnVisibilityChanged());
+      watchers[i].observe(conditions, this._hass, this._colConditionContext(i));
+    }
+    if (redraw) this._columnVisibilityChanged();
+  }
+
+  _columnVisibilityChanged() {
+    if (this._shownVisibilityKey === undefined) return;  // not drawn yet
+    if (this._visibilityKey() !== this._shownVisibilityKey) this._render();
+  }
+
+  _setHostHidden(hidden) {
+    if (this.hidden === hidden) return;
+    this.hidden = hidden;
+    this.dispatchEvent(new CustomEvent("card-visibility-changed", {
+      bubbles: true, composed: true, detail: { value: !hidden },
+    }));
+  }
+
+  _hassChanged() {
+    this._syncColumnVisibility();
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    this._syncColumnVisibility();
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    for (const watcher of this._colWatchers || []) watcher?.stop();
+    this._colWatchers = [];
   }
 
   _buildColumn(colIdx) {
@@ -1142,7 +1266,7 @@ export class HomeTasksCard extends TasksCardBase {
       for (const p of _assignees(t)) assignedPersons.add(p);
     }
     // Remove preset assignees — they are always applied and cannot be toggled by the user
-    for (const eid of (col.filters?.assignees || [])) assignedPersons.delete(eid);
+    for (const eid of this._presetAssignees(col)) assignedPersons.delete(eid);
     if (assignedPersons.size === 0) return null;
     const chipChildren = [];
     for (const eid of [...assignedPersons].sort()) {

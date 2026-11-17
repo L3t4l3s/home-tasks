@@ -1,6 +1,6 @@
 // The editor of the list card: its columns, one tab each.
 
-import { MAX_REMINDERS, MAX_REOPEN_LEAD_MINUTES, SORT_MODES, TODO_FEATURE, UNASSIGNED, _TILE_SIZES, _assignees, _tileMinWidth, imageSettingsForLists, listInfoFor, listSupportsDue, nextFreeReminderOffset, personEntries, reminderOffsetOptions } from "../core/helpers.js";
+import { MAX_REMINDERS, MAX_REOPEN_LEAD_MINUTES, SORT_MODES, TODO_FEATURE, UNASSIGNED, CURRENT_USER, _TILE_SIZES, _assignees, _tileMinWidth, imageSettingsForLists, listInfoFor, listSupportsDue, nextFreeReminderOffset, personEntries, reminderOffsetOptions } from "../core/helpers.js";
 import { EditorBase } from "./editor-base.js";
 
 export class HomeTasksCardEditor extends EditorBase {
@@ -1084,9 +1084,11 @@ export class HomeTasksCardEditor extends EditorBase {
           // Linked lists can name people Home Assistant doesn't know (a
           // Todoist collaborator), so the list's own assignees come too.
           // "Unassigned" comes last (issue #93).
+          // "Current user" stands for whoever views the dashboard.
           [
             ...this._personOptions([...meta.persons.map((p) => p.value), ...(col.filters?.assignees || [])])
-              .filter((p) => p.value !== UNASSIGNED),
+              .filter((p) => p.value !== UNASSIGNED && p.value !== CURRENT_USER),
+            { value: CURRENT_USER, label: this._t("ed_preset_current_user") },
             { value: UNASSIGNED, label: this._t("ed_preset_unassigned") },
           ],
           col.filters?.assignees || [],
@@ -1099,6 +1101,8 @@ export class HomeTasksCardEditor extends EditorBase {
           (vals) => updateFilters({ labels: vals }),
         ),
       ]),
+      makeSection("visibility", "mdi:eye-check-outline", "ed_sec_visibility",
+        this._buildVisibilityEditor(tabIdx, updateCol)),
       makeSection("config", "mdi:tune", "ed_sec_display", [
         detailFields,
         makeToggle("show-move", "ed_show_move", "show_move", true),
@@ -1135,6 +1139,61 @@ export class HomeTasksCardEditor extends EditorBase {
         ] : []),
       ]),
     ]);
+  }
+
+  // The column's visibility conditions, set as a card's own are: with Home
+  // Assistant's Visibility editor, the one under a card's Visibility tab. It
+  // is defined wherever Home Assistant's card editor is open; until it is, or
+  // where something in the list is no condition it can show, the conditions
+  // are edited as YAML.
+  _buildVisibilityEditor(tabIdx, updateCol) {
+    const col = this._config.columns[tabIdx] || {};
+    const raw = col.visibility;
+    const list = raw == null ? [] : Array.isArray(raw) ? raw : [raw];
+    const allConditions = (items) => items.every((c) => {
+      if (typeof c !== "object" || c === null || Array.isArray(c)) return false;
+      if (c.conditions == null) return true;
+      return allConditions(Array.isArray(c.conditions) ? c.conditions : [c.conditions]);
+    });
+    const save = (value) => {
+      const next = Array.isArray(value) && value.length ? value : undefined;
+      if (JSON.stringify(next) === JSON.stringify(this._config.columns[tabIdx]?.visibility)) return;
+      updateCol({ visibility: next });
+    };
+    const nodes = [this._el("div", { className: "hint", textContent: this._t("ed_visibility_hint") })];
+    const Editor = customElements.get("ha-card-conditions-editor");
+    if (Editor && allConditions(list)) {
+      const ed = document.createElement("ha-card-conditions-editor");
+      ed.hass = this._hass;
+      ed.conditions = list;
+      ed.addEventListener("value-changed", (e) => {
+        // Ours alone: Home Assistant's card editor around listens for it too.
+        e.stopPropagation();
+        const value = e.detail?.value;
+        if (!Array.isArray(value)) return;
+        ed.conditions = value;  // it shows what it is given
+        save(value);
+      });
+      nodes.push(ed);
+      return nodes;
+    }
+    if (!Editor && !this._waitingForConditionsEditor && customElements.whenDefined) {
+      this._waitingForConditionsEditor = true;
+      customElements.whenDefined("ha-card-conditions-editor").then(() => {
+        this._waitingForConditionsEditor = false;
+        if (this.isConnected) this._render();
+      });
+    }
+    const yaml = document.createElement("ha-yaml-editor");
+    yaml.defaultValue = list;
+    yaml.addEventListener("value-changed", (e) => {
+      e.stopPropagation();
+      const value = e.detail?.value;
+      if (value == null || (Array.isArray(value) && allConditions(value))) save(value || []);
+      else if (typeof value === "object" && allConditions([value])) save([value]);
+    });
+    nodes.push(yaml);
+    return nodes;
   }
 
   // Everyone Home Assistant knows as a person, plus *extra* values that are

@@ -162,6 +162,11 @@ export function _assignees(task) {
 // a person: nothing is ever assigned to it.
 export const UNASSIGNED = "unassigned";
 
+// Stands for "the user viewing the dashboard" in a column's preset assignee
+// filter: their person, found through the person's user. One column then
+// shows each user their own tasks. Never a person itself.
+export const CURRENT_USER = "current_user";
+
 // The orders a column can sort by (label key sort_<mode>) - also what a native
 // list's todo entity can be ordered by (TODO_SORT_MODES in the backend).
 export const SORT_MODES = ["manual", "due", "priority", "title", "person"];

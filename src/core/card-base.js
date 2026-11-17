@@ -4,7 +4,8 @@
 // in the hooks at the end.
 
 import { _htText } from "./i18n.js";
-import { DETAIL_FOLD_EVENT, DETAIL_FOLD_STORAGE_KEY, MAX_REMINDERS, PERSON_COLORS, PERSON_MODES, REMINDER_OFFSETS, UNASSIGNED, WS_TIMEOUT, _assignees, _detailFieldOn, _detailOrder, _foldedDetailKeys, imageSettingsForLists, listInfoFor, listSupportsDueTime, nextFreeReminderOffset, personEntries, reminderOffsetOptions } from "./helpers.js";
+import { viewerPersonId } from "./visibility.js";
+import { DETAIL_FOLD_EVENT, DETAIL_FOLD_STORAGE_KEY, MAX_REMINDERS, PERSON_COLORS, PERSON_MODES, REMINDER_OFFSETS, UNASSIGNED, CURRENT_USER, WS_TIMEOUT, _assignees, _detailFieldOn, _detailOrder, _foldedDetailKeys, imageSettingsForLists, listInfoFor, listSupportsDueTime, nextFreeReminderOffset, personEntries, reminderOffsetOptions } from "./helpers.js";
 
 export class TasksCardBase extends HTMLElement {
   // The shortest gap between two occurrences, in minutes — what a reopen
@@ -139,6 +140,7 @@ export class TasksCardBase extends HTMLElement {
   set hass(hass) {
     const prev = this._hass;
     this._hass = hass;
+    this._hassChanged();
     if (!this._initialized) {
       this._initialized = true;
       this._loadLists();
@@ -1037,7 +1039,9 @@ export class TasksCardBase extends HTMLElement {
     const preAssignees = col.filters?.assignees;
     const preLabels = col.filters?.labels;
     if (preAssignees && preAssignees.length > 0) {
-      const set = new Set(preAssignees);
+      // Still a filter when "current user" resolves to nobody: a user
+      // without a person sees none of the people's tasks.
+      const set = new Set(this._presetAssignees(col));
       tasks = tasks.filter((t) => {
         const people = _assignees(t);
         return people.length === 0 ? set.has(UNASSIGNED) : people.some((p) => set.has(p));
@@ -1048,6 +1052,15 @@ export class TasksCardBase extends HTMLElement {
       tasks = tasks.filter((t) => t.tags && t.tags.some((tag) => set.has(tag)));
     }
     return tasks;
+  }
+
+  // A column's preset assignees with "current user" put in as the person of
+  // the user viewing the dashboard - left out for a user who has none.
+  _presetAssignees(col) {
+    const preset = col?.filters?.assignees || [];
+    if (!preset.includes(CURRENT_USER)) return preset;
+    const me = viewerPersonId(this._hass);
+    return [...new Set(preset.flatMap((v) => (v === CURRENT_USER ? (me ? [me] : []) : [v])))];
   }
 
   _filteredTasks(colIdx) {
@@ -5493,6 +5506,10 @@ export class TasksCardBase extends HTMLElement {
       @media (max-width: 600px) { .multi-columns { flex-direction: column; } .multi-columns .card-column { border-right: none; border-bottom: 1px solid var(--todo-divider); } .multi-columns .card-column:last-child { border-bottom: none; } :host(.fit-rows) .multi-columns .card-column { flex: 1 1 0%; } }
       .card-column.drag-target { outline: 2px dashed var(--todo-primary); outline-offset: -2px; border-radius: var(--todo-radius); }
       .card-column { padding: 16px; display: flex; flex-direction: column; min-height: 0; }
+      /* A column its visibility conditions hide, while the dashboard is edited. */
+      .card-column.visibility-hidden { opacity: 0.45; }
+      /* All columns hidden: the card hides itself (hui-card follows). */
+      :host([hidden]) { display: none !important; }
       .header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
       .card-global-title { font-size: 1.25rem; font-weight: 500; color: var(--ha-card-header-color, var(--todo-text)); margin: 0; padding: 16px 16px 0; line-height: 1.2; }
       .title { font-size: 1.25rem; font-weight: 500; color: var(--ha-card-header-color, var(--todo-text)); margin: 0; line-height: 1.2; display: flex; align-items: center; gap: 6px; }
@@ -6511,6 +6528,9 @@ export class TasksCardBase extends HTMLElement {
   _sourceStamps() {
     return null;
   }
+
+  // Home Assistant handed the card a new hass (any state changed).
+  _hassChanged() {}
 
   // Before the 30 s poll of linked lists.
   _beforePoll() {}

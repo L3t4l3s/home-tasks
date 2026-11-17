@@ -288,6 +288,9 @@ var ui_translations_default = {
     ed_sec_filters: "Filters",
     ed_preset_assignees: "Limit to people",
     ed_preset_unassigned: "Unassigned",
+    ed_preset_current_user: "Current user",
+    ed_sec_visibility: "Visibility",
+    ed_visibility_hint: "The column is shown when ALL conditions below are met. Without conditions it always shows. While the dashboard is edited, hidden columns appear dimmed.",
     ed_preset_labels: "Limit to tags",
     ed_ms_add: "Add…",
     ed_ai_image_entity: "AI entity for image generation",
@@ -557,6 +560,9 @@ var ui_translations_default = {
     ed_sec_filters: "Filters",
     ed_preset_assignees: "Beperken tot personen",
     ed_preset_unassigned: "Niet toegewezen",
+    ed_preset_current_user: "Huidige gebruiker",
+    ed_sec_visibility: "Zichtbaarheid",
+    ed_visibility_hint: "De kolom wordt getoond als ALLE onderstaande voorwaarden zijn vervuld. Zonder voorwaarden is hij altijd zichtbaar. Tijdens het bewerken van het dashboard worden verborgen kolommen gedimd weergegeven.",
     ed_preset_labels: "Beperken tot tags",
     ed_ms_add: "Toevoegen…",
     due_time_lbl: "Tijd",
@@ -884,6 +890,9 @@ var ui_translations_default = {
     ed_sec_filters: "Filtri",
     ed_preset_assignees: "Limita alle persone",
     ed_preset_unassigned: "Non assegnate",
+    ed_preset_current_user: "Utente attuale",
+    ed_sec_visibility: "Visibilità",
+    ed_visibility_hint: "La colonna viene mostrata quando TUTTE le condizioni seguenti sono soddisfatte. Senza condizioni è sempre visibile. Durante la modifica della dashboard le colonne nascoste appaiono attenuate.",
     ed_preset_labels: "Limita ai tag",
     ed_ms_add: "Aggiungi…",
     due_time_lbl: "Ora",
@@ -1211,6 +1220,9 @@ var ui_translations_default = {
     ed_sec_filters: "Filtry",
     ed_preset_assignees: "Ogranicz do osób",
     ed_preset_unassigned: "Nieprzypisane",
+    ed_preset_current_user: "Bieżący użytkownik",
+    ed_sec_visibility: "Widoczność",
+    ed_visibility_hint: "Kolumna jest wyświetlana, gdy WSZYSTKIE poniższe warunki są spełnione. Bez warunków jest zawsze widoczna. Podczas edycji dashboardu ukryte kolumny są przyciemnione.",
     ed_preset_labels: "Ogranicz do tagów",
     ed_ms_add: "Dodaj…",
     due_time_lbl: "Czas",
@@ -1538,6 +1550,9 @@ var ui_translations_default = {
     ed_sec_filters: "Filter",
     ed_preset_assignees: "Begränsa till personer",
     ed_preset_unassigned: "Ej tilldelade",
+    ed_preset_current_user: "Aktuell användare",
+    ed_sec_visibility: "Synlighet",
+    ed_visibility_hint: "Kolumnen visas när ALLA villkor nedan är uppfyllda. Utan villkor visas den alltid. När instrumentpanelen redigeras visas dolda kolumner nedtonade.",
     ed_preset_labels: "Begränsa till taggar",
     ed_ms_add: "Lägg till…",
     due_time_lbl: "Tid",
@@ -1865,6 +1880,9 @@ var ui_translations_default = {
     ed_sec_filters: "Filtres",
     ed_preset_assignees: "Limiter aux personnes",
     ed_preset_unassigned: "Non assignées",
+    ed_preset_current_user: "Utilisateur actuel",
+    ed_sec_visibility: "Visibilité",
+    ed_visibility_hint: "La colonne s'affiche lorsque TOUTES les conditions ci-dessous sont remplies. Sans condition, elle s'affiche toujours. Pendant la modification du tableau de bord, les colonnes masquées apparaissent estompées.",
     ed_preset_labels: "Limiter aux étiquettes",
     ed_ms_add: "Ajouter…",
     due_time_lbl: "Heure",
@@ -2192,6 +2210,9 @@ var ui_translations_default = {
     ed_sec_filters: "Filtros",
     ed_preset_assignees: "Limitar a pessoas",
     ed_preset_unassigned: "Não atribuídas",
+    ed_preset_current_user: "Utilizador atual",
+    ed_sec_visibility: "Visibilidade",
+    ed_visibility_hint: "A coluna é mostrada quando TODAS as condições abaixo forem cumpridas. Sem condições, é sempre mostrada. Ao editar o painel, as colunas ocultas aparecem esbatidas.",
     ed_preset_labels: "Limitar a etiquetas",
     ed_ms_add: "Adicionar…",
     due_time_lbl: "Hora",
@@ -2519,6 +2540,9 @@ var ui_translations_default = {
     ed_sec_filters: "Filtros",
     ed_preset_assignees: "Limitar a pessoas",
     ed_preset_unassigned: "Não atribuídas",
+    ed_preset_current_user: "Usuário atual",
+    ed_sec_visibility: "Visibilidade",
+    ed_visibility_hint: "A coluna é exibida quando TODAS as condições abaixo forem atendidas. Sem condições, ela sempre aparece. Ao editar o painel, as colunas ocultas aparecem esmaecidas.",
     ed_preset_labels: "Limitar a etiquetas",
     ed_ms_add: "Adicionar…",
     due_time_lbl: "Hora",
@@ -2846,6 +2870,9 @@ var ui_translations_default = {
     ed_sec_filters: "Filtros",
     ed_preset_assignees: "Limitar a personas",
     ed_preset_unassigned: "Sin asignar",
+    ed_preset_current_user: "Usuario actual",
+    ed_sec_visibility: "Visibilidad",
+    ed_visibility_hint: "La columna se muestra cuando se cumplen TODAS las condiciones de abajo. Sin condiciones se muestra siempre. Al editar el panel, las columnas ocultas aparecen atenuadas.",
     ed_preset_labels: "Limitar a etiquetas",
     ed_ms_add: "Añadir…",
     due_time_lbl: "Hora",
@@ -3173,6 +3200,9 @@ var ui_translations_default = {
     ed_sec_filters: "Фильтры",
     ed_preset_assignees: "Ограничить по людям",
     ed_preset_unassigned: "Без исполнителя",
+    ed_preset_current_user: "Текущий пользователь",
+    ed_sec_visibility: "Видимость",
+    ed_visibility_hint: "Столбец отображается, когда выполнены ВСЕ условия ниже. Без условий он виден всегда. При редактировании панели скрытые столбцы показаны приглушённо.",
     ed_preset_labels: "Ограничить по тегам",
     ed_ms_add: "Добавить…",
     due_time_lbl: "Время",
@@ -3500,6 +3530,9 @@ var ui_translations_default = {
     ed_sec_filters: "Filtry",
     ed_preset_assignees: "Omezit na osoby",
     ed_preset_unassigned: "Nepřiřazené",
+    ed_preset_current_user: "Aktuální uživatel",
+    ed_sec_visibility: "Viditelnost",
+    ed_visibility_hint: "Sloupec se zobrazí, když jsou splněny VŠECHNY podmínky níže. Bez podmínek je vždy viditelný. Při úpravě dashboardu se skryté sloupce zobrazují ztlumeně.",
     ed_preset_labels: "Omezit na štítky",
     ed_ms_add: "Přidat…",
     due_time_lbl: "Čas",
@@ -3827,6 +3860,9 @@ var ui_translations_default = {
     ed_sec_filters: "Filtre",
     ed_preset_assignees: "Begræns til personer",
     ed_preset_unassigned: "Ikke tildelt",
+    ed_preset_current_user: "Aktuel bruger",
+    ed_sec_visibility: "Synlighed",
+    ed_visibility_hint: "Kolonnen vises, når ALLE betingelser nedenfor er opfyldt. Uden betingelser vises den altid. Når dashboardet redigeres, vises skjulte kolonner nedtonet.",
     ed_preset_labels: "Begræns til tags",
     ed_ms_add: "Tilføj…",
     due_time_lbl: "Tid",
@@ -4154,6 +4190,9 @@ var ui_translations_default = {
     ed_sec_filters: "Filtre",
     ed_preset_assignees: "Begrens til personer",
     ed_preset_unassigned: "Ikke tildelt",
+    ed_preset_current_user: "Gjeldende bruker",
+    ed_sec_visibility: "Synlighet",
+    ed_visibility_hint: "Kolonnen vises når ALLE betingelsene nedenfor er oppfylt. Uten betingelser vises den alltid. Når dashbordet redigeres, vises skjulte kolonner nedtonet.",
     ed_preset_labels: "Begrens til tagger",
     ed_ms_add: "Legg til…",
     due_time_lbl: "Tid",
@@ -4481,6 +4520,9 @@ var ui_translations_default = {
     ed_sec_filters: "Suodattimet",
     ed_preset_assignees: "Rajaa henkilöihin",
     ed_preset_unassigned: "Ei vastuuhenkilöä",
+    ed_preset_current_user: "Nykyinen käyttäjä",
+    ed_sec_visibility: "Näkyvyys",
+    ed_visibility_hint: "Sarake näytetään, kun KAIKKI alla olevat ehdot täyttyvät. Ilman ehtoja se näkyy aina. Kojelautaa muokattaessa piilotetut sarakkeet näytetään himmennettyinä.",
     ed_preset_labels: "Rajaa tunnisteisiin",
     ed_ms_add: "Lisää…",
     due_time_lbl: "Aika",
@@ -4808,6 +4850,9 @@ var ui_translations_default = {
     ed_sec_filters: "Szűrők",
     ed_preset_assignees: "Személyekre szűkítés",
     ed_preset_unassigned: "Nincs hozzárendelve",
+    ed_preset_current_user: "Jelenlegi felhasználó",
+    ed_sec_visibility: "Láthatóság",
+    ed_visibility_hint: "Az oszlop akkor jelenik meg, ha az alábbi ÖSSZES feltétel teljesül. Feltételek nélkül mindig látható. Az irányítópult szerkesztésekor a rejtett oszlopok halványan jelennek meg.",
     ed_preset_labels: "Korlátozás címkékre",
     ed_ms_add: "Hozzáadás…",
     due_time_lbl: "Időpont",
@@ -5193,6 +5238,9 @@ var ui_translations_default = {
     ed_sec_filters: "Filter",
     ed_preset_assignees: "Auf Personen begrenzen",
     ed_preset_unassigned: "Nicht zugewiesen",
+    ed_preset_current_user: "Aktueller Nutzer",
+    ed_sec_visibility: "Sichtbarkeit",
+    ed_visibility_hint: "Die Spalte wird angezeigt, wenn ALLE Bedingungen unten erfüllt sind. Ohne Bedingungen ist sie immer sichtbar. Beim Bearbeiten des Dashboards erscheinen ausgeblendete Spalten abgeblendet.",
     ed_preset_labels: "Auf Tags begrenzen",
     ed_ms_add: "Hinzufügen…",
     ed_ai_image_entity: "KI-Entität für Bildgenerierung",
@@ -5363,6 +5411,7 @@ function _assignees(task) {
   return people;
 }
 var UNASSIGNED = "unassigned";
+var CURRENT_USER = "current_user";
 var SORT_MODES = ["manual", "due", "priority", "title", "person"];
 var DETAIL_FIELDS = [
   ["notes", "ed_show_notes", "show_notes", true],
@@ -5395,6 +5444,640 @@ function _shortDetailOrder(order) {
   return n ? order.slice(0, n) : void 0;
 }
 var NEW_ENTRY_PATH = "/config/integrations/integration/home_tasks";
+
+// src/core/visibility.js
+var CLIENT_TYPES = /* @__PURE__ */ new Set(["screen", "user", "view_columns", "location", "time"]);
+var LOGICAL_TYPES = /* @__PURE__ */ new Set(["and", "or", "not"]);
+var ROW_CONFIG_KEYS = ["alias", "note", "enabled"];
+var WEEKDAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+var REFUSALS = /* @__PURE__ */ new Set(["unknown_command", "unauthorized"]);
+var ensureArray = (v) => v === void 0 || v === null ? v : Array.isArray(v) ? v : [v];
+var isValidEntityId = (v) => typeof v === "string" && /^(\w+)\.(\w+)$/.test(v);
+var isObject = (c) => typeof c === "object" && c !== null && !Array.isArray(c);
+var domainOf = (entityId) => String(entityId).split(".", 1)[0];
+function normalizeVisibility(value) {
+  if (value === void 0 || value === null) return void 0;
+  const list = dropInvalid(Array.isArray(value) ? value : [value]);
+  return list.length ? list : void 0;
+}
+function dropInvalid(conditions) {
+  const valid = [];
+  for (const c of conditions) {
+    if (!isObject(c)) continue;
+    if ("conditions" in c && c.conditions != null) {
+      valid.push({ ...c, conditions: dropInvalid(ensureArray(c.conditions)) });
+    } else {
+      valid.push(c);
+    }
+  }
+  return valid;
+}
+var isLogicalCondition = (c) => "condition" in c && LOGICAL_TYPES.has(c.condition);
+var logicalChildren = (c) => ensureArray(c.conditions) || [];
+var isDisabledCondition = (c) => "enabled" in c && c.enabled === false;
+var isEntityReference = (v) => typeof v === "string" && isNaN(Number(v)) && isValidEntityId(v);
+function hasLegacyOnlySemantics(c) {
+  if (c.condition === "numeric_state") return [c.above, c.below].some(isEntityReference);
+  if ("attribute" in c && c.attribute !== void 0) return true;
+  return [...ensureArray(c.state) || [], ...ensureArray(c.state_not) || []].some(isEntityReference);
+}
+function isServerCondition(c) {
+  if (isLogicalCondition(c)) return logicalChildren(c).every(isServerCondition);
+  if (!("condition" in c)) return !hasLegacyOnlySemantics(c);
+  if (CLIENT_TYPES.has(c.condition)) return false;
+  if ((c.condition === "state" || c.condition === "numeric_state") && !("entity_id" in c)) {
+    return !hasLegacyOnlySemantics(c);
+  }
+  return true;
+}
+var isClientCondition = (c) => !isServerCondition(c);
+function pickRowConfig(c) {
+  const out = {};
+  for (const k of ROW_CONFIG_KEYS) if (k in c) out[k] = c[k];
+  return out;
+}
+var alwaysFalse = () => ({ condition: "not", conditions: [{ condition: "and", conditions: [] }] });
+var NEVER = /* @__PURE__ */ Symbol("never-satisfied");
+function toCoreCondition(c) {
+  if (!("condition" in c)) return toCoreState({ condition: "state", ...c });
+  if (isLogicalCondition(c)) {
+    const row = pickRowConfig(c);
+    if (c.conditions === void 0) return { ...row, condition: "and", conditions: [] };
+    const conditions = logicalChildren(c).map(toCoreCondition);
+    if (c.condition === "not") return { ...row, condition: "not", conditions: [{ condition: "and", conditions }] };
+    return { ...row, condition: c.condition, conditions };
+  }
+  if (c.condition === "state") return toCoreState(c);
+  if (c.condition === "numeric_state") return toCoreNumericState(c);
+  return c;
+}
+function toCoreState(c) {
+  if ("entity_id" in c) return c;
+  const row = pickRowConfig(c);
+  if (!c.entity || c.state === void 0 && c.state_not === void 0) return { ...row, ...alwaysFalse() };
+  const base = { condition: "state", entity_id: c.entity, ...c.attribute !== void 0 ? { attribute: c.attribute } : {} };
+  if (c.state !== void 0) return { ...row, ...base, state: c.state };
+  return { ...row, condition: "not", conditions: [{ ...base, state: c.state_not }] };
+}
+function toCoreBound(bound, side) {
+  if (bound == null) return void 0;
+  const n = typeof bound === "number" ? bound : Number(bound);
+  if (isNaN(n)) return typeof bound === "string" && isValidEntityId(bound) ? bound : void 0;
+  if (!isFinite(n)) return side === "above" === n > 0 ? NEVER : void 0;
+  return n;
+}
+function toCoreNumericState(c) {
+  if ("entity_id" in c) return c;
+  const row = pickRowConfig(c);
+  if (!c.entity) return { ...row, ...alwaysFalse() };
+  const above = toCoreBound(c.above, "above");
+  const below = toCoreBound(c.below, "below");
+  if (above === NEVER || below === NEVER) return { ...row, ...alwaysFalse() };
+  if (above === void 0 && below === void 0) {
+    return {
+      ...row,
+      condition: "template",
+      value_template: c.attribute === void 0 ? `{{ is_number(states(${JSON.stringify(c.entity)})) }}` : `{{ is_number(state_attr(${JSON.stringify(c.entity)}, ${JSON.stringify(c.attribute)})) }}`
+    };
+  }
+  const core = { ...row, condition: "numeric_state", entity_id: c.entity };
+  if (c.attribute !== void 0) core.attribute = c.attribute;
+  if (above !== void 0) core.above = above;
+  if (below !== void 0) core.below = below;
+  return core;
+}
+function stateFromEntityId(hass, value) {
+  return isValidEntityId(value) && hass.states[value] ? hass.states[value].state : void 0;
+}
+function checkState(c, hass, ctx) {
+  const entityId = c.entity_id || c.entity || ctx.entity_id;
+  const stateObj = entityId ? hass.states[entityId] : void 0;
+  let state;
+  if (!stateObj) state = "unknown";
+  else if (c.attribute) {
+    const v = stateObj.attributes?.[c.attribute];
+    state = v == null ? "unknown" : String(v);
+  } else state = stateObj.state;
+  let value = c.state ?? c.state_not;
+  if (value === void 0) return false;
+  if (Array.isArray(value)) {
+    value = [...value, ...value.map((v) => stateFromEntityId(hass, v)).filter((v) => v !== void 0)];
+  } else if (typeof value === "string") {
+    const fromEntity = stateFromEntityId(hass, value);
+    value = fromEntity ? [value, fromEntity] : [value];
+  }
+  return c.state != null ? ensureArray(value).includes(state) : !ensureArray(value).includes(state);
+}
+function checkNumericState(c, hass, ctx) {
+  const entityId = c.entity_id || c.entity || ctx.entity_id;
+  const stateObj = entityId ? hass.states[entityId] : void 0;
+  const state = c.attribute ? stateObj?.attributes?.[c.attribute] : stateObj?.state;
+  let above = c.above;
+  let below = c.below;
+  if (typeof above === "string") above = stateFromEntityId(hass, above) ?? above;
+  if (typeof below === "string") below = stateFromEntityId(hass, below) ?? below;
+  const n = Number(state);
+  const a = Number(above);
+  const b = Number(below);
+  if (isNaN(n)) return false;
+  return (c.above == null || isNaN(a) || a < n) && (c.below == null || isNaN(b) || b > n);
+}
+function conditionTimeZone(hass) {
+  if (hass.locale?.time_zone === "server" && hass.config?.time_zone) return hass.config.time_zone;
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch (_) {
+    return "UTC";
+  }
+}
+var wallFormats = /* @__PURE__ */ new Map();
+function wallClock(zone, date) {
+  let fmt = wallFormats.get(zone);
+  if (fmt === void 0) {
+    try {
+      fmt = new Intl.DateTimeFormat("en-US", {
+        timeZone: zone,
+        hourCycle: "h23",
+        weekday: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+    } catch (_) {
+      fmt = null;
+    }
+    wallFormats.set(zone, fmt);
+  }
+  if (!fmt) {
+    return { weekday: WEEKDAYS[date.getDay()], seconds: date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds() };
+  }
+  const parts = Object.fromEntries(fmt.formatToParts(date).map((p) => [p.type, p.value]));
+  const hour = Number(parts.hour) % 24;
+  return {
+    weekday: String(parts.weekday).slice(0, 3).toLowerCase(),
+    seconds: hour * 3600 + Number(parts.minute) * 60 + Number(parts.second)
+  };
+}
+function timeOfDay(value) {
+  if (typeof value !== "string") return null;
+  const parts = value.split(":");
+  if (parts.length < 2 || parts.length > 3 || !parts.every((p) => /^\d+$/.test(p))) return null;
+  const [h, m, s = 0] = parts.map(Number);
+  if (h > 23 || m > 59 || s > 59) return null;
+  return h * 3600 + m * 60 + s;
+}
+function checkTime(c, hass, now = /* @__PURE__ */ new Date()) {
+  const wall = wallClock(conditionTimeZone(hass), now);
+  if (Array.isArray(c.weekdays) && c.weekdays.length > 0 && !c.weekdays.includes(wall.weekday)) return false;
+  if (!c.after && !c.before) return true;
+  const after = c.after ? timeOfDay(c.after) : null;
+  const before = c.before ? timeOfDay(c.before) : null;
+  const t = wall.seconds;
+  if (after !== null && before !== null) {
+    if (before < after) return t >= after || t <= before;
+    return t >= after && t <= before;
+  }
+  if (after !== null) return t >= after;
+  if (before !== null) return t <= before;
+  return true;
+}
+var personOfUser = /* @__PURE__ */ new Map();
+function viewerPersonId(hass) {
+  const userId = hass?.user?.id;
+  const states = hass?.states;
+  if (!userId || !states) return void 0;
+  const cached = personOfUser.get(userId);
+  if (cached && states[cached]?.attributes?.user_id === userId) return cached;
+  for (const id of Object.keys(states)) {
+    if (domainOf(id) === "person" && states[id]?.attributes?.user_id === userId) {
+      personOfUser.set(userId, id);
+      return id;
+    }
+  }
+  return void 0;
+}
+function viewerPerson(hass) {
+  const id = viewerPersonId(hass);
+  return id ? hass.states[id] : void 0;
+}
+var TARGET_KEYS = ["entity_id", "device_id", "area_id", "floor_id", "label_id"];
+var isIdList = (v) => typeof v === "string" || Array.isArray(v) && v.every((x) => typeof x === "string");
+function isTarget(t, allowExclude = true) {
+  return isObject(t) && Object.entries(t).every(([k, v]) => k === "exclude" ? allowExclude && isTarget(v, false) : TARGET_KEYS.includes(k) && isIdList(v));
+}
+function targetZones(hass, target) {
+  const entities = hass.entities || {};
+  const devices = hass.devices || {};
+  const areas = hass.areas || {};
+  const ids = (v) => ensureArray(v) || [];
+  const zoneIds = /* @__PURE__ */ new Set([
+    ...Object.keys(entities).filter((id) => domainOf(id) === "zone"),
+    ...Object.keys(hass.states).filter((id) => domainOf(id) === "zone")
+  ]);
+  const resolve = (t) => {
+    const out = new Set(ids(t.entity_id).filter((id) => domainOf(id) === "zone"));
+    const areaIds = new Set(ids(t.area_id));
+    for (const floor of ids(t.floor_id)) {
+      for (const [areaId, area] of Object.entries(areas)) if (area?.floor_id === floor) areaIds.add(areaId);
+    }
+    const deviceIds = new Set(ids(t.device_id));
+    const labels = new Set(ids(t.label_id));
+    for (const [areaId, area] of Object.entries(areas)) {
+      if ((area?.labels || []).some((l) => labels.has(l))) areaIds.add(areaId);
+    }
+    for (const [deviceId, device] of Object.entries(devices)) {
+      if ((device?.labels || []).some((l) => labels.has(l))) deviceIds.add(deviceId);
+      if (device?.area_id && areaIds.has(device.area_id)) deviceIds.add(deviceId);
+    }
+    for (const id of zoneIds) {
+      const entry = entities[id];
+      if (!entry) continue;
+      const area = entry.area_id || (entry.device_id ? devices[entry.device_id]?.area_id : void 0);
+      if ((entry.labels || []).some((l) => labels.has(l)) || entry.device_id && deviceIds.has(entry.device_id) || area && areaIds.has(area)) {
+        out.add(id);
+      }
+    }
+    return out;
+  };
+  const zones = resolve(target);
+  if (target.exclude) for (const id of resolve(target.exclude)) zones.delete(id);
+  return [...zones].filter((id) => id in hass.states);
+}
+function activeZoneState(hass, zoneId) {
+  const stateObj = hass.states[zoneId];
+  if (!stateObj || stateObj.attributes?.passive) return void 0;
+  return zoneId === "zone.home" ? "home" : stateObj.attributes?.friendly_name;
+}
+function checkLocation(c, hass) {
+  const stateObj = viewerPerson(hass);
+  if (!stateObj) return false;
+  if (c.locations?.includes(stateObj.state)) return true;
+  if (c.away === true && stateObj.state === "not_home") return true;
+  if (!isTarget(c.target)) return false;
+  const zones = targetZones(hass, c.target);
+  const inZones = stateObj.attributes?.in_zones;
+  if (!Array.isArray(inZones) || inZones.length === 0) {
+    return stateObj.state !== "not_home" && zones.some((z) => activeZoneState(hass, z) === stateObj.state);
+  }
+  if (c.match_mode === "active_zone") {
+    const active = inZones.find((z) => activeZoneState(hass, z) === stateObj.state);
+    return active !== void 0 && zones.includes(active);
+  }
+  return inZones.some((z) => zones.includes(z));
+}
+function checkUser(c, hass) {
+  return c.users && hass.user?.id ? c.users.includes(hass.user.id) : false;
+}
+function checkViewColumns(c, ctx) {
+  if (!ctx.max_columns) return true;
+  return (c.min == null || ctx.max_columns >= c.min) && (c.max == null || ctx.max_columns <= c.max);
+}
+function matchesMedia(query) {
+  try {
+    return !!window.matchMedia && window.matchMedia(query).matches;
+  } catch (_) {
+    return false;
+  }
+}
+function checkConditionsMet(conditions, hass, ctx = {}) {
+  return conditions.every((c) => {
+    if (!("condition" in c)) return checkState(c, hass, ctx);
+    switch (c.condition) {
+      case "view_columns":
+        return checkViewColumns(c, ctx);
+      case "time":
+        return checkTime(c, hass, ctx.now);
+      case "screen":
+        return c.media_query ? matchesMedia(c.media_query) : false;
+      case "user":
+        return checkUser(c, hass);
+      case "location":
+        return checkLocation(c, hass);
+      case "numeric_state":
+        return checkNumericState(c, hass, ctx);
+      case "and":
+        return !c.conditions || checkConditionsMet(ensureArray(c.conditions), hass, ctx);
+      case "not":
+        return !c.conditions || !checkConditionsMet(ensureArray(c.conditions), hass, ctx);
+      case "or":
+        return !c.conditions || ensureArray(c.conditions).some((x) => checkConditionsMet([x], hass, ctx));
+      default:
+        return checkState(c, hass, ctx);
+    }
+  });
+}
+function checkLeaf(c, hass, ctx) {
+  try {
+    return checkConditionsMet([c], hass, ctx);
+  } catch (_) {
+    return false;
+  }
+}
+function andOf(values) {
+  let unknown = false;
+  for (const v of values) {
+    if (v === false) return false;
+    if (v === void 0) unknown = true;
+  }
+  return unknown ? void 0 : true;
+}
+function orOf(values) {
+  let unknown = false;
+  for (const v of values) {
+    if (v === true) return true;
+    if (v === void 0) unknown = true;
+  }
+  return unknown ? void 0 : false;
+}
+function isLocallyEvaluableServerLeaf(c, states, ctx) {
+  const type = "condition" in c ? c.condition : "state";
+  if (type !== "state" && type !== "numeric_state") return false;
+  if (!("entity_id" in c)) {
+    const target = c.entity || ctx.entity_id;
+    return !!target && target in states;
+  }
+  if (typeof c.entity_id !== "string" || !(c.entity_id in states) || c.attribute !== void 0 || c.for !== void 0 || c.match !== void 0 || c.value_template !== void 0) {
+    return false;
+  }
+  if (type === "numeric_state") {
+    const bounds = [c.above, c.below].filter((b) => b !== void 0);
+    return bounds.length > 0 && bounds.every((b) => typeof b === "number");
+  }
+  return !(ensureArray(c.state) || []).some(isEntityReference);
+}
+function evaluateLocally(conditions, hass, ctx = {}) {
+  const node = (c) => {
+    if ("enabled" in c && typeof c.enabled !== "boolean") return void 0;
+    if (isLogicalCondition(c)) {
+      if (c.conditions === void 0) return true;
+      const values = logicalChildren(c).filter((x) => !isDisabledCondition(x)).map(node);
+      if (c.condition === "or") return orOf(values);
+      const all = andOf(values);
+      return c.condition === "not" ? all === void 0 ? void 0 : !all : all;
+    }
+    if (isClientCondition(c) || isLocallyEvaluableServerLeaf(c, hass.states, ctx)) return checkLeaf(c, hass, ctx);
+    return void 0;
+  };
+  return andOf(conditions.filter((c) => !isDisabledCondition(c)).map(node));
+}
+function splitConditionTree(conditions) {
+  const subtrees = [];
+  const addSubtree = (coreCondition, original, operator) => {
+    const id = String(subtrees.length);
+    subtrees.push({ id, coreCondition, original, operator });
+    return (_client, server) => server[id];
+  };
+  const siblings = (children, operator) => {
+    const server = [];
+    const client = [];
+    for (const child of children) {
+      if (isDisabledCondition(child)) continue;
+      (isServerCondition(child) ? server : client).push(child);
+    }
+    const nodes = [];
+    if (server.length === 1) {
+      nodes.push(addSubtree(toCoreCondition(server[0]), server, operator));
+    } else if (server.length > 1) {
+      nodes.push(addSubtree({ condition: operator, conditions: server.map(toCoreCondition) }, server, operator));
+    }
+    for (const child of client) nodes.push(build(child));
+    return nodes;
+  };
+  const build = (c) => {
+    if ("enabled" in c && typeof c.enabled !== "boolean") return () => void 0;
+    if (isLogicalCondition(c)) {
+      const children = logicalChildren(c);
+      if (c.condition === "or") {
+        const nodes2 = siblings(children, "or");
+        return (cl, sv) => orOf(nodes2.map((n) => n(cl, sv)));
+      }
+      const nodes = siblings(children, "and");
+      if (c.condition === "not") {
+        return (cl, sv) => {
+          const v = andOf(nodes.map((n) => n(cl, sv)));
+          return v === void 0 ? void 0 : !v;
+        };
+      }
+      return (cl, sv) => andOf(nodes.map((n) => n(cl, sv)));
+    }
+    if (isServerCondition(c)) return addSubtree(toCoreCondition(c), [c], "and");
+    return (client) => client(c);
+  };
+  const roots = siblings(conditions, "and");
+  return {
+    subtrees,
+    evaluate: (client, server) => andOf(roots.map((n) => n(client, server)))
+  };
+}
+function collect(conditions, type) {
+  const out = [];
+  for (const c of conditions) {
+    if ("conditions" in c && c.conditions) out.push(...collect(ensureArray(c.conditions), type));
+    if (c.condition === type) out.push(c);
+  }
+  return out;
+}
+var connectionSupport = /* @__PURE__ */ new WeakMap();
+function supportOf(connection) {
+  let rec = connectionSupport.get(connection);
+  if (!rec) {
+    rec = { support: "unknown", listeners: /* @__PURE__ */ new Set() };
+    connectionSupport.set(connection, rec);
+    try {
+      connection.addEventListener?.("ready", () => {
+        if (rec.support === "no") rec.support = "unknown";
+        for (const l of [...rec.listeners]) l();
+      });
+    } catch (_) {
+    }
+  }
+  return rec;
+}
+var ConditionWatcher = class {
+  constructor(onChange) {
+    this._onChange = onChange;
+    this._conditions = void 0;
+    this._signature = void 0;
+    this._subscribedSignature = void 0;
+    this._hass = null;
+    this._ctx = {};
+    this._connection = null;
+    this._split = null;
+    this._server = {};
+    this._errors = {};
+    this._refused = /* @__PURE__ */ new Set();
+    this._subscriptions = [];
+    this._listeners = [];
+    this._generation = 0;
+    this._result = "unknown";
+    this._stopped = false;
+    this._onReady = () => {
+      if (this._stopped) return;
+      this._resubscribe();
+      if (this._onChange) this._onChange();
+    };
+  }
+  // Take the current conditions and hass; subscribes again only when the
+  // conditions say something else or Home Assistant's connection changed.
+  observe(conditions, hass, ctx = {}) {
+    this._stopped = false;
+    this._hass = hass;
+    this._ctx = ctx;
+    if (conditions !== this._conditions) {
+      this._conditions = conditions;
+      this._signature = conditions ? JSON.stringify(conditions) : void 0;
+    }
+    const connection = hass?.connection || null;
+    if (this._signature !== this._subscribedSignature || connection !== this._connection) {
+      this._resubscribe();
+    } else {
+      this._recompute();
+    }
+  }
+  get visible() {
+    const conditions = this._conditions;
+    if (!conditions || conditions.length === 0) return true;
+    if (this._result !== "unknown") return this._result === "visible";
+    if (!this._hass) return true;
+    return evaluateLocally(conditions, this._hass, this._ctx) === true;
+  }
+  stop() {
+    this._stopped = true;
+    this._teardown();
+    this._subscribedSignature = void 0;
+    this._connection = null;
+    this._result = "unknown";
+  }
+  _teardown() {
+    this._generation += 1;
+    for (const sub of this._subscriptions) {
+      Promise.resolve(sub).then((unsub) => {
+        if (typeof unsub === "function") unsub();
+      }).catch(() => void 0);
+    }
+    this._subscriptions = [];
+    for (const unsub of this._listeners) {
+      try {
+        unsub();
+      } catch (_) {
+      }
+    }
+    this._listeners = [];
+    if (this._connection) supportOf(this._connection).listeners.delete(this._onReady);
+    this._split = null;
+    this._server = {};
+    this._errors = {};
+    this._refused = /* @__PURE__ */ new Set();
+  }
+  _resubscribe() {
+    this._teardown();
+    const conditions = this._conditions;
+    const hass = this._hass;
+    this._connection = hass?.connection || null;
+    this._subscribedSignature = this._signature;
+    if (!conditions || !hass) {
+      this._setResult("unknown");
+      return;
+    }
+    const split = splitConditionTree(conditions);
+    this._split = split;
+    const generation = this._generation;
+    const connection = this._connection;
+    const canSubscribe = connection && typeof connection.subscribeMessage === "function";
+    const rec = canSubscribe ? supportOf(connection) : null;
+    if (rec) rec.listeners.add(this._onReady);
+    for (const subtree of split.subtrees) {
+      this._server[subtree.id] = void 0;
+      if (!canSubscribe || rec.support === "no") {
+        this._refused.add(subtree.id);
+        continue;
+      }
+      const sub = connection.subscribeMessage((msg) => {
+        if (generation !== this._generation) return;
+        if (msg && msg.error !== void 0) {
+          this._server[subtree.id] = false;
+          this._errors[subtree.id] = typeof msg.error === "string" ? msg.error : msg.error?.message || "error";
+        } else {
+          this._server[subtree.id] = msg ? msg.result : void 0;
+          this._errors[subtree.id] = void 0;
+        }
+        this._changed();
+      }, { type: "subscribe_condition", condition: subtree.coreCondition });
+      Promise.resolve(sub).then(() => {
+        rec.support = "yes";
+      }, (err) => {
+        if (generation !== this._generation) return;
+        if (REFUSALS.has(err?.code)) {
+          rec.support = "no";
+          this._refused.add(subtree.id);
+          this._server[subtree.id] = void 0;
+        } else {
+          this._server[subtree.id] = false;
+          this._errors[subtree.id] = err?.message || "error";
+        }
+        this._changed();
+      });
+      this._subscriptions.push(sub);
+    }
+    for (const c of collect(conditions, "screen")) {
+      if (!c.media_query || !window.matchMedia) continue;
+      try {
+        const mql = window.matchMedia(c.media_query);
+        const handler = () => this._changed();
+        if (mql.addEventListener) {
+          mql.addEventListener("change", handler);
+          this._listeners.push(() => mql.removeEventListener("change", handler));
+        } else if (mql.addListener) {
+          mql.addListener(handler);
+          this._listeners.push(() => mql.removeListener(handler));
+        }
+      } catch (_) {
+      }
+    }
+    if (collect(conditions, "time").length) {
+      let timer = null;
+      const tick = () => {
+        const now = Date.now();
+        timer = setTimeout(() => {
+          this._changed();
+          tick();
+        }, 6e4 - now % 6e4 + 500);
+      };
+      tick();
+      this._listeners.push(() => clearTimeout(timer));
+    }
+    this._recompute();
+  }
+  // Something the browser cannot see coming changed (core answered, a media
+  // query flipped, a minute passed): judged again and the card told.
+  _changed() {
+    this._recompute();
+    if (this._onChange) this._onChange();
+  }
+  _recompute() {
+    if (!this._split || !this._hass) {
+      this._setResult("unknown");
+      return;
+    }
+    const hass = this._hass;
+    const ctx = this._ctx;
+    if (Object.values(this._errors).some((e) => !!e)) {
+      this._setResult("hidden");
+      return;
+    }
+    const server = { ...this._server };
+    for (const subtree of this._split.subtrees) {
+      if (!this._refused.has(subtree.id)) continue;
+      const values = subtree.original.map((c) => evaluateLocally([c], hass, ctx));
+      server[subtree.id] = subtree.operator === "or" ? orOf(values) : andOf(values);
+    }
+    const value = this._split.evaluate((c) => checkLeaf(c, hass, ctx), server);
+    this._setResult(value === void 0 ? "unknown" : value ? "visible" : "hidden");
+  }
+  _setResult(result) {
+    this._result = result;
+  }
+};
 
 // src/core/card-base.js
 var TasksCardBase = class _TasksCardBase extends HTMLElement {
@@ -5509,6 +6192,7 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
   set hass(hass) {
     const prev = this._hass;
     this._hass = hass;
+    this._hassChanged();
     if (!this._initialized) {
       this._initialized = true;
       this._loadLists();
@@ -6264,7 +6948,7 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
     const preAssignees = col.filters?.assignees;
     const preLabels = col.filters?.labels;
     if (preAssignees && preAssignees.length > 0) {
-      const set = new Set(preAssignees);
+      const set = new Set(this._presetAssignees(col));
       tasks = tasks.filter((t) => {
         const people = _assignees(t);
         return people.length === 0 ? set.has(UNASSIGNED) : people.some((p) => set.has(p));
@@ -6275,6 +6959,14 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
       tasks = tasks.filter((t) => t.tags && t.tags.some((tag) => set.has(tag)));
     }
     return tasks;
+  }
+  // A column's preset assignees with "current user" put in as the person of
+  // the user viewing the dashboard - left out for a user who has none.
+  _presetAssignees(col) {
+    const preset = col?.filters?.assignees || [];
+    if (!preset.includes(CURRENT_USER)) return preset;
+    const me = viewerPersonId(this._hass);
+    return [...new Set(preset.flatMap((v) => v === CURRENT_USER ? me ? [me] : [] : [v]))];
   }
   _filteredTasks(colIdx) {
     const cs = this._columns[colIdx];
@@ -10171,6 +10863,10 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
       @media (max-width: 600px) { .multi-columns { flex-direction: column; } .multi-columns .card-column { border-right: none; border-bottom: 1px solid var(--todo-divider); } .multi-columns .card-column:last-child { border-bottom: none; } :host(.fit-rows) .multi-columns .card-column { flex: 1 1 0%; } }
       .card-column.drag-target { outline: 2px dashed var(--todo-primary); outline-offset: -2px; border-radius: var(--todo-radius); }
       .card-column { padding: 16px; display: flex; flex-direction: column; min-height: 0; }
+      /* A column its visibility conditions hide, while the dashboard is edited. */
+      .card-column.visibility-hidden { opacity: 0.45; }
+      /* All columns hidden: the card hides itself (hui-card follows). */
+      :host([hidden]) { display: none !important; }
       .header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
       .card-global-title { font-size: 1.25rem; font-weight: 500; color: var(--ha-card-header-color, var(--todo-text)); margin: 0; padding: 16px 16px 0; line-height: 1.2; }
       .title { font-size: 1.25rem; font-weight: 500; color: var(--ha-card-header-color, var(--todo-text)); margin: 0; line-height: 1.2; display: flex; align-items: center; gap: 6px; }
@@ -11184,6 +11880,9 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
   _sourceStamps() {
     return null;
   }
+  // Home Assistant handed the card a new hass (any state changed).
+  _hassChanged() {
+  }
   // Before the 30 s poll of linked lists.
   _beforePoll() {
   }
@@ -11209,6 +11908,7 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
 };
 
 // src/views/list-card.js
+var VISIBILITY_CACHE = /* @__PURE__ */ new WeakMap();
 var HomeTasksCard = class extends TasksCardBase {
   setConfig(config) {
     if (config.view === "day_plan") {
@@ -11267,6 +11967,7 @@ var HomeTasksCard = class extends TasksCardBase {
         this._columns[i].sortBy = col.default_sort || "manual";
       }
     }
+    this._syncColumnVisibility(false);
     if (this._initialized) {
       this._loadAllTasks();
     } else {
@@ -11477,8 +12178,9 @@ var HomeTasksCard = class extends TasksCardBase {
     const cs = this._columns[colIdx];
     const col = this._config.columns[colIdx];
     if (cs.personFilters.size === 1) return [...cs.personFilters][0];
-    if (cs.personFilters.size === 0 && col.filters?.assignees?.length === 1 && col.filters.assignees[0] !== UNASSIGNED && !(col.hidden_persons || []).includes(col.filters.assignees[0])) {
-      return col.filters.assignees[0];
+    const preset = this._presetAssignees(col);
+    if (cs.personFilters.size === 0 && (col.filters?.assignees || []).length === 1 && preset.length === 1 && preset[0] !== UNASSIGNED && !(col.hidden_persons || []).includes(preset[0])) {
+      return preset[0];
     }
     return null;
   }
@@ -11651,8 +12353,17 @@ var HomeTasksCard = class extends TasksCardBase {
   }
   _buildCardContent() {
     const cols = this._config.columns;
+    const preview = this.preview;
+    const shown = cols.map((_, i) => i).filter((i) => preview || this._columnVisible(i));
+    this._shownVisibilityKey = this._visibilityKey();
+    this._setHostHidden(shown.length === 0);
+    const build = (i) => {
+      const el = this._buildColumn(i);
+      if (preview && !this._columnVisible(i)) el.classList.add("visibility-hidden");
+      return el;
+    };
     if (cols.length === 1) {
-      return this._buildColumn(0);
+      return shown.length ? build(0) : document.createElement("div");
     }
     const children = [];
     if (this._config.title) {
@@ -11661,8 +12372,102 @@ var HomeTasksCard = class extends TasksCardBase {
       titleEl.textContent = this._config.title;
       children.push(titleEl);
     }
-    children.push(this._el("div", { className: "multi-columns" }, cols.map((_, i) => this._buildColumn(i))));
+    children.push(this._el("div", { className: "multi-columns" }, shown.map(build)));
     return this._el("div", {}, children);
+  }
+  // -- Column visibility ------------------------------------------------------
+  //
+  // A column's `visibility` takes the conditions of a card's own Visibility
+  // tab and is judged as Home Assistant judges them (core/visibility.js).
+  // A hidden column is not drawn; its tasks still load, so it shows at once
+  // when its conditions hold again. With no column left the card hides, and
+  // stays connected while hidden (connectedWhileHidden) to notice that.
+  // Set by Home Assistant while the dashboard or this card is edited.
+  set preview(value) {
+    const on = value === true;
+    if (on === (this._preview === true)) return;
+    this._preview = on;
+    if (this._shownVisibilityKey !== void 0) this._render();
+  }
+  get preview() {
+    return this._preview === true;
+  }
+  // Asks hui-card to keep the card in the page while it is hidden.
+  get connectedWhileHidden() {
+    return true;
+  }
+  _colConditions(colIdx) {
+    const col = this._config.columns[colIdx];
+    if (!col || col.visibility == null) return void 0;
+    let entry = VISIBILITY_CACHE.get(col);
+    if (!entry || entry.source !== col.visibility) {
+      entry = { source: col.visibility, list: normalizeVisibility(col.visibility) };
+      VISIBILITY_CACHE.set(col, entry);
+    }
+    return entry.list;
+  }
+  // A `state` condition naming no entity reads the column's linked list, as
+  // a card's reads the card's entity.
+  _colConditionContext(colIdx) {
+    const entityId = this._config.columns[colIdx]?.entity_id;
+    return entityId ? { entity_id: entityId } : {};
+  }
+  _columnVisible(colIdx) {
+    const conditions = this._colConditions(colIdx);
+    if (!conditions) return true;
+    const watcher = this._colWatchers?.[colIdx];
+    if (watcher) return watcher.visible;
+    if (!this._hass) return true;
+    return evaluateLocally(conditions, this._hass, this._colConditionContext(colIdx)) === true;
+  }
+  _visibilityKey() {
+    return this._config.columns.map((_, i) => this._columnVisible(i) ? "1" : "0").join("") + (this.preview ? "p" : "");
+  }
+  // Watches each column's conditions while the card is in the page (core
+  // subscriptions, media queries, time); redraws when what shows changed.
+  _syncColumnVisibility(redraw = true) {
+    const cols = this._config && this._config.columns || [];
+    const watchers = this._colWatchers || (this._colWatchers = []);
+    for (let i = cols.length; i < watchers.length; i++) watchers[i]?.stop();
+    watchers.length = Math.min(watchers.length, cols.length);
+    for (let i = 0; i < cols.length; i++) {
+      const conditions = this._colConditions(i);
+      if (!conditions || !this.isConnected || !this._hass) {
+        if (watchers[i]) {
+          watchers[i].stop();
+          watchers[i] = null;
+        }
+        continue;
+      }
+      if (!watchers[i]) watchers[i] = new ConditionWatcher(() => this._columnVisibilityChanged());
+      watchers[i].observe(conditions, this._hass, this._colConditionContext(i));
+    }
+    if (redraw) this._columnVisibilityChanged();
+  }
+  _columnVisibilityChanged() {
+    if (this._shownVisibilityKey === void 0) return;
+    if (this._visibilityKey() !== this._shownVisibilityKey) this._render();
+  }
+  _setHostHidden(hidden) {
+    if (this.hidden === hidden) return;
+    this.hidden = hidden;
+    this.dispatchEvent(new CustomEvent("card-visibility-changed", {
+      bubbles: true,
+      composed: true,
+      detail: { value: !hidden }
+    }));
+  }
+  _hassChanged() {
+    this._syncColumnVisibility();
+  }
+  connectedCallback() {
+    super.connectedCallback();
+    this._syncColumnVisibility();
+  }
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    for (const watcher of this._colWatchers || []) watcher?.stop();
+    this._colWatchers = [];
   }
   _buildColumn(colIdx) {
     const col = this._config.columns[colIdx];
@@ -12248,7 +13053,7 @@ var HomeTasksCard = class extends TasksCardBase {
     for (const t of baseTasks) {
       for (const p of _assignees(t)) assignedPersons.add(p);
     }
-    for (const eid of col.filters?.assignees || []) assignedPersons.delete(eid);
+    for (const eid of this._presetAssignees(col)) assignedPersons.delete(eid);
     if (assignedPersons.size === 0) return null;
     const chipChildren = [];
     for (const eid of [...assignedPersons].sort()) {
@@ -13065,17 +13870,16 @@ var HomeTasksDayPlanCard = class extends TasksCardBase {
     }
     if (!isCurrent) {
       headLine.push(this._el("span", { className: "plan-count", textContent: String(rows.length) }));
-    }
-    const head = [this._el("div", { className: "plan-head-line" }, headLine)];
-    if (opts.show_focus !== false) head.push(this._buildPlanNote(day));
-    if (isCurrent && opts.show_progress !== false) {
+    } else if (opts.show_progress !== false) {
       const fill = this._el("div", { className: "plan-bar-fill" });
       fill.style.width = rows.length ? `${Math.round(done / rows.length * 100)}%` : "0%";
-      head.push(this._el("div", { className: "plan-progress" }, [
+      headLine.push(this._el("div", { className: "plan-progress" }, [
         this._el("span", { className: "plan-progress-text", textContent: this._t("progress", done, rows.length) }),
         this._el("div", { className: "plan-bar" }, [fill])
       ]));
     }
+    const head = [this._el("div", { className: "plan-head-line" }, headLine)];
+    if (opts.show_focus !== false) head.push(this._buildPlanNote(day));
     const showList = (plan.sources || []).length > 1;
     const list = this._el("div", { className: "task-list plan-day-list", "data-plan-date": day.date }, [
       ...rows.map((row, i) => this._buildPlanRow(row, i + 1, showList, day)),
@@ -13565,7 +14369,6 @@ var HomeTasksDayPlanCard = class extends TasksCardBase {
       .plan-current .plan-day-head {
         background: color-mix(in srgb, var(--todo-primary) 14%, var(--todo-bg));
         border-bottom-color: color-mix(in srgb, var(--todo-primary) 40%, transparent);
-        padding-top: 16px;
       }
       /* A card title is the plan's heading: it gets the tint of the current
          day's head over the whole width. Left plain, it was a bare line
@@ -13575,7 +14378,14 @@ var HomeTasksDayPlanCard = class extends TasksCardBase {
         background: color-mix(in srgb, var(--todo-primary) 14%, var(--todo-bg));
         border-bottom: 1px solid color-mix(in srgb, var(--todo-primary) 40%, transparent);
       }
-      .plan-head-line { display: flex; align-items: baseline; gap: 8px; }
+      /* As tall as the current day's larger name on every day, the line at
+         the bottom: the heads end at one height and the names share a
+         baseline across the columns. */
+      .plan-head-line {
+        display: flex; flex-wrap: wrap; align-content: flex-end; align-items: baseline; gap: 8px;
+        min-height: calc(1.35rem * 1.2);
+      }
+      .plan-view.compact .plan-head-line { min-height: calc(1.1rem * 1.2); }
       .plan-day-name { font-size: 1rem; font-weight: 600; color: var(--todo-text); line-height: 1.2; }
       .plan-current .plan-day-name { font-size: 1.35rem; color: var(--todo-primary); }
       .plan-day-date { font-size: 13px; color: var(--todo-secondary-text); }
@@ -13595,10 +14405,13 @@ var HomeTasksDayPlanCard = class extends TasksCardBase {
         width: calc(100% + 12px); border: 1px solid var(--todo-primary); border-radius: 4px;
         background: var(--todo-bg); color: var(--todo-text); outline: none;
       }
-      .plan-progress { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--todo-secondary-text); }
+      .plan-progress {
+        margin-left: auto; flex: 0 1 180px; min-width: 0;
+        display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--todo-secondary-text);
+      }
       .plan-progress-text { white-space: nowrap; }
       .plan-bar {
-        flex: 1; height: 4px; border-radius: 2px; overflow: hidden;
+        flex: 1; min-width: 24px; height: 4px; border-radius: 2px; overflow: hidden;
         background: color-mix(in srgb, var(--todo-primary) 22%, transparent);
       }
       .plan-bar-fill { height: 100%; border-radius: 2px; background: var(--todo-primary); transition: width 0.3s ease; }
@@ -13645,7 +14458,6 @@ var HomeTasksDayPlanCard = class extends TasksCardBase {
       }
       /* Compact: the same day in less height. */
       .plan-view.compact .plan-day-head { padding: 8px 12px 8px; gap: 3px; }
-      .plan-view.compact .plan-current .plan-day-head { padding-top: 10px; }
       .plan-view.compact .plan-current .plan-day-name { font-size: 1.1rem; }
       .plan-view.compact > .card-global-title { padding: 10px 12px 8px; font-size: 1.1rem; }
       .plan-view.compact .plan-day-list { padding: 8px 8px 0; gap: 4px; }
@@ -13768,6 +14580,7 @@ var EditorBase = class extends HTMLElement {
   }
   set hass(hass) {
     this._hass = hass;
+    for (const el of this.shadowRoot?.querySelectorAll("ha-card-conditions-editor") || []) el.hass = hass;
     if (!this._listsLoaded) {
       this._loadLists();
     }
@@ -15102,8 +15915,10 @@ var HomeTasksCardEditor = class extends EditorBase {
           // Linked lists can name people Home Assistant doesn't know (a
           // Todoist collaborator), so the list's own assignees come too.
           // "Unassigned" comes last (issue #93).
+          // "Current user" stands for whoever views the dashboard.
           [
-            ...this._personOptions([...meta.persons.map((p) => p.value), ...col.filters?.assignees || []]).filter((p) => p.value !== UNASSIGNED),
+            ...this._personOptions([...meta.persons.map((p) => p.value), ...col.filters?.assignees || []]).filter((p) => p.value !== UNASSIGNED && p.value !== CURRENT_USER),
+            { value: CURRENT_USER, label: this._t("ed_preset_current_user") },
             { value: UNASSIGNED, label: this._t("ed_preset_unassigned") }
           ],
           col.filters?.assignees || [],
@@ -15116,6 +15931,12 @@ var HomeTasksCardEditor = class extends EditorBase {
           (vals) => updateFilters({ labels: vals })
         )
       ]),
+      makeSection(
+        "visibility",
+        "mdi:eye-check-outline",
+        "ed_sec_visibility",
+        this._buildVisibilityEditor(tabIdx, updateCol)
+      ),
       makeSection("config", "mdi:tune", "ed_sec_display", [
         detailFields,
         makeToggle("show-move", "ed_show_move", "show_move", true),
@@ -15145,6 +15966,59 @@ var HomeTasksCardEditor = class extends EditorBase {
         ] : []
       ])
     ]);
+  }
+  // The column's visibility conditions, set as a card's own are: with Home
+  // Assistant's Visibility editor, the one under a card's Visibility tab. It
+  // is defined wherever Home Assistant's card editor is open; until it is, or
+  // where something in the list is no condition it can show, the conditions
+  // are edited as YAML.
+  _buildVisibilityEditor(tabIdx, updateCol) {
+    const col = this._config.columns[tabIdx] || {};
+    const raw = col.visibility;
+    const list = raw == null ? [] : Array.isArray(raw) ? raw : [raw];
+    const allConditions = (items) => items.every((c) => {
+      if (typeof c !== "object" || c === null || Array.isArray(c)) return false;
+      if (c.conditions == null) return true;
+      return allConditions(Array.isArray(c.conditions) ? c.conditions : [c.conditions]);
+    });
+    const save = (value) => {
+      const next = Array.isArray(value) && value.length ? value : void 0;
+      if (JSON.stringify(next) === JSON.stringify(this._config.columns[tabIdx]?.visibility)) return;
+      updateCol({ visibility: next });
+    };
+    const nodes = [this._el("div", { className: "hint", textContent: this._t("ed_visibility_hint") })];
+    const Editor = customElements.get("ha-card-conditions-editor");
+    if (Editor && allConditions(list)) {
+      const ed = document.createElement("ha-card-conditions-editor");
+      ed.hass = this._hass;
+      ed.conditions = list;
+      ed.addEventListener("value-changed", (e) => {
+        e.stopPropagation();
+        const value = e.detail?.value;
+        if (!Array.isArray(value)) return;
+        ed.conditions = value;
+        save(value);
+      });
+      nodes.push(ed);
+      return nodes;
+    }
+    if (!Editor && !this._waitingForConditionsEditor && customElements.whenDefined) {
+      this._waitingForConditionsEditor = true;
+      customElements.whenDefined("ha-card-conditions-editor").then(() => {
+        this._waitingForConditionsEditor = false;
+        if (this.isConnected) this._render();
+      });
+    }
+    const yaml = document.createElement("ha-yaml-editor");
+    yaml.defaultValue = list;
+    yaml.addEventListener("value-changed", (e) => {
+      e.stopPropagation();
+      const value = e.detail?.value;
+      if (value == null || Array.isArray(value) && allConditions(value)) save(value || []);
+      else if (typeof value === "object" && allConditions([value])) save([value]);
+    });
+    nodes.push(yaml);
+    return nodes;
   }
   // Everyone Home Assistant knows as a person, plus *extra* values that are
   // not one (a removed person, a provider's collaborator), named as stored.

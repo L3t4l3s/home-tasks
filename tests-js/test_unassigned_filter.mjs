@@ -146,13 +146,13 @@ describe('unassigned preset in the editor', () => {
 
   test('"Unassigned" is offered last and can be switched on', async () => {
     const { field, events } = await editor(undefined);
-    assert.deepEqual(chips(field), ['Anna', 'Kevin', 'Unassigned']);
-    field.querySelectorAll('.assignee-chip')[2].click();
+    assert.deepEqual(chips(field), ['Anna', 'Kevin', 'Current user', 'Unassigned']);
+    field.querySelectorAll('.assignee-chip')[3].click();
     assert.deepEqual(JSON.parse(JSON.stringify(events.at(-1))), ['unassigned']);
   });
 
   test('a saved "unassigned" shows as the one chip, not as a person', async () => {
     const { field } = await editor({ assignees: ['unassigned'] });
-    assert.deepEqual(chips(field), ['Anna', 'Kevin', 'Unassigned*']);
+    assert.deepEqual(chips(field), ['Anna', 'Kevin', 'Current user', 'Unassigned*']);
   });
 });

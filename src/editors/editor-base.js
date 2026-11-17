@@ -78,6 +78,8 @@ export class EditorBase extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
+    // Home Assistant's own editors in ours keep up with the states.
+    for (const el of this.shadowRoot?.querySelectorAll("ha-card-conditions-editor") || []) el.hass = hass;
     if (!this._listsLoaded) {
       this._loadLists();
     }
