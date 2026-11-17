@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.components.todo import TodoItem, TodoItemStatus
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.common import MockConfigEntry, async_fire_time_changed
 
 from custom_components.home_tasks import (
     DOMAIN,
@@ -517,3 +517,123 @@ async def test_recover_immediate_reopen_for_past_target(hass: HomeAssistant, ext
     assert "t1" not in hass.data.get(DATA_RECURRENCE_TIMERS, {})
     assert any(c.get("status") == "needs_action" for c in calls)
     assert len(events) == 1
+
+
+# ---------------------------------------------------------------------------
+# Reopen on completion, and the due date a reopen moves to
+# ---------------------------------------------------------------------------
+
+def _due_now(calls: list, overlay: dict) -> str | None:
+    """The due date the provider was last given - or the overlay's, for a
+    provider that keeps none."""
+    sent = [c["due_date"] for c in calls if c.get("due_date")]
+    return str(sent[-1]) if sent else overlay.get("due_date")
+
+
+async def _recurring_done(hass: HomeAssistant, ext_entry, **extra) -> list:
+    """t1: a daily task counted from completion, due today, just ticked off.
+    Returns the provider's update calls."""
+    from homeassistant.util import dt as dt_util
+
+    _register_todo_items(hass, [
+        TodoItem(uid="t1", summary="Recurring", status=TodoItemStatus.COMPLETED),
+    ])
+    await _overlay(hass, ext_entry).async_set_overlay(
+        "t1", recurrence_enabled=True, recurrence_unit="days", recurrence_value=1,
+        due_date=dt_util.now().date().isoformat(), **extra,
+    )
+    calls: list = []
+
+    async def _fake_update(call):
+        calls.append(dict(call.data))
+
+    hass.services.async_register("todo", "update_item", _fake_update)
+    return calls
+
+
+async def test_reopen_counted_from_completion_moves_the_due_date(
+    hass: HomeAssistant, ext_entry
+) -> None:
+    """Left on the ticked-off date, the task would come back already overdue."""
+    from homeassistant.util import dt as dt_util
+
+    calls = await _recurring_done(hass, ext_entry)
+    await _overlay(hass, ext_entry).async_set_overlay(
+        "t1", completed_at=datetime.now(timezone.utc).isoformat(),
+    )
+
+    await _async_reopen_external_task(hass, ext_entry.entry_id, ENTITY, "t1")
+    await hass.async_block_till_done()
+
+    tomorrow = (dt_util.now() + timedelta(days=1)).date().isoformat()
+    assert _due_now(calls, _overlay(hass, ext_entry).get_all_overlays()["t1"]) == tomorrow
+
+
+async def test_a_list_that_reopens_on_completion_reopens_a_linked_task_at_once(
+    hass: HomeAssistant, ext_entry
+) -> None:
+    from homeassistant.util import dt as dt_util
+
+    calls = await _recurring_done(hass, ext_entry)
+    await _overlay(hass, ext_entry).async_set_defaults(recurrence_reopen_on_complete=True)
+    events = []
+    hass.bus.async_listen(f"{DOMAIN}_task_reopened", lambda e: events.append(e))
+
+    await _handle_external_recurrence_completion(hass, ext_entry.entry_id, ENTITY, "t1")
+    await hass.async_block_till_done()
+    assert not any(c.get("status") == "needs_action" for c in calls)  # time to untick
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=31))
+    await hass.async_block_till_done()
+
+    assert "t1" not in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+    assert any(c.get("status") == "needs_action" for c in calls)
+    assert len(events) == 1
+    tomorrow = (dt_util.now() + timedelta(days=1)).date().isoformat()
+    assert _due_now(calls, _overlay(hass, ext_entry).get_all_overlays()["t1"]) == tomorrow
+
+
+async def test_switching_reopen_on_completion_on_reopens_a_waiting_linked_task(
+    hass: HomeAssistant, ext_entry
+) -> None:
+    calls = await _recurring_done(hass, ext_entry)
+    await _handle_external_recurrence_completion(hass, ext_entry.entry_id, ENTITY, "t1")
+    await hass.async_block_till_done()
+    assert "t1" in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+    # Ticked off an hour ago: well past the grace.
+    await _overlay(hass, ext_entry).async_set_overlay(
+        "t1", completed_at=(datetime.now(timezone.utc) - timedelta(hours=1)).isoformat(),
+    )
+
+    await _overlay(hass, ext_entry).async_set_defaults(recurrence_reopen_on_complete=True)
+    await hass.async_block_till_done()
+
+    assert "t1" not in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+    assert any(c.get("status") == "needs_action" for c in calls)
+
+
+async def test_reopen_on_completion_leaves_a_provider_run_recurrence_alone(
+    hass: HomeAssistant, ext_entry
+) -> None:
+    """Todoist moves its own task on; reopening it here as well would double up."""
+    calls = await _recurring_done(hass, ext_entry)
+    # Switched on before the provider took the recurrence over.
+    await _overlay(hass, ext_entry).async_set_defaults(recurrence_reopen_on_complete=True)
+    _set_adapter_owns_recurrence(hass, True)
+
+    await _handle_external_recurrence_completion(hass, ext_entry.entry_id, ENTITY, "t1")
+    await hass.async_block_till_done()
+
+    assert "t1" not in hass.data.get(DATA_RECURRENCE_TIMERS, {})
+    assert not any(c.get("status") == "needs_action" for c in calls)
+
+
+
+async def test_reopen_on_completion_is_refused_where_the_provider_runs_the_recurrence(
+    hass: HomeAssistant, ext_entry
+) -> None:
+    _set_adapter_owns_recurrence(hass, True)
+    with pytest.raises(ValueError, match="provider runs the recurrence"):
+        await _overlay(hass, ext_entry).async_set_defaults(recurrence_reopen_on_complete=True)
+    assert _overlay(hass, ext_entry).get_defaults()["recurrence_reopen_on_complete"] is False
+    # Off is always fine.
+    await _overlay(hass, ext_entry).async_set_defaults(recurrence_reopen_on_complete=False)

@@ -118,9 +118,11 @@ async def test_cleared_at_the_provider_it_is_put_back_at_its_reopen(hass: HomeAs
     assert moved["recurrence_enabled"] is True
     assert moved["recurrence_remaining_count"] == 4
     assert moved["completed_at"] is None and moved["recreate"] is None
-    # Anchored on completion, a reopen leaves the due date as it is - the
-    # put-back task too (a provider without due dates keeps it here).
-    assert moved["due_date"] == "2026-10-24"
+    # Anchored on completion, the reopen moves the due date to the occurrence
+    # it reopens for - a week after the tick - the put-back task too (a
+    # provider without due dates keeps it here).
+    week_after = (dt_util.now() + timedelta(weeks=1)).date().isoformat()
+    assert moved["due_date"] == week_after
     assert reopened and reopened[0]["task_id"] == new_uid
 
 

@@ -539,6 +539,7 @@ export class TasksCardBase extends HTMLElement {
         cs.tasks = r?.tasks ?? [];
         cs.sections = r?.sections ?? [];
         cs.tagCatalog = r?.tag_catalog ?? [];
+        cs.reopenOnComplete = r?.reopen_on_complete === true;
         cs.loaded = !!r;
       } else if (col.list_id) {
         // Native column
@@ -547,6 +548,7 @@ export class TasksCardBase extends HTMLElement {
         cs.sections = r?.sections ?? [];
         cs.tagCatalog = r?.tag_catalog ?? [];
         cs.reopenLead = r?.reopen_lead ?? 0;
+        cs.reopenOnComplete = r?.reopen_on_complete === true;
         cs.loaded = !!r;
       } else {
         cs.tasks = [];
@@ -2855,7 +2857,8 @@ export class TasksCardBase extends HTMLElement {
 
   _buildRecurrenceSection(task, colIdx) {
     const recurrenceEnabled = task.recurrence_enabled || false;
-    const listLead = this._columns[colIdx]?.reopenLead || 0;
+    // A list that reopens on completion has no lead to start an interval for.
+    const listLead = this._columns[colIdx]?.reopenOnComplete ? 0 : (this._columns[colIdx]?.reopenLead || 0);
     // Never set up yet: start the interval a day longer than the list's
     // reopen lead, so switching it on keeps the lead (issue #77).
     const leadDays = !task.recurrence_unit && listLead >= 1440 ? Math.floor(listLead / 1440) + 1 : 0;
@@ -3357,7 +3360,10 @@ export class TasksCardBase extends HTMLElement {
     // Until recurrence is switched on the task has no lead of its own: it
     // shows the list's (issue #77), which it takes over with the switch
     // where the interval can hold it.
-    const leadSupported = !this._isExternalCol(colIdx);
+    // Not offered either where the list reopens recurring tasks the moment
+    // they are ticked off: there is no wait to shorten. A lead the task has
+    // stays, for when the list stops doing that.
+    const leadSupported = !this._isExternalCol(colIdx) && !this._columns[colIdx]?.reopenOnComplete;
     const LEAD_FACTORS = { minutes: 1, hours: 60, days: 1440 };
     // A recurring task without one (from before reopen early, or moved in)
     // reopens when due, like the backend's `or 0`.

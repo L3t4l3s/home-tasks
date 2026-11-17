@@ -464,7 +464,10 @@ def _list_info(hass: HomeAssistant, src: SourceList) -> dict:
         "priority": defaults["priority"],
         "section": names.get(defaults["section_id"]),
     }
-    if not src.entity_id:
+    if defaults.get("recurrence_reopen_on_complete"):
+        # No lead then: there is no wait for it to shorten.
+        info["reopen_on_complete"] = True
+    elif not src.entity_id:
         info["defaults"]["reopen_early_minutes"] = defaults.get("recurrence_reopen_lead", 0)
     return info
 
@@ -1069,6 +1072,10 @@ class SetListDefaultsTool(_Tool):
             "reopen_early_minutes",
             description="Native lists: a recurring task comes back this many minutes before it is due; 0 = when due",
         ): vol.All(vol.Coerce(int), vol.Range(min=0, max=MAX_REOPEN_LEAD_MINUTES)),
+        vol.Optional(
+            "reopen_on_complete",
+            description="true: a recurring task reopens the moment it is completed, already due on its next occurrence",
+        ): bool,
     })
 
     async def _run(self, hass: HomeAssistant, args: dict, llm_context: llm.LLMContext) -> dict:
@@ -1076,6 +1083,8 @@ class SetListDefaultsTool(_Tool):
         src = self._source(hass, entry_id)
         store = _list_store(hass, entry_id)
         changes: dict = {}
+        if "reopen_on_complete" in args:
+            changes["recurrence_reopen_on_complete"] = args["reopen_on_complete"]
         for arg, field in (
             ("assigned_persons", "assignees"), ("reminders", "reminders"), ("tags", "tags"),
             ("priority", "priority"), ("fixed_tags", "tag_catalog"),
@@ -1094,8 +1103,11 @@ class SetListDefaultsTool(_Tool):
             raise HomeAssistantError("Nothing to change: give at least one field")
         await store.async_set_defaults(**changes)
         info = _list_info(hass, src)
-        return {"success": True, "list_name": src.name, "defaults": info["defaults"],
-                "fixed_tags": info["fixed_tags"]}
+        result = {"success": True, "list_name": src.name, "defaults": info["defaults"],
+                  "fixed_tags": info["fixed_tags"]}
+        if info.get("reopen_on_complete"):
+            result["reopen_on_complete"] = True
+        return result
 
 
 # ---------------------------------------------------------------------------

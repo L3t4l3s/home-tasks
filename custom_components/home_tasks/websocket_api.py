@@ -12,7 +12,7 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 
 from .image_library import async_get_image_library
 from .image_queue import PLACEHOLDER_IMAGE_URLS, async_get_image_queue
-from .const import DOMAIN, MAX_ASSIGNEES_PER_TASK, MAX_IMAGE_URL_LENGTH, MAX_REORDER_IDS, MAX_RECURRENCE_VALUE, MAX_REOPEN_LEAD_MINUTES, MAX_REMINDER_OFFSET_MINUTES, MAX_REMINDERS_PER_TASK, MAX_SUB_TASKS_PER_TASK, MAX_TAG_CATALOG, MAX_TAGS_PER_TASK, MAX_TITLE_LENGTH, RECURRENCE_FIELDS, VALID_RECURRENCE_ANCHORS, VALID_RECURRENCE_UNITS
+from .const import DOMAIN, MAX_ASSIGNEES_PER_TASK, MAX_IMAGE_URL_LENGTH, MAX_REORDER_IDS, MAX_RECURRENCE_VALUE, MAX_REOPEN_LEAD_MINUTES, MAX_REMINDER_OFFSET_MINUTES, MAX_REMINDERS_PER_TASK, MAX_SUB_TASKS_PER_TASK, MAX_TAG_CATALOG, MAX_TAGS_PER_TASK, MAX_TITLE_LENGTH, RECURRENCE_FIELDS, TODO_SORT_MODES, VALID_RECURRENCE_ANCHORS, VALID_RECURRENCE_UNITS
 from .overlay_store import ExternalTaskOverlayStore, OVERLAY_FIELDS, _empty_overlay
 from .store import (
     sync_assignee_fields,
@@ -103,7 +103,10 @@ _TARGET = {
     vol.Exclusive("entity_id", "target"): _val_entity_id,
 }
 
-DEFAULT_FIELDS = ("assignee", "assignees", "reminders", "tags", "priority", "section_id", "tag_catalog")
+DEFAULT_FIELDS = (
+    "assignee", "assignees", "reminders", "tags", "priority", "section_id", "tag_catalog",
+    "recurrence_reopen_on_complete",
+)
 
 
 def _get_target_store(hass, msg):
@@ -205,6 +208,9 @@ async def ws_get_tasks(hass, connection, msg):
             "tag_catalog": defaults["tag_catalog"],
             # The lead a task takes over when its recurrence is switched on (issue #77).
             "reopen_lead": defaults["recurrence_reopen_lead"],
+            # Recurring tasks reopen the moment they are ticked off: the card
+            # has no reopen lead to offer then.
+            "reopen_on_complete": defaults["recurrence_reopen_on_complete"],
         })
     except Exception as err:
         _handle_error(connection, msg["id"], err)
@@ -346,6 +352,7 @@ async def ws_sync_image_config(hass, connection, msg):
         vol.Optional("auto_generate_images"): bool,
         vol.Optional("ai_task_entity_id"): vol.Any(_val_entity_id, None),
         vol.Optional("prompt_prefix"): vol.All(str, vol.Length(max=200)),
+        vol.Optional("todo_sort"): vol.In(TODO_SORT_MODES),
     }
 )
 @websocket_api.async_response
@@ -359,11 +366,14 @@ async def ws_set_list_settings(hass, connection, msg):
         store = _get_store(hass, list_id) if list_id else _get_overlay_store(hass, entity_id)
         kwargs = {
             k: msg[k]
-            for k in ("share_images", "auto_generate_images", "ai_task_entity_id", "prompt_prefix")
+            for k in ("share_images", "auto_generate_images", "ai_task_entity_id", "prompt_prefix", "todo_sort")
             if k in msg
         }
         if not kwargs:
             raise ValueError("No settings given")
+        if "todo_sort" in kwargs and entity_id:
+            # A linked list's todo entity belongs to its own integration.
+            raise ValueError("todo_sort is only available on Home Tasks lists")
         was_on = store.get_settings()["auto_generate_images"]
         settings = await store.async_set_settings(**kwargs)
 
@@ -415,6 +425,7 @@ async def ws_get_defaults(hass, connection, msg):
         vol.Optional("recurrence_reopen_lead"): vol.All(
             int, vol.Range(min=0, max=MAX_REOPEN_LEAD_MINUTES)
         ),
+        vol.Optional("recurrence_reopen_on_complete"): bool,
         **_TARGET,
     }
 )
@@ -1417,10 +1428,11 @@ async def ws_get_external_tasks(hass, connection, msg):
     """Get tasks from an external todo entity, merged with overlay data."""
     try:
         tasks, overlay_store = await _async_get_external_tasks(hass, msg["entity_id"])
-
+        defaults = overlay_store.get_defaults()
         connection.send_result(msg["id"], {
             "tasks": tasks, "sections": overlay_store.sections,
-            "tag_catalog": overlay_store.get_defaults()["tag_catalog"],
+            "tag_catalog": defaults["tag_catalog"],
+            "reopen_on_complete": defaults["recurrence_reopen_on_complete"],
         })
     except Exception as err:
         _handle_error(connection, msg["id"], err)

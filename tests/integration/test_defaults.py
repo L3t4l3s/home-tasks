@@ -70,7 +70,7 @@ async def test_setting_one_default_leaves_the_others_alone(hass: HomeAssistant, 
     assert after == {
         "assignee": "person.alice", "assignees": ["person.alice"], "reminders": [],
         "tags": ["chore"], "priority": 1, "section_id": None,
-        "tag_catalog": [], "recurrence_reopen_lead": 0,
+        "tag_catalog": [], "recurrence_reopen_lead": 0, "recurrence_reopen_on_complete": False,
     }
 
 
@@ -141,7 +141,7 @@ async def test_the_websocket_round_trip_carries_the_new_fields(
     assert msg["result"]["defaults"] == {
         "assignee": None, "assignees": [], "reminders": [],
         "tags": ["chore"], "priority": 2, "section_id": section["id"],
-        "tag_catalog": [], "recurrence_reopen_lead": 0,
+        "tag_catalog": [], "recurrence_reopen_lead": 0, "recurrence_reopen_on_complete": False,
     }
 
 
@@ -228,6 +228,51 @@ async def test_an_external_list_has_no_reopen_lead(
     msg = await client.receive_json()
     assert msg["success"] is False
     assert "linked lists" in msg["error"]["message"]
+
+
+async def test_reopen_on_completion_reaches_the_cards_of_both_kinds_of_list(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store, ext_entry
+) -> None:
+    """Set like any default, and handed out with the tasks: the card hides
+    the reopen lead where the list reopens on completion."""
+    client = await hass_ws_client(hass)
+    for i, target in enumerate(({"list_id": mock_config_entry.entry_id}, {"entity_id": EXT_ENTITY})):
+        await client.send_json({
+            "id": 40 + 2 * i, "type": "home_tasks/set_defaults", **target,
+            "recurrence_reopen_on_complete": True,
+        })
+        msg = await client.receive_json()
+        assert msg["success"], msg
+        assert msg["result"]["defaults"]["recurrence_reopen_on_complete"] is True
+    await client.send_json({"id": 50, "type": "home_tasks/get_tasks", "list_id": mock_config_entry.entry_id})
+    assert (await client.receive_json())["result"]["reopen_on_complete"] is True
+    await client.send_json({"id": 51, "type": "home_tasks/get_external_tasks", "entity_id": EXT_ENTITY})
+    msg = await client.receive_json()
+    assert msg["success"], msg
+    assert msg["result"]["reopen_on_complete"] is True
+
+
+async def test_the_todo_sort_is_a_native_list_setting(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store, ext_entry
+) -> None:
+    """A linked list's todo entity belongs to its own integration."""
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        "id": 60, "type": "home_tasks/set_list_settings",
+        "list_id": mock_config_entry.entry_id, "todo_sort": "due",
+    })
+    msg = await client.receive_json()
+    assert msg["success"], msg
+    assert store.get_settings()["todo_sort"] == "due"
+    await client.send_json({"id": 61, "type": "home_tasks/get_lists"})
+    lists = (await client.receive_json())["result"]["lists"]
+    assert lists[0]["todo_sort"] == "due"
+    await client.send_json({
+        "id": 62, "type": "home_tasks/set_list_settings", "entity_id": EXT_ENTITY, "todo_sort": "due",
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is False
+    assert "Home Tasks lists" in msg["error"]["message"]
 
 
 class _Adapter:

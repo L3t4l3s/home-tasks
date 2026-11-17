@@ -81,6 +81,11 @@ DUE_CHECK_INTERVAL = timedelta(hours=1)
 # sit far behind its target.  Generous enough for loop lag, far below the
 # hourly watchdog interval.
 TIMER_STALE_GRACE = timedelta(minutes=5)
+# On a list that reopens recurring tasks on completion, how long a ticked-off
+# task stays done before it comes back: time to untick an accidental tick,
+# which undoes the due date's advance - there is nothing to untick once it is
+# open again.
+REOPEN_ON_COMPLETE_GRACE = timedelta(seconds=30)
 
 
 # ---------------------------------------------------------------------------
@@ -442,9 +447,10 @@ def _on_task_completed(
     if task.get("recurrence_enabled"):
         target = _compute_next_reopen_target(task, completed_at)
         # recurrence_reopen_lead pulls the REOPEN moment earlier than the due
-        # target, so the task shows as "upcoming" ahead of its due date. The
+        # target, so the task shows as "upcoming" ahead of its due date; a
+        # list that reopens on completion brings it back right now. The
         # due_date advance below still uses the un-shifted target.
-        reopen_target = _apply_reopen_lead(task, target, completed_at)
+        reopen_target = _reopen_moment(hass, entry_id, task, target, completed_at)
         # Persist the reopen moment on the task.  The in-memory timer dies
         # with HA; after a restart this field is the *authoritative* target
         # (see _recovery_reopen_target) — recomputing against the advanced
@@ -569,8 +575,9 @@ def _on_task_schedule_changed(hass: HomeAssistant, entry_id: str, task: dict) ->
         target = _due_date_reopen_target(task)
         if target is not None:
             target = _apply_start_date(task, target)
-    # Same reopen-lead shift as completion: reopen ahead of the due target.
-    reopen_target = _apply_reopen_lead(task, target, completed_at)
+    # Same reopen moment as completion: ahead of the due target by the lead,
+    # or right away on a list that reopens on completion.
+    reopen_target = _reopen_moment(hass, entry_id, task, target, completed_at)
     task["reopen_at"] = (
         reopen_target.astimezone(timezone.utc).isoformat()
         if reopen_target is not None
@@ -996,6 +1003,52 @@ def _apply_reopen_lead(
     local_due = due_target.astimezone(dt_util.DEFAULT_TIME_ZONE)
     reopen = (local_due - timedelta(minutes=lead)).astimezone(timezone.utc)
     return reopen if reopen > completed_at else completed_at
+
+
+def _reopens_on_completion(hass: HomeAssistant, entry_id: str) -> bool:
+    """Whether the list reopens its recurring tasks the moment they are ticked off.
+
+    A list setting (recurrence_reopen_on_complete in its defaults), off by
+    default: the task comes straight back, its due date already on the next
+    occurrence, instead of waiting as done until then.
+    """
+    store = hass.data.get(DOMAIN, {}).get(entry_id)
+    return store is not None and store.get_defaults()["recurrence_reopen_on_complete"]
+
+
+def _on_completion_reopen(
+    hass: HomeAssistant, entry_id: str, completed_at: datetime,
+) -> datetime | None:
+    """The latest a task completed at *completed_at* reopens on a list that
+    reopens on completion (after the grace to untick it), or None where the
+    list waits for the next occurrence."""
+    if not _reopens_on_completion(hass, entry_id):
+        return None
+    return completed_at + REOPEN_ON_COMPLETE_GRACE
+
+
+def _reopen_moment(
+    hass: HomeAssistant, entry_id: str, task: dict,
+    due_target: datetime | None, completed_at: datetime,
+) -> datetime | None:
+    """When a completed recurring task reopens for *due_target*: right away
+    on a list that reopens on completion, else its reopen lead before it."""
+    if due_target is None:
+        return None
+    return _on_completion_reopen(hass, entry_id, completed_at) or _apply_reopen_lead(
+        task, due_target, completed_at)
+
+
+@callback
+def _reopen_waiting_tasks(hass: HomeAssistant, entry_id: str) -> None:
+    """The list has started reopening recurring tasks on completion: those
+    still waiting as done for their next occurrence come back now - by the
+    same re-arming as after a restart, which caps every wait at the grace."""
+    store = hass.data.get(DOMAIN, {}).get(entry_id)
+    if isinstance(store, ExternalTaskOverlayStore):
+        _recover_external_recurrence_timers(hass, entry_id, store.entity_id, replace_timers=True)
+    elif store is not None:
+        _recover_recurrence_timers(hass, entry_id, store)
 
 
 def _resolve_dom(year: int, month: int, dom) -> int:
@@ -1621,15 +1674,23 @@ def _rearm_or_reopen(hass: HomeAssistant, entry_id: str, task: dict) -> str | No
         # recomputing this every hourly watchdog pass.
         return None
     completed_at = _parse_completed_at(task)
+    now = datetime.now(timezone.utc)
     target = _recovery_reopen_target(task, completed_at)
-    if target is not None:
-        delay = (target - datetime.now(timezone.utc)).total_seconds()
-    else:
+    if target is None:
         delay = _compute_reopen_delay(task, completed_at)
         if delay is None:
             return None
+        target = now + timedelta(seconds=delay)
+    # A list that reopens on completion keeps nothing waiting past the grace
+    # - also a task that waited before it was switched on, or moved in.
+    quick = _on_completion_reopen(hass, entry_id, completed_at)
+    if quick is not None and quick < target:
+        target = quick
+    delay = (target - now).total_seconds()
 
     if delay <= 0:
+        # A timer still armed for the old moment must not reopen it again.
+        _cancel_recurrence(hass, task["id"])
         hass.async_create_task(_async_reopen_task(hass, entry_id, task["id"]))
         return "reopened"
     _schedule_recurrence(
@@ -1715,7 +1776,15 @@ async def _handle_external_recurrence_completion(
     if overlay_kwargs.get("recurrence_enabled") is False:
         return  # count exhausted — no further reopen
     task["completed_at"] = overlay_kwargs["completed_at"]
-    _schedule_recurrence(hass, entry_id, task, completed_at=completed_at)
+    # A list that reopens on completion brings it back right away - as long
+    # as there is a next occurrence to reopen for (no end date passed).
+    quick = (
+        _on_completion_reopen(hass, entry_id, completed_at)
+        if _compute_next_reopen_target(task, completed_at) is not None else None
+    )
+    _schedule_recurrence(
+        hass, entry_id, task, completed_at=completed_at, precomputed_target=quick,
+    )
 
 
 async def _async_reopen_external_task(
@@ -1731,18 +1800,22 @@ async def _async_reopen_external_task(
     from .websocket_api import _get_adapter, _get_overlay_store
     adapter = _get_adapter(hass, entity_id) or GenericAdapter(hass, entity_id, {})
     # A linked list's due date is not advanced at completion (the provider
-    # owns it).  A due-anchored series needs it to move, though — the next
-    # completion counts from it — so it reopens on the occurrence it
-    # reopens for.
+    # owns it), so it moves here, to the occurrence the task reopens for -
+    # as a native list's does at completion, whatever the series counts
+    # from. Left behind, the task would come back already overdue, and a
+    # due-anchored series would count its next completion from a stale date.
     fields: dict = {"completed": False}
     unit = task.get("recurrence_unit")
-    if task.get("due_date") and _is_due_anchored(task, unit):
+    if task.get("due_date"):
         target = _compute_next_reopen_target(task, _parse_completed_at(task))
         if target is not None:
             local_target = target.astimezone(dt_util.DEFAULT_TIME_ZONE)
             new_due_date = local_target.date().isoformat()
+            # The time moves only for an hourly series on the due grid, whose
+            # due moment it is (as _on_task_completed).
             new_due_time = (
-                local_target.strftime("%H:%M") if unit == "hours" else task.get("due_time")
+                local_target.strftime("%H:%M")
+                if unit == "hours" and _is_due_anchored(task, unit) else task.get("due_time")
             )
             if (new_due_date, new_due_time) != (task.get("due_date"), task.get("due_time")):
                 fields["due_date"] = new_due_date
@@ -1838,13 +1911,16 @@ async def _async_recreate_external_task(
                  task.get("title"), entity_id, new_uid)
 
 
-def _recover_external_recurrence_timers(hass: HomeAssistant, entry_id: str, entity_id: str) -> None:
+def _recover_external_recurrence_timers(
+    hass: HomeAssistant, entry_id: str, entity_id: str, replace_timers: bool = False,
+) -> None:
     """Reschedule reopen timers for completed recurring external tasks.
 
     Runs once 120s after startup AND hourly from the due checker (external
     watchdog) — tasks that already own a live timer are skipped, so repeat
     invocations only pick up what the startup shot missed (e.g. a provider
-    that loaded late).
+    that loaded late). *replace_timers*: re-arm those too - the list has
+    started reopening on completion, which their timers know nothing of.
     """
     if _external_owns_recurrence(hass, entity_id):
         return
@@ -1875,7 +1951,11 @@ def _recover_external_recurrence_timers(hass: HomeAssistant, entry_id: str, enti
         delay = _compute_reopen_delay(task, completed_at)
         if delay is None:
             continue
-        if task["id"] in timers:
+        # A list that reopens on completion keeps nothing waiting past the grace.
+        quick = _on_completion_reopen(hass, entry_id, completed_at)
+        if quick is not None:
+            delay = min(delay, (quick - datetime.now(timezone.utc)).total_seconds())
+        if task["id"] in timers and not replace_timers:
             # A live timer owns this task (hourly watchdog re-entry) — unless
             # it missed its wall-clock target, see _watchdog_recurring_reopen.
             if delay > -TIMER_STALE_GRACE.total_seconds():
@@ -1887,9 +1967,13 @@ def _recover_external_recurrence_timers(hass: HomeAssistant, entry_id: str, enti
             _cancel_recurrence(hass, task["id"])
         task["_entity_id"] = entity_id
         if delay <= 0:
+            _cancel_recurrence(hass, task["id"])
             hass.async_create_task(_async_reopen_task(hass, entry_id, task["id"]))
         else:
-            _schedule_recurrence(hass, entry_id, task, completed_at=completed_at)
+            _schedule_recurrence(
+                hass, entry_id, task, completed_at=completed_at,
+                precomputed_target=datetime.now(timezone.utc) + timedelta(seconds=delay),
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -2996,6 +3080,7 @@ async def _async_setup_native_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
     store.on_task_reopened = lambda task: _on_task_reopened(hass, entry.entry_id, task)
     store.on_reminders_changed = lambda task: _schedule_reminders(hass, entry.entry_id, task)
     store.on_task_schedule_changed = lambda task: _on_task_schedule_changed(hass, entry.entry_id, task)
+    store.on_reopen_on_complete_enabled = lambda: _reopen_waiting_tasks(hass, entry.entry_id)
 
     # Recover any pending timers from before restart
     _recover_recurrence_timers(hass, entry.entry_id, store)
@@ -3028,6 +3113,7 @@ async def _async_setup_external_entry(hass: HomeAssistant, entry: ConfigEntry) -
     overlay_store.on_reminders_changed = lambda uid: _schedule_external_reminders(
         hass, entry.entry_id, entity_id, uid
     )
+    overlay_store.on_reopen_on_complete_enabled = lambda: _reopen_waiting_tasks(hass, entry.entry_id)
 
     # Instantiate the provider adapter.
     # Detect provider_type on the fly if missing (pre-1.7 entries) — do NOT call

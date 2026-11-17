@@ -174,8 +174,12 @@ var ui_translations_default = {
     ed_tag_catalog: "Fixed tags",
     ed_tag_catalog_hint: "Always suggested when tagging a task in this list — other tags can still be added on the task.",
     ed_default_lead_hint: "Taken over by a task when its recurrence is switched on",
+    ed_reopen_on_complete: "Reopen recurring tasks right away",
+    ed_reopen_on_complete_hint: "A ticked-off recurring task comes straight back, due on its next occurrence",
     tag_did_you_mean: "Did you mean {0}?",
     ed_overdue_first: "Overdue tasks first",
+    ed_todo_sort: "Order in Home Assistant's to-do list",
+    ed_todo_sort_hint: "For the list's to-do entity (to-do page, phone, Assist). Items can only be moved in manual order",
     reminder: "Reminders",
     rem_add: "+ Add reminder",
     rem_none: "No reminder",
@@ -520,8 +524,12 @@ var ui_translations_default = {
     ed_tag_catalog: "Vaste tags",
     ed_tag_catalog_hint: "Altijd voorgesteld bij het taggen in deze lijst — andere tags kun je bij de taak nog toevoegen.",
     ed_default_lead_hint: "Wordt door een taak overgenomen wanneer de herhaling wordt ingeschakeld",
+    ed_reopen_on_complete: "Terugkerende taken direct heropenen",
+    ed_reopen_on_complete_hint: "Een afgevinkte terugkerende taak komt meteen terug, met de volgende keer als vervaldatum",
     tag_did_you_mean: "Bedoel je {0}?",
     ed_overdue_first: "Verlopen taken eerst",
+    ed_todo_sort: "Volgorde in de takenlijst van Home Assistant",
+    ed_todo_sort_hint: "Voor de taken-entiteit van de lijst (takenpagina, telefoon, Assist). Verplaatsen kan alleen bij handmatige volgorde",
     reminder: "Herinneringen",
     rem_add: "+ Herinnering toevoegen",
     rem_none: "Geen herinnering",
@@ -843,8 +851,12 @@ var ui_translations_default = {
     ed_tag_catalog: "Tag fissi",
     ed_tag_catalog_hint: "Sempre suggeriti quando assegni tag in questo elenco — altri tag si possono aggiungere nell'attività.",
     ed_default_lead_hint: "Viene adottato da un'attività quando se ne attiva la ripetizione",
+    ed_reopen_on_complete: "Riapri subito le attività ricorrenti",
+    ed_reopen_on_complete_hint: "Un'attività ricorrente spuntata torna subito, con scadenza alla prossima occorrenza",
     tag_did_you_mean: "Intendevi {0}?",
     ed_overdue_first: "Attività scadute per prime",
+    ed_todo_sort: "Ordine nella lista di cose da fare di Home Assistant",
+    ed_todo_sort_hint: "Per l'entità todo della lista (pagina Da fare, telefono, Assist). Gli elementi si spostano solo con l'ordine manuale",
     reminder: "Promemoria",
     rem_add: "+ Aggiungi promemoria",
     rem_none: "Nessun promemoria",
@@ -1166,8 +1178,12 @@ var ui_translations_default = {
     ed_tag_catalog: "Stałe tagi",
     ed_tag_catalog_hint: "Zawsze podpowiadane przy tagowaniu w tej liście — inne tagi można dodać w zadaniu.",
     ed_default_lead_hint: "Przejmowane przez zadanie po włączeniu jego powtarzania",
+    ed_reopen_on_complete: "Od razu ponownie otwieraj zadania cykliczne",
+    ed_reopen_on_complete_hint: "Odhaczone zadanie cykliczne wraca od razu, z terminem na następne wystąpienie",
     tag_did_you_mean: "Czy chodziło o {0}?",
     ed_overdue_first: "Zaległe zadania najpierw",
+    ed_todo_sort: "Kolejność na liście zadań Home Assistant",
+    ed_todo_sort_hint: "Dla encji todo listy (strona zadań, telefon, Assist). Przesuwanie działa tylko przy kolejności ręcznej",
     reminder: "Przypomnienia",
     rem_add: "+ Dodaj przypomnienie",
     rem_none: "Brak przypomnienia",
@@ -1489,8 +1505,12 @@ var ui_translations_default = {
     ed_tag_catalog: "Fasta taggar",
     ed_tag_catalog_hint: "Föreslås alltid när du taggar i den här listan — andra taggar kan läggas till på uppgiften.",
     ed_default_lead_hint: "Tas över av en uppgift när dess upprepning slås på",
+    ed_reopen_on_complete: "Öppna återkommande uppgifter direkt igen",
+    ed_reopen_on_complete_hint: "En avbockad återkommande uppgift kommer tillbaka direkt, med förfallodag vid nästa tillfälle",
     tag_did_you_mean: "Menade du {0}?",
     ed_overdue_first: "Försenade uppgifter först",
+    ed_todo_sort: "Ordning i Home Assistants att göra-lista",
+    ed_todo_sort_hint: "För listans att göra-entitet (att göra-sidan, telefonen, Assist). Objekt kan bara flyttas i manuell ordning",
     reminder: "Påminnelser",
     rem_add: "+ Lägg till påminnelse",
     rem_none: "Ingen påminnelse",
@@ -1812,8 +1832,12 @@ var ui_translations_default = {
     ed_tag_catalog: "Étiquettes fixes",
     ed_tag_catalog_hint: "Toujours proposées lors de l'étiquetage dans cette liste — d'autres étiquettes peuvent être ajoutées dans la tâche.",
     ed_default_lead_hint: "Repris par une tâche lorsque sa répétition est activée",
+    ed_reopen_on_complete: "Rouvrir immédiatement les tâches récurrentes",
+    ed_reopen_on_complete_hint: "Une tâche récurrente cochée revient aussitôt, avec l'échéance de sa prochaine occurrence",
     tag_did_you_mean: "Vouliez-vous dire {0} ?",
     ed_overdue_first: "Tâches en retard en premier",
+    ed_todo_sort: "Ordre dans la liste de tâches de Home Assistant",
+    ed_todo_sort_hint: "Pour l'entité todo de la liste (page Tâches, téléphone, Assist). Les éléments ne se déplacent qu'en ordre manuel",
     reminder: "Rappels",
     rem_add: "+ Ajouter un rappel",
     rem_none: "Aucun rappel",
@@ -2135,8 +2159,12 @@ var ui_translations_default = {
     ed_tag_catalog: "Tags fixas",
     ed_tag_catalog_hint: "Sempre sugeridas ao etiquetar nesta lista — outras tags podem ser adicionadas na tarefa.",
     ed_default_lead_hint: "Assumido por uma tarefa quando a sua repetição é ativada",
+    ed_reopen_on_complete: "Reabrir de imediato as tarefas recorrentes",
+    ed_reopen_on_complete_hint: "Uma tarefa recorrente concluída volta logo, com o prazo na próxima ocorrência",
     tag_did_you_mean: "Queria dizer {0}?",
     ed_overdue_first: "Tarefas atrasadas primeiro",
+    ed_todo_sort: "Ordem na lista de tarefas do Home Assistant",
+    ed_todo_sort_hint: "Para a entidade de tarefas da lista (página de tarefas, telemóvel, Assist). Só se movem itens na ordem manual",
     reminder: "Lembretes",
     rem_add: "+ Adicionar lembrete",
     rem_none: "Sem lembrete",
@@ -2458,8 +2486,12 @@ var ui_translations_default = {
     ed_tag_catalog: "Etiquetas fixas",
     ed_tag_catalog_hint: "Sempre sugeridas ao adicionar etiquetas às tarefas desta lista — outras etiquetas também podem ser adicionadas à tarefa.",
     ed_default_lead_hint: "Assumido por uma tarefa quando a repetição dela é ativada",
+    ed_reopen_on_complete: "Reabrir tarefas recorrentes imediatamente",
+    ed_reopen_on_complete_hint: "Uma tarefa recorrente concluída volta na hora, com vencimento na próxima ocorrência",
     tag_did_you_mean: "Você quis dizer {0}?",
     ed_overdue_first: "Tarefas atrasadas primeiro",
+    ed_todo_sort: "Ordem na lista de tarefas do Home Assistant",
+    ed_todo_sort_hint: "Para a entidade de tarefas da lista (página de tarefas, celular, Assist). Só dá para mover itens na ordem manual",
     reminder: "Lembretes",
     rem_add: "+ Adicionar lembrete",
     rem_none: "Sem lembrete",
@@ -2781,8 +2813,12 @@ var ui_translations_default = {
     ed_tag_catalog: "Etiquetas fijas",
     ed_tag_catalog_hint: "Siempre sugeridas al etiquetar en esta lista; se pueden añadir otras etiquetas en la tarea.",
     ed_default_lead_hint: "Lo adopta una tarea cuando se activa su repetición",
+    ed_reopen_on_complete: "Reabrir al instante las tareas recurrentes",
+    ed_reopen_on_complete_hint: "Una tarea recurrente marcada vuelve enseguida, con vencimiento en la próxima vez",
     tag_did_you_mean: "¿Quisiste decir {0}?",
     ed_overdue_first: "Tareas vencidas primero",
+    ed_todo_sort: "Orden en la lista de tareas de Home Assistant",
+    ed_todo_sort_hint: "Para la entidad de tareas de la lista (página de tareas, móvil, Assist). Solo se pueden mover elementos en orden manual",
     reminder: "Recordatorios",
     rem_add: "+ Añadir recordatorio",
     rem_none: "Sin recordatorio",
@@ -3104,8 +3140,12 @@ var ui_translations_default = {
     ed_tag_catalog: "Постоянные теги",
     ed_tag_catalog_hint: "Всегда предлагаются при добавлении тега в этом списке — другие теги можно добавить в самой задаче.",
     ed_default_lead_hint: "Применяется к задаче при включении её повторения",
+    ed_reopen_on_complete: "Сразу снова открывать повторяющиеся задачи",
+    ed_reopen_on_complete_hint: "Отмеченная повторяющаяся задача сразу возвращается со сроком следующего повторения",
     tag_did_you_mean: "Вы имели в виду {0}?",
     ed_overdue_first: "Просроченные сначала",
+    ed_todo_sort: "Порядок в списке дел Home Assistant",
+    ed_todo_sort_hint: "Для сущности todo этого списка (страница дел, телефон, Assist). Перемещать элементы можно только при ручном порядке",
     reminder: "Напоминания",
     rem_add: "+ Добавить напоминание",
     rem_none: "Нет напоминания",
@@ -3427,8 +3467,12 @@ var ui_translations_default = {
     ed_tag_catalog: "Pevné štítky",
     ed_tag_catalog_hint: "Vždy nabízeny při štítkování v tomto seznamu — další štítky lze přidat přímo v úkolu.",
     ed_default_lead_hint: "Úkol jej převezme, když se zapne jeho opakování",
+    ed_reopen_on_complete: "Opakované úkoly hned znovu otevřít",
+    ed_reopen_on_complete_hint: "Odškrtnutý opakovaný úkol se hned vrátí s termínem dalšího výskytu",
     tag_did_you_mean: "Mysleli jste {0}?",
     ed_overdue_first: "Úkoly po termínu nahoře",
+    ed_todo_sort: "Pořadí v seznamu úkolů Home Assistantu",
+    ed_todo_sort_hint: "Pro entitu úkolů seznamu (stránka úkolů, telefon, Assist). Položky lze přesouvat jen v ručním pořadí",
     reminder: "Připomínky",
     rem_add: "+ Přidat připomínku",
     rem_none: "Bez připomínky",
@@ -3750,8 +3794,12 @@ var ui_translations_default = {
     ed_tag_catalog: "Faste tags",
     ed_tag_catalog_hint: "Foreslås altid, når du tagger i denne liste — andre tags kan tilføjes på opgaven.",
     ed_default_lead_hint: "Overtages af en opgave, når dens gentagelse slås til",
+    ed_reopen_on_complete: "Genåbn gentagne opgaver med det samme",
+    ed_reopen_on_complete_hint: "En afkrydset gentagen opgave kommer straks tilbage, med forfald ved næste gentagelse",
     tag_did_you_mean: "Mente du {0}?",
     ed_overdue_first: "Forfaldne opgaver først",
+    ed_todo_sort: "Rækkefølge i Home Assistants opgaveliste",
+    ed_todo_sort_hint: "For listens opgave-entitet (opgavesiden, telefonen, Assist). Elementer kan kun flyttes i manuel rækkefølge",
     reminder: "Påmindelser",
     rem_add: "+ Tilføj påmindelse",
     rem_none: "Ingen påmindelse",
@@ -4073,8 +4121,12 @@ var ui_translations_default = {
     ed_tag_catalog: "Faste tagger",
     ed_tag_catalog_hint: "Foreslås alltid når du tagger i denne listen — andre tagger kan legges til på oppgaven.",
     ed_default_lead_hint: "Overtas av en oppgave når gjentakelsen slås på",
+    ed_reopen_on_complete: "Gjenåpne gjentakende oppgaver med en gang",
+    ed_reopen_on_complete_hint: "En avkrysset gjentakende oppgave kommer straks tilbake, med frist ved neste gang",
     tag_did_you_mean: "Mente du {0}?",
     ed_overdue_first: "Forfalte oppgaver først",
+    ed_todo_sort: "Rekkefølge i Home Assistants gjøremålsliste",
+    ed_todo_sort_hint: "For listens gjøremålsentitet (gjøremålssiden, telefonen, Assist). Elementer kan bare flyttes i manuell rekkefølge",
     reminder: "Påminnelser",
     rem_add: "+ Legg til påminnelse",
     rem_none: "Ingen påminnelse",
@@ -4396,8 +4448,12 @@ var ui_translations_default = {
     ed_tag_catalog: "Kiinteät tagit",
     ed_tag_catalog_hint: "Ehdotetaan aina tagattaessa tässä listassa — muita tageja voi lisätä tehtävässä.",
     ed_default_lead_hint: "Tehtävä ottaa sen käyttöön, kun sen toisto kytketään päälle",
+    ed_reopen_on_complete: "Avaa toistuvat tehtävät heti uudelleen",
+    ed_reopen_on_complete_hint: "Kuitattu toistuva tehtävä palaa heti, eräpäivänä seuraava kerta",
     tag_did_you_mean: "Tarkoititko {0}?",
     ed_overdue_first: "Myöhässä olevat ensin",
+    ed_todo_sort: "Järjestys Home Assistantin tehtävälistassa",
+    ed_todo_sort_hint: "Listan tehtäväentiteetille (tehtäväsivu, puhelin, Assist). Kohteita voi siirtää vain manuaalisessa järjestyksessä",
     reminder: "Muistutukset",
     rem_add: "+ Lisää muistutus",
     rem_none: "Ei muistutusta",
@@ -4719,8 +4775,12 @@ var ui_translations_default = {
     ed_tag_catalog: "Rögzített címkék",
     ed_tag_catalog_hint: "Mindig felajánlva címkézéskor ebben a listában — további címkék a feladatnál adhatók hozzá.",
     ed_default_lead_hint: "A feladat átveszi, amikor bekapcsolják az ismétlését",
+    ed_reopen_on_complete: "Ismétlődő feladatok azonnali újranyitása",
+    ed_reopen_on_complete_hint: "A kipipált ismétlődő feladat azonnal visszatér, a következő alkalom határidejével",
     tag_did_you_mean: "Erre gondoltál: {0}?",
     ed_overdue_first: "Lejárt feladatok elöl",
+    ed_todo_sort: "Sorrend a Home Assistant teendőlistájában",
+    ed_todo_sort_hint: "A lista teendő-entitásához (teendők oldal, telefon, Assist). Elemeket csak kézi sorrendben lehet mozgatni",
     reminder: "Emlékeztetők",
     rem_add: "+ Emlékeztető hozzáadása",
     rem_none: "Nincs emlékeztető",
@@ -5019,8 +5079,12 @@ var ui_translations_default = {
     ed_tag_catalog: "Feste Tags",
     ed_tag_catalog_hint: "Werden beim Taggen in dieser Liste immer vorgeschlagen — weitere Tags können in der Aufgabe ergänzt werden.",
     ed_default_lead_hint: "Wird von einer Aufgabe übernommen, wenn ihre Wiederholung eingeschaltet wird",
+    ed_reopen_on_complete: "Wiederkehrende Aufgaben sofort wieder öffnen",
+    ed_reopen_on_complete_hint: "Eine abgehakte wiederkehrende Aufgabe kommt direkt zurück, fällig zum nächsten Termin",
     tag_did_you_mean: "Meintest du {0}?",
     ed_overdue_first: "Überfällige Aufgaben zuerst",
+    ed_todo_sort: "Reihenfolge in der To-do-Liste von Home Assistant",
+    ed_todo_sort_hint: "Für die To-do-Entität der Liste (To-do-Seite, Handy, Assist). Verschieben geht nur bei manueller Reihenfolge",
     reminder: "Erinnerungen",
     rem_add: "+ Erinnerung hinzufügen",
     rem_none: "Keine Erinnerung",
@@ -5299,6 +5363,7 @@ function _assignees(task) {
   return people;
 }
 var UNASSIGNED = "unassigned";
+var SORT_MODES = ["manual", "due", "priority", "title", "person"];
 var DETAIL_FIELDS = [
   ["notes", "ed_show_notes", "show_notes", true],
   ["sub_tasks", "ed_show_sub_items", "show_sub_tasks", true, "show_sub_items"],
@@ -5787,6 +5852,7 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
         cs.tasks = r?.tasks ?? [];
         cs.sections = r?.sections ?? [];
         cs.tagCatalog = r?.tag_catalog ?? [];
+        cs.reopenOnComplete = r?.reopen_on_complete === true;
         cs.loaded = !!r;
       } else if (col.list_id) {
         const r = await this._callWs("home_tasks/get_tasks", { list_id: col.list_id });
@@ -5794,6 +5860,7 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
         cs.sections = r?.sections ?? [];
         cs.tagCatalog = r?.tag_catalog ?? [];
         cs.reopenLead = r?.reopen_lead ?? 0;
+        cs.reopenOnComplete = r?.reopen_on_complete === true;
         cs.loaded = !!r;
       } else {
         cs.tasks = [];
@@ -7837,7 +7904,7 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
   }
   _buildRecurrenceSection(task, colIdx) {
     const recurrenceEnabled = task.recurrence_enabled || false;
-    const listLead = this._columns[colIdx]?.reopenLead || 0;
+    const listLead = this._columns[colIdx]?.reopenOnComplete ? 0 : this._columns[colIdx]?.reopenLead || 0;
     const leadDays = !task.recurrence_unit && listLead >= 1440 ? Math.floor(listLead / 1440) + 1 : 0;
     const recurrenceValue = leadDays > 365 ? 2 : leadDays || task.recurrence_value || 1;
     const legacyWeekdaysMode = task.recurrence_type === "weekdays";
@@ -8288,7 +8355,7 @@ var TasksCardBase = class _TasksCardBase extends HTMLElement {
     });
     const recMaxCountWithClear = this._el("div", { className: "field-with-clear" }, [recMaxCountWrap, recMaxCountClearBtn]);
     const recurrenceCountRow = this._el("div", { className: "recurrence-input-row" }, [recMaxCountWithClear, recRemainingSpan]);
-    const leadSupported = !this._isExternalCol(colIdx);
+    const leadSupported = !this._isExternalCol(colIdx) && !this._columns[colIdx]?.reopenOnComplete;
     const LEAD_FACTORS = { minutes: 1, hours: 60, days: 1440 };
     let leadMinutes = recurrenceEnabled ? Number.isInteger(task.recurrence_reopen_lead) ? task.recurrence_reopen_lead : 0 : null;
     const _intervalMinutes = () => {
@@ -14117,7 +14184,8 @@ var HomeTasksCardEditor = class extends EditorBase {
         priority: d.priority ?? null,
         section_id: d.section_id || null,
         tag_catalog: [...d.tag_catalog || []],
-        recurrence_reopen_lead: d.recurrence_reopen_lead || 0
+        recurrence_reopen_lead: d.recurrence_reopen_lead || 0,
+        recurrence_reopen_on_complete: d.recurrence_reopen_on_complete === true
       };
       this._renderDefaultsInto(container, col, this._listDefaults[key]);
     }).catch(() => {
@@ -14257,6 +14325,55 @@ var HomeTasksCardEditor = class extends EditorBase {
       sw
     ]);
   }
+  // The order of the list's own todo entity - what Home Assistant's to-do
+  // page, the phone and Assist show - in the card's sort modes. A setting of
+  // the list, so it holds for every card; native lists only, a linked list's
+  // entity belongs to its integration.
+  _buildTodoSortField(col) {
+    const info = (this._lists || []).find((l) => l.id === col.list_id);
+    const select = this._el("select", { className: "editor-native-select" });
+    const current = info && info.todo_sort || "manual";
+    for (const mode of SORT_MODES) {
+      const opt = this._el("option", { value: mode, textContent: this._t(`sort_${mode}`) });
+      if (mode === current) opt.selected = true;
+      select.appendChild(opt);
+    }
+    select.disabled = !info;
+    select.addEventListener("change", async () => {
+      const prev = info && info.todo_sort || "manual";
+      try {
+        await this._hass.callWS({ type: "home_tasks/set_list_settings", list_id: col.list_id, todo_sort: select.value });
+        if (info) info.todo_sort = select.value;
+      } catch (e) {
+        select.value = prev;
+      }
+    });
+    return this._el("div", { className: "todo-sort-field" }, [
+      this._el("div", { className: "field-wrap" }, [
+        select,
+        this._el("span", { textContent: this._t("ed_todo_sort") })
+      ]),
+      this._el("span", { className: "hint", textContent: this._t("ed_todo_sort_hint") })
+    ]);
+  }
+  // The list's "Reopen on completion" switch: a recurring task comes straight
+  // back when ticked off, already due on its next occurrence.
+  _buildReopenOnComplete(defaults, onChange) {
+    const sw = document.createElement("ha-switch");
+    sw.checked = defaults.recurrence_reopen_on_complete === true;
+    sw.setAttribute("aria-label", this._t("ed_reopen_on_complete"));
+    sw.addEventListener("change", () => {
+      defaults.recurrence_reopen_on_complete = sw.checked;
+      onChange(sw.checked);
+    });
+    return [
+      this._el("div", { className: "toggle-row" }, [
+        this._el("span", { className: "toggle-label", textContent: this._t("ed_reopen_on_complete") }),
+        sw
+      ]),
+      this._el("span", { className: "hint", textContent: this._t("ed_reopen_on_complete_hint") })
+    ];
+  }
   // The list's "Reopen early": number + unit like the task's own field, but
   // with no interval to fit — a task starts its interval long enough for it.
   _buildDefaultLead(defaults, save) {
@@ -14329,8 +14446,9 @@ var HomeTasksCardEditor = class extends EditorBase {
           const normTags = d.tags || [];
           const normCatalog = d.tag_catalog || [];
           const normPeople = d.assignees || (d.assignee ? [d.assignee] : []);
-          const changed = JSON.stringify(normPeople) !== JSON.stringify(defaults.assignees || []) || (d.priority ?? null) !== defaults.priority || (d.section_id || null) !== defaults.section_id || JSON.stringify(norm) !== JSON.stringify(defaults.reminders) || JSON.stringify(normTags) !== JSON.stringify(defaults.tags) || JSON.stringify(normCatalog) !== JSON.stringify(defaults.tag_catalog || []) || (d.recurrence_reopen_lead || 0) !== (defaults.recurrence_reopen_lead || 0);
+          const changed = JSON.stringify(normPeople) !== JSON.stringify(defaults.assignees || []) || (d.priority ?? null) !== defaults.priority || (d.section_id || null) !== defaults.section_id || JSON.stringify(norm) !== JSON.stringify(defaults.reminders) || JSON.stringify(normTags) !== JSON.stringify(defaults.tags) || JSON.stringify(normCatalog) !== JSON.stringify(defaults.tag_catalog || []) || (d.recurrence_reopen_lead || 0) !== (defaults.recurrence_reopen_lead || 0) || d.recurrence_reopen_on_complete === true !== (defaults.recurrence_reopen_on_complete === true);
           defaults.recurrence_reopen_lead = d.recurrence_reopen_lead || 0;
+          defaults.recurrence_reopen_on_complete = d.recurrence_reopen_on_complete === true;
           defaults.assignees = [...normPeople];
           defaults.priority = d.priority ?? null;
           defaults.section_id = d.section_id || null;
@@ -14372,7 +14490,16 @@ var HomeTasksCardEditor = class extends EditorBase {
         }
       ));
       kids.push(this._el("span", { className: "hint", textContent: this._t("ed_tag_catalog_hint") }));
-      if (!col.entity_id) kids.push(...this._buildDefaultLead(defaults, save));
+      const ext = col.entity_id ? (this._externalLists || []).find((l) => l.entity_id === col.entity_id) : null;
+      if (!ext?.capabilities?.can_sync_recurrence) {
+        kids.push(...this._buildReopenOnComplete(defaults, (on) => {
+          save({ recurrence_reopen_on_complete: on });
+          renderInto();
+        }));
+      }
+      if (!col.entity_id && !defaults.recurrence_reopen_on_complete) {
+        kids.push(...this._buildDefaultLead(defaults, save));
+      }
       const peopleField = this._buildPersonChips(
         this._t("ed_default_assignee"),
         this._personOptions(defaults.assignees),
@@ -14753,13 +14880,7 @@ var HomeTasksCardEditor = class extends EditorBase {
     );
     const sortField = makeSelect(
       "ed_default_sort",
-      [
-        ["manual", "sort_manual"],
-        ["due", "sort_due"],
-        ["priority", "sort_priority"],
-        ["title", "sort_title"],
-        ["person", "sort_person"]
-      ],
+      SORT_MODES.map((mode) => [mode, `sort_${mode}`]),
       col.default_sort || "manual",
       (val) => {
         if (val !== (col.default_sort || "manual")) updateCol({ default_sort: val });
@@ -14966,6 +15087,7 @@ var HomeTasksCardEditor = class extends EditorBase {
       makeSection("defaults", "mdi:account-check-outline", "ed_sec_defaults", [
         sortField,
         makeToggle("overdue-first", "ed_overdue_first", "overdue_first", false),
+        ...col.list_id && !col.entity_id ? [this._buildTodoSortField(col)] : [],
         // Defaults live with the list, native or external, so they apply
         // however the task is created - card, voice, service or todo entity.
         this._buildDefaultsEditor(col)

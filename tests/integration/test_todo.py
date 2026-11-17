@@ -568,3 +568,61 @@ async def test_create_todo_item_with_due_is_atomic(hass: HomeAssistant, mock_con
     assert task["due_date"] == "2027-03-03"
     assert task["due_time"] == "09:30"
     assert [h["action"] for h in task["history"]] == ["created"]
+
+
+async def _todo_titles(hass: HomeAssistant, entity_id: str) -> list[str]:
+    result = await hass.services.async_call(
+        "todo", "get_items", {"entity_id": entity_id}, blocking=True, return_response=True,
+    )
+    return [item["summary"] for item in result[entity_id]["items"]]
+
+
+async def test_todo_entity_follows_the_lists_sort_order(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """todo_sort orders what Home Assistant shows, as the card sorts: no due
+    date last, ties in the list's own order."""
+    for title, due in (("Later", "2026-12-01"), ("Undated", None), ("Soon", "2026-11-20")):
+        task = await store.async_add_task(title)
+        if due:
+            await store.async_update_task(task["id"], due_date=due)
+    entity_id = _get_todo_entity_id(hass, mock_config_entry.entry_id)
+    assert await _todo_titles(hass, entity_id) == ["Later", "Undated", "Soon"]
+
+    await store.async_set_settings(todo_sort="due")
+    await hass.async_block_till_done()
+    assert await _todo_titles(hass, entity_id) == ["Soon", "Later", "Undated"]
+
+    await store.async_set_settings(todo_sort="title")
+    await hass.async_block_till_done()
+    assert await _todo_titles(hass, entity_id) == ["Later", "Soon", "Undated"]
+    # Accents aside, as the card compares: Ä with the A, not after Z.
+    await store.async_add_task("Äpfel")
+    await hass.async_block_till_done()
+    assert await _todo_titles(hass, entity_id) == ["Äpfel", "Later", "Soon", "Undated"]
+
+
+async def test_todo_entity_moves_items_only_in_the_lists_own_order(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Sorted by anything else, a moved item would jump straight back."""
+    from homeassistant.components.todo import TodoListEntityFeature
+
+    entity_id = _get_todo_entity_id(hass, mock_config_entry.entry_id)
+    features = lambda: hass.states.get(entity_id).attributes["supported_features"]  # noqa: E731
+    assert features() & TodoListEntityFeature.MOVE_TODO_ITEM
+
+    await store.async_set_settings(todo_sort="priority")
+    await hass.async_block_till_done()
+    assert not features() & TodoListEntityFeature.MOVE_TODO_ITEM
+    assert features() & TodoListEntityFeature.CREATE_TODO_ITEM
+
+    await store.async_set_settings(todo_sort="manual")
+    await hass.async_block_till_done()
+    assert features() & TodoListEntityFeature.MOVE_TODO_ITEM
+
+
+async def test_an_unknown_todo_sort_is_refused(hass: HomeAssistant, mock_config_entry, store) -> None:
+    with pytest.raises(ValueError):
+        await store.async_set_settings(todo_sort="random")
+    assert store.get_settings()["todo_sort"] == "manual"

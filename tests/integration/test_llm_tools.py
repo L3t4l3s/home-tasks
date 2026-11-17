@@ -331,6 +331,16 @@ async def test_set_list_defaults(hass: HomeAssistant, mock_config_entry, store) 
         await _tool(hass, "set_list_defaults")
 
 
+async def test_a_list_that_reopens_on_completion_has_no_reopen_lead(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    await store.async_set_defaults(recurrence_reopen_lead=120)
+    result = await _tool(hass, "set_list_defaults", reopen_on_complete=True)
+    assert result["reopen_on_complete"] is True
+    assert "reopen_early_minutes" not in result["defaults"]
+    assert store.get_defaults()["recurrence_reopen_on_complete"] is True
+
+
 async def test_reopening_early_is_for_native_lists(hass: HomeAssistant, mock_config_entry, store) -> None:
     from tests.integration.linked_list_helpers import setup_linked_list
 

@@ -44,6 +44,10 @@ MAX_RECURRENCE_VALUE = 365
 # How long (minutes) before its due moment a recurring task may reopen as
 # "upcoming" — at most a year; a lead as long as the interval is ignored.
 MAX_REOPEN_LEAD_MINUTES = 365 * 24 * 60
+# The order a native list's todo entity hands its items to Home Assistant -
+# the card's sort modes. Only "manual" lets Home Assistant move items: any
+# other order would put a moved item straight back.
+TODO_SORT_MODES = ("manual", "due", "priority", "title", "person")
 
 VALID_MONTH_PATTERNS = ("day_of_month", "nth_weekday")
 VALID_NTH_WEEK = (1, 2, 3, 4, "last")

@@ -1900,6 +1900,147 @@ async def test_a_list_lead_too_long_for_the_interval_is_not_taken(
     assert (await _switch_recurrence_on(store))["recurrence_reopen_lead"] == 0
 
 
+async def test_a_list_that_reopens_on_completion_skips_the_wait(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """The reopen moment is the tick itself, plus the grace to untick it; the
+    due date still moves to the next occurrence - and the task's own lead has
+    nothing to say."""
+    await store.async_set_defaults(recurrence_reopen_on_complete=True)
+    stored = await _complete_with_lead(hass, store, 2 * 1440, "2026-08-05 18:00:00+00:00")
+    assert stored["due_date"] == "2026-08-12"
+    assert datetime.fromisoformat(stored["reopen_at"]) == datetime(2026, 8, 5, 18, 0, 30, tzinfo=timezone.utc)
+
+
+async def test_reopening_on_completion_brings_the_task_straight_back(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    await store.async_set_defaults(recurrence_reopen_on_complete=True)
+    task = await store.async_add_task("Water plants")
+    await store.async_update_task(
+        task["id"], due_date=dt_util.now().date().isoformat(),
+        recurrence_enabled=True, recurrence_unit="days", recurrence_value=2,
+    )
+    reopened = []
+    hass.bus.async_listen(f"{DOMAIN}_task_reopened", lambda e: reopened.append(e.data))
+
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
+    await hass.async_block_till_done()
+    assert store.get_task(task["id"])["completed"] is True  # still time to untick
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))
+    await hass.async_block_till_done()
+
+    stored = store.get_task(task["id"])
+    assert stored["completed"] is False
+    assert stored["due_date"] == (dt_util.now().date() + timedelta(days=2)).isoformat()
+    assert reopened and reopened[0]["task_id"] == task["id"]
+
+
+async def test_an_accidental_tick_is_undone_within_the_grace(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Unticked before it comes back: due date and count as they were - and
+    the reopen once the grace is over changes nothing more."""
+    await store.async_set_defaults(recurrence_reopen_on_complete=True)
+    today = dt_util.now().date().isoformat()
+    task = await store.async_add_task("Water plants")
+    await store.async_update_task(
+        task["id"], due_date=today, recurrence_enabled=True, recurrence_unit="days",
+        recurrence_value=2, recurrence_end_type="count", recurrence_max_count=3,
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+    await store.async_update_task(task["id"], completed=False)
+    await hass.async_block_till_done()
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))
+    await hass.async_block_till_done()
+
+    stored = store.get_task(task["id"])
+    assert stored["completed"] is False
+    assert stored["due_date"] == today
+    assert stored["recurrence_remaining_count"] == 3
+
+
+async def test_a_waiting_task_moved_into_such_a_list_comes_back(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """A task arriving done (moved in, restored) waits no longer than one
+    ticked off here would."""
+    from custom_components.home_tasks import _rearm_or_reopen
+
+    task = await store.async_add_task("Bins")
+    await store.async_update_task(
+        task["id"], due_date=dt_util.now().date().isoformat(),
+        recurrence_enabled=True, recurrence_unit="weeks", recurrence_value=1,
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+    stored = store.get_task(task["id"])
+    stored["completed_at"] = (utcnow() - timedelta(hours=1)).isoformat()
+    store._data["defaults"]["recurrence_reopen_on_complete"] = True  # no switch-on hook
+
+    assert _rearm_or_reopen(hass, mock_config_entry.entry_id, stored) == "reopened"
+    await hass.async_block_till_done()
+    assert store.get_task(task["id"])["completed"] is False
+
+
+async def test_switching_on_leaves_a_legacy_series_that_has_ended(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Done before reopen_at existed, and past its end date: nothing to reopen."""
+    yesterday = (dt_util.now().date() - timedelta(days=1)).isoformat()
+    task = await store.async_add_task("Old series")
+    await store.async_update_task(
+        task["id"], due_date=yesterday, recurrence_enabled=True, recurrence_unit="days",
+        recurrence_value=1, recurrence_end_type="date", recurrence_end_date=yesterday,
+    )
+    await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+    stored = store.get_task(task["id"])
+    stored.pop("reopen_at", None)
+    stored["completed_at"] = (utcnow() - timedelta(days=1)).isoformat()
+
+    await store.async_set_defaults(recurrence_reopen_on_complete=True)
+    await hass.async_block_till_done()
+    assert store.get_task(task["id"])["completed"] is True
+
+
+async def test_switching_reopen_on_completion_on_brings_back_the_waiting(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    """Done and waiting for next week: switched on, the list has nothing
+    waiting any more. A series that has ended stays done."""
+    waiting = await store.async_add_task("Bins")
+    ended = await store.async_add_task("Last one")
+    for task, extra in ((waiting, {}), (ended, {"recurrence_end_type": "count", "recurrence_max_count": 1})):
+        await store.async_update_task(
+            task["id"], due_date=dt_util.now().date().isoformat(),
+            recurrence_enabled=True, recurrence_unit="weeks", recurrence_value=1, **extra,
+        )
+        await store.async_update_task(task["id"], completed=True)
+    await hass.async_block_till_done()
+    assert store.get_task(waiting["id"])["completed"] is True
+
+    await store.async_set_defaults(recurrence_reopen_on_complete=True)
+    await hass.async_block_till_done()
+    # Just ticked off: it keeps the grace to untick, then comes back.
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))
+    await hass.async_block_till_done()
+
+    assert store.get_task(waiting["id"])["completed"] is False
+    assert store.get_task(ended["id"])["completed"] is True
+
+
+async def test_reopening_on_completion_is_off_by_default(
+    hass: HomeAssistant, mock_config_entry, store
+) -> None:
+    assert store.get_defaults()["recurrence_reopen_on_complete"] is False
+    stored = await _complete_with_lead(hass, store, 0, "2026-08-05 18:00:00+00:00")
+    assert datetime.fromisoformat(stored["reopen_at"]) == _local(2026, 8, 12, 0, 0)
+
+
 async def test_changing_the_list_lead_leaves_recurring_tasks_alone(
     hass: HomeAssistant, mock_config_entry, store
 ) -> None:

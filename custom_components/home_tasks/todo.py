@@ -3,6 +3,7 @@
 from datetime import date, datetime, timezone
 import logging
 import time
+import unicodedata
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -35,15 +36,23 @@ async def async_setup_entry(
     async_add_entities([entity])
 
 
+def _title_key(title: str) -> str:
+    """A title as the card compares it (localeCompare, base sensitivity):
+    case and accents aside, so "Äpfel" sorts with the A, not after Z."""
+    return "".join(
+        c for c in unicodedata.normalize("NFKD", title.casefold())
+        if not unicodedata.combining(c)
+    )
+
+
 class HomeTasksEntity(TodoListEntity):
     """A todo list entity backed by our custom store."""
 
     _attr_has_entity_name = True
-    _attr_supported_features = (
+    _BASE_FEATURES = (
         TodoListEntityFeature.CREATE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.DELETE_TODO_ITEM
-        | TodoListEntityFeature.MOVE_TODO_ITEM
         | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
         | TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
@@ -68,10 +77,39 @@ class HomeTasksEntity(TodoListEntity):
         self.async_write_ha_state()
 
     @property
+    def supported_features(self) -> TodoListEntityFeature:
+        """Moving items only in the list's own order: sorted by anything else,
+        Home Assistant would show a moved item straight back in its place."""
+        if self._store.get_settings()["todo_sort"] == "manual":
+            return self._BASE_FEATURES | TodoListEntityFeature.MOVE_TODO_ITEM
+        return self._BASE_FEATURES
+
+    def _sorted_tasks(self) -> list[dict]:
+        """The tasks in the order the list's settings ask for (todo_sort),
+        as the card sorts them; ties keep the list's own order."""
+        tasks = self._store.tasks  # the list's own order
+        mode = self._store.get_settings()["todo_sort"]
+        if mode == "due":
+            # No due date last.
+            return sorted(tasks, key=lambda t: (
+                not t.get("due_date"), t.get("due_date") or "", t.get("due_time") or "00:00",
+            ))
+        if mode == "priority":
+            return sorted(tasks, key=lambda t: -(t.get("priority") or 0))
+        if mode == "title":
+            return sorted(tasks, key=lambda t: _title_key(t.get("title") or ""))
+        if mode == "person":
+            # Nobody assigned last.
+            return sorted(tasks, key=lambda t: (
+                not t.get("assigned_person"), t.get("assigned_person") or "",
+            ))
+        return tasks
+
+    @property
     def todo_items(self) -> list[TodoItem]:
         """Return the todo items."""
         items = []
-        for task in self._store.tasks:
+        for task in self._sorted_tasks():
             # due: expose as datetime when due_time is set, date otherwise
             due = None
             if task.get("due_date"):

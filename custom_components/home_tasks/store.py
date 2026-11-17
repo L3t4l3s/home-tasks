@@ -32,6 +32,7 @@ from .const import (
     MAX_TITLE_LENGTH,
     RECURRENCE_FIELDS,
     STORAGE_VERSION,
+    TODO_SORT_MODES,
     VALID_MONTH_PATTERNS,
     VALID_NTH_WEEK,
     VALID_RECURRENCE_ANCHORS,
@@ -528,6 +529,9 @@ class HomeTasksStore:
         # completed are edited — the persisted reopen_at and any armed reopen
         # timer describe the pre-edit configuration and must be recomputed.
         self.on_task_schedule_changed: Callable[[dict], None] | None = None
+        # Fired when the list starts reopening recurring tasks on completion:
+        # the ones still waiting for their reopen come back now.
+        self.on_reopen_on_complete_enabled: Callable[[], None] | None = None
 
     def async_add_listener(self, callback: Callable[[], None]) -> Callable[[], None]:
         """Add a listener for data changes. Returns a removal callable."""
@@ -648,6 +652,8 @@ class HomeTasksStore:
             "auto_generate_images": s.get("auto_generate_images", False) is True,
             "ai_task_entity_id": s.get("ai_task_entity_id") or None,
             "prompt_prefix": prefix if isinstance(prefix, str) else None,
+            # The order of the list's todo entity (one of TODO_SORT_MODES).
+            "todo_sort": s.get("todo_sort") if s.get("todo_sort") in TODO_SORT_MODES else "manual",
         }
 
     async def async_set_settings(
@@ -656,9 +662,14 @@ class HomeTasksStore:
         auto_generate_images: object = _UNSET,
         ai_task_entity_id: object = _UNSET,
         prompt_prefix: object = _UNSET,
+        todo_sort: object = _UNSET,
     ) -> dict:
         """Update per-list settings. Omitted fields keep their value."""
         current = self.get_settings()
+        if todo_sort is _UNSET:
+            todo_sort = current["todo_sort"]
+        elif todo_sort not in TODO_SORT_MODES:
+            raise ValueError(f"todo_sort must be one of {', '.join(TODO_SORT_MODES)}")
         if share_images is _UNSET:
             share_images = current["share_images"]
         if auto_generate_images is _UNSET:
@@ -672,10 +683,15 @@ class HomeTasksStore:
             "auto_generate_images": bool(auto_generate_images),
             "ai_task_entity_id": ai_task_entity_id or None,
             "prompt_prefix": prompt_prefix if isinstance(prompt_prefix, str) else None,
+            "todo_sort": todo_sort,
         }
         # Same reasoning as async_set_defaults: persist immediately, skip the
-        # entity listener fanout (no entity state depends on this).
-        await self._store.async_save(self._data)
+        # entity listener fanout - except for the todo entity's order, which
+        # its state shows.
+        if todo_sort != current["todo_sort"]:
+            await self._async_save()
+        else:
+            await self._store.async_save(self._data)
         return self.get_settings()
 
     def get_defaults(self) -> dict:
@@ -701,6 +717,10 @@ class HomeTasksStore:
             # recurrence is switched on (async_update_task) and keeps it when
             # this changes later.  0 = reopen when due.
             "recurrence_reopen_lead": d.get("recurrence_reopen_lead") or 0,
+            # A list policy, not stamped: every recurring task of the list
+            # reopens the moment it is ticked off, its due date already on the
+            # next occurrence; the reopen lead has nothing to do then.
+            "recurrence_reopen_on_complete": d.get("recurrence_reopen_on_complete") is True,
         }
 
     async def async_set_defaults(
@@ -713,6 +733,7 @@ class HomeTasksStore:
         tag_catalog: object = _UNSET,
         recurrence_reopen_lead: object = _UNSET,
         assignees: object = _UNSET,
+        recurrence_reopen_on_complete: object = _UNSET,
     ) -> dict:
         """Update the list-level defaults.
 
@@ -749,6 +770,10 @@ class HomeTasksStore:
             recurrence_reopen_lead = current["recurrence_reopen_lead"]
         else:
             recurrence_reopen_lead = validate_recurrence_reopen_lead(recurrence_reopen_lead) or 0
+        if recurrence_reopen_on_complete is _UNSET:
+            recurrence_reopen_on_complete = current["recurrence_reopen_on_complete"]
+        elif not isinstance(recurrence_reopen_on_complete, bool):
+            raise ValueError("recurrence_reopen_on_complete must be true or false")
         self._data["defaults"] = {
             # assignee kept beside assignees, so a downgrade still finds one.
             "assignee": people[0] if people else None,
@@ -759,6 +784,7 @@ class HomeTasksStore:
             "section_id": section_id or None,
             "tag_catalog": tag_catalog,
             "recurrence_reopen_lead": recurrence_reopen_lead,
+            "recurrence_reopen_on_complete": recurrence_reopen_on_complete,
         }
         # Immediate save (not async_delay_save): a pending delayed write of an
         # unloaded store instance could clobber newer disk state after a
@@ -768,10 +794,17 @@ class HomeTasksStore:
         # or the reopen lead changed: cards show those (the lead in the editor
         # of a task not recurring yet), and reload on the listener's sensor update.
         now = self.get_defaults()
-        if any(now[k] != current[k] for k in ("tag_catalog", "recurrence_reopen_lead")):
+        if any(now[k] != current[k] for k in (
+            "tag_catalog", "recurrence_reopen_lead", "recurrence_reopen_on_complete",
+        )):
             await self._async_save()
         else:
             await self._store.async_save(self._data)
+        if (
+            now["recurrence_reopen_on_complete"] and not current["recurrence_reopen_on_complete"]
+            and self.on_reopen_on_complete_enabled
+        ):
+            self.on_reopen_on_complete_enabled()
         return self.get_defaults()
 
     async def async_add_task(

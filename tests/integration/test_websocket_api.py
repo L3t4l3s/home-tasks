@@ -2674,7 +2674,7 @@ async def test_ws_defaults_roundtrip_and_applied(hass: HomeAssistant, hass_ws_cl
     assert msg["result"]["defaults"] == {
         "assignee": "person.alice", "assignees": ["person.alice"], "reminders": [0, 60],
         "tags": [], "priority": None, "section_id": None,
-        "tag_catalog": [], "recurrence_reopen_lead": 0,
+        "tag_catalog": [], "recurrence_reopen_lead": 0, "recurrence_reopen_on_complete": False,
     }
 
     await client.send_json({"id": 302, "type": "home_tasks/get_defaults", "list_id": mock_config_entry.entry_id})
@@ -2710,7 +2710,7 @@ async def test_ws_defaults_roundtrip_and_applied(hass: HomeAssistant, hass_ws_cl
     assert msg["result"]["defaults"] == {
         "assignee": "person.bob", "assignees": ["person.bob"], "reminders": [0, 60],
         "tags": [], "priority": None, "section_id": None,
-        "tag_catalog": [], "recurrence_reopen_lead": 0,
+        "tag_catalog": [], "recurrence_reopen_lead": 0, "recurrence_reopen_on_complete": False,
     }
 
     # explicit empty reminders at creation win over the default ([] means
@@ -2732,7 +2732,7 @@ async def test_ws_defaults_roundtrip_and_applied(hass: HomeAssistant, hass_ws_cl
     assert msg["result"]["defaults"] == {
         "assignee": None, "assignees": [], "reminders": [],
         "tags": [], "priority": None, "section_id": None,
-        "tag_catalog": [], "recurrence_reopen_lead": 0,
+        "tag_catalog": [], "recurrence_reopen_lead": 0, "recurrence_reopen_on_complete": False,
     }
 
 

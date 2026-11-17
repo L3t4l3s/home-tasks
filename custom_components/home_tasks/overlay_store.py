@@ -161,6 +161,7 @@ class ExternalTaskOverlayStore:
         self._store = Store(hass, OVERLAY_STORAGE_VERSION, f"home_tasks_overlay_{safe_id}")
         self._data: dict | None = None
         self._listeners: list[Callable[[], None]] = []
+        self.hass = hass
         self.entity_id = entity_id
         # Hooks (parity with HomeTasksStore) so external lists fire the same
         # events / schedule reminders. async_set_overlay is the choke point for
@@ -169,6 +170,9 @@ class ExternalTaskOverlayStore:
         # (task uid, previous primary, everyone assigned before)
         self.on_task_assigned: Callable[[str, str | None, list[str]], None] | None = None
         self.on_reminders_changed: Callable[[str], None] | None = None
+        # The list starts reopening recurring tasks on completion (as
+        # HomeTasksStore.on_reopen_on_complete_enabled).
+        self.on_reopen_on_complete_enabled: Callable[[], None] | None = None
 
     # -- listener support (mirrors HomeTasksStore) --
 
@@ -468,6 +472,10 @@ class ExternalTaskOverlayStore:
             # one (issue #61). Lives here so it's edited, stored and synced
             # with the other per-list settings.
             "tag_catalog": list(d.get("tag_catalog") or []),
+            # Reopen recurring tasks the moment they are ticked off (as
+            # HomeTasksStore.get_defaults) - unless the provider runs the
+            # recurrence itself.
+            "recurrence_reopen_on_complete": d.get("recurrence_reopen_on_complete") is True,
         }
 
     async def async_set_defaults(
@@ -479,9 +487,22 @@ class ExternalTaskOverlayStore:
         section_id: object = _UNSET,
         tag_catalog: object = _UNSET,
         assignees: object = _UNSET,
+        recurrence_reopen_on_complete: object = _UNSET,
     ) -> dict:
         """Update the defaults; omitted fields keep their current value."""
         current = self.get_defaults()
+        if recurrence_reopen_on_complete is _UNSET:
+            recurrence_reopen_on_complete = current["recurrence_reopen_on_complete"]
+        elif not isinstance(recurrence_reopen_on_complete, bool):
+            raise ValueError("recurrence_reopen_on_complete must be true or false")
+        elif recurrence_reopen_on_complete and not current["recurrence_reopen_on_complete"]:
+            from . import _external_owns_recurrence
+            if _external_owns_recurrence(self.hass, self.entity_id):
+                # Todoist moves its own task on: nothing here would reopen it.
+                raise ValueError(
+                    "recurrence_reopen_on_complete is not available where the provider "
+                    "runs the recurrence"
+                )
         people = updated_default_assignees(current, assignee, assignees, _UNSET)
         if reminders is _UNSET:
             reminders = current["reminders"]
@@ -511,8 +532,14 @@ class ExternalTaskOverlayStore:
             "priority": priority,
             "section_id": section_id or None,
             "tag_catalog": tag_catalog,
+            "recurrence_reopen_on_complete": recurrence_reopen_on_complete,
         }
         await self._async_save()
+        if (
+            recurrence_reopen_on_complete and not current["recurrence_reopen_on_complete"]
+            and self.on_reopen_on_complete_enabled
+        ):
+            self.on_reopen_on_complete_enabled()
         return self.get_defaults()
 
     async def async_delete_section(self, section_id: str) -> None:

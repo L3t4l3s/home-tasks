@@ -1,6 +1,6 @@
 // The editor of the list card: its columns, one tab each.
 
-import { MAX_REMINDERS, MAX_REOPEN_LEAD_MINUTES, TODO_FEATURE, UNASSIGNED, _TILE_SIZES, _assignees, _tileMinWidth, imageSettingsForLists, listInfoFor, listSupportsDue, nextFreeReminderOffset, personEntries, reminderOffsetOptions } from "../core/helpers.js";
+import { MAX_REMINDERS, MAX_REOPEN_LEAD_MINUTES, SORT_MODES, TODO_FEATURE, UNASSIGNED, _TILE_SIZES, _assignees, _tileMinWidth, imageSettingsForLists, listInfoFor, listSupportsDue, nextFreeReminderOffset, personEntries, reminderOffsetOptions } from "../core/helpers.js";
 import { EditorBase } from "./editor-base.js";
 
 export class HomeTasksCardEditor extends EditorBase {
@@ -30,6 +30,7 @@ export class HomeTasksCardEditor extends EditorBase {
           section_id: d.section_id || null,
           tag_catalog: [...(d.tag_catalog || [])],
           recurrence_reopen_lead: d.recurrence_reopen_lead || 0,
+          recurrence_reopen_on_complete: d.recurrence_reopen_on_complete === true,
         };
         this._renderDefaultsInto(container, col, this._listDefaults[key]);
       })
@@ -179,6 +180,57 @@ export class HomeTasksCardEditor extends EditorBase {
     ]);
   }
 
+  // The order of the list's own todo entity - what Home Assistant's to-do
+  // page, the phone and Assist show - in the card's sort modes. A setting of
+  // the list, so it holds for every card; native lists only, a linked list's
+  // entity belongs to its integration.
+  _buildTodoSortField(col) {
+    const info = (this._lists || []).find((l) => l.id === col.list_id);
+    const select = this._el("select", { className: "editor-native-select" });
+    const current = (info && info.todo_sort) || "manual";
+    for (const mode of SORT_MODES) {
+      const opt = this._el("option", { value: mode, textContent: this._t(`sort_${mode}`) });
+      if (mode === current) opt.selected = true;
+      select.appendChild(opt);
+    }
+    select.disabled = !info;
+    select.addEventListener("change", async () => {
+      const prev = (info && info.todo_sort) || "manual";
+      try {
+        await this._hass.callWS({ type: "home_tasks/set_list_settings", list_id: col.list_id, todo_sort: select.value });
+        if (info) info.todo_sort = select.value;  // keep the cached list in sync
+      } catch (e) {
+        select.value = prev;  // put it back if the write failed
+      }
+    });
+    return this._el("div", { className: "todo-sort-field" }, [
+      this._el("div", { className: "field-wrap" }, [
+        select,
+        this._el("span", { textContent: this._t("ed_todo_sort") }),
+      ]),
+      this._el("span", { className: "hint", textContent: this._t("ed_todo_sort_hint") }),
+    ]);
+  }
+
+  // The list's "Reopen on completion" switch: a recurring task comes straight
+  // back when ticked off, already due on its next occurrence.
+  _buildReopenOnComplete(defaults, onChange) {
+    const sw = document.createElement("ha-switch");
+    sw.checked = defaults.recurrence_reopen_on_complete === true;
+    sw.setAttribute("aria-label", this._t("ed_reopen_on_complete"));
+    sw.addEventListener("change", () => {
+      defaults.recurrence_reopen_on_complete = sw.checked;
+      onChange(sw.checked);
+    });
+    return [
+      this._el("div", { className: "toggle-row" }, [
+        this._el("span", { className: "toggle-label", textContent: this._t("ed_reopen_on_complete") }),
+        sw,
+      ]),
+      this._el("span", { className: "hint", textContent: this._t("ed_reopen_on_complete_hint") }),
+    ];
+  }
+
   // The list's "Reopen early": number + unit like the task's own field, but
   // with no interval to fit — a task starts its interval long enough for it.
   _buildDefaultLead(defaults, save) {
@@ -267,8 +319,10 @@ export class HomeTasksCardEditor extends EditorBase {
               JSON.stringify(norm) !== JSON.stringify(defaults.reminders) ||
               JSON.stringify(normTags) !== JSON.stringify(defaults.tags) ||
               JSON.stringify(normCatalog) !== JSON.stringify(defaults.tag_catalog || []) ||
-              (d.recurrence_reopen_lead || 0) !== (defaults.recurrence_reopen_lead || 0);
+              (d.recurrence_reopen_lead || 0) !== (defaults.recurrence_reopen_lead || 0) ||
+              (d.recurrence_reopen_on_complete === true) !== (defaults.recurrence_reopen_on_complete === true);
             defaults.recurrence_reopen_lead = d.recurrence_reopen_lead || 0;
+            defaults.recurrence_reopen_on_complete = d.recurrence_reopen_on_complete === true;
             defaults.assignees = [...normPeople];
             defaults.priority = d.priority ?? null;
             defaults.section_id = d.section_id || null;
@@ -320,10 +374,23 @@ export class HomeTasksCardEditor extends EditorBase {
         },
       ));
       kids.push(this._el("span", { className: "hint", textContent: this._t("ed_tag_catalog_hint") }));
+      // Reopen on completion: a list policy for every recurring task, not a
+      // value a task takes over. Not where the provider runs the recurrence
+      // itself (Todoist).
+      const ext = col.entity_id ? (this._externalLists || []).find((l) => l.entity_id === col.entity_id) : null;
+      if (!ext?.capabilities?.can_sync_recurrence) {
+        kids.push(...this._buildReopenOnComplete(defaults, (on) => {
+          save({ recurrence_reopen_on_complete: on });
+          renderInto();  // the reopen lead below comes and goes with it
+        }));
+      }
       // Reopen early (issue #77): taken over by a task when its recurrence
       // is switched on, so a later change leaves recurring tasks alone.
-      // Native lists only, as for the task's own lead.
-      if (!col.entity_id) kids.push(...this._buildDefaultLead(defaults, save));
+      // Native lists only, as for the task's own lead - and nothing to set
+      // where tasks reopen on completion anyway.
+      if (!col.entity_id && !defaults.recurrence_reopen_on_complete) {
+        kids.push(...this._buildDefaultLead(defaults, save));
+      }
       const peopleField = this._buildPersonChips(
         this._t("ed_default_assignee"),
         this._personOptions(defaults.assignees),
@@ -760,8 +827,7 @@ export class HomeTasksCardEditor extends EditorBase {
 
     const sortField = makeSelect(
       "ed_default_sort",
-      [["manual", "sort_manual"], ["due", "sort_due"], ["priority", "sort_priority"],
-       ["title", "sort_title"], ["person", "sort_person"]],
+      SORT_MODES.map((mode) => [mode, `sort_${mode}`]),
       col.default_sort || "manual",
       (val) => { if (val !== (col.default_sort || "manual")) updateCol({ default_sort: val }); }
     );
@@ -1004,6 +1070,7 @@ export class HomeTasksCardEditor extends EditorBase {
       makeSection("defaults", "mdi:account-check-outline", "ed_sec_defaults", [
         sortField,
         makeToggle("overdue-first", "ed_overdue_first", "overdue_first", false),
+        ...(col.list_id && !col.entity_id ? [this._buildTodoSortField(col)] : []),
         // Defaults live with the list, native or external, so they apply
         // however the task is created - card, voice, service or todo entity.
         this._buildDefaultsEditor(col),
