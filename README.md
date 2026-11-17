@@ -105,7 +105,7 @@ Already using **Todoist, Google Tasks, Nextcloud, Bring** or another to-do app? 
 - **Sections** — group a list under headers like store aisles, rooms or project phases; every dashboard shows the same ones
 - **Drag & drop** — reorder, sort into sections, or move tasks to another list
 - **Filter and sort** — open/done/due soon, by date, priority, title or person; tap a tag or person chip to filter
-- **A card per person, in one card** — a column can show *the current user's* tasks, and each column can be shown only under conditions, set as in a card's own Visibility tab: to some users, on some screens, at some times, or while an entity has a state ([how](https://github.com/L3t4l3s/home-tasks#showing-a-column-under-conditions))
+- **A card per person, in one card** — a column can show *the current user's* tasks, new tasks can go to whoever adds them, and each column can be shown only under conditions, set as in a card's own Visibility tab: to some users, on some screens, at some times, or while an entity has a state ([how](https://github.com/L3t4l3s/home-tasks#showing-a-column-under-conditions))
 - **Task details inline** — edit every field; fold the ones you rarely need; one-tap due dates (today, tomorrow, in 1 week …)
 - **Voice input** — dictate a task with the mic button (Home Assistant Assist, or the browser's speech recognition)
 - **Pictures and AI** — a picture per task from your media, or drawn by AI from its title and reused for every task with that title ([setup](https://github.com/L3t4l3s/home-tasks#task-pictures-and-ai-generation))
@@ -394,7 +394,7 @@ Each entry in `columns` of the list card accepts the following options.
 | `auto_delete_completed` | `false` | Automatically delete completed tasks |
 | `confirm_complete` | `false` | Ask for confirmation before marking a task as completed (guards against accidental taps on touch devices) |
 | `tap_to_complete` | `false` | List view: tapping anywhere on a task row completes it (or reopens a done one), like a tile; the chevron on the right opens the details, where the title is edited. Works together with `confirm_complete`. Tiles always behave this way |
-| `visibility` | — | Show the column only while conditions hold: the conditions of a card's own **Visibility** tab (user, screen, time, location, state, numeric state, template, sun, zone, device, and/or/not). See [Showing a column under conditions](https://github.com/L3t4l3s/home-tasks#showing-a-column-under-conditions) |
+| `visibility` | — | Show the column only while conditions hold: the conditions of a card's own **Visibility** tab (user, screen, time, location, state, numeric state, template, sun, zone, device, view columns, and/or/not). See [Showing a column under conditions](https://github.com/L3t4l3s/home-tasks#showing-a-column-under-conditions) |
 | `filters.assignees` | — | Show only tasks of these people: `person.*` entities, `current_user` (the person of whoever views the dashboard) and `unassigned` (tasks nobody has). Set in the visual editor under *Filters* → *Limit to people* |
 | `filters.labels` | — | Show only tasks with one of these tags |
 | `max_height` | — | Maximum height of the task list in px; the list scrolls internally while title, add-task row and filters stay fixed (e.g. `max_height: 350`). Unset/0 = grows with content. In a *sections* dashboard prefer the card's **Layout** tab: a fixed number of rows makes the card fill exactly that height and scroll its list the same way |
@@ -438,7 +438,7 @@ Each entry in `columns` of the list card accepts the following options.
 One card can look different for each person in the household. Two settings make that, per column:
 
 - **Current user** in *Filters* → *Limit to people* (`filters.assignees: [current_user]`): the column shows the tasks of whoever is signed in, found through the person their Home Assistant user belongs to. Together with *Unassigned* it shows their tasks and the unclaimed ones. The filter only decides what shows: to have new tasks go to whoever adds them, pick *Current user* among the list's default assignees (card editor → *Defaults*). A user without a person (a wall tablet's account, say) sees none of the people's tasks.
-- **Visibility** (`visibility:`): the column shows only while all its conditions hold. The card editor has the same Visibility editor as a card's own Visibility tab, which picks people by name. While the dashboard is edited every column shows, the hidden ones dimmed; with no column left, the card hides.
+- **Visibility** (`visibility:`): the column shows only while all its conditions hold. The card editor has the same Visibility editor as a card's own Visibility tab, which picks people by name. A state or numeric state condition without an entity reads the column's list (a linked column's to-do entity); *view columns* reads the columns of the sections view the card is in. While the dashboard is edited every column shows, the hidden ones dimmed. With one column left, the card looks like a card of one column; with none, the card hides.
 
 ```yaml
 type: custom:home-tasks-card
@@ -461,6 +461,8 @@ columns:
 ```
 
 Conditions are judged as Home Assistant judges a card's: user, screen, time and location in the browser, everything else by Home Assistant itself (2026.10 and newer). On an older Home Assistant, state and numeric state are judged in the browser and the conditions only Home Assistant can judge keep the column hidden.
+
+For a card per person, one column with *Current user* is enough. A column per person, each with a *user* condition, does the same and lets every column have settings of its own: each person then sees what looks like a card of their own.
 
 This tidies what each person sees; it is not access control. Anyone signed in to Home Assistant can still open every list.
 
