@@ -308,6 +308,35 @@ def read_lists(hass: HomeAssistant, wanted: set[str] | None = None) -> list[Sour
     return sources
 
 
+async def async_read_lists(hass: HomeAssistant, wanted: set[str] | None = None) -> list[SourceList]:
+    """As read_lists, with a linked list whose provider has an adapter of
+    its own (Todoist) read the way the card reads it: through the provider,
+    with the fields only it reports - priority, labels and the like. A list
+    that cannot be read that way keeps what the snapshot has."""
+    from .provider_adapters import GenericAdapter
+    from .websocket_api import _async_get_external_tasks, _get_adapter
+
+    sources = read_lists(hass, wanted)
+    for src in sources:
+        if not src.entity_id or src.away:
+            continue
+        adapter = _get_adapter(hass, src.entity_id)
+        if adapter is None or isinstance(adapter, GenericAdapter):
+            continue  # the snapshot is what the card gets too
+        try:
+            src.tasks, _overlay = await _async_get_external_tasks(hass, src.entity_id)
+        except Exception as err:  # noqa: BLE001 - the provider is away
+            _LOGGER.debug("Reading %s through its provider failed: %s", src.entity_id, err)
+    return sources
+
+
+async def async_plan_view(hass: HomeAssistant, entry: ConfigEntry, store: PlanStore) -> PlanView:
+    """A view of the plan for an answer - card, service or assistant - with
+    its lists as async_read_lists reads them."""
+    wanted = set(entry.options.get(CONF_SOURCE_LISTS) or [])
+    return PlanView(hass, entry, store, sources=await async_read_lists(hass, wanted))
+
+
 class ListIndex:
     """Lists read once, with their tasks by id - to find a task in them."""
 
@@ -518,8 +547,11 @@ class PlanView:
                 if auto and (not self.include_due or self.due_on(task) != day):
                     continue  # the due date points elsewhere now
                 if task.get("completed"):
-                    # Ticked off in its list, not through the plan.
-                    if _completed_on(task) != day:
+                    # Ticked off in its list, not through the plan. A linked
+                    # list's provider says nothing about when (ticked off in
+                    # its own app): taken as done on the current day, as it
+                    # is seen done now - not dropped from the day.
+                    if (_completed_on(task) or self.current) != day:
                         continue
                     done = True
             seen.add(ref)

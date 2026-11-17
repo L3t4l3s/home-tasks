@@ -1350,6 +1350,20 @@ describe('editor of the day plan card', () => {
     assert.equal(fired.length, 0, 'a setting of the plan, not of the card config');
   });
 
+  test('two quick list taps both count, written one after the other', async () => {
+    const plans = [{ id: 'P1', name: 'Today', source_lists: [] }];
+    const { editor, wsCalls } = await makeEditor(
+      { type: 'custom:home-tasks-day-plan-card', plan: 'P1', days: 3 }, plans);
+    const chips = () => [...editor.shadowRoot.querySelectorAll('.plan-lists .assignee-chip')];
+    const before = wsCalls.length;
+    chips()[1].click();                                 // Work
+    chips()[2].click();                                 // Home, before the first write is back
+    assert.deepEqual(chips().map((c) => c.classList.contains('active')), [false, true, true, false], 'shown at once');
+    await settle();
+    same(wsCalls.slice(before).map((c) => c.source_lists), [['L1'], ['L1', 'L2']]);
+    assert.deepEqual(chips().map((c) => c.classList.contains('active')), [false, true, true, false]);
+  });
+
   test('a refused change of the lists is said, not swallowed', async () => {
     const plans = [{ id: 'P1', name: 'Today', source_lists: [] }];
     const { editor, refuseWrites } = await makeEditor(

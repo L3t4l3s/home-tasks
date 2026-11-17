@@ -54,6 +54,7 @@ from .plan import (
     PlanView,
     SourceList,
     async_plan_task,
+    async_plan_view,
     async_set_day,
     async_unplan_task,
     is_plan,
@@ -1128,8 +1129,8 @@ class _PlanTool(_Tool):
         return self._scope.plan(hass, args.get("plan"))
 
     @staticmethod
-    def _day(hass: HomeAssistant, entry: ConfigEntry, store: PlanStore, day: date | None) -> dict:
-        view = PlanView(hass, entry, store)
+    async def _day(hass: HomeAssistant, entry: ConfigEntry, store: PlanStore, day: date | None) -> dict:
+        view = await async_plan_view(hass, entry, store)
         return view.day(day or view.current)
 
 
@@ -1152,7 +1153,7 @@ class GetPlanTool(_PlanTool):
 
     async def _run(self, hass: HomeAssistant, args: dict, llm_context: llm.LLMContext) -> dict:
         entry, store = self._plan(hass, args)
-        view = PlanView(hass, entry, store)
+        view = await async_plan_view(hass, entry, store)
         return {
             "plan": plan_name(entry),
             "today": view.today.isoformat(),
@@ -1200,7 +1201,7 @@ class SetPlanTool(_PlanTool):
             hass, entry, store, refs,
             day=day, mode=args["mode"], updated_by="llm", **extra,
         )
-        return {"success": True, "day": self._day(hass, entry, store, day)}
+        return {"success": True, "day": await self._day(hass, entry, store, day)}
 
 
 class PlanTaskTool(_PlanTool):
@@ -1225,7 +1226,7 @@ class PlanTaskTool(_PlanTool):
             hass, entry, store, args["task_id"],
             day=day, position=args["position"], list_hint=args.get("entry_id"), updated_by="llm",
         )
-        return {"success": True, "date": self._day(hass, entry, store, day)["date"]}
+        return {"success": True, "date": (await self._day(hass, entry, store, day))["date"]}
 
 
 class UnplanTaskTool(_PlanTool):

@@ -1424,3 +1424,43 @@ async def test_a_move_takes_along_a_reference_with_a_stale_list_hint(
     await hass.async_block_till_done()
     (item,) = plan_store(hass, plan.entry_id).days[TUE]["items"]
     assert (item["list"], item["task_id"]) == (third.entry_id, task_id)
+
+
+async def test_a_linked_task_ticked_off_in_its_app_stays_on_the_day_as_done(
+    hass: HomeAssistant, plan,
+) -> None:
+    """The provider tells no completion time and no event comes: the day
+    still shows the task, done - not as if it had been deleted."""
+    from homeassistant.components.todo import TodoItem, TodoItemStatus
+
+    from tests.integration.linked_list_helpers import setup_linked_list
+
+    linked, _adapter = await setup_linked_list(hass)
+    await _call(hass, "plan_task", task_id="uid-1", entry_id=linked.entry_id)
+    hass.data["todo"].get_entity.return_value.todo_items = [
+        TodoItem(uid="uid-1", summary="Wipe bench", status=TodoItemStatus.COMPLETED),
+    ]
+    rows = (await _today(hass))["items"]
+    assert [(row["title"], row["completed"]) for row in rows] == [("Wipe bench", True)]
+
+
+async def test_a_plan_shows_what_only_a_linked_lists_provider_knows(
+    hass: HomeAssistant, plan, hass_ws_client,
+) -> None:
+    """Labels a provider like Todoist keeps itself reach the plan's rows - in
+    the service's answer and the card's."""
+    from tests.integration.linked_list_helpers import setup_linked_list
+
+    linked, adapter = await setup_linked_list(hass)
+    adapter.labels["uid-1"] = ["shop"]
+    await _call(hass, "plan_task", task_id="uid-1", entry_id=linked.entry_id)
+
+    (row,) = (await _today(hass))["items"]
+    assert row["tags"] == ["shop"]
+
+    ws = await hass_ws_client(hass)
+    await ws.send_json({"id": 1, "type": "home_tasks/get_plan", "plan": plan.entry_id})
+    msg = await ws.receive_json()
+    assert msg["success"], msg
+    (row,) = msg["result"]["days"][0]["items"]
+    assert row["tags"] == ["shop"]

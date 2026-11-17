@@ -15633,15 +15633,24 @@ var HomeTasksDayPlanCardEditor = class extends EditorBase {
         ...missing.filter((id) => ids.has(id))
       ];
       const save = (ids) => {
+        if (planInfo._savedLists === void 0) planInfo._savedLists = planInfo.source_lists || [];
+        planInfo.source_lists = ids;
+        const seq = this._listsSeq = (this._listsSeq || 0) + 1;
         this._planListsError = null;
-        this._hass.callWS({ type: "home_tasks/set_plan_lists", plan: planInfo.id, source_lists: ids }).then((info) => {
-          planInfo.source_lists = info && info.source_lists || ids;
-          this._render();
+        this._render();
+        this._listsWrite = (this._listsWrite || Promise.resolve()).then(() => this._hass.callWS({ type: "home_tasks/set_plan_lists", plan: planInfo.id, source_lists: ids }).then((info) => {
+          planInfo._savedLists = info && info.source_lists || ids;
+          if (seq === this._listsSeq) {
+            planInfo.source_lists = planInfo._savedLists;
+            this._render();
+          }
         }).catch((err) => {
+          planInfo.source_lists = planInfo._savedLists;
           this._planListsError = err && err.message || String(err);
           this._render();
-        });
+        }));
       };
+      const shown = () => new Set(planInfo.source_lists || []);
       const chip = (label, active, cls, onClick) => {
         const btn = this._el("button", { className: `assignee-chip ${cls}` + (active ? " active" : ""), textContent: label });
         btn.type = "button";
@@ -15653,7 +15662,7 @@ var HomeTasksDayPlanCardEditor = class extends EditorBase {
         chip(this._t("ed_plan_all_lists"), chosen.size === 0, "plan-all-lists", () => save([])),
         ...allLists.map((l) => {
           const btn = chip(l.name, chosen.has(l.entry_id), "plan-list", () => {
-            const next = new Set(chosen);
+            const next = shown();
             if (next.has(l.entry_id)) next.delete(l.entry_id);
             else next.add(l.entry_id);
             save(ordered(next));
@@ -15664,7 +15673,7 @@ var HomeTasksDayPlanCardEditor = class extends EditorBase {
         // Chosen, but not there: a tap takes it out of the choice.
         ...missing.map((id) => {
           const btn = chip(this._t("ed_plan_list_missing"), true, "plan-list plan-list-missing", () => {
-            const next = new Set(chosen);
+            const next = shown();
             next.delete(id);
             save(ordered(next));
           });

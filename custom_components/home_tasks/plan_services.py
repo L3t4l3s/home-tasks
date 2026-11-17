@@ -14,8 +14,8 @@ from .const import DOMAIN
 from .plan import (
     PLAN_HORIZON_DAYS,
     SET_MODES,
-    PlanView,
     async_plan_task,
+    async_plan_view,
     async_set_day,
     async_unplan_task,
     plan_name,
@@ -42,7 +42,7 @@ def async_register_plan_services(hass: HomeAssistant) -> None:
 
     async def async_handle_get_day_plan(call: ServiceCall) -> ServiceResponse:
         entry, store = resolve_plan(hass, call.data.get("plan"))
-        view = PlanView(hass, entry, store)
+        view = await async_plan_view(hass, entry, store)
         start: date = call.data.get("date") or view.current
         return {
             "plan": plan_name(entry),

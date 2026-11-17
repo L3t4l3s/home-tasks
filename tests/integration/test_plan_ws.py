@@ -134,10 +134,10 @@ async def test_get_plans_reads_no_list(hass: HomeAssistant, plan, saturday_week,
     """Which plans there are, with their days: that needs no task of any list."""
     from custom_components.home_tasks import plan_ws
 
-    def no_view(*_args, **_kwargs):
+    async def no_view(*_args, **_kwargs):
         raise AssertionError("get_plans resolved a plan")
 
-    monkeypatch.setattr(plan_ws, "PlanView", no_view)
+    monkeypatch.setattr(plan_ws, "async_plan_view", no_view)
     (info,) = (await ws("get_plans"))["plans"]
     # A plan without weekends on a Saturday: its days start on Monday.
     assert info["today"] == SAT

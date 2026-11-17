@@ -28,9 +28,9 @@ from .plan import (
     PLAN_HORIZON_DAYS,
     SET_MODES,
     WEEKDAYS,
-    PlanView,
     all_lists,
     async_plan_task,
+    async_plan_view,
     async_set_day,
     async_unplan_task,
     async_untick,
@@ -126,7 +126,7 @@ async def ws_get_plan(hass, connection, msg):
     """A plan from its current day on, with the lists it draws from."""
     try:
         entry, store = resolve_plan(hass, msg.get("plan"))
-        view = PlanView(hass, entry, store)
+        view = await async_plan_view(hass, entry, store)
         connection.send_result(msg["id"], {
             **_plan_info(hass, entry, view.sources),
             "today": view.today.isoformat(),
