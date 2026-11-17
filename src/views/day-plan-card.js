@@ -5,6 +5,9 @@
 import { NEW_ENTRY_PATH } from "../core/helpers.js";
 import { TasksCardBase } from "../core/card-base.js";
 
+// How many days a new card shows, from the picker or a suggestion.
+export const PLAN_DEFAULT_DAYS = 3;
+
 export class HomeTasksDayPlanCard extends TasksCardBase {
   setConfig(config) {
     this._setPlanConfig(config || {});
@@ -17,7 +20,7 @@ export class HomeTasksDayPlanCard extends TasksCardBase {
   // What the picker starts a new card with: the first plan there is. With
   // several plans a card has to name one, so it is named from the start.
   static async getStubConfig(hass) {
-    const config = { days: 3 };
+    const config = { days: PLAN_DEFAULT_DAYS };
     try {
       const result = await hass.callWS({ type: "home_tasks/get_plans" });
       const first = result && Array.isArray(result.plans) && result.plans[0];

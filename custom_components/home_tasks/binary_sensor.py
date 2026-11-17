@@ -15,6 +15,7 @@ from homeassistant.helpers.event import async_track_time_change
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
+from .device import entry_device_info
 from .store import task_assignees
 from .external_view import (
     async_subscribe_external,
@@ -48,9 +49,9 @@ class _BaseOverdueBinarySensor(BinarySensorEntity):
     _attr_icon = "mdi:clock-alert"
 
     def __init__(self, entry: ConfigEntry) -> None:
-        list_name = entry.data.get("name", entry.title)
-        self._attr_name = f"{list_name} Overdue"
+        self._attr_name = "Overdue"
         self._attr_unique_id = f"{entry.entry_id}_overdue"
+        self._attr_device_info = entry_device_info(entry)
 
     def _get_tasks(self) -> list[dict]:
         raise NotImplementedError

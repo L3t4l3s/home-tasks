@@ -4,7 +4,7 @@
 
 import { _htText } from "./core/i18n.js";
 import { HomeTasksCard } from "./views/list-card.js";
-import { HomeTasksDayPlanCard } from "./views/day-plan-card.js";
+import { HomeTasksDayPlanCard, PLAN_DEFAULT_DAYS } from "./views/day-plan-card.js";
 import { HomeTasksCardEditor } from "./editors/list-editor.js";
 import { HomeTasksDayPlanCardEditor } from "./editors/plan-editor.js";
 
@@ -87,32 +87,44 @@ const _htPickerText = (key) => {
 };
 
 // Suggestions in Home Assistant's "add to dashboard" dialog, which starts
-// from an entity: pick a list's todo entity, or a plan's sensor, and the
-// matching card is offered. Home Assistant asks synchronously and keeps the
-// answer per entity, so the answer comes from the states alone: a list's
-// todo entity names its list (list_id), the sensor of a linked provider list
-// names the provider's todo entity (source_entity_id), a plan's sensor its
-// plan (plan_id).
-const _htOwnStates = (hass) => Object.values(hass.entities || {})
-  .filter((e) => e && e.platform === "home_tasks")
-  .map((e) => hass.states[e.entity_id])
-  .filter(Boolean);
+// from an entity: pick any entity of a list or a plan, and the matching card
+// is offered. Home Assistant asks synchronously and keeps the answer per
+// entity, so it comes from what the frontend holds: every list and plan has a
+// device whose identifier says what it is (device.py) -
+// list:<entry id>, linked:<provider's todo entity>, plan:<entry id>.
+const _htDeviceKey = (device) => {
+  for (const [domain, id] of device?.identifiers || []) {
+    const m = domain === "home_tasks" && /^(list|linked|plan):(.+)$/.exec(id);
+    if (m) return { kind: m[1], id: m[2] };
+  }
+  return null;
+};
+
+const _htEntityKey = (hass, entityId) => {
+  const deviceId = hass.entities?.[entityId]?.device_id;
+  const own = deviceId ? _htDeviceKey(hass.devices?.[deviceId]) : null;
+  if (own) return own;
+  // A provider's todo entity, when it is linked to Home Tasks.
+  if (!entityId?.startsWith("todo.")) return null;
+  const linked = Object.values(hass.devices || {}).some((d) => {
+    const key = _htDeviceKey(d);
+    return key && key.kind === "linked" && key.id === entityId;
+  });
+  return linked ? { kind: "linked", id: entityId } : null;
+};
 
 const _htSuggestList = (hass, entityId) => {
-  if (!entityId || !entityId.startsWith("todo.")) return null;
-  const type = "custom:home-tasks-card";
-  const own = hass.entities?.[entityId]?.platform === "home_tasks";
-  const listId = own ? hass.states[entityId]?.attributes?.list_id : null;
-  if (listId) return { config: { type, columns: [{ list_id: listId }] } };
-  // A provider's list: only when it is linked to Home Tasks.
-  const linked = !own && _htOwnStates(hass).some((s) => s.attributes?.source_entity_id === entityId);
-  return linked ? { config: { type, columns: [{ entity_id: entityId }] } } : null;
+  const key = _htEntityKey(hass, entityId);
+  const column = key?.kind === "list" ? { list_id: key.id }
+    : key?.kind === "linked" ? { entity_id: key.id } : null;
+  return column ? { config: { type: "custom:home-tasks-card", columns: [column] } } : null;
 };
 
 const _htSuggestPlan = (hass, entityId) => {
-  if (hass.entities?.[entityId]?.platform !== "home_tasks") return null;
-  const planId = hass.states[entityId]?.attributes?.plan_id;
-  return planId ? { config: { type: "custom:home-tasks-day-plan-card", plan: planId, days: 3 } } : null;
+  const key = _htEntityKey(hass, entityId);
+  return key?.kind === "plan"
+    ? { config: { type: "custom:home-tasks-day-plan-card", plan: key.id, days: PLAN_DEFAULT_DAYS } }
+    : null;
 };
 
 window.customCards = window.customCards || [];

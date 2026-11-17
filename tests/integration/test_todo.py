@@ -25,12 +25,6 @@ async def test_todo_entity_registered(hass: HomeAssistant, mock_config_entry) ->
     assert entity_id is not None
 
 
-async def test_todo_entity_names_its_list(hass: HomeAssistant, mock_config_entry) -> None:
-    """The card's suggestion for this entity needs the list's id from the state."""
-    entity_id = _get_todo_entity_id(hass, mock_config_entry.entry_id)
-    assert hass.states.get(entity_id).attributes["list_id"] == mock_config_entry.entry_id
-
-
 async def test_todo_items_reflect_store(hass: HomeAssistant, mock_config_entry, store) -> None:
     """Todo items match the tasks in the store."""
     await store.async_add_task("Alpha")

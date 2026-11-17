@@ -632,7 +632,6 @@ async def test_the_sensor_counts_what_is_open_today(
     assert state.state == "2"
     assert (state.attributes["date"], state.attributes["done"], state.attributes["total"]) == (MON, 0, 2)
     assert state.attributes["note"] == "Focus"
-    assert state.attributes["plan_id"] == plan.entry_id
 
     await _call(hass, "complete_task", entry_id=mock_config_entry.entry_id, task_id=planned)
     state = _sensor(hass, plan)

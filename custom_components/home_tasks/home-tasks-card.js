@@ -12856,6 +12856,7 @@ var HomeTasksCard = class extends TasksCardBase {
 };
 
 // src/views/day-plan-card.js
+var PLAN_DEFAULT_DAYS = 3;
 var HomeTasksDayPlanCard = class extends TasksCardBase {
   setConfig(config) {
     this._setPlanConfig(config || {});
@@ -12866,7 +12867,7 @@ var HomeTasksDayPlanCard = class extends TasksCardBase {
   // What the picker starts a new card with: the first plan there is. With
   // several plans a card has to name one, so it is named from the start.
   static async getStubConfig(hass) {
-    const config = { days: 3 };
+    const config = { days: PLAN_DEFAULT_DAYS };
     try {
       const result = await hass.callWS({ type: "home_tasks/get_plans" });
       const first = result && Array.isArray(result.plans) && result.plans[0];
@@ -15778,20 +15779,32 @@ var _htPickerText = (key) => {
   if (!lang && typeof navigator !== "undefined") lang = navigator.language || "";
   return _htText(lang, key);
 };
-var _htOwnStates = (hass) => Object.values(hass.entities || {}).filter((e) => e && e.platform === "home_tasks").map((e) => hass.states[e.entity_id]).filter(Boolean);
+var _htDeviceKey = (device) => {
+  for (const [domain, id] of device?.identifiers || []) {
+    const m = domain === "home_tasks" && /^(list|linked|plan):(.+)$/.exec(id);
+    if (m) return { kind: m[1], id: m[2] };
+  }
+  return null;
+};
+var _htEntityKey = (hass, entityId) => {
+  const deviceId = hass.entities?.[entityId]?.device_id;
+  const own = deviceId ? _htDeviceKey(hass.devices?.[deviceId]) : null;
+  if (own) return own;
+  if (!entityId?.startsWith("todo.")) return null;
+  const linked = Object.values(hass.devices || {}).some((d) => {
+    const key = _htDeviceKey(d);
+    return key && key.kind === "linked" && key.id === entityId;
+  });
+  return linked ? { kind: "linked", id: entityId } : null;
+};
 var _htSuggestList = (hass, entityId) => {
-  if (!entityId || !entityId.startsWith("todo.")) return null;
-  const type = "custom:home-tasks-card";
-  const own = hass.entities?.[entityId]?.platform === "home_tasks";
-  const listId = own ? hass.states[entityId]?.attributes?.list_id : null;
-  if (listId) return { config: { type, columns: [{ list_id: listId }] } };
-  const linked = !own && _htOwnStates(hass).some((s) => s.attributes?.source_entity_id === entityId);
-  return linked ? { config: { type, columns: [{ entity_id: entityId }] } } : null;
+  const key = _htEntityKey(hass, entityId);
+  const column = key?.kind === "list" ? { list_id: key.id } : key?.kind === "linked" ? { entity_id: key.id } : null;
+  return column ? { config: { type: "custom:home-tasks-card", columns: [column] } } : null;
 };
 var _htSuggestPlan = (hass, entityId) => {
-  if (hass.entities?.[entityId]?.platform !== "home_tasks") return null;
-  const planId = hass.states[entityId]?.attributes?.plan_id;
-  return planId ? { config: { type: "custom:home-tasks-day-plan-card", plan: planId, days: 3 } } : null;
+  const key = _htEntityKey(hass, entityId);
+  return key?.kind === "plan" ? { config: { type: "custom:home-tasks-day-plan-card", plan: key.id, days: PLAN_DEFAULT_DAYS } } : null;
 };
 window.customCards = window.customCards || [];
 window.customCards.push({

@@ -27,6 +27,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
+from .device import entry_device_info
 from .ui_translations import get_ui_translation
 from .store import task_assignees
 from .external_view import (
@@ -274,8 +275,9 @@ class HomeTasksCalendarEntity(_BaseHomeTasksCalendar):
     def __init__(self, entry: ConfigEntry, store) -> None:
         self._entry = entry
         self._store = store
-        self._attr_name = f"{entry.data.get('name', entry.title)} Calendar"
+        self._attr_name = "Calendar"
         self._attr_unique_id = f"{entry.entry_id}_calendar"
+        self._attr_device_info = entry_device_info(entry)
 
     async def async_added_to_hass(self) -> None:
         """Register store listener so calendar updates on any data change."""
@@ -398,8 +400,9 @@ class ExternalHomeTasksCalendarEntity(_BaseHomeTasksCalendar):
         self.hass = hass
         self._entry = entry
         self._source_entity_id = entity_id
-        self._attr_name = f"{entry.data.get('name', entry.title)} Calendar"
+        self._attr_name = "Calendar"
         self._attr_unique_id = f"{entry.entry_id}_calendar"
+        self._attr_device_info = entry_device_info(entry)
 
     async def async_added_to_hass(self) -> None:
         """Refresh when the overlay changes or the source entity updates."""

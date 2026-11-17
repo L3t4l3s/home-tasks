@@ -14,6 +14,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DOMAIN
+from .device import entry_device_info
 from .external_view import (
     async_subscribe_external,
     get_external_tasks_snapshot,
@@ -27,7 +28,6 @@ from .plan import (
     PlanView,
     is_plan,
     plan_fingerprint,
-    plan_name,
     plan_store,
 )
 from .store import HomeTasksStore
@@ -62,9 +62,9 @@ class _BaseOpenTasksSensor(SensorEntity):
     _attr_icon = "mdi:clipboard-list"
 
     def __init__(self, entry: ConfigEntry) -> None:
-        list_name = entry.data.get("name", entry.title)
-        self._attr_name = f"{list_name} Open Tasks"
+        self._attr_name = "Open Tasks"
         self._attr_unique_id = f"{entry.entry_id}_open_tasks"
+        self._attr_device_info = entry_device_info(entry)
         self._last_modified = datetime.now(timezone.utc).isoformat()
 
     def _get_tasks(self) -> list[dict]:
@@ -134,14 +134,6 @@ class ExternalOpenTasksSensor(_BaseOpenTasksSensor):
         self.hass = hass
         self._source_entity_id = entity_id
 
-    # The provider's list this sensor counts. The card's suggestions read it
-    # to know that a todo entity is linked to Home Tasks.
-    _unrecorded_attributes = frozenset({"source_entity_id"})
-
-    @property
-    def extra_state_attributes(self) -> dict:
-        return {**super().extra_state_attributes, "source_entity_id": self._source_entity_id}
-
     @property
     def available(self) -> bool:
         """Unavailable while the provider's entity is not there to read."""
@@ -173,14 +165,14 @@ class PlanOpenItemsSensor(SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = "tasks"
     _attr_icon = "mdi:calendar-check"
-    _unrecorded_attributes = frozenset({"plan_id"})
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, store: PlanStore) -> None:
         self.hass = hass
         self._entry = entry
         self._store = store
-        self._attr_name = f"{plan_name(entry)} Open Items"
+        self._attr_name = "Open Items"
         self._attr_unique_id = f"{entry.entry_id}_plan_open_items"
+        self._attr_device_info = entry_device_info(entry)
         self._last_modified = datetime.now(timezone.utc).isoformat()
         self._source_unsubs: list = []
         # entry id -> identity of the store that is listened to
@@ -222,8 +214,6 @@ class PlanOpenItemsSensor(SensorEntity):
             "total": len(day["items"]),
             "note": day["note"],
             "last_modified": self._last_modified,
-            # The plan, for the card's suggestions (see the list's todo entity).
-            "plan_id": self._entry.entry_id,
         }
 
     async def async_added_to_hass(self) -> None:

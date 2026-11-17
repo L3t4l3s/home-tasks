@@ -314,41 +314,68 @@ describe('day plan: what it shows', () => {
     const entry = (type) => window.customCards.find((c) => c.type === type);
     const list = entry('home-tasks-card').getEntitySuggestion;
     const plan = entry('home-tasks-day-plan-card').getEntitySuggestion;
-    const ent = (entity_id, platform) => [entity_id, { entity_id, platform }];
+    // Each list and plan has a device that says what it is (device.py).
+    const dev = (id, ...identifiers) => [id, { id, identifiers }];
     const hass = {
-      entities: Object.fromEntries([
-        ent('todo.bens_aufgaben', 'home_tasks'),
-        ent('sensor.bens_aufgaben_open_tasks', 'home_tasks'),
-        ent('todo.google_einkauf', 'google_tasks'),
-        ent('sensor.google_einkauf_open_tasks', 'home_tasks'),
-        ent('todo.shopping_list', 'shopping_list'),
-        ent('sensor.heute_open_items', 'home_tasks'),
-        ent('sensor.other', 'other'),
+      devices: Object.fromEntries([
+        dev('d_list', ['home_tasks', 'list:L1']),
+        dev('d_linked', ['home_tasks', 'linked:todo.google_einkauf']),
+        dev('d_plan', ['home_tasks', 'plan:P1']),
+        dev('d_google', ['google_tasks', 'account']),
+        dev('d_other', ['other', 'plan:X']),
       ]),
-      states: {
-        'todo.bens_aufgaben': { attributes: { list_id: 'L1' } },
-        'sensor.bens_aufgaben_open_tasks': { attributes: {} },
-        'todo.google_einkauf': { attributes: {} },
-        'sensor.google_einkauf_open_tasks': { attributes: { source_entity_id: 'todo.google_einkauf' } },
-        'todo.shopping_list': { attributes: {} },
-        'sensor.heute_open_items': { attributes: { plan_id: 'P1' } },
-        'sensor.other': { attributes: { plan_id: 'X' } },
-      },
+      entities: Object.fromEntries([
+        ['todo.bens_aufgaben', 'd_list'],
+        ['binary_sensor.bens_aufgaben_overdue', 'd_list'],
+        ['todo.google_einkauf', 'd_google'],
+        ['sensor.google_einkauf_open_tasks', 'd_linked'],
+        ['todo.shopping_list', undefined],
+        ['sensor.heute_open_items', 'd_plan'],
+        ['sensor.other', 'd_other'],
+      ].map(([entity_id, device_id]) => [entity_id, { entity_id, device_id }])),
+      states: {},
     };
-    // A Home Tasks list, and a provider's list linked to Home Tasks.
-    same(list(hass, 'todo.bens_aufgaben'),
-      { config: { type: 'custom:home-tasks-card', columns: [{ list_id: 'L1' }] } });
-    same(list(hass, 'todo.google_einkauf'),
-      { config: { type: 'custom:home-tasks-card', columns: [{ entity_id: 'todo.google_einkauf' }] } });
-    // Not linked, or no list at all: nothing to offer.
+    const listCard = (column) => ({ config: { type: 'custom:home-tasks-card', columns: [column] } });
+    // Any entity of a Home Tasks list.
+    same(list(hass, 'todo.bens_aufgaben'), listCard({ list_id: 'L1' }));
+    same(list(hass, 'binary_sensor.bens_aufgaben_overdue'), listCard({ list_id: 'L1' }));
+    // A provider's list linked to Home Tasks - also with its own device -
+    // and the linked list's own entities.
+    same(list(hass, 'todo.google_einkauf'), listCard({ entity_id: 'todo.google_einkauf' }));
+    same(list(hass, 'sensor.google_einkauf_open_tasks'), listCard({ entity_id: 'todo.google_einkauf' }));
+    // Not linked, someone else's device, or nothing known: nothing to offer.
     assert.equal(list(hass, 'todo.shopping_list'), null);
-    assert.equal(list(hass, 'sensor.bens_aufgaben_open_tasks'), null);
-    assert.equal(list({ states: {} }, 'todo.bens_aufgaben'), null);
-    // A plan's sensor; someone else's entity with the same attribute is not one.
+    assert.equal(list(hass, 'sensor.other'), null);
+    assert.equal(list(hass, 'todo.unknown'), null);
+    assert.equal(list({}, 'todo.bens_aufgaben'), null);
+    // A plan's entity.
     same(plan(hass, 'sensor.heute_open_items'),
       { config: { type: 'custom:home-tasks-day-plan-card', plan: 'P1', days: 3 } });
     assert.equal(plan(hass, 'sensor.other'), null);
     assert.equal(plan(hass, 'todo.bens_aufgaben'), null);
+    assert.equal(list(hass, 'sensor.heute_open_items'), null);
+  });
+
+  test('a suggested card shows its list or plan as it is', async () => {
+    const { window } = await freshCard();
+    const entry = (type) => window.customCards.find((c) => c.type === type);
+    const hass = {
+      devices: {
+        d1: { id: 'd1', identifiers: [['home_tasks', 'list:L1']] },
+        d2: { id: 'd2', identifiers: [['home_tasks', 'plan:P1']] },
+      },
+      entities: {
+        'todo.work': { entity_id: 'todo.work', device_id: 'd1' },
+        'sensor.today_open_items': { entity_id: 'sensor.today_open_items', device_id: 'd2' },
+      },
+    };
+    const { card: listCard } = await makeCard(
+      entry('home-tasks-card').getEntitySuggestion(hass, 'todo.work').config);
+    assert.match(listCard.shadowRoot.textContent, /Write report/);
+    const { card: planCard } = await makeCard(
+      entry('home-tasks-day-plan-card').getEntitySuggestion(hass, 'sensor.today_open_items').config);
+    assert.equal(planCard._planId, 'P1');
+    assert.match(planCard.shadowRoot.textContent, /Write report/);
   });
 
   test('a new card from the picker names the first plan', async () => {
