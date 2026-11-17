@@ -5450,7 +5450,8 @@ var CLIENT_TYPES = /* @__PURE__ */ new Set(["screen", "user", "view_columns", "l
 var LOGICAL_TYPES = /* @__PURE__ */ new Set(["and", "or", "not"]);
 var ROW_CONFIG_KEYS = ["alias", "note", "enabled"];
 var WEEKDAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
-var REFUSALS = /* @__PURE__ */ new Set(["unknown_command", "unauthorized"]);
+var UNKNOWN_COMMAND = "unknown_command";
+var REFUSALS = /* @__PURE__ */ new Set([UNKNOWN_COMMAND, "unauthorized"]);
 var ensureArray = (v) => v === void 0 || v === null ? v : Array.isArray(v) ? v : [v];
 var isValidEntityId = (v) => typeof v === "string" && /^(\w+)\.(\w+)$/.test(v);
 var isObject = (c) => typeof c === "object" && c !== null && !Array.isArray(c);
@@ -5665,10 +5666,20 @@ var isIdList = (v) => typeof v === "string" || Array.isArray(v) && v.every((x) =
 function isTarget(t, allowExclude = true) {
   return isObject(t) && Object.entries(t).every(([k, v]) => k === "exclude" ? allowExclude && isTarget(v, false) : TARGET_KEYS.includes(k) && isIdList(v));
 }
+var zoneCache = /* @__PURE__ */ new WeakMap();
 function targetZones(hass, target) {
   const entities = hass.entities || {};
   const devices = hass.devices || {};
   const areas = hass.areas || {};
+  const cached = zoneCache.get(target);
+  if (cached && cached.entities === entities && cached.devices === devices && cached.areas === areas) {
+    return cached.zones.filter((id) => id in hass.states);
+  }
+  const zones = resolveTargetZones(hass, target, entities, devices, areas);
+  zoneCache.set(target, { entities, devices, areas, zones });
+  return zones.filter((id) => id in hass.states);
+}
+function resolveTargetZones(hass, target, entities, devices, areas) {
   const ids = (v) => ensureArray(v) || [];
   const zoneIds = /* @__PURE__ */ new Set([
     ...Object.keys(entities).filter((id) => domainOf(id) === "zone"),
@@ -5701,7 +5712,7 @@ function targetZones(hass, target) {
   };
   const zones = resolve(target);
   if (target.exclude) for (const id of resolve(target.exclude)) zones.delete(id);
-  return [...zones].filter((id) => id in hass.states);
+  return [...zones];
 }
 function activeZoneState(hass, zoneId) {
   const stateObj = hass.states[zoneId];
@@ -5911,8 +5922,9 @@ var ConditionWatcher = class {
     this._generation = 0;
     this._result = "unknown";
     this._stopped = false;
+    this._unsubscribed = false;
     this._onReady = () => {
-      if (this._stopped) return;
+      if (this._stopped || !this._unsubscribed) return;
       this._resubscribe();
       if (this._onChange) this._onChange();
     };
@@ -5968,6 +5980,7 @@ var ConditionWatcher = class {
     this._server = {};
     this._errors = {};
     this._refused = /* @__PURE__ */ new Set();
+    this._unsubscribed = false;
   }
   _resubscribe() {
     this._teardown();
@@ -5990,6 +6003,7 @@ var ConditionWatcher = class {
       this._server[subtree.id] = void 0;
       if (!canSubscribe || rec.support === "no") {
         this._refused.add(subtree.id);
+        this._unsubscribed = true;
         continue;
       }
       const sub = connection.subscribeMessage((msg) => {
@@ -6007,8 +6021,9 @@ var ConditionWatcher = class {
         rec.support = "yes";
       }, (err) => {
         if (generation !== this._generation) return;
+        this._unsubscribed = true;
         if (REFUSALS.has(err?.code)) {
-          rec.support = "no";
+          if (err.code === UNKNOWN_COMMAND) rec.support = "no";
           this._refused.add(subtree.id);
           this._server[subtree.id] = void 0;
         } else {
@@ -12187,6 +12202,11 @@ var HomeTasksCard = class extends TasksCardBase {
   // A column that shows unassigned tasks (issue #93) and has no one to give a
   // new task to keeps it unassigned: the list's default assignees would take
   // it straight out of the column it was added in.
+  // A preset of people that resolves to no one: only "current user", for a
+  // user who has no person. A task added there could never show.
+  _presetShowsNobody(col) {
+    return (col.filters?.assignees || []).length > 0 && this._presetAssignees(col).length === 0;
+  }
   _keepsNewTasksUnassigned(colIdx) {
     const preset = this._config.columns[colIdx].filters?.assignees || [];
     return preset.includes(UNASSIGNED) && !this._autoAssignPerson(colIdx);
@@ -12392,9 +12412,11 @@ var HomeTasksCard = class extends TasksCardBase {
   get preview() {
     return this._preview === true;
   }
-  // Asks hui-card to keep the card in the page while it is hidden.
+  // Asks hui-card to keep the card in the page while it is hidden - only
+  // when a column has conditions that could show it again. Hidden by its
+  // own card conditions alone, it leaves the page and stops loading.
   get connectedWhileHidden() {
-    return true;
+    return (this._config?.columns || []).some((col) => col?.visibility != null);
   }
   _colConditions(colIdx) {
     const col = this._config.columns[colIdx];
@@ -12408,9 +12430,37 @@ var HomeTasksCard = class extends TasksCardBase {
   }
   // A `state` condition naming no entity reads the column's linked list, as
   // a card's reads the card's entity.
+  // `view_columns` reads the columns of the sections view the card is in.
   _colConditionContext(colIdx) {
     const entityId = this._config.columns[colIdx]?.entity_id;
-    return entityId ? { entity_id: entityId } : {};
+    const ctx = entityId ? { entity_id: entityId } : {};
+    if (this._maxColumns) ctx.max_columns = this._maxColumns;
+    return ctx;
+  }
+  // The column count of the sections view around the card, which Home
+  // Assistant hands its own cards as a Lit context ("lovelace-max-columns").
+  // Asked through the context protocol a custom card can speak without Lit;
+  // no view answers outside a sections view, and view_columns then holds,
+  // as in Home Assistant.
+  _requestMaxColumns() {
+    if (this._maxColumnsUnsub) return;
+    const ev = new Event("context-request", { bubbles: true, composed: true });
+    Object.assign(ev, {
+      context: "lovelace-max-columns",
+      contextTarget: this,
+      subscribe: true,
+      callback: (value, unsubscribe) => {
+        if (typeof unsubscribe === "function") {
+          if (this._maxColumnsUnsub && this._maxColumnsUnsub !== unsubscribe) this._maxColumnsUnsub();
+          this._maxColumnsUnsub = unsubscribe;
+        }
+        const n = typeof value === "number" && value > 0 ? value : void 0;
+        if (n === this._maxColumns) return;
+        this._maxColumns = n;
+        if (this.isConnected) this._syncColumnVisibility();
+      }
+    });
+    this.dispatchEvent(ev);
   }
   _columnVisible(colIdx) {
     const conditions = this._colConditions(colIdx);
@@ -12462,12 +12512,21 @@ var HomeTasksCard = class extends TasksCardBase {
   }
   connectedCallback() {
     super.connectedCallback();
+    this._requestMaxColumns();
     this._syncColumnVisibility();
   }
   disconnectedCallback() {
     super.disconnectedCallback();
     for (const watcher of this._colWatchers || []) watcher?.stop();
     this._colWatchers = [];
+    if (this._maxColumnsUnsub) {
+      try {
+        this._maxColumnsUnsub();
+      } catch (_) {
+      }
+      this._maxColumnsUnsub = null;
+    }
+    this._maxColumns = void 0;
   }
   _buildColumn(colIdx) {
     const col = this._config.columns[colIdx];
@@ -12491,7 +12550,7 @@ var HomeTasksCard = class extends TasksCardBase {
     this._applyColumnMaxHeight(taskList, col);
     const children = [];
     if (header) children.push(header);
-    if (col.show_add_task !== false) children.push(addTask);
+    if (col.show_add_task !== false && !this._presetShowsNobody(col)) children.push(addTask);
     if (cs.draft) children.push(this._buildDraftPanel(cs, colIdx));
     if (filters) children.push(filters);
     if (tagChipsEl) children.push(tagChipsEl);
@@ -14378,19 +14437,24 @@ var HomeTasksDayPlanCard = class extends TasksCardBase {
         background: color-mix(in srgb, var(--todo-primary) 14%, var(--todo-bg));
         border-bottom: 1px solid color-mix(in srgb, var(--todo-primary) 40%, transparent);
       }
-      /* As tall as the current day's larger name on every day, the line at
-         the bottom: the heads end at one height and the names share a
-         baseline across the columns. */
+      /* As tall as the current day's larger name on every day: the heads
+         end at one height across the columns. Every part of the line has a
+         fixed height - the texts their line-height, the count and the
+         progress 20px, centred - and the line never wraps (the progress
+         shrinks instead), so what differs between the days cannot make
+         one line taller than the others. */
       .plan-head-line {
-        display: flex; flex-wrap: wrap; align-content: flex-end; align-items: baseline; gap: 8px;
-        min-height: calc(1.35rem * 1.2);
+        display: flex; flex-wrap: nowrap; align-items: baseline; gap: 8px;
+        line-height: 1.2; min-height: max(calc(1.35rem * 1.2), 20px);
       }
-      .plan-view.compact .plan-head-line { min-height: calc(1.1rem * 1.2); }
+      .plan-day-name, .plan-day-date { flex: none; white-space: nowrap; }
+      .plan-view.compact .plan-head-line { min-height: max(calc(1.1rem * 1.2), 20px); }
       .plan-day-name { font-size: 1rem; font-weight: 600; color: var(--todo-text); line-height: 1.2; }
       .plan-current .plan-day-name { font-size: 1.35rem; color: var(--todo-primary); }
       .plan-day-date { font-size: 13px; color: var(--todo-secondary-text); }
       .plan-count {
-        margin-left: auto; font-size: 12px; min-width: 20px; text-align: center; padding: 1px 6px;
+        margin-left: auto; font-size: 12px; min-width: 20px; text-align: center; padding: 0 6px;
+        box-sizing: border-box; height: 20px; line-height: 20px; align-self: center;
         border-radius: 10px; background: rgba(var(--rgb-primary-text-color, 33, 33, 33), 0.08);
         color: var(--todo-secondary-text);
       }
@@ -14406,10 +14470,10 @@ var HomeTasksDayPlanCard = class extends TasksCardBase {
         background: var(--todo-bg); color: var(--todo-text); outline: none;
       }
       .plan-progress {
-        margin-left: auto; flex: 0 1 180px; min-width: 0;
+        margin-left: auto; flex: 0 1 180px; min-width: 0; height: 20px; align-self: center;
         display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--todo-secondary-text);
       }
-      .plan-progress-text { white-space: nowrap; }
+      .plan-progress-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
       .plan-bar {
         flex: 1; min-width: 24px; height: 4px; border-radius: 2px; overflow: hidden;
         background: color-mix(in srgb, var(--todo-primary) 22%, transparent);
@@ -16013,8 +16077,11 @@ var HomeTasksCardEditor = class extends EditorBase {
     yaml.defaultValue = list;
     yaml.addEventListener("value-changed", (e) => {
       e.stopPropagation();
+      if (e.detail?.isValid === false) return;
       const value = e.detail?.value;
-      if (value == null || Array.isArray(value) && allConditions(value)) save(value || []);
+      const empty = value == null || typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === 0;
+      if (empty) save([]);
+      else if (Array.isArray(value) && allConditions(value)) save(value);
       else if (typeof value === "object" && allConditions([value])) save([value]);
     });
     nodes.push(yaml);

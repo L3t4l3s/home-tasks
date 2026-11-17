@@ -25,9 +25,11 @@ const CLIENT_TYPES = new Set(["screen", "user", "view_columns", "location", "tim
 const LOGICAL_TYPES = new Set(["and", "or", "not"]);
 const ROW_CONFIG_KEYS = ["alias", "note", "enabled"];
 const WEEKDAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
-// What Home Assistant answers for a command it does not know, or will not
-// run for this user.
-const REFUSALS = new Set(["unknown_command", "unauthorized"]);
+// What Home Assistant answers for a command it does not know (then nothing
+// is asked of this connection again), or will not run for this user (only
+// that condition: core may take the others).
+const UNKNOWN_COMMAND = "unknown_command";
+const REFUSALS = new Set([UNKNOWN_COMMAND, "unauthorized"]);
 
 const ensureArray = (v) => (v === undefined || v === null ? v : Array.isArray(v) ? v : [v]);
 const isValidEntityId = (v) => typeof v === "string" && /^(\w+)\.(\w+)$/.test(v);
@@ -85,8 +87,6 @@ export function isServerCondition(c) {
 }
 
 const isClientCondition = (c) => !isServerCondition(c);
-const isPureClientCondition = (c) =>
-  isLogicalCondition(c) ? logicalChildren(c).every(isPureClientCondition) : isClientCondition(c);
 
 // ── Translation to core's shape (translate.ts) ─────────────────────────────
 
@@ -280,11 +280,24 @@ function isTarget(t, allowExclude = true) {
 }
 
 // The zones a target selects: directly, or through a device, area, floor or
-// label, as Home Assistant's target selector resolves them.
+// label, as Home Assistant's target selector resolves them. Resolved once per
+// set of registries (hass hands over new ones only when they change), not on
+// every state change.
+const zoneCache = new WeakMap();
 function targetZones(hass, target) {
   const entities = hass.entities || {};
   const devices = hass.devices || {};
   const areas = hass.areas || {};
+  const cached = zoneCache.get(target);
+  if (cached && cached.entities === entities && cached.devices === devices && cached.areas === areas) {
+    return cached.zones.filter((id) => id in hass.states);
+  }
+  const zones = resolveTargetZones(hass, target, entities, devices, areas);
+  zoneCache.set(target, { entities, devices, areas, zones });
+  return zones.filter((id) => id in hass.states);
+}
+
+function resolveTargetZones(hass, target, entities, devices, areas) {
   const ids = (v) => ensureArray(v) || [];
   const zoneIds = new Set([
     ...Object.keys(entities).filter((id) => domainOf(id) === "zone"),
@@ -319,7 +332,7 @@ function targetZones(hass, target) {
   };
   const zones = resolve(target);
   if (target.exclude) for (const id of resolve(target.exclude)) zones.delete(id);
-  return [...zones].filter((id) => id in hass.states);
+  return [...zones];
 }
 
 function activeZoneState(hass, zoneId) {
@@ -543,8 +556,12 @@ export class ConditionWatcher {
     this._generation = 0;
     this._result = "unknown";
     this._stopped = false;
+    // Back on the connection: the subscriptions core took come back by
+    // themselves (the websocket client sends them again). Asked again only
+    // what never got one - refused, or failed.
+    this._unsubscribed = false;
     this._onReady = () => {
-      if (this._stopped) return;
+      if (this._stopped || !this._unsubscribed) return;
       this._resubscribe();
       if (this._onChange) this._onChange();
     };
@@ -599,6 +616,7 @@ export class ConditionWatcher {
     this._server = {};
     this._errors = {};
     this._refused = new Set();
+    this._unsubscribed = false;
   }
 
   _resubscribe() {
@@ -619,7 +637,11 @@ export class ConditionWatcher {
 
     for (const subtree of split.subtrees) {
       this._server[subtree.id] = undefined;
-      if (!canSubscribe || rec.support === "no") { this._refused.add(subtree.id); continue; }
+      if (!canSubscribe || rec.support === "no") {
+        this._refused.add(subtree.id);
+        this._unsubscribed = true;
+        continue;
+      }
       const sub = connection.subscribeMessage((msg) => {
         if (generation !== this._generation) return;
         if (msg && msg.error !== undefined) {
@@ -633,8 +655,9 @@ export class ConditionWatcher {
       }, { type: "subscribe_condition", condition: subtree.coreCondition });
       Promise.resolve(sub).then(() => { rec.support = "yes"; }, (err) => {
         if (generation !== this._generation) return;
+        this._unsubscribed = true;
         if (REFUSALS.has(err?.code)) {
-          rec.support = "no";
+          if (err.code === UNKNOWN_COMMAND) rec.support = "no";
           this._refused.add(subtree.id);
           this._server[subtree.id] = undefined;
         } else {
@@ -701,6 +724,3 @@ export class ConditionWatcher {
     this._result = result;
   }
 }
-
-// Exposed for the tests.
-export const _internals = { isPureClientCondition, checkTime, targetZones };

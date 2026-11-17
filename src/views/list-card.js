@@ -309,6 +309,12 @@ export class HomeTasksCard extends TasksCardBase {
   // A column that shows unassigned tasks (issue #93) and has no one to give a
   // new task to keeps it unassigned: the list's default assignees would take
   // it straight out of the column it was added in.
+  // A preset of people that resolves to no one: only "current user", for a
+  // user who has no person. A task added there could never show.
+  _presetShowsNobody(col) {
+    return (col.filters?.assignees || []).length > 0 && this._presetAssignees(col).length === 0;
+  }
+
   _keepsNewTasksUnassigned(colIdx) {
     const preset = this._config.columns[colIdx].filters?.assignees || [];
     return preset.includes(UNASSIGNED) && !this._autoAssignPerson(colIdx);
@@ -542,9 +548,11 @@ export class HomeTasksCard extends TasksCardBase {
     return this._preview === true;
   }
 
-  // Asks hui-card to keep the card in the page while it is hidden.
+  // Asks hui-card to keep the card in the page while it is hidden - only
+  // when a column has conditions that could show it again. Hidden by its
+  // own card conditions alone, it leaves the page and stops loading.
   get connectedWhileHidden() {
-    return true;
+    return (this._config?.columns || []).some((col) => col?.visibility != null);
   }
 
   _colConditions(colIdx) {
@@ -560,9 +568,38 @@ export class HomeTasksCard extends TasksCardBase {
 
   // A `state` condition naming no entity reads the column's linked list, as
   // a card's reads the card's entity.
+  // `view_columns` reads the columns of the sections view the card is in.
   _colConditionContext(colIdx) {
     const entityId = this._config.columns[colIdx]?.entity_id;
-    return entityId ? { entity_id: entityId } : {};
+    const ctx = entityId ? { entity_id: entityId } : {};
+    if (this._maxColumns) ctx.max_columns = this._maxColumns;
+    return ctx;
+  }
+
+  // The column count of the sections view around the card, which Home
+  // Assistant hands its own cards as a Lit context ("lovelace-max-columns").
+  // Asked through the context protocol a custom card can speak without Lit;
+  // no view answers outside a sections view, and view_columns then holds,
+  // as in Home Assistant.
+  _requestMaxColumns() {
+    if (this._maxColumnsUnsub) return;
+    const ev = new Event("context-request", { bubbles: true, composed: true });
+    Object.assign(ev, {
+      context: "lovelace-max-columns",
+      contextTarget: this,
+      subscribe: true,
+      callback: (value, unsubscribe) => {
+        if (typeof unsubscribe === "function") {
+          if (this._maxColumnsUnsub && this._maxColumnsUnsub !== unsubscribe) this._maxColumnsUnsub();
+          this._maxColumnsUnsub = unsubscribe;
+        }
+        const n = typeof value === "number" && value > 0 ? value : undefined;
+        if (n === this._maxColumns) return;
+        this._maxColumns = n;
+        if (this.isConnected) this._syncColumnVisibility();
+      },
+    });
+    this.dispatchEvent(ev);
   }
 
   _columnVisible(colIdx) {
@@ -617,6 +654,7 @@ export class HomeTasksCard extends TasksCardBase {
 
   connectedCallback() {
     super.connectedCallback();
+    this._requestMaxColumns();
     this._syncColumnVisibility();
   }
 
@@ -624,6 +662,11 @@ export class HomeTasksCard extends TasksCardBase {
     super.disconnectedCallback();
     for (const watcher of this._colWatchers || []) watcher?.stop();
     this._colWatchers = [];
+    if (this._maxColumnsUnsub) {
+      try { this._maxColumnsUnsub(); } catch (_) { /* provider gone */ }
+      this._maxColumnsUnsub = null;
+    }
+    this._maxColumns = undefined;  // asked again where the card is put next
   }
 
   _buildColumn(colIdx) {
@@ -664,7 +707,9 @@ export class HomeTasksCard extends TasksCardBase {
 
     const children = [];
     if (header) children.push(header);
-    if (col.show_add_task !== false) children.push(addTask);
+    // No add row where no task could show: "current user" for a user
+    // without a person, and nothing else in the preset.
+    if (col.show_add_task !== false && !this._presetShowsNobody(col)) children.push(addTask);
     if (cs.draft) children.push(this._buildDraftPanel(cs, colIdx));
     if (filters) children.push(filters);
     if (tagChipsEl) children.push(tagChipsEl);

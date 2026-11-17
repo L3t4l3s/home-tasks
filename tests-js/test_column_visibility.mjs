@@ -18,15 +18,20 @@ afterEach(() => { while (mounted.length) mounted.pop().remove(); });
 const flush = async () => { for (let i = 0; i < 6; i++) await new Promise((r) => setTimeout(r, 0)); };
 
 // A connection that records every subscription and lets the test push.
+// *refuse*: true refuses every subscription as unknown_command, a function
+// (msg) => code|null refuses the ones it names. fireReady() is a reconnect.
 function makeConnection({ refuse = false } = {}) {
   const subs = [];
+  const ready = new Set();
   return {
     subs,
-    addEventListener() {},
+    addEventListener(type, fn) { if (type === 'ready') ready.add(fn); },
+    fireReady() { for (const fn of ready) fn(); },
     subscribeMessage(cb, msg) {
       const sub = { cb, msg, closed: false };
       subs.push(sub);
-      if (refuse) return Promise.reject({ code: 'unknown_command', message: 'Unknown command.' });
+      const code = typeof refuse === 'function' ? refuse(msg) : refuse ? 'unknown_command' : null;
+      if (code) { sub.closed = true; return Promise.reject({ code, message: code }); }
       return Promise.resolve(() => { sub.closed = true; });
     },
     open() { return subs.filter((s) => !s.closed); },
@@ -121,6 +126,35 @@ describe('the card as a whole', () => {
     const dimmed = [...card.shadowRoot.querySelectorAll('.card-column.visibility-hidden .title')].map((t) => t.textContent.trim());
     assert.deepEqual(dimmed, ['Anna']);
   });
+
+  test('without column conditions it leaves the page when hidden, as any card', async () => {
+    const { card } = await mount([col('Family')]);
+    assert.equal(card.connectedWhileHidden, false);
+  });
+
+  test('view_columns reads the column count of the sections view around it', async () => {
+    const { HomeTasksCard, window } = await loadCard({ force: true });
+    // A sections view stand-in: answers the context request, then changes.
+    const view = window.document.createElement('div');
+    const consumers = [];
+    view.addEventListener('context-request', (e) => {
+      if (e.context !== 'lovelace-max-columns') return;
+      e.stopPropagation();
+      consumers.push(e.callback);
+      e.callback(1, () => {});
+    });
+    window.document.body.appendChild(view);
+    const card = new HomeTasksCard();
+    card.setConfig({ columns: [col('Wide', [{ condition: 'view_columns', min: 2 }]), col('Family')] });
+    view.appendChild(card);
+    mounted.push(view);
+    card.hass = makeHass();
+    await flush();
+    assert.deepEqual(shownTitles(card), ['Family']);
+    for (const cb of consumers) cb(3, () => {});
+    await flush();
+    assert.deepEqual(shownTitles(card), ['Wide', 'Family']);
+  });
 });
 
 describe('conditions core judges', () => {
@@ -208,6 +242,43 @@ describe('conditions core judges', () => {
     await flush();
     assert.deepEqual(shownTitles(card), ['Family']);
   });
+
+  test('a condition refused for this user leaves core judging the others', async () => {
+    const tpl = (v) => ({ condition: 'template', value_template: `{{ ${v} }}` });
+    const connection = makeConnection({
+      refuse: (msg) => (msg.condition.value_template === '{{ 1 }}' ? 'unauthorized' : null),
+    });
+    const { card, hass } = await mount([col('Refused', [tpl(1)]), col('Asked', [tpl(2)])], { connection });
+    await flush();
+    // A later card on the same connection still asks core.
+    const { HomeTasksCard, window } = await loadCard();
+    const other = new HomeTasksCard();
+    other.setConfig({ columns: [col('Later', [tpl(3)])] });
+    window.document.body.appendChild(other);
+    mounted.push(other);
+    other.hass = hass;
+    await flush();
+    const asked = connection.subs.map((s) => s.msg.condition.value_template);
+    assert.deepEqual(asked, ['{{ 1 }}', '{{ 2 }}', '{{ 3 }}']);
+    assert.equal(connection.open().length, 2);
+    assert.ok(card);
+  });
+
+  test('after a reconnect only what core never took is asked again', async () => {
+    const tpl = (v) => ({ condition: 'template', value_template: `{{ ${v} }}` });
+    let refuseOne = true;
+    const connection = makeConnection({
+      refuse: (msg) => (refuseOne && msg.condition.value_template === '{{ 1 }}' ? 'unauthorized' : null),
+    });
+    await mount([col('Refused', [tpl(1)]), col('Taken', [tpl(2)])], { connection });
+    assert.equal(connection.subs.length, 2);
+    refuseOne = false;
+    connection.fireReady();
+    await flush();
+    // The taken one comes back through the websocket client by itself.
+    const asked = connection.subs.map((s) => s.msg.condition.value_template);
+    assert.deepEqual(asked, ['{{ 1 }}', '{{ 2 }}', '{{ 1 }}']);
+  });
 });
 
 describe('screen and time', () => {
@@ -282,6 +353,16 @@ describe('current user in the preset assignee filter', () => {
     const { card } = await shown({ assignees: ['current_user'] }, 'u-ben');
     assert.equal(card._autoAssignPerson(0), 'person.ben');
   });
+
+  test('a user without a person gets no add row there: the task could never show', async () => {
+    const addRow = async (user, assignees) => {
+      const { card } = await mount([col('Mine', null, { filters: { assignees } })], { user });
+      return !!card.shadowRoot.querySelector('.add-input');
+    };
+    assert.equal(await addRow('u-kiosk', ['current_user']), false);
+    assert.equal(await addRow('u-kiosk', ['current_user', 'unassigned']), true);
+    assert.equal(await addRow('u-ben', ['current_user']), true);
+  });
 });
 
 describe('visibility in the editor', () => {
@@ -327,5 +408,16 @@ describe('visibility in the editor', () => {
     assert.equal(root.querySelector('ha-card-conditions-editor'), null);
     const section = [...root.querySelectorAll('details')].find((d) => d.querySelector('summary').textContent.trim() === 'Visibility');
     assert.ok(section.querySelector('ha-yaml-editor'));
+  });
+
+  test('YAML typed half-way changes nothing; an emptied box removes the key', async () => {
+    const conditions = [{ condition: 'user', users: ['u-anna'] }];
+    const { root, events, window } = await editor({ visibility: conditions }, { defineConditionsEditor: false });
+    const yaml = root.querySelector('ha-yaml-editor');
+    const send = (detail) => yaml.dispatchEvent(new window.CustomEvent('value-changed', { detail }));
+    send({ value: undefined, isValid: false });
+    assert.equal(events.length, 0);
+    send({ value: {}, isValid: true });
+    assert.equal('visibility' in events.at(-1), false);
   });
 });

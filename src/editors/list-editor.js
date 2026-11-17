@@ -1188,8 +1188,15 @@ export class HomeTasksCardEditor extends EditorBase {
     yaml.defaultValue = list;
     yaml.addEventListener("value-changed", (e) => {
       e.stopPropagation();
+      // YAML that does not parse yet (typed half-way) changes nothing.
+      if (e.detail?.isValid === false) return;
       const value = e.detail?.value;
-      if (value == null || (Array.isArray(value) && allConditions(value))) save(value || []);
+      // An emptied box comes as {} (or nothing): no conditions, not one
+      // empty condition, which would never hold.
+      const empty = value == null
+        || (typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === 0);
+      if (empty) save([]);
+      else if (Array.isArray(value) && allConditions(value)) save(value);
       else if (typeof value === "object" && allConditions([value])) save([value]);
     });
     nodes.push(yaml);
