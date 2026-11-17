@@ -12,6 +12,7 @@ its settings and its sensor, and so that several plans can sit side by side.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 import copy
@@ -25,6 +26,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
@@ -38,6 +40,7 @@ ENTRY_TYPE_PLAN = "plan"
 # Plan stores live apart from the list stores in hass.data[DOMAIN]: plenty of
 # code walks those and takes whatever is not a native store for a linked one.
 DATA_PLANS = f"{DOMAIN}_plans"
+DATA_PROVIDER_FIELDS = f"{DOMAIN}_plan_provider_fields"
 # Sent when a list is set up or unloaded, so a plan re-reads which lists it
 # draws from.
 SIGNAL_LISTS_CHANGED = f"{DOMAIN}_lists_changed"
@@ -58,6 +61,8 @@ PLAN_HORIZON_DAYS = 7
 PLAN_KEEP_PAST_DAYS = 14
 MAX_PLAN_ITEMS_PER_DAY = 100
 MAX_PLAN_NOTE_LENGTH = 255
+# All providers are read concurrently, within the card's five-second wait.
+PLAN_PROVIDER_TIMEOUT = 2.0
 
 _UNSET = object()
 
@@ -97,6 +102,8 @@ class PlanStore:
         self._store = Store(hass, STORAGE_VERSION, f"home_tasks_plan_{entry_id}")
         self._data: dict | None = None
         self._listeners: list[Callable[[], None]] = []
+        self._external_tasks: dict[str, dict[str, dict]] = {}
+        self._external_lock = asyncio.Lock()
 
     def async_add_listener(self, listener: Callable[[], None]) -> Callable[[], None]:
         """Add a listener for changes. Returns a removal callable."""
@@ -295,12 +302,17 @@ def read_lists(hass: HomeAssistant, wanted: set[str] | None = None) -> list[Sour
     a plan can be read from an entity property as well as from a service.
     """
     from .external_view import get_external_tasks_snapshot
+    from .websocket_api import _get_adapter
 
     stores = hass.data.get(DOMAIN, {})
     sources = [src for src in all_lists(hass) if not wanted or src.entry_id in wanted]
     for src in sources:
         if src.entity_id:
             src.tasks = get_external_tasks_snapshot(hass, src.entity_id)
+            cached = hass.data.get(DATA_PROVIDER_FIELDS, {}).get(src.entity_id)
+            if cached and cached[0] is _get_adapter(hass, src.entity_id):
+                for task in src.tasks:
+                    task.update(copy.deepcopy(cached[1].get(str(task["id"]), {})))
             state = hass.states.get(src.entity_id)
             src.away = state is None or state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN)
         else:
@@ -316,23 +328,39 @@ async def async_read_lists(hass: HomeAssistant, wanted: set[str] | None = None) 
     from .provider_adapters import GenericAdapter
     from .websocket_api import _async_get_external_tasks, _get_adapter
 
-    sources = read_lists(hass, wanted)
-    for src in sources:
+    async def read_provider(src: SourceList) -> None:
         if not src.entity_id or src.away:
-            continue
+            return
         adapter = _get_adapter(hass, src.entity_id)
         if adapter is None or isinstance(adapter, GenericAdapter):
-            continue  # the snapshot is what the card gets too
+            return  # the snapshot is what the card gets too
         try:
-            src.tasks, _overlay = await _async_get_external_tasks(hass, src.entity_id)
+            async with asyncio.timeout(PLAN_PROVIDER_TIMEOUT):
+                tasks, _overlay = await _async_get_external_tasks(hass, src.entity_id)
         except Exception as err:  # noqa: BLE001 - the provider is away
             _LOGGER.debug("Reading %s through its provider failed: %s", src.entity_id, err)
+            return
+        src.tasks = tasks
+        # Only provider-owned display fields are cached. Live status, due
+        # dates and overlay fields must not be overwritten by an old read.
+        fields = [field for field, supported in (
+            ("priority", adapter.capabilities.can_sync_priority),
+            ("tags", adapter.capabilities.can_sync_labels),
+        ) if supported]
+        hass.data.setdefault(DATA_PROVIDER_FIELDS, {})[src.entity_id] = (
+            adapter, {str(task["id"]): {key: copy.deepcopy(task[key]) for key in fields if key in task}
+                      for task in tasks},
+        )
+
+    sources = read_lists(hass, wanted)
+    await asyncio.gather(*(read_provider(src) for src in sources))
     return sources
 
 
 async def async_plan_view(hass: HomeAssistant, entry: ConfigEntry, store: PlanStore) -> PlanView:
     """A view of the plan for an answer - card, service or assistant - with
     its lists as async_read_lists reads them."""
+    await _async_follow_external(hass, entry, store)
     wanted = set(entry.options.get(CONF_SOURCE_LISTS) or [])
     return PlanView(hass, entry, store, sources=await async_read_lists(hass, wanted))
 
@@ -547,11 +575,9 @@ class PlanView:
                 if auto and (not self.include_due or self.due_on(task) != day):
                     continue  # the due date points elsewhere now
                 if task.get("completed"):
-                    # Ticked off in its list, not through the plan. A linked
-                    # list's provider says nothing about when (ticked off in
-                    # its own app): taken as done on the current day, as it
-                    # is seen done now - not dropped from the day.
-                    if (_completed_on(task) or self.current) != day:
+                    # External completions are remembered in done_on by the
+                    # source observer, even without a provider timestamp.
+                    if _completed_on(task) != day:
                         continue
                     done = True
             seen.add(ref)
@@ -713,7 +739,7 @@ async def async_plan_task(
 ) -> None:
     """Put a task on a day. From today on a task sits on one day only, so
     this moves it when it was planned elsewhere."""
-    view = PlanView(hass, entry, store)
+    view = await async_plan_view(hass, entry, store)
     day = day or view.current
     _check_writable(view, day)
     entry_id, task = _find_open(view, task_id, list_hint)
@@ -721,7 +747,7 @@ async def async_plan_task(
 
     with _all_or_nothing(store):
         _drop_open(view, ref, view.current.isoformat())
-        view = PlanView(hass, entry, store)
+        view = PlanView(hass, entry, store, sources=view.sources)
         # The day's full order, so that "top" is the top of what the day shows.
         items = [i for i in view.materialize(day) if _item_ref(i) != ref]
         item = {"task_id": ref[1], "list": entry_id, "auto": view.is_auto(task, day), "done_on": None}
@@ -746,7 +772,7 @@ async def async_set_day(
     before. ``replace`` takes the unnamed ones off, except what is done and
     what is there through its due date.
     """
-    view = PlanView(hass, entry, store)
+    view = await async_plan_view(hass, entry, store)
     day = day or view.current
     _check_writable(view, day)
     key = day.isoformat()
@@ -764,7 +790,7 @@ async def async_set_day(
     with _all_or_nothing(store):
         for ref in wanted:
             _drop_open(view, ref, view.current.isoformat(), except_key=key)
-        view = PlanView(hass, entry, store)
+        view = PlanView(hass, entry, store, sources=view.sources)
         current = view.materialize(day)
         by_ref = {_item_ref(item): item for item in current}
         named = [
@@ -949,9 +975,63 @@ async def async_retarget(hass: HomeAssistant, old: tuple[str, str], new: tuple[s
 #  Following the lists
 # ---------------------------------------------------------------------------
 
+async def _async_follow_external(hass: HomeAssistant, entry: ConfigEntry, store: PlanStore) -> None:
+    """Persist external ticks, also without a card or a provider timestamp.
+
+    An open-to-done transition is evidence of a new completion. A stored
+    reference on today is evidence too: only open tasks can be planned.
+    An unrelated completed task first seen in a provider is not new work
+    completed today, however old its due date is.
+    """
+    from . import _external_owns_recurrence
+    from .external_watch import _recently_ours, provider_readable
+
+    async with store._external_lock:
+        sources = source_lists(hass, entry)
+        view = PlanView(hass, entry, store, sources=sources)
+        key = view.today.isoformat()
+        stored = (store.days.get(key) or {}).get("items", [])
+        refs = {view.item_key(item) for item in stored if not item.get("done_on")}
+        for src in sources:
+            if not src.entity_id or src.away or not provider_readable(hass, src.entity_id):
+                continue
+            previous = store._external_tasks.get(src.entry_id, {})
+            current = {
+                str(task["id"]): {key: task.get(key) for key in (
+                    "completed", "due_date", "completed_at", "recurrence_enabled",
+                )}
+                for task in src.tasks
+            }
+            store._external_tasks[src.entry_id] = current
+            for task_id, task in current.items():
+                before = previous.get(task_id)
+                if task.get("completed") and (
+                    (before is not None and not before.get("completed"))
+                    or (src.entry_id, task_id) in refs
+                    or _completed_on(task) == view.today
+                ):
+                    await async_mark_completed(
+                        hass, entry, store, task_id, src.entry_id,
+                        (before or task).get("due_date"), sources=sources,
+                    )
+                elif before and before.get("completed") and not task.get("completed"):
+                    # Open again through its recurrence, not unticked: the
+                    # reopen moves the due date to the next occurrence, an
+                    # untick leaves it. Without a due date only our own
+                    # recent write tells - or the provider runs the series.
+                    if task.get("recurrence_enabled") and (
+                        (before.get("due_date") and task.get("due_date") != before.get("due_date"))
+                        or _recently_ours(hass, src.entity_id, task_id)
+                        or _external_owns_recurrence(hass, src.entity_id)
+                    ):
+                        continue  # the next occurrence, not a manual un-tick
+                    await async_mark_reopened(hass, entry, store, task_id, src.entry_id)
+
+
 async def async_mark_completed(
     hass: HomeAssistant, entry: ConfigEntry, store: PlanStore, task_id,
     list_hint: str | None = None, due_before: str | None = None,
+    *, sources: list[SourceList] | None = None,
 ) -> None:
     """A task was completed: if it sits on today, today remembers it as done.
 
@@ -959,7 +1039,12 @@ async def async_mark_completed(
     recurring task has moved on to its next occurrence by the time the plan
     looks.
     """
-    view = PlanView(hass, entry, store)
+    if sources is None:
+        # No provider round trip for a tick: the snapshot with the provider
+        # fields last read (priority, labels) keeps the day in the order it
+        # is shown in.
+        sources = read_lists(hass, set(entry.options.get(CONF_SOURCE_LISTS) or []))
+    view = PlanView(hass, entry, store, sources=sources)
     if view.current != view.today or task_id is None:
         return  # no plan day today
     # Events identify the current source, not a hint to a moved task.
@@ -1090,6 +1175,29 @@ async def async_setup_plan_entry(hass: HomeAssistant, entry: ConfigEntry) -> Non
     await store.async_load()
     hass.data.setdefault(DATA_PLANS, {})[entry.entry_id] = store
 
+    # Keep completions even with the sensor disabled and no dashboard open.
+    from .external_view import async_subscribe_external
+
+    source_unsubs: list[Callable[[], None]] = []
+
+    @callback
+    def _unsubscribe_sources() -> None:
+        for unsub in source_unsubs:
+            unsub()
+        source_unsubs.clear()
+
+    @callback
+    def _on_source_update() -> None:
+        hass.async_create_task(_async_follow_external(hass, entry, store))
+
+    @callback
+    def _subscribe_sources() -> None:
+        _unsubscribe_sources()
+        for src in source_lists(hass, entry):
+            if src.entity_id:
+                source_unsubs.extend(async_subscribe_external(hass, src.entity_id, _on_source_update))
+        _on_source_update()
+
     @callback
     def _on_completed(event) -> None:
         hass.async_create_task(async_mark_completed(
@@ -1108,11 +1216,15 @@ async def async_setup_plan_entry(hass: HomeAssistant, entry: ConfigEntry) -> Non
         # The settings are read on every look at the plan; nothing to reload.
         # Only what was planned on a day that is a day off now has to move.
         await async_leave_days_off(hass, entry, store)
+        _subscribe_sources()
         store.notify()
 
     entry.async_on_unload(hass.bus.async_listen(f"{DOMAIN}_task_completed", _on_completed))
     entry.async_on_unload(hass.bus.async_listen(f"{DOMAIN}_task_reopened", _on_reopened))
     entry.async_on_unload(entry.add_update_listener(_on_options_changed))
+    entry.async_on_unload(_unsubscribe_sources)
+    entry.async_on_unload(async_dispatcher_connect(hass, SIGNAL_LISTS_CHANGED, _subscribe_sources))
+    _subscribe_sources()
 
     # The plan's tools for an LLM, there for as long as the plan is loaded.
     # A Home Assistant too old to have tool sets still gets the plan.

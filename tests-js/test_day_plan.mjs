@@ -1240,7 +1240,7 @@ describe('"Plan for…" in a list', () => {
 });
 
 describe('editor of the day plan card', () => {
-  async function makeEditor(config, planList, hassExtra = {}) {
+  async function makeEditor(config, planList, hassExtra = {}, writeLists = null) {
     const loads = [];
     const { window } = await freshCard();
     // A config with columns is edited by the list card's editor.
@@ -1261,6 +1261,7 @@ describe('editor of the day plan card', () => {
         if (msg.type === 'home_tasks/get_plans') return { plans: planList, lists: LISTS };
         if (msg.type === 'home_tasks/set_plan_lists') {
           wsCalls.push(msg);
+          if (writeLists) return writeLists(msg);
           if (refuse) throw { code: 'unauthorized', message: 'Unauthorized' };
           return { id: msg.plan, source_lists: msg.source_lists };
         }
@@ -1373,6 +1374,76 @@ describe('editor of the day plan card', () => {
     await settle();
     assert.match(editor.shadowRoot.querySelector('.plan-lists-error').textContent, /Unauthorized/);
     assert.ok(editor.shadowRoot.querySelector('.plan-all-lists').classList.contains('active'));
+  });
+
+  test('an earlier failed write leaves newer queued list choices intact', async () => {
+    const plans = [{ id: 'P1', name: 'Today', source_lists: [] }];
+    const pending = [];
+    const { editor, wsCalls } = await makeEditor(
+      { type: 'custom:home-tasks-day-plan-card', plan: 'P1' }, plans, {},
+      (msg) => new Promise((resolve, reject) => pending.push({
+        resolve: () => resolve({ source_lists: msg.source_lists }), reject,
+      })),
+    );
+    const tap = (id) => editor.shadowRoot.querySelector(`[data-entry-id="${id}"]`).click();
+    tap('L1');
+    tap('L2');
+    await settle();
+    assert.equal(pending.length, 1, 'the second write waits for the first');
+    pending[0].reject(new Error('Temporary write failure'));
+    await settle();
+    tap('L3');
+    pending[1].resolve();
+    await settle();
+    pending[2].resolve();
+    await settle();
+    same(wsCalls.map((msg) => msg.source_lists), [['L1'], ['L1', 'L2'], ['L1', 'L2', 'L3']]);
+    same(plans[0].source_lists, ['L1', 'L2', 'L3']);
+    assert.equal(editor.shadowRoot.querySelector('.plan-lists-error'), null);
+  });
+
+  test('when every queued list write fails, the saved choice is restored', async () => {
+    const plans = [{ id: 'P1', name: 'Today', source_lists: ['L3'] }];
+    const pending = [];
+    const { editor } = await makeEditor(
+      { type: 'custom:home-tasks-day-plan-card', plan: 'P1' }, plans, {},
+      () => new Promise((_resolve, reject) => pending.push(reject)),
+    );
+    editor.shadowRoot.querySelector('[data-entry-id="L1"]').click();
+    editor.shadowRoot.querySelector('[data-entry-id="L2"]').click();
+    await settle();
+    pending[0](new Error('First failure'));
+    await settle();
+    pending[1](new Error('Last failure'));
+    await settle();
+    same(plans[0].source_lists, ['L3']);
+    assert.match(editor.shadowRoot.querySelector('.plan-lists-error').textContent, /Last failure/);
+  });
+
+  test('pending list writes and failures stay with their plan after switching', async () => {
+    const plans = [
+      { id: 'P1', name: 'Work plan', source_lists: ['L3'] },
+      { id: 'P2', name: 'Home plan', source_lists: [] },
+    ];
+    const pending = [];
+    const { editor } = await makeEditor(
+      { type: 'custom:home-tasks-day-plan-card', plan: 'P1' }, plans, {},
+      (msg) => new Promise((resolve, reject) => pending.push({
+        resolve: () => resolve({ source_lists: msg.source_lists }), reject,
+      })),
+    );
+    editor.shadowRoot.querySelector('[data-entry-id="L1"]').click();
+    pick(editor, 'plan-select', 'P2');
+    editor.shadowRoot.querySelector('[data-entry-id="L2"]').click();
+    await settle();
+    pending[0].reject(new Error('Work plan refused'));
+    await settle();
+    assert.equal(editor.shadowRoot.querySelector('.plan-lists-error'), null);
+    pending[1].resolve();
+    await settle();
+    same(plans.map((plan) => plan.source_lists), [['L3'], ['L2']]);
+    pick(editor, 'plan-select', 'P1');
+    assert.match(editor.shadowRoot.querySelector('.plan-lists-error').textContent, /Work plan refused/);
   });
 
   test('compact is a switch', async () => {
@@ -1561,6 +1632,29 @@ describe('editor of the day plan card', () => {
     same(wsCalls.slice(before).map((c) => c.workdays), [
       ['tue', 'wed', 'thu', 'fri'], ['wed', 'thu', 'fri'],
     ]);
+    same(activeDays(editor), ['wed', 'thu', 'fri']);
+  });
+
+  test('an earlier failed workday write leaves a newer choice intact', async () => {
+    const plans = [{ id: 'P1', name: 'Today', source_lists: [], workdays: ['mon', 'tue', 'wed', 'thu', 'fri'] }];
+    const pending = [];
+    const { editor } = await makeEditor(
+      { type: 'custom:home-tasks-day-plan-card', plan: 'P1', days: 3 }, plans);
+    const callWS = editor._hass.callWS;
+    editor._hass.callWS = (msg) => (msg.type === 'home_tasks/set_plan_workdays'
+      ? new Promise((resolve, reject) => pending.push({
+        resolve: () => resolve({ id: msg.plan, workdays: msg.workdays }), reject,
+      }))
+      : callWS(msg));
+    workdayChips(editor)[0].click();                      // Monday off
+    workdayChips(editor)[1].click();                      // Tuesday off, queued
+    await settle();
+    pending[0].reject(new Error('Temporary failure'));
+    await settle();
+    same(activeDays(editor), ['wed', 'thu', 'fri'], 'the newer choice still shows');
+    assert.equal(editor.shadowRoot.querySelector('.plan-days-error'), null);
+    pending[1].resolve();
+    await settle();
     same(activeDays(editor), ['wed', 'thu', 'fri']);
   });
 

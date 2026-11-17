@@ -15578,19 +15578,21 @@ var HomeTasksDayPlanCardEditor = class extends EditorBase {
           const workdays = ALL.filter((d) => next.has(d));
           if (planInfo._savedWorkdays === void 0) planInfo._savedWorkdays = planInfo.workdays || [];
           planInfo.workdays = workdays.length === ALL.length ? [] : workdays;
-          const seq = this._workdaysSeq = (this._workdaysSeq || 0) + 1;
-          this._planDaysError = null;
+          const seq = planInfo._workdaysSeq = (planInfo._workdaysSeq || 0) + 1;
+          planInfo._daysError = null;
           this._render();
           this._workdaysWrite = (this._workdaysWrite || Promise.resolve()).then(() => this._hass.callWS({ type: "home_tasks/set_plan_workdays", plan: planInfo.id, workdays }).then((info) => {
             planInfo._savedWorkdays = info && info.workdays || (workdays.length === ALL.length ? [] : workdays);
-            if (seq === this._workdaysSeq) {
+            if (seq === planInfo._workdaysSeq) {
               planInfo.workdays = planInfo._savedWorkdays;
               this._render();
             }
           }).catch((err) => {
-            planInfo.workdays = planInfo._savedWorkdays;
-            this._planDaysError = err && err.message || String(err);
-            this._render();
+            if (seq === planInfo._workdaysSeq) {
+              planInfo.workdays = planInfo._savedWorkdays;
+              planInfo._daysError = err && err.message || String(err);
+              this._render();
+            }
           }));
         });
         return btn;
@@ -15608,7 +15610,7 @@ var HomeTasksDayPlanCardEditor = class extends EditorBase {
           toggle("compact-switch", "ed_compact", "compact", false)
         ]),
         ...workdayNodes,
-        ...this._planDaysError ? [this._el("div", { className: "hint plan-lists-error plan-days-error", textContent: this._planDaysError })] : [],
+        ...planInfo && planInfo._daysError ? [this._el("div", { className: "hint plan-lists-error plan-days-error", textContent: planInfo._daysError })] : [],
         groupLabel("ed_group_header"),
         this._el("div", { className: "toggle-grid" }, [
           toggle("date-switch", "due_date_lbl", "show_date", true),
@@ -15635,19 +15637,21 @@ var HomeTasksDayPlanCardEditor = class extends EditorBase {
       const save = (ids) => {
         if (planInfo._savedLists === void 0) planInfo._savedLists = planInfo.source_lists || [];
         planInfo.source_lists = ids;
-        const seq = this._listsSeq = (this._listsSeq || 0) + 1;
-        this._planListsError = null;
+        const seq = planInfo._listsSeq = (planInfo._listsSeq || 0) + 1;
+        planInfo._listsError = null;
         this._render();
         this._listsWrite = (this._listsWrite || Promise.resolve()).then(() => this._hass.callWS({ type: "home_tasks/set_plan_lists", plan: planInfo.id, source_lists: ids }).then((info) => {
           planInfo._savedLists = info && info.source_lists || ids;
-          if (seq === this._listsSeq) {
+          if (seq === planInfo._listsSeq) {
             planInfo.source_lists = planInfo._savedLists;
             this._render();
           }
         }).catch((err) => {
-          planInfo.source_lists = planInfo._savedLists;
-          this._planListsError = err && err.message || String(err);
-          this._render();
+          if (seq === planInfo._listsSeq) {
+            planInfo.source_lists = planInfo._savedLists;
+            planInfo._listsError = err && err.message || String(err);
+            this._render();
+          }
         }));
       };
       const shown = () => new Set(planInfo.source_lists || []);
@@ -15682,8 +15686,8 @@ var HomeTasksDayPlanCardEditor = class extends EditorBase {
         })
       ];
       const nodes = [this._el("div", { className: "assignee-chip-row plan-lists" }, chips)];
-      if (this._planListsError) {
-        nodes.push(this._el("div", { className: "hint plan-lists-error", textContent: this._planListsError }));
+      if (planInfo._listsError) {
+        nodes.push(this._el("div", { className: "hint plan-lists-error", textContent: planInfo._listsError }));
       }
       sections.push(this._buildEditorSection("plan_lists", "mdi:format-list-checks", "ed_view_lists", nodes));
     }

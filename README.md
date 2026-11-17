@@ -52,6 +52,12 @@ Already using **Todoist, Google Tasks, Nextcloud, Bring** or another to-do app? 
 </tr>
 </table>
 
+<p align="center">
+<img src="https://raw.githubusercontent.com/L3t4l3s/home-tasks/main/docs/Day-plan.png" width="820" alt="A work week as a day plan: three days with tasks from a work list and a clients list"><br>
+<b>Plan your days</b><br>
+<sub>Which task gets done on which day, from all your lists — with a focus for the day and its progress</sub>
+</p>
+
 **Why Home Tasks?**
 
 - 🔁 **Recurring tasks done right** — "every 2nd Saturday", "Mon–Fri" or "3 days after I last did it", and they come back on their own.

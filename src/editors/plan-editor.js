@@ -92,8 +92,8 @@ export class HomeTasksDayPlanCardEditor extends EditorBase {
           const workdays = ALL.filter((d) => next.has(d));
           if (planInfo._savedWorkdays === undefined) planInfo._savedWorkdays = planInfo.workdays || [];
           planInfo.workdays = workdays.length === ALL.length ? [] : workdays;   // shown at once
-          const seq = (this._workdaysSeq = (this._workdaysSeq || 0) + 1);
-          this._planDaysError = null;
+          const seq = (planInfo._workdaysSeq = (planInfo._workdaysSeq || 0) + 1);
+          planInfo._daysError = null;
           this._render();
           // One write after the other, in the order of the taps.
           this._workdaysWrite = (this._workdaysWrite || Promise.resolve()).then(() =>
@@ -101,16 +101,20 @@ export class HomeTasksDayPlanCardEditor extends EditorBase {
               .then((info) => {
                 planInfo._savedWorkdays = (info && info.workdays) || (workdays.length === ALL.length ? [] : workdays);
                 // A later tap is on its way: what it shows stays.
-                if (seq === this._workdaysSeq) {
+                if (seq === planInfo._workdaysSeq) {
                   planInfo.workdays = planInfo._savedWorkdays;
                   this._render();
                 }
               })
               .catch((err) => {
-                // Back to what the plan has: the last write that went through.
-                planInfo.workdays = planInfo._savedWorkdays;
-                this._planDaysError = (err && err.message) || String(err);
-                this._render();
+                // As the lists: a later tap's write holds the whole newer
+                // choice, so only the last one's failure goes back to what
+                // the plan has - the last write that went through.
+                if (seq === planInfo._workdaysSeq) {
+                  planInfo.workdays = planInfo._savedWorkdays;
+                  planInfo._daysError = (err && err.message) || String(err);
+                  this._render();
+                }
               }));
         });
         return btn;
@@ -129,8 +133,8 @@ export class HomeTasksDayPlanCardEditor extends EditorBase {
           toggle("compact-switch", "ed_compact", "compact", false),
         ]),
         ...workdayNodes,
-        ...(this._planDaysError
-          ? [this._el("div", { className: "hint plan-lists-error plan-days-error", textContent: this._planDaysError })]
+        ...(planInfo && planInfo._daysError
+          ? [this._el("div", { className: "hint plan-lists-error plan-days-error", textContent: planInfo._daysError })]
           : []),
         groupLabel("ed_group_header"),
         this._el("div", { className: "toggle-grid" }, [
@@ -169,23 +173,27 @@ export class HomeTasksDayPlanCardEditor extends EditorBase {
       const save = (ids) => {
         if (planInfo._savedLists === undefined) planInfo._savedLists = planInfo.source_lists || [];
         planInfo.source_lists = ids;
-        const seq = (this._listsSeq = (this._listsSeq || 0) + 1);
-        this._planListsError = null;
+        const seq = (planInfo._listsSeq = (planInfo._listsSeq || 0) + 1);
+        planInfo._listsError = null;
         this._render();
         this._listsWrite = (this._listsWrite || Promise.resolve()).then(() =>
           this._hass.callWS({ type: "home_tasks/set_plan_lists", plan: planInfo.id, source_lists: ids })
             .then((info) => {
               planInfo._savedLists = (info && info.source_lists) || ids;
               // A later tap is on its way: what it shows stays.
-              if (seq === this._listsSeq) {
+              if (seq === planInfo._listsSeq) {
                 planInfo.source_lists = planInfo._savedLists;
                 this._render();
               }
             })
             .catch((err) => {
-              planInfo.source_lists = planInfo._savedLists;
-              this._planListsError = (err && err.message) || String(err);
-              this._render();
+              // Later queued writes contain the full newer choice. An
+              // earlier failure must not replace that choice mid-tap.
+              if (seq === planInfo._listsSeq) {
+                planInfo.source_lists = planInfo._savedLists;
+                planInfo._listsError = (err && err.message) || String(err);
+                this._render();
+              }
             }));
       };
       // From the choice as shown now, not as it was when the chip was drawn:
@@ -222,8 +230,8 @@ export class HomeTasksDayPlanCardEditor extends EditorBase {
         }),
       ];
       const nodes = [this._el("div", { className: "assignee-chip-row plan-lists" }, chips)];
-      if (this._planListsError) {
-        nodes.push(this._el("div", { className: "hint plan-lists-error", textContent: this._planListsError }));
+      if (planInfo._listsError) {
+        nodes.push(this._el("div", { className: "hint plan-lists-error", textContent: planInfo._listsError }));
       }
       sections.push(this._buildEditorSection("plan_lists", "mdi:format-list-checks", "ed_view_lists", nodes));
     }
