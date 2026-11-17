@@ -8,7 +8,7 @@
  * Built from src/ by scripts/build-card.mjs. Edit the sources there and run
  * `npm run build` - this file is written over.
  */
-console.info("%c HOME-TASKS-CARD %c v2.5.3 ", "color: white; background: #03a9f4; font-weight: bold;", "color: #03a9f4; background: white; font-weight: bold;");
+console.info("%c HOME-TASKS-CARD %c v3.0.0 ", "color: white; background: #03a9f4; font-weight: bold;", "color: #03a9f4; background: white; font-weight: bold;");
 
 // custom_components/home_tasks/ui_translations.json
 var ui_translations_default = {
