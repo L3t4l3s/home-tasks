@@ -12,7 +12,11 @@ dashboard" dialog, which has to answer from what the frontend holds.
 """
 from __future__ import annotations
 
+from collections import Counter
+
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 
@@ -44,3 +48,33 @@ def entry_device_info(entry: ConfigEntry) -> DeviceInfo:
         model=model,
         entry_type=DeviceEntryType.SERVICE,
     )
+
+
+@callback
+def async_move_areas_to_service(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Once, when a list or plan becomes a service: its area goes there.
+
+    Before, an entity could only be put in an area of its own. Under a
+    service, Home Assistant names an entity with an area of its own without
+    the service's name - in Assist the todo entity had no name left, a
+    sensor "Open Tasks" like every other list's - and the todo entity, which
+    has no name of its own, may not have an area of its own at all.
+
+    The service takes the area of the todo entity, else the one most of the
+    entities have; the entities with that area inherit it from then on. One
+    with another area keeps its own.
+    """
+    ent_reg = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(ent_reg, entry.entry_id)
+    areas = [e.area_id for e in entities if e.area_id]
+    if not areas:
+        return
+    area = next((e.area_id for e in entities if e.domain == "todo" and e.area_id), None)
+    area = area or Counter(areas).most_common(1)[0][0]
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_or_create(config_entry_id=entry.entry_id, **entry_device_info(entry))
+    if device.area_id is None:
+        dev_reg.async_update_device(device.id, area_id=area)
+    for e in entities:
+        if e.area_id == area:
+            ent_reg.async_update_entity(e.entity_id, area_id=None)

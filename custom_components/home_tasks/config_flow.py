@@ -25,6 +25,8 @@ class HomeTasksConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Home Tasks."""
 
     VERSION = 1
+    # 2: each list and plan is a service; areas moved to it (device.py).
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback

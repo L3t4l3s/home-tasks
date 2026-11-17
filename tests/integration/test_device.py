@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import pytest
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import area_registry as ar, device_registry as dr, entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 DOMAIN = "home_tasks"
@@ -81,3 +81,71 @@ async def test_a_plan_has_a_device_of_its_own(
     entities = list(_entities(hass, entry).values())
     assert [e.device_id for e in entities] == [device.id]
     assert _names(hass, entities) == {"Today Open Items"}
+
+
+# ---------------------------------------------------------------------------
+# Areas: from the entities to the service, once (minor version 2)
+# ---------------------------------------------------------------------------
+
+async def _old_list(hass: HomeAssistant, areas: dict[str, str | None]) -> MockConfigEntry:
+    """A list from before the service, its entities in areas of their own."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"name": "Garden"}, title="Garden", minor_version=1)
+    entry.add_to_hass(hass)
+    ent_reg = er.async_get(hass)
+    for domain, unique_id, name in (
+        ("todo", entry.entry_id, "Garden"),
+        ("sensor", f"{entry.entry_id}_open_tasks", "Garden Open Tasks"),
+        ("calendar", f"{entry.entry_id}_calendar", "Garden Calendar"),
+    ):
+        e = ent_reg.async_get_or_create(
+            domain, DOMAIN, unique_id, config_entry=entry, original_name=name, has_entity_name=True,
+        )
+        if areas.get(domain):
+            ent_reg.async_update_entity(e.entity_id, area_id=areas[domain])
+    return entry
+
+
+async def test_the_area_moves_from_the_entities_to_the_service(
+    hass: HomeAssistant, patch_add_extra_js_url
+) -> None:
+    area_reg = ar.async_get(hass)
+    garden, shed = area_reg.async_create("Garden").id, area_reg.async_create("Shed").id
+    entry = await _old_list(hass, {"todo": garden, "sensor": garden, "calendar": shed})
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.minor_version == 2
+    device = _device(hass, entry)
+    assert device.area_id == garden
+    by_domain = {e.domain: e for e in _entities(hass, entry).values()}
+    # Inherited from the service now; another area stays the entity's own.
+    assert (by_domain["todo"].area_id, by_domain["sensor"].area_id) == (None, None)
+    assert by_domain["calendar"].area_id == shed
+    # Assist knows them by the list's name again.
+    assert er.async_get_full_entity_name(hass, by_domain["todo"]) == "Garden"
+    assert er.async_get_full_entity_name(hass, by_domain["sensor"]) == "Garden Open Tasks"
+
+    # Once: an area set later on an entity stays where it was put.
+    er.async_get(hass).async_update_entity(by_domain["sensor"].entity_id, area_id=shed)
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert er.async_get(hass).async_get(by_domain["sensor"].entity_id).area_id == shed
+    assert _device(hass, entry).area_id == garden
+
+
+async def test_without_the_todo_entity_in_one_the_most_common_area_wins(
+    hass: HomeAssistant, patch_add_extra_js_url
+) -> None:
+    shed = ar.async_get(hass).async_create("Shed").id
+    entry = await _old_list(hass, {"sensor": shed, "calendar": shed})
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert _device(hass, entry).area_id == shed
+    assert {e.area_id for e in _entities(hass, entry).values()} == {None}
+
+
+async def test_a_list_in_no_area_gets_none(hass: HomeAssistant, patch_add_extra_js_url) -> None:
+    entry = await _old_list(hass, {})
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert (entry.minor_version, _device(hass, entry).area_id) == (2, None)

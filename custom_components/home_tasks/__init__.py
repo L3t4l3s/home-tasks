@@ -3044,6 +3044,18 @@ def _async_register_services(hass: HomeAssistant) -> None:
 #  Config entry lifecycle
 # ---------------------------------------------------------------------------
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Bring an entry up to the config flow's version."""
+    if entry.version > 1:
+        return False  # from a newer release
+    if entry.minor_version < 2:
+        from .device import async_move_areas_to_service  # noqa: WPS433
+
+        async_move_areas_to_service(hass, entry)
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Home Tasks from a config entry."""
     await _async_register_card(hass)
