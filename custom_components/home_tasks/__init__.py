@@ -40,6 +40,7 @@ from .overlay_store import ExternalTaskOverlayStore
 from .store import (
     HomeTasksStore,
     _REOPEN_UNCHANGED,
+    person_of_user,
     recurrence_interval_minutes,
     task_assignees,
     validate_reminders,
@@ -2367,7 +2368,9 @@ def _async_register_services(hass: HomeAssistant) -> None:
                 ]
             except ValueError as err:
                 raise ServiceValidationError(str(err)) from err
-            new_uid = await async_create_external_task(hass, ident, fields)
+            new_uid = await async_create_external_task(
+                hass, ident, fields, user_id=call.context.user_id if call.context else None,
+            )
             wants_more = sub_titles or extra or "image_url" in data or data.get("generate_image")
             if wants_more and not new_uid:
                 raise HomeAssistantError(
@@ -2403,6 +2406,7 @@ def _async_register_services(hass: HomeAssistant) -> None:
         task = await store.async_add_task(
             data["title"],
             actor=actor,
+            current_person=person_of_user(hass, call.context.user_id if call.context else None),
             assigned_person=data.get("assigned_person"),
             due_date=data.get("due_date"),
             due_time=data.get("due_time"),

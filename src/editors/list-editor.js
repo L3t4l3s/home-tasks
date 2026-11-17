@@ -391,9 +391,13 @@ export class HomeTasksCardEditor extends EditorBase {
       if (!col.entity_id && !defaults.recurrence_reopen_on_complete) {
         kids.push(...this._buildDefaultLead(defaults, save));
       }
+      // "Current user": new tasks go to whoever adds them.
       const peopleField = this._buildPersonChips(
         this._t("ed_default_assignee"),
-        this._personOptions(defaults.assignees),
+        [
+          ...this._personOptions(defaults.assignees).filter((p) => p.value !== CURRENT_USER),
+          { value: CURRENT_USER, label: this._t("ed_preset_current_user") },
+        ],
         defaults.assignees,
         (people) => {
           defaults.assignees = people;

@@ -20,6 +20,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .device import entry_device_info
+from .store import person_of_user
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -196,7 +197,8 @@ class HomeTasksEntity(TodoListEntity):
                 due_date = item.due.isoformat()
         actor, user_id = await self._async_actor()
         task = await self._store.async_add_task(
-            item.summary or "", actor=actor, due_date=due_date, due_time=due_time
+            item.summary or "", actor=actor, due_date=due_date, due_time=due_time,
+            current_person=person_of_user(self.hass, user_id),
         )
         # Apply optional fields
         kwargs = {}

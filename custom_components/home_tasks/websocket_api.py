@@ -15,6 +15,8 @@ from .image_queue import PLACEHOLDER_IMAGE_URLS, async_get_image_queue
 from .const import DOMAIN, MAX_ASSIGNEES_PER_TASK, MAX_IMAGE_URL_LENGTH, MAX_REORDER_IDS, MAX_RECURRENCE_VALUE, MAX_REOPEN_LEAD_MINUTES, MAX_REMINDER_OFFSET_MINUTES, MAX_REMINDERS_PER_TASK, MAX_SUB_TASKS_PER_TASK, MAX_TAG_CATALOG, MAX_TAGS_PER_TASK, MAX_TITLE_LENGTH, RECURRENCE_FIELDS, TODO_SORT_MODES, VALID_RECURRENCE_ANCHORS, VALID_RECURRENCE_UNITS
 from .overlay_store import ExternalTaskOverlayStore, OVERLAY_FIELDS, _empty_overlay
 from .store import (
+    person_of_user,
+    resolve_current_user,
     sync_assignee_fields,
     task_assignees,
     validate_assigned_person,
@@ -241,6 +243,7 @@ async def ws_add_task(hass, connection, msg):
         task = await store.async_add_task(
             msg["title"],
             actor=actor,
+            current_person=person_of_user(hass, connection.user.id if connection.user else None),
             assigned_person=msg.get("assigned_person"),
             assigned_persons=msg.get("assigned_persons"),
             due_date=msg.get("due_date"),
@@ -1755,7 +1758,8 @@ def _fire_external_task_event(
 
 
 async def async_create_external_task(
-    hass, entity_id: str, fields: dict, apply_defaults: bool = True
+    hass, entity_id: str, fields: dict, apply_defaults: bool = True,
+    user_id: str | None = None,
 ) -> str | None:
     """Create a task on a linked external list and return its new uid.
 
@@ -1763,7 +1767,9 @@ async def async_create_external_task(
     the list's defaults, the adapter, the overlay and the created event all
     belong to creating a task, wherever the call came from. A copy of an
     existing task passes apply_defaults=False: it is meant to be that task
-    again, not a new one dressed in the list's defaults.
+    again, not a new one dressed in the list's defaults. user_id is the user
+    creating it: their person takes the place of current_user in the
+    default assignees.
     """
     adapter = _get_adapter(hass, entity_id)
 
@@ -1781,7 +1787,9 @@ async def async_create_external_task(
         # The default assignees only for a task the caller named nobody for.
         if (fields.get("assigned_person") is None and not fields.get("assigned_persons")
                 and defaults["assignees"]):
-            fields["assigned_persons"] = list(defaults["assignees"])
+            people = resolve_current_user(defaults["assignees"], person_of_user(hass, user_id))
+            if people:
+                fields["assigned_persons"] = people
         # Presence, not truthiness: "reminders": [] is the caller saying
         # "this one gets none", the same as on a native list.
         if "reminders" not in fields and defaults["reminders"]:
@@ -1877,7 +1885,9 @@ async def ws_create_external_task(hass, connection, msg):
     """Create a task via the provider adapter."""
     try:
         fields = {k: v for k, v in msg.items() if k not in ("id", "type", "entity_id")}
-        new_uid = await async_create_external_task(hass, msg["entity_id"], fields)
+        new_uid = await async_create_external_task(
+            hass, msg["entity_id"], fields, user_id=connection.user.id if connection.user else None,
+        )
         connection.send_result(msg["id"], {"uid": new_uid})
     except Exception as err:
         _handle_error(connection, msg["id"], err)

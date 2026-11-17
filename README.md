@@ -437,7 +437,7 @@ Each entry in `columns` of the list card accepts the following options.
 
 One card can look different for each person in the household. Two settings make that, per column:
 
-- **Current user** in *Filters* → *Limit to people* (`filters.assignees: [current_user]`): the column shows the tasks of whoever is signed in, found through the person their Home Assistant user belongs to. Together with *Unassigned* it shows their tasks and the unclaimed ones. A new task added there goes to them. A user without a person (a wall tablet's account, say) sees none of the people's tasks.
+- **Current user** in *Filters* → *Limit to people* (`filters.assignees: [current_user]`): the column shows the tasks of whoever is signed in, found through the person their Home Assistant user belongs to. Together with *Unassigned* it shows their tasks and the unclaimed ones. The filter only decides what shows: to have new tasks go to whoever adds them, pick *Current user* among the list's default assignees (card editor → *Defaults*). A user without a person (a wall tablet's account, say) sees none of the people's tasks.
 - **Visibility** (`visibility:`): the column shows only while all its conditions hold. The card editor has the same Visibility editor as a card's own Visibility tab, which picks people by name. While the dashboard is edited every column shows, the hidden ones dimmed; with no column left, the card hides.
 
 ```yaml
@@ -550,7 +550,7 @@ add-task row, tiles) have no effect here, and neither has `columns`.
 
 ### List defaults
 
-Each list — native or linked — can preset new tasks (card editor → *Defaults*): assignees, reminders, tags, priority and section. They apply however a task is created: card, voice, service or `todo.add_item`; values given when creating it win. The same place sets:
+Each list — native or linked — can preset new tasks (card editor → *Defaults*): assignees, reminders, tags, priority and section. They apply however a task is created: card, voice, service or `todo.add_item`; values given when creating it win. Among the assignees, *Current user* (`current_user`) is the person of whoever creates the task — from the card, a service call or an assistant on their behalf; an automation, or a user no person belongs to, leaves it out. The same place sets:
 
 - **Fixed tags** — always suggested in the tag input, and a near-miss typo (`kitchn`) offers the fixed tag instead
 - **Reopen early** — a list-wide lead for recurring tasks ([Tasks](https://github.com/L3t4l3s/home-tasks#tasks))

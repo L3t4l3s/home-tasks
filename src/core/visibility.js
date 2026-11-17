@@ -61,6 +61,32 @@ function dropInvalid(conditions) {
   return valid;
 }
 
+// A state or numeric_state condition naming no entity reads *entityId* (a
+// linked column's list), at any depth, as Home Assistant fills in a badge's
+// or feature's entity (addEntityToCondition). Done before anything is judged
+// or sent to core, so both read the same entity.
+export function withEntity(conditions, entityId) {
+  if (!entityId || !conditions) return conditions;
+  let changed = false;
+  const fill = (c) => {
+    if ("conditions" in c && c.conditions != null) {
+      const kids = ensureArray(c.conditions);
+      const next = kids.map(fill);
+      if (next.every((k, i) => k === kids[i])) return c;
+      changed = true;
+      return { ...c, conditions: next };
+    }
+    const type = "condition" in c ? c.condition : "state";
+    if ((type === "state" || type === "numeric_state") && !c.entity && !("entity_id" in c)) {
+      changed = true;
+      return { ...c, entity: entityId };
+    }
+    return c;
+  };
+  const out = conditions.map(fill);
+  return changed ? out : conditions;
+}
+
 export const isLogicalCondition = (c) => "condition" in c && LOGICAL_TYPES.has(c.condition);
 const logicalChildren = (c) => ensureArray(c.conditions) || [];
 const isDisabledCondition = (c) => "enabled" in c && c.enabled === false;
@@ -161,7 +187,7 @@ function stateFromEntityId(hass, value) {
 }
 
 function checkState(c, hass, ctx) {
-  const entityId = c.entity_id || c.entity || ctx.entity_id;
+  const entityId = c.entity_id || c.entity;
   const stateObj = entityId ? hass.states[entityId] : undefined;
   let state;
   if (!stateObj) state = "unknown";
@@ -181,7 +207,7 @@ function checkState(c, hass, ctx) {
 }
 
 function checkNumericState(c, hass, ctx) {
-  const entityId = c.entity_id || c.entity || ctx.entity_id;
+  const entityId = c.entity_id || c.entity;
   const stateObj = entityId ? hass.states[entityId] : undefined;
   const state = c.attribute ? stateObj?.attributes?.[c.attribute] : stateObj?.state;
   let above = c.above;
@@ -420,7 +446,7 @@ function isLocallyEvaluableServerLeaf(c, states, ctx) {
   const type = "condition" in c ? c.condition : "state";
   if (type !== "state" && type !== "numeric_state") return false;
   if (!("entity_id" in c)) {
-    const target = c.entity || ctx.entity_id;
+    const target = c.entity;
     return !!target && target in states;
   }
   if (typeof c.entity_id !== "string" || !(c.entity_id in states) || c.attribute !== undefined

@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import (
+    CURRENT_USER,
     MAX_IMAGE_URL_LENGTH,
     MAX_NOTES_LENGTH,
     MAX_RECURRENCE_VALUE,
@@ -342,6 +343,28 @@ def default_assignees(defaults: dict) -> list[str]:
     if not people and defaults.get("assignee"):
         people = [defaults["assignee"]]
     return people
+
+
+def person_of_user(hass, user_id: str | None) -> str | None:
+    """The person entity of a Home Assistant user, or None (no user, or a
+    user no person belongs to - a wall tablet's account, an automation)."""
+    if not user_id:
+        return None
+    for state in hass.states.async_all("person"):
+        if state.attributes.get("user_id") == user_id:
+            return state.entity_id
+    return None
+
+
+def resolve_current_user(people: list[str], person: str | None) -> list[str]:
+    """Default assignees as a new task takes them: current_user becomes the
+    person of whoever creates it, and is left out where there is none."""
+    out: list[str] = []
+    for value in people:
+        value = person if value == CURRENT_USER else value
+        if value and value not in out:
+            out.append(value)
+    return out
 
 
 def updated_default_assignees(current: dict, assignee, assignees, unset) -> list[str]:
@@ -822,6 +845,7 @@ class HomeTasksStore:
         sub_tasks: list[str] | None = None,
         recurrence: dict | None = None,
         assigned_persons: list | None = None,
+        current_person: str | None = None,
     ) -> dict:
         """Add a task, optionally with an initial due date/time (issue #38),
         reminders (issue #43), notes, priority, sub-tasks (issue #70) and
@@ -831,6 +855,9 @@ class HomeTasksStore:
         Creating with these set (instead of add + update) keeps a single
         history entry / task_created event and no intermediate bare state.
         A due_time without a due_date is meaningless and dropped.
+
+        current_person is the person of the user creating the task: it takes
+        the place of current_user in the list's default assignees.
         """
         title = validate_text(title, MAX_TITLE_LENGTH, "Task title")
         # List-level defaults (issues #44 / #46): only fill fields the caller
@@ -839,7 +866,7 @@ class HomeTasksStore:
         # means "not provided", mirroring the assignee check).
         defaults = self._data.get("defaults") or {}
         if assigned_person is None and not assigned_persons:
-            assigned_persons = default_assignees(defaults)
+            assigned_persons = resolve_current_user(default_assignees(defaults), current_person)
         if reminders is None and defaults.get("reminders"):
             reminders = list(defaults["reminders"])
         if tags is None and defaults.get("tags"):

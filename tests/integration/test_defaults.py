@@ -570,3 +570,95 @@ async def test_a_linked_list_caller_naming_people_gets_only_them(
     assert msg["success"] is True, msg
 
     assert overlay.get_overlay("uid-new")["assigned_persons"] == ["person.bob"]
+
+
+# ---------------------------------------------------------------------------
+# "Current user" among the default assignees
+# ---------------------------------------------------------------------------
+
+async def test_current_user_becomes_the_person_of_whoever_adds_the_task(
+    hass: HomeAssistant, store
+) -> None:
+    await store.async_set_defaults(assignees=["current_user", "person.bob"])
+
+    mine = await store.async_add_task("Bins", current_person="person.alice")
+    nobodys = await store.async_add_task("Dishes")
+
+    assert mine["assigned_persons"] == ["person.alice", "person.bob"]
+    assert nobodys["assigned_persons"] == ["person.bob"]
+    # The setting itself stays "current user", for the next one to add a task.
+    assert store.get_defaults()["assignees"] == ["current_user", "person.bob"]
+
+
+async def test_the_card_adding_a_task_gets_its_users_person(
+    hass: HomeAssistant, hass_ws_client, hass_admin_user, mock_config_entry, store
+) -> None:
+    hass.states.async_set("person.alice", "home", {"user_id": hass_admin_user.id})
+    hass.states.async_set("person.bob", "home", {"user_id": "someone-else"})
+    await store.async_set_defaults(assignees=["current_user"])
+    client = await hass_ws_client(hass)
+
+    await client.send_json({
+        "id": 70, "type": "home_tasks/add_task",
+        "list_id": mock_config_entry.entry_id, "title": "Mine",
+    })
+    msg = await client.receive_json()
+
+    assert msg["success"] is True, msg
+    assert msg["result"]["assigned_persons"] == ["person.alice"]
+
+
+async def test_a_user_without_a_person_adds_an_unassigned_task(
+    hass: HomeAssistant, hass_ws_client, mock_config_entry, store
+) -> None:
+    await store.async_set_defaults(assignees=["current_user"])
+    client = await hass_ws_client(hass)
+
+    await client.send_json({
+        "id": 71, "type": "home_tasks/add_task",
+        "list_id": mock_config_entry.entry_id, "title": "Whose?",
+    })
+    msg = await client.receive_json()
+
+    assert msg["success"] is True, msg
+    assert msg["result"]["assigned_persons"] == []
+
+
+async def test_a_service_call_takes_the_person_of_its_user(
+    hass: HomeAssistant, hass_admin_user, mock_config_entry, store
+) -> None:
+    from homeassistant.core import Context
+
+    hass.states.async_set("person.alice", "home", {"user_id": hass_admin_user.id})
+    await store.async_set_defaults(assignees=["current_user"])
+
+    await hass.services.async_call(
+        DOMAIN, "add_task", {"list_name": "Test List", "title": "From a script"},
+        blocking=True, context=Context(user_id=hass_admin_user.id),
+    )
+    await hass.services.async_call(
+        DOMAIN, "add_task", {"list_name": "Test List", "title": "From an automation"},
+        blocking=True,
+    )
+
+    people = {t["title"]: t["assigned_persons"] for t in store.tasks}
+    assert people == {"From a script": ["person.alice"], "From an automation": []}
+
+
+async def test_a_linked_list_gives_current_user_the_adders_person(
+    hass: HomeAssistant, hass_ws_client, hass_admin_user, ext_entry
+) -> None:
+    hass.states.async_set("person.alice", "home", {"user_id": hass_admin_user.id})
+    overlay = _overlay(hass, ext_entry)
+    await overlay.async_set_defaults(assignees=["current_user"])
+    hass.data.setdefault(f"{DOMAIN}_adapters", {})[EXT_ENTITY] = _Adapter()
+    client = await hass_ws_client(hass)
+
+    await client.send_json({
+        "id": 72, "type": "home_tasks/create_external_task",
+        "entity_id": EXT_ENTITY, "title": "Bread",
+    })
+    msg = await client.receive_json()
+    assert msg["success"] is True, msg
+
+    assert overlay.get_overlay("uid-new")["assigned_persons"] == ["person.alice"]

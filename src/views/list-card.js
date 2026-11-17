@@ -1,9 +1,9 @@
 // The list card (custom:home-tasks-card): lists as columns, with filters,
 // sorting, sections, an add-task row and tiles.
 
-import { UNASSIGNED, _assignees, _listColumns, _listMinWidth, _tileMinWidth, listSupportsDue } from "../core/helpers.js";
+import { CURRENT_USER, UNASSIGNED, _assignees, _listColumns, _listMinWidth, _tileMinWidth, listSupportsDue } from "../core/helpers.js";
 import { TasksCardBase } from "../core/card-base.js";
-import { ConditionWatcher, evaluateLocally, normalizeVisibility } from "../core/visibility.js";
+import { ConditionWatcher, evaluateLocally, normalizeVisibility, viewerPersonId, withEntity } from "../core/visibility.js";
 
 // A column's visibility conditions as judged, per column object: the list a
 // watcher compares stays the same object across hass updates.
@@ -158,7 +158,7 @@ export class HomeTasksCard extends TasksCardBase {
     // what the list would fill in (see _saveDraft).
     const people = person ? [person]
       : this._keepsNewTasksUnassigned(colIdx) ? []
-      : [...(defaults.assignees || (defaults.assignee ? [defaults.assignee] : []))];
+      : this._defaultAssignees(defaults);
     const { addDue, addDueTime } = this._addRowDue(colIdx);
     cs.draft = {
       id: `__draft__${colIdx}`, _draft: true, title, completed: false, notes: "", sub_items: [],
@@ -291,19 +291,29 @@ export class HomeTasksCard extends TasksCardBase {
   // Auto-assign: the one person active in the person filter, or else the
   // column's one preset assignee unless this card doesn't offer them
   // (hidden_persons). null when neither applies - also for a column that
-  // only shows unassigned tasks, whose new tasks stay unassigned.
+  // only shows unassigned tasks, whose new tasks stay unassigned, and for
+  // "current user": a filter says what shows, not who gets new tasks (the
+  // list's default assignees take current_user for that).
   _autoAssignPerson(colIdx) {
     const cs = this._columns[colIdx];
     const col = this._config.columns[colIdx];
     if (cs.personFilters.size === 1) return [...cs.personFilters][0];
-    // "Current user" counts as the person of whoever is signed in.
-    const preset = this._presetAssignees(col);
-    if (cs.personFilters.size === 0 && (col.filters?.assignees || []).length === 1 && preset.length === 1
-        && preset[0] !== UNASSIGNED
+    const preset = col.filters?.assignees || [];
+    if (cs.personFilters.size === 0 && preset.length === 1
+        && preset[0] !== UNASSIGNED && preset[0] !== CURRENT_USER
         && !(col.hidden_persons || []).includes(preset[0])) {
       return preset[0];
     }
     return null;
+  }
+
+  // A list's default assignees as a task created here gets them: current_user
+  // is the viewer's person, or left out (as the backend does on creation).
+  _defaultAssignees(defaults) {
+    const people = defaults?.assignees || (defaults?.assignee ? [defaults.assignee] : []);
+    if (!people.includes(CURRENT_USER)) return [...people];
+    const me = viewerPersonId(this._hass);
+    return [...new Set(people.flatMap((p) => (p === CURRENT_USER ? (me ? [me] : []) : [p])))];
   }
 
   // A column that shows unassigned tasks (issue #93) and has no one to give a
@@ -377,9 +387,9 @@ export class HomeTasksCard extends TasksCardBase {
         tags: [...(listDefaults.tags || [])],
         reminders: [...(listDefaults.reminders || [])],
         section_id: listDefaults.section_id || null,
-        assigned_person: autoAssignPerson || (keepUnassigned ? null : listDefaults.assignee) || null,
+        assigned_person: autoAssignPerson || (keepUnassigned ? null : this._defaultAssignees(listDefaults)[0]) || null,
         assigned_persons: autoAssignPerson ? [autoAssignPerson]
-          : keepUnassigned ? [] : [...(listDefaults.assignees || [])],
+          : keepUnassigned ? [] : this._defaultAssignees(listDefaults),
         recurrence_enabled: false, _external: true,
       });
       const typed = { title, due: cs.newTaskDue, dueTime: cs.newTaskDueTime };
@@ -517,6 +527,11 @@ export class HomeTasksCard extends TasksCardBase {
     if (cols.length === 1) {
       return shown.length ? build(0) : document.createElement("div");
     }
+    // One column left for this viewer: drawn as a card of one column, not as
+    // one column of several (no column min-width, no row of columns) - a
+    // card of a column per person looks to each like a card of their own.
+    // A card title stays, above it as with several.
+    if (shown.length === 1 && !this._config.title) return build(shown[0]);
     const children = [];
     if (this._config.title) {
       const titleEl = document.createElement("h1");
@@ -558,22 +573,24 @@ export class HomeTasksCard extends TasksCardBase {
   _colConditions(colIdx) {
     const col = this._config.columns[colIdx];
     if (!col || col.visibility == null) return undefined;
+    // A state condition naming no entity reads the column's linked list -
+    // filled in here, so the browser and core judge the same entity, and a
+    // new list gives new conditions (and a new subscription).
     let entry = VISIBILITY_CACHE.get(col);
-    if (!entry || entry.source !== col.visibility) {
-      entry = { source: col.visibility, list: normalizeVisibility(col.visibility) };
+    if (!entry || entry.source !== col.visibility || entry.entityId !== col.entity_id) {
+      entry = {
+        source: col.visibility,
+        entityId: col.entity_id,
+        list: withEntity(normalizeVisibility(col.visibility), col.entity_id),
+      };
       VISIBILITY_CACHE.set(col, entry);
     }
     return entry.list;
   }
 
-  // A `state` condition naming no entity reads the column's linked list, as
-  // a card's reads the card's entity.
   // `view_columns` reads the columns of the sections view the card is in.
-  _colConditionContext(colIdx) {
-    const entityId = this._config.columns[colIdx]?.entity_id;
-    const ctx = entityId ? { entity_id: entityId } : {};
-    if (this._maxColumns) ctx.max_columns = this._maxColumns;
-    return ctx;
+  _colConditionContext() {
+    return this._maxColumns ? { max_columns: this._maxColumns } : {};
   }
 
   // The column count of the sections view around the card, which Home

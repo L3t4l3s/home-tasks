@@ -5473,6 +5473,27 @@ function dropInvalid(conditions) {
   }
   return valid;
 }
+function withEntity(conditions, entityId) {
+  if (!entityId || !conditions) return conditions;
+  let changed = false;
+  const fill = (c) => {
+    if ("conditions" in c && c.conditions != null) {
+      const kids = ensureArray(c.conditions);
+      const next = kids.map(fill);
+      if (next.every((k, i) => k === kids[i])) return c;
+      changed = true;
+      return { ...c, conditions: next };
+    }
+    const type = "condition" in c ? c.condition : "state";
+    if ((type === "state" || type === "numeric_state") && !c.entity && !("entity_id" in c)) {
+      changed = true;
+      return { ...c, entity: entityId };
+    }
+    return c;
+  };
+  const out = conditions.map(fill);
+  return changed ? out : conditions;
+}
 var isLogicalCondition = (c) => "condition" in c && LOGICAL_TYPES.has(c.condition);
 var logicalChildren = (c) => ensureArray(c.conditions) || [];
 var isDisabledCondition = (c) => "enabled" in c && c.enabled === false;
@@ -5551,7 +5572,7 @@ function stateFromEntityId(hass, value) {
   return isValidEntityId(value) && hass.states[value] ? hass.states[value].state : void 0;
 }
 function checkState(c, hass, ctx) {
-  const entityId = c.entity_id || c.entity || ctx.entity_id;
+  const entityId = c.entity_id || c.entity;
   const stateObj = entityId ? hass.states[entityId] : void 0;
   let state;
   if (!stateObj) state = "unknown";
@@ -5570,7 +5591,7 @@ function checkState(c, hass, ctx) {
   return c.state != null ? ensureArray(value).includes(state) : !ensureArray(value).includes(state);
 }
 function checkNumericState(c, hass, ctx) {
-  const entityId = c.entity_id || c.entity || ctx.entity_id;
+  const entityId = c.entity_id || c.entity;
   const stateObj = entityId ? hass.states[entityId] : void 0;
   const state = c.attribute ? stateObj?.attributes?.[c.attribute] : stateObj?.state;
   let above = c.above;
@@ -5804,7 +5825,7 @@ function isLocallyEvaluableServerLeaf(c, states, ctx) {
   const type = "condition" in c ? c.condition : "state";
   if (type !== "state" && type !== "numeric_state") return false;
   if (!("entity_id" in c)) {
-    const target = c.entity || ctx.entity_id;
+    const target = c.entity;
     return !!target && target in states;
   }
   if (typeof c.entity_id !== "string" || !(c.entity_id in states) || c.attribute !== void 0 || c.for !== void 0 || c.match !== void 0 || c.value_template !== void 0) {
@@ -12048,7 +12069,7 @@ var HomeTasksCard = class extends TasksCardBase {
     const defaults = r && r.defaults || {};
     if (isExt && r) this._sourceDefaults[this._colEntityId(colIdx)] = r.defaults || null;
     const person = this._autoAssignPerson(colIdx);
-    const people = person ? [person] : this._keepsNewTasksUnassigned(colIdx) ? [] : [...defaults.assignees || (defaults.assignee ? [defaults.assignee] : [])];
+    const people = person ? [person] : this._keepsNewTasksUnassigned(colIdx) ? [] : this._defaultAssignees(defaults);
     const { addDue, addDueTime } = this._addRowDue(colIdx);
     cs.draft = {
       id: `__draft__${colIdx}`,
@@ -12188,16 +12209,26 @@ var HomeTasksCard = class extends TasksCardBase {
   // Auto-assign: the one person active in the person filter, or else the
   // column's one preset assignee unless this card doesn't offer them
   // (hidden_persons). null when neither applies - also for a column that
-  // only shows unassigned tasks, whose new tasks stay unassigned.
+  // only shows unassigned tasks, whose new tasks stay unassigned, and for
+  // "current user": a filter says what shows, not who gets new tasks (the
+  // list's default assignees take current_user for that).
   _autoAssignPerson(colIdx) {
     const cs = this._columns[colIdx];
     const col = this._config.columns[colIdx];
     if (cs.personFilters.size === 1) return [...cs.personFilters][0];
-    const preset = this._presetAssignees(col);
-    if (cs.personFilters.size === 0 && (col.filters?.assignees || []).length === 1 && preset.length === 1 && preset[0] !== UNASSIGNED && !(col.hidden_persons || []).includes(preset[0])) {
+    const preset = col.filters?.assignees || [];
+    if (cs.personFilters.size === 0 && preset.length === 1 && preset[0] !== UNASSIGNED && preset[0] !== CURRENT_USER && !(col.hidden_persons || []).includes(preset[0])) {
       return preset[0];
     }
     return null;
+  }
+  // A list's default assignees as a task created here gets them: current_user
+  // is the viewer's person, or left out (as the backend does on creation).
+  _defaultAssignees(defaults) {
+    const people = defaults?.assignees || (defaults?.assignee ? [defaults.assignee] : []);
+    if (!people.includes(CURRENT_USER)) return [...people];
+    const me = viewerPersonId(this._hass);
+    return [...new Set(people.flatMap((p) => p === CURRENT_USER ? me ? [me] : [] : [p]))];
   }
   // A column that shows unassigned tasks (issue #93) and has no one to give a
   // new task to keeps it unassigned: the list's default assignees would take
@@ -12263,8 +12294,8 @@ var HomeTasksCard = class extends TasksCardBase {
         tags: [...listDefaults.tags || []],
         reminders: [...listDefaults.reminders || []],
         section_id: listDefaults.section_id || null,
-        assigned_person: autoAssignPerson || (keepUnassigned ? null : listDefaults.assignee) || null,
-        assigned_persons: autoAssignPerson ? [autoAssignPerson] : keepUnassigned ? [] : [...listDefaults.assignees || []],
+        assigned_person: autoAssignPerson || (keepUnassigned ? null : this._defaultAssignees(listDefaults)[0]) || null,
+        assigned_persons: autoAssignPerson ? [autoAssignPerson] : keepUnassigned ? [] : this._defaultAssignees(listDefaults),
         recurrence_enabled: false,
         _external: true
       });
@@ -12385,6 +12416,7 @@ var HomeTasksCard = class extends TasksCardBase {
     if (cols.length === 1) {
       return shown.length ? build(0) : document.createElement("div");
     }
+    if (shown.length === 1 && !this._config.title) return build(shown[0]);
     const children = [];
     if (this._config.title) {
       const titleEl = document.createElement("h1");
@@ -12422,20 +12454,19 @@ var HomeTasksCard = class extends TasksCardBase {
     const col = this._config.columns[colIdx];
     if (!col || col.visibility == null) return void 0;
     let entry = VISIBILITY_CACHE.get(col);
-    if (!entry || entry.source !== col.visibility) {
-      entry = { source: col.visibility, list: normalizeVisibility(col.visibility) };
+    if (!entry || entry.source !== col.visibility || entry.entityId !== col.entity_id) {
+      entry = {
+        source: col.visibility,
+        entityId: col.entity_id,
+        list: withEntity(normalizeVisibility(col.visibility), col.entity_id)
+      };
       VISIBILITY_CACHE.set(col, entry);
     }
     return entry.list;
   }
-  // A `state` condition naming no entity reads the column's linked list, as
-  // a card's reads the card's entity.
   // `view_columns` reads the columns of the sections view the card is in.
-  _colConditionContext(colIdx) {
-    const entityId = this._config.columns[colIdx]?.entity_id;
-    const ctx = entityId ? { entity_id: entityId } : {};
-    if (this._maxColumns) ctx.max_columns = this._maxColumns;
-    return ctx;
+  _colConditionContext() {
+    return this._maxColumns ? { max_columns: this._maxColumns } : {};
   }
   // The column count of the sections view around the card, which Home
   // Assistant hands its own cards as a Lit context ("lovelace-max-columns").
@@ -15380,7 +15411,10 @@ var HomeTasksCardEditor = class extends EditorBase {
       }
       const peopleField = this._buildPersonChips(
         this._t("ed_default_assignee"),
-        this._personOptions(defaults.assignees),
+        [
+          ...this._personOptions(defaults.assignees).filter((p) => p.value !== CURRENT_USER),
+          { value: CURRENT_USER, label: this._t("ed_preset_current_user") }
+        ],
         defaults.assignees,
         (people) => {
           defaults.assignees = people;

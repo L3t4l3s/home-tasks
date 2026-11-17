@@ -13,6 +13,9 @@ MAX_NOTES_LENGTH = 5000
 MAX_REORDER_IDS = 500
 MAX_TAGS_PER_TASK = 20
 MAX_ASSIGNEES_PER_TASK = 10
+# In a list's default assignees: whoever creates the task - their person,
+# found through the person's user. Never stored on a task itself.
+CURRENT_USER = "current_user"
 MAX_TAG_LENGTH = 50
 # Fixed tags per list, always offered when tagging (issue #61).
 MAX_TAG_CATALOG = 100

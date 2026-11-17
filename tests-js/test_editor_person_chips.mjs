@@ -41,7 +41,7 @@ describe('default assignees', () => {
 
   test('a list may default to several people, the first one tapped leading', async () => {
     const { calls, field } = await editor({ assignees: ['person.kevin'], reminders: [] });
-    assert.deepEqual(chipsIn(field), ['Anna', 'Kevin*']);
+    assert.deepEqual(chipsIn(field), ['Anna', 'Kevin*', 'Current user']);
     field.querySelectorAll('.assignee-chip')[0].click();
     await new Promise((r) => setTimeout(r, 10));
     const set = calls.find((c) => c.type === 'home_tasks/set_defaults');
@@ -51,7 +51,20 @@ describe('default assignees', () => {
 
   test('a default saved by an older version shows as its one person', async () => {
     const { field } = await editor({ assignee: 'person.anna', reminders: [] });
-    assert.deepEqual(chipsIn(field), ['Anna*', 'Kevin']);
+    assert.deepEqual(chipsIn(field), ['Anna*', 'Kevin', 'Current user']);
+  });
+
+  test('"current user" is a default too: new tasks go to whoever adds them', async () => {
+    const { calls, field } = await editor({ assignees: [], reminders: [] });
+    field.querySelectorAll('.assignee-chip')[2].click();
+    await new Promise((r) => setTimeout(r, 10));
+    const set = calls.find((c) => c.type === 'home_tasks/set_defaults');
+    assert.deepEqual(plain(set.assignees), ['current_user']);
+  });
+
+  test('stored, it shows on its own chip, not as a stranger', async () => {
+    const { field } = await editor({ assignees: ['current_user', 'person.anna'], reminders: [] });
+    assert.deepEqual(chipsIn(field), ['Anna*', 'Kevin', 'Current user*']);
   });
 });
 

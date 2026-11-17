@@ -127,6 +127,16 @@ describe('the card as a whole', () => {
     assert.deepEqual(dimmed, ['Anna']);
   });
 
+  test('one column left looks like a card of one column', async () => {
+    const { card } = await mount([
+      col('Anna', [{ condition: 'user', users: ['u-anna'] }]),
+      col('Ben', [{ condition: 'user', users: ['u-ben'] }]),
+    ], { user: 'u-ben' });
+    assert.deepEqual(shownTitles(card), ['Ben']);
+    assert.equal(card.shadowRoot.querySelector('.multi-columns'), null);
+    assert.ok(card.shadowRoot.querySelector('ha-card > .card-column'));
+  });
+
   test('without column conditions it leaves the page when hidden, as any card', async () => {
     const { card } = await mount([col('Family')]);
     assert.equal(card.connectedWhileHidden, false);
@@ -171,6 +181,21 @@ describe('conditions core judges', () => {
     hass.connection.subs[0].cb({ result: false });
     await flush();
     assert.deepEqual(shownTitles(card), ['Family']);
+  });
+
+  test('a state condition without an entity reads the linked list, in core too', async () => {
+    const work = (state) => ({ 'todo.work': { entity_id: 'todo.work', state, attributes: {} } });
+    const { card, hass } = await mount(
+      [{ entity_id: 'todo.work', title: 'Work', visibility: [{ condition: 'state', state_not: '0' }] }, col('Family')],
+      { states: work('3') },
+    );
+    assert.deepEqual(plain(hass.connection.subs.map((s) => s.msg.condition)), [{
+      condition: 'not', conditions: [{ condition: 'state', entity_id: 'todo.work', state: '0' }],
+    }]);
+    assert.deepEqual(shownTitles(card), ['Work', 'Family']);
+    hass.connection.subs[0].cb({ result: true });
+    await flush();
+    assert.deepEqual(shownTitles(card), ['Work', 'Family']);
   });
 
   test('a template stays hidden until core says it holds', async () => {
@@ -349,9 +374,16 @@ describe('current user in the preset assignee filter', () => {
     assert.deepEqual((await shown({ assignees: ['current_user'] }, 'u-kiosk')).ids, []);
   });
 
-  test('a new task in such a column goes to whoever adds it', async () => {
+  test('the filter alone assigns nobody: it says what shows, not who gets new tasks', async () => {
     const { card } = await shown({ assignees: ['current_user'] }, 'u-ben');
-    assert.equal(card._autoAssignPerson(0), 'person.ben');
+    assert.equal(card._autoAssignPerson(0), null);
+  });
+
+  test('"current user" among the list defaults is whoever adds the task', async () => {
+    const { card } = await shown({}, 'u-ben');
+    assert.deepEqual(plain(card._defaultAssignees({ assignees: ['current_user', 'person.anna'] })), ['person.ben', 'person.anna']);
+    const { card: kiosk } = await shown({}, 'u-kiosk');
+    assert.deepEqual(plain(kiosk._defaultAssignees({ assignees: ['current_user'] })), []);
   });
 
   test('a user without a person gets no add row there: the task could never show', async () => {
