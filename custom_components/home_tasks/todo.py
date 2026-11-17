@@ -49,6 +49,8 @@ class HomeTasksEntity(TodoListEntity):
     """A todo list entity backed by our custom store."""
 
     _attr_has_entity_name = True
+    # list_id never changes; nothing for the recorder to keep.
+    _unrecorded_attributes = frozenset({"list_id"})
     _BASE_FEATURES = (
         TodoListEntityFeature.CREATE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
@@ -64,6 +66,10 @@ class HomeTasksEntity(TodoListEntity):
         self._store = store
         self._attr_name = entry.data.get("name", entry.title)
         self._attr_unique_id = entry.entry_id
+        # The list this entity is, for the card's suggestions in Home
+        # Assistant's "add to dashboard" dialog: they are made from the
+        # entity's state alone, with no call to the backend.
+        self._attr_extra_state_attributes = {"list_id": entry.entry_id}
 
     async def async_added_to_hass(self) -> None:
         """Register store listener so state updates on any data change."""

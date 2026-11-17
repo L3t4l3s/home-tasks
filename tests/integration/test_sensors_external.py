@@ -122,6 +122,8 @@ async def test_the_sensor_counts_what_the_provider_holds(hass: HomeAssistant, li
     assert state.attributes["open_task_titles"] == ["Milk", "Bread"]
     assert state.attributes["total_tasks"] == 3
     assert state.attributes["overdue_count"] == 0
+    # The provider's list, so the card can tell it is linked.
+    assert state.attributes["source_entity_id"] == EXT_ENTITY
 
 
 async def test_the_sensor_follows_the_provider(hass: HomeAssistant, linked) -> None:

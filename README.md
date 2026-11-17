@@ -362,7 +362,7 @@ Pictures are stored in `config/www/home_tasks/` and reused for every task with t
 
 ## Card Configuration
 
-There are two card types: the list card (**Home Tasks: List** in the card picker, `custom:home-tasks-card`), whose options come first, and the [day plan card](https://github.com/L3t4l3s/home-tasks#day-plan-card) (**Home Tasks: Day plan**, `custom:home-tasks-day-plan-card`). All options are available in the visual card editor. The examples below cover the most common setups.
+There are two card types: the list card (**Home Tasks: List** in the card picker, `custom:home-tasks-card`), whose options come first, and the [day plan card](https://github.com/L3t4l3s/home-tasks#day-plan-card) (**Home Tasks: Day plan**, `custom:home-tasks-day-plan-card`). When you add a card by entity, Home Assistant offers them too: the list card for a list's todo entity (also a provider's list linked to Home Tasks), the day plan card for a plan's *Open Items* sensor. All options are available in the visual card editor. The examples below cover the most common setups.
 
 <center>
 

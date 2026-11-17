@@ -134,6 +134,14 @@ class ExternalOpenTasksSensor(_BaseOpenTasksSensor):
         self.hass = hass
         self._source_entity_id = entity_id
 
+    # The provider's list this sensor counts. The card's suggestions read it
+    # to know that a todo entity is linked to Home Tasks.
+    _unrecorded_attributes = frozenset({"source_entity_id"})
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        return {**super().extra_state_attributes, "source_entity_id": self._source_entity_id}
+
     @property
     def available(self) -> bool:
         """Unavailable while the provider's entity is not there to read."""
@@ -165,6 +173,7 @@ class PlanOpenItemsSensor(SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = "tasks"
     _attr_icon = "mdi:calendar-check"
+    _unrecorded_attributes = frozenset({"plan_id"})
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, store: PlanStore) -> None:
         self.hass = hass
@@ -213,6 +222,8 @@ class PlanOpenItemsSensor(SensorEntity):
             "total": len(day["items"]),
             "note": day["note"],
             "last_modified": self._last_modified,
+            # The plan, for the card's suggestions (see the list's todo entity).
+            "plan_id": self._entry.entry_id,
         }
 
     async def async_added_to_hass(self) -> None:

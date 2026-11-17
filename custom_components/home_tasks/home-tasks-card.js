@@ -15778,15 +15778,32 @@ var _htPickerText = (key) => {
   if (!lang && typeof navigator !== "undefined") lang = navigator.language || "";
   return _htText(lang, key);
 };
+var _htOwnStates = (hass) => Object.values(hass.entities || {}).filter((e) => e && e.platform === "home_tasks").map((e) => hass.states[e.entity_id]).filter(Boolean);
+var _htSuggestList = (hass, entityId) => {
+  if (!entityId || !entityId.startsWith("todo.")) return null;
+  const type = "custom:home-tasks-card";
+  const own = hass.entities?.[entityId]?.platform === "home_tasks";
+  const listId = own ? hass.states[entityId]?.attributes?.list_id : null;
+  if (listId) return { config: { type, columns: [{ list_id: listId }] } };
+  const linked = !own && _htOwnStates(hass).some((s) => s.attributes?.source_entity_id === entityId);
+  return linked ? { config: { type, columns: [{ entity_id: entityId }] } } : null;
+};
+var _htSuggestPlan = (hass, entityId) => {
+  if (hass.entities?.[entityId]?.platform !== "home_tasks") return null;
+  const planId = hass.states[entityId]?.attributes?.plan_id;
+  return planId ? { config: { type: "custom:home-tasks-day-plan-card", plan: planId, days: 3 } } : null;
+};
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "home-tasks-card",
   name: _htPickerText("picker_list_name"),
   description: _htPickerText("picker_list_desc"),
-  preview: true
+  preview: true,
+  getEntitySuggestion: _htSuggestList
 }, {
   type: "home-tasks-day-plan-card",
   name: _htPickerText("picker_plan_name"),
   description: _htPickerText("picker_plan_desc"),
-  preview: true
+  preview: true,
+  getEntitySuggestion: _htSuggestPlan
 });
